@@ -1,0 +1,966 @@
+{
+ "about": {
+  "title": "The hard problem",
+  "course": "consciousness",
+  "class_n": 2,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. It teaches one idea at a time and stops for a check question after each main idea. The two thought experiments and the three kinds of critic each need their own time, so I did not shorten them. The teacher can drop the timeline beat if time is short."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Facing Up to the Problem of Consciousness (HTML version)",
+   "publisher": "David J. Chalmers, consc.net (first published in Journal of Consciousness Studies, 1995)",
+   "date": "1995",
+   "link": "https://consc.net/papers/facing.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Facing Up to the Problem of Consciousness (PDF version)",
+   "publisher": "David J. Chalmers, consc.net",
+   "date": "1995",
+   "link": "https://consc.net/papers/facing.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "The Hard Problem of Consciousness",
+   "publisher": "Internet Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://iep.utm.edu/hard-problem-of-conciousness/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "What Is It Like to Be a Bat?",
+   "publisher": "Wikipedia",
+   "date": "n.d. (page current in 2026)",
+   "link": "https://en.wikipedia.org/wiki/What_Is_It_Like_to_Be_a_Bat",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Thomas Nagel: What is it Like to be a Bat?",
+   "publisher": "Philosophy Break",
+   "date": "n.d.",
+   "link": "https://philosophybreak.com/articles/thomas-nagel-what-is-it-like-to-be-a-bat/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Qualia",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://plato.stanford.edu/entries/qualia/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Qualia: The Knowledge Argument",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://plato.stanford.edu/entries/qualia-knowledge/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Knowledge Argument Against Physicalism",
+   "publisher": "Internet Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://iep.utm.edu/know-arg/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Zombies",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://plato.stanford.edu/entries/zombies/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Zombies (Summer 2023 archived edition)",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "2023",
+   "link": "https://plato.stanford.edu/archives/sum2023/entries/zombies/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Philosophical zombie",
+   "publisher": "Wikipedia",
+   "date": "n.d. (page current in 2026)",
+   "link": "https://en.wikipedia.org/wiki/Philosophical_zombie",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "What Exactly is the Explanatory Gap?",
+   "publisher": "David Papineau (King's College London)",
+   "date": "n.d.",
+   "link": "https://www.davidpapineau.co.uk/uploads/1/8/5/5/18551740/what_exactly_is_the_exaplanitory_gap.doc",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Subjectivity 'Demystified': Neurobiology, Evolution, and the Explanatory Gap",
+   "publisher": "Frontiers in Psychology",
+   "date": "2019",
+   "link": "https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2019.01686/full",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Illusionism (philosophy of mind)",
+   "publisher": "Wikipedia",
+   "date": "n.d. (page current in 2026)",
+   "link": "https://en.wikipedia.org/wiki/Illusionism_(philosophy_of_mind)",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Illusionism as the Obvious Default Theory of Consciousness",
+   "publisher": "Daniel Dennett, Journal of Consciousness Studies",
+   "date": "2016",
+   "link": "https://www.researchgate.net/profile/Daniel-Dennett/publication/316513753_Illusionism_as_the_obvious_default_theory_of_consciousness/links/6087858c907dcf667bc70df1/Illusionism-as-the-obvious-default-theory-of-consciousness.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Can you believe it? Illusionism about consciousness and the illusion meta-problem",
+   "publisher": "François Kammerer, PhilArchive",
+   "date": "n.d.",
+   "link": "https://philarchive.org/archive/KAMCYB",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "The Hornswoggle Problem (page also discusses later responses)",
+   "publisher": "ResearchGate",
+   "date": "1996",
+   "link": "https://www.researchgate.net/publication/233567350_The_Hornswoggle_Problem",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Hard problem of consciousness",
+   "publisher": "Scholarpedia",
+   "date": "n.d.",
+   "link": "http://www.scholarpedia.org/article/Hard_problem_of_consciousness",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Hard problem of consciousness",
+   "publisher": "Wikipedia",
+   "date": "n.d. (page current in 2026)",
+   "link": "https://en.wikipedia.org/wiki/Hard_problem_of_consciousness",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Joseph Levine (philosopher)",
+   "publisher": "Wikipedia",
+   "date": "n.d. (page current in 2026)",
+   "link": "https://en.wikipedia.org/wiki/Joseph_Levine_(philosopher)",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "The Knowledge Argument (bibliography)",
+   "publisher": "PhilPapers",
+   "date": "n.d.",
+   "link": "https://philpapers.org/browse/the-knowledge-argument",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 2. Last time we sorted out what the word 'consciousness' can mean. Today we meet the puzzle many people call the hardest one."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The hard problem"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "By the end you will be able to state the hard problem, name the 'easy problems', and describe two thought experiments with one main reply to each."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. State the hard problem and the easy problems. 2. Describe Mary's room and a reply. 3. Describe philosophical zombies and a reply."
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, one plain idea: experience. When you taste coffee, there is the taste itself, as it feels to you. Philosophers call this the 'what it is like' side of the mind."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Experience: what it is like"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "Which of these is an example of 'experience' in this sense?",
+    "right": "The bitter taste of coffee as you feel it",
+    "wrong": [
+     "The chemical make-up of the coffee",
+     "The fact that you can say the word 'coffee'",
+     "The part of the brain that handles taste"
+    ],
+    "why": "Experience means the felt, first-person side: what it is like for the person. The other answers describe chemistry, speech or brain regions, which are things we can observe from outside."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In 1995 the philosopher David Chalmers gave the puzzle a name. The hard problem asks why physical states in the brain come with experience at all."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The hard problem = why is there experience at all?"
+   },
+   "cite": [
+    "s3",
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "He set it against a second group, the 'easy problems'. These are about what the brain does: its abilities and its jobs, called functions."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Easy problems: abilities and functions. Hard problem: experience."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "His list has seven items. Examples are reacting to things in the world, reporting what is in your mind, focusing attention, and the difference between waking and sleep."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "dot",
+    "count": 7,
+    "layout": "row",
+    "text": "Seven 'easy problems'"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Which of these is one of the 'easy problems'?",
+    "right": "How the brain lets you report what you see",
+    "wrong": [
+     "Why seeing red feels like something",
+     "Why there is anything it is like to be you",
+     "Why pain hurts instead of being a silent signal"
+    ],
+    "why": "Reporting is a function, a job a system performs, so it is on Chalmers's list of easy problems. The other three are all about the feeling itself."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Careful: 'easy' does not mean simple. Chalmers says it is a relative term. We have a clear idea how to explain these, but the work may take a century or two."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Easy does not mean simple"
+   },
+   "cite": [
+    "s2",
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does Chalmers mean by calling these problems 'easy'?",
+    "right": "We have a clear idea of how to explain them, even if it takes a lot of work",
+    "wrong": [
+     "They can be finished in a few weeks",
+     "They are boring to scientists",
+     "They have already been fully solved"
+    ],
+    "why": "He says they are among the most interesting unsolved problems in cognitive science. Getting the details right may take a century or two. 'Easy' only means we know what kind of explanation to look for."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So why is the hard problem hard? Explaining a function means showing a mechanism that does the job. But experience is not a job."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Function: show the mechanism that does the job. Experience: the felt side. Even with every job explained, a question seems left over."
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Scientists fully explain how the brain detects red light and lets you say 'that is red'. According to Chalmers, what is left over?",
+    "right": "Why that processing comes with a felt experience of red",
+    "wrong": [
+     "Nothing, the whole problem is solved",
+     "How the eye detects light",
+     "Whether you can say the word 'red'"
+    ],
+    "why": "On Chalmers's view the hard problem is not about performing functions. It would remain even when all the relevant functions are explained."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A fair note before we go on. Not everyone agrees the hard problem exists. We will hear from those critics at the end."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Disputed: does the hard problem exist?"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a first picture of the puzzle. In 1974 Thomas Nagel asked what it is like to be a bat. His key idea is a test for being conscious."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "\"there is something that it is like to be that organism\""
+   },
+   "cite": [
+    "s4",
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "We can imagine flying, hanging upside down and finding our way by sonar. But that tells us what it would be like for us to act like a bat, not what it is like for the bat."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A small bat in flight at night, with curved lines showing sound waves fanning out in front of it."
+   },
+   "cite": [
+    "s4",
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is Nagel's point about imagining being a bat?",
+    "right": "Imagining ourselves doing bat things is not the same as knowing what it is like for the bat itself",
+    "wrong": [
+     "Bats cannot have any experiences",
+     "Studying a bat's brain would tell us exactly what its experience is like",
+     "Imagination is useless in science"
+    ],
+    "why": "Nagel says we can picture ourselves as bats but not what it is like for bats to be bats. His point is that, with our current methods, bat-brain facts do not take us to the bat's experience."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Nagel did not say it is forever impossible. His point was that our present ways of explaining leave this feeling out. That is the same worry Chalmers later named."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Bat: facts about the brain, but not the feel"
+   },
+   "cite": [
+    "s5",
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The bat is a warm-up. Now the first of our two main thought experiments: Mary's room, from the philosopher Frank Jackson in 1982."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A plain room where everything is black, white or grey. A scientist sits at a screen showing only greyscale pictures."
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Mary is a brilliant colour scientist. She has spent her life in a black-and-white room, and she knows every physical fact about colour vision."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Mary lives in a black-and-white room. She knows all the physical facts about how humans see colour. She has never seen colour herself."
+   },
+   "cite": [
+    "s6",
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One day Mary steps out and sees a ripe red tomato. The question is: does she learn anything new?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Does Mary learn something new?"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "What question does Mary's room ask?",
+    "right": "When Mary sees red for the first time, does she learn something new?",
+    "wrong": [
+     "Whether colours exist at all",
+     "Whether scientists can work in black-and-white rooms",
+     "Whether Mary's eyes work properly"
+    ],
+    "why": "The whole thought experiment turns on whether Mary learns something when she first sees red, even though she knew every physical fact beforehand."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Jackson's answer is yes: she learns what it is like to see red. If so, the physical facts did not cover everything. That challenges physicalism, the view that the world is entirely physical."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Mary knows all the physical facts about colour vision. 2. On seeing red she learns something new. 3. So not everything about experience is in the physical facts."
+   },
+   "cite": [
+    "s8",
+    "s6",
+    "s7"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "If Mary does learn something new, what does the argument say follows?",
+    "right": "The physical facts alone did not cover everything about experience",
+    "wrong": [
+     "Physicalism is proven true",
+     "Colour is not real",
+     "Mary's brain must be damaged"
+    ],
+    "why": "If what-it-is-like were just a physical fact, Mary would already have known it in her room. Learning something new suggests the physical facts left something out."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the main reply from physicalists. Mary gains a new way of thinking about something she already knew. She gets new concepts for colour experience, not a new fact."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Reply: new concepts, same facts"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is the main physicalist reply to Mary's room?",
+    "right": "Mary gets a new way of thinking about facts she already had, not a new fact",
+    "wrong": [
+     "Mary was not clever enough to understand the physics",
+     "Tomatoes are not really red",
+     "Mary forgot what she learned in the room"
+    ],
+    "why": "The reply grants that her knowledge grows in an everyday sense, but says it comes from new ways of thinking about colour experiences, not from facts beyond the physical."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now our second thought experiment: the philosophical zombie. This is not the film kind. It is a being physically identical to a normal person but with no experience at all."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two identical people side by side. One has a small glowing light inside, for experience. The other has none. From outside they look exactly the same."
+   },
+   "cite": [
+    "s11",
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "If you poked a zombie with a sharp object, it would react just as a person does. But it would feel no pain."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Same body, same behaviour, no inner feeling"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is a philosophical zombie?",
+    "right": "A being physically identical to a person and behaving the same way, but with no inner experience",
+    "wrong": [
+     "A walking corpse that wants to eat brains",
+     "A person who has lost their memory",
+     "A robot that looks quite different from humans"
+    ],
+    "why": "The zombie is a tool for thought. It matches us physically and in behaviour, but nothing is felt on the inside."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Almost nobody thinks zombies really exist. The question is whether they are conceivable, meaning we can imagine them without contradiction. Some say they are even possible."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Conceivable? Possible?"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The argument runs in three steps. If zombies are possible, then the physical facts alone do not settle whether a being has experience."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Zombies are conceivable. 2. Whatever is conceivable is possible. 3. So zombies are possible, and physicalism looks false."
+   },
+   "cite": [
+    "s9",
+    "s10"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why do zombies matter to the hard problem?",
+    "right": "If a being with all the physical facts could lack experience, physical facts alone seem not to explain experience",
+    "wrong": [
+     "They show that consciousness is an easy problem",
+     "They would be dangerous",
+     "They prove brains do not exist"
+    ],
+    "why": "The pull of the argument is that we can easily imagine a system with all the physical machinery and still no consciousness. That suggests the machinery does not explain the feeling."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The main reply: being able to imagine something does not make it possible. A physicalist can allow that zombies seem imaginable and still say experience is a physical property."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Reply: imaginable is not the same as possible"
+   },
+   "cite": [
+    "s9",
+    "s11"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "How does a physicalist reply to the zombie argument?",
+    "right": "Being able to imagine a zombie does not show a zombie is really possible",
+    "wrong": [
+     "Nobody can imagine anything",
+     "Zombies would be physically different from us, by definition",
+     "Physics shows zombies are dangerous"
+    ],
+    "why": "The key step is 'conceivable means possible'. Physicalists deny it, or grant the imagining while insisting the properties involved are still physical."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a name for the shared worry: the explanatory gap, from the philosopher Joseph Levine in 1983. Start with an example that has no gap: water is H2O."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Water = H2O"
+   },
+   "cite": [
+    "s12",
+    "s13"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Once we learn water is H2O, we feel no leftover question. Now try 'pain is the firing of certain nerve fibres'. We still ask why it feels like that."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Water = H2O: nothing left to ask. Pain = nerve-fibre firing: why does it feel that way?"
+   },
+   "cite": [
+    "s12",
+    "s13"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What does the 'explanatory gap' say?",
+    "right": "Even when we link a brain state to a feeling, the link does not explain why it feels that way",
+    "wrong": [
+     "Brains have physical holes in them",
+     "Scientists lack good brain scans",
+     "Water is not really H2O"
+    ],
+    "why": "Levine's point is about explanation. Linking pain to a brain event still leaves open why pain feels the way it does."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the best case for the hard problem. All four ideas point the same way: physical explanation tells us what a system does, yet experience seems left out."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Bat: facts, but not the feel. Mary: all the facts, still something to learn. Zombie: same machinery, no feeling. Gap: the link leaves 'why' unanswered."
+   },
+   "cite": [
+    "s5",
+    "s7",
+    "s10",
+    "s12"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which sentence best sums up the best case for the hard problem?",
+    "right": "Physical explanations describe what systems do, but experience seems to be something left unexplained",
+    "wrong": [
+     "Science has proven that brains do not matter",
+     "Experience is easy to explain with enough brain scans",
+     "The brain is not a physical thing"
+    ],
+    "why": "This is Chalmers's core claim: the easy problems are about functions, and experience goes beyond functions."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One more point in its favour. Even finding where and how brain activity matches experience might leave 'why do they match?' unanswered."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Matching is not explaining"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the critics. We have already met the physicalist replies to Mary and to zombies. Both grant that the puzzles feel real, but deny they show anything non-physical."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Critics: physicalists"
+   },
+   "cite": [
+    "s6",
+    "s9"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A bolder critic is Daniel Dennett. He argued the hard problem would be solved in the process of solving the easy problems."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Dennett: no separate hard problem"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Illusionism is the view that follows. Phenomenal consciousness seems to exist as a special inner 'feel', but is not what it seems. It does not deny that consciousness exists. It gives a different account of it."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Seems: a special inner feel. Illusionist claim: it is not what it seems. The job is to explain why it seems so."
+   },
+   "cite": [
+    "s14",
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The philosopher Keith Frankish put it this way: illusionism swaps the hard problem for the illusion problem. Dennett likens it to stage magic: our job is to explain how the trick is done."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Hard problem becomes the illusion problem"
+   },
+   "cite": [
+    "s14",
+    "s15"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does illusionism say about the 'inner feel' of experience?",
+    "right": "It seems real but is not what it seems, so we must explain why it seems so",
+    "wrong": [
+     "Nobody has any inner life at all",
+     "The hard problem is solved by dualism",
+     "Experiences are real and non-physical"
+    ],
+    "why": "Illusionists replace 'why does experience exist?' with 'how and why does the illusion of it arise?'"
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Fair criticism: John Searle said the appearance is the reality when it comes to consciousness. Others note illusionists must explain why their own view seems so absurd."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "\"where consciousness is concerned the existence of the appearance is the reality\""
+   },
+   "cite": [
+    "s14",
+    "s16"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Third critic: the problem will dissolve with progress. Patricia Churchland compared the mystery to vitalism, the old belief that life needed a special force. The mystery, she said, is about us, not the world."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Vitalism: the old mystery of life"
+   },
+   "cite": [
+    "s17",
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Chalmers answers that the comparison fails. Vitalists doubted physical mechanisms could perform life's functions, and they could. The hard problem is not about functions."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Vitalism: doubt about functions of life. Hard problem: why there is experience at all."
+   },
+   "cite": [
+    "s2",
+    "s18"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why does Chalmers think the vitalism comparison fails?",
+    "right": "Vitalists doubted physics could explain life's functions, and it did. The hard problem is not about functions",
+    "wrong": [
+     "Nobody ever believed in vitalism",
+     "Biology is not a real science",
+     "Science will never learn anything about brains"
+    ],
+    "why": "Chalmers thinks the easy problems will yield to science. His claim is that experience is a different kind of question from a function."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let us place these ideas in time. They run from Nagel's bat paper to the illusionism debate.",
+    "note": ""
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1974 Nagel's bat paper. 1982 Jackson's Mary. 1983 Levine's explanatory gap. 1995 Chalmers names the hard problem. 2016 illusionism named."
+   },
+   "cite": [
+    "s5",
+    "s6",
+    "s13",
+    "s3",
+    "s14"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To sum up: easy problems are about functions, and the hard problem is about experience. Mary's room and zombies are the two thought experiments, each with a reply. Critics ask whether the problem is real."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Easy: functions. Hard: experience. Mary: new concepts reply. Zombies: imaginable is not possible reply. Critics: illusionism, patience."
+   },
+   "cite": [
+    "s1",
+    "s6",
+    "s9",
+    "s14",
+    "s17"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Who named the 'explanatory gap'?",
+    "right": "Joseph Levine",
+    "wrong": [
+     "David Chalmers",
+     "Thomas Nagel",
+     "Daniel Dennett"
+    ],
+    "why": "Levine used the phrase in a 1983 paper. Chalmers named the hard problem in 1995, and Nagel wrote the bat paper in 1974."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next class we go looking for consciousness in the brain itself. Well done for staying with some very big ideas."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Looking for consciousness in the brain"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "hard problem",
+   "links": [
+    "[[easy problems]]",
+    "[[explanatory gap]]",
+    "[[qualia]]"
+   ]
+  },
+  {
+   "topic": "Mary's room",
+   "links": [
+    "[[knowledge argument]]",
+    "[[physicalism]]",
+    "[[phenomenal concepts]]"
+   ]
+  },
+  {
+   "topic": "philosophical zombies",
+   "links": [
+    "[[conceivability argument]]",
+    "[[physicalism]]"
+   ]
+  },
+  {
+   "topic": "illusionism",
+   "links": [
+    "[[Dennett]]",
+    "[[Frankish]]",
+    "[[illusion problem]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "The hard problem is a real, separate problem that the easy problems cannot solve.",
+   "other_view": "Dennett argued it would be solved while solving the easy problems. Illusionists hold that the special inner 'feel' seems real but is not what it seems. The task is then to explain the illusion.",
+   "cite": [
+    "s14",
+    "s15"
+   ]
+  },
+  {
+   "claim": "Mary learns a new fact, so physicalism is incomplete.",
+   "other_view": "Many physicalists say Mary only gains new concepts or a new way of knowing the same facts. Others say she gains acquaintance or know-how, not facts. One recent line says she did not know all the physical facts in the room after all.",
+   "cite": [
+    "s6",
+    "s8",
+    "s21"
+   ]
+  },
+  {
+   "claim": "Zombies are conceivable, so they are possible, so physicalism is false.",
+   "other_view": "Critics deny that conceivable means possible. Some physicalists grant the zombie's conceivability and still say experience is physical. Others argue zombies are not truly conceivable.",
+   "cite": [
+    "s9",
+    "s10",
+    "s11"
+   ]
+  },
+  {
+   "claim": "The explanatory gap shows materialism is false.",
+   "other_view": "Levine himself does not think the gap refutes materialism. Papineau notes that few philosophers think the gap discredits materialism, though many think it explains why the puzzle feels so strong.",
+   "cite": [
+    "s20",
+    "s12"
+   ]
+  },
+  {
+   "claim": "Scientific progress will not dissolve the hard problem.",
+   "other_view": "Churchland and others compare the mystery to vitalism, which faded as biology advanced. Chalmers replies that the cases differ, because vitalism was about functions and the hard problem is not.",
+   "cite": [
+    "s17",
+    "s18",
+    "s2"
+   ]
+  },
+  {
+   "claim": "Illusionism is a sound way to remove the hard problem.",
+   "other_view": "Searle said that for consciousness the appearance is the reality. Kammerer says illusionists must explain why their own view seems so implausible, which he calls the illusion meta-problem.",
+   "cite": [
+    "s14",
+    "s16"
+   ]
+  }
+ ]
+}

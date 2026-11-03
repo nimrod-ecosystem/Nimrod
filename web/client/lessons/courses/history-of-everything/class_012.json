@@ -1,0 +1,1257 @@
+{
+ "about": {
+  "title": "Ice Age Minds: Fire, Tools, Language and Art",
+  "course": "history-of-everything",
+  "class_n": 12,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. The five topics (tools, fire, language, symbols and art, the debate) fit one half-hour class, so nothing was cut or added. Each step is short and ends with a question."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Stone Tools",
+   "publisher": "Smithsonian Institution Human Origins Program",
+   "date": "n.d.",
+   "link": "https://humanorigins.si.edu/evidence/behavior/stone-tools",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "Early Stone Age Tools",
+   "publisher": "Smithsonian Institution Human Origins Program",
+   "date": "n.d.",
+   "link": "https://humanorigins.si.edu/evidence/behavior/stone-tools/early-stone-age-tools",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "Olduvai Chopper",
+   "publisher": "Smithsonian Institution Human Origins Program",
+   "date": "n.d.",
+   "link": "https://humanorigins.si.edu/evidence/behavior/stone-tools/early-stone-age-tools/olduvai-chopper",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "Oldowan tools at 3 million years ago",
+   "publisher": "Smithsonian Institution Human Origins Program",
+   "date": "n.d.",
+   "link": "https://humanorigins.si.edu/research/whats-hot-human-origins/oldowan-tools-3-million-years-ago",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "The Earliest Example of Hominid Fire",
+   "publisher": "Smithsonian Magazine",
+   "date": "n.d.",
+   "link": "https://www.smithsonianmag.com/science-nature/the-earliest-example-of-hominid-fire-171693652/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "Could These 400,000-Year-Old Rock Fragments Be the Oldest Known Evidence of Human Fire-Making?",
+   "publisher": "Smithsonian Magazine",
+   "date": "2025-12",
+   "link": "https://www.smithsonianmag.com/smart-news/could-these-400000-year-old-rock-fragments-be-the-oldest-known-evidence-of-human-fire-making-180987861/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "Archaeologists find earliest known fire made by humans",
+   "publisher": "CNN",
+   "date": "2025-12-10",
+   "link": "https://edition.cnn.com/2025/12/10/science/earliest-fire-use-neanderthals",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "Human Ancestors Used Controlled Fire to Make Tools 300,000 Years Ago in Middle East, Shows New Study",
+   "publisher": "Weizmann Institute of Science (US friends)",
+   "date": "n.d.",
+   "link": "https://www.weizmann-usa.org/news-media/in-the-news/human-ancestors-used-controlled-fire-to-make-tools-300-000-years-ago-in-middle-east-shows-new-study/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "Micro-Biomechanics of the Kebara 2 Hyoid and Its Implications for Speech in Neanderthals",
+   "publisher": "PLOS ONE via PubMed Central",
+   "date": "n.d.",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3867335/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "Revisiting FOXP2 and the origins of language",
+   "publisher": "National Geographic",
+   "date": "n.d.",
+   "link": "https://www.nationalgeographic.com/science/article/revisiting-foxp2-and-the-origins-of-language",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "Genetic origins of language may predate modern humans splitting from Neanderthals, a new study suggests",
+   "publisher": "Scientific American",
+   "date": "n.d.",
+   "link": "https://www.scientificamerican.com/article/genetic-origins-of-language-may-predate-modern-humans-splitting-from-neanderthals-a-new-study-suggests/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "Neanderthal language? Just-so stories take center stage",
+   "publisher": "PubMed Central (journal commentary)",
+   "date": "n.d.",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3781312/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "Indonesian Cave Painting Is Oldest-Known Visual Storytelling",
+   "publisher": "Smithsonian Magazine",
+   "date": "2024-07-05",
+   "link": "https://www.smithsonianmag.com/smart-news/indonesian-cave-painting-is-oldest-known-visual-storytelling-180984660/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "World's oldest known artwork in Indonesian cave dated using lasers (summary of Oktaviana et al., Nature 631, 814-818)",
+   "publisher": "Nature",
+   "date": "2024",
+   "link": "https://www.nature.com/articles/d41586-024-03248-x",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "Cave painting in Indonesia is the oldest known 'picture story'",
+   "publisher": "Griffith University News",
+   "date": "2024-07-04",
+   "link": "https://news.griffith.edu.au/2024/07/04/cave-painting-in-indonesia-is-the-oldest-known-picture-story/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "Chauvet Cave",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/anthropology/chauvet-cave/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "Neanderthals were cave artists, researchers find",
+   "publisher": "NBC News",
+   "date": "2018",
+   "link": "https://www.nbcnews.com/health/health-news/neanderthals-were-cave-artists-researchers-find-n850366",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "Dating questions challenge whether Neandertals drew Spanish cave art",
+   "publisher": "Science News",
+   "date": "n.d.",
+   "link": "https://www.sciencenews.org/article/dating-questions-challenge-whether-neandertals-drew-spanish-cave-art",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "Scientist questions dating of world's oldest cave art and Neanderthal paintings",
+   "publisher": "Archaeology Magazine",
+   "date": "2026-05",
+   "link": "https://archaeologymag.com/2026/05/scientist-questions-dating-of-worlds-oldest-cave-art/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "Neanderthals, not modern humans, created these cave paintings",
+   "publisher": "CBC News",
+   "date": "2018",
+   "link": "https://amp.cbc.ca/lite/story/1.4378719",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "Engraved ochres from the Middle Stone Age levels at Blombos Cave, South Africa (abstract and introduction)",
+   "publisher": "Journal of Human Evolution via ScienceDirect",
+   "date": "2009",
+   "link": "https://www.sciencedirect.com/science/article/abs/pii/S0047248409000207",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "Blombos Cave",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Blombos-Cave",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "Unveiling the multifunctional use of ochre in the Middle Stone Age: Specialized ochre retouchers from Blombos Cave",
+   "publisher": "Science Advances via PubMed Central",
+   "date": "2025-06-27",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC12204176/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "The revolution that wasn't: a new interpretation of the origin of modern human behavior (abstract)",
+   "publisher": "Journal of Human Evolution via ScienceDirect",
+   "date": "2000",
+   "link": "https://www.sciencedirect.com/science/article/abs/pii/S0047248400904354",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "Suddenly Smarter",
+   "publisher": "Stanford Magazine",
+   "date": "n.d.",
+   "link": "https://stanfordmag.org/contents/suddenly-smarter",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "Our species arose at least 300,000 years ago",
+   "publisher": "Smithsonian Institution Human Origins Program",
+   "date": "n.d.",
+   "link": "https://humanorigins.si.edu/research/whats-hot-human-origins/our-species-arose-least-300000-years-ago",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "Oldest known cave art painted by Neanderthals",
+   "publisher": "The History Blog",
+   "date": "2018",
+   "link": "http://www.thehistoryblog.com/archives/50658",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "Becoming Human: The Origin of Stone Tools",
+   "publisher": "Smithsonian Magazine",
+   "date": "n.d.",
+   "link": "https://www.smithsonianmag.com/science-nature/becoming-human-the-origin-of-stone-tools-55335180/",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 12. Last time we met the genus Homo. Today we ask what these early people made, and when they began to think like us."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Ice Age Minds: Fire, Tools, Language and Art"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We will go one step at a time: stone tools, then fire, then language, then symbols and art. Last, a real argument among experts."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Stone tools\n2. Fire\n3. Language\n4. Symbols and art\n5. The big debate"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, why do we know about stone tools at all? Stone survives much better than bone. So stone tools are often our best clue to where and when early people lived."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Evidence that lasts"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why are stone tools often our best evidence about early people?",
+    "right": "Stone survives much better than bone.",
+    "wrong": [
+     "Stone tools were always signed by their makers.",
+     "Early people made nothing except stone tools.",
+     "You can tell a tool's age just by looking at it."
+    ],
+    "why": "The Smithsonian says stone artifacts are less easily destroyed than bones, so they usually give the best evidence of where and when early humans lived."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The oldest toolkit has a name: Oldowan, after Olduvai Gorge in Tanzania. It is simple: hammerstones, stone cores, and sharp flakes."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Oldowan"
+   },
+   "cite": [
+    "s28",
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is how it worked. Early humans struck a stone core with a hammerstone. Flakes broke off, and the core was left with a sharp edge."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A dark Oldowan stone chopper from Olduvai Gorge, with chipped edges where flakes were knocked off."
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What was it for? Cutting meat and getting marrow out of large animals' bones. This 1.8-million-year-old chopper is the oldest human-made object in the Smithsonian's collections."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The Olduvai chopper beside a drawing of an antelope shoulder it could cut through."
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What were Oldowan flakes used for, according to the Smithsonian?",
+    "right": "Cutting meat and getting marrow from large animals.",
+    "wrong": [
+     "Painting on cave walls.",
+     "Writing messages.",
+     "Digging fields for farming."
+    ],
+    "why": "The Smithsonian says early humans used these tools for extracting meat and bone marrow from large animals."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So how old is toolmaking? The Smithsonian says it developed by at least 2.6 million years ago."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "2.6 million years ago (at least)"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A Kenyan site called Nyayanga pushes it back. It has Oldowan tools about 3 million years old, next to cut-marked hippo bones. But no Homo habilis fossils, only Paranthropus teeth."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Stone flakes and a cut-marked hippo bone lying in an excavation layer at Nyayanga, Kenya."
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So who made the tools? Several kinds of early human lived at the same time, so we cannot always tell."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Who made them? Not certain"
+   },
+   "cite": [
+    "s1",
+    "s4"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Who made the oldest stone tools?",
+    "right": "Scientists are not sure, because several early human species lived at the same time.",
+    "wrong": [
+     "Only Homo sapiens, proven by fossils at every site.",
+     "Homo habilis, proven at Nyayanga.",
+     "Neanderthals."
+    ],
+    "why": "The Smithsonian notes it is hard to tell which species made tools when several lived together, and at Nyayanga it is unwise to rule out Paranthropus."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next came a new idea. About 1.76 million years ago, people struck off big flakes, then trimmed the edges with smaller blows. The result was the handaxe."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A teardrop-shaped stone handaxe, flaked on both faces around the edge."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Handaxes and other large cutting tools make up the Acheulean toolkit. It was made for an immense time, ending in different places between 400,000 and 250,000 years ago."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Acheulean: handaxes"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which toolkit came later: Oldowan or Acheulean?",
+    "right": "Acheulean, with handaxes from about 1.76 million years ago.",
+    "wrong": [
+     "Oldowan, because it was more advanced.",
+     "Neither; they appeared on the same day.",
+     "Neither; both are the same toolkit."
+    ],
+    "why": "Oldowan toolmaking began by at least 2.6 million years ago. Acheulean handaxes came by about 1.76 million years ago."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Stone technology kept moving. By 200,000 years ago, the pace of innovation began to speed up."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "By 200,000 years ago: faster change"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now fire. First, a difference that matters: using fire is not the same as making it."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Fire: using it, and making it"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Early humans probably began by using fire from lightning or other natural causes, perhaps saving embers for a while. But that kind of fire was unpredictable."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A small glowing ember being carried in a hand-sized bundle across dry grassland."
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "At Wonderwerk Cave in South Africa, researchers found tiny charred bone pieces and plant ash, about one million years old. They called it the earliest secure evidence of hominid fire."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 1,000,000 years ago: Wonderwerk Cave"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Making fire on demand is a bigger step. At Barnham in England, about 400,000 years ago, people left a baked-earth hearth, heat-shattered flint axes, and two pieces of pyrite, a stone used for sparks."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A hearth of baked red earth with two small pyrite stones and cracked flint axes beside it."
+   },
+   "cite": [
+    "s7",
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Be careful, though. No fire-lighting tools have been found at Barnham yet. Reports also differ on who lit the fires: most likely Neanderthals, or perhaps Homo heidelbergensis."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "USING fire: keeping or borrowing natural flames. | MAKING fire: lighting it on demand, for example with pyrite sparks."
+   },
+   "cite": [
+    "s6",
+    "s7"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is the difference between using fire and making fire?",
+    "right": "Using fire means taking advantage of natural flames, maybe saving embers. Making fire means lighting it on demand.",
+    "wrong": [
+     "There is no difference.",
+     "Using fire means cooking; making fire means only keeping warm.",
+     "Making fire came first, and using fire came later."
+    ],
+    "why": "Early humans probably first used natural fire, which was unpredictable. Barnham suggests people there could light and use fire routinely."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Fire was likely a game-changer. It even changed toolmaking: about 300,000 years ago, people in the Middle East heated stone before flaking it into blades."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Fire helped make tools"
+   },
+   "cite": [
+    "s6",
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now language, our hardest clue. As one rock-art researcher put it, words do not fossilize. So scientists look for indirect clues."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "'...words do not fossilize...' (Adhi Agus Oktaviana, rock art specialist)"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One clue is the hyoid, a small bone in the throat. A Neanderthal hyoid from Kebara Cave, Israel, was described in 1989. Its shape differs little from ours."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A small, curved, U-shaped throat bone (the hyoid) shown next to a modern human hyoid."
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Some researchers took that as a sign Neanderthals could speak, perhaps even use language. But a critic notes that being able to make speech sounds cannot by itself stand in for language."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Speech anatomy: the body can make speech sounds. | Language: a system of meaning. Not proven by bones alone."
+   },
+   "cite": [
+    "s9",
+    "s12"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Does a modern-looking Neanderthal hyoid bone prove they had language?",
+    "right": "No. It hints at speech anatomy, but anatomy alone is not proof of language.",
+    "wrong": [
+     "Yes, because only language users have hyoid bones.",
+     "Yes, because hyoid bones record the words people spoke.",
+     "Yes, because it proves Neanderthals were Homo sapiens."
+    ],
+    "why": "Researchers have argued the hyoid suggests possible speech, but the commentary says anatomical capacity for speech cannot by itself be taken as a proxy for language."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Genes are another clue. In 2001, scientists found that a change in one gene, FOXP2, caused a rare speech disability in a family. Headlines called it the language gene."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "FOXP2"
+   },
+   "cite": [
+    "s11",
+    "s10"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Then Neanderthal DNA showed the same two changes we carry. And later work found FOXP2 does not single-handedly drive language. It is one of many genes involved."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Neanderthals had our FOXP2 changes\nFOXP2 is not the only gene involved\nSo it cannot date language on its own"
+   },
+   "cite": [
+    "s10",
+    "s11",
+    "s12"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What does it tell us that Neanderthals carried the same FOXP2 changes as us?",
+    "right": "Those changes are not unique to modern humans, and the gene alone cannot settle when language began.",
+    "wrong": [
+     "Neanderthals wrote books.",
+     "FOXP2 is the only gene needed for language.",
+     "Modern humans invented the FOXP2 gene 50,000 years ago."
+    ],
+    "why": "National Geographic reports that Neanderthal FOXP2 has the same two mutations, and Scientific American reports FOXP2 does not drive language alone."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So when did language begin? Nobody knows. One view says it grew step by step. Another points to a late brain change that boosted innovation. We return to this in the debate."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Step by step, over a long time. | A late change in the brain, such as Richard Klein proposed."
+   },
+   "cite": [
+    "s12",
+    "s25"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now symbols and art. A symbol is a mark or object that stands for an idea, like a flag or a ring today. Finding symbols hints at minds that think in meanings."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Symbol: something that stands for an idea"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Red ochre is an iron-rich pigment, widely linked to symbolic communication. At Blombos Cave in South Africa, people scratched a crosshatch design into ochre at least 70,000 years ago."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A flat piece of red ochre with a crosshatch pattern scratched into it."
+   },
+   "cite": [
+    "s23",
+    "s22"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Later work added 13 more engraved pieces from levels 75,000 to 100,000 years old. That looks like a tradition, not a one-off."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "13 more engraved ochre pieces, 75,000 to 100,000 years old"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The same cave held 49 shell beads with holes through them, about 75,000 years old. Many researchers accept personal ornaments as clear evidence of symbolic culture."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Illustration: 49 perforated shell beads from Blombos Cave, about 75,000 years old."
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Researchers accept personal ornaments, like beads, as evidence of what?",
+    "right": "Symbolic culture.",
+    "wrong": [
+     "Farming.",
+     "Writing.",
+     "Metal-working."
+    ],
+    "why": "The Blombos paper says personal ornaments are accepted as unqualified evidence of symbolic material culture."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To be fair, ochre also had practical uses, and those are still poorly understood. Exactly which symbolic practices it served is speculative."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Symbolic uses of ochre: meaning, ritual, tradition. | Practical uses: still being studied."
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now paintings. In Leang Karampuang cave on Sulawesi, Indonesia, a painted scene shows three human-like figures and a wild pig. It is at least 51,200 years old."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A faded red cave-wall painting: three small human-like figures near a larger wild pig."
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It counts as narrative art because the figures and the animal interact. The artist seems to be telling a story."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Narrative art: a picture that tells a story"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "How do we know the age? Scientists used lasers to date a thin mineral layer that grew over the paint."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A laser beam scanning a thin mineral crust sitting on top of red paint on a cave wall."
+   },
+   "cite": [
+    "s14",
+    "s27"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The paint must be older than the crust that grew on it. So the date is a minimum age. That is why we say 'at least'."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "'At least' = minimum age"
+   },
+   "cite": [
+    "s27",
+    "s15"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why do scientists say the painting is 'at least' 51,200 years old?",
+    "right": "The dated mineral crust grew over the paint, so the paint is older than the crust.",
+    "wrong": [
+     "Paint cannot be dated at all.",
+     "They simply guessed.",
+     "Lasers can only measure round numbers."
+    ],
+    "why": "The art must be older than the calcite on top of it, so dating the crust gives a minimum age for the paint."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In France, Chauvet Cave was found in 1994. Most of its paintings are about 36,000 years old. It is a UNESCO World Heritage Site."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A map of southern France with Chauvet Cave marked in the Ardèche region."
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So the Sulawesi scene is roughly 15,000 years older than Chauvet. Cave art was not only a European story."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Sulawesi: at least 51,200 years ago | Chauvet: about 36,000 years ago"
+   },
+   "cite": [
+    "s15",
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the big picture. Tools and fire reach back more than a million years. The art we can find is far younger."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1",
+    "text": "How long ago? Thousands of years"
+   },
+   "cite": [
+    "s1",
+    "s2",
+    "s5",
+    "s6",
+    "s21",
+    "s15",
+    "s16"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Looking at the chart, which of these is the oldest?",
+    "right": "Oldowan stone tools.",
+    "wrong": [
+     "Chauvet cave paintings.",
+     "The Sulawesi painting.",
+     "The Blombos engraved ochre."
+    ],
+    "why": "The chart shows Oldowan toolmaking at least 2,600 thousand years old, far older than any of the art."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Spain adds a twist. In 2018 a team dated mineral crusts over marks in caves, including a red ladder shape, to at least 64,000 years ago. Modern humans reached Europe only about 45,000 to 40,000 years ago."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A red ladder-shaped design painted on a limestone cave wall at La Pasiega, Spain."
+   },
+   "cite": [
+    "s27",
+    "s20",
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So the team said Neanderthals made it. Others disagree. Critics argue the dating method may overestimate ages by thousands of years. If the dates are inflated, the Neanderthal-art case weakens a lot."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "For: dates over 64,000 years, before modern humans in Europe. | Against: the method may give ages too old."
+   },
+   "cite": [
+    "s17",
+    "s18",
+    "s19"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is the main doubt critics raise about the 64,000-year-old Spanish art?",
+    "right": "The dating method may overestimate ages, so the art could be much younger.",
+    "wrong": [
+     "They say the paintings are modern fakes.",
+     "They say Chauvet is older than the Spanish art.",
+     "They say no one can see the paintings."
+    ],
+    "why": "Science News and Archaeology Magazine report that critics say the dating method may give ages that are too old."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the big question. When did people start to think and behave like us? Experts give two main answers."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. A sudden leap, about 50,000 years ago\n2. A gradual build-up, much earlier"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Answer one is a sudden leap, about 50,000 years ago, called the great leap forward or human revolution. Its supporters say modern behavior arose suddenly across the Old World, around 40,000 to 50,000 years ago."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sudden leap, about 50,000 years ago"
+   },
+   "cite": [
+    "s25",
+    "s24"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Anthropologist Richard Klein speculated that a lucky genetic mutation reorganized the brain about 45,000 years ago. He also allowed that a population and culture threshold might do it."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Klein's idea: a brain change, perhaps genetic. | His alternative: a social and population threshold."
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Answer two comes from Sally McBrearty and Alison Brooks, in 2000. They said there was no sudden revolution. Many of the supposed new behaviors already appear in Africa's Middle Stone Age, tens of thousands of years earlier."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Gradual build-up in Africa"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "They found these items at sites far apart in space and time, not all together. They read that as a package of behaviors assembled gradually in Africa, then carried to other regions."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Older, scattered finds in Africa -> package assembled over time -> spread to other regions"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Remember Blombos: engraved ochre and beads from 75,000 to 100,000 years ago. Gradual-view supporters point to finds like that. And our species is at least 300,000 years old, which gives a lot of time."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "300,000 years ago: oldest known Homo sapiens (Jebel Irhoud) | 100,000-75,000: Blombos engraved ochre and beads | 51,200: Sulawesi scene | 36,000: Chauvet"
+   },
+   "cite": [
+    "s21",
+    "s26",
+    "s15",
+    "s16"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which find supports the 'gradual' view?",
+    "right": "Engraved ochre at Blombos, 75,000 to 100,000 years old, long before 50,000 years ago.",
+    "wrong": [
+     "Chauvet paintings, about 36,000 years old.",
+     "Nothing: no symbols are older than 50,000 years.",
+     "The idea that all behavior changed in a single year."
+    ],
+    "why": "The gradual view says modern behaviors appear in Africa well before 50,000 years ago. Blombos fits that."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It may not be all one or the other. Klein's own idea allows a social threshold, and a Stanford Magazine report said most colleagues favored social explanations over a gene. If Neanderthal art holds up, it pushes the story back further."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Sudden leap: a burst of change around 50,000 years ago. | Gradual: slow build-up, with possible bursts."
+   },
+   "cite": [
+    "s25",
+    "s19"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let us gather it up. Stone tools and fire go back over a million years. Symbols and art are older than 50,000 years in some places. Language remains the hardest to date."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Tools: 2.6 million years or more\nFire: used about 1 million years ago, made about 400,000\nSymbols: by 75,000 to 100,000 years ago\nArt: at least 51,200 years ago\nThe debate: sudden or gradual?"
+   },
+   "cite": [
+    "s1",
+    "s5",
+    "s6",
+    "s21",
+    "s15"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why can we not say for sure when language began?",
+    "right": "Words leave no fossils, so we only have indirect clues such as bones, genes and symbols.",
+    "wrong": [
+     "Language was invented only last century.",
+     "All scientists agree it began 50,000 years ago.",
+     "Language leaves behind hard stone tools."
+    ],
+    "why": "Words do not fossilize, so scientists use indirect clues, and those clues (hyoid bones, FOXP2) have been debated."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next class we follow these people as they spread across the planet."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: People Spread Across the Planet"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "How long ago? (thousands of years)",
+   "rows": [
+    {
+     "label": "Oldowan stone tools (at least)",
+     "value": 2600,
+     "source": "s1"
+    },
+    {
+     "label": "First handaxes",
+     "value": 1760,
+     "source": "s2"
+    },
+    {
+     "label": "Fire at Wonderwerk Cave",
+     "value": 1000,
+     "source": "s5"
+    },
+    {
+     "label": "Fire-making at Barnham",
+     "value": 400,
+     "source": "s6"
+    },
+    {
+     "label": "Blombos engraved ochre",
+     "value": 75,
+     "source": "s21"
+    },
+    {
+     "label": "Sulawesi painted scene (at least)",
+     "value": 51.2,
+     "source": "s15"
+    },
+    {
+     "label": "Chauvet paintings",
+     "value": 36,
+     "source": "s16"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Oldowan and Acheulean stone tools",
+   "links": [
+    "[[How do we know? Reading the evidence]]",
+    "[[The genus Homo]]"
+   ]
+  },
+  {
+   "topic": "Control of fire",
+   "links": [
+    "[[Neanderthals]]",
+    "[[The genus Homo]]"
+   ]
+  },
+  {
+   "topic": "The origin of language",
+   "links": [
+    "[[Neanderthals]]",
+    "[[FOXP2]]"
+   ]
+  },
+  {
+   "topic": "Blombos Cave and early symbols",
+   "links": [
+    "[[Homo sapiens origins]]",
+    "[[Ochre]]"
+   ]
+  },
+  {
+   "topic": "Cave art and dating methods",
+   "links": [
+    "[[How do we know? Reading the evidence]]",
+    "[[People spread across the planet]]"
+   ]
+  },
+  {
+   "topic": "Gradual versus sudden origins of modern behavior",
+   "links": [
+    "[[Homo sapiens origins]]",
+    "[[Neanderthals]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About 1.76 million years ago",
+   "elsewhere": "Handaxes appear, but the older Oldowan-style toolkit keeps being made alongside them for a very long time.",
+   "cite": [
+    "s2"
+   ]
+  },
+  {
+   "when": "About 1 million years ago",
+   "elsewhere": "The ash and charred bone at Wonderwerk Cave date from a time when Acheulean handaxes were still being made in many places.",
+   "cite": [
+    "s5",
+    "s2"
+   ]
+  },
+  {
+   "when": "About 400,000 years ago",
+   "elsewhere": "Fire-making at Barnham, England. Handaxe toolkits are still in use in some places, and Qesem Cave in Israel has well-accepted fire evidence of about the same age.",
+   "cite": [
+    "s6",
+    "s2",
+    "s5"
+   ]
+  },
+  {
+   "when": "About 300,000 years ago",
+   "elsewhere": "The oldest known Homo sapiens live at Jebel Irhoud, Morocco, while people in the Middle East heat stone to make blades.",
+   "cite": [
+    "s26",
+    "s8"
+   ]
+  },
+  {
+   "when": "75,000 to 100,000 years ago",
+   "elsewhere": "The Blombos engravers and bead-makers live more than 200,000 years after the Jebel Irhoud people.",
+   "cite": [
+    "s21",
+    "s26"
+   ]
+  },
+  {
+   "when": "About 51,200 years ago",
+   "elsewhere": "The Sulawesi scene is painted before modern humans reached Europe, which happened some 45,000 to 40,000 years ago. Neanderthals still live in Europe and Asia.",
+   "cite": [
+    "s15",
+    "s20"
+   ]
+  },
+  {
+   "when": "About 36,000 years ago",
+   "elsewhere": "Chauvet Cave is painted around the time Neanderthals were disappearing, about 40,000 years ago.",
+   "cite": [
+    "s16",
+    "s20"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Early humans first made stone tools at about 2.6 million years ago, and we can say who made them.",
+   "other_view": "Tools at Nyayanga, Kenya, are about 3 million years old, and no Homo habilis fossils were found there. Because several hominins lived at the same time, scientists say it is hard to know who the toolmaker was, and Paranthropus cannot be ruled out.",
+   "cite": [
+    "s1",
+    "s4"
+   ]
+  },
+  {
+   "claim": "Early humans learned to make fire about 400,000 years ago, at Barnham.",
+   "other_view": "Barnham may be the oldest deliberate fire-making, but no fire-lighting tools have been found there yet, and reports differ on whether Neanderthals or Homo heidelbergensis lit the fires.",
+   "cite": [
+    "s6",
+    "s7"
+   ]
+  },
+  {
+   "claim": "Fire and cooking helped human brains grow.",
+   "other_view": "Some researchers think fire was instrumental in bigger brains. A Smithsonian report said the one-million-year-old fire at Wonderwerk is too young to fully support Wrangham's hypothesis, so the timing is still debated.",
+   "cite": [
+    "s6",
+    "s5"
+   ]
+  },
+  {
+   "claim": "A modern-looking Neanderthal hyoid shows they could speak.",
+   "other_view": "Some researchers took it as a sign of speech, but a commentary says the anatomical capacity for speech cannot by itself stand in for language. FOXP2 is not a single 'language gene' either.",
+   "cite": [
+    "s9",
+    "s12",
+    "s11"
+   ]
+  },
+  {
+   "claim": "Engraved ochre at Blombos shows symbolic thinking.",
+   "other_view": "Ochre is widely linked to symbolic communication, but it also had practical uses that are still poorly understood. Exactly which symbolic practices it served is speculative.",
+   "cite": [
+    "s23",
+    "s21"
+   ]
+  },
+  {
+   "claim": "Neanderthals made cave art in Spain more than 64,000 years ago.",
+   "other_view": "Critics argue the dating method may overestimate ages by thousands of years, and a 2026 report raised further concerns about leaching in the dated minerals. If the dates are inflated, the evidence for Neanderthal art weakens a lot.",
+   "cite": [
+    "s17",
+    "s18",
+    "s19"
+   ]
+  },
+  {
+   "claim": "Modern human thinking appeared suddenly, around 50,000 years ago.",
+   "other_view": "McBrearty and Brooks argued there was no revolution: many supposed new behaviors appear in the African Middle Stone Age tens of thousands of years earlier, at sites widely separated in space and time. Even Klein allowed that a population and culture threshold could explain the change, rather than a single genetic event.",
+   "cite": [
+    "s24",
+    "s25"
+   ]
+  }
+ ]
+}

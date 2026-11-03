@@ -1,0 +1,845 @@
+{
+ "about": {
+  "title": "Walking upright: the first human relatives",
+  "course": "prehistory",
+  "class_n": 2,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. There are 25 short beats and 9 checking questions. Each idea gets its own beat, and the debates (why walking began, Sahelanthropus, the family tree) need some room. A learner who wants a slower pace can stop after any question."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "4.7 Our Ancient Past: The Earliest Hominins (Introduction to Anthropology)",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/introduction-anthropology/pages/4-7-our-ancient-past-the-earliest-hominins",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Ch. 4 Key Terms (Introduction to Anthropology)",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/introduction-anthropology/pages/4-key-terms",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Sharing a common ancestor",
+   "publisher": "The Australian Museum",
+   "date": "n.d.",
+   "link": "https://australian.museum/learn/science/human-evolution/sharing-a-common-ancestor/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Walking Upright",
+   "publisher": "Smithsonian Institution Human Origins Program",
+   "date": "n.d.",
+   "link": "https://humanorigins.si.edu/human-characteristics/walking-upright",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "AL 288-1 (Lucy)",
+   "publisher": "Smithsonian Institution Human Origins Program",
+   "date": "n.d.",
+   "link": "https://humanorigins.si.edu/evidence/human-fossils/fossils/al-288-1",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Australopithecus afarensis",
+   "publisher": "Smithsonian Institution Human Origins Program",
+   "date": "n.d.",
+   "link": "https://humanorigins.si.edu/evidence/human-fossils/species/australopithecus-afarensis",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Footprint evidence of early hominin locomotor diversity at Laetoli, Tanzania",
+   "publisher": "Nature",
+   "date": "2021",
+   "link": "https://www.nature.com/articles/s41586-021-04187-7",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Paleontology: These feet were made for walking",
+   "publisher": "eLife",
+   "date": "n.d.",
+   "link": "https://elifesciences.org/articles/22886",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Anthropologists Offer New Evidence of Bipedalism in Long-Debated Fossil Discovery",
+   "publisher": "New York University",
+   "date": "2026-01",
+   "link": "https://www.nyu.edu/about/news-publications/news/2026/january/anthropologists-offer-new-evidence-of-bipedalism-in-long-debated.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Earliest Human Ancestor May Have Walked on Two Legs",
+   "publisher": "Scientific American",
+   "date": "n.d.",
+   "link": "https://www.scientificamerican.com/article/earliest-human-ancestor-may-have-walked-on-two-legs/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "How Sahelanthropus tchadensis moved",
+   "publisher": "John Hawks (paleoanthropologist, University of Wisconsin-Madison)",
+   "date": "n.d.",
+   "link": "https://www.johnhawks.net/p/how-sahelanthropus-tchadensis-moved",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Human Ancestors May Have Evolved to Walk Upright in Trees",
+   "publisher": "Smithsonian Magazine",
+   "date": "n.d.",
+   "link": "https://www.smithsonianmag.com/smart-news/human-ancestors-may-have-evolved-to-walk-upright-in-trees-180981300/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Origins of Bipedalism: Why do we walk on two legs?",
+   "publisher": "NOVA (PBS)",
+   "date": "n.d.",
+   "link": "https://www.pbs.org/wgbh/nova/allfours/bipe-nf.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Why Are Humans Bipedal? The Science of Walking Upright",
+   "publisher": "ScienceInsights",
+   "date": "n.d.",
+   "link": "https://scienceinsights.org/why-are-humans-bipedal-the-science-of-walking-upright/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Why Humans Walk on Two Legs",
+   "publisher": "Harvard Magazine",
+   "date": "n.d.",
+   "link": "https://www.harvardmagazine.com/research/harvard-humans-walking-bipedalism-evolutionary-biology",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "A famous 'ancestor' may be ousted from the human family",
+   "publisher": "Science (AAAS)",
+   "date": "n.d.",
+   "link": "https://www.science.org/content/article/famous-ancestor-may-be-ousted-human-family",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Is there anything truly surprising about Homo naledi?",
+   "publisher": "Understanding Evolution, University of California Museum of Paleontology (Berkeley)",
+   "date": "n.d.",
+   "link": "https://evolution.berkeley.edu/evo-news/is-there-anything-truly-surprising-about-homo-naledi/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Au. sediba and our Family Tree",
+   "publisher": "California Academy of Sciences",
+   "date": "n.d.",
+   "link": "https://www.calacademy.org/explore-science/au-sediba-and-our-family-tree",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Lucy (fossil)",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Lucy-fossil",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "When Did Human Ancestors First Walk Upright?",
+   "publisher": "History.com",
+   "date": "n.d.",
+   "link": "https://www.history.com/articles/human-ancestors-first-walk-upright-bipedalism",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Laetoli Footprints",
+   "publisher": "NOVA (PBS)",
+   "date": "n.d.",
+   "link": "https://www.pbs.org/wgbh/nova/education/evolution/laetoli-footprints.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Footprint evidence of early hominin locomotor diversity at Laetoli, Tanzania (Springer version)",
+   "publisher": "Nature / Springer",
+   "date": "2021",
+   "link": "https://link.springer.com/10.1038/s41586-021-04187-7",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "'Lucy' Discovered in Africa",
+   "publisher": "National Geographic Education",
+   "date": "n.d.",
+   "link": "https://education.nationalgeographic.org/resource/lucy-discovered-africa/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "What Is Bipedalism? The Story of Walking Upright",
+   "publisher": "ScienceInsights",
+   "date": "n.d.",
+   "link": "https://scienceinsights.org/what-is-bipedalism-the-story-of-walking-upright/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "New Analysis of Foot Prints Found at Laetoli!",
+   "publisher": "World of Paleoanthropology",
+   "date": "2021-12-01",
+   "link": "https://worldofpaleoanthropology.org/2021/12/01/new-foot-prints-found-at-laetoli/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Laetoli: The Unfolding Story",
+   "publisher": "Popular Archaeology",
+   "date": "n.d.",
+   "link": "https://popular-archaeology.com/article/laetoli-the-unfolding-story/",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back. Last class we saw how scientists read the past without writing. Today we meet some of our oldest relatives, and the trick that set them apart: walking on two legs."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Walking upright: the first human relatives"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, our place in the family. Humans did not evolve from a modern ape. We are apes ourselves, and chimpanzees and gorillas are among our closest living relatives."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "We are apes"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Humans and chimpanzees share a common ancestor that lived millions of years ago. Most scientists place the split between our line and the chimpanzee line at about five to seven million years ago."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "About 5 to 7 million years ago: the human line and the chimpanzee line split from a common ancestor"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "How are humans and chimpanzees related?",
+    "right": "They share a common ancestor from millions of years ago.",
+    "wrong": [
+     "Humans evolved from modern chimpanzees.",
+     "Chimpanzees evolved from modern humans.",
+     "Humans are not apes, so they are not related to them."
+    ],
+    "why": "Both lines come from one shared ancestor. Neither of us descends from the other, and humans are apes."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What did that shared ancestor look like? Nobody knows for sure. It was long assumed to look like a chimpanzee. Studies of Ardi, an Ardipithecus ramidus skeleton about 4.4 million years old, changed that picture."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ardi: Ardipithecus ramidus, about 4.4 million years old"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a word you will meet often: hominin. It means modern humans, our extinct human species, and our immediate ancestors, such as Australopithecus. Hominid is wider: it means all the great apes."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Hominid: humans, chimpanzees, gorillas, orangutans and their ancestors | Hominin: modern humans, extinct human species and our immediate ancestors (Homo, Australopithecus, Paranthropus, Ardipithecus)"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which of these belongs in the group called hominins?",
+    "right": "An extinct Australopithecus, a relative of ours.",
+    "wrong": [
+     "A living gorilla.",
+     "A living orangutan.",
+     "A modern monkey."
+    ],
+    "why": "Hominin covers modern humans and our extinct human relatives and immediate ancestors, such as Australopithecus. Gorillas and orangutans are hominids, but not hominins."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Hominins are known for being bipedal, which means walking on two legs. Chimpanzees sometimes stand and step, but their skeletons are not built for it. Early hominins evolved skeletons that held the body upright."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Three drawings side by side: a chimpanzee, an early human and a modern human, each shown in a standing pose"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Bones keep the clues. The curve in the lower back absorbs shock. A strong knee lets the body rest on one leg at a time. Later species, like Homo erectus, had broad hips much like ours."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Curved lower back | Strong knee that carries weight on one leg | Broad hip bones"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Which is a skeleton clue that an early hominin walked upright?",
+    "right": "A strong knee that can carry the body's weight on one leg at a time.",
+    "wrong": [
+     "Very long, sharp canine teeth.",
+     "A very large brain.",
+     "A tail for balance."
+    ],
+    "why": "A strong knee and a curved lower back are built for steady walking on two legs."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Bones are one clue. Footprints are another. At Laetoli, in Tanzania, hominins walked across wet volcanic ash about 3.66 million years ago. A rainstorm and another ashfall then helped preserve their tracks."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A trail of footprints pressed into pale, hardened volcanic ash, with animal tracks around it"
+   },
+   "cite": [
+    "s7",
+    "s21"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Laetoli has two dates. The prints were made about 3.66 million years ago. Erosion later uncovered them, and Mary Leakey's team found them in 1976. They were fully excavated by 1978."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "About 3.66 million years ago: prints made in wet ash | 1976: found by Mary Leakey's team | 1978: fully excavated"
+   },
+   "cite": [
+    "s7",
+    "s8",
+    "s21"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "When were the Laetoli footprints made, and when were they found?",
+    "right": "Made about 3.66 million years ago, and found in the 1970s.",
+    "wrong": [
+     "Made in 1976, and found 3.66 million years ago.",
+     "Made in 1978, and found in 1976.",
+     "Made about 3.66 million years ago, and found in 2021."
+    ],
+    "why": "Making and finding are two different events. The walkers left the prints about 3.66 million years ago, and the team found them in 1976."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why did they matter so much? The trail at Site G, found in 1978, is widely accepted as the oldest clear evidence of regular two-legged walking in our lineage. Before this, the oldest known footprints of human ancestors were only tens of thousands of years old."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "3.66 million years: the Laetoli trail"
+   },
+   "cite": [
+    "s7",
+    "s21"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So what does walking on two legs give you? It can use less energy over long distances. It also leaves the hands free to carry things."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Less energy for long travel | Hands free to carry"
+   },
+   "cite": [
+    "s13",
+    "s14"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "People once assumed big brains came first. The evidence says walking came first. Lucy's species had a brain of about 400 cubic centimetres, which is roughly a chimpanzee's. Walking upright came millions of years before tools or fire."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 400 cc: brain size of Australopithecus afarensis, like a chimpanzee"
+   },
+   "cite": [
+    "s1",
+    "s19",
+    "s24"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "In human evolution, which came first?",
+    "right": "Walking upright on two legs.",
+    "wrong": [
+     "A big brain.",
+     "Making stone tools.",
+     "Controlling fire."
+    ],
+    "why": "Early hominins walked upright while their brains were still chimpanzee-sized. Tools and fire came much later."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the puzzle: why did walking upright begin? Scientists do not agree. The first idea is the savanna hypothesis. Forests shrank and open grassland spread, and walking upright helped with travel and with seeing over tall grass."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The savanna idea"
+   },
+   "cite": [
+    "s12",
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A newer idea turns that around. Researchers who studied wild chimpanzees suggested that upright walking began in the trees, as our ancestors moved along branches looking for food."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Savanna idea: open grassland, walking and looking far | Trees idea: standing on branches while feeding"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "There are more ideas. One, from 1981, said upright males could carry food to mates and young. It was controversial. Another says standing upright exposes less of the body to the midday sun, which helps keep cool."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Carrying food (Lovejoy, 1981, controversial) | Staying cool in the sun"
+   },
+   "cite": [
+    "s13",
+    "s24"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Charles Darwin thought free hands for tools came first. The huge time gap before the first tools mostly set that idea aside. So the exact push behind walking upright is still debated, and several advantages may have worked together."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Still debated"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is the fair summary of why upright walking began?",
+    "right": "Scientists still debate it, and several advantages may have worked together.",
+    "wrong": [
+     "It is proven that stone tools made our ancestors stand up.",
+     "It is settled that grassland alone caused it.",
+     "Scientists have no ideas at all."
+    ],
+    "why": "There are several competing explanations. None has been proven, and more than one may have played a part."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now to meet some early hominins. The oldest candidate is Sahelanthropus tchadensis, about 7 million years old. Its remains came from the Djurab desert of Chad. The skull is nicknamed Toumai, which means hope of life."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A cracked, ape-like skull in three-quarter view, with a small braincase and a heavy brow"
+   },
+   "cite": [
+    "s9",
+    "s10",
+    "s11",
+    "s20"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Djurab site also has two dates. The animal lived about 7 million years ago. Skull fragments were found there in 2001, and the skull was described in 2002."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "About 7 million years ago: Sahelanthropus lived | 2001: skull fragments found in Chad | 2002: skull described"
+   },
+   "cite": [
+    "s9",
+    "s10",
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "But was it a hominin? The base of its skull hinted at an upright head. A 2020 study of a thigh bone saw no sign of walking. A 2022 team said it was a habitual walker. A 2026 team says its bones show walking, yet others still disagree."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "For bipedal: a skull hint, plus 2022 and 2026 studies of the limb bones | Against: the 2020 thigh bone study and other researchers who call it ape-like"
+   },
+   "cite": [
+    "s9",
+    "s10",
+    "s11",
+    "s20"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why is Sahelanthropus still debated?",
+    "right": "Experts disagree about whether its bones show two-legged walking, and so whether it is a hominin.",
+    "wrong": [
+     "Nobody has ever found any part of it.",
+     "It was proven to be a modern human.",
+     "It lived only a few thousand years ago."
+    ],
+    "why": "The same few bones are read differently by different teams. That is why it is called the earliest putative hominin, not a settled one."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next, Australopithecus afarensis, Lucy's species. It lived in eastern Africa between about 3.85 and 2.95 million years ago. Remains of more than 300 individuals are known. The Laetoli prints are thought to belong to this species."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "300+ individuals found"
+   },
+   "cite": [
+    "s6",
+    "s8"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Lucy was found by Donald Johanson and Maurice Taieb's team at Hadar, Ethiopia, on 24 November 1974. She lived about 3.2 million years ago. About 40 percent of her skeleton survived, which is a lot for something so old."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "About 3.2 million years ago: Lucy lived | 24 Nov 1974: found at Hadar | 1978: species formally named Australopithecus afarensis"
+   },
+   "cite": [
+    "s5",
+    "s6",
+    "s19",
+    "s23"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Lucy stood about 1.1 metres tall. She had a humanlike pelvis, but powerful arms and long, curved toes. So she walked upright and could still climb trees. Fun fact: her name came from a Beatles song played at the camp."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Lucy's reconstructed skeleton standing upright on two feet, with long arms and curved toes visible"
+   },
+   "cite": [
+    "s5",
+    "s19",
+    "s23"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What do Lucy's bones tell us?",
+    "right": "She walked upright, and she could also climb trees.",
+    "wrong": [
+     "She lived only in trees and never walked upright.",
+     "She walked exactly like a modern person and could not climb.",
+     "She had a large brain like ours."
+    ],
+    "why": "Her pelvis suggests upright walking. Her strong arms and curved toes suggest she still climbed."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let us line up the ages. Remember, Sahelanthropus is the debated one."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Ages of four finds, in millions of years",
+    "chart": "c1"
+   },
+   "cite": [
+    "s3",
+    "s5",
+    "s7",
+    "s9"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the family tree. A direct ancestor is a species we descend from. A cousin sits on a side branch. Homo naledi, for example, is thought to be our cousin. It is extremely unlikely that most known species are direct ancestors."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A branching tree: one thick line leads to modern humans, while thinner side branches end in extinct species"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a live disagreement. Australopithecus sediba was once called the best candidate for the direct ancestor of Homo. Others say Homo is older, and that the East African A. afarensis is a likelier ancestor."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Sediba as ancestor: face and body traits like early Homo | Sediba as cousin: Homo already exists by 2.33 million years ago, before sediba (about 1.98 million years)"
+   },
+   "cite": [
+    "s16",
+    "s18"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why do many experts think A. sediba is a cousin, not a direct ancestor of Homo?",
+    "right": "Its fossils are younger than the earliest Homo, so it could not be the ancestor.",
+    "wrong": [
+     "It had no bones that could be studied.",
+     "It lived in a place that Homo never reached.",
+     "It had a much bigger brain than Homo."
+    ],
+    "why": "An ancestor has to come before its descendants. Fossils of Homo already exist from before sediba, though a few scientists still argue for sediba."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To sum up: we are apes. Hominins are humans and our extinct relatives. Walking on two legs began millions of years before big brains. Sahelanthropus, Ardi and Lucy show different stages. Next class: the first stone tools."
+   },
+   "show": {
+    "kind": "list",
+    "text": "We are apes | Hominins: humans and our extinct relatives | Bipedalism came first | Sahelanthropus (debated), Ardi, Lucy | Next: the first stone tools"
+   },
+   "cite": [],
+   "move": "count-in"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Age of four finds (millions of years)",
+   "rows": [
+    {
+     "label": "Sahelanthropus (about 7; hominin status debated)",
+     "value": 7,
+     "source": "s9"
+    },
+    {
+     "label": "Ardi, Ardipithecus ramidus (about 4.4)",
+     "value": 4.4,
+     "source": "s3"
+    },
+    {
+     "label": "Laetoli footprints (3.66)",
+     "value": 3.66,
+     "source": "s7"
+    },
+    {
+     "label": "Lucy, Australopithecus afarensis (about 3.2)",
+     "value": 3.2,
+     "source": "s5"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "hominin",
+   "links": [
+    "[[ape]]",
+    "[[common ancestor]]",
+    "[[Australopithecus]]"
+   ]
+  },
+  {
+   "topic": "bipedalism",
+   "links": [
+    "[[Laetoli footprints]]",
+    "[[Lucy]]",
+    "[[savanna hypothesis]]"
+   ]
+  },
+  {
+   "topic": "Laetoli (site)",
+   "links": [
+    "[[Laetoli footprints]]",
+    "[[Mary Leakey]]",
+    "[[Australopithecus afarensis]]"
+   ]
+  },
+  {
+   "topic": "Hadar (site)",
+   "links": [
+    "[[Lucy]]",
+    "[[Australopithecus afarensis]]"
+   ]
+  },
+  {
+   "topic": "Djurab desert (site)",
+   "links": [
+    "[[Sahelanthropus]]"
+   ]
+  },
+  {
+   "topic": "family tree: ancestor or cousin",
+   "links": [
+    "[[Australopithecus sediba]]",
+    "[[Homo naledi]]",
+    "[[the first stone tools]]",
+    "[[how we know]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About 3.66 million years ago (Laetoli prints made)",
+   "elsewhere": "The genus Homo, our own, had not yet appeared. Some researchers argue a second kind of two-legged hominin may have walked the same ash plain.",
+   "cite": [
+    "s26",
+    "s25"
+   ]
+  },
+  {
+   "when": "1974 to 1978 (Lucy found, Laetoli excavated, A. afarensis named)",
+   "elsewhere": "Until the Laetoli prints turned up in the 1970s, the oldest known footprints of human ancestors were only tens of thousands of years old. The species name afarensis came in 1978, after finds at both Hadar and Laetoli.",
+   "cite": [
+    "s21",
+    "s6"
+   ]
+  },
+  {
+   "when": "About 2.33 million years ago",
+   "elsewhere": "Homo already exists in the fossil record. Lucy's species, which ended about 2.95 million years ago, is gone, while Australopithecus africanus lived until about 2.1 million years ago.",
+   "cite": [
+    "s18"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Upright walking began because forests shrank and grassland spread (the savanna hypothesis).",
+   "other_view": "Research on wild chimpanzees suggests it may have begun in the trees, as hominins moved along branches to feed. Others point to carrying food, or to staying cool in the sun. Darwin's idea that free hands for tools came first is mostly set aside because of the time gap before tools. No single cause is proven.",
+   "cite": [
+    "s12",
+    "s15",
+    "s13",
+    "s24",
+    "s14"
+   ]
+  },
+  {
+   "claim": "Sahelanthropus was a bipedal hominin, the earliest known.",
+   "other_view": "A 2020 analysis of its thigh bone found no evidence of walking and raised doubts that it was a hominin. Other researchers read the same neck-muscle area as ape-like. Even a study that favours bipedalism allows that it could have been a separate ape lineage that evolved walking independently.",
+   "cite": [
+    "s9",
+    "s10",
+    "s11",
+    "s20"
+   ]
+  },
+  {
+   "claim": "Australopithecus sediba was the direct ancestor of the genus Homo.",
+   "other_view": "Some researchers, including Lee Berger, proposed it in 2010. Others say its fossils are too young, and that sediba is a relative on a side branch. A. afarensis is seen as the likelier ancestor by those scientists, though the question is not fully settled.",
+   "cite": [
+    "s16",
+    "s18"
+   ]
+  },
+  {
+   "claim": "All the bipedal prints at Laetoli were made by one species, Australopithecus afarensis.",
+   "other_view": "A 2021 team re-found the older Site A trackway. They argue its odd, crossing-over gait points to a second kind of two-legged hominin. Another study sees the size differences as variation within one species.",
+   "cite": [
+    "s25",
+    "s22",
+    "s8"
+   ]
+  }
+ ]
+}

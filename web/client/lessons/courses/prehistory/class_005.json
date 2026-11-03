@@ -1,0 +1,1187 @@
+{
+ "about": {
+  "title": "Leaving Africa the first time",
+  "course": "prehistory",
+  "class_n": 5,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. This class has six sites, three species and a debate section, so it runs to about 40 short beats, with a check question after each new idea. Each site gets two dates, when people lived there and when archaeologists found it. If time is short, stop after the 'Other human species' part and take the debates in a second sitting."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Homo erectus",
+   "publisher": "Smithsonian Institution Human Origins Program",
+   "date": "n.d.",
+   "link": "https://humanorigins.si.edu/evidence/human-fossils/species/homo-erectus",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "D2282 (Dmanisi skull)",
+   "publisher": "Smithsonian Institution Human Origins Program",
+   "date": "n.d.",
+   "link": "https://humanorigins.si.edu/evidence/human-fossils/fossils/d2282",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Homo erectus, our ancient ancestor",
+   "publisher": "Natural History Museum, London",
+   "date": "n.d.",
+   "link": "https://www.nhm.ac.uk/discover/homo-erectus-our-ancient-ancestor.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Beautiful Skull Spurs Debate on Human History",
+   "publisher": "National Geographic",
+   "date": "2013",
+   "link": "https://www.nationalgeographic.com/culture/article/131017-skull-human-origins-dmanisi-georgia-erectus",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "New Dmanisi fossil study suggests multiple human species left Africa 1.8 million years ago",
+   "publisher": "Archaeology Magazine (archaeologymag.com)",
+   "date": "2026-01",
+   "link": "https://archaeologymag.com/2026/01/dmanisi-fossil-study-multiple-species-left-africa/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Stone tools put early hominids in China 2.1 million years ago",
+   "publisher": "Science News",
+   "date": "n.d.",
+   "link": "https://www.sciencenews.org/article/shangchen-stone-tools-put-early-hominids-china-earlier",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Tools from China are Oldest Hint of Human Lineage Outside Africa",
+   "publisher": "Scientific American",
+   "date": "n.d.",
+   "link": "https://www.scientificamerican.com/article/tools-from-china-are-oldest-hint-of-human-lineage-outside-africa/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Oldest early human toolmakers in Asia",
+   "publisher": "Smithsonian Institution Human Origins Program",
+   "date": "n.d.",
+   "link": "https://humanorigins.si.edu/research/whats-hot-human-origins/oldest-early-human-toolmakers-asia",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "5.2 Tools and Brains: Homo habilis, Homo ergaster, and Homo erectus (Introduction to Anthropology)",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/introduction-anthropology/pages/5-2-tools-and-brains-homo-habilis-homo-ergaster-and-homo-erectus",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Extinction of Homo erectus",
+   "publisher": "Smithsonian Institution Human Origins Program",
+   "date": "n.d.",
+   "link": "https://humanorigins.si.edu/research/whats-hot-human-origins/extinction-homo-erectus",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Homo floresiensis",
+   "publisher": "Smithsonian Institution Human Origins Program",
+   "date": "n.d.",
+   "link": "https://humanorigins.si.edu/evidence/human-fossils/species/homo-floresiensis",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Homo floresiensis: the real-life 'hobbit'?",
+   "publisher": "Natural History Museum, London",
+   "date": "n.d.",
+   "link": "https://www.nhm.ac.uk/discover/homo-floresiensis-hobbit.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "The 'hobbits' were extinct much earlier than first thought",
+   "publisher": "The Conversation",
+   "date": "n.d.",
+   "link": "https://theconversation.com/the-hobbits-were-extinct-much-earlier-than-first-thought-56922",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "The earliest human face of Western Europe",
+   "publisher": "Nature",
+   "date": "2025",
+   "link": "https://www.nature.com/articles/s41586-025-08681-0",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Cave discovery reveals earliest known human fossils in Western Europe",
+   "publisher": "CNN",
+   "date": "2025-03-12",
+   "link": "https://www.cnn.com/2025/03/12/science/earliest-human-fossils-western-europe/index.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Fragments of a million-year-old face found in Spain shed new light on ancient human migrations",
+   "publisher": "The Conversation",
+   "date": "n.d.",
+   "link": "https://theconversation.com/fragments-of-a-million-year-old-face-found-in-spain-shed-new-light-on-ancient-human-migrations-252146",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Age of Ape-Human Species Homo naledi Revealed: 236,000 to 335,000 Years Old",
+   "publisher": "National Geographic",
+   "date": "n.d.",
+   "link": "https://www.nationalgeographic.com/history/article/homo-naledi-human-evolution-science",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Homo naledi",
+   "publisher": "The Australian Museum",
+   "date": "n.d.",
+   "link": "https://australian.museum/learn/science/human-evolution/homo-naledi/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Did an ancient human relative really bury its dead?",
+   "publisher": "Science (AAAS)",
+   "date": "n.d.",
+   "link": "https://www.science.org/content/article/ancient-human-relative-really-bury-dead",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Homo erectus",
+   "publisher": "The Australian Museum",
+   "date": "n.d.",
+   "link": "https://australian.museum/learn/science/human-evolution/homo-erectus/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "KNM-WT 15000 (Turkana Boy)",
+   "publisher": "Smithsonian Institution Human Origins Program",
+   "date": "n.d.",
+   "link": "https://humanorigins.si.edu/evidence/human-fossils/fossils/knm-wt-15000",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "1.8 million-year-old human jawbone unearthed in Georgia reveals earliest Homo erectus migration to Eurasia",
+   "publisher": "Archaeology Magazine (archaeologymag.com)",
+   "date": "2025-09",
+   "link": "https://archaeologymag.com/2025/09/1-8-million-year-old-human-jawbone-georgia/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Homo floresiensis: The curious case of the hobbit and what its remarkable discovery taught us",
+   "publisher": "CNN",
+   "date": "2023-09-02",
+   "link": "https://www.cnn.com/2023/09/02/asia/homo-floresiensis-hobbit-discovery-anniversary-scn",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Climate and environment of the earliest West European hominins inferred from amphibian and squamate reptile assemblages: Sima del Elefante Lower Red Unit, Atapuerca, Spain",
+   "publisher": "ScienceDirect (Elsevier)",
+   "date": "n.d.",
+   "link": "https://www.sciencedirect.com/science/article/abs/pii/S027737911000257X",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "Homo floresiensis",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/earth-and-atmospheric-sciences/homo-floresiensis/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "Origin of the Genus Homo",
+   "publisher": "Evolution: Education and Outreach (Springer/BioMed Central)",
+   "date": "n.d.",
+   "link": "https://evolution-outreach.biomedcentral.com/articles/10.1007/s12052-010-0247-8",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "Homo floresiensis (The Hominini, chapter 32)",
+   "publisher": "eCampusOntario Pressbooks",
+   "date": "n.d.",
+   "link": "https://ecampusontario.pressbooks.pub/hominini/chapter/homo-floresiensis/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "The age of Homo naledi and associated sediments in the Rising Star Cave, South Africa",
+   "publisher": "eLife",
+   "date": "2017",
+   "link": "https://elifesciences.org/articles/24231",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome. Today we follow the first humans who left Africa. We will visit the main sites, meet the species, and see where experts disagree."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Leaving Africa the first time"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a name. 'Homo' is the Latin word for human. It is the group, or genus, that holds our species and cousins like Homo erectus."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Genus Homo"
+   },
+   "cite": [
+    "s20",
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the starting point. For the first several million years of human evolution, early humans lived only in Africa."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Africa: the starting point"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Where did early humans live during the first several million years of human evolution?",
+    "right": "Only in Africa",
+    "wrong": [
+     "Only in Asia",
+     "Only in Europe",
+     "All over the world"
+    ],
+    "why": "Early humans spread beyond Africa only about 1.8 million years ago, so for millions of years before that they lived only in Africa."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Homo erectus is usually thought to have evolved in Africa about 2 million years ago. That is the usual view. We will meet a challenge to it later."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 2 million years ago"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let us meet an African Homo erectus. The Turkana Boy, from Kenya, is a skeleton about 1.6 million years old. Kamoya Kimeu found it in 1984."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A partial skeleton of a young boy, about 40% complete, with long legs, laid out in a museum case"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "He stood about 1.6 metres tall and had long legs. Those long legs helped Homo erectus walk, and perhaps run, long distances."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Long legs, long journeys"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which body feature helped Homo erectus walk long distances?",
+    "right": "Long legs",
+    "wrong": [
+     "Very short legs",
+     "Webbed feet",
+     "A heavy shell"
+    ],
+    "why": "The Turkana Boy skeleton shows long legs, which helped Homo erectus walk, and possibly run, long distances."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Homo erectus is generally considered the first species to spread beyond Africa. Its fossils turn up in western Asia, China and Indonesia."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A map with arrows from Africa to Georgia in western Asia, then on to China and Indonesia"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "It also lasted a very long time. Its story stretches over more than 1.5 million years, longer than any other human relative."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "More than 1.5 million years"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "About how long did Homo erectus survive as a species?",
+    "right": "More than a million years",
+    "wrong": [
+     "About 10,000 years",
+     "About 50,000 years",
+     "About 300 years"
+    ],
+    "why": "The Natural History Museum says its story stretches over more than 1.5 million years, the longest of any human relative."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the sites. For each one we give two dates: when people lived there, and when archaeologists found it. They are very different dates."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Key sites: two dates each"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, Dmanisi in Georgia, in the Caucasus. People lived there about 1.8 million years ago."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Dmanisi, Georgia: lived about 1.8 million years ago"
+   },
+   "cite": [
+    "s3",
+    "s23"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Archaeologists began finding bones at Dmanisi in 1991. More than 100 fossil bones have come out, including several skulls."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Lived here: about 1.8 million years ago | Found: from 1991 onwards"
+   },
+   "cite": [
+    "s3",
+    "s23"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which pair of dates fits Dmanisi?",
+    "right": "People lived there about 1.8 million years ago, and archaeologists began finding bones in 1991",
+    "wrong": [
+     "People lived there in 1991, and archaeologists found bones 1.8 million years ago",
+     "People lived there about 1.8 million years ago, and archaeologists found it 1.8 million years ago",
+     "Archaeologists found bones there in 1.8 million BC, and people arrived in 1991"
+    ],
+    "why": "The people lived at Dmanisi about 1.8 million years ago. The archaeologists' discovery came from 1991 onwards. These are two different dates."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next, Shangchen on China's Loess Plateau. Stone tools there span about 2.12 million years ago down to about 1.26 million years ago."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Shangchen, China: tools from about 2.12 to 1.26 million years ago"
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Archaeologists made the finds between 2004 and 2017. The results appeared in the journal Nature in 2018."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Used: about 2.12 to 1.26 million years ago | Found: 2004 to 2017, reported 2018"
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Notice what is missing. No human fossils have been found at Shangchen, only stone tools. So we cannot say for sure who made them."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Tools, but no bones"
+   },
+   "cite": [
+    "s6",
+    "s8"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What has been found at Shangchen?",
+    "right": "Stone tools, but no human fossil bones",
+    "wrong": [
+     "Only human skeletons, with no tools",
+     "A cave painting of Homo erectus",
+     "A complete Homo erectus village"
+    ],
+    "why": "Shangchen has stone tools. No hominid fossils have been found there, so the toolmakers are unknown."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now Java, in Indonesia. Homo erectus fossils there go back about 1.6 million years. Some of the last are about 108,000 to 117,000 years old."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Java: Homo erectus from about 1.6 million to about 110,000 years ago"
+   },
+   "cite": [
+    "s8",
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Archaeologists found it first. In 1891 Eugene Dubois dug up a skull cap and a thigh bone at Trinil on Java."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Lived: from about 1.6 million years ago | Found: 1891, at Trinil"
+   },
+   "cite": [
+    "s9",
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Dubois named it in 1894. At that time no early human fossil had been found in Africa. The first Homo erectus came from Asia."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "First found in Asia, not Africa"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "New dating shows erectus overlapped in time with our species. But it died out before modern humans reached Southeast Asia."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "No meeting with Homo sapiens in Southeast Asia"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now Europe. At Sima del Elefante in Spain, a face fossil is the earliest human fossil in Western Europe. It is about 1.4 to 1.1 million years old."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sima del Elefante, Spain: about 1.4 to 1.1 million years ago"
+   },
+   "cite": [
+    "s14",
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Digging in the Atapuerca caves has gone on since the 1960s. A jawbone turned up at Sima del Elefante in 2007. The partial face was found in 2022."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Lived: about 1.4 to 1.1 million years ago | Found: jaw 2007, face 2022"
+   },
+   "cite": [
+    "s15",
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Nearby is Gran Dolina. About 80 fossils from there were named Homo antecessor in the mid-1990s. They are about 900,000 to 800,000 years old."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Gran Dolina lived: about 900,000 to 800,000 years ago | Found and named: mid-1990s"
+   },
+   "cite": [
+    "s15",
+    "s14"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Homo antecessor had a flat, modern-looking face. The Sima del Elefante face juts forward, like Homo erectus. Scientists call it 'Homo aff. erectus', meaning close to erectus but not certain."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Homo antecessor: flat, modern-like face | Sima del Elefante face: projecting, like Homo erectus | Label: Homo aff. erectus"
+   },
+   "cite": [
+    "s15",
+    "s16"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "The Sima del Elefante face looks most like which one?",
+    "right": "Homo erectus",
+    "wrong": [
+     "Homo sapiens",
+     "Homo antecessor",
+     "A modern gorilla"
+    ],
+    "why": "Its projecting face is like other Homo erectus fossils. Homo antecessor from nearby Gran Dolina has a flat, modern-like face."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now two surprising cousins, one in Indonesia and one in South Africa. They show how many kinds of human lived at once."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Other human species"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Homo floresiensis, nicknamed the hobbit, stood about 1 metre tall and had a small brain. It is known only from the island of Flores."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Homo floresiensis: about 1 metre tall"
+   },
+   "cite": [
+    "s27",
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A joint Indonesian-Australian team found it at Liang Bua cave in September 2003. The skeleton lay about six metres down."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Liang Bua: found September 2003"
+   },
+   "cite": [
+    "s13",
+    "s11",
+    "s12"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "At first the remains were dated to about 18,000 years old. Later work put the skeletons at 100,000 to 60,000 years old."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "First dating: about 18,000 years | Revised: 100,000 to 60,000 years"
+   },
+   "cite": [
+    "s25",
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Until 2003 it was generally thought that only modern humans had crossed the ocean from mainland Southeast Asia towards Australia. The hobbit changed that thinking."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Crossing water"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A common idea is that Homo erectus crossed the sea to Flores and shrank over generations. This is called island dwarfism."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Island dwarfism"
+   },
+   "cite": [
+    "s29"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "But fossils at Mata Menge are about 700,000 years old. Their teeth are as small as Liang Bua's, or smaller. So the hobbit's ancestor may have been small already."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Mata Menge: about 700,000 years ago"
+   },
+   "cite": [
+    "s12",
+    "s25"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Some scientists once argued that the first skeleton was a modern human with a disease. Today most scientists accept it as a separate human species."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A valid species, not a sick modern human"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What do most scientists now think about Homo floresiensis?",
+    "right": "It is a human species distinct from Homo sapiens",
+    "wrong": [
+     "It was a modern human with an illness",
+     "It was an ape, not a human relative",
+     "It was a child of Neanderthals"
+    ],
+    "why": "Most scientists now recognise it as a valid species, even though some once suggested a modern human with a disease or growth disorder."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now South Africa. Homo naledi has a small brain, with ape-like shoulders and some humanlike features. 'Naledi' means star in Sesotho, after the Rising Star cave system."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Homo naledi: the 'star' human"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Two cavers found bones there in 2013. The species was announced in 2015, with remains of at least 15 individuals."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Found: 2013 | Announced as a new species: 2015"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The surprise was the age. Dating published in 2017 gave 236,000 to 335,000 years. Our own species, Homo sapiens, was only appearing in Africa at about that time."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "236,000 to 335,000 years ago"
+   },
+   "cite": [
+    "s17",
+    "s10"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "About how old are the Homo naledi remains from Rising Star?",
+    "right": "236,000 to 335,000 years old",
+    "wrong": [
+     "About 1.8 million years old",
+     "About 18,000 years old",
+     "About 2,000 years old"
+    ],
+    "why": "Dating published in 2017 put them at 236,000 to 335,000 years. That is far younger than many scientists expected."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So a small-brained, primitive-looking human relative survived late in the Pleistocene in Africa. It lived at about the same time as early Homo sapiens."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A bushy family tree"
+   },
+   "cite": [
+    "s30"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A later claim is still debated. The discovery team said Homo naledi buried its dead. Four reviewers were doubtful, and in 2025 one changed their mind but another stayed sceptical."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Burial: still debated"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is the status of the claim that Homo naledi buried its dead?",
+    "right": "It is still debated among experts",
+    "wrong": [
+     "It is settled and fully agreed",
+     "It has been completely disproved",
+     "Nobody has ever studied it"
+    ],
+    "why": "Reviewers were sceptical at first. After an updated version, one reviewer was persuaded and another stayed sceptical."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the big question underneath all this: how do scientists decide where one species ends and another begins?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "What experts still debate"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Whether to lump or split the species of Homo is an ongoing challenge. Lumpers see one varied species. Splitters name more species."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Lumpers: one varied species | Splitters: several species"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Take Homo erectus. Some scientists call the early African fossils Homo ergaster and the Asian ones Homo erectus. Others lump them together."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Split: ergaster (Africa) and erectus (Asia) | Lump: all are Homo erectus"
+   },
+   "cite": [
+    "s1",
+    "s9"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "A scientist who puts African and Asian fossils together as one species, Homo erectus, is best called what?",
+    "right": "A lumper",
+    "wrong": [
+     "A splitter",
+     "A dater",
+     "A digger"
+    ],
+    "why": "Lumpers treat variation as inside one species. Splitters give separate names such as Homo ergaster and Homo erectus."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The choice matters. If erectus is redefined as only East Asian fossils, it becomes a side branch. Homo ergaster is then seen as a direct ancestor."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "One name, different family tree"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Dmanisi shows this too. Its people were first proposed as a new species, Homo georgicus. Most now see them as early Homo erectus. A few go further and lump other early Homo in too."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Dmanisi: a new species, or Homo erectus?"
+   },
+   "cite": [
+    "s23",
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A second debate: how many times did people leave Africa? The long-standing view is one species, Homo erectus, leaving about 1.8 million years ago."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "One dispersal or many?"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A 2026 report on 583 Dmanisi teeth argues that at least two human species lived there about 1.8 million years ago. Early migrations may have involved several species."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Maybe more than one species left"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Shangchen's tools are older than Dmanisi. Europe's earliest face differs from the later Gran Dolina people. Both hint at several waves, not one."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Evidence for several waves"
+   },
+   "cite": [
+    "s8",
+    "s14"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which find suggests people left Africa earlier than Dmanisi?",
+    "right": "The Shangchen stone tools, about 2.12 million years old",
+    "wrong": [
+     "The Liang Bua skeletons",
+     "The Homo naledi bones",
+     "The Trinil skull cap from 1891"
+    ],
+    "why": "The Shangchen tools were reported as hundreds of thousands of years older than Dmanisi. But the date is debated, and no fossils were found there."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let us line up the oldest evidence at each site. It starts at Shangchen, then Dmanisi, and ends with Liang Bua."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Oldest evidence at each site (thousand years ago)",
+    "chart": "c1"
+   },
+   "cite": [
+    "s7",
+    "s3",
+    "s26",
+    "s12",
+    "s17",
+    "s11"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Which site on the chart has the youngest evidence?",
+    "right": "Liang Bua, Flores",
+    "wrong": [
+     "Dmanisi, Georgia",
+     "Shangchen, China",
+     "Sima del Elefante, Spain"
+    ],
+    "why": "Liang Bua's hobbit skeletons are only about 100,000 years old at most, the shortest bar on the chart."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To recap: Homo erectus was the first big traveller, and its sites are Dmanisi, Shangchen, Java and Atapuerca. The hobbit and Homo naledi show a bushy family tree."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Homo erectus | Dmanisi | Shangchen | Java | Atapuerca | Homo floresiensis | Homo naledi"
+   },
+   "cite": [
+    "s1",
+    "s11",
+    "s17"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next class we meet our own species, Homo sapiens, and our cousins the Neanderthals and Denisovans."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Our species, our cousins"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Oldest evidence at each site (thousand years ago)",
+   "rows": [
+    {
+     "label": "Shangchen, China (stone tools)",
+     "value": 2120,
+     "source": "s7"
+    },
+    {
+     "label": "Dmanisi, Georgia",
+     "value": 1800,
+     "source": "s3"
+    },
+    {
+     "label": "Sima del Elefante, Spain",
+     "value": 1200,
+     "source": "s26"
+    },
+    {
+     "label": "Mata Menge, Flores",
+     "value": 700,
+     "source": "s12"
+    },
+    {
+     "label": "Rising Star, South Africa (Homo naledi)",
+     "value": 335,
+     "source": "s17"
+    },
+    {
+     "label": "Liang Bua, Flores (hobbit skeletons)",
+     "value": 100,
+     "source": "s11"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Homo erectus",
+   "links": [
+    "[[Walking upright: the first human relatives]]",
+    "[[The first stone tools]]",
+    "[[Fire and the changing body]]"
+   ]
+  },
+  {
+   "topic": "Dmanisi and the first Eurasians",
+   "links": [
+    "[[How we know: reading the deep past without writing]]",
+    "[[Homo erectus]]"
+   ]
+  },
+  {
+   "topic": "Lumping and splitting species",
+   "links": [
+    "[[How we know: reading the deep past without writing]]",
+    "[[Our species, our cousins: Homo sapiens, Neanderthals and Denisovans]]"
+   ]
+  },
+  {
+   "topic": "Homo floresiensis and island dwarfism",
+   "links": [
+    "[[Spreading across the world]]"
+   ]
+  },
+  {
+   "topic": "Homo naledi and the bushy family tree",
+   "links": [
+    "[[Our species, our cousins: Homo sapiens, Neanderthals and Denisovans]]"
+   ]
+  },
+  {
+   "topic": "Dating methods and revised dates",
+   "links": [
+    "[[How we know: reading the deep past without writing]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About 2.12 million years ago (Shangchen, China)",
+   "elsewhere": "African hominids had learned to make sharp stone flakes about 2.6 million years ago.",
+   "cite": [
+    "s6"
+   ]
+  },
+  {
+   "when": "About 1.8 million years ago (Dmanisi, Georgia)",
+   "elsewhere": "In Kenya, Homo erectus such as the Turkana Boy was living about 1.6 million years ago.",
+   "cite": [
+    "s21"
+   ]
+  },
+  {
+   "when": "About 335,000 to 236,000 years ago (Homo naledi, South Africa)",
+   "elsewhere": "Homo sapiens was evolving in Africa about 300,000 years ago.",
+   "cite": [
+    "s10",
+    "s17"
+   ]
+  },
+  {
+   "when": "100,000 to 60,000 years ago (hobbit skeletons, Flores)",
+   "elsewhere": "The last known Homo erectus on Java lived about 108,000 to 117,000 years ago, so the hobbit outlasted them.",
+   "cite": [
+    "s10",
+    "s11"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The Shangchen tools show humans were in China about 2.12 million years ago.",
+   "other_view": "Archaeologist Reid Ferring says the magnetic reversal used to date the oldest layer is at least 1.95 million years old, not 2.12 million. No human fossils were found there, so the makers are unknown.",
+   "cite": [
+    "s6"
+   ]
+  },
+  {
+   "claim": "Homo erectus left Africa in one wave about 1.8 million years ago.",
+   "other_view": "A 2026 teeth study argues that at least two human species lived at Dmanisi about 1.8 million years ago. Another view lumps the Dmanisi people and several early Homo species into one evolving lineage. Experts have not settled how many dispersals there were.",
+   "cite": [
+    "s5",
+    "s4"
+   ]
+  },
+  {
+   "claim": "Early African fossils belong in a separate species, Homo ergaster.",
+   "other_view": "Others treat African and Asian fossils together as Homo erectus. The Smithsonian notes both views, and OpenStax calls whether to lump or split an ongoing challenge.",
+   "cite": [
+    "s1",
+    "s9",
+    "s20"
+   ]
+  },
+  {
+   "claim": "Homo erectus evolved in Africa before spreading out.",
+   "other_view": "One review says Homo erectus may have evolved outside Africa, possibly in western Asia, rather than in Africa.",
+   "cite": [
+    "s28"
+   ]
+  },
+  {
+   "claim": "The hobbit's small size came from island dwarfism after Homo erectus crossed the sea.",
+   "other_view": "Teeth from Mata Menge, about 700,000 years old, are as small as Liang Bua's or smaller. This works against the idea that the hobbits shrank on the island. Earlier, some scientists thought the first skeleton was a modern human with a disease. Most now accept a distinct species.",
+   "cite": [
+    "s29",
+    "s12",
+    "s25",
+    "s11"
+   ]
+  },
+  {
+   "claim": "Homo naledi deliberately buried its dead.",
+   "other_view": "The eLife reviewers of the burial paper were sceptical at first. After an updated version in 2025, one reviewer was persuaded and another stayed sceptical.",
+   "cite": [
+    "s19"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,1099 @@
+{
+ "about": {
+  "title": "Eye gaze and other ways to access a device",
+  "course": "assistive-tech-and-aac",
+  "class_n": 6,
+  "audience": [
+   "adult",
+   "families",
+   "caregivers",
+   "anyone curious"
+  ],
+  "minutes": 20,
+  "length_note": "About 20 minutes. There are 48 short beats, each one or two sentences, with 11 check questions. The class has seven topics, and each one needs a plain explanation, an example and a check before the next. This is general information, not clinical advice. A speech-language pathologist (SLP) can advise about one person."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Augmentative and Alternative Communication (AAC) - Practice Portal",
+   "publisher": "American Speech-Language-Hearing Association (ASHA)",
+   "date": "n.d.",
+   "link": "https://www.asha.org/practice-portal/professional-issues/augmentative-and-alternative-communication/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "The Eyegaze Edge: How does it work? What do you need to know?",
+   "publisher": "Eyegaze Inc. (LC Technologies)",
+   "date": "n.d.",
+   "link": "https://eyegaze.com/wp-content/uploads/How-Does-it-Work-1.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Compensation Method of Natural Head Movement for Gaze Tracking System Using an Ultrasonic Sensor for Distance Measurement",
+   "publisher": "PubMed Central (NCBI)",
+   "date": "n.d.",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4732143/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Testing and Calibration of Non-Invasive Optical Imaging Technology for Functional Brain Imaging (study protocol describing an eye tracker)",
+   "publisher": "ClinicalTrials.gov (NCT01212029)",
+   "date": "n.d.",
+   "link": "https://cdn.clinicaltrials.gov/large-docs/29/NCT01212029/Prot_SAP_000.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Eye Tracking 101: What Is It & How Does It Work In Real Life?",
+   "publisher": "Eyeware",
+   "date": "n.d.",
+   "link": "https://eyeware.tech/blog/what-is-eye-tracking/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "AAC Assessment Corner with Vicki Clarke: The Eyes Have It - Assessment Considerations for High Tech Eye Gaze Access",
+   "publisher": "PrAACtical AAC",
+   "date": "n.d.",
+   "link": "https://praacticalaac.org/praactical/aac-assessment-corner-with-vicki-clarke-the-eyes-have-it-assessment-considerations-for-high-tech-eye-gaze-access-2/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "ICAN Talk With My Eyes: Evaluating Eye Gaze Access (slides by Michael O'Leary, CCC-SLP)",
+   "publisher": "SUNY Fredonia, Communication Disorders and Sciences",
+   "date": "n.d.",
+   "link": "https://www.fredonia.edu/sites/default/files/section/academics/college-liberal-arts-sciences/communication-disorders-sciences/_files/181001_fredonia_eye_gaze_eval.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Speech generation device with a head mounted display unit (US patent 10031576)",
+   "publisher": "United States Patent and Trademark Office",
+   "date": "n.d.",
+   "link": "https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/10031576",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Adapting Creatively: Eye Gaze Technology in AAC - Time for a Trial!",
+   "publisher": "Adapting Creatively (blog)",
+   "date": "2011-03",
+   "link": "http://adaptingcreatively.blogspot.com/2011/03/eye-gaze-technology-in-aactime-for.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Three Common AAC Adult Access Methods",
+   "publisher": "PRC-Saltillo",
+   "date": "n.d.",
+   "link": "https://prc-saltillo.com/blog/Adult-Access-Methods",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Direct Access AAC",
+   "publisher": "Technically Speaking AAC",
+   "date": "n.d.",
+   "link": "https://www.technicallyspeakingaac.com/direct-access-aac.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Direct Access",
+   "publisher": "A Voice Discovered",
+   "date": "n.d.",
+   "link": "http://www.avoicediscovered.com/direct-access.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Access Methods",
+   "publisher": "A Voice Discovered",
+   "date": "n.d.",
+   "link": "http://www.avoicediscovered.com/access-methods.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Access is the Key to Communication",
+   "publisher": "Forbes AAC",
+   "date": "n.d.",
+   "link": "https://www.forbesaac.com/post/access-is-the-key-to-communication",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "How to Get the Right AAC Device",
+   "publisher": "Expressable",
+   "date": "n.d.",
+   "link": "https://www.expressable.com/learning-center/speech-and-language-issues/how-to-get-the-right-aac-device",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Apparatus and method for selecting from a display (US patent 9535494)",
+   "publisher": "United States Patent and Trademark Office",
+   "date": "n.d.",
+   "link": "https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/9535494",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Systems and method of providing automatic motion-tolerant calibration for an eye tracking device (US patent 9983666)",
+   "publisher": "United States Patent and Trademark Office",
+   "date": "n.d.",
+   "link": "https://image-ppubs.uspto.gov/dirsearch-public/print/downloadPdf/9983666",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Voice-Assisted Technology as a Potential Tool for Addressing Speech and Voice Concerns Experienced by People With Parkinson's Disease and Other Conditions Presenting With Dysarthria: A Scoping Review",
+   "publisher": "PubMed Central (published in the International Journal of Language & Communication Disorders)",
+   "date": "2025",
+   "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12537997/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Benchmarking Commercial Speech Recognition and Multimodal Large Language Models on Dysarthric Speech",
+   "publisher": "arXiv (preprint)",
+   "date": "n.d.",
+   "link": "https://arxiv.org/pdf/2512.17474",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Developing accessible speech technology with users with dysarthric speech",
+   "publisher": "Taylor & Francis Online",
+   "date": "n.d.",
+   "link": "https://www.tandfonline.com/doi/full/10.1080/10400435.2024.2328082",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "How to get insurance coverage for speech generating devices (Funding and trial program)",
+   "publisher": "Tobii Dynavox US",
+   "date": "n.d.",
+   "link": "https://us.tobiidynavox.com/pages/funding",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Liberator Trial Handbook",
+   "publisher": "Liberator Pty Ltd",
+   "date": "n.d.",
+   "link": "https://liberator.net.au/wp-content/uploads/Liberator-Trial-Handbook.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "AAC abandonment",
+   "publisher": "SEN Magazine",
+   "date": "n.d.",
+   "link": "https://senmagazine.co.uk/content/tech/assistive-tech/28585/aac-abandonment/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "Communication Partners Need Support Too!",
+   "publisher": "NWACS",
+   "date": "n.d.",
+   "link": "https://nwacs.info/community/advocacy/communication-partners-need-support/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Nystagmus",
+   "publisher": "American Optometric Association",
+   "date": "n.d.",
+   "link": "https://www.aoa.org/healthy-eyes/eye-and-vision-conditions/nystagmus",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Attending ASHA this month? Don't miss this poster!",
+   "publisher": "Control Bionics",
+   "date": "n.d.",
+   "link": "https://controlbionics.com/attending-asha-this-month-dont-miss-this-poster/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "GaVe: A Webcam-Based Gaze Vending Interface Using One-Point Calibration",
+   "publisher": "arXiv (preprint)",
+   "date": "n.d.",
+   "link": "https://arxiv.org/pdf/2201.05533",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class six. Today we look at how people tell a device what they want to say: with their eyes, hands, head or voice."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Eye gaze and other ways to access a device"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "An access method is simply the way a person makes a choice on a device. How reliably someone can do that shapes how well they can communicate."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Access method"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Direct selection means choosing the target itself, with a body part or a tool. Indirect selection means the device offers choices and the person picks among them."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Direct: choose the target itself | Indirect: choose from a set of choices offered"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Eye gaze is a direct method, because the person looks straight at the message they want."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Eye gaze = direct"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A person chooses a word by looking straight at it on the screen. Which kind of selection is this?",
+    "right": "Direct selection",
+    "wrong": [
+     "Indirect selection, because a camera is involved",
+     "Indirect selection, because the device must offer choices first",
+     "Neither, because eye gaze is not a real access method"
+    ],
+    "why": "With eye gaze the person looks directly at the message they want, so it counts as a direct access method."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Most eye gaze systems shine an invisible infrared light toward the eyes and watch with a camera."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "How eye gaze tracks the eyes"
+   },
+   "cite": [
+    "s3",
+    "s5"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The light makes a tiny reflection on the cornea. The camera compares that spot with the centre of the pupil to work out where the eye is pointing."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Close-up of an eye: a dark pupil in the middle, a small bright dot of reflected light beside it, and a short arrow joining the two."
+   },
+   "cite": [
+    "s4",
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Because the system compares small positions, the head can only move so far before tracking suffers. That is why seating matters, as we will see."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Limited head movement"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which two things does the camera compare to work out where someone is looking?",
+    "right": "The centre of the pupil and the small infrared reflection on the cornea",
+    "wrong": [
+     "The colour of the iris and how often the person blinks",
+     "The person's voice and the brightness of the screen",
+     "The size of the person's glasses and the temperature of the room"
+    ],
+    "why": "The common method compares the pupil centre with the corneal reflection of the infrared light."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Before use, the system has to learn your eyes. This is calibration: you look at dots on the screen, one at a time."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Calibration"
+   },
+   "cite": [
+    "s9",
+    "s2"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Designs differ. Calibration can use anywhere from one to sixteen dots, and one example design uses nine."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "dot",
+    "count": 9,
+    "layout": "group",
+    "text": "Nine calibration dots, looked at one by one"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One manufacturer describes an automatic calibration that takes about 15 seconds."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "about 15 seconds"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "If the dots move too fast for someone to follow, the calibration can be slowed. A helper can also step through it, moving to the next dot when the person is ready."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Slow the calibration down; Step through it with a key; Use something eye-catching for attention"
+   },
+   "cite": [
+    "s6",
+    "s9"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Once a good calibration exists, one SLP-written guide says not to keep redoing it. It suggests saving a spare copy in case someone recalibrates by accident."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Keep a good calibration"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A person's calibration is working well. What is sensible advice?",
+    "right": "Leave it alone unless you are trying to improve it, and keep a backup copy",
+    "wrong": [
+     "Recalibrate before every message",
+     "Delete it each night so the device stays fresh",
+     "Recalibrate only after the device stops speaking"
+    ],
+    "why": "The guide says a usable calibration is a one-time job, to be redone only to improve it, and a spare copy protects it."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To choose something, the person holds their gaze on a button for a set time. That is called dwell."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Dwell"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One SLP team found a person needs to pause on an image for at least 0.3 seconds before eye gaze work can begin."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "0.3 seconds"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Dwell time is a balance. A short dwell is quicker but can select things by accident. A longer dwell cuts accidents but is slower and can strain the eyes."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Short dwell: faster, more accidental picks | Long dwell: fewer accidents, slower, more strain"
+   },
+   "cite": [
+    "s27",
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Someone keeps selecting words just by glancing around the screen. Which change is most likely to help?",
+    "right": "Lengthen the dwell time a little",
+    "wrong": [
+     "Shorten the dwell time",
+     "Turn the screen to face away from the person",
+     "Remove the calibration"
+    ],
+    "why": "In a research study, a longer dwell threshold meant fewer false detections, though it was slower and could tire the eyes."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Some systems let a deliberate blink make the selection, or accept either a blink or a dwell. A separate switch can also do the selecting."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Dwell; Blink; Blink or dwell; Blink with a switch; External switch"
+   },
+   "cite": [
+    "s8",
+    "s15"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Eye gaze needs care. Five things matter: positioning, lighting, glasses, the eyes themselves, and tiredness."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Positioning; Lighting; Glasses; The eyes themselves; Fatigue"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Each device has its own preferred distance, height and angle from the user. Physical and occupational therapists often help with positioning."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A person seated comfortably in front of a screen mounted at eye level, with the camera strip under the screen."
+   },
+   "cite": [
+    "s9",
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The person has to stay in front of the screen and camera. The manufacturer's guide and a company representative can lead you through the setup."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Stay in front of the camera"
+   },
+   "cite": [
+    "s7",
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "When calibration is only roughly accurate, the targets on the screen need to be bigger."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Less accurate = bigger buttons"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A person's calibration is only roughly accurate. What helps most?",
+    "right": "Larger buttons on the page",
+    "wrong": [
+     "Smaller buttons, so more fit on a page",
+     "Standing further from the screen",
+     "Switching off the camera"
+    ],
+    "why": "The less accurate the calibration, the larger the targets have to be."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Room light and age can affect how well the pupil is tracked. One method is said to be harder for people with darker-coloured eyes."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Lighting and eye colour"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Glasses and contact lenses reflect light too. One maker says its calibration allows for them, but systems differ, so test with the glasses the person really wears."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Glasses"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The person needs enough vision, in at least one eye, to see the screen. SLPs are expected to get vision and hearing evaluations, or refer for them."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Enough vision"
+   },
+   "cite": [
+    "s6",
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Cortical visual impairment can make eye gaze ineffective at first. Teams then use other ways to communicate while visual skills develop."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Live voice scanning; Gestures; Switch scanning; Light-tech eye gaze boards with familiar symbols"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Involuntary eye movement can pull gaze off a button and restart the dwell timer. Nystagmus, one such condition, can be worse when a person is tired or stressed."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Involuntary eye movement"
+   },
+   "cite": [
+    "s26",
+    "s25"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What can happen when involuntary movement pulls gaze away from a button during dwell?",
+    "right": "The dwell period can restart, so the selection does not happen",
+    "wrong": [
+     "The device speaks the word anyway",
+     "The device switches itself off",
+     "The device recalibrates automatically"
+    ],
+    "why": "Uncontrolled movement may move gaze off the target and reset the dwell period."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Holding your gaze takes effort, and for some people that is tiring. One manufacturer's users report less fatigue with short dwell times."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Fatigue"
+   },
+   "cite": [
+    "s26",
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Eye gaze can also mean more hours in one position than is advised. A team can keep touch or another method available for tired days."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Eye gaze for good days; Touch or another method as a back-up; A team that reviews the plan"
+   },
+   "cite": [
+    "s6",
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A person is very tired and eye gaze is not working today. What is a kind, practical response?",
+    "right": "Offer another access method the person can use, if one has been set up",
+    "wrong": [
+     "Insist they keep trying eye gaze until it works",
+     "Recalibrate every five minutes",
+     "Take the device away for good"
+    ],
+    "why": "Teams can keep a second method available, and ASHA lists flexibility of access method as abilities change as something to plan for."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Eye gaze is one of several options. Adults whose communication is affected by injury or disease may use eye gaze, head tracking or switch scanning."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Other ways to access a device"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Direct touch means using a finger, a toe or a stylus on the screen. Accessories such as keyguards can improve accuracy."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Direct touch"
+   },
+   "cite": [
+    "s11",
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A head pointer is a stylus used on the head, so the person can touch the target with it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Head pointer"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Head tracking moves an on-screen pointer as the head moves. Some systems use sensors and a reflective dot on the forehead, and others use a camera."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Head tracking"
+   },
+   "cite": [
+    "s12",
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "It suits people with limited hand use who have good head control. The person also needs a way to pause it, so a nod in conversation is not read as a selection."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Limited hand use; Good head control; A way to pause the system"
+   },
+   "cite": [
+    "s10",
+    "s17",
+    "s16"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Who is head tracking most likely to suit?",
+    "right": "Someone with limited use of their hands and good head control",
+    "wrong": [
+     "Someone with no head control at all",
+     "Anyone, because it needs no movement",
+     "Only people with nystagmus"
+    ],
+    "why": "Head tracking is described for people with limited hand use, and head-pointing systems only work for those with good head control."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Mouth sticking uses a small rod held in the mouth to press keys. One patent notes that repeating the same movement may cause repetitive-motion injury over years, so it is worth discussing with a therapist."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Mouth-operated"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Voice control means using your speech to operate a device. For many people with motor impairments it may be the best or only way in."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Voice control"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "But recognition often fails for dysarthria, a motor speech disorder. It tends to get worse as speech becomes harder to understand."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Dysarthria and recognition"
+   },
+   "cite": [
+    "s19",
+    "s18",
+    "s20"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which statement about voice control fits best?",
+    "right": "It can be excellent for some people, but may work poorly when the software cannot understand their speech",
+    "wrong": [
+     "It works equally well for every speaker",
+     "It cannot be used by anyone with a disability",
+     "It only works for people who use eye gaze"
+    ],
+    "why": "Standard recognisers do well on typical speech, and they often struggle with moderate or severe dysarthria."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Some apps, such as Voiceitt, are built for dysarthric speech. Whether any voice tool works for a person is a question for a trial."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Try it and see"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Scanning is for people who cannot access a device directly. The device highlights choices one at a time, and a switch picks the highlighted one."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Direct: touch, eye gaze, head pointing | Indirect: switch plus scanning"
+   },
+   "cite": [
+    "s15",
+    "s13"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A switch can also work alongside other methods, such as with eye gaze."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Switch + eye gaze"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is the main difference between eye gaze and switch scanning?",
+    "right": "Eye gaze picks the target directly. Scanning offers choices in turn and the person signals when theirs is highlighted",
+    "wrong": [
+     "Eye gaze needs a switch and scanning does not",
+     "Scanning picks the target directly and eye gaze does not",
+     "There is no difference"
+    ],
+    "why": "Eye gaze is a direct method, while scanning is indirect: the device highlights choices and a switch makes the selection."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A full assessment looks at vision, physical status and the person's means of access. Trying a device in daily life tells you more."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Why a trial before choosing matters"
+   },
+   "cite": [
+    "s1",
+    "s21"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One manufacturer offers trials of up to four weeks at home, school or in the community. Another lends devices free for three weeks."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "up to 4 weeks"
+   },
+   "cite": [
+    "s21",
+    "s22"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Funders may ask for a trial first. At one company, an SLP evaluation is required for funding applications. Rules vary, so ask locally."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Evaluation by an SLP; Trial of the device; Report for the funder"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "During a trial, teams collect notes, feedback from the user and their partners, and, with permission, usage logs."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Collect real evidence"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why is it useful to trial a device in the person's usual places?",
+    "right": "Lighting, seating and tiredness in daily life can change how well an access method works",
+    "wrong": [
+     "Because devices only work at home",
+     "Because calibration is not needed there",
+     "Because it avoids needing an SLP"
+    ],
+    "why": "Room light affects tracking, and trials in the person's own environment show how the device works in real life."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Setbacks are common. Research tells us many people given AAC eventually stop using it, even though they still need it."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Setbacks, and how people cope"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "If the technology does not match a person's abilities, frustration can come quickly. So a setback usually points to the setup, not to a failing in the person."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Adjust the setup"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Ways to cope: ask the team to adjust as abilities change, and keep more than one way to communicate."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Review the access method as abilities change; Keep a back-up way to communicate"
+   },
+   "cite": [
+    "s1",
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Families who connect with others on the same journey are more likely to embrace the technology long-term. Communication partners need coaching too."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Meet other families; Coach communication partners; Keep encouraging use"
+   },
+   "cite": [
+    "s23",
+    "s24"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To recap: eye gaze uses a camera and infrared light, calibration and dwell or blink. Position, light, glasses, the eyes and tiredness all matter, and there are other methods."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Eye gaze: camera, calibration, dwell or blink; Practical factors: positioning, light, glasses, eyes, fatigue; Others: touch, head, mouth, voice, scanning; Trial first; Setbacks mean adjust"
+   },
+   "cite": [
+    "s1",
+    "s6",
+    "s10"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next time: a short history of AAC. For advice about one person, an SLP is the right guide, because this course is general information and not clinical advice."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: A short history of AAC"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Access method",
+   "links": [
+    "[[Switches and scanning]]",
+    "[[The AAC toolbox]]"
+   ]
+  },
+  {
+   "topic": "Eye gaze, calibration and dwell",
+   "links": [
+    "[[Symbol sets and how pages are laid out]]",
+    "[[Switches and scanning]]"
+   ]
+  },
+  {
+   "topic": "Practical factors for eye gaze",
+   "links": [
+    "[[How to support a communicator]]"
+   ]
+  },
+  {
+   "topic": "Trials and setbacks",
+   "links": [
+    "[[Getting professional help and what to do next]]",
+    "[[How to support a communicator]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Eye gaze is the natural choice for anyone who cannot use their hands.",
+   "other_view": "One AAC consultant writes that eye gaze can be very difficult and needs good vision and tracking skills. An SLP team says it tries eye gaze for people without consistent, comfortable touch access, and trials it even for some people who use a stylus, to open up discussion. Both agree that it has to be tried and that other options should stay available.",
+   "cite": [
+    "s14",
+    "s6"
+   ]
+  },
+  {
+   "claim": "Voice control is a convenient hands-free option for people with motor difficulties.",
+   "other_view": "For many people with motor impairments it may be the most viable or only way in. A scoping review found that voice assistants recognise dysarthric speech poorly and inconsistently, and that it is often unclear whether the technology or the speech is the limit. Specialised apps such as Voiceitt are built to address this, so a trial is the fair test.",
+   "cite": [
+    "s19",
+    "s18",
+    "s20"
+   ]
+  },
+  {
+   "claim": "A longer dwell time is always better, because it prevents accidental selections.",
+   "other_view": "In a research study, a longer dwell threshold meant fewer false detections but slower selection and more strain. A manufacturer reports that its users feel less fatigue with short dwell times. The right setting depends on the person.",
+   "cite": [
+    "s27",
+    "s2"
+   ]
+  }
+ ]
+}

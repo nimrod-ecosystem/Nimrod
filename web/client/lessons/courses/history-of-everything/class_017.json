@@ -1,0 +1,1227 @@
+{
+ "about": {
+  "title": "The Bronze Age World and Its Collapse",
+  "course": "history-of-everything",
+  "class_n": 17,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. The class has about 44 short beats and 12 check questions. It covers five societies, the metal trade that linked them, and one big debate, one idea at a time. That fits a half-hour without rushing."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Minoan civilization",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Minoan-civilization",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "Knossos",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/place/Knossos",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "Who Were the Minoans—and What Happened to Them?",
+   "publisher": "History.com",
+   "date": "n.d.",
+   "link": "https://www.history.com/articles/minoan-civilization-rise-fall",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "Tour the mighty palaces of the heroes of the Iliad",
+   "publisher": "National Geographic",
+   "date": "n.d.",
+   "link": "https://www.nationalgeographic.com/history/article/ancient-greece-mycenae-palaces",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "Linear B and its Decipherment: Records of Mycenaean Civilization",
+   "publisher": "Jeremy Norman's HistoryofInformation.com",
+   "date": "n.d.",
+   "link": "https://www.historyofinformation.com/detail.php?id=697",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "Egypt's New Kingdom",
+   "publisher": "Brigham Young University Religious Studies Center",
+   "date": "n.d.",
+   "link": "https://rsc.byu.edu/bible-readers-history-ancient-world/egypts-new-kingdom",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "The Battle of Kadesh & the First Peace Treaty",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/article/78/the-battle-of-kadesh--the-first-peace-treaty/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "Battle of Kadesh",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/military-history-and-science/battle-kadesh/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "Egyptian–Hittite peace treaty",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Egyptian%E2%80%93Hittite_peace_treaty",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "The Hittite Empire transformed the world—and then the world forgot it",
+   "publisher": "National Geographic",
+   "date": "n.d.",
+   "link": "https://www.nationalgeographic.com/history/article/hittite-ancient-empire-disappear-mystery",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "The Last Days of Hattusa",
+   "publisher": "Biblical Archaeology Society",
+   "date": "n.d.",
+   "link": "https://www.biblicalarchaeology.org/daily/ancient-cultures/ancient-near-eastern-world/the-last-days-of-hattusa/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "Oracle Bones",
+   "publisher": "Asian Art Museum, Education",
+   "date": "n.d.",
+   "link": "https://education.asianart.org/resources/oracle-bones/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "7 Everyday Objects From the Shang Dynasty",
+   "publisher": "History.com",
+   "date": "n.d.",
+   "link": "https://www.history.com/articles/everyday-objects-shang-dynasty",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "Chinese Oracle Bones",
+   "publisher": "Cambridge Digital Library, Cambridge University Library",
+   "date": "n.d.",
+   "link": "https://cudl.lib.cam.ac.uk/view/MS-CUL-00001-00155/1",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "Uluburun Late Bronze Age Shipwreck Excavation",
+   "publisher": "Institute of Nautical Archaeology",
+   "date": "n.d.",
+   "link": "https://nauticalarch.org/projects/uluburun-late-bronze-age-shipwreck-excavation/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "Isotope analysis reveals origins of Uluburun shipwreck cargo",
+   "publisher": "The Past",
+   "date": "n.d.",
+   "link": "https://the-past.com/news/isotope-analysis-reveals-origins-of-uluburun-shipwreck-cargo/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "New study refutes origin claim involving Bronze Age tin ingots recovered from shipwreck",
+   "publisher": "Phys.org",
+   "date": "2023-09",
+   "link": "https://phys.org/news/2023-09-refutes-involving-bronze-age-tin.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "Bronze Age Collapse: The Decline and Fall of Mediterranean Civilization",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/Bronze_Age_Collapse/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "Late Bronze Age collapse",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/anthropology/late-bronze-age-collapse/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "Environmental Roots of the Late Bronze Age Crisis",
+   "publisher": "PLOS ONE via PubMed Central (NCBI)",
+   "date": "2013",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3743901/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "What Caused The Mysterious Bronze Age Collapse? (interview with Eric H. Cline)",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://etc.worldhistory.org/interviews/what-caused-the-bronze-age-collapse/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "Late Bronze Age collapse",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Late_Bronze_Age_collapse",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "Olmec Civilization",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/Olmec_Civilization/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "Olive shrub buried on Therasia supports a mid-16th century BCE date for the Thera eruption",
+   "publisher": "Scientific Reports via PubMed Central (NCBI)",
+   "date": "2023",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10147620/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "The Eruption of Thera",
+   "publisher": "University of Pittsburgh (Forbes 5 student journal)",
+   "date": "n.d.",
+   "link": "https://www.forbes5.pitt.edu/article/eruption-thera",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "Bronze Age Collapse: Pollen Study Highlights Late Bronze Age Drought",
+   "publisher": "Biblical Archaeology Society",
+   "date": "n.d.",
+   "link": "https://www.biblicalarchaeology.org/daily/news/bronze-age-collapse-pollen-study-highlights-late-bronze-age-drought/",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 17. Today we visit a world of palaces, ships and kings, and then we find out how it fell apart."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Bronze Age World and Its Collapse"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last time we met Egypt and the Indus Valley. Now we widen the view to a whole web of linked kingdoms, from about 1600 BCE to the collapse around 1200 BCE."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "c. 1600 BCE: Minoans at their peak | 1274 BCE: Battle of Kadesh | c. 1250–1150 BCE: the collapse"
+   },
+   "cite": [
+    "s2",
+    "s7",
+    "s18"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, what is bronze? It is a metal made by mixing copper with a little tin. The usual recipe was about ten parts copper to one part tin."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Bronze = copper + tin (about 10 : 1)"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which two metals are mixed to make bronze?",
+    "right": "Copper and tin",
+    "wrong": [
+     "Iron and gold",
+     "Copper and iron",
+     "Tin and silver"
+    ],
+    "why": "Bronze is copper mixed with tin, in a ratio of about ten to one."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Many kingdoms wanted these metals: Assyria, Mycenae, even Shang China. They used them for tools, for prestige objects and for weapons."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Tools | Prestige objects | Weapons"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So today we meet the Minoans, the Mycenaeans, Egypt, the Hittites and Shang China. Then we follow the metal trade, and then the mystery of the collapse."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Minoans | Mycenaeans | New Kingdom Egypt | Hittites | Shang China | Metal trade | The collapse"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, the Minoans, on the island of Crete. Crete sat at a sea crossroads between Greece, Anatolia and Egypt."
+   },
+   "show": {
+    "kind": "map",
+    "text": "The Aegean Sea: Crete in the south, Greece to the north-west, Anatolia (Turkey) to the north-east, Egypt across the sea to the south-east"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The name is modern. In 1900 Arthur Evans dug up the ruins at Knossos and named the culture after Minos, a king from Greek legend."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Knossos, Crete"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Who gave the Minoans their name?",
+    "right": "Arthur Evans, after the legendary King Minos",
+    "wrong": [
+     "The Minoans themselves, after their first queen",
+     "Egyptian scribes, after a pharaoh",
+     "Homer, after Agamemnon"
+    ],
+    "why": "Evans excavated Knossos in 1900 and named the civilization after Minos from Greek legend."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Knossos was the main palace center. Britannica says its sophisticated culture dominated the Aegean between about 1600 and 1400 BCE."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1600–1400 BCE"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Around 1450 BCE, Mycenaeans from mainland Greece are believed to have burned the Minoan palaces and taken over Knossos."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "c. 1450 BCE: Mycenaeans take over Knossos"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why were the Minoans weak? One view blames a volcano on Thera. But dating that eruption is tricky, so we will flag it as a debate at the end."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Volcano weakened the Minoans first | The eruption was too early to end the palaces"
+   },
+   "cite": [
+    "s3",
+    "s25"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the Mycenaeans, on the Greek mainland. Their palaces had scribes who kept accounts on clay tablets."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A clay tablet covered in rows of Linear B signs"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That writing is called Linear B. About 1450 BCE the Mycenaeans adapted the older Minoan script to write an early form of Greek."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Linear B = early Greek writing"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What language did Linear B record?",
+    "right": "An early form of Greek",
+    "wrong": [
+     "Egyptian",
+     "Hittite",
+     "Chinese"
+    ],
+    "why": "Michael Ventris showed that Linear B is an early form of Greek."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Centuries later Homer told of heroes like Agamemnon and Achilles. The poems were composed in the 8th century BCE, but they are set in the Mycenaean age."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Iliad and Odyssey: composed 700s BCE, set in the Bronze Age"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now Egypt in the New Kingdom, which you met last time. Ramesses III, one of its late pharaohs, reigned for over thirty years, from 1195 to 1164 BCE."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1195–1164 BCE: Ramesses III"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Egypt also wrote to its neighbours. At Amarna, archaeologists found an archive of clay-tablet letters between the royal court and foreign rulers."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A clay tablet letter from the Amarna archive"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next, the Hittites, an empire in Anatolia. Their capital, Hattusa, lies in what is now central Türkiye. Archaeologists found thousands of clay tablets there."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Hittites: capital Hattusa"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Egypt and the Hittites fought at Kadesh in 1274 BCE. Ramesses II led Egypt and Muwatalli II led the Hittites."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1274 BCE: Battle of Kadesh"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Who won? Egyptian records call it an Egyptian victory. Hittite accounts say Egypt was defeated. Today it is generally seen as a draw."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Egyptian records: Egypt won | Hittite accounts: Egypt lost | Today: a draw"
+   },
+   "cite": [
+    "s8",
+    "s7"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "How do historians usually describe the Battle of Kadesh?",
+    "right": "As a draw, because both sides claimed victory",
+    "wrong": [
+     "As a total Egyptian victory that ended the Hittites",
+     "As a total Hittite victory that conquered Egypt",
+     "As a battle nobody wrote about"
+    ],
+    "why": "Both sides claimed victory, and it is today considered a draw."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In 1258 BCE the two kings signed a peace treaty, often called the world's first. Ramesses II also married a Hittite princess."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "1258 BCE: Egypt–Hittite peace treaty"
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Hittite copy was baked clay, found in the Hattusa archives. The treaty held until the Hittite empire collapsed eighty years later."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A baked clay tablet bearing the Hittite copy of the treaty"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now far east: the Shang dynasty of China, which lasted from about 1600 to 1050 BCE."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "c. 1600–1050 BCE: Shang dynasty"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Shang kings asked their ancestors questions using oracle bones, mostly cattle shoulder blades and turtle shells. A hot point made the bone crack."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "An oracle bone, cracked by heat and scratched with characters"
+   },
+   "cite": [
+    "s12",
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The questions were about rain, harvests, births, battles and dreams. Scribes carved the words. These are the earliest known examples of Chinese writing."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Rain | Harvests | Births and deaths | Hunts and battles | Dreams"
+   },
+   "cite": [
+    "s12",
+    "s13"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "For centuries farmers dug up the bones and sold them to be ground into medicine. In 1899 people realised the scratches were writing."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "1899: oracle bones recognised as writing"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What were oracle bones used for?",
+    "right": "Asking ancestors questions and recording them",
+    "wrong": [
+     "Cooking food",
+     "Paying for goods as money",
+     "Drawing maps"
+    ],
+    "why": "Oracle bones were used to talk to ancestors, and the questions were carved into them."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The bones also proved the Shang were real. Some scholars had doubted the dynasty existed at all."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "The bones backed up the traditional histories, even the order of the Shang kings."
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Shang also cast bronze vessels for offerings to their ancestors. So China belongs in the bronze story too."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A Shang bronze ritual vessel"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now we tie the world together with a shipwreck. In 1982 a Turkish sponge diver spotted what he called \"metal biscuits with ears\"."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "\"metal biscuits with ears\""
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "They were copper ingots shaped like animal hides. The ship, called Uluburun, sank off Turkey around 1320 BCE."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "c. 1320 BCE"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It carried about ten tonnes of copper and one tonne of tin. That is the world's largest Bronze Age haul of raw metal ever found."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "block",
+    "count": 11,
+    "layout": "group",
+    "text": "Each block is one tonne: 10 copper and 1 tin"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Look at the bars. Ten to one is the bronze recipe, loaded in one ship. It was enough metal to supply 5,000 soldiers with swords."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1",
+    "text": "Uluburun ship: metal cargo in tonnes"
+   },
+   "cite": [
+    "s16",
+    "s15"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "About how many tonnes of copper came with each tonne of tin on the ship?",
+    "right": "About ten",
+    "wrong": [
+     "About one",
+     "About two",
+     "About a hundred"
+    ],
+    "why": "The cargo was about ten tonnes of copper to one tonne of tin, the usual bronze recipe."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Where did the tin come from? One team traced it to ore in Tajikistan and Uzbekistan, over 2,000 miles away."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Tin travelling from Central Asia west to the Mediterranean coast"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "But another team disagrees. They think at least part of the tin may have come from Cornwall in Britain. That question is still open."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Central Asia (one team) | Cornwall, Britain (other team)"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the hard part. Between about 1250 and 1150 BCE, many of these societies were destroyed or collapsed."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Late Bronze Age collapse"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Hittite empire ended and Mycenaean palaces fell. Greece entered a dark age and lost Linear B. Egypt and Assyria survived, but weakened."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Hittite empire ends | Mycenaean palaces fall | Linear B lost | Egypt and Assyria survive, weakened"
+   },
+   "cite": [
+    "s22",
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Historians do not think a single event did it. The usual suspects are invasions, drought and famine, earthquakes, and broken trade."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Invasions | Drought and famine | Earthquakes | Broken trade"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Suspect one: the Sea Peoples. Egyptian records tell of raiders by this name. A few years into Ramesses III's reign they attacked the Delta by land and sea."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sea Peoples"
+   },
+   "cite": [
+    "s6",
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Egyptian records say Egypt beat them each time. Some think they came to settle with their families, perhaps driven from home by hard times."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Attacked Egypt several times | Egypt prevailed each time | Perhaps came to settle"
+   },
+   "cite": [
+    "s19",
+    "s6",
+    "s20"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What do Egyptian records say happened when the Sea Peoples attacked Egypt?",
+    "right": "Egypt's forces prevailed each time",
+    "wrong": [
+     "Egypt was conquered at once",
+     "They never attacked Egypt",
+     "They joined Egypt as allies"
+    ],
+    "why": "The records say Egyptian forces won each time the Sea Peoples attacked."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Suspect two: drought. Pollen in mud under the Sea of Galilee and the Dead Sea suggests drought may have been a major factor."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A core of lake mud with layers of pollen"
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Tree rings from Gordion show a harsh three-year drought from 1198 to 1196 BCE. Archaeologists also found empty grain stores in Hittite cities."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1198–1196 BCE: three-year drought"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What did tree rings from Gordion show?",
+    "right": "A punishing three-year drought around 1198–1196 BCE",
+    "wrong": [
+     "A huge flood",
+     "A new city being founded",
+     "A big earthquake"
+    ],
+    "why": "Stressed trees show a three-year drought just as the Hittite Empire was ending."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Climate data from Cyprus also point to drought-driven famine, which one study links to the Sea Peoples' movements."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Drought → famine → people on the move?"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The port city of Ugarit left tablets until almost its last days, about 1190 to 1185 BCE. They describe enemy ships, ruined fields, drought and famine."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Tablets from Ugarit: enemy ships, ruined fields, drought, famine"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Suspect three: earthquakes. Eric Cline says there is direct and indirect evidence of earthquakes in this same period."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Earthquakes"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Suspect four: broken trade. Bronze needed far-flung supplies. Scholars describe a systems collapse, where linked parts of a society fail together under growing pressure."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Systems collapse = linked parts fail together"
+   },
+   "cite": [
+    "s18",
+    "s26"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does a 'systems collapse' mean?",
+    "right": "Linked parts of society fail together under pressure",
+    "wrong": [
+     "One city loses a single battle",
+     "A machine breaks down",
+     "Farmers stop farming for a season"
+    ],
+    "why": "A systems collapse is when complex, connected networks break down under mounting pressure."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Cline calls it a \"perfect storm\": many disasters at once. He ranks climate first, then drought and famine, earthquakes, invaders and rebellions."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1 Climate change | 2 Drought and famine | 3 Earthquakes | 4 Invaders | 5 Internal rebellions"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Not everyone weighs the causes the same way. The older view blamed the Sea Peoples, while newer work says the collapse was smaller than once thought."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Older view: invasions did it | Newer view: many causes, and a more limited collapse"
+   },
+   "cite": [
+    "s18",
+    "s22"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Even the end of Hattusa is argued. Many residents seem to have left first, taking valuables and records. The burning came after."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Hattusa: abandoned first, burned later?"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does the evidence at Hattusa suggest?",
+    "right": "Many people left before the city burned",
+    "wrong": [
+     "Nobody ever lived there",
+     "It was only ever a small village",
+     "It burned while still full of records"
+    ],
+    "why": "Recent excavations suggest Hattusa's destruction came after many residents had left, carrying off valuables and official records."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The old order did not end the world. New societies and new ideas grew in its wake. The Hittite capital was abandoned around 1180 BCE."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "c. 1180 BCE: Hattusa abandoned | After: new societies and ideas"
+   },
+   "cite": [
+    "s10",
+    "s20"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Frame of reference: while Hittite and Mycenaean palaces were failing around 1200 BCE, San Lorenzo became the great ceremonial center of the Olmec on Mexico's Gulf Coast."
+   },
+   "show": {
+    "kind": "map",
+    "text": "San Lorenzo on the Gulf Coast of Mexico, c. 1200 BCE"
+   },
+   "cite": [
+    "s23",
+    "s10"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One last check. What happened to Linear B when the Mycenaean palaces fell?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Linear B after the collapse"
+   },
+   "cite": [
+    "s5",
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What happened to Linear B after the Mycenaean palaces fell?",
+    "right": "It disappeared and was lost during the Greek dark age",
+    "wrong": [
+     "It spread to Egypt",
+     "The Hittites adopted it",
+     "It was carved onto oracle bones"
+    ],
+    "why": "Linear B disappeared with the fall of Mycenaean civilization, and Greece's dark age followed."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Well done. Next class we leave the Mediterranean and visit other early worlds in Africa, the Americas and the Pacific."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Other Early Worlds"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Uluburun shipwreck: metal cargo (tonnes, c. 1320 BCE)",
+   "rows": [
+    {
+     "label": "Copper ingots",
+     "value": 10,
+     "source": "s16"
+    },
+    {
+     "label": "Tin ingots",
+     "value": 1,
+     "source": "s16"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Bronze and the tin trade",
+   "links": [
+    "[[Egypt and the Indus Valley]]",
+    "[[Iron Age Empires: Assyria, Babylon and Persia]]"
+   ]
+  },
+  {
+   "topic": "Linear B and Linear A",
+   "links": [
+    "[[Classical Greece]]",
+    "[[The First Cities and the Invention of Writing]]"
+   ]
+  },
+  {
+   "topic": "Oracle bones and Shang writing",
+   "links": [
+    "[[Mauryan India, Qin and Han China]]"
+   ]
+  },
+  {
+   "topic": "Treaty of Kadesh",
+   "links": [
+    "[[Egypt and the Indus Valley]]"
+   ]
+  },
+  {
+   "topic": "Sea Peoples",
+   "links": [
+    "[[Iron Age Empires: Assyria, Babylon and Persia]]"
+   ]
+  },
+  {
+   "topic": "Late Bronze Age collapse",
+   "links": [
+    "[[Other Early Worlds: Africa, the Americas and the Pacific]]",
+    "[[Classical Greece]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "c. 1600 BCE",
+   "elsewhere": "The Minoans were at their height on Crete, and Knossos dominated the Aegean until about 1400 BCE. In China, the Shang dynasty is dated from about 1600 BCE. Around this time a huge volcano erupted on Thera, though its exact date is debated.",
+   "cite": [
+    "s2",
+    "s12",
+    "s24"
+   ]
+  },
+  {
+   "when": "c. 1450 BCE",
+   "elsewhere": "Mycenaeans devised Linear B from the Minoan script and took over Knossos.",
+   "cite": [
+    "s3",
+    "s5"
+   ]
+  },
+  {
+   "when": "c. 1320 BCE",
+   "elsewhere": "The Uluburun ship sank off Turkey with copper and tin. Meanwhile Shang diviners in China were using oracle bones, whose dates run from about 1300 to 1050 BCE.",
+   "cite": [
+    "s15",
+    "s12"
+   ]
+  },
+  {
+   "when": "1274 BCE",
+   "elsewhere": "Ramesses II of Egypt fought the Hittites at Kadesh. In China, the Shang capital at Anyang was occupied from roughly 1250 to 1050 BCE.",
+   "cite": [
+    "s7",
+    "s13"
+   ]
+  },
+  {
+   "when": "c. 1200 BCE",
+   "elsewhere": "Far across the Atlantic, San Lorenzo became the great ceremonial center of the Olmec on Mexico's Gulf Coast. The Hittite empire's capital was abandoned around 1180 BCE.",
+   "cite": [
+    "s23",
+    "s10"
+   ]
+  },
+  {
+   "when": "1195–1164 BCE",
+   "elsewhere": "Ramesses III ruled Egypt and faced the Sea Peoples.",
+   "cite": [
+    "s6"
+   ]
+  },
+  {
+   "when": "700s BCE",
+   "elsewhere": "Long after the collapse, the Iliad and Odyssey were composed. They look back on a Mycenaean world that had already vanished.",
+   "cite": [
+    "s4"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The Sea Peoples invaded and destroyed the Bronze Age kingdoms.",
+   "other_view": "The collapse was once attributed mainly to the Sea Peoples. Many scholars now see them as one part of a bigger crisis, or even a result of it. Some argue they were peoples fleeing drought and famine. Eric Cline ranks invaders fourth among his causes.",
+   "cite": [
+    "s18",
+    "s19",
+    "s20",
+    "s21"
+   ]
+  },
+  {
+   "claim": "There was a sudden, total collapse of the whole Bronze Age world.",
+   "other_view": "Later scholarship suggests the collapse was more limited in scale than once thought. Assyria and Egypt survived in weakened forms, and some cities, such as Troy, were quickly rebuilt.",
+   "cite": [
+    "s22"
+   ]
+  },
+  {
+   "claim": "Climate and drought were the main drivers.",
+   "other_view": "A Cyprus climate study argues that drought-driven famine was causally linked to the Sea Peoples' invasions. Other scholars treat drought as one factor among many, since historians remain unsure of the exact cause and only agree that several things combined.",
+   "cite": [
+    "s20",
+    "s19"
+   ]
+  },
+  {
+   "claim": "Hattusa, the Hittite capital, was destroyed by invaders.",
+   "other_view": "Recent excavations suggest many residents abandoned the city first, taking valuables and records. The fire came afterwards, and the causes of the empire's end remain mysterious.",
+   "cite": [
+    "s11",
+    "s10"
+   ]
+  },
+  {
+   "claim": "Kadesh in 1274 BCE was an Egyptian victory.",
+   "other_view": "Egyptian records portray it as a victory, but Hittite accounts say Egypt was defeated. Today it is generally seen as a draw.",
+   "cite": [
+    "s8",
+    "s7"
+   ]
+  },
+  {
+   "claim": "The tin on the Uluburun ship came from Central Asia.",
+   "other_view": "One isotope study traced the tin to ores in Tajikistan and Uzbekistan. A later study argues that at least part of it was more likely from Cornwall in Britain.",
+   "cite": [
+    "s16",
+    "s17"
+   ]
+  },
+  {
+   "claim": "The Thera volcano eruption ended Minoan civilization.",
+   "other_view": "Some historians think the eruption weakened Crete before the Mycenaeans took over. Others argue the eruption was around 1650–1600 BCE, well before the palaces fell around 1450 BCE. The date itself is debated. Radiocarbon points to about 1600 BCE, while some archaeological arguments based on Egyptian chronology point to a later date.",
+   "cite": [
+    "s3",
+    "s25",
+    "s24"
+   ]
+  }
+ ]
+}

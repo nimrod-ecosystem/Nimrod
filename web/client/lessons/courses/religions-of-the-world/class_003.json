@@ -1,0 +1,1089 @@
+{
+ "about": {
+  "title": "Jainism",
+  "course": "religions-of-the-world",
+  "class_n": 3,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 27,
+  "length_note": "About 27 minutes, a little over the 25-minute aim. Jainism has six topics here, and each gets a short check question so no idea is rushed. A teacher can skip beats 8, 25 and 33 to land near 25 minutes."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Jainism",
+   "publisher": "National Geographic Education",
+   "date": "n.d.",
+   "link": "https://education.nationalgeographic.org/resource/jainism/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Jainism",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Jainism",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Karma",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/karma",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Jiva",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/jiva",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Jainism: Ritual practices and religious institutions (monks, nuns, and their practices)",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Jainism/Ritual-practices-and-religious-institutions",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Why Don't Jains Eat Root Vegetables?",
+   "publisher": "Arihanta Institute",
+   "date": "n.d.",
+   "link": "https://www.arihantainstitute.org/blog/12-why-don-t-jains-eat-root-vegetables",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Jain Asceticism",
+   "publisher": "Jain Heritage Centres",
+   "date": "n.d.",
+   "link": "https://www.jainheritagecentres.com/jainism/jain-ascetics/jain-asceticism/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Jain Festivals",
+   "publisher": "Culturopedia",
+   "date": "n.d.",
+   "link": "https://culturopedia.com/jain-festivals/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Jain Festivals and Holy Days",
+   "publisher": "thejainreligion.in",
+   "date": "n.d.",
+   "link": "https://thejainreligion.in/festivals/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Jainism (Demographics section)",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Jainism",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Jainism",
+   "publisher": "WorldAtlas",
+   "date": "n.d.",
+   "link": "https://www.worldatlas.com/religion/jainism.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "The Digambara and Svetambara sects",
+   "publisher": "Jainworld",
+   "date": "n.d.",
+   "link": "https://jainworld.com/library/jain-books/books-on-line/jainworld-books-in-indian-languages/antiquity-of-jainism/the-digambara-and-svetambara-sects/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Mahavira (concept page, reproduces encyclopedia text)",
+   "publisher": "EPFL GraphSearch",
+   "date": "n.d.",
+   "link": "https://graphsearch.epfl.ch/en/concept/236750",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Tattva (Jainism)",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Tattva_(Jainism)",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Two sects of Jainism (Svetambara and Digambara), in A Study of the Philosophy of Jainism",
+   "publisher": "Wisdom Library",
+   "date": "n.d.",
+   "link": "https://www.wisdomlib.org/jainism/essay/a-study-of-the-philosophy-of-jainism/d/doc242093.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Jain Digest, March-April 2015",
+   "publisher": "JAINA (Federation of Jain Associations in North America)",
+   "date": "2015",
+   "link": "https://cdn.ymaws.com/www.jaina.org/resource/resmgr/e-jain_digest/jain_mar-apr_2015.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Jain Festivals 2026: The Complete Dated Calendar",
+   "publisher": "Nidarshanavedh",
+   "date": "2026",
+   "link": "https://jain.nidarshanavedh.com/jain-festivals-2026/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Jain Festivals",
+   "publisher": "Indian Century",
+   "date": "n.d.",
+   "link": "http://www.indiancentury.com/festival-jain.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Jainism in India",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Jainism_in_India",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "The Concept of Moksha: Liberation in Hinduism, Buddhism, and Jainism",
+   "publisher": "Pratha Cultural School",
+   "date": "n.d.",
+   "link": "https://www.prathaculturalschool.com/post/the-concept-of-moksha-liberation-in-hinduism-buddhism-and-jainism",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Jain Population in India Census 2011: State-Wise Data",
+   "publisher": "Let Every Jain Count",
+   "date": "n.d.",
+   "link": "https://leteveryjaincount.info/jain-population-india-census-2011",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Tattvartha Sutra",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Tattvartha_Sutra",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Digambara and Svetambara (concept page, reproduces encyclopedia text)",
+   "publisher": "EPFL GraphSearch",
+   "date": "n.d.",
+   "link": "https://graphsearch.epfl.ch/en/concept/2809069/concepts",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "Jain Festivals of India",
+   "publisher": "Culture and Heritage",
+   "date": "n.d.",
+   "link": "https://cultureandheritage.org/jain-festivals-of-india",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Jain Population in India, State-wise: 2011 Census Data",
+   "publisher": "The Maps Daily",
+   "date": "n.d.",
+   "link": "https://themapsdaily.com/posts/in-religion-jain",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "Core Religious Practices of Jainism Explained",
+   "publisher": "Sociology.Institute",
+   "date": "n.d.",
+   "link": "https://sociology.institute/sociology-of-religion/core-practices-jainism-explained/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "Jain terms and concepts",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Jain_terms_and_concepts",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class three: Jainism. By the end you will be able to describe what Jains believe and do, especially non-violence, name key festivals, and say where Jains live today."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Jainism"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Jainism began in the Ganges basin of eastern India, between about the 7th and 5th centuries BCE. It shares many values with Hinduism, our last class, and with Buddhism, which comes next."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map of India with the Ganges river basin in the east highlighted, and the label 'Jainism begins here'"
+   },
+   "cite": [
+    "s2",
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Where did Jainism begin?",
+    "right": "In the Ganges basin of eastern India",
+    "wrong": [
+     "On the coast of Japan",
+     "In the deserts of Arabia",
+     "In the Andes mountains"
+    ],
+    "why": "Britannica says Jainism originated in the Ganges basin of eastern India around the 7th to 5th century BCE."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The name comes from a Sanskrit verb, ji, meaning 'to conquer'. It points to the inner struggle monks and nuns take on, against their own passions and senses."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "ji = to conquer"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What does the name 'Jain' come from?",
+    "right": "A Sanskrit verb meaning 'to conquer'",
+    "wrong": [
+     "A word meaning 'to travel'",
+     "A word meaning 'to build'",
+     "A word meaning 'to sing'"
+    ],
+    "why": "The name comes from the verb ji, 'to conquer', the inner struggle against passions and the senses."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Jains honour 24 great teachers called Tirthankaras, also known as Jinas. These are people who reached enlightenment and were freed from the cycle of rebirth."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Illustration: 24 star"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In Jain tradition the first Tirthankara is Rishabhanatha and the 23rd is Parshvanatha. The 24th and last is Mahavira, who was born with the name Vardhamana."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1st: Rishabhanatha → 23rd: Parshvanatha → 24th and last: Mahavira (Vardhamana)"
+   },
+   "cite": [
+    "s13",
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Who is the 24th and last Tirthankara?",
+    "right": "Mahavira",
+    "wrong": [
+     "Parshvanatha",
+     "Rishabhanatha",
+     "No one; the list is still open"
+    ],
+    "why": "Mahavira is counted as the 24th and final Tirthankara. Parshvanatha was the 23rd and Rishabhanatha the first."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let us follow Mahavira's life as Jains tell it. He was born into a royal family, and at about age 30 he gave up all possessions and left home to live as an ascetic."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Royal family → about age 30: leaves home → years of meditation and austerities"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "He meditated and practised severe self-discipline for twelve and a half years. Then he reached Kevala Jnana, complete knowledge. He taught for about thirty years."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "12½ years of austerity → Kevala Jnana (complete knowledge) → about 30 years of teaching"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "About how long did Mahavira practise meditation and austerities before reaching complete knowledge?",
+    "right": "About twelve and a half years",
+    "wrong": [
+     "About three days",
+     "About five years",
+     "About forty years"
+    ],
+    "why": "The account says he practised for twelve and a half years before attaining Kevala Jnana, then taught for about 30 years."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Where does this fit in history? Mahavira was an older contemporary of the Buddha. Exact dates differ between Jain traditions."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "6th century BCE, India: Mahavira teaching; the Buddha, a younger contemporary, teaching in the same region"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the heart of Jain practice: ahimsa, a strict code of non-violence. It means doing no harm to humans, animals, plants or nature."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "ahimsa = non-violence"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why so careful? Jains teach that every living being has a soul, a jiva. Souls are eternal and are not the same as the bodies they live in. Jain teaching extends this to plants, and even to air and water."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A circle of living things drawn around a person: an elephant, an ant, a tree, a drop of water, each with a small glowing light inside"
+   },
+   "cite": [
+    "s4",
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In Jain teaching, what is a jiva?",
+    "right": "A soul, which is eternal and not the same as the body",
+    "wrong": [
+     "A holy book",
+     "A festival",
+     "A vow"
+    ],
+    "why": "Britannica describes jivas as eternal, living souls that are not the same as the bodies they inhabit."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Ahimsa is the first of five vows: non-violence, truthfulness, not stealing, sexual restraint with celibacy as an ideal, and not being attached to worldly things."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "finger",
+    "count": 5,
+    "layout": "five-frame"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Monks and nuns keep the vows in full. Lay Jains, who are most Jains, keep versions adapted to family life and work. Non-violence is the cornerstone for everyone."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Monks and nuns: the vows in full | Lay Jains: adapted vows for household life"
+   },
+   "cite": [
+    "s27"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which vow is described as the cornerstone of Jain practice?",
+    "right": "Ahimsa, non-violence",
+    "wrong": [
+     "Owning many possessions",
+     "Eating only at night",
+     "Staying in one temple for life"
+    ],
+    "why": "Ahimsa is described as the most fundamental vow, the cornerstone of all Jain practice."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "What does ahimsa look like day to day? Start with food. Jain monks and nuns are strict vegetarians who also avoid root vegetables, and many lay Jains eat vegetarian too."
+   },
+   "show": {
+    "kind": "list",
+    "text": "No meat | No root vegetables (the strict form) | Monks do not eat after dark"
+   },
+   "cite": [
+    "s7",
+    "s27",
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The traditional diet leaves out onions, garlic, potatoes and carrots. Many lay Jains follow this ideal, some fully and some in part. Pulling up a root vegetable kills the whole plant and many tiny living things in the soil, which Jains try not to harm."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Onions | Garlic | Potatoes | Carrots (left out of the traditional Jain diet)"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why do traditional Jains avoid root vegetables?",
+    "right": "Pulling up the whole plant disturbs many tiny lives in and around the soil",
+    "wrong": [
+     "They are too expensive",
+     "They are only forbidden on festival days",
+     "They are thought to make food spoil"
+    ],
+    "why": "Teachers explain that root vegetables are thought to hold many souls, and digging them up harms insects and other life in the soil."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Monks and nuns take care with every step. They carry a soft broom to sweep insects from their path, and they travel barefoot."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A Jain monk in white robes gently sweeping the ground ahead of his bare feet with a soft broom"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is the monk's soft broom for?",
+    "right": "To sweep insects gently out of the way so they are not stepped on",
+    "wrong": [
+     "To clean the temple floor before a festival",
+     "To show the monk's rank",
+     "To keep off the rain"
+    ],
+    "why": "Jain ascetics carry a broom so that insects crossing their path are not harmed."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Some Jain monks and nuns also hold a cloth over the mouth, called a mukhavastrika. It protects small insects from being breathed in. Two groups wear it at all times, the Sthanakavasis and the Terapanthis."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A monk with a small white cloth held over his mouth"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is the cloth over the mouth meant to protect?",
+    "right": "Small insects, from being breathed in",
+    "wrong": [
+     "The monk's voice",
+     "The monk's face from the sun",
+     "Sacred books from dust"
+    ],
+    "why": "Britannica explains the mukhavastrika as protection against the ingestion of small insects."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now karma, which shows why harm matters so much. Jains describe karma as fine particles that settle on the soul."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "karma = fine particles on the soul"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Actions and emotions attract these particles, rather like dust sticking to an oiled surface. They make the soul heavy and keep it in the cycle of rebirth. Jains see karma as an automatic law, not a god's judgment."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A glowing soul slowly covered with grey dust until it looks heavy and dim"
+   },
+   "cite": [
+    "s4",
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In Jain teaching, what does karma do to the soul?",
+    "right": "It settles on the soul like fine dust and binds it to the cycle of rebirth",
+    "wrong": [
+     "It lifts the soul straight to freedom",
+     "It erases the soul at death",
+     "It affects only the body, never the soul"
+    ],
+    "why": "Jainism sees karma as particles that attach to the soul and keep it in rebirth. Britannica says it works as an autonomous law."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Jain texts describe the process in steps. Karma flows in, it binds to the soul, it can be stopped from flowing in, and it can be shed. When all of it is gone, the soul is liberated."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Influx | Bondage | Stopping the influx | Shedding | Liberation (moksha)"
+   },
+   "cite": [
+    "s14",
+    "s28"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Jain teachers say fasting, meditation and self-discipline help stop new karma and shed old karma. The path is also summed up as three jewels: right view, right knowledge and right conduct."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Right view | Right knowledge | Right conduct"
+   },
+   "cite": [
+    "s20",
+    "s22"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A soul that has become pure rises to the top of the universe and is never born again. Jains call this liberation moksha. It is the goal of the Jain path."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "moksha = liberation"
+   },
+   "cite": [
+    "s4",
+    "s2"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "What is moksha?",
+    "right": "Liberation: the soul is free of karma and is never reborn",
+    "wrong": [
+     "A temple festival",
+     "A kind of fast",
+     "The first of the five vows"
+    ],
+    "why": "In Jainism moksha is release from rebirth when the soul is free of karma."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the main traditions. Jainism has two large ones: Digambara, which means 'sky-clad', and Svetambara, which means 'white-clad'."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Digambara: sky-clad | Svetambara: white-clad"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "They share core teachings, and both accept the Tattvartha Sutra of Umasvati. They differ in details: monks' dress, how Tirthankara images look, and some texts."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Digambara: monks wear no clothes; images shown unclothed | Svetambara: monks wear white; images often decorated with jewels"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which statement fits Digambara and Svetambara Jains?",
+    "right": "They share core teachings but differ in details such as monastic dress and temple images",
+    "wrong": [
+     "They follow two entirely different religions",
+     "Only one of them practises ahimsa",
+     "Only one of them honours Mahavira"
+    ],
+    "why": "Sources describe no fundamental difference in doctrine, with differences in details such as dress and images."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Svetambara tradition has further groups, including the Murtipujakas, Sthanakavasis and Terapanthis. The Sthanakavasis and Terapanthis do not worship images, so their places of worship look different."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Svetambara groups: Murtipujaka | Sthanakavasi | Terapanthi"
+   },
+   "cite": [
+    "s15",
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does 'Digambara' mean?",
+    "right": "Sky-clad",
+    "wrong": [
+     "White-clad",
+     "Temple-builder",
+     "Forgiving"
+    ],
+    "why": "Digambara means sky-clad. Svetambara means white-clad."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Fasting is a regular part of Jain life, especially for ascetics. Digambara monks eat one meal a day, and many lay Jains fast at festival times."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "fasting"
+   },
+   "cite": [
+    "s7",
+    "s18"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Jain temples hold images of the Tirthankaras. For example, a marble statue of Mahavira stands in a temple in Jaisalmer Fort. Pilgrims also visit sacred places such as Palitana and Girnar in Gujarat, and Pawapuri in Bihar."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A carved white marble temple, with a seated Tirthankara statue inside"
+   },
+   "cite": [
+    "s1",
+    "s18"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What do many Jain temples hold images of?",
+    "right": "The Tirthankaras, the 24 teachers",
+    "wrong": [
+     "Roman emperors",
+     "Relics of the Buddha",
+     "Only living monks"
+    ],
+    "why": "Jain temples hold images of Tirthankaras such as Mahavira. Some Jain groups, such as the Sthanakavasis, do not worship images."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now festivals. A very important one is Paryushana, in August or September. Svetambaras keep it for eight days and Digambaras for ten."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Svetambara: 8 days | Digambara: 10 days (Das Lakshana)"
+   },
+   "cite": [
+    "s8",
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "It is linked to the monsoon, when travelling monks settle in one place. People go to temples, listen to readings from the Kalpa Sutra, do the reflective practice called pratikraman, and many fast."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Temple visits | Readings from the Kalpa Sutra | Pratikraman (reflection) | Fasting"
+   },
+   "cite": [
+    "s8",
+    "s18"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Svetambara festival ends with Samvatsari, a day of forgiveness. The Digambara ten days end with Kshama Vani, which carries the same spirit."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Samvatsari = forgiveness day"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "How many days does Paryushana last for Svetambara Jains?",
+    "right": "Eight",
+    "wrong": [
+     "One",
+     "Three",
+     "Forty"
+    ],
+    "why": "Svetambaras keep Paryushana for eight days. Digambaras keep ten."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Mahavir Jayanti celebrates Mahavira's birth. Temples are decorated, and an image of Mahavira is bathed and carried in procession. In 2026 it fell on 31 March."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Mahavir Jayanti | Birth of Mahavira | Procession and prayers"
+   },
+   "cite": [
+    "s8",
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Jains also keep Diwali, as the day Mahavira attained nirvana, or liberation. One 2026 Jain calendar lists 8 November."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Jain Diwali = Mahavira's liberation"
+   },
+   "cite": [
+    "s9",
+    "s17"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "Which Jain festival marks the day Mahavira attained liberation?",
+    "right": "Diwali",
+    "wrong": [
+     "Mahavir Jayanti",
+     "Paryushana",
+     "Samvatsari"
+    ],
+    "why": "Mahavir Jayanti marks his birth. Jains keep Diwali as the day of his nirvana."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Where do Jains live today? India's 2011 census counted 4,451,753 Jains, about 0.37% of the population. Worldwide estimates are four to five million."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "4,451,753"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Within India they are concentrated in four states. Maharashtra has the largest share, then Rajasthan, Gujarat and Madhya Pradesh."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1",
+    "text": "Share of India's Jains by state, 2011 census"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "According to the 2011 census, which state has the largest share of India's Jains?",
+    "right": "Maharashtra",
+    "wrong": [
+     "Kerala",
+     "Punjab",
+     "Assam"
+    ],
+    "why": "Maharashtra has about 31.5% of India's Jains, ahead of Rajasthan, Gujarat and Madhya Pradesh."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Jain communities also live in the United States, the United Kingdom, Kenya, Canada, Australia and Belgium. Estimates for the United States range from about 80,000 to 200,000. Of these, the United States is usually listed as having the largest Jain community outside India."
+   },
+   "show": {
+    "kind": "map",
+    "text": "World map with India in the centre, and marked communities in North America, East Africa, the United Kingdom, Belgium and Australia"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which country outside India is listed as having the largest Jain community?",
+    "right": "The United States",
+    "wrong": [
+     "Japan",
+     "Brazil",
+     "Norway"
+    ],
+    "why": "WorldAtlas says the largest Jain community outside India is in the United States, though estimates vary widely."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Many of these communities grew through migration: Gujarati merchants to East Africa, then families to the United Kingdom after 1972, and many to the United States after 1965."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Late 1800s: merchants to Kenya → 1965: US immigration law changes → 1972: Uganda expulsions, families to the UK"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To recap: 24 Tirthankaras, with Mahavira the last. Ahimsa, rooted in the soul in every living being. Karma and liberation. Two main traditions. Fasting, temples and festivals."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Tirthankaras | Ahimsa | Soul, karma, moksha | Digambara and Svetambara | Paryushana, Mahavir Jayanti, Diwali | India and the diaspora"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next class is Buddhism. Mahavira was an older contemporary of the Buddha, so we turn to another teacher from the same time and region."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Buddhism"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "pie",
+   "title": "Where India's Jains live, 2011 census (percent of India's Jains)",
+   "rows": [
+    {
+     "label": "Maharashtra",
+     "value": 31.5,
+     "source": "s10"
+    },
+    {
+     "label": "Rajasthan",
+     "value": 14.0,
+     "source": "s10"
+    },
+    {
+     "label": "Gujarat",
+     "value": 13.0,
+     "source": "s10"
+    },
+    {
+     "label": "Madhya Pradesh",
+     "value": 12.7,
+     "source": "s10"
+    },
+    {
+     "label": "All other states and territories (100 minus the four above)",
+     "value": 28.8,
+     "source": "s10"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Ahimsa (non-violence)",
+   "links": [
+    "[[Jiva (soul)]]",
+    "[[Jain dietary practice]]",
+    "[[Five vows]]"
+   ]
+  },
+  {
+   "topic": "Tirthankaras",
+   "links": [
+    "[[Mahavira]]",
+    "[[Parshvanatha]]",
+    "[[Rishabhanatha]]"
+   ]
+  },
+  {
+   "topic": "Karma, soul and liberation",
+   "links": [
+    "[[Moksha]]",
+    "[[Three jewels]]",
+    "[[Karma in Hinduism]]",
+    "[[Karma in Buddhism]]"
+   ]
+  },
+  {
+   "topic": "Digambara and Svetambara traditions",
+   "links": [
+    "[[Tattvartha Sutra]]",
+    "[[Sthanakavasi and Terapanthi]]"
+   ]
+  },
+  {
+   "topic": "Paryushana, Mahavir Jayanti and Jain Diwali",
+   "links": [
+    "[[Calendars and festivals across religions]]",
+    "[[Diwali in Hinduism]]"
+   ]
+  },
+  {
+   "topic": "Jains in India and the diaspora",
+   "links": [
+    "[[Religion in India]]",
+    "[[Gujarati migration to East Africa]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About the 6th century BCE",
+   "elsewhere": "In the same part of India, Mahavira was an older contemporary of the Buddha, who was also teaching.",
+   "cite": [
+    "s13"
+   ]
+  },
+  {
+   "when": "Late 1800s (Gujarati migration to East Africa)",
+   "elsewhere": "Asian migration to East Africa grew with the building of the Uganda railway around 1896. Jain merchants from Gujarat settled in Kenya.",
+   "cite": [
+    "s16",
+    "s11"
+   ]
+  },
+  {
+   "when": "1965 and 1972",
+   "elsewhere": "The 1965 US Immigration Act opened the way for many Jains to settle in the United States. In 1972 the expulsion of South Asians from Uganda brought a wave of Jain migration to the United Kingdom.",
+   "cite": [
+    "s11"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Jainism goes back to a long line of Tirthankaras, beginning with Rishabhanatha.",
+   "other_view": "Jain doctrine holds that Jainism has always existed and always will. Britannica says scholars generally agree it has no historical founder, and places its origin in the Ganges basin around the 7th to 5th century BCE. Even the year of Mahavira's liberation varies by tradition.",
+   "cite": [
+    "s19",
+    "s2",
+    "s13"
+   ]
+  },
+  {
+   "claim": "Anyone, of any sex, can reach liberation.",
+   "other_view": "Svetambaras say a soul can reach liberation from a female body. Digambaras say it cannot, and teach that a woman must first be reborn as a man. Britannica also notes the two traditions disagree about whether a woman can be a Tirthankara.",
+   "cite": [
+    "s2",
+    "s12",
+    "s15"
+   ]
+  },
+  {
+   "claim": "The census count shows how many Jains there are in India.",
+   "other_view": "The 2011 census recorded 4,451,753 Jains. The advocacy site Let Every Jain Count says community estimates put the real number at 2 crore (20 million) or more. We could not check this figure, so treat it with care.",
+   "cite": [
+    "s11",
+    "s21"
+   ]
+  },
+  {
+   "claim": "Four states hold most of India's Jains.",
+   "other_view": "Sources disagree on the exact total. Wikipedia states 78.2%, but its own four state shares add up to 71.2%. The Maps Daily says nearly 70%, and WorldAtlas says about three-quarters.",
+   "cite": [
+    "s10",
+    "s26",
+    "s11"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,1114 @@
+{
+ "about": {
+  "title": "The Scientific Revolution",
+  "course": "history-of-everything",
+  "class_n": 40,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. There are nine topics, each taught in short steps with a check question, so the class fits a half hour without extra time. Galileo and the Church gets three short beats because it is the part people most often misremember."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "2.4 The Birth of Modern Astronomy, Astronomy 2e",
+   "publisher": "OpenStax (Rice University)",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/astronomy-2e/pages/2-4-the-birth-of-modern-astronomy",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "410 Years Ago: Galileo Discovers Jupiter's Moons",
+   "publisher": "NASA",
+   "date": "n.d.",
+   "link": "https://www.nasa.gov/history/410-years-ago-galileo-discovers-jupiters-moons/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "Galileo Galilei",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://plato.stanford.edu/entries/galileo/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "Lecture 16: The Starry Messenger: Galileo Galilei and the Telescope",
+   "publisher": "Ohio State University Astronomy (Ast 161 course page)",
+   "date": "Autumn 2006",
+   "link": "https://www.astronomy.ohio-state.edu/pogge.1/Ast161/Au06/Unit3/galileo.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "Revisiting the mathematical synthesis of the laws of Kepler and Galileo leading to Newton's law of universal gravitation",
+   "publisher": "arXiv",
+   "date": "2014",
+   "link": "https://arxiv.org/pdf/1408.6758",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "Principia",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Principia",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "Principia by Isaac Newton",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/literature-and-writing/principia-isaac-newton/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "Newton and Planetary Motion",
+   "publisher": "NAAP, University of Nebraska-Lincoln",
+   "date": "n.d.",
+   "link": "https://astro.unl.edu/naap/pos/pos_background2.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "Scientific Revolutions",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://plato.stanford.edu/entries/scientific-revolutions/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "H-Net Reviews (review of Steven Shapin, The Scientific Revolution)",
+   "publisher": "H-Net",
+   "date": "n.d.",
+   "link": "https://www.h-net.org/reviews/showrev.php?id=1200",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "The Microscope",
+   "publisher": "Science Museum Group (UK)",
+   "date": "n.d.",
+   "link": "https://www.sciencemuseum.org.uk/objects-and-stories/medicine/microscope",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "Early History (Microscopes exhibit)",
+   "publisher": "Atkins Library, UNC Charlotte",
+   "date": "n.d.",
+   "link": "https://exhibits.charlotte.edu/s/Microscopes/page/early-history",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "The Royal Society's First Charter",
+   "publisher": "History Today",
+   "date": "July 2012",
+   "link": "https://www.historytoday.com/archive/royal-societys-first-charter",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "Study sheds light on 11th century Arab-Muslim optical scientist whose work laid ground for modern-day physics",
+   "publisher": "EurekAlert (University of Sharjah, on a review by Prof. Nader El-Bizri)",
+   "date": "n.d.",
+   "link": "https://www.eurekalert.org/news-releases/1043138",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "650 Years of Optics: From Alhazen to Fermat and Rømer (in Astrometry during the past 2000 years)",
+   "publisher": "arXiv (Erik Høg, Niels Bohr Institute)",
+   "date": "2011",
+   "link": "https://arxiv.org/pdf/1104.4554",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "The Missing Link? The Maragha Observatory",
+   "publisher": "OER Project (Big History Project)",
+   "date": "n.d.",
+   "link": "https://www.oerproject.com/OER-Materials/OER-Media/HTML-Articles/BHP/Unit2/The-Maragha-Observatory",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "The Maragha Revolution",
+   "publisher": "The Human Journey",
+   "date": "n.d.",
+   "link": "https://humanjourney.us/ideas/the-journey-of-classical-greek-culture-to-the-west-page/the-maragha-revolution/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "400 Years Ago the Catholic Church Prohibited Copernicanism",
+   "publisher": "Origins, Ohio State University",
+   "date": "February 2016",
+   "link": "https://origins.osu.edu/milestones/february-2016-400-years-ago-catholic-church-prohibited-copernicanism",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "The truth about Galileo and his conflict with the Catholic Church",
+   "publisher": "UCLA Newsroom",
+   "date": "n.d.",
+   "link": "https://newsroom.ucla.edu/releases/the-truth-about-galileo-and-his-conflict-with-the-catholic-church",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "Misleading Narratives: The Galileo Affair's Lessons",
+   "publisher": "Heterodox Academy",
+   "date": "n.d.",
+   "link": "https://heterodoxacademy.org/blog/how-simplistic-narratives-can-mislead-us-a-case-study-of-the-galileo-affair/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "The Scientific Revolution (History of Europe course)",
+   "publisher": "Lumen Learning (material provided by OpenStax CNX)",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/muw-historyofeurope/chapter/the-scientific-revolution/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "Chapter 7: Enlightenment, The Scientific Revolution (Statewide Dual Credit World History)",
+   "publisher": "OER Commons",
+   "date": "n.d.",
+   "link": "https://oercommons.org/courseware/lesson/87906/student-old/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "Timeline: History of 1600 - 1700",
+   "publisher": "Timetoast",
+   "date": "n.d.",
+   "link": "https://www.timetoast.com/timelines/history-of-1600-1700",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "1600–1699 (A.D.) World History",
+   "publisher": "FactMonster",
+   "date": "n.d.",
+   "link": "https://www.factmonster.com/history/world/1600-1699-ad-world-history",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "Chapter 4 - The Scientific Revolution (Contested Visions: The History of Western Civilization from 1648)",
+   "publisher": "Manifold (open textbook)",
+   "date": "n.d.",
+   "link": "https://alg.manifoldapp.org/read/contested-visions-the-history-of-western-civilization-from-1648/section/e1128013-dea3-447a-9325-a660cbb8fb2e",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "Galileo and Heliocentrism",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/history/galileo-and-heliocentrism",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s29",
+   "title": "Bringing The Apple to the Moon",
+   "publisher": "arXiv",
+   "date": "2019",
+   "link": "https://arxiv.org/pdf/1903.10342",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s30",
+   "title": "Astronomical Methods and Instrumentation in the Islamic World: Past, Present, Future",
+   "publisher": "arXiv (preprint)",
+   "date": "2025",
+   "link": "https://arxiv.org/pdf/2511.19559",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s31",
+   "title": "The Debate on the Scientific Revolution: A Historiographical Analysis",
+   "publisher": "Metascience / HPS journal",
+   "date": "n.d.",
+   "link": "https://metasciencehps.org/index.php/science/article/view/23",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s32",
+   "title": "The Scientific Revolution by Steven Shapin (ebook preview)",
+   "publisher": "Everand / University of Chicago Press",
+   "date": "n.d.",
+   "link": "https://www.everand.com/book/615831947/The-Scientific-Revolution",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s33",
+   "title": "Antonie van Leeuwenhoek and the dawn of microscopic observation: a narrative review",
+   "publisher": "PubMed Central (NCBI)",
+   "date": "n.d.",
+   "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12862032/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s34",
+   "title": "Historical/Cultural Timeline - 1600s",
+   "publisher": "University of Houston College of Education",
+   "date": "n.d.",
+   "link": "http://www.fm.coe.uh.edu/timeline/1600s.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s35",
+   "title": "Scientific Revolutions (Fall 2012 archive edition)",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "2012",
+   "link": "https://plato.stanford.edu/archives/fall2012/entries/scientific-revolutions/",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 40. Last class, Europe's churches split apart. Today, people change how they study nature itself."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Scientific Revolution"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Historians use the name 'Scientific Revolution' for a stretch of change in Europe. It is often dated from 1543 to 1687."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Scientific Revolution: about 1543 to 1687 (dates are debated)"
+   },
+   "cite": [
+    "s22",
+    "s21"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, the old picture. Ptolemy's model said Earth sits still at the centre of the heavens."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ptolemy's model: Earth stands still at the centre"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In the old Ptolemy picture, what sits still at the centre?",
+    "right": "Earth",
+    "wrong": [
+     "The Sun",
+     "The Moon",
+     "Jupiter"
+    ],
+    "why": "Ptolemy's model described the cosmos with Earth stationary at the centre."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Then Nicolaus Copernicus argued the opposite. Earth is a planet, and the planets circle the Sun. This is called heliocentric, or Sun-centred."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A simple diagram: the Sun in the middle, with Earth and the other planets travelling around it."
+   },
+   "cite": [
+    "s1",
+    "s22"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In Copernicus's idea, what circles the Sun?",
+    "right": "Earth and the other planets",
+    "wrong": [
+     "Only the Moon",
+     "Nothing, because everything stays still",
+     "Only comets"
+    ],
+    "why": "Copernicus concluded that Earth is a planet and that all the planets circle the Sun."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "He could not prove it. But his arguments were strong enough to turn the tide of thinking. Proof would need better measuring and new tools."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A strong argument, not yet a proof"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next, Johannes Kepler asked what shape the orbits are. After about 20 years of work, he found they are ellipses, not circles."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A circle stretched into an oval, with the Sun placed off-centre at one of two special points inside it."
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What shape did Kepler find for a planet's orbit?",
+    "right": "An ellipse, a stretched circle",
+    "wrong": [
+     "A perfect circle",
+     "A square",
+     "A straight line"
+    ],
+    "why": "Kepler's first law says planets move on elliptical orbits with the Sun at one focus."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the telescope. On 7 January 1610, Galileo aimed his homemade 20-power telescope at Jupiter."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Galileo at a window at night, looking through a long thin telescope at a bright Jupiter with tiny dots beside it."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "He saw small lights beside Jupiter. They moved from night to night. By 15 January he decided they were moons."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "moon",
+    "count": 4,
+    "layout": "row"
+   },
+   "cite": [
+    "s2",
+    "s4"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What did Galileo decide the little lights near Jupiter were?",
+    "right": "Moons orbiting Jupiter",
+    "wrong": [
+     "Distant ordinary stars",
+     "Mistakes in his telescope",
+     "Comets passing by"
+    ],
+    "why": "He watched them over several nights and concluded they were moons going around Jupiter."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why does that matter? It showed that not everything circles Earth. That was strong evidence for Copernicus."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Not everything circles Earth"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "He saw more. The Moon had mountains and craters. It was not the smooth, perfect ball that the old teaching claimed."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A telescope view of the Moon with a rough edge, craters and long mountain shadows."
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Late in 1610 he watched Venus. It showed phases, like our Moon. That tells us Venus circles the Sun."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Venus shown in a row: a small round disk, then larger crescents."
+   },
+   "cite": [
+    "s3",
+    "s4"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What did Venus showing phases tell Galileo?",
+    "right": "Venus circles the Sun",
+    "wrong": [
+     "Venus is a star",
+     "Venus has no light of its own and is not a planet",
+     "Earth is standing still"
+    ],
+    "why": "The order of the phases showed that Venus goes around the Sun. This contradicted the Ptolemaic picture."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Galileo also pushed a habit. Do experiments, measure carefully, and ask nature itself."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Experiment: ask nature, then measure"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What did Galileo urge scientists to do?",
+    "right": "Make observations and experiments and measure carefully",
+    "wrong": [
+     "Trust ancient writers instead of looking",
+     "Only argue, never measure",
+     "Keep their results secret"
+    ],
+    "why": "He advocated experiments and observations, using careful measurements, to find out how nature works."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Soon scientists organised around this habit. In 1660 the Royal Society began in London. Its motto means 'take nobody's word for it'."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Nullius in verba: 'Take nobody's word for it.'"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does the Royal Society's motto, Nullius in verba, mean?",
+    "right": "Take nobody's word for it",
+    "wrong": [
+     "Obey the king",
+     "Nature never changes",
+     "Words are all we need"
+    ],
+    "why": "The Society's aim was to promote experiments and argument, not to rely on authority alone."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The microscope opened a second hidden world. In 1665 Robert Hooke published Micrographia. It is full of engraved drawings of things seen through his microscope."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A page from Micrographia: a huge, finely engraved drawing of a flea."
+   },
+   "cite": [
+    "s11",
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Hooke looked at thin slices of cork and saw tiny pores. He called them cells. Leeuwenhoek's single-lens microscopes then showed blood cells and more."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "How much early instruments magnified",
+    "chart": "c2"
+   },
+   "cite": [
+    "s11",
+    "s12",
+    "s33"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Hooke looked at thin slices of which material and gave us the word 'cell'?",
+    "right": "Cork",
+    "wrong": [
+     "Blood",
+     "Pond water",
+     "A flea's leg"
+    ],
+    "why": "Looking at thin slices of cork, Hooke described tiny pores. He coined the word 'cell' while studying plant structure."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the big finish. In 1687 Isaac Newton published the Principia. It set out three laws of motion and a law of universal gravitation."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Principia, 1687: laws of motion and gravity"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Take the first law. A thing keeps still, or keeps moving in a straight line, unless a force acts on it. Think of a puck gliding on ice."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "First law: no force, no change of motion"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "By Newton's first law, a moving object keeps moving in a straight line unless what happens?",
+    "right": "A force acts on it",
+    "wrong": [
+     "Time passes",
+     "It gets tired",
+     "It reaches the end of the day"
+    ],
+    "why": "The first law, the law of inertia, says an object keeps its motion unless an outside force changes it."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Then gravity. Every object pulls on every other object. And the same rules work in the sky and on the ground."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "One set of rules for Earth and sky"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was new about Newton's gravity?",
+    "right": "One set of rules applied to both the heavens and the Earth",
+    "wrong": [
+     "It only worked for apples",
+     "It only worked for the planets",
+     "It was never written in numbers"
+    ],
+    "why": "Newton's laws were a united set of principles that applied to the heavens and the Earth in the same way."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A small joke. The famous apple is never mentioned in the Principia. It is a story that grew later."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A cartoon apple with a question mark above it."
+   },
+   "cite": [
+    "s29"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Look how long this took. From Copernicus's book in 1543 to Newton's Principia is 144 years. That is more than a century."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Years since Copernicus's book (1543)",
+    "chart": "c1"
+   },
+   "cite": [
+    "s22",
+    "s2",
+    "s19",
+    "s6"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "About how many years passed between Copernicus's book (1543) and Newton's Principia (1687)?",
+    "right": "144 years",
+    "wrong": [
+     "14 years",
+     "44 years",
+     "444 years"
+    ],
+    "why": "1687 minus 1543 is 144, which the chart shows."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Europe did not do this alone. Ibn al-Haytham was born in Basra around 965. He wrote his Book of Optics in Cairo, under house arrest, between 1010 and 1021."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ibn al-Haytham: Book of Optics"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Where did Ibn al-Haytham write his Book of Optics?",
+    "right": "In Cairo, while under house arrest",
+    "wrong": [
+     "At Oxford University",
+     "On a ship to Spain",
+     "In a Paris cathedral school"
+    ],
+    "why": "He wrote it in Cairo during eleven years of house arrest, 1010 to 1021."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "His book used repeated, controlled testing. Its Latin version reached Europe around 1200. It stayed the top optics book until Kepler's work of 1604."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Ibn al-Haytham's method: test, repeat, check. Translated into Latin. Studied for centuries in Europe."
+   },
+   "cite": [
+    "s14",
+    "s15"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Astronomers at the Maragha observatory in Persia, led by Nasir al-Din al-Tusi, built the Tusi couple. It is a small circle turning inside a larger one."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A small circle rolling inside a larger circle that is twice its size."
+   },
+   "cite": [
+    "s16",
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Some of Copernicus's maths was nearly identical to the Tusi couple. But the Maragha scholars had no Sun-centred model."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Maragha: new maths for the planets, Earth still at the centre | Copernicus: used similar maths, put the Sun at the centre"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What did the Maragha scholars not have?",
+    "right": "A Sun-centred (heliocentric) model",
+    "wrong": [
+     "Any mathematics at all",
+     "An observatory",
+     "Any interest in planets"
+    ],
+    "why": "The Maragha scholars improved Ptolemy's models, but they did not have a heliocentric model."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now science and religion. Galileo was a devout Catholic. In 1616 Church advisers judged heliocentrism false and heretical. He was warned not to hold or defend it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "1616: the warning"
+   },
+   "cite": [
+    "s28",
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In 1632 he published the Dialogue, and a trial followed in 1633. He was found guilty of 'strong suspicion of heresy'. He lived under house arrest for the rest of his life."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "1633: guilty of strong suspicion of heresy"
+   },
+   "cite": [
+    "s19",
+    "s20"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was Galileo found guilty of in 1633?",
+    "right": "Strong suspicion of heresy",
+    "wrong": [
+     "Murder",
+     "Treason against a king",
+     "Stealing a telescope"
+    ],
+    "why": "He was convicted of strong suspicion of heresy, a lesser charge than heresy itself."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The story is not simply science against religion. In 1616, much of the scientific evidence did not yet clearly favour a moving Earth. The trial turned on whether he broke the Church's order."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Common story: science versus religion | Historians add: personal quarrels, politics, and what counted as proof"
+   },
+   "cite": [
+    "s20",
+    "s19"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why do historians warn against the simple 'science versus religion' story of Galileo?",
+    "right": "The real events involved evidence, politics, personalities and an order he was accused of breaking",
+    "wrong": [
+     "Nothing happened to Galileo",
+     "The Church had no part in it",
+     "Galileo never made any discoveries"
+    ],
+    "why": "Sources describe a mix of disputed evidence, a Church order and personal conflicts. It was more than a simple clash."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So was it a 'revolution'? A famous historian opened his book with a surprising line."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "'There was no such thing as the Scientific Revolution, and this is a book about it.' (Steven Shapin, 1996)"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "His point is that change was slower and messier than one event. There was real continuity with the medieval past. Yet most agree the pace of change picked up."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Slow, not sudden | Linked to the medieval past | Still, the pace clearly sped up"
+   },
+   "cite": [
+    "s32",
+    "s35"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Many historians now see the Scientific Revolution as what?",
+    "right": "A long, messy period of change, not a single event",
+    "wrong": [
+     "A single event on one day",
+     "A time when nothing changed",
+     "Something Newton invented alone"
+    ],
+    "why": "Many historians treat it as a topic area. Most agree the pace of change increased."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the frame of reference. Galileo was born in 1564, the same year as Shakespeare. He died in 1642, the year Newton was born."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1564 Galileo and Shakespeare born | 1603 Tokugawa shogunate begins in Japan | 1610 Starry Messenger | 1618 Thirty Years' War begins | 1620 Mayflower lands | 1632 Taj Mahal begun | 1633 Galileo's trial | 1642 Galileo dies, Newton born | 1660 Royal Society founded | 1687 Principia"
+   },
+   "cite": [
+    "s1",
+    "s34",
+    "s23",
+    "s25",
+    "s18",
+    "s27",
+    "s13",
+    "s6"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which of these people was born in the same year as Galileo, 1564?",
+    "right": "William Shakespeare",
+    "wrong": [
+     "Isaac Newton",
+     "Johannes Kepler",
+     "Nicolaus Copernicus"
+    ],
+    "why": "Galileo and Shakespeare were both born in 1564. Newton was born in 1642, Kepler in 1571 and Copernicus in 1473."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To sum up. People tested ideas with telescopes, microscopes and experiments, shared the results, and let others check them."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Copernicus: Sun-centred idea | Kepler: elliptical orbits | Galileo: telescope and experiments | Newton: one set of laws | Many cultures contributed"
+   },
+   "cite": [
+    "s1",
+    "s5",
+    "s2",
+    "s6",
+    "s15"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which sentence best sums up the new way of studying nature?",
+    "right": "Test ideas with observation, measurement and experiment, and share results so others can check them",
+    "wrong": [
+     "Believe the oldest books without question",
+     "Use thinking only and never look",
+     "Keep discoveries secret"
+    ],
+    "why": "The Royal Society's motto and Galileo's habit of measuring both point to testing ideas against evidence."
+   }
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Years since Copernicus's book (1543)",
+   "rows": [
+    {
+     "label": "To Galileo's Starry Messenger (1610)",
+     "value": 67,
+     "source": "s2"
+    },
+    {
+     "label": "To Galileo's trial (1633)",
+     "value": 90,
+     "source": "s19"
+    },
+    {
+     "label": "To Newton's Principia (1687)",
+     "value": 144,
+     "source": "s6"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Magnification of early instruments (times; top of range)",
+   "rows": [
+    {
+     "label": "Galileo's telescope, 1610",
+     "value": 20,
+     "source": "s2"
+    },
+    {
+     "label": "Hooke's compound microscope, 1660s",
+     "value": 50,
+     "source": "s33"
+    },
+    {
+     "label": "Leeuwenhoek's single lens, 1670s",
+     "value": 266,
+     "source": "s33"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Heliocentric and geocentric models",
+   "links": [
+    "[[The Renaissance]]",
+    "[[Early Earth and the Moon]]",
+    "[[Our Sun and Solar System]]"
+   ]
+  },
+  {
+   "topic": "Experiment and the Royal Society",
+   "links": [
+    "[[Enlightenment and Absolute Monarchy]]",
+    "[[How Do We Know? Reading the Evidence and Telling Time]]"
+   ]
+  },
+  {
+   "topic": "Science and religion",
+   "links": [
+    "[[The Reformation and the Wars of Religion]]",
+    "[[Science and Ideas in the 1800s]]"
+   ]
+  },
+  {
+   "topic": "Contributions from the Islamic world",
+   "links": [
+    "[[Tang and Song China and the Islamic Golden Age]]",
+    "[[The Mongol Empire]]"
+   ]
+  },
+  {
+   "topic": "Microscopes and cells",
+   "links": [
+    "[[Complex Cells, Oxygen and a Changing Planet]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "1564",
+   "elsewhere": "Galileo and the playwright William Shakespeare were both born this year.",
+   "cite": [
+    "s1",
+    "s34"
+   ]
+  },
+  {
+   "when": "1603",
+   "elsewhere": "Tokugawa Ieyasu became shogun in Japan, starting nearly three centuries of Tokugawa rule.",
+   "cite": [
+    "s23"
+   ]
+  },
+  {
+   "when": "1618",
+   "elsewhere": "The Thirty Years' War began in Europe. Kepler's last law of planetary motion is dated to about the same time.",
+   "cite": [
+    "s25"
+   ]
+  },
+  {
+   "when": "1620",
+   "elsewhere": "The Mayflower brought Pilgrims to Plymouth. Francis Bacon's Novum Organum also appeared.",
+   "cite": [
+    "s23",
+    "s25"
+   ]
+  },
+  {
+   "when": "1632 to 1633",
+   "elsewhere": "Galileo's Dialogue appeared in 1632. Shah Jahan began building the Taj Mahal in India, and Galileo went to Rome for trial in 1633.",
+   "cite": [
+    "s19",
+    "s23"
+   ]
+  },
+  {
+   "when": "1642",
+   "elsewhere": "Galileo died, and Isaac Newton was born in the same year.",
+   "cite": [
+    "s18",
+    "s27"
+   ]
+  },
+  {
+   "when": "1660 to 1661",
+   "elsewhere": "The Royal Society was founded in London. Charles II was crowned king of England and Louis XIV began his personal rule in France.",
+   "cite": [
+    "s13",
+    "s25"
+   ]
+  },
+  {
+   "when": "1665",
+   "elsewhere": "Hooke's Micrographia was published, and the Royal Society began its journal Philosophical Transactions.",
+   "cite": [
+    "s11",
+    "s13"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The Scientific Revolution was a single great turning point in how people studied nature.",
+   "other_view": "Many historians now doubt there was one coherent event. Shapin opened a famous book by saying so, and he stressed continuity with medieval thought. Copernicus was cautious, and few people paid attention to his work for about fifty years. Most scholars still agree change sped up, and some argue the idea remains a useful category.",
+   "cite": [
+    "s9",
+    "s35",
+    "s32",
+    "s31"
+   ]
+  },
+  {
+   "claim": "Copernicus's mathematics owed a great deal to the astronomers of Maragha.",
+   "other_view": "Some scholars say Copernicus could not have reached his model without them, because his diagrams and maths closely match Tusi's. Others find no evidence the Maragha scholars influenced his Sun-centred system. They note that he never mentioned al-Tusi or Ibn al-Shatir, and that these scholars had no Sun-centred model.",
+   "cite": [
+    "s16",
+    "s17"
+   ]
+  },
+  {
+   "claim": "Galileo's trial shows science fighting religion.",
+   "other_view": "The Church's condemnation became the iconic illustration of conflict between science and religion. Some historians say that is too simple. They point to a Church order, personal quarrels, politics, and the view that the evidence was not yet decisive.",
+   "cite": [
+    "s18",
+    "s20"
+   ]
+  },
+  {
+   "claim": "Galileo's telescope settled whether Earth moves.",
+   "other_view": "The phases of Venus contradicted Ptolemy's model but also fit a rival Sun-and-planets model. Defenders of the Church's position argue that the evidence in 1616 was not firmly on the side of heliocentrism.",
+   "cite": [
+    "s4",
+    "s20"
+   ]
+  },
+  {
+   "claim": "The Scientific Revolution was mainly a European story.",
+   "other_view": "One recent preprint argues that Islamic astronomy was an independent scientific revolution, not just a bridge between Greece and Europe. This is a newer view and not everyone shares it.",
+   "cite": [
+    "s30"
+   ]
+  }
+ ]
+}

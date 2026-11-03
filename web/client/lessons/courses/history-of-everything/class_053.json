@@ -1,0 +1,1135 @@
+{
+ "about": {
+  "title": "Depression, Dictators and the Slide to War",
+  "course": "history-of-everything",
+  "class_n": 53,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 35,
+  "length_note": "This class runs about 35 minutes, a little over the usual half hour. It covers five topics plus a debate, and earlier lessons felt rushed. Each idea gets its own short step and a check question. If you need a shorter class, stop after the Stalin section and do the Japan and debate sections next time."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "What Caused the Great Depression?",
+   "publisher": "Federal Reserve Bank of St. Louis",
+   "date": "n.d.",
+   "link": "https://www.stlouisfed.org/the-great-depression/curriculum/economic-episodes-in-american-history-part-5",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "Unemployment in Interwar Germany: An Analysis of the Labor Market, 1927-1936 (abstract)",
+   "publisher": "ProQuest",
+   "date": "n.d.",
+   "link": "https://www.proquest.com/docview/216448809",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "Adolf Hitler and the Nazi Rise to Power, 1918–1933",
+   "publisher": "United States Holocaust Memorial Museum (Holocaust Encyclopedia)",
+   "date": "n.d.",
+   "link": "https://encyclopedia.ushmm.org/content/en/article/the-nazi-rise-to-power",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "Adolf Hitler is Appointed Chancellor",
+   "publisher": "United States Holocaust Memorial Museum (Holocaust Encyclopedia)",
+   "date": "n.d.",
+   "link": "https://encyclopedia.ushmm.org/content/en/timeline-event/holocaust/1933-1938/hitler-appointed-chancellor",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "Adolf Hitler",
+   "publisher": "United States Holocaust Memorial Museum (Holocaust Encyclopedia)",
+   "date": "n.d.",
+   "link": "https://encyclopedia.ushmm.org/content/en/article/adolf-hitler",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "March on Rome",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/event/March-on-Rome",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "The March on Rome that never happened: 100 years on",
+   "publisher": "C-REX, University of Oslo",
+   "date": "2022",
+   "link": "https://www.sv.uio.no/c-rex/english/news-and-events/right-now/2022/the-march-on-rome-which-never-happened.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "Great Famine Strikes the Soviet Union",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/politics-and-government/great-famine-strikes-soviet-union/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "Stalin Introduces Central Planning",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/history/stalin-introduces-central-planning/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "History 105, Lecture 18 (Prof. J. Popkin)",
+   "publisher": "University of Kentucky",
+   "date": "2002-11-13",
+   "link": "https://www.uky.edu/~popkin/105Nov13.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "Nanjing Massacre",
+   "publisher": "USC Shoah Foundation",
+   "date": "n.d.",
+   "link": "https://sfi.usc.edu/collections/nanjing-massacre",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "Statewide Dual Credit World History, Chapter 14: The World Afire: World War II (Japanese Invasion of Manchuria)",
+   "publisher": "OER Commons",
+   "date": "n.d.",
+   "link": "https://oercommons.org/courseware/lesson/88049/student-old/?task=2",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "The War in China",
+   "publisher": "American Historical Association",
+   "date": "n.d.",
+   "link": "https://www.historians.org/resource/the-war-in-china/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "Munich Agreement",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/event/Munich-Agreement",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "Chamberlain and Hitler 1938",
+   "publisher": "The National Archives (UK)",
+   "date": "n.d.",
+   "link": "https://www.nationalarchives.gov.uk/education/resources/chamberlain-and-hitler/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "'Peace for our time': opposing the Munich Agreement",
+   "publisher": "The History of Parliament",
+   "date": "2018-09-28",
+   "link": "https://historyofparliament.com/2018/09/28/opposing-the-munich-agreement/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "Case 366. The 1938 Munich Conference: Hitler, Chamberlain, and Appeasement",
+   "publisher": "Institute for the Study of Diplomacy, Georgetown University",
+   "date": "n.d.",
+   "link": "https://isd.georgetown.edu/publications/case-studies/case-366-the-1938-munich-conference-hitler-chamberlain-and-appeasement/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "Rethinking Guernica. Picasso's Twentieth-Century Work-Icon Close-Up",
+   "publisher": "Museo Reina Sofía",
+   "date": "n.d.",
+   "link": "https://guernica.museoreinasofia.es/en",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "Gandhi Leads the Salt March",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/history/gandhi-leads-salt-march/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "Jesse Owens Competes in Olympic Games",
+   "publisher": "United States Holocaust Memorial Museum (Holocaust Encyclopedia)",
+   "date": "n.d.",
+   "link": "https://encyclopedia.ushmm.org/content/en/timeline-event/holocaust/1933-1938/jesse-owens-competes-in-olympic-games",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "Weimar Republic: The end of the Weimar Republic",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/place/Weimar-Republic/The-end-of-the-Weimar-Republic",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "The Great Depression in Germany (A New Economic Crisis)",
+   "publisher": "Facing History and Ourselves",
+   "date": "n.d.",
+   "link": "https://www.facinghistory.org/resource-library/new-economic-crisis",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "Great Depression in Germany",
+   "publisher": "Alpha History",
+   "date": "n.d.",
+   "link": "https://alphahistory.com/nazigermany/the-great-depression/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "Collectivisation and the Soviet Peasantry: A Short Guide",
+   "publisher": "Explaining History",
+   "date": "2025-10-27",
+   "link": "https://explaininghistory.org/2025/10/27/collectivisation-and-the-soviet-peasantry-a-short-guide/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "Munich Conference",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/history/munich-conference/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "Nazi Rule",
+   "publisher": "United States Holocaust Memorial Museum (Holocaust Encyclopedia)",
+   "date": "n.d.",
+   "link": "https://encyclopedia.ushmm.org/content/en/article/nazi-rule",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "Adolf Hitler: Key Dates",
+   "publisher": "United States Holocaust Memorial Museum (Holocaust Encyclopedia)",
+   "date": "n.d.",
+   "link": "https://encyclopedia.ushmm.org/content/en/article/adolf-hitler-key-dates",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "Guernica",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Guernica-by-Picasso",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 53. Last time we were in the 1920s. Today is the 1930s: how a money crisis helped push the world toward war."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Depression, Dictators and the Slide to War"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We'll take it one story at a time. First the Great Depression. Then Italy and Germany. Then Stalin's Soviet Union. Then Japan in China. We'll finish with a debate."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. The Great Depression\n2. Fascism in Italy and Nazism in Germany\n3. Stalin's USSR\n4. Japan and the war in China\n5. Debate: appeasement"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First word: a depression. It is a severe economic slump, when businesses make less and lay off workers."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Depression"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Great Depression is usually said to start with a crash. A stock is a small share of a company. From September 1929 to July 1932, US stocks lost 80 to 85 percent of their value."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "80–85%"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The crash was not the only cause. Economists also name bank failures, falling world trade, government policy, and a shrinking money supply. They weigh these differently."
+   },
+   "show": {
+    "kind": "list",
+    "text": "The stock market crash\nBank failures and panics\nCollapse of world trade (Smoot-Hawley Tariff)\nGovernment policies\nCollapse of the money supply"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Did economists name ONLY the stock market crash as a cause of the Great Depression?",
+    "right": "No. They also named bank failures, falling trade, government policy and a shrinking money supply.",
+    "wrong": [
+     "Yes. The crash is the only cause anyone has suggested.",
+     "No. They blamed only the weather.",
+     "Yes. Banks had nothing to do with it."
+    ],
+    "why": "The St. Louis Fed lists several suggested causes. The crash is the most popular one, but it is only one of them."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The human cost was jobs. In the United States by 1932, more than 12 million people, about 24 percent of workers, were out of work."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "12 million+"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The slump did not stay in America. Germany's late-1920s prosperity rested on foreign loans. When the loans dried up, Germany fell into a slump worse than any other country's."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Germany relied on foreign loans"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is Germany's jobless count. Summer 1929: just under 1.3 million. Early 1932: over 6 million. It was still over 6 million at the start of 1933."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "German unemployment, millions",
+    "chart": "c1"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Looking at the chart, about how many times more unemployed Germans were there in early 1932 than in summer 1929?",
+    "right": "About five times as many",
+    "wrong": [
+     "About the same number",
+     "About twice as many",
+     "About fifty times as many"
+    ],
+    "why": "From just under 1.3 million to over 6 million is roughly five times as many."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "When people lose work and savings, some lose faith in ordinary politics. We call parties that offer extreme answers extremist parties. In Germany, votes shifted toward the Communist and Nazi parties."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Extremist parties"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The two parties together had 13 percent of the vote in May 1928. By the last free election, in November 1932, they had half of all valid votes."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Communist and Nazi share of the German vote, percent",
+    "chart": "c2"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "By the last free German election, in November 1932, about what share of votes went to the Communist and Nazi parties together?",
+    "right": "About half",
+    "wrong": [
+     "About one in ten",
+     "About 90 percent",
+     "Under 1 percent"
+    ],
+    "why": "The share rose from 13 percent in 1928 to half of all valid votes in November 1932."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now we step back in time. Italy's fascists took power in 1922, seven years before the crash. So the Depression did not create fascism."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Fascism in Italy: a step back to 1922"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Fascism was the name of Benito Mussolini's movement. It used armed squads called Blackshirts. Many Italians were unhappy. The middle class feared a socialist revolution, and many were let down by the peace after World War One."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Fear of a socialist revolution | Disappointment with the peace after World War One"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In late October 1922 the Fascists planned a 'March on Rome' by Blackshirt squads. The government gave way, and the king named Mussolini prime minister."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "24 Oct 1922: Fascist leaders plan the march\n28–30 Oct 1922: the March on Rome\nLate Oct 1922: Mussolini takes power"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Mussolini later called it a conquest of power. Britannica calls it a transfer of power inside the constitution, made possible by officials giving in to fascist intimidation. Researchers in Oslo call the famous 'march' a myth."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Myth vs. reality"
+   },
+   "cite": [
+    "s6",
+    "s7"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "According to these sources, how did Mussolini get power in 1922?",
+    "right": "Officials gave way to fascist intimidation, and he was handed the post of prime minister.",
+    "wrong": [
+     "He won a long civil war against the army.",
+     "He was elected with a huge majority.",
+     "He was chosen by the League of Nations."
+    ],
+    "why": "Britannica describes a transfer of power after authorities surrendered to intimidation, not a battlefield conquest."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Back to Germany, where our charts left off. On January 30, 1933, President Paul von Hindenburg appointed Adolf Hitler chancellor, the head of the government."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Nazi Germany: January 30, 1933"
+   },
+   "cite": [
+    "s3",
+    "s4"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A common mistake is that Hitler was voted into office. He was not. He was appointed, through Germany's legal process, and he did not seize power in a coup."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Appointed, not elected"
+   },
+   "cite": [
+    "s4",
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why did Hindenburg do it? Conservative politician Franz von Papen thought he could control Hitler. He persuaded the reluctant president that there were no other options. The USHMM stresses that the Nazi rise was not inevitable."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Von Papen's plan: control Hitler from inside the government\nHindenburg: reluctant, but agreed\nHistorians: it was not inevitable"
+   },
+   "cite": [
+    "s5",
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Who appointed Hitler as chancellor in January 1933?",
+    "right": "President Paul von Hindenburg",
+    "wrong": [
+     "The German voters, in a special vote",
+     "Benito Mussolini",
+     "The German army, after a coup"
+    ],
+    "why": "Hindenburg, the German president, appointed Hitler on January 30, 1933."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A chancellor is not yet a dictator. On February 27, 1933, the Reichstag, the parliament building, burned. Hitler used the fire to take extraordinary powers. On March 23, parliament passed the Enabling Act."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Enabling Act"
+   },
+   "cite": [
+    "s26",
+    "s27"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Act let Hitler make laws without parliament's consent. It passed only because his government intimidated other parties, and many opponents had been arrested and could not vote."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Laws without parliament's consent\nOpponents intimidated\nMany opponents arrested, unable to vote"
+   },
+   "cite": [
+    "s27",
+    "s3",
+    "s26"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Hindenburg died in August 1934. Hitler abolished the presidency and named himself Führer, 'leader'. Soldiers and civil servants swore a personal oath of loyalty to him."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Jan 1933: appointed chancellor\nMar 1933: Enabling Act\nAug 1934: Hindenburg dies; Hitler becomes Führer"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What did the Enabling Act allow Hitler's government to do?",
+    "right": "Pass laws without needing parliament's approval",
+    "wrong": [
+     "End the Great Depression overnight",
+     "Give every German a vote",
+     "Make Hindenburg chancellor"
+    ],
+    "why": "The Act let Hitler, as chancellor, sign laws without parliamentary consent. That effectively set up a dictatorship."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Different country, same decade. Joseph Stalin ruled the Soviet Union, a Communist state. In October 1928 he began the First Five-Year Plan: build heavy industry fast, and reorganize farming."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Stalin's USSR: the Five-Year Plans"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Collectivization means merging millions of small peasant farms into giant state-controlled ones. The aim was to modernize farming and pay for industry."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Collectivization"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Peasants resisted. Many killed their animals rather than hand them over, and some hid grain or fled. The state answered with brutal force. By 1937, private farming was almost gone."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Peasants: hid grain, slaughtered livestock, fled | The state: brutal coercion"
+   },
+   "cite": [
+    "s24",
+    "s9"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What was collectivization in the Soviet Union?",
+    "right": "Merging many small peasant farms into large state-controlled farms",
+    "wrong": [
+     "Giving farmland free to every peasant",
+     "Moving all factories to the countryside",
+     "Selling state farms to foreign companies"
+    ],
+    "why": "Collectivization pulled small independent farms into giant state-controlled collectives."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A catastrophic famine followed in the early 1930s. Its human cost was enormous, but Stalin's government could not admit it, so the world knew little at the time."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The Great Famine"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "On paper, industry grew. Using Soviet figures, industry produced 41.7 percent of national income in 1929 and 53.1 percent in 1937. Millions paid for that growth."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Industry's share of Soviet national income, percent",
+    "chart": "c3"
+   },
+   "cite": [
+    "s9",
+    "s8"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "As the plans advanced, Stalin tightened control. In the Great Terror, people were arrested for imaginary crimes, then executed or sent to prison camps called the Gulag."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The Great Terror"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now East Asia. On September 18, 1931, Japan invaded Manchuria, in northeastern China. It was an industrial region with rich coal and mineral reserves."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A map of East Asia. Manchuria is shaded in the northeast of China. Beijing is to its southwest. Shanghai and Nanjing sit along the Yangtze River to the south."
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "China appealed to the League of Nations, an international body set up to keep peace. Meanwhile, between 1931 and 1936, the Japanese edged further into North China."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1931: Manchuria invaded\n1931–36: Japan edges into North China"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "On July 7, 1937, Chinese and Japanese troops clashed at the Marco Polo Bridge near Beijing. This grew into full-scale war. China's Nationalists and Communists paused their civil war to ally against Japan."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Marco Polo Bridge, July 7, 1937"
+   },
+   "cite": [
+    "s11",
+    "s12"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What happened after the clash at the Marco Polo Bridge on July 7, 1937?",
+    "right": "It grew into full-scale war between China and Japan.",
+    "wrong": [
+     "China and Japan signed a peace treaty.",
+     "Japan withdrew from Manchuria.",
+     "China invaded Japan."
+    ],
+    "why": "The Marco Polo Bridge incident provoked the full-scale Second Sino-Japanese War, which lasted until 1945."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "This part is hard, so take a breath. In December 1937 Japanese forces captured Nanjing, then China's capital. They killed civilians and unarmed soldiers over about two months. Estimates of the dead range from about 200,000 to as many as 300,000."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Nanjing, December 1937"
+   },
+   "cite": [
+    "s11",
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the debate. By 1938 Hitler wanted more land. Britain's prime minister, Neville Chamberlain, tried appeasement: giving in to demands, hoping to avoid war."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Appeasement"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "At Munich, on September 29–30, 1938, Germany, Britain, France and Italy agreed that Germany could take the Sudetenland. That was a German-speaking part of western Czechoslovakia. Hitler promised no more land demands."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A map of central Europe. Czechoslovakia is shown with its western border region, the Sudetenland, marked as handed to Germany."
+   },
+   "cite": [
+    "s14",
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Chamberlain came home saying he had won 'peace for our time'. Within months, Nazi armies took what remained of Czechoslovakia. World War II began in September 1939."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "\"Peace for our time\" — Neville Chamberlain, 1938"
+   },
+   "cite": [
+    "s14",
+    "s16"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the case against appeasement. Critics say Munich encouraged more aggression. In Parliament, Winston Churchill and others spoke against it."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "The case against: it encouraged Hitler | Opponents: Churchill, Anthony Eden, many in the Labour movement"
+   },
+   "cite": [
+    "s15",
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the case for it. Even as Chamberlain signed, he agreed a huge rise in arms spending. Defenders say Munich bought time. Historians still argue whether that extra year helped Britain and France more than it helped Germany."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "The case for: time to rearm | Still disputed: did the extra year help the Allies more?"
+   },
+   "cite": [
+    "s14",
+    "s15",
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The bigger question is whether war was avoidable at all. Historian Paul Kennedy calls appeasement 'massively over-determined'. That means many forces pushed events the same way, so no single decision decided it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Was war avoidable?"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which is an argument made by DEFENDERS of the Munich Agreement?",
+    "right": "It bought time for Britain and France to build up their armed forces.",
+    "wrong": [
+     "It made Hitler keep his promises.",
+     "It protected Czechoslovakia's borders.",
+     "It ended the Nazi Party."
+    ],
+    "why": "Defenders say Munich bought time for rearmament. Critics reply that Hitler broke his word within months and that Czechoslovakia lost its territory."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "I won't give you a verdict. Historians still disagree, and good arguments exist on both sides. Weigh the evidence and decide for yourself."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Was Chamberlain buying time, or hoping for lasting peace?\nCould firmness in 1938 have stopped Hitler?\nWould the public have backed war earlier?"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now our frame of reference: what else was happening. In March and April 1930, Gandhi led a march of about 240 miles to the coast at Dandi to defy Britain's salt laws."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1930: Gandhi's Salt March in India\n1936: Berlin Olympics\n1937: Guernica bombed and painted\n1938: Munich"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In August 1936, in Hitler's Germany, American runner Jesse Owens won the 100-meter gold. Many US journalists hailed the victories of Owens and other Black athletes as a blow to the Nazi myth of 'Aryan' supremacy."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A runner in a white vest crossing a finish line at the 1936 Berlin Olympics, with a crowd behind him."
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "On April 26, 1937, during the Spanish Civil War, German and Italian forces bombed the Basque town of Gernika. Pablo Picasso answered with his huge black-and-white painting Guernica. It became a symbol against the destruction of war."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A mural-sized black-and-white painting. Distorted figures, a screaming horse and a grieving woman fill one crowded room."
+   },
+   "cite": [
+    "s18",
+    "s28"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To recap: a depression shook the world, and extremist parties grew. Mussolini took power by intimidation, and Hitler through legal steps and then force. Stalin transformed the USSR at terrible cost. Japan pushed deeper into China. Next class, the war itself."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Depression and extremist politics\nMussolini and Hitler\nStalin's plans and terror\nJapan's war in China\nMunich: was war avoidable?"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "German unemployed, in millions (approximate)",
+   "rows": [
+    {
+     "label": "Summer 1929 (just under 1.3)",
+     "value": 1.3,
+     "source": "s2"
+    },
+    {
+     "label": "Early 1932 (over 6)",
+     "value": 6,
+     "source": "s2"
+    },
+    {
+     "label": "Start of 1933 (over 6)",
+     "value": 6,
+     "source": "s2"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Communist and Nazi parties' combined share of German votes (percent)",
+   "rows": [
+    {
+     "label": "May 1928",
+     "value": 13,
+     "source": "s2"
+    },
+    {
+     "label": "November 1932 (about half)",
+     "value": 50,
+     "source": "s2"
+    }
+   ]
+  },
+  {
+   "id": "c3",
+   "kind": "bar",
+   "title": "Industry's share of Soviet national income (percent, Soviet definition)",
+   "rows": [
+    {
+     "label": "1929",
+     "value": 41.7,
+     "source": "s9"
+    },
+    {
+     "label": "1937",
+     "value": 53.1,
+     "source": "s9"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Great Depression",
+   "links": [
+    "[[Revolution, Flu and the Roaring Twenties]]",
+    "[[World War II]]"
+   ]
+  },
+  {
+   "topic": "Fascism and Nazism",
+   "links": [
+    "[[World War I]]",
+    "[[The Holocaust and the Memory of Genocide]]"
+   ]
+  },
+  {
+   "topic": "Stalin's USSR",
+   "links": [
+    "[[Revolution, Flu and the Roaring Twenties]]",
+    "[[A New World Order: The UN, the Cold War and Decolonization]]"
+   ]
+  },
+  {
+   "topic": "Japan's war in China",
+   "links": [
+    "[[Imperialism: Africa, India, China and Japan]]",
+    "[[World War II]]"
+   ]
+  },
+  {
+   "topic": "Appeasement",
+   "links": [
+    "[[World War II]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "Fall 1929 to 1932",
+   "elsewhere": "US stocks lost 80–85% of their value, and German unemployment climbed from just under 1.3 million to over 6 million.",
+   "cite": [
+    "s1",
+    "s2"
+   ]
+  },
+  {
+   "when": "March–April 1930",
+   "elsewhere": "In India, Gandhi led the roughly 240-mile Salt March to Dandi to defy the British salt laws, as the Depression deepened.",
+   "cite": [
+    "s19"
+   ]
+  },
+  {
+   "when": "September 1931",
+   "elsewhere": "Japan invaded Manchuria while the world was deep in the Depression.",
+   "cite": [
+    "s11"
+   ]
+  },
+  {
+   "when": "January–March 1933",
+   "elsewhere": "Hitler was appointed chancellor, and the Enabling Act followed in March.",
+   "cite": [
+    "s3",
+    "s4"
+   ]
+  },
+  {
+   "when": "August 1936",
+   "elsewhere": "Jesse Owens won the 100-meter gold at the Berlin Olympics, Hitler's showcase games.",
+   "cite": [
+    "s20"
+   ]
+  },
+  {
+   "when": "April–July 1937",
+   "elsewhere": "Gernika was bombed in Spain's civil war, and Picasso's Guernica was shown at the Paris World's Fair that year. In July the Marco Polo Bridge clash began the full war between China and Japan.",
+   "cite": [
+    "s18",
+    "s11"
+   ]
+  },
+  {
+   "when": "September 1938",
+   "elsewhere": "The Munich Agreement let Germany annex the Sudetenland, a year before World War II began in Europe.",
+   "cite": [
+    "s14"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The stock market crash caused the Great Depression.",
+   "other_view": "The crash is the popular explanation. The St. Louis Fed's David Wheelock says the crash did affect spending, but he puts more blame on the Fed, bank failures and the collapse of the money supply. Other suggested causes include the Smoot-Hawley Tariff and government policy.",
+   "cite": [
+    "s1"
+   ]
+  },
+  {
+   "claim": "The Depression made Hitler's rise to power unavoidable.",
+   "other_view": "The USHMM stresses that the Nazi rise was not inevitable. Back-room deals among conservative elites and Hindenburg's decision were decisive. Scholars also differ on how far the weaknesses of 1920s Germany made it vulnerable to the Depression.",
+   "cite": [
+    "s3",
+    "s5",
+    "s2"
+   ]
+  },
+  {
+   "claim": "The March on Rome was a fascist revolution that seized power.",
+   "other_view": "Mussolini's propaganda told it that way, and Britannica still calls it an insurrection. Britannica also describes it as a transfer of power inside the constitution after officials gave in to intimidation. Oslo researchers call the 'march' a myth and describe a change of ruling elite, with Mussolini entering a coalition government.",
+   "cite": [
+    "s6",
+    "s7"
+   ]
+  },
+  {
+   "claim": "The Soviet famine of the early 1930s was an unintended result of collectivization.",
+   "other_view": "Some sources describe the famine as emerging from the push for collectivization. Others read collectivization and famine as an act of terror designed to destroy the peasantry.",
+   "cite": [
+    "s8",
+    "s24"
+   ]
+  },
+  {
+   "claim": "The scale and timing of Stalin's Great Terror.",
+   "other_view": "Sources differ. One university lecture dates it 1934–38 and says millions were arrested, then executed or sent to camps. Another source dates it 1936–37 and speaks of thousands killed. They may be counting different things.",
+   "cite": [
+    "s10",
+    "s8"
+   ]
+  },
+  {
+   "claim": "The war between China and Japan began in 1937.",
+   "other_view": "Most sources date the Second Sino-Japanese War to the Marco Polo Bridge incident of July 1937. The American Historical Association argues it really began with the 1931 invasion of Manchuria.",
+   "cite": [
+    "s11",
+    "s12",
+    "s13"
+   ]
+  },
+  {
+   "claim": "The number killed in the Nanjing Massacre.",
+   "other_view": "Estimates differ by source. The USC Shoah Foundation says as many as 300,000, while a world-history textbook on OER Commons gives about 200,000.",
+   "cite": [
+    "s11",
+    "s12"
+   ]
+  },
+  {
+   "claim": "Appeasement at Munich was a mistake that made war certain.",
+   "other_view": "Critics say it encouraged Hitler, and the deal fell apart within months. Defenders say it bought time for rearmament, and Chamberlain likely acted in good faith. Historians still argue whether the extra year helped the Allies. Paul Kennedy argues that appeasement was 'massively over-determined', so more forces were at work than one man's choice.",
+   "cite": [
+    "s14",
+    "s15",
+    "s16",
+    "s17",
+    "s25"
+   ]
+  }
+ ]
+}

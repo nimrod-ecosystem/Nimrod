@@ -1,0 +1,1408 @@
+{
+ "about": {
+  "title": "Classical Greece",
+  "course": "history-of-everything",
+  "class_n": 21,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes, read slowly with pauses for ten short questions. Seven topics are packed in, so each idea gets one or two short beats and a check question. Nothing was cut to save time."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Ancient Greek civilization",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/place/ancient-Greece",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "Polis: The City-State of Ancient Greece",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/Polis/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "6.3: Ancient Greece (World History Volume 1, OpenStax)",
+   "publisher": "Humanities LibreTexts, reproducing OpenStax",
+   "date": "n.d.",
+   "link": "https://human.libretexts.org/Bookshelves/History/World_History/World_History_1%3A_to_1500_(OpenStax)/Unit_2%3A_States_and_Empires_1000_BCE500_CE/06%3A_Mediterranean_Peoples/6.03%3A_Ancient_Greece",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "The First Democracy: An Introduction to Athenian Demokratia",
+   "publisher": "League of Women Voters of Chicago",
+   "date": "n.d.",
+   "link": "https://www.lwvchicago.org/news/democracy-101-the-first-democracy",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "Athenian democracy",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/literature-and-writing/athenian-democracy/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "Athenian democracy",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Athenian_democracy",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "Persian Wars",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/Persian_Wars/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "Battle of Marathon",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/event/Battle-of-Marathon",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "Battle of Salamis",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/Battle_of_Salamis/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "Second Persian invasion of Greece",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Second_Persian_invasion_of_Greece",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "Peloponnesian War",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/event/Peloponnesian-War",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "Peloponnesian War summary",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/summary/Peloponnesian-War",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "Peloponnesian War",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/Peloponnesian_War/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "Theatre in Ancient Greece",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/drama-and-theater-arts/theatre-ancient-greece",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "Hippocrates and Ancient Greek Medicine (lecture by Professor Edith Hall)",
+   "publisher": "Gresham College",
+   "date": "n.d.",
+   "link": "https://www.gresham.ac.uk/watch-now/ancient-greek-medicine",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "Works of Hippocrates",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/history/works-hippocrates",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "What is the 'Hippocratic oath,' and who was Hippocrates?",
+   "publisher": "Live Science",
+   "date": "n.d.",
+   "link": "https://www.livescience.com/62515-hippocrates.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "Classical Greek Philosophy",
+   "publisher": "Lumen Learning (SUNY World History)",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/suny-worldhistory/chapter/classical-greek-philosophy/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "Socrates (469–399 BC)",
+   "publisher": "Routledge Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://www.rep.routledge.com/articles/biographical/socrates-469-399-bc/v-1/sections/life-and-sources",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "Plato",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/biography/Plato",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "Sparta: Definition, Greece & Peloponnesian War",
+   "publisher": "History.com",
+   "date": "n.d.",
+   "link": "https://www.history.com/articles/sparta",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "Spartan hegemony",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Spartan_hegemony",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "Parthenon: Temple of Athena Parthenos",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/parthenon/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "China's Warring States Period",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/history/chinas-warring-states-period/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "How People Voted in Ancient Elections",
+   "publisher": "History.com",
+   "date": "n.d.",
+   "link": "https://www.history.com/articles/ancient-elections-voting",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "Metic",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Metic",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "Health care practices in ancient Greece: The Hippocratic ideal",
+   "publisher": "PubMed Central (National Library of Medicine)",
+   "date": "n.d.",
+   "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4263393/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "The 431-404 BC Peloponnesian War in Ancient Greece",
+   "publisher": "History Is Now Magazine",
+   "date": "2025-03-06",
+   "link": "https://www.historyisnowmagazine.com/blog/2025/3/6/the-431-404-bc-peloponnesian-war-in-ancient-greece",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s29",
+   "title": "Ancient Sparta: Society, Helots, Warriors and Daily Life",
+   "publisher": "Passion for History",
+   "date": "n.d.",
+   "link": "https://passionforhistory.com/ancient-history/sparta-ancient-greece/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s30",
+   "title": "Socrates",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Socrates",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s31",
+   "title": "Classical Greek Theater",
+   "publisher": "Lumen Learning (SUNY World History)",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/suny-worldhistory/chapter/classical-greek-theater/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s32",
+   "title": "Warring States Period of China Timeline",
+   "publisher": "Preceden",
+   "date": "n.d.",
+   "link": "https://www.preceden.com/timeline/warring-states-period-of-china",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s33",
+   "title": "Hippocrates Legacy: Life, Work and Influence",
+   "publisher": "Confinity",
+   "date": "n.d.",
+   "link": "https://www.confinity.com/legacies/hippocrates",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to Class 21: Classical Greece. Today we meet the Greeks who gave us the word democracy, great plays, big questions, and a new way of thinking about illness."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Class 21: Classical Greece"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last time we met thinkers and teachers across the world. Before that, we met the Persian Empire. Both of those come back today. Here is our plan, one idea at a time."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. City-states 2. Athens and Sparta 3. The Persian Wars 4. The Peloponnesian War 5. Theater 6. Philosophy and medicine 7. Who was left out"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First idea: the polis. A polis is a Greek city-state. It is one city, with the land around it, and it ran its own affairs."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "polis = city-state"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So there was no single country called Greece back then. There were hundreds of small states. Eventually there were over a thousand, including Athens, Sparta, Corinth and Thebes."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A map of the Greek world around 500 BCE, with many small dots for city-states. Athens, Sparta, Corinth and Thebes are labelled."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Think of neighbours who share a language and gods but have separate governments. They often fought each other. But they could join forces against a common enemy, as we will see."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Separate states, shared language"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Quick check before we go on."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "What is a polis?"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was a polis?",
+    "right": "A Greek city-state that governed itself",
+    "wrong": [
+     "A Greek warship",
+     "A king who ruled all of Greece",
+     "A national army"
+    ],
+    "why": "A polis was a city plus its land, independent of the other poleis in its government and laws."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Second idea: the two biggest poleis, Sparta and Athens. Sparta first. By the late 500s BCE it was the most powerful state in the Peloponnese, the southern part of Greece."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Sparta"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Sparta led an alliance called the Peloponnesian League. And Sparta had two kings at once, from two rival royal families."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Leader of the Peloponnesian League. Two hereditary kings."
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Spartan society had three main groups. Spartans were the full citizens. Helots were enslaved workers. Perioeci were free, but they were not citizens."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Spartans (full citizens). Perioeci (free, not citizens). Helots (enslaved workers)."
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The helots were fellow Greeks whom Sparta had conquered. They did the farming and the daily work. Their lives were forced labour, and that is the hard truth under Sparta's famous image."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Helots = captives"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Because helots did the work, Spartan men could train full-time. Boys left home at age seven for a state training system called the agoge. It stressed duty, discipline and endurance."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "agoge: training from age 7"
+   },
+   "cite": [
+    "s21",
+    "s22"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let us check that."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Who did Sparta's farming?"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In Sparta, who did most of the farming and daily labour?",
+    "right": "The helots, who were conquered and enslaved",
+    "wrong": [
+     "The Spartan kings",
+     "Foreign merchants",
+     "The Spartan soldiers themselves"
+    ],
+    "why": "Helots handled the daily work, which freed Spartan citizens to train and fight."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now Athens. In 507 BCE, under a leader named Cleisthenes, Athenians began building a system of popular rule. They called it democracy."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Athens and democracy (from 507 BCE)"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Democracy comes from Greek words meaning 'people power'. In Athens it was direct. Citizens did not choose representatives to vote for them. They gathered and voted in person."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "dēmokratia = people power"
+   },
+   "cite": [
+    "s25",
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The main meeting was the Assembly. Free Athenian men over eighteen could attend, speak, and vote on laws by majority."
+   },
+   "show": {
+    "kind": "list",
+    "text": "The Assembly (Ecclesia): proposed, debated, decided."
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is a number. Athens had thirty to forty thousand adult male citizens. But only about six thousand were needed to hold an Assembly meeting."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "6,000"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "They also used chance. A machine called the kleroterion helped pick council members at random. And jurors were paid a small fee, so that poorer citizens could afford to serve."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A stone slab with rows of slots and tubes: the kleroterion, a lottery machine that picked citizens by chance."
+   },
+   "cite": [
+    "s25",
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Your turn."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "What is a direct democracy?"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does 'direct democracy' mean in Athens?",
+    "right": "Eligible citizens voted in person on laws and policy",
+    "wrong": [
+     "Citizens elected a few leaders to vote for them",
+     "One king made every decision",
+     "Only judges could vote"
+    ],
+    "why": "In Athens eligible citizens gathered in person to vote, instead of electing representatives."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Third idea: the Persian Wars. Persia invaded Greece twice, in 490 BCE and again in 480 BCE."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "490 BCE Marathon. Aug 480 BCE Thermopylae. Sep 480 BCE Salamis."
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First came Marathon, in September 490 BCE. The Athenians, heavily outnumbered, drove back the Persian army in a single afternoon."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Marathon, 490 BCE: Athens wins"
+   },
+   "cite": [
+    "s8",
+    "s27"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Legend says a messenger ran about 25 miles from Marathon to Athens with the news, then died of exhaustion. That story is where the modern marathon race comes from."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "about 25 miles (40 km)"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Ten years later, King Xerxes invaded. In August 480 BCE a small Greek force held a narrow pass at Thermopylae. It included 300 Spartans. The Persians won that battle."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Thermopylae, Aug 480 BCE: Persians win"
+   },
+   "cite": [
+    "s9",
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Then came Salamis, in September 480 BCE. A Greek fleet led by Themistocles beat Xerxes' much larger fleet. Athens and Sparta had fought on the same side."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Salamis, Sep 480 BCE: Greek fleet wins"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Check."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Who won at Thermopylae?"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Who won the battle of Thermopylae?",
+    "right": "The Persians won, despite fierce resistance",
+    "wrong": [
+     "The Greeks won easily",
+     "The Athenian navy won",
+     "The battle ended with no result"
+    ],
+    "why": "Thermopylae was a Persian victory. The Greeks later won at sea at Salamis."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "After the war, many Greek states formed the Delian League, led by Athens. It was meant to keep Persia away. Over time it turned into what historians call the Athenian Empire."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Delian League, then Athenian Empire"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Athens used money from the League's treasury to rebuild its temples, which Persia had burned in 480 BCE. This angered some other city-states."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "League money paid for Athens' rebuilding"
+   },
+   "cite": [
+    "s23",
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The best-known result is the Parthenon, built between 447 and 432 BCE under Pericles for the goddess Athena. Iktinos and Kallikrates designed it. The sculptor Phidias oversaw the art."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The Parthenon on the Acropolis in Athens: a white marble temple with rows of tall columns, seen from the west."
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Check."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "What paid for the Parthenon?"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Where did the money for the Parthenon largely come from?",
+    "right": "The treasury of the Delian League",
+    "wrong": [
+     "Tribute from Sparta",
+     "A Persian peace payment",
+     "Gifts from the helots"
+    ],
+    "why": "Pericles funded the Parthenon with surplus from the war treasury of the Delian League."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Fourth idea: the Peloponnesian War. Athens kept growing stronger, and this frightened Sparta. Ancient and modern writers agree that fear of Athenian power was the main cause."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Peloponnesian War, 431 to 404 BCE"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Nearly every Greek state took a side. Athens led the Delian League and Sparta led the Peloponnesian League. Athens relied on its navy and Sparta on its army."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Athens: Delian League, strong navy. Sparta: Peloponnesian League, strong army."
+   },
+   "cite": [
+    "s11",
+    "s12"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Early on, Pericles persuaded Athenians to move inside the city walls. He reasoned that the navy would bring food and supplies until Sparta tired of the war."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Inside the walls, supplied by sea"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Then Athens sent a huge force to Sicily. It was a disaster. By 413 BCE Athens' forces there were destroyed."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sicily, 413 BCE: a disaster for Athens"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Sparta, with Persian money, built a navy. It destroyed the Athenian fleet at Aegospotami in 405 BCE. Under blockade, Athens surrendered in 404 BCE. Its empire was broken up, and the Spartans set up a harsh ruling group, the Thirty Tyrants."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "431 war begins. 413 Sicily disaster. 405 Aegospotami. 404 Athens surrenders."
+   },
+   "cite": [
+    "s12",
+    "s13"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Check."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Who won, and who helped?"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Who won the Peloponnesian War?",
+    "right": "Sparta and its allies, helped by Persian money",
+    "wrong": [
+     "Athens and its allies",
+     "Persia alone",
+     "The war ended in a draw"
+    ],
+    "why": "Sparta won in 404 BCE after destroying Athens' fleet with Persian help."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Fifth idea: theater. Greek plays began inside religious festivals honouring Dionysus, the god of wine. Plays were performed in big open-air theaters."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Theater: plays for a god"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Two main kinds came out of this. Tragedy explored deep problems about right and wrong. Comedy made fun of society and its leaders."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Tragedy: moral dilemmas. Comedy: satire of society."
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Sophocles won first prize on his first try in 468 BCE, beating the older playwright Aeschylus. He won 24 times in his career. He is credited with adding a third actor."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sophocles: 24 festival wins"
+   },
+   "cite": [
+    "s14",
+    "s31"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Sadly, only seven of his 123 known plays survive. For comedy, eleven plays by Aristophanes survive, and they are our only full examples of that early style."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "7 of 123 plays survive"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Check."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Where did plays first appear?"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Where did Greek drama come from?",
+    "right": "Religious festivals honouring the god Dionysus",
+    "wrong": [
+     "Royal courts of Sparta",
+     "Military training camps",
+     "Marketplaces run by metics"
+    ],
+    "why": "Greek theater grew out of the Dionysia, an annual festival of Dionysus."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Sixth idea: philosophy. It means asking big questions, like how should we live, and then answering with reasons. We start with Socrates of Athens."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Philosophy"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Socrates wrote nothing himself. We know him mainly through his students, Plato and Xenophon."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Socrates: wrote nothing"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In 399 BCE he was tried for impiety, meaning disrespect to the gods, and for corrupting the young. He was convicted and sentenced to death. So a democracy put a thinker to death."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "399 BCE: trial of Socrates"
+   },
+   "cite": [
+    "s20",
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Plato was Socrates' student, founded a school called the Academy, and taught Aristotle. Aristotle later tutored Alexander the Great and founded his own school, the Lyceum."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Socrates (c. 470 to 399) taught Plato (428/427 to 348/347) who taught Aristotle (384 to 322)."
+   },
+   "cite": [
+    "s20",
+    "s18"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Check."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Who taught Aristotle?"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Who taught Aristotle?",
+    "right": "Plato",
+    "wrong": [
+     "Socrates",
+     "Hippocrates",
+     "Sophocles"
+    ],
+    "why": "Plato, a student of Socrates, founded the Academy and taught Aristotle."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now medicine. Hippocrates of Kos lived from about 460 to 375 BCE. At a time when many blamed the gods for illness, he taught that every illness has a natural cause."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Hippocrates: illness has natural causes"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "About sixty medical texts, called the Hippocratic Corpus, carry his name. Most were not written by him. They include the Hippocratic Oath, a code of ethics for doctors."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "about 60 texts"
+   },
+   "cite": [
+    "s16",
+    "s17"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Their theory was that health depends on four body fluids: blood, phlegm, yellow bile and black bile. That theory was later discredited. But the habit of watching patients and looking for natural causes lasted."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Blood. Phlegm. Yellow bile. Black bile."
+   },
+   "cite": [
+    "s27",
+    "s33"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Check."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "What was new in Hippocratic medicine?"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was the big new idea in Hippocratic medicine?",
+    "right": "Illness has natural causes that can be studied",
+    "wrong": [
+     "Illness is always a punishment from the gods",
+     "Only priests can heal",
+     "Illness cannot be explained"
+    ],
+    "why": "Hippocrates taught that all forms of illness have a natural cause, at a time when many blamed the gods."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Seventh idea: the limits of Athenian democracy. We have praised it, so we must also ask who was left out. Taking part was open to free adult male citizens."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Who was left out?"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Women, enslaved people and metics could not take part in politics. Metics were free foreigners who lived in Athens."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Left out: women. Enslaved people. Metics (resident foreigners)."
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Metics paid a special yearly tax. Many were Greek by birth and fit in culturally. Even so, citizenship was very rarely granted to them."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Metics: taxed, rarely made citizens"
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here are the numbers. Athens had a population approaching 200,000, but only 30,000 to 40,000 were adult male citizens. Historians' estimates vary, so treat these as rough."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Rough size of Athens' citizen body compared with its whole population",
+    "chart": "c1"
+   },
+   "cite": [
+    "s4",
+    "s3"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So women, enslaved people, foreigners and children together often made up the majority. Athens' democracy was real self-government for some people, and shut out many others. Both things are true."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Real for some. Closed to many."
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last check for this section."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Who could vote in Athens?"
+   },
+   "cite": [
+    "s6",
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Who could vote in the Athenian Assembly?",
+    "right": "Free adult male citizens",
+    "wrong": [
+     "Women who owned land",
+     "Metics who had paid taxes for many years",
+     "Enslaved people who were born in Athens"
+    ],
+    "why": "Participation was open only to free adult male citizens. Women, slaves and metics were excluded."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let us zoom out for our frame of reference. What else was happening in the world while all this was going on?"
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "551 Confucius born. 490 Marathon. 479 Confucius dies. 475 Warring States begins. 404 Athens surrenders. 399 Socrates dies."
+   },
+   "cite": [
+    "s24",
+    "s7",
+    "s12",
+    "s18"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In China, Confucius lived from 551 to 479 BCE. So he died while the Greeks were beating Persia. China then entered the Warring States period, which began around 475 BCE."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "China: Confucius dies 479, Warring States from 475"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Confucius died about ten years before Socrates was born. And Plato was born in the year after the death of Pericles, the statesman who built the Parthenon."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Confucius, then Socrates, about a decade apart"
+   },
+   "cite": [
+    "s24",
+    "s19",
+    "s20"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In Persia, Xerxes was king from 486 to 465 BCE. And when Athens fell in 404 BCE, Persian gold had helped Sparta win."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Persia: Xerxes, king 486 to 465 BCE"
+   },
+   "cite": [
+    "s9",
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let us gather it up. Greece was many city-states. Athens tried democracy and Sparta built a warrior state. Together they beat Persia, then fought each other. Along the way Greeks created drama, philosophy and natural medicine."
+   },
+   "show": {
+    "kind": "list",
+    "text": "City-states. Democracy, with limits. Persian Wars. Peloponnesian War. Theater, philosophy, medicine."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next time, Class 22: Alexander the Great, and how Greek culture spread far beyond Greece."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Alexander and the Hellenistic World"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Athens in the classical period: rough numbers of people",
+   "rows": [
+    {
+     "label": "Whole population (nearly)",
+     "value": 200000,
+     "source": "s4"
+    },
+    {
+     "label": "Adult male citizens, higher estimate",
+     "value": 40000,
+     "source": "s3"
+    },
+    {
+     "label": "Adult male citizens, lower estimate",
+     "value": 30000,
+     "source": "s3"
+    },
+    {
+     "label": "Number needed to hold an Assembly meeting",
+     "value": 6000,
+     "source": "s3"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Polis and city-states",
+   "links": [
+    "[[Sparta]]",
+    "[[Athens]]",
+    "[[Thinkers and Teachers: Buddha, Confucius, the Greeks and the Prophets]]"
+   ]
+  },
+  {
+   "topic": "Athenian democracy",
+   "links": [
+    "[[Metics]]",
+    "[[Limits of Athenian democracy]]",
+    "[[The Rise of Rome]]"
+   ]
+  },
+  {
+   "topic": "Persian Wars",
+   "links": [
+    "[[Iron Age Empires: Assyria, Babylon and Persia]]",
+    "[[Delian League]]",
+    "[[Parthenon]]"
+   ]
+  },
+  {
+   "topic": "Peloponnesian War",
+   "links": [
+    "[[Thucydides]]",
+    "[[Alexander and the Hellenistic World]]"
+   ]
+  },
+  {
+   "topic": "Greek theater, philosophy and medicine",
+   "links": [
+    "[[Socrates, Plato and Aristotle]]",
+    "[[Hippocrates]]",
+    "[[Dionysia]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "551 to 479 BCE",
+   "elsewhere": "In China, Confucius lived and taught. He died in 479 BCE, as the Greek victory over Persia was being won.",
+   "cite": [
+    "s24"
+   ]
+  },
+  {
+   "when": "475 BCE onward",
+   "elsewhere": "China entered the Warring States period, with seven rival states. It was also the age of the Hundred Schools of Thought, with thinkers such as Confucius and Laozi.",
+   "cite": [
+    "s24"
+   ]
+  },
+  {
+   "when": "486 to 465 BCE",
+   "elsewhere": "Xerxes ruled the Persian Empire, and his invasion of Greece in 480 BCE ended with defeat at sea at Salamis.",
+   "cite": [
+    "s9",
+    "s7"
+   ]
+  },
+  {
+   "when": "About 470 to 399 BCE",
+   "elsewhere": "Socrates lived in Athens. Confucius had died about ten years before he was born.",
+   "cite": [
+    "s19",
+    "s24"
+   ]
+  },
+  {
+   "when": "428 or 427 BCE",
+   "elsewhere": "Plato was born in Athens, the year after the death of Pericles.",
+   "cite": [
+    "s20"
+   ]
+  },
+  {
+   "when": "404 BCE",
+   "elsewhere": "Athens surrendered to Sparta. Persian money had helped Sparta build the navy that won.",
+   "cite": [
+    "s12"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Athens was the birthplace of democracy and a model of citizen participation.",
+   "other_view": "Critics point out that only free adult male citizens took part, and women, enslaved people and metics were shut out. Estimates of how many people could vote differ. One source says about 15 to 20 percent of residents, another says adult male citizens were no more than 30 percent of adults, and another gives 30,000 to 60,000 citizens.",
+   "cite": [
+    "s4",
+    "s6",
+    "s25"
+   ]
+  },
+  {
+   "claim": "The Persian Wars battles happened as ancient writers describe them, including the huge armies.",
+   "other_view": "Our main source is Herodotus. Modern historians generally rate him highly, but they treat his troop numbers and some dates with skepticism.",
+   "cite": [
+    "s10"
+   ]
+  },
+  {
+   "claim": "The Peloponnesian War was a clash between Athens' democracy and Sparta's oligarchy.",
+   "other_view": "Thucydides blamed Sparta's fear of Athenian power. One modern view holds that it was not a struggle of democracy against oligarchy at all, but a rivalry between two great powers neither of which could back down.",
+   "cite": [
+    "s12",
+    "s28"
+   ]
+  },
+  {
+   "claim": "Hippocrates wrote the medical works that carry his name.",
+   "other_view": "Scholars think the roughly 60 texts come from many physicians and span the 5th to 3rd centuries BCE. Fewer than a dozen are usually credited to Hippocrates himself, and almost nothing is known about the man.",
+   "cite": [
+    "s16",
+    "s17",
+    "s33"
+   ]
+  },
+  {
+   "claim": "We know what Socrates thought from Plato's dialogues.",
+   "other_view": "Socrates wrote nothing, and how far Plato's dialogues show the real Socrates is debated. Scholars use Plato with caution and also weigh Xenophon and Aristotle.",
+   "cite": [
+    "s19",
+    "s30"
+   ]
+  },
+  {
+   "claim": "Spartan life was as the famous training story tells it.",
+   "other_view": "Many detailed descriptions of the agoge come from writers who lived later than classical Sparta. Estimates of how many helots there were per Spartan citizen also vary, and one source gives about 7 or 8 to 1.",
+   "cite": [
+    "s29",
+    "s22"
+   ]
+  },
+  {
+   "claim": "The Warring States period began in 475 BCE.",
+   "other_view": "Historians date the start differently. Some use 475 BCE and others use 453 BCE, when the state of Jin was divided among three clans.",
+   "cite": [
+    "s24",
+    "s32"
+   ]
+  }
+ ]
+}

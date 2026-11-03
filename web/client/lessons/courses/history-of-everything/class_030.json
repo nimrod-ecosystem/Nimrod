@@ -1,0 +1,1355 @@
+{
+ "about": {
+  "title": "Japan, Korea, Southeast Asia and Medieval India",
+  "course": "history-of-everything",
+  "class_n": 30,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "This class covers six places, so it has about 50 short beats and 9 questions. At a slow, clear reading pace that comes to about 30 minutes. Each place gets one idea at a time, and the frame-of-reference beats come near the end."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "The Age of the Samurai (1185-1868)",
+   "publisher": "Asia for Educators, Columbia University",
+   "date": "n.d.",
+   "link": "https://afe.easia.columbia.edu/special/japan_1000ce_samurai.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Kamakura shogunate",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Kamakura_shogunate",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Kamakura shogunate",
+   "publisher": "New World Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.newworldencyclopedia.org/entry/Kamakura_shogunate",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Heian Period",
+   "publisher": "New World Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.newworldencyclopedia.org/entry/Heian_Period",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "What was the Heian Period and how did it change Japan?",
+   "publisher": "History Skills",
+   "date": "n.d.",
+   "link": "https://www.historyskills.com/classroom/year-8/heian-period/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "The Tale of Genji (catalog record)",
+   "publisher": "Library of Congress",
+   "date": "n.d.",
+   "link": "https://www.loc.gov/item/2021666121/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Guide to the classics: The Tale of Genji, a 1,000-year-old Japanese masterpiece",
+   "publisher": "The Conversation",
+   "date": "n.d.",
+   "link": "https://theconversation.com/guide-to-the-classics-the-tale-of-genji-a-1-000-year-old-japanese-masterpiece-99848",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Murasaki Shikibu & The Tale of Genji",
+   "publisher": "Europeana",
+   "date": "n.d.",
+   "link": "https://www.europeana.eu/en/stories/murasaki-shikibu-and-the-tale-of-genji",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "The Mongol Invasions of Japan, 1274 and 1281",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/article/1415/the-mongol-invasions-of-japan-1274-and-1281/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Hōjō Tokimune",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/biography/Hojo-Tokimune",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Korea",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/place/Korea",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Korea: Unified Silla (and Korea to c. 1400)",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/place/Korea/Unified-Silla",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Goryeo dynasty",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Goryeo-dynasty",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Angkor",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/place/Angkor",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Khmer Empire",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Khmer_Empire",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Suryavarman II",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/biography/Suryavarman-II",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Suryavarman II",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Suryavarman_II",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Jayavarman VII",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Jayavarman_VII",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Suryavarman II",
+   "publisher": "Encyclopedia.com",
+   "date": "n.d.",
+   "link": "https://www.encyclopedia.com/science/encyclopedias-almanacs-transcripts-and-maps/suryavarman-ii",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "A Guide to Angkor Wat, Cambodia",
+   "publisher": "National Geographic",
+   "date": "n.d.",
+   "link": "https://www.nationalgeographic.com/travel/world-heritage/article/angkor",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Angkor: Religious and Political Center of the Khmer Empire",
+   "publisher": "Ancient History Sites",
+   "date": "n.d.",
+   "link": "https://www.ancient-history-sites.com/sites/angkor/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Angkor",
+   "publisher": "UNESCO World Heritage Centre",
+   "date": "n.d.",
+   "link": "https://whc.unesco.org/en/list/668/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Srivijaya empire",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/place/Srivijaya-empire",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "Śrivijaya",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/history/srivijaya/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "History of Srivijaya",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/History_of_Srivijaya",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Rajaraja I",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/biography/Rajaraja-I",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "Rajendra I",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Rajendra_I",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "Gangaikonda Cholapuram",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Gangaikonda_Cholapuram",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "Delhi sultanate",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/place/Delhi-sultanate",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "Delhi Sultanate",
+   "publisher": "The Indosphere",
+   "date": "n.d.",
+   "link": "https://theindosphere.com/delhi-sultanate/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s31",
+   "title": "Sultanates: Delhi",
+   "publisher": "Encyclopedia.com",
+   "date": "n.d.",
+   "link": "https://www.encyclopedia.com/religion/encyclopedias-almanacs-transcripts-and-maps/sultanates-delhi",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s32",
+   "title": "Khalji dynasty",
+   "publisher": "Britannica Kids (Students)",
+   "date": "n.d.",
+   "link": "https://kids.britannica.com/students/article/Khalji-dynasty/623384",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s33",
+   "title": "Delhi Sultanate",
+   "publisher": "New World Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.newworldencyclopedia.org/entry/Delhi_Sultanate",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome. Today we visit four parts of Asia in the Middle Ages: Japan and Korea, Cambodia and Sumatra, and India. We will take one place at a time."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Japan, Korea, Southeast Asia and Medieval India"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, find them on a map. Japan and Korea are in the northeast. Cambodia and the island of Sumatra are in the southeast. South India is the tip of the triangle, and Delhi is in the north."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map of Asia with six marked places: Kyoto and Kamakura in Japan, the Korean peninsula, Angkor in Cambodia, Palembang on Sumatra, Tamil Nadu in South India, and Delhi in the north."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Our window is roughly the years 800 to 1400. These places had their own stories, but they sometimes touched. We will watch for those moments."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "794 Heian-kyō is the capital of Japan | 802 Khmer Empire begins | 985 Rajaraja I | 1185 Kamakura government | 1206 Delhi Sultanate | 1274 Mongols attack Japan | 1392 Joseon in Korea | 1398 Timur sacks Delhi"
+   },
+   "cite": [
+    "s4",
+    "s15",
+    "s26",
+    "s1",
+    "s30",
+    "s9",
+    "s11",
+    "s29"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's start in Japan. In 794 the capital moved to a new city called Heian-kyō, which is today's Kyoto. The Heian period is named after it and lasted until 1185."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Heian-kyō (Kyoto), 794"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The name Heian-kyō meant roughly Capital of Peace and Tranquility. In this era the emperor and court aristocrats ruled, and literature and culture flourished among them."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A court lady in layered silk robes writing at a low desk in a Kyoto palace room."
+   },
+   "cite": [
+    "s5",
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The most famous book of that court is The Tale of Genji. A court lady known as Murasaki Shikibu wrote it in the early 11th century. It is one of the oldest novels in the world."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The Tale of Genji"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It has 54 chapters, about 400 characters and almost 800 poems. Many people call it the first novel. That would make it centuries older than most European ones."
+   },
+   "show": {
+    "kind": "list",
+    "text": "54 chapters | about 400 characters | almost 800 poems"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Who wrote The Tale of Genji?",
+    "right": "Murasaki Shikibu, a lady of the Heian court",
+    "wrong": [
+     "A shogun named Minamoto no Yoritomo",
+     "A Khmer king named Suryavarman II",
+     "A Chinese emperor"
+    ],
+    "why": "The Library of Congress record names Murasaki Shikibu, a court lady, as the author of this early 11th-century novel."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a problem. The Heian court had no police force of its own. So in the provinces, bands of warriors called samurai gained power."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Samurai: warriors who filled the gap"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "These bands managed large areas of rice land in eastern Japan, near modern Tokyo. Strong group loyalty and discipline held them together."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Armoured samurai on horseback beside flooded rice fields in eastern Japan."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Two warrior families, the Taira and the Minamoto, fought the Genpei War. It ran from 1180 to 1185, and the Minamoto won."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1180 Genpei War begins | 1185 Minamoto victory at Dan-no-ura"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 1185 the Minamoto founded a new government in Kamakura, south of Tokyo. The emperor's court carried on in Kyoto, but the samurai became the real rulers."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Kyoto: the emperor and his court, who kept the law and the ceremonies | Kamakura: the shogun and his samurai, who held the real power"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The head of this warrior government was called a shogun. The first was Minamoto no Yoritomo. We call his government the Kamakura shogunate."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Shogun and shogunate"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "After 1185, who held most of the real power in Japan?",
+    "right": "The samurai government in Kamakura",
+    "wrong": [
+     "The emperor alone, with no one else",
+     "The Chinese court",
+     "The kings of Korea"
+    ],
+    "why": "The emperor's court stayed in Kyoto, but a new samurai class increasingly became the real rulers."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Historians do not agree on the exact start. Some count 1185. Others count 1192, when Yoritomo was formally recognised as shogun. Japanese textbooks of 2016 give no single year."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "1185 or 1192?"
+   },
+   "cite": [
+    "s3",
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a threat from overseas. In 1274 and 1281 Kublai Khan sent huge fleets from Korea and China to conquer Japan. The young regent Hōjō Tokimune led the defence."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1274 first Mongol fleet | 1281 second, much larger fleet"
+   },
+   "cite": [
+    "s9",
+    "s10"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Typhoons wrecked the fleets, and Japan remembers the 1281 storm as the kamikaze, or divine wind. But one account adds that Japanese attacks forced the Mongols to chain their ships together. That made the storm deadlier."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "The storm view: typhoons saved Japan | The fuller view: samurai defence set the trap, and the typhoon finished it"
+   },
+   "cite": [
+    "s9",
+    "s10"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which is the fairest summary of the 1281 invasion?",
+    "right": "A typhoon wrecked much of the fleet, and Japanese defenders also played a part",
+    "wrong": [
+     "The samurai surrendered and Japan joined the Mongol empire",
+     "No storm struck; the Mongols simply chose to go home",
+     "Nobody knows anything about what happened"
+    ],
+    "why": "The sources agree a typhoon destroyed many ships. One adds that Japanese attacks had forced the Mongols to lash their ships together."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Kamakura shogunate was overthrown in 1333. Counting from 1185, it lasted about 148 years. Now we cross the sea to Korea."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1185 to 1333: Kamakura shogunate"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "For centuries Korea was split between three rival kingdoms: Goguryeo, Baekje and Silla. This is called the Three Kingdoms period, from about 57 BCE to 668 CE."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "star",
+    "count": 3,
+    "layout": "row",
+    "text": "Three kingdoms: Goguryeo, Baekje, Silla"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Silla allied with Tang China. It conquered Baekje in 660 and Goguryeo in 668. By 676 it had driven the Chinese out and held the whole peninsula."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "660 Baekje falls | 668 Goguryeo falls | 676 Chinese forces driven out"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Later Silla broke apart. General Wang Kon founded a new kingdom called Goryeo. Silla surrendered to it in 935 and Later Baekje in 936."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Goryeo"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The name Korea comes from Goryeo. That dynasty ruled from 935 to 1392. During it the country began to form a culture distinct from the rest of East Asia."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Goryeo gives us the word Korea"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Where does the name Korea come from?",
+    "right": "From Goryeo, the dynasty that ruled from 935 to 1392",
+    "wrong": [
+     "From Silla, the kingdom that fought the Taira",
+     "From the Heian court in Kyoto",
+     "From the Khmer capital at Angkor"
+    ],
+    "why": "Britannica says the Western name Korea comes from the name Goryeo."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Goryeo is famous for celadon pottery. It also produced the Tripitaka Koreana, one of the most complete editions of the Buddhist scriptures."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A Goryeo celadon bottle with inlaid decoration, 13th century."
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In the 1200s the Mongols invaded Goryeo again and again. After a peace treaty, Goryeo kept its own identity. In 1392 General Yi Seong-gye overthrew it and founded the Joseon dynasty."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "13th century Mongol invasions | 1392 Goryeo ends, Joseon begins"
+   },
+   "cite": [
+    "s13",
+    "s12",
+    "s11"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now Southeast Asia, starting in what is now Cambodia. The Khmer Empire is conventionally dated from 802. That year, Prince Jayavarman II declared himself a universal ruler."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Khmer Empire, from 802"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Its great capital area was Angkor, which served the Khmer from the 9th to the 15th century. Today the Angkor Archaeological Park covers about 400 square kilometres."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "about 400 square kilometres of temples and ruins"
+   },
+   "cite": [
+    "s14",
+    "s22"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The most famous building there is Angkor Wat. King Suryavarman II, who ruled from about 1113 to 1150, built it in the 12th century as a temple to the Hindu god Vishnu."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Angkor Wat at dawn: five stone towers rising above a wide moat."
+   },
+   "cite": [
+    "s16",
+    "s14"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Who built Angkor Wat, and for which god?",
+    "right": "King Suryavarman II, for the Hindu god Vishnu",
+    "wrong": [
+     "Rajaraja I, for the god Shiva",
+     "Minamoto no Yoritomo, for the Buddha",
+     "Wang Kon, for the god Vishnu"
+    ],
+    "why": "Britannica says Suryavarman II built Angkor Wat in the 12th century and dedicated it to Vishnu."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Most Khmer temples face east, but Angkor Wat faces west. Scholars have long debated why. One idea links west to Vishnu, but the question is not settled."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Why does Angkor Wat face west?"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "After Suryavarman died, wars with the Chams of Vietnam hit Angkor hard. In 1181 Jayavarman VII became king after leading Khmer forces against them. Historians generally call him the most powerful Khmer king."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "c.1150 Suryavarman II dies | 1181 Jayavarman VII becomes king"
+   },
+   "cite": [
+    "s19",
+    "s18"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Later, Angkor stopped being the centre of power. Why is still debated. Some theories point to defeats in war and a shift from Hinduism to Theravada Buddhism. Another source stresses a 1431 sack by Ayutthaya, yet says Angkor was still used as a royal centre into the 1500s."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Theory 1: war defeats and religious change | Theory 2: the 1431 Ayutthaya sack, with Angkor still used afterwards"
+   },
+   "cite": [
+    "s20",
+    "s21"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the sea. Srivijaya was a maritime kingdom that flourished from the 7th to the 13th century, mostly in today's Indonesia. It began at Palembang, on the island of Sumatra."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Srivijaya, a kingdom of the sea"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Its power came from controlling sea trade through the Strait of Malacca. That is the narrow water between Sumatra and the Malay Peninsula. Srivijaya traded with China, India and the Malay islands."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map of the Strait of Malacca with Palembang on Sumatra and sea routes running west to India and east to China."
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Srivijaya was also a centre of Buddhism, shaped by Indian Buddhist schools. It later became almost forgotten. Much of what we know comes from stone inscriptions such as the Kedukan Bukit inscription."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A weathered stone inscription found near Palembang, Sumatra."
+   },
+   "cite": [
+    "s24",
+    "s25"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So Srivijaya grew strong by controlling a narrow sea road. Hold that thought, because a fleet from India is about to test it. First, a quick check."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Srivijaya = power over the sea road"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was Srivijaya's power based on?",
+    "right": "Control of international sea trade, especially through the Strait of Malacca",
+    "wrong": [
+     "A huge land army that conquered China",
+     "Rice terraces in the mountains of Japan",
+     "Gold mines in Korea"
+    ],
+    "why": "Britannica says Srivijaya's power rested on control of international sea trade and that it controlled the Strait of Malacca."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now South India. The Chola dynasty rose in what is now Tamil Nadu. Rajaraja I ruled from 985 to 1014. He restored Chola power and conquered northern Sri Lanka, Lakshadweep and the Maldives."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Rajaraja I, 985 to 1014"
+   },
+   "cite": [
+    "s26",
+    "s27"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "He built the Brihadishvara temple at Thanjavur for the god Shiva. It was completed in 1010 and was the largest temple in India at the time. It used about 40 times the stone of an average Chola temple."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1010: the Thanjavur temple is completed"
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Who built the Brihadishvara temple at Thanjavur, completed in 1010?",
+    "right": "Rajaraja I of the Chola dynasty",
+    "wrong": [
+     "Suryavarman II of the Khmer",
+     "Hōjō Tokimune of Japan",
+     "Iltutmish of Delhi"
+    ],
+    "why": "Britannica says Rajaraja I built it as a shrine to Shiva and a symbol of his power."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "His son Rajendra I took the throne in 1014. He built a new capital, Gangaikonda Cholapuram. Tamil tradition says he took a title meaning the Chola who conquered the Ganges."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Rajendra I and Gangaikonda Cholapuram"
+   },
+   "cite": [
+    "s27",
+    "s28"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In 1025 Rajendra attacked Srivijaya. He took some land on the Malay Peninsula and invaded Sumatra. Two great powers of the sea road had collided."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1025: Chola attack on Srivijaya"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "By the end of the 12th century, Srivijaya was a small kingdom. Malayu, based at Jambi, had taken its leading role. In 1377 the Javanese kingdom Majapahit conquered Palembang."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "End of the 1100s: Srivijaya is small | 1377: Majapahit takes Palembang"
+   },
+   "cite": [
+    "s23",
+    "s24"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last stop is North India. In 1206 Muhammad of Ghor was assassinated. His slave-general, Qutb-ud-din Aibak, declared himself an independent ruler, first at Lahore and then at Delhi."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Delhi Sultanate, from 1206"
+   },
+   "cite": [
+    "s30"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A sultanate is a state led by a ruler called a sultan. Delhi's Sultanate lasted until 1526. It was ruled by five dynasties in turn: Mamluk, Khalji, Tughlaq, Sayyid and Lodi."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "block",
+    "count": 5,
+    "layout": "row",
+    "text": "Five dynasties: Mamluk, Khalji, Tughlaq, Sayyid, Lodi"
+   },
+   "cite": [
+    "s32",
+    "s30"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Who founded it? Many accounts say Aibak. Britannica says the Ghurid campaigns made it possible and Iltutmish made it independent. Iltutmish ruled from 1211 to 1236, so both views are worth knowing."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Aibak: declared independence in 1206 | Iltutmish: made it truly independent"
+   },
+   "cite": [
+    "s30",
+    "s29"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Under the Khalji dynasty, from 1290 to 1320, the Sultanate became an imperial power. It conquered Gujarat and made southern Hindu kingdoms pay it respect and tribute. Its forces even occupied Madurai, far to the south."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1290 to 1320: Khalji dynasty | c.1311: its general Malik Kafur returns to Delhi with treasure"
+   },
+   "cite": [
+    "s29",
+    "s32"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Madurai is in Tamil Nadu, the old Chola heartland. So Delhi's armies reached the region where Rajaraja and Rajendra had once ruled."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map of India with an arrow from Delhi south to Madurai in Tamil Nadu."
+   },
+   "cite": [
+    "s31",
+    "s27"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Mongol armies pressed on the northwest. The Sultanate's military system, called the iqta system, helped it check them."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Checking the Mongols"
+   },
+   "cite": [
+    "s31",
+    "s33"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "By the time of Muhammad Tughluq, from 1325 to 1351, all the major South Indian states had been annexed. But before he died, many provinces broke away. One example is the Bahmanis in the Deccan."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1325 to 1351: Muhammad Tughluq | provinces break away"
+   },
+   "cite": [
+    "s31"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 1398 the Central Asian conqueror Timur invaded and sacked Delhi. This shattered the Sultanate's power in the north. It never again ruled all of India."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1398: Timur sacks Delhi"
+   },
+   "cite": [
+    "s29",
+    "s31"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What happened to the Delhi Sultanate in 1398?",
+    "right": "Timur sacked Delhi, and the Sultanate was badly and permanently weakened",
+    "wrong": [
+     "The Chola navy captured Delhi",
+     "The Sultanate moved its capital to Angkor",
+     "The Sultanate was founded that year by Iltutmish"
+    ],
+    "why": "Britannica says Timur's invasion shattered the Sultanate's power in north India. Another source says it was weakened for good."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Sultanate faded into smaller states and was replaced by the Mughal Empire in 1526. We will meet the Mughals later in the course."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1206 Delhi Sultanate begins | 1526 replaced by the Mughal Empire"
+   },
+   "cite": [
+    "s33",
+    "s30"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's compare how long four of these governments lasted. We count from each start year to each end year."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1",
+    "text": "Years each regime lasted"
+   },
+   "cite": [
+    "s4",
+    "s2",
+    "s13",
+    "s30"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the frame of reference: what else was happening at the same time. Around 1010, Murasaki Shikibu's novel was being written in Kyoto. That same year the great Thanjavur temple was finished in South India."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Early 1000s: Genji written in Kyoto | 1010: Thanjavur temple completed"
+   },
+   "cite": [
+    "s6",
+    "s26"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 1181 Jayavarman VII became king in Cambodia. In Japan, the Taira and Minamoto were in the middle of their war, which ran from 1180 to 1185."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1181: Jayavarman VII crowned | 1180 to 1185: Genpei War"
+   },
+   "cite": [
+    "s18",
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Mongols were a thread across the whole map. In the 1270s Kublai Khan's fleets struck Japan, and Goryeo was under Mongol influence. In India, Delhi was busy checking Mongol armies."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1274 and 1281: Mongols attack Japan | Goryeo: Mongol influence | Delhi: checks Mongol armies"
+   },
+   "cite": [
+    "s9",
+    "s12",
+    "s31"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 1292 the Italian traveller Marco Polo reached Sumatra, where the old Srivijayan lands no longer had a single ruler. And within six years, Goryeo fell in 1392 and Timur sacked Delhi in 1398."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1292 Marco Polo in Sumatra | 1392 Joseon founded | 1398 Timur sacks Delhi"
+   },
+   "cite": [
+    "s24",
+    "s11",
+    "s29"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is a last check on order. Remember, Rajaraja's temple was finished in 1010, and Kamakura began around 1185."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1010 temple | 1185 Kamakura | 1274 Mongols | 1398 Timur"
+   },
+   "cite": [
+    "s26",
+    "s2",
+    "s9",
+    "s29"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which of these happened first?",
+    "right": "Rajaraja I's Thanjavur temple was completed (1010)",
+    "wrong": [
+     "The Kamakura government began (1185)",
+     "The Mongols attacked Japan (1274)",
+     "Timur sacked Delhi (1398)"
+    ],
+    "why": "1010 comes before 1185, 1274 and 1398."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Today you met warriors who ruled Japan, a Korea named for Goryeo, temple cities in Cambodia, a sea power on Sumatra, the Cholas, and the Delhi Sultanate. Next class we cross to Africa: Ghana, Mali, Great Zimbabwe and the Swahili Coast."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Japan: Heian court, then Kamakura samurai | Korea: Silla, then Goryeo | Cambodia: Angkor | Sumatra: Srivijaya | South India: Cholas | North India: Delhi Sultanate"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Years each regime lasted (end year minus start year)",
+   "rows": [
+    {
+     "label": "Heian court era, 794-1185",
+     "value": 391,
+     "source": "s4"
+    },
+    {
+     "label": "Kamakura shogunate, 1185-1333",
+     "value": 148,
+     "source": "s2"
+    },
+    {
+     "label": "Goryeo dynasty, 935-1392",
+     "value": 457,
+     "source": "s13"
+    },
+    {
+     "label": "Delhi Sultanate, 1206-1526",
+     "value": 320,
+     "source": "s30"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Heian court culture and The Tale of Genji",
+   "links": [
+    "[[Tang and Song China and the Islamic Golden Age]]",
+    "[[Classical literature]]"
+   ]
+  },
+  {
+   "topic": "Samurai, shoguns and the Kamakura government",
+   "links": [
+    "[[The Mongol Empire]]",
+    "[[Imperialism: Africa, India, China and Japan]]"
+   ]
+  },
+  {
+   "topic": "Korea: Three Kingdoms, Silla and Goryeo",
+   "links": [
+    "[[The Mongol Empire]]",
+    "[[Tang and Song China and the Islamic Golden Age]]"
+   ]
+  },
+  {
+   "topic": "Khmer Empire and Angkor",
+   "links": [
+    "[[Thinkers and Teachers: Buddha, Confucius, the Greeks and the Prophets]]"
+   ]
+  },
+  {
+   "topic": "Srivijaya and the Strait of Malacca",
+   "links": [
+    "[[The Silk Roads]]",
+    "[[Ottomans, Ming China and the Age of Exploration]]"
+   ]
+  },
+  {
+   "topic": "The Chola dynasty and Chola temples",
+   "links": [
+    "[[Mughal, Safavid, Qing and Tokugawa: Early Modern Asia]]"
+   ]
+  },
+  {
+   "topic": "The Delhi Sultanate and Timur",
+   "links": [
+    "[[The Mongol Empire]]",
+    "[[Mughal, Safavid, Qing and Tokugawa: Early Modern Asia]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "Early 1000s (about 1010)",
+   "elsewhere": "In Kyoto, Murasaki Shikibu was writing The Tale of Genji. In South India, Rajaraja I's Brihadishvara temple at Thanjavur was completed in 1010.",
+   "cite": [
+    "s6",
+    "s26"
+   ]
+  },
+  {
+   "when": "1025",
+   "elsewhere": "Rajendra I's Chola forces attacked Srivijaya. Genji, probably completed around 1021, had been in circulation at the Heian court for only a few years.",
+   "cite": [
+    "s24",
+    "s8"
+   ]
+  },
+  {
+   "when": "1180 to 1185",
+   "elsewhere": "The Genpei War ended with the Minamoto victory and the Kamakura government. In 1181 Jayavarman VII became king of the Khmer.",
+   "cite": [
+    "s5",
+    "s1",
+    "s18"
+   ]
+  },
+  {
+   "when": "1185 to 1206",
+   "elsewhere": "Kamakura began in 1185. Twenty-one years later, in 1206, Aibak declared himself ruler at Lahore and then Delhi, and the Delhi Sultanate began.",
+   "cite": [
+    "s1",
+    "s30"
+   ]
+  },
+  {
+   "when": "1274 to 1292",
+   "elsewhere": "Kublai Khan's fleets attacked Japan in 1274 and 1281. Goryeo was under Mongol influence. Delhi was checking Mongol armies. In 1292 Marco Polo reached Sumatra.",
+   "cite": [
+    "s9",
+    "s12",
+    "s31",
+    "s24"
+   ]
+  },
+  {
+   "when": "1377 to 1398",
+   "elsewhere": "In 1377 Majapahit conquered Palembang. In 1392 Goryeo ended and Joseon began. In 1398 Timur sacked Delhi.",
+   "cite": [
+    "s24",
+    "s11",
+    "s29"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The Kamakura shogunate began in 1185.",
+   "other_view": "Some sources date it to 1192, when Yoritomo was formally recognised as shogun. Wikipedia reports that Japanese history textbooks as of 2016 give no single starting year.",
+   "cite": [
+    "s3",
+    "s2",
+    "s1"
+   ]
+  },
+  {
+   "claim": "Typhoons, the kamikaze or divine wind, saved Japan from the Mongols.",
+   "other_view": "Storms did destroy much of the Mongol fleets. But one account says the crucial factor was Japanese attacks, which forced the Mongols to chain their ships together and made the typhoon fatal. Britannica notes that the invaders then faced the Japanese army.",
+   "cite": [
+    "s9",
+    "s10"
+   ]
+  },
+  {
+   "claim": "The Tale of Genji is the world's first novel.",
+   "other_view": "Many people say so, but the Library of Congress more cautiously calls it one of the oldest novels in the world. Europeana says it is sometimes said to be the first modern novel.",
+   "cite": [
+    "s7",
+    "s6",
+    "s8"
+   ]
+  },
+  {
+   "claim": "Goryeo was founded in 918 and the peninsula was unified in 935 to 936.",
+   "other_view": "Britannica gives 918 for the founding and 936 for the unified kingdom in one article. Another Britannica article dates Goryeo's rule over the peninsula from 935.",
+   "cite": [
+    "s12",
+    "s13"
+   ]
+  },
+  {
+   "claim": "Angkor Wat faces west for a reason linked to Vishnu.",
+   "other_view": "Scholars have long debated this. Most Khmer temples face east, and the link to Vishnu is an idea, not a settled fact.",
+   "cite": [
+    "s17"
+   ]
+  },
+  {
+   "claim": "Angkor was abandoned because of war and religious change.",
+   "other_view": "National Geographic lists defeats in battle and a shift from Hinduism to Theravada Buddhism as theories, and calls the question an old puzzle. Another source stresses the 1431 Ayutthaya sack, yet says Angkor was still restored and used as a royal centre into the 1500s.",
+   "cite": [
+    "s20",
+    "s21"
+   ]
+  },
+  {
+   "claim": "Qutb-ud-din Aibak founded the Delhi Sultanate in 1206.",
+   "other_view": "Many accounts credit Aibak. Britannica says Iltutmish made the Sultanate independent. New World Encyclopedia dates the Sultanate from 1210 in one line, though it also lists the first dynasty from 1206.",
+   "cite": [
+    "s30",
+    "s29",
+    "s33"
+   ]
+  },
+  {
+   "claim": "The Khalji dynasty was non-Turkish.",
+   "other_view": "Encyclopedia.com calls the Khaljis non-Turkish. Britannica Kids says they were of Turkish origin but long settled in Afghanistan.",
+   "cite": [
+    "s31",
+    "s32"
+   ]
+  }
+ ]
+}

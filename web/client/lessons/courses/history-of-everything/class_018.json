@@ -1,0 +1,1229 @@
+{
+ "about": {
+  "title": "Other Early Worlds: Africa, the Americas and the Pacific",
+  "course": "history-of-everything",
+  "class_n": 18,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. There are five topics at roughly five minutes each, plus a recap. The beats are short, so the teacher can pause for the eleven questions and for talk."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Nubia: The Kingdoms of Kerma and Kush",
+   "publisher": "Utah Education Network (UEN) Pressbooks, World History",
+   "date": "n.d.",
+   "link": "https://uen.pressbooks.pub/worldhistory1/chapter/nubia-the-kingdoms-of-kerma-and-kush/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "The genetic legacy of the expansion of Bantu-speaking peoples in Africa",
+   "publisher": "Nature",
+   "date": "n.d.",
+   "link": "https://www.nature.com/articles/s41586-023-06770-6",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "The Bantu Expansion",
+   "publisher": "ResearchGate (review article)",
+   "date": "n.d.",
+   "link": "https://www.researchgate.net/publication/324909335_The_Bantu_Expansion",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "New Linguistic Evidence and 'The Bantu Expansion'",
+   "publisher": "Semantic Scholar (listing of an older paper)",
+   "date": "n.d.",
+   "link": "https://www.semanticscholar.org/paper/New-Linguistic-Evidence-and-%E2%80%98The-Bantu-Expansion%E2%80%99-Vansina/50879fddff6e4bd5c9d01ed087aeace8ae3861b6",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "BantuFirst project report",
+   "publisher": "CORDIS (European Commission)",
+   "date": "n.d.",
+   "link": "https://cordis.europa.eu/project/id/724275/reporting/fr",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "Archaeologists Shed New Light On Americas' Earliest Known Civilization",
+   "publisher": "ScienceDaily",
+   "date": "2005-01-04",
+   "link": "https://www.sciencedaily.com/releases/2005/01/050104112957.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "Casma–Sechin culture",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Casma%E2%80%93Sechin_culture",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "La Venta",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/La_Venta",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "What We Learn: The Cascajal Block",
+   "publisher": "Archaeology Magazine archive",
+   "date": "2007-01",
+   "link": "https://archive.archaeology.org/0701/etc/learn.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "Colossal heads of the Olmec",
+   "publisher": "Lithic Casting Lab",
+   "date": "n.d.",
+   "link": "http://www.lithiccastinglab.com/gallery-pages/2013februaryolmecheadspage1.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "Cascajal Block",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Cascajal_Block",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "Olmec hieroglyphs",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Olmec_hieroglyphs",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "Lapita (encyclopedia chapter)",
+   "publisher": "Springer",
+   "date": "n.d.",
+   "link": "https://link.springer.com/chapter/10.1007/978-1-4615-1189-2_20",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "Origin and significance of a founding settlement in Polynesia",
+   "publisher": "Proceedings of the National Academy of Sciences (PNAS)",
+   "date": "n.d.",
+   "link": "https://www.pnas.org/doi/10.1073/pnas.181335398",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "Leveraging known Pacific colonisation times to test models for the ancestry of Southeast Asians",
+   "publisher": "Scientific Reports (Nature)",
+   "date": "n.d.",
+   "link": "https://www.nature.com/articles/s41598-025-20856-3",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "High-precision radiocarbon dating shows recent and rapid initial human colonization of East Polynesia",
+   "publisher": "Proceedings of the National Academy of Sciences (PNAS)",
+   "date": "2011-02-01",
+   "link": "https://www.pnas.org/doi/10.1073/pnas.1015876108",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "High-precision radiocarbon dating shows recent and rapid initial human colonization of East Polynesia (abstract record)",
+   "publisher": "PubMed, National Library of Medicine",
+   "date": "2011-02-01",
+   "link": "https://pubmed.ncbi.nlm.nih.gov/21187404/?dopt=Abstract",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "History of the Marquesas",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/History_of_the_Marquesas",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "Bayesian Modeling and Chronological Precision for Polynesian Settlement of Tonga",
+   "publisher": "PLOS ONE (PubMed Central)",
+   "date": "n.d.",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4370570/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "Polynesian Wayfinding",
+   "publisher": "Hōkūleʻa, Polynesian Voyaging Society",
+   "date": "n.d.",
+   "link": "https://hokulea.com/polynesian-wayfinding/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "Meroitic script",
+   "publisher": "UCL Digital Egypt for Universities",
+   "date": "n.d.",
+   "link": "https://www.ucl.ac.uk/museums-static/digitalegypt//nubia/mwriting.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "Cracking Codes: 5 Ancient Languages Yet to Be Deciphered",
+   "publisher": "Live Science",
+   "date": "n.d.",
+   "link": "https://www.livescience.com/59851-ancient-languages-not-yet-deciphered.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "The Great Pyramid (Pyramid of Khufu) c. 2560 BCE",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/image/15685/the-great-pyramid-pyramid-of-khufu-c-2560-bce/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "Kingdom of Kush",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Kingdom_of_Kush",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "Bantu expansion",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Bantu_expansion",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "Olmec: The Civilization That Built Everything and Disappeared",
+   "publisher": "Unpacked History",
+   "date": "n.d.",
+   "link": "https://unpackedhistory.com/en/ancient/olmec-mother-culture",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "Caral: Oldest City in the Americas & Shicra Architecture",
+   "publisher": "Studio MatrX",
+   "date": "n.d.",
+   "link": "https://www.studiomatrx.org/architecture-canon/caral",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "Kingdom of Kush: Cradle of African Civilisation",
+   "publisher": "TimeMaps",
+   "date": "n.d.",
+   "link": "https://timemaps.com/civilizations/kingdom-of-kush/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s29",
+   "title": "Micronesian navigation",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Micronesian_navigation",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s30",
+   "title": "Monumental Mexico - the art and culture of the Olmecs",
+   "publisher": "Minerva Magazine",
+   "date": "n.d.",
+   "link": "https://minervamagazine.com/monumental-mexico",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s31",
+   "title": "The Nubian kingdom of Kush, rival to Egypt",
+   "publisher": "National Geographic",
+   "date": "n.d.",
+   "link": "https://www.nationalgeographic.com/history/history-magazine/article/ancient-egypt-nubian-kingdom-pyramids-sudan",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s32",
+   "title": "Nubian pyramids",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Nubian_pyramids",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 18. Last time we saw the Bronze Age world and its collapse. Today we leave that region and go looking for complex societies elsewhere."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Other Early Worlds"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We will make five stops: the Nile south of Egypt, the Bantu-speaking peoples of Africa, the coast of Peru, the Gulf coast of Mexico, and the Pacific islands."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A world map with five markers: Nubia on the Nile, central and southern Africa, coastal Peru, the Gulf coast of Mexico, and the Pacific Ocean islands."
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, a plain meaning. A complex society has leaders, many kinds of work, and big shared projects, like temples or tombs."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Complex society"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which of these is a sign of a complex society?",
+    "right": "Large public buildings made by many people working together",
+    "wrong": [
+     "One family farm with no neighbours",
+     "A single campfire shared by a small group",
+     "A lone traveller with no home"
+    ],
+    "why": "Big shared projects need leaders, planning and many workers. That is what we look for."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Stop one is Nubia. It is the Nile valley south of Aswan, in what is now northern Sudan and southern Egypt."
+   },
+   "show": {
+    "kind": "map",
+    "text": "The Nile river running south from Egypt. Aswan is marked at the first cataract (rapids). Nubia is shaded to the south, with Kerma, Napata and Meroë marked in order."
+   },
+   "cite": [
+    "s1",
+    "s24"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Nubia's first big kingdom had its capital at Kerma. It stood as an independent kingdom from around 2500 BCE."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Kerma, from about 2500 BCE"
+   },
+   "cite": [
+    "s28",
+    "s32"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The kingdom of Kush then had two more capitals. After Kerma came Napata, and after Napata came Meroë."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Kerma 2500–1500 BCE | Napata 1000–300 BCE | Meroë 300 BCE–300 CE"
+   },
+   "cite": [
+    "s32"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which Kushite capital came last?",
+    "right": "Meroë",
+    "wrong": [
+     "Kerma",
+     "Napata",
+     "Aswan"
+    ],
+    "why": "The order was Kerma, then Napata, then Meroë."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Kush became its own state in the eighth century BCE, as Egypt entered a weak period. Napata was its first capital."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Kush, 8th century BCE"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In 593 BCE an Egyptian dynasty defeated the Nubians. The capital moved south from Napata to Meroë."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "593 BCE: capital moves to Meroë"
+   },
+   "cite": [
+    "s32"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Meroë had more rainfall than Napata. Its farmers could grow cotton, sorghum and millet."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Cotton | Sorghum | Millet"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Kush's kings were buried under pyramids. There are more than 200 at Meroë, so Sudan has more pyramids than all of Egypt."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "200+ pyramids at Meroë"
+   },
+   "cite": [
+    "s31"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Which country has more pyramids, Sudan or Egypt?",
+    "right": "Sudan, thanks to the more than 200 at Meroë",
+    "wrong": [
+     "Egypt, by a long way",
+     "They have exactly the same number",
+     "Nobody has counted"
+    ],
+    "why": "Meroë alone has more than 200 pyramids. That is more than all of Egypt."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "They were not copies of Egypt's. Meroë's pyramids were smaller and built in a local style."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A row of tall, narrow, steep-sided pyramids with flat tops, standing in desert sand at Meroë."
+   },
+   "cite": [
+    "s1",
+    "s31"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Kush also had writing. The Meroitic script has 23 signs, and about 1,278 texts are known."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1,278 known texts"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Scholars can sound the signs out. But the language itself is still poorly understood, and only a few words are clear. Remember that for the end of class."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "We can read the signs. We cannot fully understand the words."
+   },
+   "cite": [
+    "s21",
+    "s22"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Kush faded by the 4th century CE. Climate got worse, there were rebellions, and there were invasions."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Kush fades, 4th century CE"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Stop two is the Bantu expansion. Bantu languages are a large family of related languages, now spoken across much of the southern half of Africa."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Stop two: The Bantu expansion"
+   },
+   "cite": [
+    "s3",
+    "s25"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "This story began about 4,000 to 5,000 years ago, in the borderland between Cameroon and Nigeria."
+   },
+   "show": {
+    "kind": "map",
+    "text": "West-central Africa with a marker at the Cameroon–Nigeria border, and arrows spreading east and south through the Congo rainforest."
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Nobody wrote this down at the time. So scientists compare several kinds of evidence: language, archaeology, genes and the environment."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Language | Archaeology | Genes | Environment"
+   },
+   "cite": [
+    "s3",
+    "s25"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Genes first. A large Nature study looked at 1,526 Bantu speakers from 147 populations. It found ancestry from western Africa spreading through the Congo rainforest to the east and south."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1,526 Bantu speakers studied"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Archaeology adds dates. The expansion probably reached South Africa as early as 300 CE."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "South Africa, as early as 300 CE"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So was it one big march? Probably not. There was genetic mixing with people already living there. The study also hints at later, more local waves of spread."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A long process, not one trip"
+   },
+   "cite": [
+    "s25",
+    "s5",
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which description fits the Bantu expansion best?",
+    "right": "A long process in which people moved and also mixed with people already there",
+    "wrong": [
+     "One single trip made in one year",
+     "Only a spread of ideas, with nobody moving",
+     "A conquest by one army"
+    ],
+    "why": "The genes show real movement of people. They also show mixing with local peoples and possible later waves."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Scientists do disagree about this. Here are two views side by side."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Migration view: genes show a large movement of people (Nature study). | Doubts: one review finds no conclusive archaeological or linguistic proof of a farming-and-language spread, especially at the start. An older linguistic study argued against a massive migration."
+   },
+   "cite": [
+    "s2",
+    "s3",
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Stop three is Peru. The Norte Chico region runs from the Andes to the Pacific coast of central Peru."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Stop three: Norte Chico, Peru"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Archaeologists gathered 127 radiocarbon dates. These are a way of telling time, like the methods in class 1. They show a society lasting more than 1,200 years, from about 3000 to 1800 BCE."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1,200+ years"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Its best-known city is Caral. It has six big platform mounds around sunken round plazas, built around 2600 BCE."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A huge stepped earth-and-stone platform mound with a sunken circular plaza in front, in dry, dusty land."
+   },
+   "cite": [
+    "s27"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Those years match the Great Pyramid in Egypt, built around 2560 BCE. The two worlds had no contact. Peru's coast is counted as one of the places where civilization began independently."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Peru: Caral, about 2600 BCE | Egypt: Great Pyramid, about 2560 BCE"
+   },
+   "cite": [
+    "s27",
+    "s23",
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the surprise. This society built monuments with no pottery."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Monuments without pottery"
+   },
+   "cite": [
+    "s6",
+    "s7"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What surprised archaeologists about Norte Chico?",
+    "right": "It built huge monuments without making pottery",
+    "wrong": [
+     "It had pottery but no buildings",
+     "It was built only 500 years ago",
+     "It was made entirely of metal"
+    ],
+    "why": "Pottery is a hallmark of other complex societies. Norte Chico had big monuments and no ceramics."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The sites sat beside short irrigation canals that watered large fields. Archaeologists call that a sign of organised work."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A short stone-lined canal bringing river water to green fields at the foot of dry hills."
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Experts debate what fed the society. Some say farming. Others say a sea-food 'maritime hypothesis', with rich Pacific resources allowing coastal communities to settle first. Some sites further along the coast may be even older."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Farming and irrigation | Sea-food from the Pacific"
+   },
+   "cite": [
+    "s7",
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Stop four is Mexico's Gulf coast, home of the Olmec. Their main centres were San Lorenzo, La Venta and Tres Zapotes."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Stop four: The Olmec"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "San Lorenzo was the top Olmec centre by 1200 BCE. La Venta peaked after 900 BCE, and was almost empty by the early 4th century BCE."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "San Lorenzo by 1200 BCE | La Venta peak after 900 BCE | La Venta abandoned about 400 BCE"
+   },
+   "cite": [
+    "s8",
+    "s9"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Olmec are famous for colossal stone heads. Seventeen have been found, and most are at San Lorenzo."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Olmec colossal heads by site",
+    "chart": "c1"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Which site has the most colossal heads?",
+    "right": "San Lorenzo, with 10",
+    "wrong": [
+     "La Venta, with 10",
+     "Tres Zapotes, with 10",
+     "Rancho la Cobata, with 10"
+    ],
+    "why": "The chart shows San Lorenzo with 10 of the 17 heads."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The heads are carved from basalt that came from the Tuxtla Mountains. One idea is that each head shows a ruler."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A giant round stone head wearing a close-fitting helmet, with a wrinkled brow and a broad nose, seen against a museum wall."
+   },
+   "cite": [
+    "s30"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Was the Olmec culture the 'mother' of all later Mexican civilizations? Experts disagree. Here are both views."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Mother culture: the first culture to spread its ideas through Mesoamerica. | Sister culture: one of several regions developing equally complex societies at about the same time."
+   },
+   "cite": [
+    "s8",
+    "s10",
+    "s26"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Did the Olmec write? In 2006 a stone slab with 62 symbols was announced, called the Cascajal Block."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "\"knocks you on the head that it is writing\" (archaeologist Stephen Houston)"
+   },
+   "cite": [
+    "s9",
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "If it is writing, it is the earliest in the Americas. But its symbols match no later script. One scholar suggests it may be a ritual arrangement of sacred objects."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Writing: earliest in the Americas | Doubt: matches no later script; may be a ritual object"
+   },
+   "cite": [
+    "s9",
+    "s11",
+    "s12"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Stop five is the Pacific. Many islanders speak Austronesian languages. The most widely accepted model links their spread to a farming expansion from China, by way of Taiwan, 4,500 to 6,000 years ago."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Stop five: The Pacific"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A pottery style called Lapita marks the trail. It first appears in the Bismarck Archipelago about 3,500 years ago."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Lapita pottery"
+   },
+   "cite": [
+    "s15",
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "By about 2,800 to 2,900 years ago, Lapita sites reached Samoa in the east and New Caledonia in the south."
+   },
+   "show": {
+    "kind": "map",
+    "text": "The southwest Pacific. Lapita sites run from the Bismarck Archipelago east to Samoa and south to New Caledonia."
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In Tonga, Lapita potters settled around 900 to 800 BCE. Lapita people were the cultural ancestors of today's Polynesians."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Tonga, about 900–800 BCE"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The far eastern islands came much later. The Society Islands were settled around 1025 to 1120 CE. The rest of East Polynesia followed around 1200 to 1290 CE."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Tonga about 900–800 BCE | Society Islands about 1025–1120 CE | Remote East Polynesian islands about 1200–1290 CE"
+   },
+   "cite": [
+    "s16",
+    "s17"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which was settled first by Polynesian voyagers?",
+    "right": "Tonga, about 900 to 800 BCE",
+    "wrong": [
+     "The Society Islands, about 1025 CE",
+     "The remote East Polynesian islands, about 1250 CE",
+     "They were all settled in the same year"
+    ],
+    "why": "Tonga came well over a thousand years before the Society Islands."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "How did they cross the open ocean? Without compass, sextant or GPS. They used stars, the sun, ocean swells and other signs of nature."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Stars | Sun | Ocean swells | Signs of nature"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "This skill was nearly lost, then revived. Mau Piailug of Satawal navigated the Hōkūleʻa to Tahiti in 1976. He taught Nainoa Thompson. In Micronesia, this knowledge was held in memory and oral tradition."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Knowledge kept in memory"
+   },
+   "cite": [
+    "s20",
+    "s29"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "How did traditional Pacific navigators find their way?",
+    "right": "By stars, the sun, ocean swells and other signs of nature",
+    "wrong": [
+     "With a satellite GPS",
+     "With a magnetic compass",
+     "With radio beacons"
+    ],
+    "why": "They navigated without instruments. They read the sky and the sea."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Dates here are still being refined. The 2011 study moved the settlement of East Polynesia about four centuries later than before. A 2014 update moved the Marquesas slightly earlier again. And scientists redid Tonga's dates with stricter rules about which samples to trust."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Older view: East Polynesia settled much earlier | 2011 study: about 1025 CE onward; later work adjusts some dates"
+   },
+   "cite": [
+    "s16",
+    "s18",
+    "s19"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the question behind all five stops. Why are written records so uneven?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Why written records are uneven"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Kush wrote, but we only partly understand its language. The Olmec have perhaps one tablet. Norte Chico had no writing in any usual sense. Pacific voyagers kept their knowledge in memory."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Kush: script read, language only partly understood | Olmec: maybe one tablet | Norte Chico: no usual writing | Pacific: memory and oral tradition"
+   },
+   "cite": [
+    "s21",
+    "s22",
+    "s12",
+    "s27",
+    "s29"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Where texts are missing, we use other tools. These are radiocarbon dates, genes, language family trees and careful digging."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Radiocarbon dates | Genes | Language family trees | Excavation"
+   },
+   "cite": [
+    "s6",
+    "s2",
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The lesson is that no writing does not mean no complexity. Norte Chico built monuments with no pottery and no usual writing."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "No writing does not mean no complexity"
+   },
+   "cite": [
+    "s6",
+    "s27"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why do written records seem so uneven across the early world?",
+    "right": "Some societies wrote a lot, some wrote little or in scripts we cannot fully read, and some kept knowledge in memory",
+    "wrong": [
+     "Only a few societies were ever complex",
+     "Writing was invented everywhere at the same moment",
+     "Societies without writing had no history"
+    ],
+    "why": "Writing survives and is understood differently from place to place. Other evidence fills the gaps."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the frame of reference. Around 2600 BCE, Caral rose in Peru, Egypt built the Great Pyramid, and Kerma stood in Nubia. Around 800 BCE, Lapita potters reached Tonga while Kush rose along the Nile."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "About 2600–2500 BCE: Caral, Great Pyramid, Kerma | About 800 BCE: Tonga settled, Kush rising | About 300–350 CE: Bantu speakers possibly in South Africa, Kush fading"
+   },
+   "cite": [
+    "s27",
+    "s23",
+    "s32",
+    "s14",
+    "s1",
+    "s25",
+    "s24"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To recap: complex societies arose in Africa, the Americas and the Pacific. Some wrote, and some did not. Next time we meet the iron-age empires of Assyria, Babylon and Persia."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Nubia and Kush | Bantu expansions | Norte Chico | Olmec | Pacific voyagers"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Olmec colossal heads found, by site",
+   "rows": [
+    {
+     "label": "San Lorenzo",
+     "value": 10,
+     "source": "s10"
+    },
+    {
+     "label": "La Venta",
+     "value": 4,
+     "source": "s10"
+    },
+    {
+     "label": "Tres Zapotes",
+     "value": 2,
+     "source": "s10"
+    },
+    {
+     "label": "Rancho la Cobata",
+     "value": 1,
+     "source": "s10"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Radiocarbon dating",
+   "links": [
+    "[[How do we know]]",
+    "[[Telling time]]"
+   ]
+  },
+  {
+   "topic": "Kush and Egypt",
+   "links": [
+    "[[Ancient Egypt]]",
+    "[[The Bronze Age collapse]]"
+   ]
+  },
+  {
+   "topic": "Language families",
+   "links": [
+    "[[Bantu languages]]",
+    "[[Austronesian languages]]"
+   ]
+  },
+  {
+   "topic": "Independent origins of civilization",
+   "links": [
+    "[[Norte Chico]]",
+    "[[Mesopotamia]]",
+    "[[Indus Valley]]"
+   ]
+  },
+  {
+   "topic": "Writing systems",
+   "links": [
+    "[[Meroitic script]]",
+    "[[Olmec writing]]",
+    "[[Oral tradition]]"
+   ]
+  },
+  {
+   "topic": "Polynesian navigation",
+   "links": [
+    "[[Wayfinding]]",
+    "[[Lapita]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About 2600–2500 BCE",
+   "elsewhere": "Caral was being built in Peru. Egypt's Great Pyramid was built about 2560 BCE, and Kerma was an independent kingdom in Nubia.",
+   "cite": [
+    "s27",
+    "s23",
+    "s32"
+   ]
+  },
+  {
+   "when": "About 900–800 BCE",
+   "elsewhere": "Lapita settlers reached Tonga. Kush was emerging as a state in Nubia. La Venta was rising to its peak among the Olmec.",
+   "cite": [
+    "s14",
+    "s1",
+    "s8"
+   ]
+  },
+  {
+   "when": "About 300–350 CE",
+   "elsewhere": "Bantu-speaking people may have reached South Africa. At the same time, Kush was fading and Meroë fell to invasion.",
+   "cite": [
+    "s25",
+    "s24"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The Bantu expansion was a large migration of farming people who spread their languages.",
+   "other_view": "A review says there is no conclusive archaeological or linguistic evidence for a farming-and-language spread, especially at the start. An older linguistic study argued against a massive migration. Genes show real movement, but also later local waves and mixing with earlier peoples.",
+   "cite": [
+    "s2",
+    "s3",
+    "s4",
+    "s5"
+   ]
+  },
+  {
+   "claim": "The Olmec were the 'mother culture' of Mesoamerica.",
+   "other_view": "Many scholars now prefer a 'sister culture' view. In it, several regions developed complex societies at about the same time, and the Olmec were one of them. The debate is not fully settled.",
+   "cite": [
+    "s8",
+    "s10",
+    "s26"
+   ]
+  },
+  {
+   "claim": "Norte Chico's complex society was built on irrigated farming.",
+   "other_view": "Some archaeologists propose a 'maritime hypothesis'. In it, rich ocean resources let coastal communities settle before irrigated farming began. Some coastal sites may also be older than Caral.",
+   "cite": [
+    "s7",
+    "s6"
+   ]
+  },
+  {
+   "claim": "The Cascajal Block is the earliest writing in the Americas.",
+   "other_view": "Its symbols match no later script and it left no known descendants. One scholar proposes it is a special arrangement of sacred objects, not a script.",
+   "cite": [
+    "s9",
+    "s11",
+    "s12"
+   ]
+  },
+  {
+   "claim": "The Pacific was settled in a single Austronesian wave from Taiwan.",
+   "other_view": "That is the most widely accepted model. But one genetic study reports that a key maternal lineage was already in Near Oceania thousands of years before Austronesian speakers arrived. Settlement dates for East Polynesia have also been revised and are still being refined.",
+   "cite": [
+    "s15",
+    "s16",
+    "s18",
+    "s19"
+   ]
+  }
+ ]
+}

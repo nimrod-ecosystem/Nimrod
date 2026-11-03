@@ -220,14 +220,18 @@ export function objectsFromText(text) {
   if (kid && grown.length) out.looks = { grownup: { object: main.object }, child: { object: kid.object } };
   return out;
 }
+// (2026-11-03, chat's note EQ) `map`: the history courses describe a map in words ("A map of Africa and Asia. An arrow
+// runs from East Africa ..."), as their pictures are described. It is read as that picture until maps are drawn: the
+// courses' own word, so no "Read as".
 const COURSE_KINDS = Object.freeze({ key_word: 'word', keyword: 'word', big_number: 'word', number: 'word',
-  list: 'lines', timeline: 'lines', two_columns: 'lines' });
+  list: 'lines', timeline: 'lines', two_columns: 'lines', map: 'picture' });
 /** A course's show (CK) as one of SHOW_KINDS; a picture that counts things as `objects`, said as a guess. */
 function courseShow(o, guess, at) {
   if (!isObj(o) || !o.kind) return o;
   const kind = COURSE_KINDS[o.kind];
   const text = typeof o.text === 'string' ? o.text : '';
   if (kind === 'word') return { kind: 'word', text: text || String(o.word || '') };
+  if (kind === 'picture') return { kind: 'picture', text };
   if (kind === 'lines') {
     if (Array.isArray(o.items)) return { kind: 'lines', items: o.items };
     let parts = o.kind === 'timeline' && !text.includes('\n') ? text.split(/\s+(?:>|\.\.\.|→)\s+/) : text.split(/\n+/);

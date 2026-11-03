@@ -1,0 +1,998 @@
+{
+ "about": {
+  "title": "Complex Cells, Oxygen and a Changing Planet",
+  "course": "history-of-everything",
+  "class_n": 7,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes, a standard half-hour class. It has 31 short beats and 8 quick checks. That is enough time for four topics, two debates and a short frame of reference, so no extra time is needed."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "The heavy metal rock bands charting life on early Earth",
+   "publisher": "Natural History Museum, London",
+   "date": "n.d.",
+   "link": "https://www.nhm.ac.uk/discover/the-heavy-metal-rock-bands-charting-life-on-early-earth.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "Banded Iron Formation",
+   "publisher": "American Museum of Natural History",
+   "date": "n.d.",
+   "link": "https://www.amnh.org/exhibitions/permanent/planet-earth/how-has-the-earth-evolved/banded-iron-formation",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "The Great Oxygenation Event as a consequence of ecological dynamics modulated by planetary change",
+   "publisher": "Nature Communications (Olejarz et al.)",
+   "date": "2021",
+   "link": "https://www.nature.com/articles/s41467-021-23286-7",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "The Great Oxygenation Event as a consequence of ecological dynamics modulated by planetary change (open-access full text of the same paper)",
+   "publisher": "PubMed Central, US National Library of Medicine",
+   "date": "2021",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8238953/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "Scientists uncover what delayed Earth's oxygen boom for a billion years",
+   "publisher": "ScienceDaily",
+   "date": "2025-11-02",
+   "link": "http://www.sciencedaily.com/releases/2025/11/251102011144.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "The Paleoproterozoic snowball Earth: A climate disaster triggered by the evolution of oxygenic photosynthesis",
+   "publisher": "Proceedings of the National Academy of Sciences (Kopp et al.)",
+   "date": "2005",
+   "link": "https://www.pnas.org/doi/10.1073/pnas.0504878102",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "Extreme sensitivity in Snowball Earth formation to mountains on PaleoProterozoic supercontinents",
+   "publisher": "PubMed Central, US National Library of Medicine",
+   "date": "n.d.",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6382813/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "23.1 Eukaryotic Origins, Biology 2e",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/biology-2e/pages/23-1-eukaryotic-origins",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "Biology 2e, Biological Diversity, Protists, Eukaryotic Origins (OpenStax text)",
+   "publisher": "CUNY Open Education",
+   "date": "n.d.",
+   "link": "https://opened.cuny.edu/courseware/lesson/719/overview",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "Eukaryotic Origins (OpenStax Biology 2e text)",
+   "publisher": "Lumen Learning (SUNY)",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/suny-osbiology2e/chapter/eukaryotic-origins/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "Mitochondria and Chloroplasts",
+   "publisher": "Oregon State University, Cell Biology open textbook",
+   "date": "n.d.",
+   "link": "https://open.oregonstate.education/cellbiology/chapter/mitochondria-and-chloroplasts/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "\"On the Origin of Mitosing Cells\" (1967), by Lynn Sagan",
+   "publisher": "Arizona State University, Embryo Project Encyclopedia",
+   "date": "n.d.",
+   "link": "https://embryo.asu.edu/pages/origin-mitosing-cells-1967-lynn-sagan",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "Lynn Margulis, 1938–2011",
+   "publisher": "Proceedings of the National Academy of Sciences",
+   "date": "n.d.",
+   "link": "https://www.pnas.org/doi/10.1073/pnas.1120472109",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "Lynn Margulis and the endosymbiont hypothesis: 50 years later",
+   "publisher": "Molecular Biology of the Cell",
+   "date": "n.d.",
+   "link": "https://www.molbiolcell.org/doi/10.1091/mbc.e16-07-0509",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "28.1: Eukaryotic Origins and Endosymbiosis",
+   "publisher": "Biology LibreTexts (Raven Biology, 12th ed.)",
+   "date": "n.d.",
+   "link": "https://bio.libretexts.org/Bookshelves/Introductory_and_General_Biology/Map:_Raven_Biology_12th_Edition/28:_Protists/28.01:_Eukaryotic_Origins_and_Endosymbiosis",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "Geotimes, April 2003: Snowball Earth",
+   "publisher": "American Geological Institute",
+   "date": "2003-04",
+   "link": "http://www.agiweb.org/geotimes/apr03/WebExtra041803.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "\"Snowball Earth\" Might Have Been Slushy",
+   "publisher": "NASA Goddard Institute for Space Studies",
+   "date": "n.d.",
+   "link": "https://www.giss.nasa.gov/research/features/201508_slushball/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "Oceans of Ice: The Snowball Earth Theory of Global Glaciation",
+   "publisher": "Dartmouth Undergraduate Journal of Science",
+   "date": "2010-05-30",
+   "link": "https://sites.dartmouth.edu/dujs/2010/05/30/oceans-of-ice-the-snowball-earth-theory-of-global-glaciation/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "A snowball Earth versus a slushball Earth: Results from Neoproterozoic climate modeling sensitivity experiments",
+   "publisher": "Geosphere, Geological Society of America",
+   "date": "n.d.",
+   "link": "https://pubs.geoscienceworld.org/gsa/geosphere/article/4/2/401/31180/A-snowball-Earth-versus-a-slushball-Earth-Results",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "Extremely cold ocean temperatures in iron formation brine pools of snowball Earth",
+   "publisher": "Nature Communications, via PubMed Central",
+   "date": "n.d.",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC12800124/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "1.63-billion-year-old multicellular eukaryotes from the Chuanlinggou Formation in North China",
+   "publisher": "Science Advances",
+   "date": "n.d.",
+   "link": "https://www.science.org/doi/10.1126/sciadv.adk3208",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "Precise age of Bangiomorpha pubescens dates the origin of eukaryotic photosynthesis",
+   "publisher": "Geology (Gibson et al.)",
+   "date": "2018",
+   "link": "https://web.gps.caltech.edu/~wfischer/pubs/Gibsonetal2018.pdf",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "Ediacaran Period",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/science/Ediacaran-Period",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "Complex Life May Have Evolved Multiple Times",
+   "publisher": "Scientific American",
+   "date": "n.d.",
+   "link": "https://www.scientificamerican.com/article/complex-life-may-have-evolved-multiple-times/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "Complex Life May Have Evolved Multiple Times (syndicated copy of the Scientific American article)",
+   "publisher": "Yahoo News",
+   "date": "n.d.",
+   "link": "https://www.yahoo.com/news/articles/complex-life-may-evolved-multiple-100000886.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "Francevillian biota",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Francevillian_biota",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "Great Oxidation Event",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Great_Oxidation_Event",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "Oxygen reductase origin followed the great oxidation event and terminated the Lomagundi excursion",
+   "publisher": "PubMed Central, US National Library of Medicine",
+   "date": "n.d.",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7618691/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s29",
+   "title": "1967 Archives",
+   "publisher": "HISTORY",
+   "date": "n.d.",
+   "link": "https://www.history.com/a-year-in-history/1967",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s30",
+   "title": "Lynn Margulis",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/biography/Lynn-Margulis",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s31",
+   "title": "Lynn Margulis",
+   "publisher": "Study.com",
+   "date": "n.d.",
+   "link": "https://study.com/academy/lesson/lynn-margulis-biography-theory-discovery.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s32",
+   "title": "Huronian Glaciation",
+   "publisher": "Springer, Encyclopedia of Astrobiology",
+   "date": "n.d.",
+   "link": "https://link.springer.com/content/pdf/10.1007/978-3-642-27833-4_742-4.pdf",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class seven. Last time we met the first life: tiny single cells. Today we see how that life changed the whole planet."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Complex Cells, Oxygen and a Changing Planet"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We will take four ideas, one at a time: oxygen, complex cells, ice, and the first many-celled life. Each one leads to the next."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Oxygen  2. Complex cells  3. Ice ages  4. Many-celled life"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, photosynthesis. It means using sunlight to make food. Early life began doing this, and it made oxygen along the way."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Photosynthesis: using sunlight to make food"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The living things that did this are called cyanobacteria. They are bacteria that make oxygen using the Sun's energy."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Cyanobacteria: bacteria that make oxygen"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is something surprising. The oxygen we breathe was not in the air at the start. It had to be made."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "At first, almost no oxygen in the air"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So where did the new oxygen go? Not up into the air yet. The sea held lots of dissolved iron. Oxygen joined with it to make iron oxide, a kind of rust, and the rust sank."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Seawater with orange-red clouds of rust slowly sinking to the sea floor"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That sunken rust piled up in layers of red and grey rock. We call it banded iron formation. It is found on every continent."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A boulder with wavy stripes of dark grey and red rock, like the 2.5-billion-year-old, 2.5-tonne banded iron rock in London's Natural History Museum"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Where did most of the early oxygen go?",
+    "right": "It joined with iron in the seawater and sank as rust.",
+    "wrong": [
+     "It floated straight up and filled the air.",
+     "It froze into the polar ice.",
+     "It escaped into space."
+    ],
+    "why": "The sea was full of dissolved iron. Oxygen reacted with it to make iron oxide, which sank and built banded iron rock."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "This went on for hundreds of millions of years. Slowly the iron in the water was used up. The leftover oxygen had nowhere to go but up, into the air."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Oxygen bubbles rising from a now iron-free sea into the sky"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That rise of oxygen in the air is called the Great Oxidation Event. Scientists place it about 2.4 billion years ago."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 2.4 billion years ago"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Why did oxygen finally start to build up in the air?",
+    "right": "Most of the dissolved iron in the sea had been used up, so leftover oxygen escaped upward.",
+    "wrong": [
+     "The Sun got hotter and boiled the oxygen out of the sea.",
+     "Volcanoes stopped erupting.",
+     "The Moon pulled it out of the ocean."
+    ],
+    "why": "While the sea had iron to react with, oxygen kept getting trapped as rust. When the iron ran short, oxygen could reach the air."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "For many microbes that lived without oxygen, the new gas was harmful. Some scientists infer a mass dying, but it is hard to count microbes from so long ago."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Oxygen: bad news for some, a door opening for others"
+   },
+   "cite": [
+    "s27",
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Oxygen also changed the weather. It reacted with methane, a strong heat-trapping gas. That made carbon dioxide and water vapour, which trap less heat."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Before: methane traps lots of heat, so the air stays warm.  |  After oxygen met it: carbon dioxide and water vapour trap less heat."
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A weaker greenhouse means a cooler planet. Earth's oldest known ice ages, the Huronian glaciation, ran from about 2.45 to 2.22 billion years ago. Three main ones are known from Canada."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "snowflake",
+    "count": 3,
+    "layout": "row",
+    "text": "Three Huronian ice ages"
+   },
+   "cite": [
+    "s32",
+    "s7"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What did oxygen do to methane in the air?",
+    "right": "It reacted with it and made weaker heat-trapping gases, so the planet cooled.",
+    "wrong": [
+     "It turned it into more methane, so the planet warmed.",
+     "It had no effect on it.",
+     "It carried it up into space."
+    ],
+    "why": "Methane is a strong heat-trapper. Oxygen turned it into carbon dioxide and water vapour, a weaker greenhouse, which may have led to ice."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Scientists still argue about this story. Some see small 'whiffs' of oxygen hundreds of millions of years earlier. Why the long delay? Ideas include methane soaking oxygen up, and trace metals like nickel holding bacteria back."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Still debated: when and why oxygen took over"
+   },
+   "cite": [
+    "s4",
+    "s5",
+    "s28"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now to cells. Simple cells, such as bacteria, have no nucleus. A nucleus is a compartment that holds the cell's DNA. Cells that do have one are called eukaryotes."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Simple cell (prokaryote): no nucleus, like bacteria.  |  Complex cell (eukaryote): DNA inside a nucleus. Plants and animals are eukaryotes."
+   },
+   "cite": [
+    "s12",
+    "s10",
+    "s31"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is the key feature of a eukaryote cell?",
+    "right": "Its DNA is kept inside a nucleus.",
+    "wrong": [
+     "It has no DNA.",
+     "It is always a bacterium.",
+     "It can only live without oxygen."
+    ],
+    "why": "Eukaryotes are the cells with an enclosed nucleus. Bacteria and similar simple cells do not have one."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "How did such a complex cell begin? Biologist Lynn Margulis argued it began as teamwork. One cell took in another, and over time they could not live apart. This is endosymbiosis."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Endosymbiosis: one cell living inside another"
+   },
+   "cite": [
+    "s15",
+    "s12",
+    "s31"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "There are two famous cases. Mitochondria came from a bacterium that uses oxygen. Chloroplasts, the parts that do photosynthesis in plants and algae, came from cyanobacteria."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Mitochondria: from a bacterium that uses oxygen.  |  Chloroplasts: from cyanobacteria, the oxygen-makers."
+   },
+   "cite": [
+    "s10",
+    "s15"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Notice the link to oxygen. Margulis suggested the first step was surviving in the new oxygen-filled air. An oxygen-using microbe was taken into a cell that lived without oxygen. All living eukaryotes descend from a cell with mitochondria."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "A new oxygen world, a new kind of cell"
+   },
+   "cite": [
+    "s14",
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What is the evidence? Mitochondria and chloroplasts carry their own small ring of DNA, like bacteria. They also divide by splitting, as bacteria do. New ones come only from old ones."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Own ring-shaped DNA, like bacteria  |  Divide by splitting, like bacteria  |  Made only by existing mitochondria or chloroplasts"
+   },
+   "cite": [
+    "s11",
+    "s9"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which fact suggests mitochondria were once free-living bacteria?",
+    "right": "They carry their own ring of DNA and divide by splitting, as bacteria do.",
+    "wrong": [
+     "They are found only in plant cells.",
+     "They are bigger than the whole cell.",
+     "They have no DNA at all."
+    ],
+    "why": "Having bacteria-like DNA and dividing on their own are bacteria-like habits. They are clues that mitochondria began as bacteria."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The idea had a bumpy start. Margulis was born in 1938. Her 1967 paper was turned down by at least fifteen journals before it was published. Later gene comparisons backed her up."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A scientist at a desk with a tall pile of rejection letters and one acceptance letter on top"
+   },
+   "cite": [
+    "s12",
+    "s13",
+    "s30"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "When did complex cells appear? Textbooks put the first likely eukaryote fossils near 2 billion years ago. Careful studies call the oldest sure ones about 1.65 billion years old. Both fit a world with rising oxygen."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1",
+    "text": "Key dates in this class, in millions of years ago"
+   },
+   "cite": [
+    "s9",
+    "s21"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Some things are still unknown. We do not know whether mitochondria arrived before or after the nucleus. Gene evidence points to an archaeon, a different simple-cell group, as the host."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Still unsolved: which came first, nucleus or mitochondria?"
+   },
+   "cite": [
+    "s9",
+    "s14"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which of these do scientists NOT yet know for certain?",
+    "right": "Whether mitochondria arrived before or after the cell had a nucleus.",
+    "wrong": [
+     "Whether mitochondria and chloroplasts have their own DNA.",
+     "Whether chloroplasts relate to cyanobacteria.",
+     "Whether all living eukaryotes descend from a cell with mitochondria."
+    ],
+    "why": "The bacterial origin of mitochondria is well supported. The order of events, nucleus first or mitochondria first, is still an open question."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now back to ice, much later. Around 710 and 640 million years ago came more glaciations, ending about 635 million years ago. The Snowball Earth idea says the surface was nearly all frozen."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "~710 million years ago: first big freeze  |  ~640: second freeze  |  ~635: it ends"
+   },
+   "cite": [
+    "s17",
+    "s18"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why believe it? Rock laid down by glaciers sits where the land was then near the equator. There are also odd 'cap carbonate' rocks, and banded iron came back after a long gap."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Map of Earth 700 million years ago with ice sheets reaching down to the tropics"
+   },
+   "cite": [
+    "s18",
+    "s20"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is one clue that the ice once reached near the equator?",
+    "right": "Glacier-made rock found in places that were near the equator at the time.",
+    "wrong": [
+     "Dinosaur footprints in polar rock.",
+     "Volcanic ash found only at the poles.",
+     "Coal found in deserts."
+    ],
+    "why": "Glaciers leave particular rock deposits. Finding them in tropical places is the main reason scientists proposed Snowball Earth."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the debate: hard snowball or slushball? In a slushball, ice covered most of the planet. But open water or thin ice stayed near the equator."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Hard snowball: frozen almost all over.  |  Slushball: big ice sheets, but open or thin-ice water near the equator."
+   },
+   "cite": [
+    "s16",
+    "s18"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The slushball side has two arguments. Climate models struggle to freeze the whole planet. And the same eukaryote lines appear before and after, so life may not have crashed. NASA's summary favours slushball but cannot rule out a hard snowball."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Models do not easily reach a full freeze  |  Same eukaryote lines before and after  |  Hard snowball not ruled out"
+   },
+   "cite": [
+    "s19",
+    "s16",
+    "s17"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The snowball side points to the rocks. Glacial deposits are found on all continents. A recent study of iron formations found extremely cold, salty pools, colder than Antarctic seas today, as an ice-covered ocean would predict."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Glacial deposits on all continents  |  Iron-formation pools colder than Antarctic seas today"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is the snowball versus slushball debate about?",
+    "right": "Whether the oceans froze over completely or stayed open near the equator.",
+    "wrong": [
+     "Whether Earth had any ice ages at all.",
+     "Whether oxygen existed at that time.",
+     "Whether the Sun was shining."
+    ],
+    "why": "Most geologists agree that big glaciations happened. The argument is how far the ice went and whether the equator stayed open."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last idea: many-celled life. This means a body made of many cells that work together. It arose more than once, in more than one group."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Many cells, one body"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The oldest convincing many-celled eukaryote is about 1.63 billion years old, from China. A red alga called Bangiomorpha, about 1.05 billion years old, is the oldest eukaryote we can place with a living group."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "~1.63 billion years ago: oldest convincing many-celled eukaryote  |  ~1.05 billion: red alga Bangiomorpha"
+   },
+   "cite": [
+    "s21",
+    "s22"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The earliest known animals come in the Ediacaran period, from 635 to 541 million years ago. They were soft-bodied. They may have appeared after the last snowball freeze, perhaps helped by rising oxygen."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Soft-bodied, frond-shaped and disc-shaped creatures on a shallow sea floor"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In which period do we find the earliest known animals?",
+    "right": "The Ediacaran, 635 to 541 million years ago.",
+    "wrong": [
+     "The Great Oxidation Event, 2.4 billion years ago.",
+     "The Huronian ice ages.",
+     "The time banded iron first formed."
+    ],
+    "why": "The Ediacaran has the earliest known many-celled animals. The other options are far older and hold only microbes."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One more disagreement. Rocks in Gabon, about 2.1 billion years old, have been read as complex life, which could mean complex life arose twice. Most experts are doubtful, and a 2023 review called the idea unconfirmed."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Disputed: possible 2.1-billion-year-old many-celled life in Gabon"
+   },
+   "cite": [
+    "s24",
+    "s25",
+    "s26"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A frame of reference. Margulis's paper came out in 1967. That year had the Summer of Love, the Six-Day War in June, and, in December, the first human heart transplant."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1967: Summer of Love  |  June 1967: Six-Day War  |  Dec 3, 1967: first human heart transplant"
+   },
+   "cite": [
+    "s12",
+    "s29"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To recap: cyanobacteria made oxygen, iron soaked it up, then it built up in the air. That chilled the planet and made room for complex cells and, later, the first animals."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Oxygen from cyanobacteria  |  Great Oxidation Event  |  Cells that team up  |  Ice ages  |  Many-celled life. Next class: animals appear."
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Key dates in this class (millions of years ago)",
+   "rows": [
+    {
+     "label": "Great Oxidation Event (about)",
+     "value": 2400,
+     "source": "s3"
+    },
+    {
+     "label": "Oldest unambiguous eukaryote fossils",
+     "value": 1650,
+     "source": "s21"
+    },
+    {
+     "label": "Red alga Bangiomorpha",
+     "value": 1047,
+     "source": "s22"
+    },
+    {
+     "label": "Snowball glaciation (first of two)",
+     "value": 710,
+     "source": "s17"
+    },
+    {
+     "label": "Start of the Ediacaran period",
+     "value": 635,
+     "source": "s23"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Photosynthesis and cyanobacteria",
+   "links": [
+    "[[The Origin of Life]]",
+    "[[Early Earth and the Moon]]"
+   ]
+  },
+  {
+   "topic": "Banded iron formations",
+   "links": [
+    "[[Great Oxidation Event]]",
+    "[[How Do We Know? Reading the Evidence and Telling Time]]"
+   ]
+  },
+  {
+   "topic": "Great Oxidation Event",
+   "links": [
+    "[[Photosynthesis and cyanobacteria]]",
+    "[[Snowball Earth]]"
+   ]
+  },
+  {
+   "topic": "Eukaryotes and endosymbiosis",
+   "links": [
+    "[[Great Oxidation Event]]",
+    "[[Animals Appear: The Cambrian to Life on Land]]"
+   ]
+  },
+  {
+   "topic": "Snowball Earth",
+   "links": [
+    "[[Great Oxidation Event]]",
+    "[[First multicellular life]]"
+   ]
+  },
+  {
+   "topic": "First multicellular life",
+   "links": [
+    "[[Eukaryotes and endosymbiosis]]",
+    "[[Animals Appear: The Cambrian to Life on Land]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About 2.45 to 2.22 billion years ago (Great Oxidation Event and Huronian ice ages)",
+   "elsewhere": "The living world was microbes only. Oxygen-making cyanobacteria were spreading, and the earliest known animals were still about 1.8 billion years in the future.",
+   "cite": [
+    "s3",
+    "s32",
+    "s23"
+   ]
+  },
+  {
+   "when": "About 2.1 billion years ago",
+   "elsewhere": "The disputed Gabon rocks date from this time. They may or may not hold early many-celled life.",
+   "cite": [
+    "s24",
+    "s26"
+   ]
+  },
+  {
+   "when": "About 1.65 to 1.05 billion years ago",
+   "elsewhere": "The oldest unambiguous eukaryote fossils date to about 1.65 billion years ago. The red alga Bangiomorpha followed at about 1.05 billion.",
+   "cite": [
+    "s21",
+    "s22"
+   ]
+  },
+  {
+   "when": "About 710 to 635 million years ago",
+   "elsewhere": "The snowball or slushball glaciations came just before the Ediacaran period, when the earliest known animals appear.",
+   "cite": [
+    "s17",
+    "s23"
+   ]
+  },
+  {
+   "when": "1967, when Lynn Margulis's endosymbiosis paper was published",
+   "elsewhere": "San Francisco had the Summer of Love and the Six-Day War was fought in June. On December 3 the first human heart transplant took place in Cape Town, South Africa.",
+   "cite": [
+    "s12",
+    "s29"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The Great Oxidation Event, about 2.4 billion years ago, was when oxygen-making life changed Earth's air.",
+   "other_view": "Some geochemical evidence points to 'whiffs' of oxygen in local pockets hundreds of millions of years earlier, but that evidence is itself debated. Why the delay? Models blame methane soaking up oxygen, and an experimental study blames nickel and urea holding cyanobacteria back. Another group argues oxygen-making cyanobacteria evolved only shortly before the snowball glaciation of about 2.3 billion years ago. No fossil cyanobacteria of 3 billion years ago are known.",
+   "cite": [
+    "s3",
+    "s4",
+    "s5",
+    "s6",
+    "s28"
+   ]
+  },
+  {
+   "claim": "Mitochondria and chloroplasts began as bacteria that lived inside other cells (endosymbiosis).",
+   "other_view": "This is widely accepted for mitochondria and chloroplasts, but how it happened is incompletely understood. Scientists do not know whether the mitochondrion arrived before or after the nucleus. Margulis's idea that the flagellum also came from a symbiont has no supporting evidence.",
+   "cite": [
+    "s9",
+    "s14"
+   ]
+  },
+  {
+   "claim": "Earth froze completely in the 'hard snowball' glaciations of about 710 and 640 million years ago.",
+   "other_view": "Many geologists agree there were massive glaciations, but some favour a 'slushball' Earth. In that picture, ice sheets were huge but the equator kept open water or thin ice. Climate models and fossil evidence from before and after the freezes support this view. Snowball supporters point to glacial deposits on all continents and to extremely cold brine pools in iron formations. NASA's summary notes that a hard snowball may still have happened.",
+   "cite": [
+    "s16",
+    "s17",
+    "s18",
+    "s19",
+    "s20"
+   ]
+  },
+  {
+   "claim": "Complex many-celled life began only in the Ediacaran, about 635 million years ago.",
+   "other_view": "Received wisdom says this, but fossils of many-celled eukaryotes about 1.63 billion years old have been described from China. Some researchers read 2.1-billion-year-old Gabon rocks as complex life. Most experts are skeptical. A 2023 review called their biological origin unconfirmed, and said that even if many-celled they were not clearly eukaryotes.",
+   "cite": [
+    "s21",
+    "s24",
+    "s25",
+    "s26"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,1334 @@
+{
+ "about": {
+  "title": "Ottomans, Ming China and the Age of Exploration",
+  "course": "history-of-everything",
+  "class_n": 37,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. It has three stories (Constantinople, Zheng He, Portugal) plus two debates: did 1453 cause the voyages, and why did China stop. Each idea gets its own short beat with a check question. Each beat is one or two breaths, so it runs the full half hour."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Fall of Constantinople",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/event/Fall-of-Constantinople-1453",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "The Fall of Constantinople",
+   "publisher": "Lumen Learning (Western Civilization course)",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/atd-herkimer-westerncivilization/chapter/the-fall-of-constantinople/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "Siege of Constantinople (1453)",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/history/siege-constantinople-1453/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "Siege of Constantinople",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/event/Siege-of-Constantinople1453",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "Fall of Constantinople",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Fall_of_Constantinople",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "Conquest of Constantinople (by Ludwig Heinrich Dyck)",
+   "publisher": "Warfare History Network",
+   "date": "n.d.",
+   "link": "https://warfarehistorynetwork.com/article/conquest-of-constantinople/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "Zheng He - Ages of Exploration",
+   "publisher": "The Mariners' Museum and Park",
+   "date": "n.d.",
+   "link": "https://exploration.marinersmuseum.org/subject/zheng-he/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "Admiral Zheng He's Voyages to the West Oceans",
+   "publisher": "Association for Asian Studies, Education About Asia",
+   "date": "n.d.",
+   "link": "https://www.asianstudies.org/publications/eaa/archives/admiral-zheng-hes-voyages-to-the-west-oceans/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "Ming treasure voyages (concept page, text from Wikipedia)",
+   "publisher": "EPFL GraphSearch",
+   "date": "n.d.",
+   "link": "https://graphsearch.epfl.ch/concept/39353443",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "The Cessation of Zheng He's Voyages and the Beginning of Private Sailings: Fiscal Competition between Emperors and Bureaucrats",
+   "publisher": "Journal of Chinese History, Cambridge University Press",
+   "date": "n.d.",
+   "link": "https://www.cambridge.org/core/journals/journal-of-chinese-history/article/cessation-of-zheng-hes-voyages-and-the-beginning-of-private-sailings-fiscal-competition-between-emperors-and-bureaucrats/8FE45F3210A4DF174A4EC2B30868D433",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "Admiral Zheng He and the Chinese Treasure Fleet",
+   "publisher": "maritime-museum.org education pages",
+   "date": "n.d.",
+   "link": "https://www.education.maritime-museum.org/training/north-gallery-2/asian-history/admiral-zheng-he-and-the-chinese-treasure-fleet/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "1405-1433: The Complete Timeline of Zheng He's 7 Voyages",
+   "publisher": "Ming Dynasty History (mingdynastyhistory.com)",
+   "date": "n.d.",
+   "link": "https://mingdynastyhistory.com/zheng-he-7-voyages-timeline/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "Ming treasure voyages",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Ming_treasure_voyages",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "The Ming Treasure Voyages Spread Chinese Influence Throughout the World",
+   "publisher": "Explore the Archive",
+   "date": "n.d.",
+   "link": "https://explorethearchive.com/ming-treasure-voyages",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "Chinese treasure ship",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Chinese_treasure_ship",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "Admiral Zheng He's Treasure Ships (1405-1433): Problems of Dimensional Interpretation and Scholarly Assessments",
+   "publisher": "Journal article, journal.ivinas.gov.ua",
+   "date": "n.d.",
+   "link": "https://journal.ivinas.gov.ua/pwh/article/view/388",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "Zheng He's Treasure Fleet",
+   "publisher": "Get History Lens",
+   "date": "n.d.",
+   "link": "https://gethistorylens.com/en/topic/zheng-he",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "Ming Treasure Ship vs. Santa Maria: How Big Was Zheng He's Fleet Really?",
+   "publisher": "Ming Dynasty History (mingdynastyhistory.com)",
+   "date": "n.d.",
+   "link": "https://mingdynastyhistory.com/ming-treasure-ship-vs-santa-maria/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "Ming treasure voyages",
+   "publisher": "Military History Wiki (Fandom)",
+   "date": "n.d.",
+   "link": "https://military-history.fandom.com/wiki/Ming_treasure_voyages",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "Xia Yuanji",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Xia_Yuanji",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "Tumu Crisis",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Tumu_Crisis",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "Yongle Emperor",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Yongle_Emperor",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "Bartolomeu Dias - Ages of Exploration",
+   "publisher": "The Mariners' Museum and Park",
+   "date": "n.d.",
+   "link": "https://exploration.marinersmuseum.org/subject/bartolomeu-dias/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "How Portugal's Seafaring Expertise Launched the Age of Exploration",
+   "publisher": "History.com",
+   "date": "n.d.",
+   "link": "https://www.history.com/articles/portugal-age-exploration",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "Portuguese Explorations and West Africa",
+   "publisher": "CliffsNotes",
+   "date": "n.d.",
+   "link": "https://www.cliffsnotes.com/study-guides/history/us-history-i/exploration-and-early-colonization/portuguese-explorations-and-west-africa",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "Bartolomeu Dias Rounds the Cape of Good Hope",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/history/bartolomeu-dias-rounds-cape-good-hope/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "Portuguese maritime exploration",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Portuguese_maritime_exploration",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "Bartolomeu Dias",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Bartolomeu_Dias",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s29",
+   "title": "Portuguese Empire",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/Portuguese_Empire/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s30",
+   "title": "Portuguese Explorers",
+   "publisher": "Lumen Learning (World History course)",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/suny-hccc-worldhistory2/chapter/portuguese-explorers/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s31",
+   "title": "Afonso de Albuquerque",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/history/afonso-de-albuquerque",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s32",
+   "title": "Portuguese Malacca",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/Portuguese_Malacca/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s33",
+   "title": "Economic history of the Ottoman Empire",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Economic_history_of_the_Ottoman_Empire",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s34",
+   "title": "Portuguese discovery of the sea route to India",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Portuguese_discovery_of_the_sea_route_to_India",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s35",
+   "title": "Cape Route",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Cape_Route",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s36",
+   "title": "The Ottoman Age of Exploration (book listing, by Giancarlo Casale)",
+   "publisher": "Oxford University Press, via MIT Press Bookstore",
+   "date": "2010",
+   "link": "https://mitpressbookstore.mit.edu/book/9780199874040",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s37",
+   "title": "Late Middle Ages Timeline",
+   "publisher": "Lords and Ladies (lordsandladies.org)",
+   "date": "n.d.",
+   "link": "https://www.lordsandladies.org/late-middle-ages-timeline.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s38",
+   "title": "Church History Timeline: the 1400s",
+   "publisher": "Study The Church",
+   "date": "n.d.",
+   "link": "https://studythechurch.com/church-history/timelines/1400s",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s39",
+   "title": "Ming Dynasty's Great Wall and Maritime Ban Both Doomed China's Mightiest Empire",
+   "publisher": "History Collection",
+   "date": "n.d.",
+   "link": "https://historycollection.com/ming-dynasty-years/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s40",
+   "title": "Ming treasure voyages facts for kids",
+   "publisher": "Kiddle",
+   "date": "n.d.",
+   "link": "https://kids.kiddle.co/Ming_treasure_voyages",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Today we ask why people made long sea voyages in the 1400s, and what came of them. We will follow three stories."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Ottomans, Ming China and the Age of Exploration"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A city falls to a new power. A Chinese fleet crosses the Indian Ocean. A small Portuguese ship creeps down the coast of Africa. We start with the city."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. A city falls (1453)\n2. China's treasure fleet (1405-1433)\n3. Portugal sails around Africa (1400s)"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, the Ottomans. They began as a Turkish sultanate in what is now Turkey, founded in the late 1200s. A sultan is the ruler."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ottoman Empire"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Their target was Constantinople, the capital of the Byzantine Empire. You met it in class 28. By now it was the last stronghold of Byzantine power."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Constantinople"
+   },
+   "cite": [
+    "s5",
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In spring 1453 a sultan named Mehmed II besieged the city. He was just 21 years old. A siege means surrounding a city to force it to give in."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "6 April 1453: siege begins\n29 May 1453: the city falls"
+   },
+   "cite": [
+    "s2",
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "His secret weapon was cannon. Huge guns fired at the old walls day after day. Sources count the siege as 53 or 55 days, depending on how you count."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Great stone walls with gaps blown in them by cannon fire"
+   },
+   "cite": [
+    "s1",
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What did Mehmed II use to batter the walls of Constantinople?",
+    "right": "Huge cannons",
+    "wrong": [
+     "Giant catapults powered by horses",
+     "Ships that rammed the walls from the sea",
+     "Tunnels that collapsed the walls from below"
+    ],
+    "why": "Sultan Mehmed II used cannon to keep up a constant bombardment of the city's walls."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "After the fall, Constantinople became the Ottoman capital. The great church Hagia Sophia became a mosque. In time the city became known as Istanbul."
+   },
+   "show": {
+    "kind": "list",
+    "text": "New Ottoman capital\nHagia Sophia becomes a mosque\nConstantinople becomes Istanbul"
+   },
+   "cite": [
+    "s4",
+    "s5",
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The human cost was heavy. Many people were killed, and by one account tens of thousands were enslaved. Later Mehmed resettled the city with Christians and Muslims and protected Christian neighbourhoods."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A city changed hands"
+   },
+   "cite": [
+    "s3",
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The news shocked Europe. Many modern historians treat 1453 as the end of the Middle Ages and the start of the early modern period."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "1453: for many historians, the end of the medieval period"
+   },
+   "cite": [
+    "s3",
+    "s5"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Many historians use 1453 as a marker for the end of which period?",
+    "right": "The Middle Ages (the medieval period)",
+    "wrong": [
+     "The Stone Age",
+     "The Industrial Revolution",
+     "The Roman Republic"
+    ],
+    "why": "For many modern historians, the fall of Constantinople marks the end of the medieval period and the start of the early modern period."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now go back nearly fifty years before Constantinople fell, and travel east. In July 1405 a Chinese fleet set out on the first of seven great voyages."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "China's Treasure Fleet, 1405-1433"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Yongle Emperor of Ming China ordered the fleet built in 1403. Admiral Zheng He commanded it. Zheng He was a court eunuch, a palace servant. In the Ming court such men often held high office."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Zheng He, Ming admiral"
+   },
+   "cite": [
+    "s9",
+    "s12"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "There were seven voyages in all, between 1405 and 1433. That is 28 years from the first to the last."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "boat",
+    "count": 7,
+    "layout": "row",
+    "text": "Seven voyages, 1405 to 1433"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The first three reached Calicut, on India's southwest coast. The fourth reached Hormuz in the Persian Gulf. The last three went on to Arabia and East Africa."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map: from Nanjing through Southeast Asia to Calicut in India, then Hormuz, Arabia and the East African coast"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Besides the Arabian Peninsula, where did Zheng He's last three voyages reach?",
+    "right": "East Africa",
+    "wrong": [
+     "Australia",
+     "The Americas",
+     "Northern Europe"
+    ],
+    "why": "In the last three voyages the fleet travelled up to the Arabian Peninsula and East Africa."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The fleet was huge. A history compiled in 1739 says that on the 1413 voyage there were over 200 ships and about 27,800 people. A famous European fleet of 1492 had three ships and about 90 people."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 27,800 people on one voyage (as the records say)"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "How big were the biggest ships? Historians disagree. Old written records give 117 to 149 metres. Many modern researchers think 60 to 76 metres. Columbus's Santa Maria was only a little over 20."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1",
+    "text": "Length of the biggest treasure ships, in metres"
+   },
+   "cite": [
+    "s16",
+    "s17"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Do historians agree on how long Zheng He's biggest ships were?",
+    "right": "No. Old records give far larger figures than many modern researchers do.",
+    "wrong": [
+     "Yes, everyone agrees they were about 137 metres long",
+     "Yes, everyone agrees they were about 20 metres long",
+     "Nobody thinks they were bigger than European ships"
+    ],
+    "why": "The size of the treasure ships has been a subject of much controversy. Even the smaller modern estimates make them far larger than the Santa Maria."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What were the voyages for? Most historians say the main aim was to show off the glory and power of Ming China. Rulers abroad were encouraged to send envoys and offer tribute, meaning respectful gifts."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Show Chinese power\nBring rulers into China's tribute system\nDiplomacy, trade and some fighting"
+   },
+   "cite": [
+    "s7",
+    "s11",
+    "s9"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Exotic things came home as well. One Ming painting shows a giraffe brought from East Africa."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A Ming-era painting of a giraffe, brought back by the fleet from East Africa about 1415"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "According to most historians, what was a main purpose of the voyages?",
+    "right": "To show off the power and glory of Ming China",
+    "wrong": [
+     "To find a route around Africa to Europe",
+     "To settle Chinese farmers on distant islands",
+     "To hunt whales for oil"
+    ],
+    "why": "Most historians agree the main purpose was to promote the glory of Ming dynasty China."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The fleet could also use force. It destroyed a pirate fleet at Palembang and captured the king of the Kotte kingdom in Sri Lanka. Historians still argue about the exact goals."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Display and force"
+   },
+   "cite": [
+    "s9",
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Then the voyages stopped. Yongle died in 1424. The new emperor, Hongxi, ended the voyages on the day he took the throne."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1424: Yongle dies; Hongxi ends the voyages\n1431: Xuande orders one more\n1433: Zheng He dies; the voyages end"
+   },
+   "cite": [
+    "s11",
+    "s20",
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The next emperor, Xuande, ordered a seventh voyage in 1431, against the general opinion of the court. After it, the great voyages never came back."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Why did China stop?"
+   },
+   "cite": [
+    "s20",
+    "s11",
+    "s7"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "Which emperor ordered the seventh and last voyage?",
+    "right": "The Xuande Emperor",
+    "wrong": [
+     "The Hongxi Emperor",
+     "The Yongle Emperor",
+     "Mehmed II"
+    ],
+    "why": "Hongxi ended the voyages in 1424. His successor Xuande ordered one more, going against general court opinion."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Reason one: cost and the north. Many scholars blame the expense. The Mongols also threatened the northern border, and in 1421 the capital moved to Beijing to watch that frontier."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Cost of the voyages | Danger on the northern frontier"
+   },
+   "cite": [
+    "s10",
+    "s21",
+    "s22"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Reason two: court politics. Eunuchs ran the voyages and depended on the emperor's favour. Civil officials were their rivals and opposed the voyages. The finance minister Xia Yuanji was one loud critic."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Eunuchs: backed the voyages | Civil officials: opposed them"
+   },
+   "cite": [
+    "s9",
+    "s20"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which group at the Ming court mainly opposed the voyages?",
+    "right": "The civil officials",
+    "wrong": [
+     "The eunuchs who commanded them",
+     "The Mongol khans",
+     "The ship builders"
+    ],
+    "why": "The eunuch establishment oversaw the voyages. The civil officials were their political opponents and the faction against the expeditions."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Other ideas exist. One scholar points to money fights between emperors and bureaucrats. Others point to a growing private trade outside state control. Some say Confucian officials looked down on commerce."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Money fights between emperors and bureaucrats\nGrowing private trade\nConfucian distrust of commerce"
+   },
+   "cite": [
+    "s10",
+    "s14",
+    "s39"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So there is no single agreed answer. One report says officials worked to destroy the voyage records, but it says only 'reportedly', so treat it with care."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "No single agreed reason"
+   },
+   "cite": [
+    "s14",
+    "s39"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Do historians agree on one single reason China stopped the voyages?",
+    "right": "No. They point to several possible causes and still debate them.",
+    "wrong": [
+     "Yes, it was only the cost",
+     "Yes, it was only the Mongols",
+     "Yes, because Zheng He retired"
+    ],
+    "why": "Historians point to various possible causes, from cost to political infighting to the growth of private commerce, and the precise reason remains uncertain."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "What happened next? One account says that when the treasure fleet withdrew, it left a power gap across the Indian Ocean. Into that gap sailed the Portuguese."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A gap in the Indian Ocean"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Portugal's voyages began in 1419, before Constantinople fell. Prince Henry, called 'the Navigator', sponsored expeditions down the coast of West Africa. To sponsor means to pay for and organise."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Portugal Feels Its Way Down Africa"
+   },
+   "cite": [
+    "s27"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Despite the nickname, Henry did not do much sailing himself. His captains did the voyages. He paid for them."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Henry the Navigator: sponsor, not sailor"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was Prince Henry's main role in the voyages?",
+    "right": "He sponsored them. He did not do much sailing himself.",
+    "wrong": [
+     "He captained every voyage",
+     "He built the walls of Constantinople",
+     "He ruled the Ming court"
+    ],
+    "why": "Prince Henry began Portugal's age of exploration, but he did not really do much sailing."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why go? The aims mixed profit and faith. Portuguese sponsors hoped for gold, spices and slaves, and for spreading Christianity. They also opposed Muslim rulers and hoped to find the Christian king Prester John. You will meet the sad story of the slave trade in class 41."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Gold, spices and slaves\nSpreading Christianity\nOpposing Muslim powers\nSearching for the legendary Prester John"
+   },
+   "cite": [
+    "s24",
+    "s25",
+    "s26"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Better ships and charts helped. Portuguese sailors developed new designs such as the caravel. By 1448 they had reached Cape Verde, and by 1460 Sierra Leone."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1419: voyages down West Africa begin\n1448: Cape Verde\n1460: Sierra Leone reached"
+   },
+   "cite": [
+    "s25",
+    "s24",
+    "s27"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Did Constantinople's fall start all this? Portugal began in 1419, which is 34 years before 1453. So the fall of the city cannot have started it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "1419 comes before 1453"
+   },
+   "cite": [
+    "s27"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Portugal's voyages down Africa began in 1419. What does that tell us?",
+    "right": "They began before 1453, so the fall of Constantinople did not start them.",
+    "wrong": [
+     "They began because Constantinople fell",
+     "They began after da Gama reached India",
+     "They began in the same year as Zheng He's last voyage"
+    ],
+    "why": "Methodical Portuguese expeditions started in 1419, 34 years before Constantinople fell. The fall may have added pressure later, but it was not the start."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Some say the Ottomans blocked the spice trade. Evidence for that is thin. One account says spice imports to Europe did not drop after 1453. Others still say the fall disrupted trade and gave Europeans a push."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Popular story: 1453 blocked the spice trade | Evidence: spice imports did not drop; the picture is more mixed"
+   },
+   "cite": [
+    "s33",
+    "s34",
+    "s35"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Portuguese pressed on. In 1488 Bartolomeu Dias rounded the southern tip of Africa. The king later named it the Cape of Good Hope, as tradition has it."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map: Portugal south along West Africa to the Cape of Good Hope, then into the Indian Ocean"
+   },
+   "cite": [
+    "s26",
+    "s28"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Dias proved a sea route to Asia was possible. One source dates his voyage to 1487, another to 1488. Dias never reached India himself."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Dias: the route is possible"
+   },
+   "cite": [
+    "s23",
+    "s24",
+    "s26"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In 1497 Vasco da Gama set out with four ships and nearly 170 men. He swung wide into the South Atlantic to catch good currents. A local navigator helped him cross the Indian Ocean."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "boat",
+    "count": 4,
+    "layout": "row",
+    "text": "Da Gama's four ships, 1497"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "He reached Calicut in May 1498. This was the first sea route from Europe to India, and it came more than 90 years after Zheng He's first voyage."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "May 1498: Calicut, India"
+   },
+   "cite": [
+    "s24",
+    "s7"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Da Gama arrived at Calicut in 1498. Which earlier fleet had also visited Calicut?",
+    "right": "Zheng He's Chinese treasure fleet",
+    "wrong": [
+     "Mehmed II's Ottoman army",
+     "Prince Henry's own ships",
+     "The Byzantine navy"
+    ],
+    "why": "The first three Zheng He voyages reached Calicut on India's Malabar Coast, long before da Gama."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Compare the two. China sent hundreds of ships to display power. Portugal sent four to find a trade route."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Zheng He (1405-1433): over 200 ships, about 27,800 people, display and diplomacy | Da Gama (1497-98): four ships, nearly 170 men, a route to trade"
+   },
+   "cite": [
+    "s18",
+    "s24",
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Portugal then built a chain of forts and trading posts. Afonso de Albuquerque took Goa in India in 1510 and Malacca in Southeast Asia in 1511. Malacca sat on the strait between the Indian Ocean and the South China Sea."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1510: Goa, India\n1511: Malacca, on the strait to the South China Sea"
+   },
+   "cite": [
+    "s29",
+    "s31",
+    "s32"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The aim was a monopoly of the spice trade, meaning one seller controls it. Portugal used force against local Muslim and Hindu populations when it saw fit."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Monopoly of the spice trade"
+   },
+   "cite": [
+    "s30",
+    "s24"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What did Portugal try to control with its forts in the Indian Ocean?",
+    "right": "The spice trade",
+    "wrong": [
+     "The Silk Road across Central Asia",
+     "The slave markets of Constantinople",
+     "The Chinese tribute system"
+    ],
+    "why": "Portugal's aim in the Indian Ocean was to secure a monopoly of the spice trade through forts and trading posts."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Ottomans return to the story. In 1517 they conquered Egypt and met the Indian Ocean world. Then they challenged Portugal there. After the Battle of Diu, Turks and Egyptians withdrew their navies from India."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The Ottomans reach the Indian Ocean (1517)"
+   },
+   "cite": [
+    "s36",
+    "s30"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Who won that contest? One historian, Giancarlo Casale, argues the Ottomans ultimately bested the Portuguese. Others stress Portugal's near century of dominance after Diu. The question is still debated."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Portugal dominant for nearly a century after Diu | Casale: the Ottomans ultimately bested Portugal"
+   },
+   "cite": [
+    "s36",
+    "s30"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the frame of reference: what else was happening. Leonardo da Vinci was born in 1452. In 1453 Constantinople fell and the Hundred Years' War ended. Gutenberg printed his Bibles in 1455."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1405: first treasure voyage\n1419: Portugal's voyages begin\n1449: Mongols capture the Ming emperor\n1452: Leonardo da Vinci born\n1453: Constantinople falls; Hundred Years' War ends\n1455: Gutenberg Bibles\n1495-98: Leonardo paints The Last Supper\n1498: da Gama at Calicut"
+   },
+   "cite": [
+    "s7",
+    "s27",
+    "s21",
+    "s37",
+    "s38",
+    "s24"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So when da Gama reached India in 1498, Leonardo was finishing The Last Supper. The same story seen from another angle: ships, printing, paint and cannon all arrived together."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A world changing all at once"
+   },
+   "cite": [
+    "s38",
+    "s24"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To sum up. Mehmed took Constantinople. China sent a huge fleet and then stopped. Portugal sailed round Africa and built forts. People sailed for power, profit and faith."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1453: Ottomans take Constantinople\n1405-1433: Zheng He's seven voyages\n1488-1498: Dias and da Gama open the sea route to India\n1510-1511: Portugal takes Goa and Malacca"
+   },
+   "cite": [
+    "s3",
+    "s7",
+    "s26",
+    "s24",
+    "s29"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What did da Gama's 1498 voyage open for Europe?",
+    "right": "A direct sea route from Europe to India",
+    "wrong": [
+     "A land route through Constantinople",
+     "A canal through Egypt",
+     "A route across the Pacific"
+    ],
+    "why": "Da Gama led the first fleet from Europe around Africa to India, which started a sea route from Portugal to India."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next time: Columbus sought a western sea route to India. Instead he found the Americas. That is class 38, Contact and the Columbian Exchange."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Contact and the Columbian Exchange"
+   },
+   "cite": [
+    "s35"
+   ],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Length of the biggest Chinese treasure ships, in metres",
+   "rows": [
+    {
+     "label": "Old written records: low figure",
+     "value": 117,
+     "source": "s16"
+    },
+    {
+     "label": "Old written records: high figure",
+     "value": 149,
+     "source": "s16"
+    },
+    {
+     "label": "Modern estimate: low figure",
+     "value": 60,
+     "source": "s16"
+    },
+    {
+     "label": "Modern estimate: high figure",
+     "value": 76,
+     "source": "s16"
+    },
+    {
+     "label": "Columbus's Santa Maria (a little over 20 m)",
+     "value": 20,
+     "source": "s17"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Byzantine Empire and Constantinople",
+   "links": [
+    "[[Byzantium, Early Medieval Europe and the Vikings]]",
+    "[[The Renaissance]]"
+   ]
+  },
+  {
+   "topic": "Ming China and the Mongols",
+   "links": [
+    "[[The Mongol Empire]]",
+    "[[Tang and Song China and the Islamic Golden Age]]"
+   ]
+  },
+  {
+   "topic": "Confucian ideas about government and commerce",
+   "links": [
+    "[[Thinkers and Teachers: Buddha, Confucius, the Greeks and the Prophets]]"
+   ]
+  },
+  {
+   "topic": "Indian Ocean trade and the East African coast",
+   "links": [
+    "[[Medieval Africa: Ghana, Mali, Great Zimbabwe and the Swahili Coast]]"
+   ]
+  },
+  {
+   "topic": "Portuguese voyages and slavery",
+   "links": [
+    "[[The Atlantic Slave Trade]]"
+   ]
+  },
+  {
+   "topic": "Columbus and what came next",
+   "links": [
+    "[[Contact and the Columbian Exchange]]"
+   ]
+  },
+  {
+   "topic": "Printing and Renaissance art",
+   "links": [
+    "[[The Renaissance]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "1405 to 1420",
+   "elsewhere": "As Zheng He's first treasure fleet sailed in 1405, the Ming were building a new capital at Beijing. Construction ran from 1407 to 1420 and employed hundreds of thousands of workers.",
+   "cite": [
+    "s7",
+    "s22"
+   ]
+  },
+  {
+   "when": "1419",
+   "elsewhere": "Methodical Portuguese expeditions down the coast of West Africa began under Prince Henry.",
+   "cite": [
+    "s27"
+   ]
+  },
+  {
+   "when": "1432 to 1453",
+   "elsewhere": "Mehmed II was born in 1432, which made him about 21 when he took Constantinople. The last Byzantine emperor, Constantine XI, was born in 1404 and died in 1453.",
+   "cite": [
+    "s3",
+    "s2"
+   ]
+  },
+  {
+   "when": "1449",
+   "elsewhere": "In the Tumu Crisis the Mongols defeated a Ming army and captured the Ming emperor, four years before Constantinople fell.",
+   "cite": [
+    "s21"
+   ]
+  },
+  {
+   "when": "1452 to 1455",
+   "elsewhere": "Leonardo da Vinci was born in 1452. In 1453 Constantinople fell and the Hundred Years' War between England and France ended. In 1455 Gutenberg printed his Bibles and the Wars of the Roses began in England.",
+   "cite": [
+    "s37"
+   ]
+  },
+  {
+   "when": "1495 to 1498",
+   "elsewhere": "Leonardo da Vinci painted The Last Supper from 1495 to 1498, while Vasco da Gama reached Calicut in May 1498.",
+   "cite": [
+    "s38",
+    "s24"
+   ]
+  },
+  {
+   "when": "1517",
+   "elsewhere": "The Ottoman sultan Selim conquered Egypt, bringing the empire into contact with the Indian Ocean trading world.",
+   "cite": [
+    "s36"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The Ottoman capture of Constantinople in 1453 closed the trade routes to Asia and started the European Age of Exploration.",
+   "other_view": "Portuguese expeditions began in 1419, well before 1453. One account says there was no general decline in spice imports to Europe after 1453, because most spice trade came through Alexandria or Beirut, not Constantinople. Another notes the conquest had no marked effect on prices and doubts that the wish for a more direct spice trade was widespread before 1490. Other sources say the fall did disrupt trade and gave Europeans an incentive to find a sea route.",
+   "cite": [
+    "s27",
+    "s33",
+    "s34",
+    "s35"
+   ]
+  },
+  {
+   "claim": "Zheng He's biggest treasure ships were about 117 to 149 metres long, as written records say.",
+   "other_view": "Many modern researchers argue wooden ships that long were not feasible. One study judges their real length at about 60 to 76 metres, based on evidence from the Nanjing shipyard. Others estimate about 70 metres. Even these smaller figures are far larger than a ship like the Santa Maria.",
+   "cite": [
+    "s16",
+    "s15",
+    "s17"
+   ]
+  },
+  {
+   "claim": "The voyages mainly aimed to show off the glory of Ming China.",
+   "other_view": "The exact goals are still debated. They are also described as a mix of diplomatic, military and trading ventures. One old story says they began to find a deposed emperor, Jianwen. Most historians discredit it, because seven costly voyages would be unnecessary for that.",
+   "cite": [
+    "s7",
+    "s8",
+    "s13",
+    "s14"
+   ]
+  },
+  {
+   "claim": "China ended the voyages mainly because of Confucian officials' opposition or because of cost.",
+   "other_view": "The reason is not settled. A Cambridge-published study argues the cause was fiscal and political tension between emperors and bureaucrats. Others stress the Mongol frontier, the growth of private trade, or the capital's move to Beijing. One historian notes the voyages might have continued if the capital had returned to Nanjing.",
+   "cite": [
+    "s10",
+    "s14",
+    "s40",
+    "s39"
+   ]
+  },
+  {
+   "claim": "Portugal dominated the Indian Ocean after Diu.",
+   "other_view": "One older textbook summary says the Portuguese held trade dominance for almost a century after Diu. Giancarlo Casale argues the Ottomans were active players and ultimately bested the Portuguese in the Indian Ocean.",
+   "cite": [
+    "s30",
+    "s36"
+   ]
+  },
+  {
+   "claim": "Dias rounded the Cape in 1488.",
+   "other_view": "Most sources give 1488, but one popular history site dates his voyage to 1487.",
+   "cite": [
+    "s26",
+    "s24"
+   ]
+  },
+  {
+   "claim": "The siege of Constantinople lasted 55 days.",
+   "other_view": "Some sources say 55 days. Others, counting from 6 April, say 53 days.",
+   "cite": [
+    "s1",
+    "s5"
+   ]
+  }
+ ]
+}

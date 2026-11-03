@@ -1,0 +1,1132 @@
+{
+ "about": {
+  "title": "The Genus Homo: Neanderthals, Denisovans and Us",
+  "course": "history-of-everything",
+  "class_n": 11,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. The six topics are taught one at a time in short beats, and nine quick check questions are spread through the class. Anyone who wants to go slower can pause at each question."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Homo habilis",
+   "publisher": "Smithsonian Institution Human Origins Program",
+   "date": "page undated; page updated around 2022",
+   "link": "https://humanorigins.si.edu/evidence/human-fossils/species/homo-habilis",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "The oldest fossil of our genus (and a new look at Homo habilis)",
+   "publisher": "Smithsonian Institution Human Origins Program",
+   "date": "2015",
+   "link": "https://humanorigins.si.edu/research/whats-hot-human-origins/oldest-fossil-our-genus",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Homo erectus",
+   "publisher": "Smithsonian Institution Human Origins Program",
+   "date": "page undated",
+   "link": "https://humanorigins.si.edu/evidence/human-fossils/species/homo-erectus",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "KNM-WT 15000 (Turkana Boy)",
+   "publisher": "Smithsonian Institution Human Origins Program",
+   "date": "page undated",
+   "link": "https://humanorigins.si.edu/evidence/human-fossils/fossils/knm-wt-15000",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "D3444 (Dmanisi, Georgia)",
+   "publisher": "Smithsonian Institution Human Origins Program",
+   "date": "page undated",
+   "link": "https://humanorigins.si.edu/evidence/human-fossils/fossils/d3444",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Extinction of Homo erectus",
+   "publisher": "Smithsonian Institution Human Origins Program",
+   "date": "2020 (reports a Nature paper of 16 January 2020)",
+   "link": "https://humanorigins.si.edu/research/whats-hot-human-origins/extinction-homo-erectus",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Our species arose at least 300,000 years ago",
+   "publisher": "Smithsonian Institution Human Origins Program",
+   "date": "2017",
+   "link": "https://humanorigins.si.edu/research/whats-hot-human-origins/our-species-arose-least-300000-years-ago",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "The first of our kind: oldest Homo sapiens fossils at Jebel Irhoud, Morocco",
+   "publisher": "Max Planck Society",
+   "date": "2017-06-07",
+   "link": "https://www.mpg.de/11322481/oldest-homo-sapiens-fossils-at-jebel-irhoud-morocco",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "New fossils from Jebel Irhoud, Morocco and the pan-African origin of Homo sapiens (abstract)",
+   "publisher": "Nature, via PubMed",
+   "date": "2017-06-07",
+   "link": "https://pubmed.ncbi.nlm.nih.gov/28593953/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Press release: The Nobel Prize in Physiology or Medicine 2022",
+   "publisher": "Nobel Assembly at Karolinska Institutet / NobelPrize.org",
+   "date": "2022-10-03",
+   "link": "https://www.nobelprize.org/prizes/medicine/2022/press-release/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Svante Pääbo wins Nobel Prize for decoding ancient DNA",
+   "publisher": "The Leakey Foundation",
+   "date": "2022-10-05",
+   "link": "https://leakeyfoundation.org/svante-paabo-wins-nobel-prize-ancient-dna/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Researchers Track Down When Neanderthals and Early Modern Humans Interbred Using Ancient Genomes",
+   "publisher": "Smithsonian Magazine",
+   "date": "date not shown on page (reports studies published in December)",
+   "link": "https://www.smithsonianmag.com/smart-news/researchers-track-down-when-neanderthals-and-early-modern-humans-interbred-using-ancient-genomes-180985665/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Scientists Link Nearly Complete Skull to Humans' Denisovan Relative",
+   "publisher": "Chinese Academy of Sciences",
+   "date": "2025-06-19",
+   "link": "https://english.cas.cn/newsroom/cas_media/202506/t20250619_1045847.shtml",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Multiregional evolution",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "date not shown on page",
+   "link": "https://www.britannica.com/science/multiregional-evolution",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Out of Africa, The Sequel",
+   "publisher": "Science (news)",
+   "date": "date not shown on page",
+   "link": "https://www.science.org/content/article/out-africa-sequel",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Pleistocene Epoch",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "date not shown on page",
+   "link": "https://www.britannica.com/science/Pleistocene-Epoch",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Youngest Toba eruption",
+   "publisher": "Wikipedia",
+   "date": "date not shown on page",
+   "link": "https://en.wikipedia.org/wiki/Youngest_Toba_eruption",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "When Did Neanderthals Really Go Extinct?",
+   "publisher": "Archaeology Magazine",
+   "date": "2014-08-21",
+   "link": "https://archaeology.org/news/2014/08/21/140821-europe-neanderthal-extinction-redated/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Neanderthals Died Out 10,000 Years Earlier Than Thought, With Help From Modern Humans",
+   "publisher": "National Geographic",
+   "date": "2014-08-20",
+   "link": "https://www.nationalgeographic.com/culture/article/140820-neanderthal-dating-bones-archaeology-science",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Who were the Neanderthals, and why did they go extinct?",
+   "publisher": "National Geographic",
+   "date": "date not shown on page",
+   "link": "https://www.nationalgeographic.com/history/article/who-were-the-neanderthals",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "A simple analytical model for Neanderthal disappearance due to genetic dilution by recurrent small-scale immigrations of modern humans",
+   "publisher": "Scientific Reports (Nature Portfolio)",
+   "date": "2025-11-04",
+   "link": "https://www.nature.com/articles/s41598-025-22376-6",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Why Humans Don't Have More Neanderthal DNA",
+   "publisher": "Smithsonian Magazine",
+   "date": "date not shown on page",
+   "link": "https://www.smithsonianmag.com/smart-news/study-reveals-why-humans-dont-have-more-neanderthal-dna-180961047/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Why Did Neanderthals Go Extinct? Inbreeding Probably Wasn't to Blame for Their Demise in Northwestern Europe, a Study Suggests",
+   "publisher": "Smithsonian Magazine",
+   "date": "year not shown on page (reports a Nature study published June 24)",
+   "link": "https://www.smithsonianmag.com/smart-news/why-did-neanderthals-go-extinct-inbreeding-probably-wasnt-to-blame-for-their-demise-in-northwestern-europe-a-study-suggests-180989032/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "The Neanderthals may have become extinct because of their isolated lifestyle",
+   "publisher": "ScienceDaily (University of Copenhagen Globe Institute study)",
+   "date": "2024-09-11",
+   "link": "https://www.sciencedaily.com/releases/2024/09/240911112132.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "The pros and cons of dating a Neanderthal",
+   "publisher": "Natural History Museum, London",
+   "date": "2014-02",
+   "link": "https://www.nhm.ac.uk/discover/news/2014/february/pros-cons-dating-neanderthal.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Two blind spots in the demographic inference of human origins from genomic data (preprint)",
+   "publisher": "arXiv",
+   "date": "preprint; date not shown on page",
+   "link": "https://arxiv.org/pdf/2608.27591",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "Homo habilis (research starter)",
+   "publisher": "EBSCO",
+   "date": "date not shown on page",
+   "link": "https://www.ebsco.com/research-starters/social-sciences-and-humanities/homo-habilis/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "Neanderthals (research starter)",
+   "publisher": "EBSCO",
+   "date": "date not shown on page",
+   "link": "https://www.ebsco.com/research-starters/biology/neanderthals",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "Medicine Nobel Prize 2022 for Svante Pääbo",
+   "publisher": "Max Planck Society",
+   "date": "2022-10-03",
+   "link": "https://www.mpg.de/19316395/medicine-nobel-prize-2022-for-svante-paabo",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "Out-of-Africa versus the multiregional hypothesis",
+   "publisher": "Nature Education / World Library of Science",
+   "date": "date not shown on page",
+   "link": "https://www.nature.com/wls/content/Out-of-Africa-versus-the-multiregional-hypothesis-6391/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s31",
+   "title": "Living on the edge: Was demographic weakness the cause of Neanderthal demise?",
+   "publisher": "PubMed Central (open-access journal article)",
+   "date": "date not shown on page",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6541251/",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back. Last time we met the early hominins who walked upright. Today we meet our own branch of the family tree, and the cousins who lived beside us."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Genus Homo: Neanderthals, Denisovans and Us"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a word. A genus is a group of closely related species. Homo is our genus: the group that includes living humans and our extinct relatives."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Genus = a group of close relatives"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In the name Homo sapiens, which word is the genus?",
+    "right": "Homo",
+    "wrong": [
+     "sapiens",
+     "Both words together",
+     "Neither word"
+    ],
+    "why": "Homo is the wider group. Sapiens is our own species inside that group."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is today's route. Homo habilis, Homo erectus, then our own species. After that, DNA from ancient bones, and two big debates."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Homo habilis; 2. Homo erectus; 3. Homo sapiens appears; 4. Where we came from: two models; 5. Neanderthals and Denisovans; 6. Ancient DNA and interbreeding; 7. Why the Neanderthals disappeared"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Stop one: Homo habilis, which means 'handy man'. Louis Leakey and colleagues gave the name to fossils from Olduvai Gorge in Tanzania, because they suspected this early human made the stone tools found there."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A skull of Homo habilis, with a small face jutting forward and a rounded braincase, beside a few simple sharp-edged stones from Olduvai Gorge."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Homo habilis lived from about 2.4 million to 1.65 million years ago. Its brain was slightly larger than that of the Australopithecus species before it."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "2.4 to 1.65 million years ago"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What does the name 'habilis' mean?",
+    "right": "Handy man",
+    "wrong": [
+     "Tree man",
+     "Cave man",
+     "Big-brained man"
+    ],
+    "why": "Leakey's team suspected this early human made the stone tools found at Olduvai Gorge, so they called it 'handy man'."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Habilis is not quite the first Homo any more. A jaw from Ethiopia, called the Ledi jaw, is 2.75 to 2.8 million years old. It has smaller teeth than Australopithecus."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ledi jaw: 2.75 to 2.8 million years old"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Careful: scientists still argue about habilis. Many see it as an ancestor of Homo erectus. Others think it may be a side branch, one of several kinds of Homo living in Africa at the same time."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "LEFT: Habilis led on to Homo erectus and perhaps to us. || RIGHT: Habilis may be a side branch, one of several kinds of early Homo."
+   },
+   "cite": [
+    "s1",
+    "s27"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Do scientists all agree that Homo habilis is our direct ancestor?",
+    "right": "No. Some think it is an ancestor and others think it may be a side branch.",
+    "wrong": [
+     "Yes, it is settled.",
+     "Yes, but only in Europe.",
+     "No, because nobody has ever found a habilis fossil."
+    ],
+    "why": "Fossils of habilis exist, but how they fit on the family tree is debated."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Stop two: Homo erectus. The first fossils were found on the island of Java in 1891. Eugène Dubois named it in 1894, using a name that meant 'erect ape-man'."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Homo erectus"
+   },
+   "cite": [
+    "s3",
+    "s6"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Early African erectus bodies looked much more like ours than habilis did. They had long legs and shorter arms compared with the torso."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Side-by-side outlines of a habilis body and an erectus body. The erectus figure has longer legs and shorter arms."
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A famous skeleton, the Turkana Boy, lived about 1.6 million years ago in Kenya. Tooth growth says he was eight or nine. He stood about 1.6 metres tall, and his long legs may have helped him walk and even run far."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A mostly complete boy's skeleton lying in a museum case. It is tall, with long thin leg bones."
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Erectus was the first known species to spread widely, across Africa and Asia. One group reached Dmanisi, in the Republic of Georgia, about 1.77 million years ago."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A map of Africa and Asia. An arrow runs from East Africa north to the Caucasus Mountains, with a pin at Dmanisi, Georgia. Another arrow continues east to Java."
+   },
+   "cite": [
+    "s4",
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "At Dmanisi, one elderly man had lost most of his teeth long before he died. His jaw had worn away. His group must have looked after him. It is some of the earliest evidence of care and compassion."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "An old skull with a worn jaw and almost no teeth, shown next to a note saying his group cared for him."
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does the toothless Dmanisi skull suggest?",
+    "right": "People in his group probably looked after him.",
+    "wrong": [
+     "He had just arrived from Africa alone.",
+     "He only ate plants.",
+     "He was the first person to use fire."
+    ],
+    "why": "He lived long after losing his teeth, which suggests members of his social group took care of him."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Homo erectus was a long-lasting species. It lived from about 1.89 million years ago until around 110,000 years ago. Our species, by comparison, is only about 300,000 years old."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "about 1.8 million years"
+   },
+   "cite": [
+    "s3",
+    "s6"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Which has lasted longer so far: Homo erectus or Homo sapiens?",
+    "right": "Homo erectus, at about 1.8 million years compared with our 300,000.",
+    "wrong": [
+     "Homo sapiens",
+     "They have lasted exactly the same time.",
+     "Nobody can tell."
+    ],
+    "why": "Erectus lasted from about 1.89 million years ago to about 110,000 years ago. Our species appeared about 300,000 years ago."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Stop three: our own species, Homo sapiens. The oldest fossils found so far come from Jebel Irhoud, a cave in Morocco, and are about 300,000 years old."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Jebel Irhoud, Morocco: about 300,000 years ago"
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "These early sapiens already had a modern-looking face. But the braincase was long and low, not round like ours. Evolution built us in pieces."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A computer reconstruction of the Jebel Irhoud skull. The face looks like a modern person's, the skull behind it is long and low."
+   },
+   "cite": [
+    "s8",
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "For years the oldest sapiens came from Ethiopia, about 195,000 years ago. Add Florisbad in South Africa at 260,000. Our beginnings are spread across a whole continent."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A map of Africa with three pins: Jebel Irhoud, Morocco (300,000 years); Florisbad, South Africa (260,000); Omo Kibish, Ethiopia (195,000)."
+   },
+   "cite": [
+    "s8",
+    "s9"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which site has the oldest known Homo sapiens fossils?",
+    "right": "Jebel Irhoud in Morocco, about 300,000 years old",
+    "wrong": [
+     "Omo Kibish in Ethiopia, about 195,000 years old",
+     "Florisbad in South Africa, about 260,000 years old",
+     "Dmanisi in Georgia, about 1.77 million years old"
+    ],
+    "why": "Jebel Irhoud is the oldest. Omo Kibish and Florisbad are younger. Dmanisi holds Homo erectus, not our species."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Experts still ask how quickly we became modern. One view says our modern shape appeared fairly suddenly, around 200,000 years ago. The other says it built up slowly over about 400,000 years."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "LEFT: A fairly rapid change, around 200,000 years ago. || RIGHT: A gradual change over about 400,000 years."
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a bigger question. How did our species come to live all over the world? Two models answer it. Both agree on one thing: Homo erectus began in Africa and spread into Eurasia."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Two models of our origin"
+   },
+   "cite": [
+    "s30"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Out of Africa model says sapiens evolved in Africa, then spread out and replaced other humans, with little mixing. The multiregional model says sapiens grew out of older Homo groups in Africa, Asia and Europe, which kept interbreeding."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "OUT OF AFRICA: sapiens evolved in Africa, spread out, and replaced other kinds of human with minimal interbreeding. || MULTIREGIONAL: sapiens evolved from older Homo populations in Africa, Asia and Europe that interbred."
+   },
+   "cite": [
+    "s14",
+    "s30"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What does the multiregional model say?",
+    "right": "Sapiens grew out of older Homo groups in Africa, Asia and Europe that exchanged genes.",
+    "wrong": [
+     "Sapiens evolved only in Africa and replaced everyone else.",
+     "Sapiens evolved only in Europe.",
+     "Homo erectus never left Africa."
+    ],
+    "why": "The multiregional model has regional groups evolving and mixing. The second option describes the Out of Africa model."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So who is winning? Genetic data from living people largely supports Out of Africa. But there are in-between versions that allow some mixing, and, as we'll see, DNA from ancient bones shows there was mixing."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Today's view: mostly Out of Africa, with some mixing"
+   },
+   "cite": [
+    "s14",
+    "s30"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Neanderthals were close relatives who lived across Eurasia. They were stocky, strong and suited to cold climates. Fossils show them from about 250,000 to 40,000 years ago."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A Neanderthal skull with heavy brow ridges and a protruding face, next to a short, broad-chested body outline."
+   },
+   "cite": [
+    "s19",
+    "s20",
+    "s28",
+    "s31"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the tool that changed everything. DNA is the instruction code inside living things. A tiny, broken amount can survive in very old bones. Svante Pääbo spent years working out how to read it."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "The Nobel Committee called the Neanderthal genome \"seemingly impossible\" to read."
+   },
+   "cite": [
+    "s10",
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "He published the first Neanderthal genome in 2010, and won the 2022 Nobel Prize in Physiology or Medicine. That started a new field, paleogenomics."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "2010: first Neanderthal genome"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "DNA also revealed a group nobody knew about, the Denisovans, named after Denisova Cave in Siberia. They were identified through ancient DNA in 2010, and a genome from a small bone followed in 2012."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Denisovans: first known from DNA"
+   },
+   "cite": [
+    "s13",
+    "s29"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the surprise. The DNA shows Neanderthals and our ancestors had children together. People with ancestry outside Africa carry roughly one to two percent Neanderthal DNA, and some sources say up to four."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "about 1 to 2 percent (up to 4 in some estimates)"
+   },
+   "cite": [
+    "s12",
+    "s25",
+    "s26"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Denisovans left their mark too. People in Papua New Guinea, Aboriginal Australia and nearby islands carry up to about five percent Denisovan DNA. Scientists have also sequenced a first-generation Neanderthal–Denisovan hybrid."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Neanderthal DNA: about 1 to 2 percent outside Africa; Denisovan DNA: up to about 5 percent in Oceania; One child with a Neanderthal and a Denisovan parent has been sequenced"
+   },
+   "cite": [
+    "s11",
+    "s26"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Did the mixing help? Some inherited pieces affect hair and skin, which may have suited our ancestors to colder lands. Other pieces are linked to illness risk."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Some Neanderthal DNA affects skin and hair"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Roughly how much of the DNA of someone with non-African ancestry comes from Neanderthals?",
+    "right": "A small share: a few percent at most",
+    "wrong": [
+     "About half",
+     "About a quarter",
+     "None. It is a myth."
+    ],
+    "why": "Studies put it at about one to two percent, with some estimates up to four."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "When did the mixing happen? Studies point to a sustained period around 47,000 years ago. Some earlier research suggested older mixing, over 100,000 years ago. The picture is still being refined."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Mixing dates suggested: older studies 130,000 to 100,000 years ago; recent genome studies about 47,000 years ago"
+   },
+   "cite": [
+    "s12",
+    "s28"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 2025 the Denisovans got a face. A nearly complete skull from Harbin, China, at least 146,000 years old, was shown by ancient proteins and DNA to be Denisovan. Before that, Denisovan fossils were scarce."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The long, low Harbin skull with heavy brow ridges and a large face, shown in a museum setting."
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "How were Denisovans first identified?",
+    "right": "From ancient DNA in a small bone from a cave in Siberia",
+    "wrong": [
+     "From a complete skull found in China",
+     "From a written record by Neanderthals",
+     "From a museum label that said Denisovan"
+    ],
+    "why": "They were first identified through ancient DNA. The nearly complete Harbin skull was only linked to them in 2025."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last stop: why did the Neanderthals disappear? Dating of 40 sites across Europe puts it between about 41,000 and 39,000 years ago. Neanderthals and modern humans may have overlapped for up to 5,400 years."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "41,000 to 39,000 years ago"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is how long each kind of Homo has lasted, shown as a bar chart. Erectus is far ahead. Neanderthals lasted about 210,000 years and sapiens at least 300,000 so far."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "How long each kind of Homo has lasted, in years",
+    "chart": "c1"
+   },
+   "cite": [
+    "s1",
+    "s3",
+    "s7",
+    "s31"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Scientists group the ideas into four kinds. Demographic: too few Neanderthals. Environmental: climate or disease. Competition: rivals for food and space. Admixture: they were absorbed by interbreeding."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Demographic (small numbers); Environmental (climate change, new diseases); Competition (with Homo sapiens); Admixture (absorbed through interbreeding)"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "For the environment idea, a cold snap of about a thousand years hit central Europe around 40,000 years ago. Chris Stringer suggests it may have been the final blow to a population already small."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A cold snap around 40,000 years ago"
+   },
+   "cite": [
+    "s19",
+    "s20"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Absorption has two sides. One geneticist says Neanderthals simply became part of our species. A Copenhagen team sees small, isolated groups with low genetic diversity. A study of northwestern Europe found healthy diversity there."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "ABSORBED / ISOLATED: Neanderthals melted into our species, or small isolated groups with little genetic diversity faded away. || NOT INBRED EVERYWHERE: Neanderthals in Belgium and France seem to have been genetically diverse."
+   },
+   "cite": [
+    "s22",
+    "s23",
+    "s24"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So there is no single settled answer. Most researchers think several causes combined. It is a good example of how science works: the debate is open."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Likely several causes combined"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Do scientists agree on a single cause for the Neanderthals' disappearance?",
+    "right": "No. Several ideas are debated, and a mix of causes seems likely.",
+    "wrong": [
+     "Yes, a volcano",
+     "Yes, a war that humans won",
+     "Yes, they never existed"
+    ],
+    "why": "Scientists still debate demography, climate, competition and mixing. They think several processes probably played a part."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's finish with how we know all this. Each step needed a new kind of evidence: bones, a skeleton, then DNA. New finds keep changing the story."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1891: first Homo erectus fossils on Java; 1964: Homo habilis named; 1984: Turkana Boy found; 2010: first Neanderthal genome; 2017: Jebel Irhoud sapiens; 2025: Harbin skull identified as Denisovan"
+   },
+   "cite": [
+    "s4",
+    "s6",
+    "s8",
+    "s10",
+    "s13",
+    "s27"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To sum up: Homo began in Africa. Erectus spread across Africa and Asia. Our species appeared in Africa about 300,000 years ago, and we met and mixed with Neanderthals and Denisovans. Next time: fire, tools, language and art."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Homo habilis: handy man; Homo erectus: long-lasting, spread widely; Homo sapiens: at least 300,000 years old; We carry DNA from Neanderthals and Denisovans; Why Neanderthals vanished is still debated"
+   },
+   "cite": [
+    "s3",
+    "s7",
+    "s11",
+    "s12"
+   ],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "How long each kind of Homo has lasted (years, rounded; sapiens is still going)",
+   "rows": [
+    {
+     "label": "Homo habilis (2.4 to 1.65 million years ago)",
+     "value": 750000,
+     "source": "s1"
+    },
+    {
+     "label": "Homo erectus (1.89 million to 110,000 years ago)",
+     "value": 1780000,
+     "source": "s3"
+    },
+    {
+     "label": "Neanderthals (250,000 to 40,000 years ago)",
+     "value": 210000,
+     "source": "s31"
+    },
+    {
+     "label": "Homo sapiens (about 300,000 years ago to now, at least)",
+     "value": 300000,
+     "source": "s7"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Genus Homo",
+   "links": [
+    "[[Australopithecus]]",
+    "[[species and genus]]"
+   ]
+  },
+  {
+   "topic": "Homo habilis and Olduvai Gorge",
+   "links": [
+    "[[Louis Leakey]]",
+    "[[Oldowan stone tools]]"
+   ]
+  },
+  {
+   "topic": "Homo erectus",
+   "links": [
+    "[[Turkana Boy]]",
+    "[[Dmanisi]]",
+    "[[Java Man]]"
+   ]
+  },
+  {
+   "topic": "Origins of Homo sapiens",
+   "links": [
+    "[[Jebel Irhoud]]",
+    "[[Omo Kibish]]"
+   ]
+  },
+  {
+   "topic": "Out of Africa versus multiregional models",
+   "links": [
+    "[[ancient DNA]]",
+    "[[Homo erectus]]"
+   ]
+  },
+  {
+   "topic": "Neanderthals",
+   "links": [
+    "[[Neanderthal extinction]]",
+    "[[Ice Age Minds]]"
+   ]
+  },
+  {
+   "topic": "Denisovans",
+   "links": [
+    "[[Denisova Cave]]",
+    "[[Harbin skull]]",
+    "[[Svante Pääbo]]"
+   ]
+  },
+  {
+   "topic": "Ancient DNA and paleogenomics",
+   "links": [
+    "[[Svante Pääbo]]",
+    "[[interbreeding]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About 2.4 to 1.65 million years ago, the time of Homo habilis",
+   "elsewhere": "Earth was in the Pleistocene, often called the Great Ice Age, which began about 2.58 million years ago. Glaciers repeatedly grew and shrank.",
+   "cite": [
+    "s1",
+    "s16"
+   ]
+  },
+  {
+   "when": "About 1.8 to 1.6 million years ago, the Dmanisi and Turkana erectus",
+   "elsewhere": "Several kinds of early human lived in East Africa together, including habilis, rudolfensis and Paranthropus boisei, while Homo erectus was spreading into Asia.",
+   "cite": [
+    "s3",
+    "s4",
+    "s5"
+   ]
+  },
+  {
+   "when": "About 195,000 to 110,000 years ago",
+   "elsewhere": "Several kinds of human lived at the same time. Sapiens were in Ethiopia and elsewhere in Africa, Neanderthals lived in Eurasia, and Homo erectus was still alive on Java.",
+   "cite": [
+    "s6",
+    "s8",
+    "s19"
+   ]
+  },
+  {
+   "when": "About 146,000 years ago",
+   "elsewhere": "The Harbin skull's owner lived in northeast China, while Neanderthals were present in Eurasia and Homo erectus was still living on Java.",
+   "cite": [
+    "s6",
+    "s13",
+    "s19"
+   ]
+  },
+  {
+   "when": "About 74,000 years ago",
+   "elsewhere": "The Toba supervolcano erupted in Sumatra, Indonesia. Homo erectus had vanished from Java a few tens of thousands of years earlier.",
+   "cite": [
+    "s6",
+    "s17"
+   ]
+  },
+  {
+   "when": "About 47,000 years ago",
+   "elsewhere": "A sustained period of interbreeding between Neanderthals and early modern humans is dated to about this time.",
+   "cite": [
+    "s12"
+   ]
+  },
+  {
+   "when": "About 41,000 to 39,000 years ago",
+   "elsewhere": "Neanderthals disappeared from Europe, around the time of a long cold snap in central Europe.",
+   "cite": [
+    "s18",
+    "s20"
+   ]
+  },
+  {
+   "when": "11,700 years ago",
+   "elsewhere": "The Pleistocene Ice Age epoch ended and the warmer Holocene began. Farming, coming up in a later class, arose in the Holocene.",
+   "cite": [
+    "s16"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Homo habilis is a direct ancestor of Homo erectus and so of us.",
+   "other_view": "Many scientists accept this. Others think habilis may be an extinct side branch, one of several kinds of early Homo living in Africa at the same time. Some also ask whether habilis and Homo rudolfensis are separate species or one variable species.",
+   "cite": [
+    "s1",
+    "s27"
+   ]
+  },
+  {
+   "claim": "Homo erectus was a single species.",
+   "other_view": "Some scientists treat African fossils (sometimes called Homo ergaster) and Asian fossils (Homo erectus in the strict sense) as two species. Others lump them together as one.",
+   "cite": [
+    "s3"
+   ]
+  },
+  {
+   "claim": "Homo sapiens arose in a single place, such as East Africa, around 200,000 years ago.",
+   "other_view": "The Jebel Irhoud fossils (about 300,000 years old) suggest our species evolved across the whole African continent. Experts also disagree about whether modern features appeared rapidly around 200,000 years ago or gradually over 400,000 years.",
+   "cite": [
+    "s7",
+    "s8",
+    "s9"
+   ]
+  },
+  {
+   "claim": "Out of Africa is the best account of where modern humans came from.",
+   "other_view": "Most evidence, especially genetics, favours it. But multiregional supporters say their model has been misrepresented: it does not require modern humans to arise several separate times. Intermediate models also allow Africa to be the main source with some local mixing, which fits the DNA evidence for mixing.",
+   "cite": [
+    "s14",
+    "s15",
+    "s30"
+   ]
+  },
+  {
+   "claim": "Neanderthals were a separate species from us.",
+   "other_view": "Because of interbreeding, there is ongoing debate about whether Neanderthals should count as a distinct species or a subspecies of modern humans.",
+   "cite": [
+    "s28"
+   ]
+  },
+  {
+   "claim": "People outside Africa carry about 1 to 2 percent Neanderthal DNA, from mixing around 47,000 years ago.",
+   "other_view": "Some sources give up to 4 percent. Earlier studies also proposed older mixing events, over 100,000 years ago, so the number and timing of mixing events are still refined.",
+   "cite": [
+    "s12",
+    "s25",
+    "s26",
+    "s28"
+   ]
+  },
+  {
+   "claim": "Neanderthals died out because modern humans outcompeted or absorbed them.",
+   "other_view": "Other researchers stress small population size and isolation, or climate change such as a cold snap around 40,000 years ago. A study of northwestern Europe found no signs of inbreeding there. Several of these causes probably combined.",
+   "cite": [
+    "s19",
+    "s20",
+    "s21",
+    "s22",
+    "s23",
+    "s24"
+   ]
+  }
+ ]
+}

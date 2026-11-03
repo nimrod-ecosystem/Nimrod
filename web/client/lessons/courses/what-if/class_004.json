@@ -1,0 +1,872 @@
+{
+ "about": {
+  "title": "The Big Bang and the rival that lost: steady state",
+  "course": "what-if",
+  "class_n": 4,
+  "audience": [
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. The class has two jobs: the Big Bang evidence, then the steady-state story. I kept the beats short and put a check question after each new idea. If you want a shorter session, stop after the beat on continuous creation and finish next time."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "29.4 The Cosmic Microwave Background, Astronomy 2e",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/astronomy-2e/pages/29-4-the-cosmic-microwave-background",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Historical Aspects of Post-1850 Cosmology",
+   "publisher": "arXiv (historical review)",
+   "date": "2014 (preprint)",
+   "link": "https://arxiv.org/pdf/1410.2753",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Quasi-Steady-State and Related Cosmological Models: A Historical Review",
+   "publisher": "arXiv (historical review)",
+   "date": "2012 (preprint)",
+   "link": "https://arxiv.org/pdf/1201.3449",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Cosmic Microwave Background Radiation (why the Big Bang theory is so widely accepted)",
+   "publisher": "NASA LAMBDA archive (POLAR experiment pages)",
+   "date": "n.d.",
+   "link": "https://lambda.gsfc.nasa.gov/product/suborbit/POLAR/cmb.physics.wisc.edu/polar/ezexp.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Scientist of the Day: Hermann Bondi",
+   "publisher": "Linda Hall Library",
+   "date": "n.d.",
+   "link": "https://www.lindahall.org/about/news/scientist-of-the-day/hermann-bondi/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Echoes of the Big Bang (Professor Carolin Crawford)",
+   "publisher": "Gresham College",
+   "date": "n.d.",
+   "link": "https://www.gresham.ac.uk/watch-now/echoes-big-bang",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Star formation across cosmic time with radio surveys. The promise of the SKA",
+   "publisher": "arXiv (research paper)",
+   "date": "2018 (preprint)",
+   "link": "https://arxiv.org/pdf/1802.06561",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Bernard Yarnton Mills 1920-2011",
+   "publisher": "arXiv (biographical memoir)",
+   "date": "2013 (preprint)",
+   "link": "https://arxiv.org/pdf/1306.6371",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Big Bang Nucleosynthesis",
+   "publisher": "University of British Columbia, Department of Physics and Astronomy",
+   "date": "n.d.",
+   "link": "https://www.astro.ubc.ca/people/scott/bbn.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Olber's Paradox",
+   "publisher": "Philosophy of Cosmology, University of Oxford",
+   "date": "n.d.",
+   "link": "https://philosophy-of-cosmology.ox.ac.uk/olbers-paradox.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "If the Universe is infinite and filled with billions of stars, then why is our night-time sky so dark?",
+   "publisher": "BBC Sky at Night Magazine",
+   "date": "n.d.",
+   "link": "https://www.skyatnightmagazine.com/space-science/olbers-paradox",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Comments on the Quasi-Steady-State Cosmology (Edward L. Wright, UCLA)",
+   "publisher": "arXiv; published in Monthly Notices of the Royal Astronomical Society",
+   "date": "1994 (preprint)",
+   "link": "https://arxiv.org/pdf/astro-ph/9410070",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Cosmologists in the dark",
+   "publisher": "arXiv (review article)",
+   "date": "2009 (preprint)",
+   "link": "https://arxiv.org/pdf/0904.1126",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Steady State Theory",
+   "publisher": "Encyclopedia.com",
+   "date": "n.d.",
+   "link": "https://www.encyclopedia.com/education/encyclopedias-almanacs-transcripts-and-maps/steady-state-theory",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "The Cosmic Microwave Background: The history of its experimental investigation and its significance for cosmology",
+   "publisher": "arXiv (review article)",
+   "date": "2015 (preprint)",
+   "link": "https://arxiv.org/pdf/1506.01907",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Cosmic Microwave Background",
+   "publisher": "Center for Astrophysics | Harvard & Smithsonian",
+   "date": "n.d.",
+   "link": "https://www.cfa.harvard.edu/research/topic/cosmic-microwave-background",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Enduring Quests-Daring Visions (NASA Astrophysics in the Next Three Decades)",
+   "publisher": "arXiv (NASA astrophysics roadmap)",
+   "date": "2014 (preprint)",
+   "link": "https://arxiv.org/pdf/1401.3741",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Cosmic microwave background",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/science/cosmic-microwave-background",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "11.8: Evolution of the Early Universe, University Physics Volume 3",
+   "publisher": "OpenStax, via LibreTexts",
+   "date": "n.d.",
+   "link": "https://phys.libretexts.org/Bookshelves/University_Physics/University_Physics_(OpenStax)/University_Physics_III_-_Optics_and_Modern_Physics_(OpenStax)/11:_Particle_Physics_and_Cosmology/11.08:_Evolution_of_the_Early_Universe",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Thermalization of Starlight in the Steady-State Cosmology",
+   "publisher": "arXiv (research paper)",
+   "date": "2009 (preprint)",
+   "link": "https://arxiv.org/pdf/0910.3004",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "On the Interpretation of Radio Source Counts (D. W. Sciama)",
+   "publisher": "Monthly Notices of the Royal Astronomical Society, vol. 126",
+   "date": "April 1963",
+   "link": "https://academic.oup.com/mnras/article/126/2/195/2601400",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Ab Initio Nuclear Reaction Theory with Applications to Astrophysics",
+   "publisher": "arXiv (review article)",
+   "date": "2022 (preprint)",
+   "link": "https://arxiv.org/pdf/2204.01187",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "On the COBE Discovery - for Pedestrians",
+   "publisher": "arXiv (lecture notes)",
+   "date": "1992 (preprint)",
+   "link": "https://arxiv.org/pdf/hep-ph/9211201",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "Big Bang Nucleosynthesis (Ned Wright)",
+   "publisher": "UCLA Astronomy",
+   "date": "n.d.",
+   "link": "https://www.astro.ucla.edu/~wright/BBNS.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "New and Recent Trends in Modern Cosmology",
+   "publisher": "arXiv (review article)",
+   "date": "2004 (preprint)",
+   "link": "https://arxiv.org/pdf/gr-qc/0404115",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Steady-state Theory",
+   "publisher": "Encyclopedia.com",
+   "date": "n.d.",
+   "link": "https://www.encyclopedia.com/science-and-technology/astronomy-and-space-exploration/astronomy-general/steady-state-theory",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "The Cosmic Microwave Background (Chapter 6), Star Noise: Discovering the Radio Universe",
+   "publisher": "Cambridge University Press",
+   "date": "2023-05-04",
+   "link": "https://www.cambridge.org/core/books/abs/star-noise-discovering-the-radio-universe/cosmic-microwave-background/956D7D62C759A7DAA6E6AA60498E2193",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "Constraining the early universe with primordial black holes",
+   "publisher": "arXiv (research paper)",
+   "date": "2018 (preprint)",
+   "link": "https://arxiv.org/pdf/1801.08654",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "Fact sheet: Evidence for the Big Bang",
+   "publisher": "University of Western Australia",
+   "date": "n.d.",
+   "link": "https://www.uwa.edu.au/study/-/media/Faculties/Science/Docs/Evidence-for-the-Big-Bang.pdf",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Where this idea stands: the steady-state universe is a minority scholarly view. It was a serious rival in the 1950s, then the evidence set it aside. Only a small group still develops a revised version."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Where this idea stands: minority scholarly view"
+   },
+   "cite": [
+    "s14",
+    "s13",
+    "s2"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "And here is the accepted view, plainly. The universe is expanding, and it began from a hot, dense early stage, about 13.8 billion years ago. That is the Big Bang picture."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Accepted view | The universe is expanding | Run the clock back and it was hotter and denser | That hot, dense stage was about 13.8 billion years ago"
+   },
+   "cite": [
+    "s18",
+    "s19",
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Today we test the rival against that view. We'll be kind to everyone involved. The steady-state authors did what science asks: they built a rival idea and let the evidence judge it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Build a rival. Let evidence judge."
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, the Big Bang's evidence. Pillar one is expansion. If space is stretching, other galaxies should be moving away from us, and farther ones should move faster. Edwin Hubble saw exactly this in the 1920s."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A balloon with dots drawn on it, being inflated. Every dot moves away from the dot marked 'us'. Arrows are longer on the dots that are farther away."
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "If the universe is expanding, what should we see other galaxies doing?",
+    "right": "Moving away from us, with farther galaxies moving faster",
+    "wrong": [
+     "Moving toward us, with nearer galaxies moving faster",
+     "Staying exactly still",
+     "Circling the Milky Way at the same speed"
+    ],
+    "why": "In an expanding universe, galaxies recede, and the farther away they are, the faster they recede. Hubble's observations showed this pattern."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now run the film backwards. Galaxies move closer together, the universe gets denser, and denser means hotter. So expansion points back to a hot, dense early stage."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Run the clock backward: denser, hotter"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Pillar two. A hot early universe should have glowed, and that old light should still be around. About 380,000 years after the Big Bang, light could first travel freely. We still see it as the cosmic microwave background."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "An oval map of the whole sky, speckled in soft blues and reds. The pattern is almost perfectly even. It is the oldest light we can see."
+   },
+   "cite": [
+    "s16",
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Expansion has stretched that light into faint microwaves, about 2.73 kelvin. That is only a few degrees above absolute zero, the coldest possible temperature. It was predicted in 1948 and found by accident in 1965."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "2.73 K"
+   },
+   "cite": [
+    "s17",
+    "s29",
+    "s3",
+    "s27"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What is the cosmic microwave background?",
+    "right": "Leftover light from the hot early universe, stretched into microwaves by expansion",
+    "wrong": [
+     "Radio chatter from a nearby star",
+     "Heat leaking out of Earth's atmosphere",
+     "Sunlight bouncing off space dust"
+    ],
+    "why": "It is the old light from when the universe first became transparent. Expansion has stretched it into the microwave range."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Pillar three: the mix of light elements. In the first few minutes the whole universe was hot enough for fusion. It should have made mostly hydrogen and helium, with helium at about 25 percent of the mass."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Prediction: about 25% helium"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Compare that with stars. Estimates for what stars alone could make were only 1 to 4 percent. We observe about 25. A hot early universe fills the gap."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Helium as a share of ordinary matter",
+    "chart": "c1"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Why does the helium amount count as evidence for a hot early stage?",
+    "right": "Stars alone can make only a small fraction of it, but a hot early universe predicts about 25 percent",
+    "wrong": [
+     "Because helium is the lightest element",
+     "Because stars make far more helium than we observe",
+     "Because helium only exists on Earth"
+    ],
+    "why": "The observed helium is far more than stars could have made, and it matches what a hot early universe predicts."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So the three pillars are galaxies moving apart, the leftover microwave glow, and the light-element mix. Together they are why this picture is so widely accepted."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Pillar 1: galaxies moving apart | Pillar 2: the microwave glow | Pillar 3: the light-element mix"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which of these is NOT one of the three pillars?",
+    "right": "The number of planets around the Sun",
+    "wrong": [
+     "Galaxies moving away from each other",
+     "The cosmic microwave background",
+     "The mix of light elements such as helium"
+    ],
+    "why": "The three pillars are expansion, the microwave background, and the light-element abundances. The number of planets is not one of them."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the rival. In 1948, Fred Hoyle, Hermann Bondi and Thomas Gold proposed the steady-state theory. It describes a universe that expands but never changes its overall look."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Steady state, 1948: Hoyle, Bondi and Gold"
+   },
+   "cite": [
+    "s14",
+    "s5"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "They fully accepted that the universe expands. One motive was an age puzzle: early estimates made the universe younger than the Earth. Another was discomfort with a moment of creation."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Accepted: the universe expands | Motive 1: the early age puzzle | Motive 2: unease with a beginning"
+   },
+   "cite": [
+    "s2",
+    "s25",
+    "s14"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Their key principle: the universe looks the same everywhere and at all times. Think of a river. The water is always moving, yet the river looks the same."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Perfect cosmological principle"
+   },
+   "cite": [
+    "s26",
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "But if galaxies drift apart, matter thins out. To keep the same look, new matter must appear. That is continuous creation: mostly hydrogen, in amounts too small to detect. One historian's figure is about three atoms per cubic metre per million years."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 3 atoms per cubic metre per million years (one account's figure)"
+   },
+   "cite": [
+    "s2",
+    "s5",
+    "s13"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Why did steady state need continuous creation of matter?",
+    "right": "Expansion spreads matter thin, so new matter must appear to keep the density the same",
+    "wrong": [
+     "Because stars disappear when they get old",
+     "Because the universe had to shrink",
+     "Because galaxies stop moving apart"
+    ],
+    "why": "Steady state keeps the overall look constant. Since expansion dilutes matter, new matter has to appear at a balancing rate."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Matter appearing from nothing sounds odd. The steady-state side replied that the Big Bang asks for everything to appear at once. They argued a slow trickle is less dramatic than one huge event."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Steady state: a tiny, constant trickle of new matter | Big Bang: a hot, dense start to the universe"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A fun twist. The name 'Big Bang' came from Hoyle himself, on a BBC broadcast on 28 March 1949, where he contrasted it with his own theory."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "'Big Bang': named by Fred Hoyle, BBC, 1949"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the story in order, so we can see how the testing unfolded."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1929: Hubble's work shows expansion | 1948: steady state proposed; the microwave glow predicted | 1949: 'big bang' named | 1955: Ryle's radio-source counts | 1965: microwave glow found | 1993: a revised version proposed"
+   },
+   "cite": [
+    "s13",
+    "s3",
+    "s2",
+    "s8",
+    "s15"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Thought experiment. Looking far away means looking back in time, because light takes time to travel. If the universe always looked the same, what should faraway galaxies look like?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "If it never changes, far = near, only dimmer"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "In a universe that always looks the same, what should distant galaxies look like compared with nearby ones?",
+    "right": "Much like the nearby ones, only dimmer",
+    "wrong": [
+     "Completely different from nearby ones",
+     "Younger and denser than nearby ones",
+     "They should not be visible at all"
+    ],
+    "why": "Steady state predicts that the distant population resembles the nearby one, only fainter because of distance."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next, the dark night sky. In a static, infinite, eternal universe, every line of sight would end on a star. The whole sky would blaze. This old puzzle is called Olbers' paradox."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A person looking up at a night sky that is completely white and bright, with no dark gaps between stars."
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In a static, infinite, eternal universe full of stars, what would the night sky look like?",
+    "right": "Bright, because every line of sight would end on a star",
+    "wrong": [
+     "Just as dark as it is now",
+     "Dark, because starlight fades with distance",
+     "Bright only in the direction of the Sun"
+    ],
+    "why": "If every line of sight ends on a star, the sky is bright in every direction. That is the paradox."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The steady-state side had an answer: expansion stretches and weakens distant light. The usual explanation today is simpler. Stars have only existed for a finite time, so only a limited amount of light has been emitted."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Steady state: expansion weakens distant light | Today's usual answer: the universe has a finite age"
+   },
+   "cite": [
+    "s28",
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So what do we see when we look far away? Different galaxies. Martin Ryle's Cambridge team counted radio sources and found far more faint ones than a never-changing universe predicts."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A radio telescope array in a field. Beside it, a tally of radio sources sorted by brightness, with a surprising pile of faint ones."
+   },
+   "cite": [
+    "s6",
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here are the numbers. Steady state allowed a count slope of at most 1.5. The 1955 Cambridge survey found about 3. That suggested sources were more common long ago."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "How steeply faint radio sources pile up",
+    "chart": "c2"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The critics deserve fairness, though. That first survey was affected by 'confusion': faint sources blurring together. Better surveys later found a slope near 1.8, still too steep for steady state."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1955: slope about 3, flawed by blurring | Later work: slope about 1.8 | Still steeper than steady state allows"
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why was it fair for critics to doubt the first 1955 radio count?",
+    "right": "Faint sources blurred together and inflated the count",
+    "wrong": [
+     "The telescope pointed at the Moon",
+     "The survey only counted bright stars",
+     "Nobody had heard of radio astronomy"
+    ],
+    "why": "The early survey suffered from confusion, where weak sources blend together. Later, cleaner surveys still disagreed with steady state."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Two more problems for steady state. Its stars could not make the 25 percent helium we see. And powerful quasars were abundant in the past but absent nearby, which shows the universe really does change."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Helium: stars alone fall far short | Quasars: common long ago, none nearby"
+   },
+   "cite": [
+    "s2",
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Then came 1965 and the microwave glow. Classic steady state had no natural way to explain it. Hoyle's side tried modifying the theory, but by the mid-1960s the verdict had largely turned."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "1965: the glow that steady state couldn't explain"
+   },
+   "cite": [
+    "s3",
+    "s6"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So why did most cosmologists move away? Not because of one blow. Several independent observations all pointed the same way: a universe that changes, with a hot, dense past."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Radio-source counts | Helium amounts | Quasars | The microwave glow"
+   },
+   "cite": [
+    "s2",
+    "s6"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why did most cosmologists move away from steady state?",
+    "right": "Several independent observations all pointed to a changing universe with a hot, dense past",
+    "wrong": [
+     "Steady state denied that the universe is expanding",
+     "One newspaper article disproved it",
+     "Cosmologists voted it out, with no new evidence"
+    ],
+    "why": "Steady state accepted expansion. It was set aside because radio counts, helium, quasars and the microwave glow together disagreed with a never-changing universe."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The idea did not vanish. In 1993 Hoyle, Burbidge and Narlikar proposed a revised 'quasi-steady-state' model, still treated as a minority view. Critics argue it struggles to match the observations."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Revised model (1993): a universe that cycles through dense phases | Critics: it has trouble matching radio-source and microwave-glow data"
+   },
+   "cite": [
+    "s3",
+    "s13",
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "This is a good example of an outside idea that was properly tested. It made clear predictions, took hard tests, was revised and then set aside by evidence. Hoyle's work on how stars build heavy elements also became part of mainstream science."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Clear predictions | Fair tests | Revision | Set aside by evidence, not mockery | Useful ideas kept"
+   },
+   "cite": [
+    "s14",
+    "s24"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To recap: the Big Bang picture rests on three pillars, and steady state lost to evidence. Next class asks what happens if the universe cycles or bounces. We'll use the same toolkit."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: cycles and bounces"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Helium as a share of the universe's ordinary matter (% by mass)",
+   "rows": [
+    {
+     "label": "Stars alone (upper end of estimate)",
+     "value": 4,
+     "source": "s9"
+    },
+    {
+     "label": "Big Bang prediction",
+     "value": 25,
+     "source": "s9"
+    },
+    {
+     "label": "Observed (about)",
+     "value": 25,
+     "source": "s9"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "How steeply faint radio sources pile up (slope size; larger means more faint sources)",
+   "rows": [
+    {
+     "label": "Steady state: at most",
+     "value": 1.5,
+     "source": "s7"
+    },
+    {
+     "label": "1955 Cambridge survey",
+     "value": 3,
+     "source": "s7"
+    },
+    {
+     "label": "Later accepted value (1968)",
+     "value": 1.8,
+     "source": "s7"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "The three pillars of the Big Bang",
+   "links": [
+    "[[How to play 'What if?': the five tiers and the evidence toolkit]]",
+    "[[Cycles and bounces: universes that begin again]]"
+   ]
+  },
+  {
+   "topic": "Steady state and continuous creation",
+   "links": [
+    "[[Cycles and bounces: universes that begin again]]",
+    "[[Challenges evolution absorbed: when outsiders improved the science]]"
+   ]
+  },
+  {
+   "topic": "How a rival idea gets tested",
+   "links": [
+    "[[Real conspiracies and unproven ones: how people weigh evidence]]",
+    "[[Your own 'What if?': putting the tools to work]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Ryle's radio-source counts disproved steady state.",
+   "other_view": "The first counts were flawed by blending of faint sources. Dennis Sciama argued in 1963 that the counts could be read within steady state. Later, cleaner surveys confirmed a real change over cosmic time, and that is what turned most opinion.",
+   "cite": [
+    "s7",
+    "s8",
+    "s21",
+    "s2"
+   ]
+  },
+  {
+   "claim": "The microwave glow ended any chance for steady state.",
+   "other_view": "Some steady-state supporters argued the glow could come from thermalized starlight. Weinberg, as quoted in that paper, found such a process viable but artificial and unnecessary. Most cosmologists regard the hot-Big-Bang explanation as far more natural.",
+   "cite": [
+    "s20",
+    "s3"
+   ]
+  },
+  {
+   "claim": "The Big Bang picture is complete and explains everything.",
+   "other_view": "It is the accepted description of how a hot, dense early universe evolved, but it has open puzzles. For example, predicted lithium-7 is about three times higher than observed. The very first moments are hidden from our view.",
+   "cite": [
+    "s22",
+    "s16",
+    "s23"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,1328 @@
+{
+ "about": {
+  "title": "The Origin of Life",
+  "course": "history-of-everything",
+  "class_n": 6,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. There are 35 short beats of roughly 50 seconds each, with question breaks. The class is split into evidence, then ideas, then the panspermia debate, so each piece gets its own time."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "The Oldest Evidence of Life on Earth is Being Stolen",
+   "publisher": "AIP Inside Science",
+   "date": "not shown on page",
+   "link": "https://www.aip.org/inside-science/the-oldest-evidence-of-life-on-earth-is-being-stolen",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "Earliest signs of life: Scientists find microbial remains in ancient rocks",
+   "publisher": "ScienceDaily (UNSW Sydney release)",
+   "date": "2019-09-26",
+   "link": "https://www.sciencedaily.com/releases/2019/09/190926105844.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "Reassessing evidence of life in 3,700-million-year-old rocks of Greenland",
+   "publisher": "Nature (Allwood et al.)",
+   "date": "2018-10-17 (online)",
+   "link": "https://www.nature.com/articles/s41586-018-0610-4",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "Claims of evidence of earliest fossils on Earth face scrutiny",
+   "publisher": "Science News",
+   "date": "2018 (exact date not shown)",
+   "link": "https://www.sciencenews.org/article/early-life-ancient-fossils-stromatolites-microbes-debate",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "Potentially biogenic carbon preserved in a 4.1 billion-year-old zircon",
+   "publisher": "Proceedings of the National Academy of Sciences",
+   "date": "2015",
+   "link": "https://www.pnas.org/doi/10.1073/pnas.1517557112",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "Ancient graphite may push start of life back by 300 million years",
+   "publisher": "Chemistry World",
+   "date": "not shown on page",
+   "link": "https://www.chemistryworld.com/news/ancient-graphite-may-push-start-of-life-back-by-300-million-years/9070.article",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "If These Researchers Are Right, Life On Earth Started Earlier Than Once Thought",
+   "publisher": "Chemical & Engineering News (American Chemical Society)",
+   "date": "2015 (vol. 93, issue 48)",
+   "link": "https://cen.acs.org/articles/93/i48/Researchers-Right-Life-Earth-Started.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "Why It's So Difficult to Find Earth's Earliest Life",
+   "publisher": "Smithsonian Magazine",
+   "date": "not shown on page",
+   "link": "https://www.smithsonianmag.com/science-nature/earth-earliest-life-fossils-stromatolites-180974442/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "Metabolism, genome and age of the last universal common ancestor",
+   "publisher": "Nature Ecology & Evolution",
+   "date": "2024",
+   "link": "https://www.nature.com/articles/s41559-024-02474-w",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "Last universal common ancestor (LUCA)",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "not shown on page",
+   "link": "https://www.britannica.com/science/last-universal-common-ancestor",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "Our Last Universal Common Ancestor was an anaerobic microbe that lived 4.2 billion years ago",
+   "publisher": "Ynetnews",
+   "date": "not shown on page",
+   "link": "https://www.ynetnews.com/health_science/article/h1umvg1qr",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "Scientists found the last universal common ancestor for all life on Earth",
+   "publisher": "The Brighter Side of News",
+   "date": "2025-12-20",
+   "link": "https://www.thebrighterside.news/post/scientists-found-the-last-universal-common-ancestor-for-all-life-on-earth/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "Life's Origins (Darwin200)",
+   "publisher": "Christ's College, University of Cambridge",
+   "date": "not shown on page",
+   "link": "https://darwin200.christs.cam.ac.uk/lifes-orgins",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "Was the origin of life hot or cold?",
+   "publisher": "American Association for the Advancement of Science (AAAS)",
+   "date": "not shown on page",
+   "link": "https://www.aaas.org/membership/scientia/was-origin-life-hot-or-cold",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "Miller-Urey experiment",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "not shown on page",
+   "link": "https://www.britannica.com/science/Miller-Urey-experiment",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "Miller–Urey experiment",
+   "publisher": "Wikipedia",
+   "date": "not shown on page",
+   "link": "https://en.wikipedia.org/wiki/Miller%E2%80%93Urey_experiment",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "Hydrothermal vents and the origin of life",
+   "publisher": "Nature Reviews Microbiology",
+   "date": "not shown on page",
+   "link": "https://www.nature.com/articles/nrmicro1991",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "What Undersea Vents Reveal about Life's Origins",
+   "publisher": "Scientific American",
+   "date": "not shown on page",
+   "link": "https://www.scientificamerican.com/article/expanding-the-limits-of-life/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "Rethinking The Origin Of Life At Seafloor Hydrothermal Vents (PNAS paper summary)",
+   "publisher": "Astrobiology.com",
+   "date": "2026-08-31",
+   "link": "https://astrobiology.com/2026/08/31/rethinking-the-origin-of-life-at-seafloor-hydrothermal-vents/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "A Scientist Says We've Been Wrong About Where Life on Earth Began",
+   "publisher": "ScienceAlert",
+   "date": "not shown on page",
+   "link": "https://www.sciencealert.com/leading-theory-for-how-life-on-earth-began-is-highly-unlikely-says-contentious-new-paper",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "Cradle of life? Why deep-sea vents might not be the answer",
+   "publisher": "Divernet",
+   "date": "not shown on page",
+   "link": "https://divernet.com/scuba-news/cradle-of-life-why-deep-sea-vents-might-not-be-the-answer/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "Hydrothermal vents and the origins of life",
+   "publisher": "Chemistry World",
+   "date": "not shown on page",
+   "link": "https://www.chemistryworld.com/features/hydrothermal-vents-and-the-origins-of-life/3007088.article",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "RNA Synthesis by in Vitro Selected Ribozymes for Recreating an RNA World",
+   "publisher": "PubMed Central (NIH)",
+   "date": "not shown on page",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4390851/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "What is the RNA World Hypothesis?",
+   "publisher": "News-Medical",
+   "date": "not shown on page",
+   "link": "https://www.news-medical.net/life-sciences/What-is-the-RNA-World-Hypothesis.aspx",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "What Is The RNA World Hypothesis?",
+   "publisher": "Stated Clearly",
+   "date": "not shown on page",
+   "link": "https://www.statedclearly.com/videos/rna-world/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "Complex and Messy Prebiotic Chemistry: Obstacles and Opportunities for an RNA World",
+   "publisher": "Life (MDPI)",
+   "date": "2026",
+   "link": "https://www.mdpi.com/2075-1729/16/2/240",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "Complex and Messy Prebiotic Chemistry: Obstacles and Opportunities for an RNA World (PMC version)",
+   "publisher": "PubMed Central (NIH)",
+   "date": "2026",
+   "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12942124/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "Evidence suggests that RNA was a product of evolution (Hud et al.)",
+   "publisher": "NASA",
+   "date": "2013",
+   "link": "https://www.nasa.gov/wp-content/uploads/2019/09/hud_2013.pdf",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s29",
+   "title": "[GADV]-Protein World Hypothesis on the Origin of Life",
+   "publisher": "PubMed Central (NIH)",
+   "date": "not shown on page",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4428654/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s30",
+   "title": "Bio-essential sugars in samples from asteroid Bennu",
+   "publisher": "Nature Geoscience",
+   "date": "2025",
+   "link": "https://www.nature.com/articles/s41561-025-01838-6",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s31",
+   "title": "Prebiotic organic compounds in samples of asteroid Bennu indicate heterogeneous aqueous alteration",
+   "publisher": "Proceedings of the National Academy of Sciences",
+   "date": "2025",
+   "link": "https://www.pnas.org/doi/10.1073/pnas.2512461122",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s32",
+   "title": "The science from asteroid sample return missions",
+   "publisher": "arXiv",
+   "date": "not shown on page",
+   "link": "https://arxiv.org/pdf/2604.22182",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s33",
+   "title": "Asteroid Hosts All Ingredients for DNA and RNA",
+   "publisher": "Eos (American Geophysical Union)",
+   "date": "not shown on page",
+   "link": "https://eos.org/articles/asteroid-hosts-all-ingredients-for-dna-and-rna",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s34",
+   "title": "Hayabusa2 and Bennu samples confirm organic building blocks",
+   "publisher": "Newsy Today",
+   "date": "not shown on page",
+   "link": "https://www.newsy-today.com/hayabusa2-and-bennu-samples-confirm-organic-building-blocks/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s35",
+   "title": "In Search of Panspermia",
+   "publisher": "NASA Astrobiology",
+   "date": "not shown on page",
+   "link": "https://astrobiology.nasa.gov/news/in-search-of-panspermia/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s36",
+   "title": "Panspermia: Could life be delivered to a planet?",
+   "publisher": "BBC Sky at Night Magazine",
+   "date": "not shown on page",
+   "link": "https://www.skyatnightmagazine.com/space-science/panspermia-life-theory",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s37",
+   "title": "Viva Panspermia! (Chandra Wickramasinghe)",
+   "publisher": "arXiv / Cardiff Centre for Astrobiology",
+   "date": "not shown on page",
+   "link": "https://arxiv.org/pdf/1101.4295",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s38",
+   "title": "The Imperatives of Cosmic Biology",
+   "publisher": "arXiv",
+   "date": "not shown on page",
+   "link": "https://arxiv.org/pdf/1003.0091",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s39",
+   "title": "Ancient crystals suggest early Earth had land and freshwater",
+   "publisher": "Science (AAAS)",
+   "date": "not shown on page",
+   "link": "https://www.science.org/content/article/ancient-crystals-suggest-early-earth-had-land-and-freshwater",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s40",
+   "title": "Zircon dating: Keeping time with zircons",
+   "publisher": "Knowable Magazine",
+   "date": "2021",
+   "link": "https://knowablemagazine.org/content/article/physical-world/2021/keeping-time-zircons",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s41",
+   "title": "Oldest fossils ever found show life on Earth began before 3.5 billion years ago",
+   "publisher": "University of Wisconsin–Madison International",
+   "date": "not shown on page (study published 2017-12-18)",
+   "link": "https://international.wisc.edu/oldest-fossils-ever-found-show-life-earth-began-3-5-billion-years-ago/",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class six. Last time we built the Earth and the Moon. Today's question is a big one: how did lifeless chemistry turn into living things?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Origin of Life"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A fair warning: nobody knows the full answer. So we'll meet several hypotheses. A hypothesis is an idea that can be tested but isn't proven yet."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Hypothesis = a testable idea, not yet proven"
+   },
+   "cite": [
+    "s35"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is a hypothesis?",
+    "right": "An idea that can be tested but is not yet proven",
+    "wrong": [
+     "A fact that nobody can ever question",
+     "A random guess with no reasoning behind it",
+     "A type of rock found in Australia"
+    ],
+    "why": "Scientists use hypotheses as ideas to test. Some get supported and some get dropped. Scientists don't expect the origin of life to be fully understood soon, so we will meet several."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, evidence that life really was here early. Meet the stromatolite: a layered rock built up over time by mats of microbes. Microbes are living things too small to see."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Stromatolite = layered rock built by microbes"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is a stromatolite?",
+    "right": "A layered rock built up by communities of microbes",
+    "wrong": [
+     "A fossilized dinosaur footprint",
+     "A kind of volcano on the ocean floor",
+     "The skeleton of one large ancient animal"
+    ],
+    "why": "Stromatolites are laminated structures formed by microbes trapping and binding sediment, layer on layer."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In Western Australia, stromatolites in a rock layer called the Dresser Formation are about 3.5 billion years old. That's more than 50 times older than the last T. rex."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "3.5 billion years"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Picture flat layers, domes and cones sitting side by side in the rock, tilted a little by time. In 2019, scientists found microscopic microbe remains inside them."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A rocky outcrop in Western Australia with layered, dome-shaped and cone-shaped stromatolites, tilted slightly"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "About how old are the Dresser Formation stromatolites?",
+    "right": "About 3.5 billion years",
+    "wrong": [
+     "About 3.5 million years",
+     "About 350 million years",
+     "About 4.5 billion years"
+    ],
+    "why": "They are about 3.5 billion years old. About 4.5 billion years is roughly the age of the Earth itself, so these traces of life are about a billion years younger than the planet."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here's a detail to remember. The oldest site is thought to be an ancient volcanic hot spring. Nearby hot-spring deposits pushed back the earliest known life on land by 580 million years."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Hot spring"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a different kind of clue: chemistry. Carbon comes in a lighter kind, carbon-12, and a heavier kind, carbon-13. Living things' enzymes tend to prefer the lighter one."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Carbon-12 (light) vs carbon-13 (heavy)"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why can extra carbon-12 in a rock hint at life?",
+    "right": "Living things tend to prefer carbon-12, so carbon they process ends up richer in it",
+    "wrong": [
+     "Carbon-12 glows when life is nearby",
+     "Carbon-12 only forms inside volcanoes",
+     "Extra carbon-12 means the rock is very young"
+    ],
+    "why": "The enzymes that fix carbon prefer the lighter carbon-12. A high carbon-12 share is therefore a possible signature of life, though not proof on its own."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In Australia's Jack Hills, a 4.1-billion-year-old zircon crystal holds two specks of graphite. Their carbon-12 is about 2 percent higher than Earth's average. Zircons are tough, so they can survive for billions of years."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A tiny zircon crystal under a microscope, with two dark flecks of graphite inside"
+   },
+   "cite": [
+    "s5",
+    "s6",
+    "s39"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "But this clue is disputed. Many researchers hesitate to accept chemical clues alone. A critic notes a crack could have healed without trace and let carbon in later. The team saw no sign of a crack."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Possible sign of life, still debated"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Is the 4.1-billion-year-old graphite clue settled?",
+    "right": "No. It is a possible sign of life that experts still debate",
+    "wrong": [
+     "Yes. It is confirmed by stromatolite fossils",
+     "Yes. Everyone agrees it came from a living cell",
+     "No. Everyone agrees it is just ordinary rock"
+    ],
+    "why": "Some researchers think it is biological carbon. Others say chemical clues alone are not enough. It is a hint, not a settled fact."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Science also checks itself. In 2016, a team reported 3.7-billion-year-old stromatolites in Greenland. In 2018, another team argued those shapes were made by rock being squeezed and deformed, not by life."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "2016: Greenland shapes = microbe-built stromatolites | 2018: Greenland shapes = deformed rock, not life"
+   },
+   "cite": [
+    "s4",
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What did the 2018 re-examination of the Greenland shapes conclude?",
+    "right": "The shapes were probably made by rock deformation, not by life",
+    "wrong": [
+     "The shapes were confirmed as the oldest fossils",
+     "The shapes were proved to be man-made",
+     "The shapes were shown to be 4.5 billion years old"
+    ],
+    "why": "The 2018 team measured the 3D shape and chemistry and judged the shapes to be tectonic features. The 3.7-billion-year claim is therefore contested."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more idea about timing. LUCA stands for Last Universal Common Ancestor: the ancient cell that every living thing today descends from. It's worked out by comparing genes, not by finding a fossil."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "LUCA = Last Universal Common Ancestor"
+   },
+   "cite": [
+    "s10",
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A 2024 study estimated LUCA lived about 4.2 billion years ago, as a complex microbe that did not need oxygen. But LUCA was not the first life. Earlier, simpler life may have come before it."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 4.2 billion years ago (estimate)"
+   },
+   "cite": [
+    "s9",
+    "s12"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Was LUCA the very first living thing?",
+    "right": "No. It is the shared ancestor of all life today, and earlier life may have come first",
+    "wrong": [
+     "Yes. It was the first cell ever to exist",
+     "Yes. It was the first animal",
+     "No. It was a dinosaur that lived later"
+    ],
+    "why": "LUCA marks the ancestor we all share, not the beginning of life. The 4.2 billion year date is also debated, and some experts doubt that LUCA could have survived such a violent early Earth."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's put these claims side by side. The oldest well-supported evidence is the 3.5-billion-year stromatolites. The older claims are possible, but debated. One expert says no single site is 100 percent proof."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1",
+    "text": "How far back do the claims go? (billions of years ago)"
+   },
+   "cite": [
+    "s40",
+    "s9",
+    "s5",
+    "s4",
+    "s1",
+    "s8"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So life was here early, within a few hundred million years of Earth forming. That makes our next question sharper: how does chemistry become life?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Part 2: How Could It Start?"
+   },
+   "cite": [
+    "s9",
+    "s40"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Charles Darwin had a private guess. In a 1871 letter to a friend, he imagined life's chemistry forming in a small pond, and he called it a very big 'if'."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "\"...some warm little pond, with all sorts of ammonia and phosphoric salts, light, heat, electricity...\" (Darwin)"
+   },
+   "cite": [
+    "s13",
+    "s37"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In 1952, a young chemist named Stanley Miller, working with Harold Urey, sealed water, methane, ammonia and hydrogen in glass flasks. Sparks stood in for lightning. They ran it for a week."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A sealed glass apparatus: a flask of warm water, a chamber with electric sparks, and tubes looping between them"
+   },
+   "cite": [
+    "s14",
+    "s13",
+    "s16"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The water turned brown. It contained amino acids, which are the building blocks of proteins. Vials from the original experiment, re-tested after Miller died in 2007, held more than 20 kinds."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Amino acids = building blocks of proteins"
+   },
+   "cite": [
+    "s13",
+    "s14",
+    "s15"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What did the Miller–Urey experiment show?",
+    "right": "Simple chemicals plus energy can make amino acids, the building blocks of proteins",
+    "wrong": [
+     "It created a living cell in a flask",
+     "It proved life began in lightning storms",
+     "It made a complete strand of DNA"
+    ],
+    "why": "It was a proof of concept: building blocks can form from simple ingredients. It did not make life, and it did not prove where life began."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "There's a catch. Later work suggested the early air held more carbon dioxide and nitrogen than Miller used. So his flask shows what's possible, not exactly what happened."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Possible is not the same as proven"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now back to that hot spring. Some scientists look to land. Pools and hot springs are one candidate for where life began. One 2026 critic of the ocean-vent idea favors lakes."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Warm pools and hot springs"
+   },
+   "cite": [
+    "s22",
+    "s20",
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The other big candidate lies on the deep seafloor. Hydrothermal vents are cracks where hot, mineral-rich water comes out. The 'Lost City' field was found in the year 2000. Its chimneys are cooler, about 50 to 90 degrees Celsius."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A dark seafloor with pale, rocky chimneys releasing shimmering warm fluid"
+   },
+   "cite": [
+    "s19",
+    "s20",
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The 'alkaline vent' idea says the vent fluid and the seawater differ in acidity, like a tiny natural battery. Tiny pores in the chimney walls could have acted as the first little cells."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Alkaline vent hypothesis: a natural battery"
+   },
+   "cite": [
+    "s19",
+    "s20",
+    "s18"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A 2026 paper challenges that. It says the fluid only becomes strongly alkaline after it cools, so the strong 'battery' may not have existed. It adds that sulfide may have been scarce. Defenders are still refining the idea."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Vent idea: under challenge, not dead"
+   },
+   "cite": [
+    "s19",
+    "s21"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why do some scientists doubt the alkaline vent idea?",
+    "right": "The strong acidity difference may only appear after the fluid cools, so the 'battery' may not have worked at real vent temperatures",
+    "wrong": [
+     "Nobody has ever found a hydrothermal vent",
+     "Vents are too cold to have any chemistry",
+     "Miller–Urey proved life began in a pond instead"
+    ],
+    "why": "The 2026 paper argues the strong gradient is measured after cooling, not at hydrothermal temperatures. That is a challenge to the idea, not a final answer."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So we have two main settings. Neither is proven. The honest summary: we don't yet know where life began."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Warm pools and hot springs: land-based, a hot spring fits the oldest known site | Seafloor vents: a battery-like energy source, now under challenge"
+   },
+   "cite": [
+    "s1",
+    "s20",
+    "s19",
+    "s22"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a different puzzle: copying. In a cell, genes store instructions, and proteins called enzymes do the work."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Part 3: Copying and the RNA World"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here's the trap. Proteins are needed to copy and read the instructions, and the instructions are needed to make the proteins. Each needs the other. Which came first?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Chicken-and-egg problem"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is the chicken-and-egg problem in the origin of life?",
+    "right": "Instructions and proteins each seem to need the other to exist",
+    "wrong": [
+     "Eggs and chickens evolved at the same time",
+     "Water and rock cannot mix",
+     "Cells need sunlight to divide"
+    ],
+    "why": "Modern cells need proteins to use genetic instructions, and instructions to make proteins. The 'RNA world' idea is one way out of this loop."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "RNA is a cousin of DNA. It can store information, and it can also speed up reactions like an enzyme. RNA that does this is called a ribozyme. The 'RNA world' idea says RNA did both jobs first."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "RNA world: RNA stores information AND speeds up reactions"
+   },
+   "cite": [
+    "s23",
+    "s24"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What makes RNA special in this idea?",
+    "right": "It can both store information and speed up reactions",
+    "wrong": [
+     "It is the only molecule that dissolves in water",
+     "It is made of protein",
+     "It is always found inside asteroids"
+    ],
+    "why": "Because RNA can do both jobs, it could break the loop: one molecule first, then DNA and proteins later."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "There is real evidence. Catalytic RNAs were found in 1982 and 1983. And the ribosome, the machine that builds proteins in every cell, uses RNA at its core. The idea itself dates to the 1960s."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1960s: idea proposed by Crick, Woese and Orgel | 1982–83: RNA that speeds up reactions found | Today: ribosome built around RNA"
+   },
+   "cite": [
+    "s24",
+    "s23"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "But the chemistry is hard. Making RNA's parts on the early Earth is difficult. The sugar ribose is not robust. RNA chains also fall apart in many conditions."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Unsolved: making RNA on the early Earth"
+   },
+   "cite": [
+    "s26",
+    "s28"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "There has been progress. John Sutherland's group in Cambridge showed that simple starting chemicals, like hydrogen cyanide, plus ultraviolet light can make precursors of sugars, amino acids and nucleotides."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Progress: Sutherland's cyanosulfidic chemistry"
+   },
+   "cite": [
+    "s27"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which statement fairly describes the RNA world idea today?",
+    "right": "It is a leading idea with real supporting evidence, but its chemistry still has unsolved problems",
+    "wrong": [
+     "It has been fully proven in the lab",
+     "It was disproven the moment ribozymes were found",
+     "It says life began on asteroids"
+    ],
+    "why": "Evidence like ribozymes and the ribosome supports it. Hard chemistry steps remain, and some scientists favor other ideas instead."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One more idea: the ingredients, or life itself, came from space. This is panspermia, from the Greek for 'seeds everywhere'. Its modern form was pushed by Svante Arrhenius in 1908."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Part 4: Did Life Come From Space?"
+   },
+   "cite": [
+    "s37",
+    "s38"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here's the key point. Panspermia doesn't explain how life began. It moves the question somewhere else. A 'directed' version, which Crick and Orgel floated in 1973, even imagines it was sent on purpose."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Panspermia: how life spread, not how it began"
+   },
+   "cite": [
+    "s36",
+    "s38"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What question does panspermia mainly address?",
+    "right": "How life or its ingredients got to Earth, not how life first began",
+    "wrong": [
+     "How old the Earth is",
+     "Why stromatolites have layers",
+     "How the Moon formed"
+    ],
+    "why": "Critics point out that panspermia relocates the origin question to another place. It does not answer it."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "New evidence comes from asteroid samples brought back to Earth. Japan's Ryugu and NASA's Bennu contain amino acids and nucleobases. Nucleobases are the chemical 'letters' of DNA and RNA. There are five."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "dot",
+    "count": 5,
+    "layout": "row",
+    "text": "Five nucleobases found in both Ryugu and Bennu"
+   },
+   "cite": [
+    "s33",
+    "s31",
+    "s32"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Bennu also holds sugars, including ribose. Together with the nucleobases and phosphate, that means every component of RNA has now been found there. That is ingredients, not life."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Space delivers ingredients"
+   },
+   "cite": [
+    "s30"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What did the Ryugu and Bennu samples contain?",
+    "right": "Building blocks of life, like amino acids, nucleobases and sugars, but not proof that life itself arrived",
+    "wrong": [
+     "Living bacteria alive and growing",
+     "A complete DNA genome",
+     "Fossil cells with tiny cell walls"
+    ],
+    "why": "The asteroid samples show life's ingredients are common in space. That does not show life itself arrived. The samples were handled with strict contamination checks."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One twist. Many molecules come in two mirror-image forms, like left and right hands. Life on Earth uses the left-handed amino acids. Bennu's came in equal left and right amounts."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A left hand and a right hand side by side as mirror images"
+   },
+   "cite": [
+    "s32",
+    "s34"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That result challenges one idea, that life's left-handed preference came from space. So the question of why life picked one hand is still open too."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Why left-handed? Still open"
+   },
+   "cite": [
+    "s32"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's gather it up. What we know, and what we don't."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "We know: life existed about 3.5 billion years ago; building blocks form easily, in labs and in space; all life shares a common ancestor | We don't know: where it began; which came first, RNA or something else; exactly when"
+   },
+   "cite": [
+    "s1",
+    "s8",
+    "s14",
+    "s30",
+    "s10",
+    "s35"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "For context, here is what else was happening. The Earth was young, and no rock that old survives. Only tough crystal grains remain from the earliest times."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "4.54 billion years ago: Earth forms | 4.4: oldest known zircon grains | 4.2: LUCA estimate | 4.1: Jack Hills graphite (debated) | 3.5: Dresser stromatolites, on an oxygen-free planet"
+   },
+   "cite": [
+    "s40",
+    "s39",
+    "s9",
+    "s5",
+    "s1",
+    "s41"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "And the research has its own timeline. People have been testing these ideas for over a century, and it's still going."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1871: Darwin's pond letter | 1952: Miller experiment | 1960s: RNA world idea | 2000: Lost City found | 2009: Sutherland's nucleotide route | 2020–2025: asteroid samples analysed | 2024: LUCA study | 2026: vent paper challenges the idea"
+   },
+   "cite": [
+    "s37",
+    "s14",
+    "s24",
+    "s20",
+    "s26",
+    "s34",
+    "s9",
+    "s19"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So what's the fairest summary? Pick the one you'd stand behind."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "What can we fairly say?"
+   },
+   "cite": [],
+   "move": "title-rise",
+   "ask": {
+    "q": "Which statement is the fairest summary of the origin of life?",
+    "right": "Life existed by about 3.5 billion years ago and building blocks are easy to find, but how and where it began is still open",
+    "wrong": [
+     "Scientists have proved life began at seafloor vents",
+     "Scientists have proved life arrived from space",
+     "Miller made life in a flask, so the question is closed"
+    ],
+    "why": "The evidence is good for when life existed and for how building blocks form. The leading ideas (pools, vents, RNA world, space delivery) are still being tested, so the main question stays open."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next class, class seven: complex cells, oxygen and a changing planet. Once life exists, it begins to change the whole Earth. See you then."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Complex Cells, Oxygen and a Changing Planet"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "How far back do claims go? (billions of years ago)",
+   "rows": [
+    {
+     "label": "Earth forms",
+     "value": 4.54,
+     "source": "s40"
+    },
+    {
+     "label": "LUCA estimate (from genes)",
+     "value": 4.2,
+     "source": "s9"
+    },
+    {
+     "label": "Jack Hills graphite (debated)",
+     "value": 4.1,
+     "source": "s5"
+    },
+    {
+     "label": "Greenland stromatolites (disputed)",
+     "value": 3.7,
+     "source": "s4"
+    },
+    {
+     "label": "Dresser stromatolites (widely accepted)",
+     "value": 3.5,
+     "source": "s1"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Stromatolites and microfossils",
+   "links": [
+    "[[Early Earth and the Moon]]",
+    "[[Complex Cells, Oxygen and a Changing Planet]]"
+   ]
+  },
+  {
+   "topic": "Miller–Urey experiment",
+   "links": [
+    "[[The Scientific Revolution]]",
+    "[[20th-Century Science and Technology]]"
+   ]
+  },
+  {
+   "topic": "RNA world and ribozymes",
+   "links": [
+    "[[Complex Cells, Oxygen and a Changing Planet]]"
+   ]
+  },
+  {
+   "topic": "Hydrothermal vents and Lost City",
+   "links": [
+    "[[Early Earth and the Moon]]"
+   ]
+  },
+  {
+   "topic": "Panspermia and asteroid sample return",
+   "links": [
+    "[[Our Sun and Solar System]]",
+    "[[First Stars, Galaxies and the Making of the Elements]]"
+   ]
+  },
+  {
+   "topic": "LUCA, the last universal common ancestor",
+   "links": [
+    "[[Animals Appear: The Cambrian to Life on Land]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About 4.54 billion years ago",
+   "elsewhere": "The Earth forms. Life's story starts only a few hundred million years later, on this young planet.",
+   "cite": [
+    "s40"
+   ]
+  },
+  {
+   "when": "About 4.4 billion years ago",
+   "elsewhere": "The oldest known mineral grains (zircons) from Jack Hills form. No rock that old survives, and the oldest rock with a reliable age is 4.03 billion years old.",
+   "cite": [
+    "s39"
+   ]
+  },
+  {
+   "when": "About 4.2 billion years ago",
+   "elsewhere": "A 2024 gene-based study places LUCA, the ancestor of all living cells, around this time. The estimate is debated.",
+   "cite": [
+    "s9",
+    "s10"
+   ]
+  },
+  {
+   "when": "About 3.5 billion years ago",
+   "elsewhere": "The Dresser stromatolites grow at what was probably a volcanic hot spring, on a planet with no free oxygen. They are more than 50 times older than the last T. rex.",
+   "cite": [
+    "s1",
+    "s41"
+   ]
+  },
+  {
+   "when": "1871",
+   "elsewhere": "Darwin writes his 'warm little pond' letter to a friend.",
+   "cite": [
+    "s37",
+    "s13"
+   ]
+  },
+  {
+   "when": "1952 (published 1953)",
+   "elsewhere": "Stanley Miller, supervised by Harold Urey at the University of Chicago, makes amino acids in a flask.",
+   "cite": [
+    "s14",
+    "s16"
+   ]
+  },
+  {
+   "when": "1960s to 1986",
+   "elsewhere": "The RNA world idea is proposed by Crick, Woese and Orgel in the 1960s. Walter Gilbert coins the name 'RNA World' in 1986.",
+   "cite": [
+    "s24"
+   ]
+  },
+  {
+   "when": "2000",
+   "elsewhere": "The Lost City hydrothermal field is discovered near the Mid-Atlantic Ridge.",
+   "cite": [
+    "s20"
+   ]
+  },
+  {
+   "when": "2009",
+   "elsewhere": "Powner, Gerland and Sutherland publish a route to activated RNA building blocks under plausible early-Earth conditions.",
+   "cite": [
+    "s26"
+   ]
+  },
+  {
+   "when": "December 2020 to January 2025",
+   "elsewhere": "Hayabusa2 delivers Ryugu material to Earth in December 2020. In January 2025, Bennu analyses report amino acids and all five nucleobases.",
+   "cite": [
+    "s34"
+   ]
+  },
+  {
+   "when": "2024 to 2026",
+   "elsewhere": "The 2024 LUCA study appears. A 2026 PNAS paper challenges the alkaline vent hypothesis.",
+   "cite": [
+    "s9",
+    "s19"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "3.7-billion-year-old stromatolites in Greenland are the earliest fossils of life.",
+   "other_view": "A 2018 team argued the shapes are rock deformation, not biology. The 3.5-billion-year-old Australian stromatolites are the better-supported earliest fossils. A Smithsonian source quotes a researcher saying no site is 100 percent proof.",
+   "cite": [
+    "s4",
+    "s3",
+    "s8"
+   ]
+  },
+  {
+   "claim": "The 4.1-billion-year-old graphite in a Jack Hills zircon is chemical evidence of life.",
+   "other_view": "Many researchers are hesitant to accept chemical clues alone as proof. One concern is that a crack could have healed without a trace and let carbon in later. The discovering team saw no sign of a crack.",
+   "cite": [
+    "s7",
+    "s5"
+   ]
+  },
+  {
+   "claim": "LUCA, the common ancestor of all life, lived about 4.2 billion years ago.",
+   "other_view": "The timing is debated, and some experts doubt such a complex organism could have survived so early. LUCA is also not the first life, only the ancestor we all share.",
+   "cite": [
+    "s10",
+    "s11",
+    "s12"
+   ]
+  },
+  {
+   "claim": "Alkaline hydrothermal vents were probably where life began.",
+   "other_view": "A 2026 PNAS paper argues the strong 'battery' effect and key chemistry would not have worked at real vent conditions. Its author favors lake settings. Defenders are still refining the idea, and a review earlier this year called vents a consistent hypothesis.",
+   "cite": [
+    "s19",
+    "s20",
+    "s21"
+   ]
+  },
+  {
+   "claim": "An RNA world came before DNA and proteins.",
+   "other_view": "The ribosome's RNA core and ribozymes support it. However, making RNA's parts and chains on the early Earth is very hard. One researcher proposes a 'protein world' instead and concludes that life never emerged by the RNA-world route.",
+   "cite": [
+    "s23",
+    "s26",
+    "s29"
+   ]
+  },
+  {
+   "claim": "Asteroid samples show life's ingredients came from space (panspermia).",
+   "other_view": "The samples show ingredients are common, but they don't show life arrived. Critics say panspermia only moves the origin question elsewhere. Panspermia supporters argue their case is far from dead. Ingredients may also have formed on Earth, since Miller-type experiments make them too.",
+   "cite": [
+    "s36",
+    "s37",
+    "s14",
+    "s30"
+   ]
+  },
+  {
+   "claim": "Life's left-handed amino acids came from a bias in material from space.",
+   "other_view": "Bennu's amino acids came in equal left and right amounts, and Ryugu's did too. This challenges that idea.",
+   "cite": [
+    "s32"
+   ]
+  }
+ ]
+}

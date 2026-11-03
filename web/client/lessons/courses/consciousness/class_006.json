@@ -1,0 +1,900 @@
+{
+ "about": {
+  "title": "Integrated information theory",
+  "course": "consciousness",
+  "class_n": 6,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. There are 28 short steps and 11 quick checks. The class covers the theory, three points in its favour, three criticisms and one big experiment. Each step teaches one idea, so we did not cut content or rush it."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Integrated information theory",
+   "publisher": "Scholarpedia",
+   "date": "n.d.",
+   "link": "http://www.scholarpedia.org/article/Integrated_information_theory",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Consciousness: here, there and everywhere? (Tononi and Koch)",
+   "publisher": "Philosophical Transactions of the Royal Society B (copy hosted by MIT CBMM)",
+   "date": "2015",
+   "link": "https://cbmm.mit.edu/sites/default/files/publications/Tononi%20&%20Koch%20'15.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Integrated information theory: from consciousness to its physical substrate (Tononi, Boly, Massimini, Koch)",
+   "publisher": "Nature Reviews Neuroscience (copy hosted by University of Zurich)",
+   "date": "2016",
+   "link": "https://tilde.ini.uzh.ch/~kiper/IIT.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Estimations of Integrated Information Based on Algorithmic Complexity and Dynamic Querying",
+   "publisher": "arXiv",
+   "date": "2019",
+   "link": "https://arxiv.org/pdf/1904.10393",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Integrated Information Theory of Consciousness",
+   "publisher": "Internet Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://iep.utm.edu/integrated-information-theory-of-consciousness/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "The Integrated Information Theory facing the Hard Problem of Consciousness",
+   "publisher": "PhilArchive",
+   "date": "n.d.",
+   "link": "https://philarchive.org/archive/BASTII-4",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Tononi's Integrated Information Theory",
+   "publisher": "Closer To Truth",
+   "date": "n.d.",
+   "link": "https://loc.closertotruth.com/theory/tononi-s-integrated-information-theory",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Adversarial testing of global neuronal workspace and integrated information theories of consciousness (Cogitate Consortium)",
+   "publisher": "Nature 642",
+   "date": "2025",
+   "link": "https://www.nature.com/articles/s41586-025-08888-1",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Make science more collegial: why the time for 'adversarial collaboration' has come",
+   "publisher": "Nature",
+   "date": "2025",
+   "link": "https://www.nature.com/articles/d41586-025-01379-3",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Daily briefing: Critics call consciousness theory 'pseudoscience'",
+   "publisher": "Nature",
+   "date": "2023",
+   "link": "https://www.nature.com/articles/d41586-023-02986-8",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Even if a leading theory of consciousness known as integrated information theory is wrong, that doesn't mean it's pseudoscience (Anil Seth)",
+   "publisher": "Nautilus",
+   "date": "n.d.",
+   "link": "https://nautil.us/the-worth-of-wild-ideas-399097",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Why I Am Not An Integrated Information Theorist (or, The Unconscious Expander)",
+   "publisher": "Shtetl-Optimized (Scott Aaronson)",
+   "date": "2014-05-21",
+   "link": "https://www.scottaaronson.com/blog/?p=1799",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Journal of Consciousness Studies 26(1-2), pp. 188-215 (Adam Pautz)",
+   "publisher": "PhilArchive",
+   "date": "2019",
+   "link": "https://philarchive.org/archive/PAUWIT-2",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Marcello Massimini and the PCI team have been selected for the second HBP innovation award",
+   "publisher": "Human Brain Project",
+   "date": "2021-10-14",
+   "link": "https://www.humanbrainproject.eu/en/follow-hbp/news/2021/10/14/marcello-massimini-and-pci-team-have-been-selected-second-hbp-innovation-award/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "A Theoretically Based Index of Consciousness Independent of Sensory Processing and Behavior (Casali et al.)",
+   "publisher": "Science Translational Medicine",
+   "date": "2013",
+   "link": "https://www.science.org/doi/10.1126/scitranslmed.3006294",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "In defense of scientifically and philosophically (not politically) critiquing neurobiological theories of consciousness",
+   "publisher": "APA Blog, American Philosophical Association",
+   "date": "2023-11-14",
+   "link": "https://blog.apaonline.org/2023/11/14/in-defense-of-scientifically-and-philosophically-not-politically-critiquing-neurobiological-theories-of-consciousness/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Integrated information theory",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Integrated_information_theory",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "#32: On IIT and adversarial testing of consciousness theories, with Christof Koch",
+   "publisher": "Theoretical Neuroscience podcast",
+   "date": "n.d.",
+   "link": "https://theoreticalneuroscience.no/thn32/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Critiques of Integrated Information Theory",
+   "publisher": "Closer To Truth",
+   "date": "n.d.",
+   "link": "https://loc.closertotruth.com/theory/critiques-of-integrated-information-theory",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Integrated information theory (IIT) 4.0: Formulating the properties of phenomenal existence in physical terms",
+   "publisher": "arXiv (published in PLOS Computational Biology)",
+   "date": "2023",
+   "link": "https://arxiv.org/pdf/2212.14787",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Integrated information theory: the good, the bad and the misunderstood",
+   "publisher": "arXiv",
+   "date": "2026",
+   "link": "https://arxiv.org/html/2604.11482v1",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "The Consciousness of Neuroscience",
+   "publisher": "eNeuro",
+   "date": "2023",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10646881/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Somebody Put a Number on Consciousness",
+   "publisher": "The Observatory (Substack)",
+   "date": "n.d.",
+   "link": "https://theuniversalobservatory.substack.com/p/somebody-put-a-number-on-consciousness",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "Adversarial testing of global neuronal workspace and integrated information theories of consciousness (record)",
+   "publisher": "Newcastle University ePrints",
+   "date": "2025",
+   "link": "https://eprints.ncl.ac.uk/306545",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class six. Today's theory is Integrated Information Theory, or IIT for short. It is bold, it is mathematical, and people argue about it a lot."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Integrated Information Theory (IIT)"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Many theories start with the brain. IIT turns that around. It starts with what an experience is like, then asks what kind of physical system could have it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Start from experience"
+   },
+   "cite": [
+    "s1",
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "IIT uses two special words. An axiom is a claim about experience that is meant to be too obvious to doubt. A postulate is the matching claim about what a physical system must be like."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Axiom: a self-evident truth about experience | Postulate: what a physical system must be like to match it"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Quick check on those two words."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Postulate"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In IIT, what is a postulate?",
+    "right": "A claim about what a physical system must be like to match a feature of experience",
+    "wrong": [
+     "A feature of experience that is too obvious to doubt",
+     "A number that measures how conscious something is",
+     "A brain scan result"
+    ],
+    "why": "The axioms are about experience. The postulates are the matching claims about the physical system. The one about a number is phi, which comes later."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "There are five axioms. In IIT's names they are intrinsic existence, composition, information, integration and exclusion. Each one has a matching postulate."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Intrinsic existence: experience exists for itself\nComposition: experience has structure\nInformation: it is the particular way it is\nIntegration: it cannot be split into independent parts\nExclusion: it is definite"
+   },
+   "cite": [
+    "s1",
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Take the information axiom first. Picture seeing a red apple on a table. That experience is exactly this one. It is not any of the countless other experiences you could have had."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A red apple on a wooden table, seen as one clear scene"
+   },
+   "cite": [
+    "s1",
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the integration axiom. Your view of the apple on the table comes as one whole scene. It does not come as two separate halves stuck together."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Integration: one whole"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which sentence matches the integration axiom?",
+    "right": "An experience is one whole that cannot be split into independent pieces",
+    "wrong": [
+     "Every experience is different from the others you could have had",
+     "An experience needs the prefrontal cortex",
+     "An experience always involves a number"
+    ],
+    "why": "Integration means the experience is irreducible to independent parts. The 'different from other experiences' idea is the information axiom."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The matching postulate says the physical system must also be a whole. Cut it into independent parts and something is lost. What is lost is called integrated information."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Integrated information"
+   },
+   "cite": [
+    "s1",
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is an example. Imagine a group of ten people in ten separate rooms with no phones. Now imagine ten people talking constantly. Cut the first group in half and nothing changes. Cut the second and you lose a lot."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Ten separate rooms: cutting changes nothing | Ten people in constant conversation: cutting loses something"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which group has more integrated information in this example?",
+    "right": "The people talking constantly, because cutting them apart loses something",
+    "wrong": [
+     "The separate rooms, because there is more space",
+     "Both the same, because both have ten people",
+     "Neither, because people are not machines"
+    ],
+    "why": "A system is integrated when changes in one part affect the rest. If a cut changes nothing, the system was not integrated."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "IIT gives this amount a number. It is written with the Greek letter phi, Φ. A higher phi means more integration, and IIT says that means more consciousness."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Φ (phi)"
+   },
+   "cite": [
+    "s4",
+    "s17"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the surprising part. Phi belongs to the physical system itself, meaning how its parts cause effects on each other. It does not belong to the program the system is running."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Cause and effect within the system"
+   },
+   "cite": [
+    "s1",
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So two machines could act exactly the same from outside. If one has feedback loops and the other only passes signals forward, IIT says only the one with feedback could be conscious."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Feedback loops: can have high phi | Strictly feed-forward: not conscious, even with the same behaviour"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Two machines give identical answers. One has feedback loops and one is strictly feed-forward. What does IIT say?",
+    "right": "Only the one with feedback loops could be conscious",
+    "wrong": [
+     "Both are equally conscious",
+     "Neither can ever be conscious",
+     "The faster one is the conscious one"
+    ],
+    "why": "IIT cares about the physical cause-and-effect wiring, not just behaviour. Tononi and Koch say feed-forward systems are not conscious even if their input and output match a conscious feedback system."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more piece is called exclusion. Many overlapping groups of parts could be counted. IIT says only the group whose phi is at its peak counts as the conscious system."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Exclusion: only the peak counts"
+   },
+   "cite": [
+    "s5",
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The theory has a puzzle to solve. The cerebellum holds about 69 of the brain's 86 billion nerve cells. Yet the cortex seems to give rise to consciousness and the cerebellum does not."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Nerve cells in the human brain, in billions",
+    "chart": "c1"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "What does the cerebellum puzzle show about consciousness?",
+    "right": "Having lots of neurons is not enough to explain which parts of the brain are involved in consciousness",
+    "wrong": [
+     "The cerebellum is the seat of consciousness",
+     "Neurons have nothing to do with consciousness",
+     "The cortex has more neurons than the cerebellum"
+    ],
+    "why": "Tononi and Koch point out that the cerebellum has even more neurons than the cortex yet does not seem to give rise to consciousness. They say a good theory should explain why."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the best case for IIT. First, it is bold. It says what experience is and which systems can have it, and it takes on the hard problem from class two directly."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Best case 1: bold"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Its way around the hard problem is to treat experience as fundamental. It does not try to explain experience from brain activity. It starts with experience and works outward."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Experience as the starting point"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Second, it is mathematical. The postulates are claims about cause and effect, so the theory needs a way to measure them. Phi is that measure, and the theory has been reworked since, up to version 4.0 in 2023."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Best case 2: precise"
+   },
+   "cite": [
+    "s4",
+    "s20"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Third, it has inspired a real medical tool. Zap the brain with a magnetic pulse, record the EEG echo, then squash the recording the way a computer zips a file. The result is called PCI."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Zap and zip: PCI"
+   },
+   "cite": [
+    "s14",
+    "s17"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "PCI is high when the brain's echo is both widespread and varied. It is low in deep sleep, anesthesia and coma, where the echo is either local or repetitive."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "High PCI: widespread and varied response | Low PCI: local or repetitive response"
+   },
+   "cite": [
+    "s14",
+    "s15"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does a high PCI mean?",
+    "right": "The brain's response to the zap was both widespread and varied",
+    "wrong": [
+     "The brain did not respond at all",
+     "The response was small and repetitive",
+     "The person moved their hand on request"
+    ],
+    "why": "PCI is high for responses that are both integrated and differentiated. It is low for local or stereotyped responses, as in deep sleep, anesthesia and coma."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The team behind PCI reported that it was the most sensitive way to spot minimally conscious patients, at 94%. Other techniques ranged from 14% to 70%. These are the team's own figures."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Sensitivity in detecting minimally conscious patients (%)",
+    "chart": "c2"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the critics. First is testability. Some researchers say IIT as a whole cannot be tested. They also object to its commitment to the idea that consciousness is fundamental and found widely."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Critic 1: can it be tested?"
+   },
+   "cite": [
+    "s10",
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In mid-September 2023, 124 researchers signed a letter calling IIT pseudoscience. Others, including Nature's editors, thought that language went too far."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The 2023 open letter"
+   },
+   "cite": [
+    "s16",
+    "s9"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was the main reason the open letter gave for the label pseudoscience?",
+    "right": "IIT as a whole may not be testable, and it commits to consciousness being fundamental and widespread",
+    "wrong": [
+     "Its maths contained arithmetic mistakes",
+     "It had never been tested in any experiment",
+     "Its authors had faked data"
+    ],
+    "why": "The letter's main grounds were IIT's commitment to panpsychism and that the theory as a whole may not be empirically testable. IIT had been tested, as we will see shortly."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The second criticism is about odd results for simple systems. In 2014 the computer scientist Scott Aaronson argued that simple grids of logic gates can reach a very high phi."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Critic 2: odd consequences"
+   },
+   "cite": [
+    "s12",
+    "s13"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Aaronson showed that a large enough system of this kind would beat any plausible phi for a human brain. He took that as a sign that phi is the wrong thing to measure. Defenders reply that IIT describes experience with more than one number."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Critic: a dull grid can have huge phi, so phi is not consciousness | Defender: high phi alone does not mean more consciousness"
+   },
+   "cite": [
+    "s12",
+    "s23",
+    "s21"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is Aaronson's objection?",
+    "right": "Very simple systems can have a very high phi, which seems absurd if phi equals consciousness",
+    "wrong": [
+     "Phi can never be calculated for any system",
+     "The brain has a phi of zero",
+     "Phi only works for animals"
+    ],
+    "why": "He argued that simple logic-gate networks can reach arbitrarily high phi. If phi is consciousness, that would give vast consciousness to dull machines."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The third point goes the other way. IIT's authors say a simulated neuron inside a normal computer program does not meet the physical conditions that real neurons likely meet. So a simulation would not count. We return to machines in class eleven."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Real hardware, not simulation"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So how do you test rival theories? One way is an adversarial collaboration. Researchers who back opposing theories agree together on an experiment before seeing the results."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Adversarial collaboration"
+   },
+   "cite": [
+    "s18",
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 2025 this was done for IIT and global workspace theory. IIT predicted that conscious content is held steadily in the back of the cortex. Global workspace predicted a burst of activity in the front, at the start and end of what you see."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "IIT: sustained activity in the posterior cortex | Global workspace: ignition in the prefrontal cortex at onset and offset"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Where did IIT predict conscious content would be held throughout an experience?",
+    "right": "In the back of the cortex (the posterior hot zone)",
+    "wrong": [
+     "In the prefrontal cortex at the start only",
+     "In the cerebellum",
+     "In the spinal cord"
+    ],
+    "why": "IIT predicts content is actively maintained in the posterior hot zone throughout an experience. Global workspace predicts prefrontal ignition at stimulus onset and offset."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The results matched some predictions of each theory and seriously challenged key ideas in both. IIT's predicted sustained activity in the back of the cortex was not found. Neither theory was fully validated."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Neither theory fully validated"
+   },
+   "cite": [
+    "s8",
+    "s9"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was the overall result of the 2025 experiment?",
+    "right": "It matched some predictions of both theories and challenged key tenets of both",
+    "wrong": [
+     "IIT won clearly",
+     "Global workspace won clearly",
+     "It proved that consciousness cannot be studied"
+    ],
+    "why": "The authors of both theories accepted the conclusion that the results align with some predictions of each while substantially challenging key ideas of both."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the story in order. Notice that the argument began years before the big experiment."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "2004: IIT proposed by Giulio Tononi\n2015: Tononi and Koch, 'here, there and everywhere?'\nJune 2023: first experiment results announced\nMid-September 2023: open letter calls IIT pseudoscience\n2023: IIT 4.0 published\n30 April 2025: final results published in Nature"
+   },
+   "cite": [
+    "s17",
+    "s2",
+    "s10",
+    "s16",
+    "s20",
+    "s24"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So why is IIT both admired and disputed? Admired for being precise, ambitious and aimed at the hard problem, and for inspiring tools like PCI. Disputed for claims that are hard to test and for odd results about simple systems. Next class: predictive processing."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Admired: bold, mathematical, faces the hard problem, inspired PCI | Disputed: hard to test, odd results for simple systems, mixed experimental results"
+   },
+   "cite": [
+    "s7",
+    "s14",
+    "s10",
+    "s12",
+    "s8"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which sentence is the fairest summary of IIT today?",
+    "right": "A precise and ambitious theory aimed at the hard problem, but its core claims are hard to test and have odd consequences",
+    "wrong": [
+     "A fully proven theory that settles the question",
+     "A theory everyone agrees is pseudoscience",
+     "A theory that only applies to computers"
+    ],
+    "why": "Experts disagree. Admirers point to its boldness, its maths and PCI. Critics point to testability and odd results. The 2025 experiment did not settle it."
+   }
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Nerve cells in the human brain (billions)",
+   "rows": [
+    {
+     "label": "Cerebellum",
+     "value": 69,
+     "source": "s2"
+    },
+    {
+     "label": "Rest of brain (86 minus 69)",
+     "value": 17,
+     "source": "s2"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Sensitivity in detecting minimally conscious patients (%), as reported by the PCI team",
+   "rows": [
+    {
+     "label": "PCI",
+     "value": 94,
+     "source": "s14"
+    },
+    {
+     "label": "Other techniques, highest",
+     "value": 70,
+     "source": "s14"
+    },
+    {
+     "label": "Other techniques, lowest",
+     "value": 14,
+     "source": "s14"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Integrated information theory",
+   "links": [
+    "[[Global workspace theory]]",
+    "[[The hard problem]]"
+   ]
+  },
+  {
+   "topic": "Phi and integration",
+   "links": [
+    "[[Looking for consciousness in the brain]]"
+   ]
+  },
+  {
+   "topic": "Perturbational complexity index (zap and zip)",
+   "links": [
+    "[[Looking for consciousness in the brain]]"
+   ]
+  },
+  {
+   "topic": "Adversarial collaboration",
+   "links": [
+    "[[Global workspace theory]]",
+    "[[Putting it together: where do we stand?]]"
+   ]
+  },
+  {
+   "topic": "Simulation versus real hardware",
+   "links": [
+    "[[Machine minds]]"
+   ]
+  },
+  {
+   "topic": "Consciousness as fundamental and widespread",
+   "links": [
+    "[[Idealism and panpsychism]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "Mid-September 2023",
+   "elsewhere": "The Nature news briefing that reported the open letter also mentioned world leaders pledging to redouble efforts on the Sustainable Development Goals.",
+   "cite": [
+    "s10"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "IIT is a serious scientific theory of consciousness.",
+   "other_view": "The 2023 letter signed by 124 researchers said IIT as a whole may not be testable and is tied to panpsychism, and that its public image outran its evidence. Defenders say the label is unfair and that IIT has been tested in many studies. Nature's editors said such language has no place in this kind of collaboration. One survey found only a small minority fully endorsed the pseudoscience label.",
+   "cite": [
+    "s10",
+    "s11",
+    "s22",
+    "s9",
+    "s17"
+   ]
+  },
+  {
+   "claim": "The 2025 experiment put IIT to a fair test.",
+   "other_view": "The letter's authors said it tested only some idiosyncratic predictions that are not closely tied to IIT's core ideas. The experiment's authors say preregistered predictions from both sides were tested and that both theories were challenged.",
+   "cite": [
+    "s19",
+    "s8"
+   ]
+  },
+  {
+   "claim": "PCI's success supports IIT.",
+   "other_view": "PCI was inspired by IIT's ideas, but critics say ordinary measures of brain complexity explain its clinical success without IIT's claim that consciousness is integrated information. This comes from a secondary summary of the debate, not a primary paper.",
+   "cite": [
+    "s17",
+    "s23"
+   ]
+  },
+  {
+   "claim": "High phi in simple systems is a fatal problem.",
+   "other_view": "Aaronson argued that simple systems can have very high phi, so phi cannot be consciousness. Defenders argue that high phi should not be read as simply more consciousness, and that describing experience in several dimensions removes the worst of the problem. Whether that works is still argued.",
+   "cite": [
+    "s12",
+    "s13",
+    "s21"
+   ]
+  },
+  {
+   "claim": "IIT is probably wrong, so it is of little use.",
+   "other_view": "Anil Seth argues that a theory can be usefully wrong, for example by inspiring related ideas, and that being wrong is not the same as being pseudoscience.",
+   "cite": [
+    "s11"
+   ]
+  }
+ ]
+}

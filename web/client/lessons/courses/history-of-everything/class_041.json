@@ -1,0 +1,1310 @@
+{
+ "about": {
+  "title": "The Atlantic Slave Trade",
+  "course": "history-of-everything",
+  "class_n": 41,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. The subject is painful and wide: how the trade worked, the numbers, plantations, resistance, how it ended, and a debate about its effects. So the class is many short beats with questions in between. You can pause or stop at any beat and pick up later."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "The Trans-Atlantic Slave Trade Database (Coverage of the Slave Trade)",
+   "publisher": "SlaveVoyages.org",
+   "date": "undated",
+   "link": "https://www.slavevoyages.org/blog/the-transatlantic-slave-trade-database/166",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "A Digital Archive of Slave Voyages Details the Largest Forced Migration in History",
+   "publisher": "Smithsonian Magazine",
+   "date": "undated",
+   "link": "https://www.smithsonianmag.com/history/digital-archive-slave-voyages-details-largest-forced-migration-history-180963093/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "5.4 The Atlantic Slave Trade, World History Volume 2, from 1400",
+   "publisher": "OpenStax (Rice University)",
+   "date": "undated",
+   "link": "https://openstax.org/books/world-history-volume-2/pages/5-4-the-atlantic-slave-trade",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "The Impact of Colonization (from OpenStax US History)",
+   "publisher": "Lumen Learning, adapted from OpenStax",
+   "date": "undated",
+   "link": "https://courses.lumenlearning.com/suny-ushistory1os2xmaster/chapter/the-impact-of-colonization/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "The Transatlantic Slave Trade and the Middle Passage",
+   "publisher": "Encyclopedia Virginia, Virginia Humanities",
+   "date": "undated",
+   "link": "https://encyclopediavirginia.org/entries/transatlantic-slave-trade-the/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "The Middle Passage",
+   "publisher": "U.S. National Park Service",
+   "date": "undated",
+   "link": "https://www.nps.gov/articles/the-middle-passage.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Transatlantic Slave Trade",
+   "publisher": "Slavery and Remembrance (Colonial Williamsburg Foundation and Gilder Lehrman Center)",
+   "date": "undated",
+   "link": "https://slaveryandremembrance.org/articles/article/?id=A0002",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Slave Labor",
+   "publisher": "Slavery and Remembrance",
+   "date": "undated",
+   "link": "https://slaveryandremembrance.org/articles/article/?id=A0056",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Chapter 2.4: The Atlantic Slave Trade (Western Civilization II, adapted from OpenStax)",
+   "publisher": "LOUIS Pressbooks",
+   "date": "undated",
+   "link": "https://louis.pressbooks.pub/westernciv2/chapter/2-4-the-atlantic-slave-trade/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "The Trans-Atlantic Slave Trade, African Passages, Lowcountry Adaptations",
+   "publisher": "Lowcountry Digital History Initiative, College of Charleston",
+   "date": "undated",
+   "link": "https://ldhi.library.cofc.edu/exhibits/show/africanpassageslowcountryadapt/introductionatlanticworld/trans_atlantic_slave_trade/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Slave rebellions",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/topic/slave-rebellions",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Haitian Revolution",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/topic/Haitian-Revolution",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Ten Great Slave Revolts in Colonial America and the United States",
+   "publisher": "World History Encyclopedia",
+   "date": "undated",
+   "link": "https://www.worldhistory.org/article/2677/ten-great-slave-revolts-in-colonial-america-and-th/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "The Haitian Revolution, Digital Collections",
+   "publisher": "University of Miami Libraries",
+   "date": "undated",
+   "link": "https://scholar.library.miami.edu/slaves/san_domingo_revolution/revolution.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "The United States and the Haitian Revolution, 1791-1804",
+   "publisher": "U.S. Department of State, Office of the Historian",
+   "date": "undated",
+   "link": "https://history.state.gov/milestones/1784-1800/haitian-rev",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Slave rebellions (Britannica Kids)",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://kids.britannica.com/kids/article/slave-rebellions/632865",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Timeline of Emancipation",
+   "publisher": "Clements Library, University of Michigan",
+   "date": "undated",
+   "link": "https://clements.umich.edu/exhibit/proclaiming-emancipation/timeline-of-emancipation/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "How did the slave trade end in Britain?",
+   "publisher": "Royal Museums Greenwich",
+   "date": "undated",
+   "link": "https://www.rmg.co.uk/stories/maritime-history/how-did-slave-trade-end-britain",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "The Slave Trade in the U.S. and Brazil: Comparisons and Connections",
+   "publisher": "Yale University Press",
+   "date": "2016-11-21",
+   "link": "https://yalebooks.yale.edu/2016/11/21/the-slave-trade-in-the-u-s-and-brazil-comparisons-and-connections/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "The Long-term Effects of Africa's Slave Trades (abstract)",
+   "publisher": "The Quarterly Journal of Economics, Oxford University Press (Nathan Nunn)",
+   "date": "2008-02",
+   "link": "https://academic.oup.com/qje/article-abstract/123/1/139/1889789",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "The Long-Term Effects of Africa's Slave Trades (full paper)",
+   "publisher": "Harvard DASH (Nathan Nunn)",
+   "date": "2008",
+   "link": "https://dash.harvard.edu/bitstreams/7312037c-846b-6bd4-e053-0100007fdf3b/download",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "The Causes and Consequences of Africa's Slave Trades",
+   "publisher": "Nathan Nunn, University of British Columbia site",
+   "date": "undated",
+   "link": "https://nathannunn.sites.olt.ubc.ca/files/2022/07/nathannunn-the-causes-.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Africa and the Demographic Consequences of the Columbian Exchange",
+   "publisher": "ResearchGate (essay by E. Frankema)",
+   "date": "undated",
+   "link": "https://www.researchgate.net/publication/333338292_Africa_and_the_Demographic_Consequences_of_the_Columbian_Exchange",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "Historiographical afterlives of Capitalism and Slavery",
+   "publisher": "University of Glasgow (Enlighten Eprints)",
+   "date": "undated",
+   "link": "https://eprints.gla.ac.uk/325342/1/325342.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Reparations and the Recasting of Eric Williams's Capitalism and Slavery",
+   "publisher": "Social Science Research Council",
+   "date": "undated",
+   "link": "https://items.ssrc.org/reading-racial-conflict/reparations-and-the-recasting-of-eric-williamss-capitalism-and-slavery/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Capitalism and Slavery revisited: the legacy of Eric Williams",
+   "publisher": "International Socialism",
+   "date": "undated",
+   "link": "https://isj.org.uk/capitalism-and-slavery-revisited/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "The Impact of the Slave Trade on African Economies",
+   "publisher": "University of Michigan (Whatley and Gillezeau)",
+   "date": "undated",
+   "link": "https://public.websites.umich.edu/~baileymj/Whatley_Gillezeau.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "The Global Story of Slavery in the Americas Comes to the Smithsonian",
+   "publisher": "Smithsonian Magazine",
+   "date": "2024-10-24",
+   "link": "https://www.smithsonianmag.com/blogs/office-of-the-secretary-of-the-smithsonian/2024/10/24/global-story-slavery-americas-comes-to-smithsonian/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "What Part of Africa Did Most Enslaved People Come From?",
+   "publisher": "HISTORY",
+   "date": "undated",
+   "link": "https://www.history.com/articles/what-part-of-africa-did-most-slaves-come-from",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 41. Today is about the Atlantic slave trade. It is a painful subject. You can pause or take a break whenever you need to."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Atlantic Slave Trade"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We say 'enslaved people', because they were people first. Slavery was something done to them. Last class was the Scientific Revolution. In those same centuries, this darker story was unfolding."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Enslaved people"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Atlantic slave trade was the forced shipping of Africans across the ocean, to be enslaved in the Americas. It ran from about 1500 to 1866."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1500 ... 1866: Africans forced onto ships bound for the Americas"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Picture a triangle. Ships carried European goods to Africa, then people from Africa to the Americas, then American crops back to Europe."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A triangle drawn on the Atlantic Ocean. Corner one: Europe. Corner two: West and Central Africa. Corner three: the Americas. Arrows run Europe to Africa (goods), Africa to the Americas (enslaved people), and the Americas to Europe (crops)."
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The crossing from Africa to the Americas was the second leg. It was called the Middle Passage, because it was the middle one of the three."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Middle Passage"
+   },
+   "cite": [
+    "s9",
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was the 'Middle Passage'?",
+    "right": "The ocean crossing that carried enslaved Africans to the Americas",
+    "wrong": [
+     "The trip that carried goods from Europe to Africa",
+     "The trip that carried sugar back to Europe",
+     "A road through the middle of Africa"
+    ],
+    "why": "It was the middle, or second, leg of the three-legged trade, the one that carried captives from Africa to the Americas."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the first part of the story: Africa. Slavery already existed in parts of Africa, and captives had long been traded north and east. Then Europeans arrived, willing to pay large sums. That changed the focus of the trade."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Africa's role"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Some African kingdoms and merchants grew powerful by selling captives taken in wars and raids. They also charged Europeans fees to trade."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Wars and raids lead to captives. Captives are sold to European traders. Fees and goods come back."
+   },
+   "cite": [
+    "s4",
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Kongo is one example. A civil war there left many of its people captured and traded to the Portuguese."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The Manikongo, the leader of Kongo, receiving Portuguese visitors in an old illustration"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Captives were marched to the coast, and many died on the way. The survivors were held in fortified castles, like Elmina in what is now Ghana."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Elmina Castle on the coast of present-day Ghana, a large white fortress by the sea"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next: Europe's role. Portugal and Spain started the trade. Northern European powers soon followed them in."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Europe's role"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It was big business. Companies in port cities built, paid for, insured and organized the slave ships. England's crown gave the Royal African Company a monopoly in 1672."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Build the ship. Raise the money. Insure the voyage. Organize the cargo."
+   },
+   "cite": [
+    "s7",
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In Africa, Europeans paid for captives with goods such as textiles, alcohol, guns, tobacco and food."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Goods for people"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "How did European traders usually get captives in Africa?",
+    "right": "They bought them from African traders and rulers, paying with goods",
+    "wrong": [
+     "They found them in Europe and sailed them over",
+     "They bought them from Native American traders",
+     "They never needed to deal with anyone in Africa"
+    ],
+    "why": "African merchants and rulers sold captives to Europeans for goods like textiles, alcohol and guns."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Third: the Americas. Colonists wanted workers for hard farm labor. They first thought of using enslaved Indigenous peoples, but those efforts failed. They turned to enslaved Africans."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Americas' role"
+   },
+   "cite": [
+    "s3",
+    "s9"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "On arrival, captives were sold at auctions to plantation owners, merchants and other buyers. So three continents were tied together, and the captives paid the price."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Africa: people captured, marched, sold. Europe: voyages paid for and shipped. Americas: people bought and forced to work."
+   },
+   "cite": [
+    "s10",
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the numbers. About 12.5 million people were forced onto ships between 1500 and 1866."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "12.5 million"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That is called the largest forced migration across an ocean in history. We know it from a database of nearly 36,000 slave voyages."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Slave Voyages database"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Not every voyage left a record. The database holds some trace of about 85 percent of the voyages that took on captives. Historians use statistics to estimate the rest."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 85% of voyages have a trace"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Why is 12.5 million called an estimate?",
+    "right": "Not every voyage left a record, so historians fill the gaps",
+    "wrong": [
+     "Because nobody ever kept any records",
+     "Because the trade only lasted one year",
+     "Because ships were never counted anywhere"
+    ],
+    "why": "Records survive for most voyages but not all. Historians use them to estimate the rest."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Of 12.52 million put on ships, about 10.7 million landed alive. So roughly 1.8 million did not survive the crossing."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Put on ships and landed alive",
+    "chart": "c2"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In the database sample, about 12 percent died during the voyage. Other scholars give a range of 10 to 19 percent. Here are 12 dots out of 100 people."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "dot",
+    "count": 12,
+    "layout": "group",
+    "text": "12 dots: about 12 in every 100 people put on ships did not survive the crossing"
+   },
+   "cite": [
+    "s1",
+    "s10"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "In the Slave Voyages sample, about how many of every 100 people put on a ship died on the crossing?",
+    "right": "About 12",
+    "wrong": [
+     "About 1",
+     "About 40",
+     "About 75"
+    ],
+    "why": "The database sample shows about 12 percent died on the voyage. Other scholars give 10 to 19 percent."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Conditions were brutal. The crossing took one to two months, and some ships held five or six hundred people."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "'the exclusion of fresh air is among the most intolerable' (Alexander Falconbridge, in the National Park Service's 'Voices of the Middle Passage')"
+   },
+   "cite": [
+    "s4",
+    "s3",
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Olaudah Equiano was 11 when enslavers took him from his village in what is now Nigeria. They took him to the coast, and he was shipped to Barbados. In 1789 he wrote about the Middle Passage."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The title page of Olaudah Equiano's 1789 life story"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Where did the survivors land? Brazil took about 4.8 million, and the Caribbean about 4.7 million. North America took at least 388,000."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Where enslaved Africans landed (millions)",
+    "chart": "c1"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "North America's share was about 4 percent of those who survived the crossing. Many people in the United States are surprised by this. Here are 4 dots out of 100."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "dot",
+    "count": 4,
+    "layout": "group",
+    "text": "4 dots: about 4 in every 100 survivors landed in North America"
+   },
+   "cite": [
+    "s6",
+    "s19"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "About what share of enslaved Africans who survived the crossing landed in North America?",
+    "right": "About 4 in every 100",
+    "wrong": [
+     "About 40 in every 100",
+     "About 75 in every 100",
+     "About half"
+    ],
+    "why": "At least 388,000 people landed in North America, about 4 percent. Most went to Brazil and the Caribbean."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The trade grew with demand. In the 1600s about 18,680 people a year crossed. In the 1700s it was about 61,330 a year."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "People shipped per year",
+    "chart": "c3"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "What drove that demand? Mostly sugar. The majority of Africans taken across the Atlantic worked on sugar plantations in the Caribbean and Brazil."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sugar"
+   },
+   "cite": [
+    "s3",
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Sugar was the most valuable crop and needed the most labor. Plantations often had hundreds of workers."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Grow the cane. Process the juice. Tend buildings and livestock. Cut wood for the fires."
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The work was punishing. At harvest, field gangs worked around the clock. Sugar and rice fields had especially high death rates."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Plantation life and death"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In the Caribbean, many infants died, so the enslaved population did not replace itself. Owners had to buy more people every year to keep up their workforce."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "More shipments needed"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why did Caribbean planters keep buying more enslaved people each year?",
+    "right": "The enslaved population did not replace itself, because so many died young",
+    "wrong": [
+     "Because enslaved people were free to leave after a few years",
+     "Because sugar plantations needed very few workers",
+     "Because Europeans wanted to send people back to Africa"
+    ],
+    "why": "Harsh conditions and high infant death meant the enslaved population shrank, so owners bought more people."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Sugar was not the only crop. Tobacco, coffee, indigo and rice were grown too. In Brazil, enslaved men also worked in mines. Coffee kept Brazil dependent on the trade into the 1800s."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Sugar, tobacco, coffee, indigo, rice, and mining"
+   },
+   "cite": [
+    "s9",
+    "s8",
+    "s19"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The profits reshaped port cities: Liverpool and Bristol, Nantes and Bordeaux, Lisbon, Rio de Janeiro, Salvador, and Newport in Rhode Island."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Atlantic ports marked on a map: Liverpool, Bristol, Nantes, Bordeaux, Lisbon, Rio de Janeiro, Salvador, Newport"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now resistance. Enslaved people resisted in many ways, from quiet refusal to open revolt. Owners often answered revolts with harsher controls."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Resistance and revolt"
+   },
+   "cite": [
+    "s3",
+    "s11"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The first revolt in the Americas was at Santo Domingo, on Christmas Day 1521. In 1739, the Stono Rebellion in South Carolina was the largest in British North America."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1521: Santo Domingo revolt. 1739: Stono Rebellion. 1791: Haiti."
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Stono led to the Negro Act of 1740, which restricted enslaved people's lives. Fear and repression followed revolt again and again."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Revolt, then repression"
+   },
+   "cite": [
+    "s13",
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Resistance happened at sea too. In 1839, 53 African captives on the Amistad rose up. They were captured and tried in the United States."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Joseph Cinque, leader of the Amistad revolt, in a portrait"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The survivors were freed. They set sail for Africa in November 1841."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Amistad: freed"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The most successful revolt began in August 1791, in the French colony of Saint-Domingue. Today that place is called Haiti."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Haiti, 1791"
+   },
+   "cite": [
+    "s13",
+    "s12"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The colony was rich. It supplied about two-thirds of France's overseas trade. The French Revolution split its white population, and the rebels took their chance."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About two-thirds of France's overseas trade"
+   },
+   "cite": [
+    "s14",
+    "s15"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "France abolished slavery in 1794. Toussaint Louverture, a formerly enslaved man, became governor-general in 1801. Haiti declared independence on 1 January 1804."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1791 revolt. 1794 France abolishes slavery. 1801 Louverture governor-general. 1804 Haiti independent."
+   },
+   "cite": [
+    "s12",
+    "s11",
+    "s16"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What did the revolt in Saint-Domingue create?",
+    "right": "Haiti, an independent country governed by formerly enslaved people",
+    "wrong": [
+     "A new British colony",
+     "A new Spanish colony",
+     "A kingdom ruled by the French king"
+    ],
+    "why": "The Africans and their descendants overthrew French rule and founded an independent country."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Other countries watched. Many US leaders were slaveowners. Under President Jefferson the United States pursued a policy to isolate Haiti, fearing the revolution would spread."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Fear of Haiti spreading"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now, ending the trade. Britain banned it on 1 May 1807, after campaigns by people like William Wilberforce. That banned the trading, not slavery itself."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Ending the trade"
+   },
+   "cite": [
+    "s18",
+    "s17"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Slavery itself ended across most of the British Empire with the Act of 1833. Owners were paid 20 million pounds. The Thirteenth Amendment ended it in the US in 1865. Brazil was last in the Americas, in 1888."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1807 trade banned (Britain). 1833 slavery ended in most of the empire. 1865 United States. 1888 Brazil."
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In the British Empire, which came first?",
+    "right": "The ban on the slave trade, in 1807, came before ending slavery in 1833",
+    "wrong": [
+     "Ending slavery came first, then the ban on the trade",
+     "Both happened on the same day",
+     "Neither ever happened in the British Empire"
+    ],
+    "why": "Britain banned the trade in 1807. The Slavery Abolition Act that ended slavery itself came in 1833."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A ban did not end the trade at once. Brazil's trade continued until 1850, mostly from Angola."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Brazil: trade to 1850"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the debate: what did the trade do to Europe? Historian Eric Williams argued in 1944 that slavery and the slave trade provided capital that helped finance Britain's Industrial Revolution. We meet that revolution in class 46."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Debate: economic effects on Europe"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Historians pushed back from the 1960s. Seymour Drescher argued against Williams on abolition, saying the trade ended while it was still profitable. Later scholars proposed a modified version of Williams's idea."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Williams: slavery helped pay for industrialization. Critics: the evidence for that was thin, and abolition was not simply economic. Later view: slavery had a major influence, in modified form."
+   },
+   "cite": [
+    "s24",
+    "s26"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What did Eric Williams argue?",
+    "right": "That profits from slavery and the slave trade helped finance Britain's Industrial Revolution",
+    "wrong": [
+     "That the slave trade had no connection to Britain",
+     "That Britain never took part in the trade",
+     "That slavery was ended because it was unprofitable in Africa"
+    ],
+    "why": "Williams argued that slavery and the slave trade supplied capital for Britain's Industrial Revolution. Historians still debate how far that is true."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "What about Africa? Economist Nathan Nunn found that parts of Africa that exported more people are poorer today. He argues the link is causal."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Debate: effects on Africa"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Nunn points to broken communities, ethnic fragmentation and weaker states. Patrick Manning estimated that by 1850 Africa's population was only half what it would have been without the slave trades."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Ethnic fragmentation. Political instability. Weakened states. Smaller population by 1850 (Manning's estimate)."
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "But not all scholars agree. John Fage argued the Atlantic trade did less harm to African populations than Manning thought, and John Thornton partly supported him. Nunn himself notes that some, like David Northrup, saw the measurable economic effects as fairly mild."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Harm view: Manning, Nunn. Smaller-effect view: Fage, Thornton, Northrup."
+   },
+   "cite": [
+    "s23",
+    "s22"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What best describes the debate about Africa?",
+    "right": "Many scholars find real harm, but others think the effects were smaller, and details are still argued over",
+    "wrong": [
+     "All historians agree the effects were exactly the same everywhere",
+     "All historians agree there were no effects at all",
+     "Nobody has ever studied the question"
+    ],
+    "why": "Scholars such as Manning and Nunn find large harm. Fage, Thornton and Northrup argue for smaller effects. Both sides are still debated."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "And the Americas? Before 1820, four enslaved Africans crossed the Atlantic for every European. Today descendants of enslaved Africans are a large part of the populations of the United States, Brazil and many Caribbean islands."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "4 Africans for every 1 European (before 1820)"
+   },
+   "cite": [
+    "s2",
+    "s29"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Many of these families struggle to trace their ancestors' origins. Databases like Slave Voyages, and museum exhibits, now help bring those stories back."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Remembering"
+   },
+   "cite": [
+    "s29",
+    "s2",
+    "s28"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To sum up: African, European and American roles were linked. About 12.5 million were forced onto ships. Plantations, especially sugar, drove the trade. People resisted, and historians debate the effects. Next class: early modern Asia."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Three roles. 12.5 million embarked, 10.7 million landed. Sugar plantations. Resistance and Haiti. A debate about effects."
+   },
+   "cite": [
+    "s1",
+    "s3",
+    "s12"
+   ],
+   "move": "slide-in-left"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Where enslaved Africans landed (millions of people)",
+   "rows": [
+    {
+     "label": "Brazil",
+     "value": 4.8,
+     "source": "s6"
+    },
+    {
+     "label": "The Caribbean",
+     "value": 4.7,
+     "source": "s6"
+    },
+    {
+     "label": "North America (at least)",
+     "value": 0.388,
+     "source": "s6"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Put on ships and landed alive (millions of people)",
+   "rows": [
+    {
+     "label": "Put on ships in Africa",
+     "value": 12.52,
+     "source": "s1"
+    },
+    {
+     "label": "Landed alive in the Americas",
+     "value": 10.7,
+     "source": "s1"
+    }
+   ]
+  },
+  {
+   "id": "c3",
+   "kind": "bar",
+   "title": "People shipped across the Atlantic per year",
+   "rows": [
+    {
+     "label": "1600s",
+     "value": 18680,
+     "source": "s3"
+    },
+    {
+     "label": "1700s",
+     "value": 61330,
+     "source": "s3"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Middle Passage",
+   "links": [
+    "[[Triangular trade]]",
+    "[[Olaudah Equiano]]",
+    "[[Slave Voyages database]]"
+   ]
+  },
+  {
+   "topic": "Sugar plantations",
+   "links": [
+    "[[Columbian Exchange]]",
+    "[[Contact and the Columbian Exchange]]",
+    "[[Brazil]]"
+   ]
+  },
+  {
+   "topic": "Haitian Revolution",
+   "links": [
+    "[[French Revolution]]",
+    "[[Toussaint Louverture]]",
+    "[[Napoleon, Haiti and Latin American Independence]]"
+   ]
+  },
+  {
+   "topic": "Williams thesis",
+   "links": [
+    "[[Industrial Revolution]]",
+    "[[Eric Williams]]"
+   ]
+  },
+  {
+   "topic": "Abolition",
+   "links": [
+    "[[Slavery Abolition Act 1833]]",
+    "[[Nations, Reform and Civil War in the 1800s]]"
+   ]
+  },
+  {
+   "topic": "Effects on Africa",
+   "links": [
+    "[[Imperialism: Africa, India, China and Japan]]",
+    "[[Medieval Africa]]"
+   ]
+  },
+  {
+   "topic": "How we know: records",
+   "links": [
+    "[[How Do We Know? Reading the Evidence and Telling Time]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "1521",
+   "elsewhere": "The first slave revolt in the Americas broke out in Santo Domingo, in the Spanish colony in what is now the Dominican Republic.",
+   "cite": [
+    "s13"
+   ]
+  },
+  {
+   "when": "1619",
+   "elsewhere": "The first Africans arrived in British North America. By then more than half a million African captives had already been landed in Brazil.",
+   "cite": [
+    "s7"
+   ]
+  },
+  {
+   "when": "1672",
+   "elsewhere": "England's crown chartered the Royal African Company, giving it a monopoly on shipping Africans to English colonies.",
+   "cite": [
+    "s4"
+   ]
+  },
+  {
+   "when": "1739",
+   "elsewhere": "The Stono Rebellion in South Carolina was the largest slave revolt in the British colonies of North America.",
+   "cite": [
+    "s13"
+   ]
+  },
+  {
+   "when": "1783",
+   "elsewhere": "The United States became independent. The Haitian Revolution later created the second independent country in the Americas.",
+   "cite": [
+    "s15"
+   ]
+  },
+  {
+   "when": "1789",
+   "elsewhere": "Olaudah Equiano's account of the Middle Passage was published, in the same year the French Revolution broke out.",
+   "cite": [
+    "s9",
+    "s14"
+   ]
+  },
+  {
+   "when": "1791 to 1804",
+   "elsewhere": "The Haitian Revolution unfolded. It outlasted the French Revolution, and France abolished slavery in 1794.",
+   "cite": [
+    "s12"
+   ]
+  },
+  {
+   "when": "1807",
+   "elsewhere": "Britain banned the slave trade on 1 May. Planters in the United States expected imports to end in 1808.",
+   "cite": [
+    "s18",
+    "s5"
+   ]
+  },
+  {
+   "when": "1833",
+   "elsewhere": "The Slavery Abolition Act ended slavery in most of the British Empire, and owners were compensated 20 million pounds.",
+   "cite": [
+    "s17"
+   ]
+  },
+  {
+   "when": "1839",
+   "elsewhere": "Captives on the Amistad rose up off the coast of Cuba. They were tried in the United States.",
+   "cite": [
+    "s11"
+   ]
+  },
+  {
+   "when": "1865 and 1888",
+   "elsewhere": "The Thirteenth Amendment ended slavery in the United States in 1865. Brazil's Golden Law of 1888 made it the last nation in the Americas to abolish slavery.",
+   "cite": [
+    "s17"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Profits from slavery and the slave trade financed Britain's Industrial Revolution (Eric Williams, 1944).",
+   "other_view": "From the 1960s many historians were sceptical of Williams's main argument. Seymour Drescher argued against his account of why Britain abolished the trade. Later scholars proposed a modified Williams thesis, with slavery shaping British shipping, commerce and industry in ways other than direct investment. One review says there is increasing consensus among leading economic historians that slavery and its commerce were a major influence on British development. So the original claim is disputed and the modified one is more widely accepted.",
+   "cite": [
+    "s25",
+    "s24",
+    "s26"
+   ]
+  },
+  {
+   "claim": "The Atlantic slave trade cut Africa's population and held back its later development.",
+   "other_view": "Patrick Manning and Nathan Nunn argue for large harm: lost population, weaker states and poorer regions today. John Fage argued the Atlantic trade had a smaller effect on African populations than Manning thought, and John Thornton partly supported him. Nunn's own review notes that some scholars, including David Northrup, saw the measurable economic effects as fairly mild. Population estimates for early Africa are hard to make because few records survive.",
+   "cite": [
+    "s20",
+    "s21",
+    "s23",
+    "s22"
+   ]
+  },
+  {
+   "claim": "About 12.5 million Africans were put on ships, and about 10.7 million landed.",
+   "other_view": "These are estimates from a database that has some trace of about 85 percent of voyages that took on captives. The database team notes that other estimates exist. For deaths on the crossing, the database sample shows about 12 percent, while other scholars give a range of 10 to 19 percent.",
+   "cite": [
+    "s1",
+    "s10"
+   ]
+  },
+  {
+   "claim": "African buyers sold captives mainly to get European guns.",
+   "other_view": "Textbooks describe guns being traded and used to capture more people. But David Northrup, in a critical review of the evidence, concluded that the evidence does not support the claim that Africans sold slaves in order to buy guns, even though guns and slaves were correlated.",
+   "cite": [
+    "s3",
+    "s27"
+   ]
+  }
+ ]
+}

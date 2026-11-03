@@ -1,0 +1,1288 @@
+{
+ "about": {
+  "title": "The Mongol Empire",
+  "course": "history-of-everything",
+  "class_n": 34,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 32,
+  "length_note": "About 30 minutes, with a little extra time for the frame of reference and the debate at the end. Each step is short, so you can pause after any question."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "World History Volume 1, to 1500: Ch. 14 Introduction",
+   "publisher": "OpenStax (Rice University)",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/world-history-volume-1/pages/14-introduction",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "Mongol empire",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/place/Mongol-empire",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "Mongol Empire",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/Mongol_Empire/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "14.2 Chinggis Khan and the Early Mongol Empire",
+   "publisher": "OpenStax (Rice University)",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/world-history-volume-1/pages/14-2-chinggis-khan-and-the-early-mongol-empire",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "Chapter 14 Section Summary",
+   "publisher": "OpenStax (Rice University)",
+   "date": "2025",
+   "link": "https://openstax.org/books/world-history-volume-1/pages/14-section-summary",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "Pax Mongolica",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/event/Pax-Mongolica",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "The Pax Mongolica",
+   "publisher": "National Geographic Education",
+   "date": "n.d.",
+   "link": "https://education.nationalgeographic.org/resource/pax-mongolica/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "Black Death migration",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Black_Death_migration",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "Destruction under the Mongol Empire",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Destruction_under_the_Mongol_Empire",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "5 Most Lethal Wars in Human History",
+   "publisher": "The National Interest",
+   "date": "n.d.",
+   "link": "https://nationalinterest.org/feature/5-most-lethal-wars-human-history-13422",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "Siege of Baghdad",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Siege_of_Baghdad",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "1258",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/1258",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "Siege of Nishapur (1221)",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Siege_of_Nishapur_(1221)",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "Mongol invasion of Khorasan",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Mongol_invasion_of_Khorasan",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "Mongol empire: The Yuan dynasty in China (1279-1368)",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/place/Mongol-empire/The-Yuan-dynasty-in-China-1279-1368",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "Kublai Khan",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/biography/Kublai-Khan",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "Kublai Khan",
+   "publisher": "National Geographic Education",
+   "date": "n.d.",
+   "link": "https://education.nationalgeographic.org/resource/kublai-khan/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "Kublai Khan - Biography, Death & Achievements",
+   "publisher": "History.com",
+   "date": "n.d.",
+   "link": "https://www.history.com/articles/kublai-khan",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "The Mongols in World History",
+   "publisher": "Asia for Educators, Columbia University",
+   "date": "n.d.",
+   "link": "https://afe.easia.columbia.edu/mongols/main/transcript.pdf",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "5. The Mongol Khanates",
+   "publisher": "Open Book Publishers",
+   "date": "n.d.",
+   "link": "https://books.openbookpublishers.com/10.11647/obp.0074/ch5.xhtml",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "Events and ideas: 1200-1345",
+   "publisher": "Times Higher Education",
+   "date": "n.d.",
+   "link": "https://www.timeshighereducation.com/features/events-and-ideas-1200-1345/149383.article",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "Sundiata Keita",
+   "publisher": "National Geographic Education",
+   "date": "n.d.",
+   "link": "https://education.nationalgeographic.org/resource/sundiata-keita/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "Kitbuqa",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Kitbuqa",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "Mongol Empire",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Mongol_Empire",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "Kublai Khan",
+   "publisher": "Lumen Learning (SUNY World Civilization)",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/suny-hccc-worldcivilization/chapter/kublai-khan/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "Trade and Currency under the Yuan",
+   "publisher": "Lumen Learning",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/atd-herkimer-worldcivilization/chapter/trade-and-currency-under-the-yuan/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "Topic 2.2 Notes: The Mongol Empire and the Making of the Modern World",
+   "publisher": "Lumisource",
+   "date": "n.d.",
+   "link": "https://www.lumisource.io/ap/world-history/unit2/topic2-2/review",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "6 Largest Empires in History",
+   "publisher": "HowStuffWorks",
+   "date": "n.d.",
+   "link": "https://history.howstuffworks.com/world-history/largest-empires-in-history.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s29",
+   "title": "Biggest Empire in History: British vs Mongol",
+   "publisher": "History Collection",
+   "date": "n.d.",
+   "link": "https://historycollection.com/biggest-empire-in-history-british-vs-mongol/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s30",
+   "title": "13th Century (chronology)",
+   "publisher": "westernciv.com",
+   "date": "n.d.",
+   "link": "https://westernciv.com/chronology/13th-century/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s31",
+   "title": "13th century",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/13th_century",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s32",
+   "title": "Timeline of the Yuan dynasty",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Timeline_of_the_Yuan_dynasty",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s33",
+   "title": "Pax Mongolica",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Pax_Mongolica",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 34. Last time we saw crusades, castles and universities in Europe. Today we ride east, to the grasslands of Asia."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Mongol Empire"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Our story starts on the steppe, which is a huge, open grassland. The Mongol Empire began there in 1206, near Lake Baikal in Mongolia."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Central Asia: the steppe near Lake Baikal, in present-day Mongolia"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It began small. One textbook says about a million Mongols were united, in a world of about 400 million people."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1 million Mongols, in a world of 400 million"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "About how many Mongols were united at the start of the empire?",
+    "right": "About one million",
+    "wrong": [
+     "About ten thousand",
+     "About 400 million",
+     "About one hundred"
+    ],
+    "why": "The textbook says he united a million or so people, out of about 400 million in the whole world."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The leader was born Temujin. As a child he was written off and enslaved, but he grew up to unite a large group of Mongols."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Temujin"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 1206 a great meeting of tribal leaders, called a kurultai, gave him the title Genghis Khan. It means 'universal ruler'. Some books spell it Chinggis."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Genghis Khan = 'universal ruler'"
+   },
+   "cite": [
+    "s3",
+    "s20"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "How do you turn many clans into one army? He split the men into groups of ten, called an arban. Each group lived and fought together like brothers."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "horse",
+    "count": 10,
+    "layout": "ten-frame",
+    "text": "One arban: ten riders"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What was an arban?",
+    "right": "A group of ten soldiers who lived and fought together",
+    "wrong": [
+     "A type of Mongol tent",
+     "A title for the ruler of a city",
+     "A kind of Mongol horse"
+    ],
+    "why": "Genghis Khan divided his men into groups of ten, called arban, and told each group to live and fight together like brothers."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "He also rewarded loyalty and skill. So people could rise because of what they did, not only because of their family."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Old clan ties weakened | Loyalty and skill rewarded | People rose by merit"
+   },
+   "cite": [
+    "s27"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Until then Mongol was only a spoken language. He had it written down, using the script of the Uyghur Turks, and set up a law code called the Yasa."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Written Mongol language | The Yasa law code"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "He also built the yam. This was a network of stations where messengers could resupply as they rode across the empire."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Yam = relay stations for messengers"
+   },
+   "cite": [
+    "s3",
+    "s20"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was the yam?",
+    "right": "A network of relay stations that helped messengers cross the empire",
+    "wrong": [
+     "A Mongol law code",
+     "A type of Mongol army unit",
+     "A written Mongol alphabet"
+    ],
+    "why": "The yam was a network of staging posts and roads where messengers could resupply. The law code was the Yasa."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Mongol armies were mostly cavalry, meaning riders on horses. They used fast tactics, signals and messenger services."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Mongol riders on the steppe, moving fast in a coordinated line"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 1210 Genghis Khan marched against the Jin dynasty in northern China. By 1220 his armies had taken the big Central Asian cities of Samarkand and Bukhara."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Arrows from Mongolia south into northern China, and west to Samarkand and Bukhara"
+   },
+   "cite": [
+    "s4",
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Cities that resisted could face terrible violence. One historian calls terror and mass killing a well-tested Mongol tactic."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Terror as a tactic"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Mongols also spread stories of their cruelty far and wide. They hoped the next city would give up without a fight."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Fear spread on purpose"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why did the Mongols spread stories of their cruelty?",
+    "right": "To scare the next city into giving up",
+    "wrong": [
+     "To please their own soldiers",
+     "To start trade with other lands",
+     "To teach children about history"
+    ],
+    "why": "The Mongols spread word of atrocities to demoralize the cities that were next in line."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "But they valued skilled workers. At Samarkand, Genghis Khan told his soldiers not to harm artisans and craftsmen."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Skilled workers were spared"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Genghis Khan died on 18 August 1227, of an unknown illness. The empire kept growing under his sons and grandsons."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1206 title of Genghis Khan | 1227 he dies | 1229-1241 Ogedei | 1251-1259 Mongke | 1260-1294 Kublai Khan"
+   },
+   "cite": [
+    "s3",
+    "s24"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "His son Ogedei expanded the empire to make a Eurasia-wide system of trade and taxes. But he left no clear plan for who would rule next. Under his nephew Mongke, the united empire came to an end."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Ogedei: expand, trade, collect taxes | No clear plan for succession | Mongke: the end of a united empire"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the size. At its peak the empire covered about 9 million square miles, which is 23 million square kilometres. It stretched from the Pacific Ocean to the Danube River."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 9 million square miles"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "You will hear it called the largest 'contiguous' land empire. Contiguous means all connected, in one block of land."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Contiguous = all connected"
+   },
+   "cite": [
+    "s28"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The British Empire had more land in total, about 13.7 million square miles, but it was spread over the oceans. Among connected empires, Russia came second to the Mongols."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Peak size of three huge empires (millions of square miles; estimates vary)",
+    "chart": "c1"
+   },
+   "cite": [
+    "s28",
+    "s29"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Why is the Mongol Empire called the largest contiguous land empire, rather than simply the largest empire?",
+    "right": "The British Empire had more land in total, but it was spread across the seas. The Mongol land was all connected.",
+    "wrong": [
+     "The Mongols had the most people of any empire ever",
+     "The Mongol Empire was made only of grassland",
+     "The Mongol Empire never had any cities"
+    ],
+    "why": "Contiguous means connected. The British Empire was bigger in total area, but its lands were not joined together."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now one famous conquest. In early 1258 a Mongol army under Hulagu Khan attacked Baghdad, then the capital of the Abbasid Caliphate. The siege lasted 13 days."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Baghdad on the Tigris River, in present-day Iraq"
+   },
+   "cite": [
+    "s10",
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Baghdad's libraries, including the House of Wisdom, were destroyed, and many books were thrown into the Tigris. The sack ended the Abbasid Caliphate."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "1258: Baghdad falls"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What happened to Baghdad in 1258?",
+    "right": "The Mongols captured it and ended the Abbasid Caliphate",
+    "wrong": [
+     "The Mongols made it their capital",
+     "It became a Mongol trading center without a fight",
+     "The Mamluks took it from the Mongols"
+    ],
+    "why": "Hulagu's army took Baghdad, destroyed the House of Wisdom, and ended the Abbasid Caliphate."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The historian Justin Marozzi called Baghdad 'the intellectual capital of the planet'. It had centers of learning and observatories."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "\"the intellectual capital of the planet\" - Justin Marozzi, on Baghdad"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Mongols could be stopped. In 1260 the Mamluks of Egypt beat them at Ain Jalut. It was the first major Mongol loss, and it halted their advance toward Arabia and Europe."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Ain Jalut, in the southern Levant, where the Mamluks turned back the Mongols"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Back home, Mongke died in 1259. His brothers Kublai and Ariq Boke fought a civil war, and Kublai won."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Kublai vs Ariq Boke"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In the end the empire split into four parts, called khanates: the Golden Horde, the Ilkhanate, the Chagatai Khanate and the Yuan dynasty."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Golden Horde (northwest) | Ilkhanate (southwest) | Chagatai Khanate (Central Asia) | Yuan dynasty (China)"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which of the four parts ruled China?",
+    "right": "The Yuan dynasty",
+    "wrong": [
+     "The Golden Horde",
+     "The Ilkhanate",
+     "The Chagatai Khanate"
+    ],
+    "why": "The Yuan dynasty, founded by Kublai Khan, ruled China. The Ilkhanate was in Persia and the Golden Horde was in the northwest."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In 1271 Kublai named his dynasty the Yuan and set his capital near modern Beijing. By 1279 he had beaten the Song dynasty and become the first Mongol to rule all of China."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1271 Yuan dynasty named | 1276 Song imperial family surrenders | 1279 all of China conquered"
+   },
+   "cite": [
+    "s17",
+    "s18"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Kublai had a mixed record. One source says he treated the Song family well and told his generals not to slaughter without limit. Another says he put Chinese subjects in the lowest class."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Treated the Song family well; limited slaughter | Chinese subjects in the lowest class; foreigners like Marco Polo given high posts"
+   },
+   "cite": [
+    "s15",
+    "s18"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Kublai's reach had limits. His attempts to invade Japan in 1274 and 1281 failed, and after 1279 no new lands were added."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Limits of the empire"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the other side of the story. Once the conquests settled, a time called the Pax Mongolica followed. It is Latin for 'Mongol Peace'."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Pax Mongolica: the Mongol Peace"
+   },
+   "cite": [
+    "s33"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Silk Road trade routes came under one ruler. There were fewer competing tribute collectors, and travel was safer."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Silk Road routes from China to the Mediterranean, all under Mongol rule"
+   },
+   "cite": [
+    "s33"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Mongols protected merchant caravans and standardized taxes and tolls in many places. They also issued official passports called paiza."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Paiza = official passport"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was a paiza?",
+    "right": "An official passport issued under Mongol rule",
+    "wrong": [
+     "A tax on trade goods",
+     "A Mongol war horse",
+     "A kind of paper money"
+    ],
+    "why": "During the Pax Mongolica the Mongols issued official passports called paiza, to help travelers and merchants."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Horses, porcelain, jewels, silk, paper and gunpowder all travelled these roads. The Mongol relay post system also improved communication."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Horses | Porcelain | Jewels | Silk | Paper | Gunpowder"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Ideas moved too. Yuan China used paper money, called chao. A Yuan minister named Bolad went to Iran and explained it to the Ilkhanate court."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A Yuan-era paper banknote, printed from mulberry bark"
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The experiment failed in the Muslim world. The Persian vizier Rashid al-Din saw that printing was a breakthrough, and he regretted the failure."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "An idea that did not travel well"
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Religion was part of the exchange. A traveler on the steppe might meet Muslims and Christians living and working alongside Mongols who kept their traditional faith."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Many faiths side by side"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The tolerance was also practical. It reduced resistance and helped the Mongols recruit useful officials and specialists. Later the Ilkhanate turned to Islam, and Ghazan converted in 1295."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Protected many faiths | Reduced resistance | Recruited skilled people | Ilkhanate: Ghazan became Muslim, 1295"
+   },
+   "cite": [
+    "s27"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which best describes Mongol religious policy?",
+    "right": "Many faiths were protected, partly because it was practical",
+    "wrong": [
+     "Everyone had to follow the Mongol religion",
+     "Only one religion was allowed in each city",
+     "All religions were banned"
+    ],
+    "why": "Many faiths were protected. One source says this was also practical, since it reduced resistance and brought in skilled people."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The same roads carried something terrible. The Black Death spread across Eurasia in the mid-1300s along the connected trade routes. One estimate is 75 to 200 million deaths."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "75 to 200 million deaths (estimate)"
+   },
+   "cite": [
+    "s6",
+    "s7",
+    "s8"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Why did the safe trade roads also help the plague spread?",
+    "right": "People and goods travelled long distances quickly, and carried the disease with them",
+    "wrong": [
+     "The Mongols spread the plague on purpose",
+     "The roads were too dangerous to use",
+     "The plague only spread by sea"
+    ],
+    "why": "The interconnected routes let disease move quickly between distant places, following the routes used for trade."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Not everyone agrees on this. Some historians point out that the Pax Mongolica had already broken down by 1325, and trade there was very hard by 1340."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A disputed link"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The empire lasted about 150 years. The Ilkhanate broke apart between 1335 and 1353, and in 1368 the Han Chinese overthrew the Yuan and began the Ming dynasty."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1335-1353 Ilkhanate falls apart | 1368 Yuan overthrown, Ming dynasty begins"
+   },
+   "cite": [
+    "s20",
+    "s24",
+    "s25"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A frame of reference: Kublai Khan was born in 1215, the same year England's King John signed Magna Carta. Thomas Aquinas was born in 1225, when Genghis Khan was heading home from Central Asia."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1215 Magna Carta; Kublai Khan born | 1225 Thomas Aquinas born; Genghis Khan leaves Central Asia"
+   },
+   "cite": [
+    "s17",
+    "s19",
+    "s21"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 1235 Sundiata won the battle of Kirina and began the Mali Empire in West Africa. In 1258, the year Baghdad fell, Llywelyn ap Gruffudd named himself Prince of Wales."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1235 Mali Empire begins | 1258 Baghdad falls; Llywelyn ap Gruffudd proclaims himself Prince of Wales"
+   },
+   "cite": [
+    "s12",
+    "s22"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Dante was born in 1265 and Giotto in 1266 or 1267. In 1271 Marco Polo set off from Venice, and by 1275 he was at Kublai's court."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1265 Dante born | 1266-67 Giotto born | 1271 Marco Polo leaves Venice | 1275 at Kublai's court"
+   },
+   "cite": [
+    "s18",
+    "s21",
+    "s30",
+    "s32"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which of these people was born in the same year as Magna Carta, 1215?",
+    "right": "Kublai Khan",
+    "wrong": [
+     "Genghis Khan",
+     "Dante",
+     "Marco Polo"
+    ],
+    "why": "Kublai Khan lived from 1215 to 1294. Genghis Khan was already an adult, and Dante, Giotto and Marco Polo came later."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the big debate. Was the Mongol legacy mostly destruction, or mostly connection? Let's look at the numbers first."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Destruction or connection?"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A common figure for deaths in the Mongol conquests is 40 to 60 million. It comes from a 1978 atlas by Colin McEvedy and Richard Jones."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "40-60 million (commonly cited, 1978 atlas)"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "But medieval chroniclers often gave huge numbers. For Nishapur, some report over 1.7 million dead. Some modern scholars estimate 100,000 to 200,000, which is about the size of the whole city."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Nishapur: chroniclers' toll against modern estimates",
+    "chart": "c2"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Why do many modern historians doubt the huge death tolls in medieval chronicles?",
+    "right": "The numbers are far bigger than the cities' likely populations, and the Mongols spread frightening stories on purpose",
+    "wrong": [
+     "Because no cities were ever attacked",
+     "Because the chronicles were written by Mongols about their own army",
+     "Because the Mongols never fought any battles"
+    ],
+    "why": "The Nishapur figures are larger than the city's likely population. The Mongols also spread word of atrocities to frighten the next city."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Some revisionist studies propose far lower totals, perhaps around 11.5 million over 120 years. Doubting the numbers is not denying the violence."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Revisionist estimate: about 11.5 million"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One source says the chroniclers' figures show a social catastrophe so extreme that survivors struggled to count their losses. So the destruction was real, even if the numbers are not exact."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Real catastrophe, uncertain numbers"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "On the other side: safer routes, shared goods, paper money, and many faiths living together. Conquest and connection both belong to the Mongol story."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Destruction: cities destroyed, great loss of life, Baghdad's libraries | Connection: Silk Road trade, paiza passports, relay posts, shared ideas"
+   },
+   "cite": [
+    "s6",
+    "s7",
+    "s9",
+    "s12"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To sum up: a small nation became the largest connected land empire. It brought great violence and also new links across Eurasia. Next time we meet the Black Death and the crisis of the 1300s."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1206: Genghis Khan unites the Mongols | Conquests and terror | Four khanates; Yuan China | Pax Mongolica | Debate: destruction and connection"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Peak size of three huge empires (millions of square miles; estimates vary)",
+   "rows": [
+    {
+     "label": "Mongol Empire (all connected)",
+     "value": 9,
+     "source": "s2"
+    },
+    {
+     "label": "Russian Empire (all connected)",
+     "value": 8.8,
+     "source": "s28"
+    },
+    {
+     "label": "British Empire (spread over the seas)",
+     "value": 13.7,
+     "source": "s29"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Nishapur, 1221: number of people killed (reports against modern estimates)",
+   "rows": [
+    {
+     "label": "Medieval chroniclers' reported toll",
+     "value": 1747000,
+     "source": "s13"
+    },
+    {
+     "label": "Modern estimate, low",
+     "value": 100000,
+     "source": "s13"
+    },
+    {
+     "label": "Modern estimate, high",
+     "value": 200000,
+     "source": "s13"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Mongol Empire",
+   "links": [
+    "[[The Rise of Islam and the Caliphates]]",
+    "[[Tang and Song China and the Islamic Golden Age]]",
+    "[[High Medieval Europe: Crusades, Castles and Universities]]",
+    "[[The Black Death and the Crisis of the 1300s]]",
+    "[[Ottomans, Ming China and the Age of Exploration]]"
+   ]
+  },
+  {
+   "topic": "Silk Roads and Pax Mongolica",
+   "links": [
+    "[[The Roman Empire, the Silk Roads and Early Christianity]]",
+    "[[The Black Death and the Crisis of the 1300s]]"
+   ]
+  },
+  {
+   "topic": "Mali Empire and Sundiata",
+   "links": [
+    "[[Medieval Africa: Ghana, Mali, Great Zimbabwe and the Swahili Coast]]"
+   ]
+  },
+  {
+   "topic": "Fall of Baghdad, 1258",
+   "links": [
+    "[[Tang and Song China and the Islamic Golden Age]]",
+    "[[The Rise of Islam and the Caliphates]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "1215",
+   "elsewhere": "King John of England signed Magna Carta. Kublai Khan was born the same year. Genghis Khan's armies were then fighting in northern China.",
+   "cite": [
+    "s4",
+    "s17",
+    "s21"
+   ]
+  },
+  {
+   "when": "1225",
+   "elsewhere": "Thomas Aquinas was born. Genghis Khan left Central Asia for home.",
+   "cite": [
+    "s19",
+    "s21"
+   ]
+  },
+  {
+   "when": "1235",
+   "elsewhere": "Sundiata beat Sumanguru at the battle of Kirina and began the Mali Empire in West Africa. Ogedei, Genghis Khan's son, ruled the Mongols.",
+   "cite": [
+    "s3",
+    "s22"
+   ]
+  },
+  {
+   "when": "1258",
+   "elsewhere": "Baghdad fell to the Mongols. In the same year Llywelyn ap Gruffudd proclaimed himself Prince of Wales.",
+   "cite": [
+    "s12"
+   ]
+  },
+  {
+   "when": "1265 to 1267",
+   "elsewhere": "Dante was born in 1265. Giotto was born in 1266 (one source says 1267).",
+   "cite": [
+    "s21",
+    "s30"
+   ]
+  },
+  {
+   "when": "1271 to 1275",
+   "elsewhere": "Kublai Khan named his dynasty the Yuan in 1271. Marco Polo set off from Venice that year and was at Kublai's court by 1275.",
+   "cite": [
+    "s18",
+    "s32"
+   ]
+  },
+  {
+   "when": "The 1200s in North America",
+   "elsewhere": "By some population estimates, Cahokia grew as large as 13th-century London.",
+   "cite": [
+    "s31"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The Mongol Empire was the largest empire in history.",
+   "other_view": "It was the largest connected (contiguous) land empire. The British Empire covered more land in total, about 13.7 million square miles, but its lands were spread across the seas.",
+   "cite": [
+    "s2",
+    "s29"
+   ]
+  },
+  {
+   "claim": "The Mongol conquests killed 40 to 60 million people.",
+   "other_view": "That number is widely cited, but chroniclers' figures are often called exaggerated. The Mongols also spread frightening stories on purpose. Revisionist studies suggest far lower totals, around 11.5 million. Even so, historians still describe the destruction as real and severe.",
+   "cite": [
+    "s9",
+    "s10",
+    "s13",
+    "s14"
+   ]
+  },
+  {
+   "claim": "The Pax Mongolica carried the Black Death across Eurasia.",
+   "other_view": "Many sources say the connected routes helped the plague spread. Others point out that the Pax Mongolica had already broken down by 1325, so the Silk Road spread theory is disputed.",
+   "cite": [
+    "s6",
+    "s7",
+    "s8"
+   ]
+  },
+  {
+   "claim": "Mongol rule was tolerant of different religions.",
+   "other_view": "Many faiths were protected, and one source calls this a lasting legacy. Another describes it as practical: it reduced resistance and brought in skilled people. Tolerance of religion did not mean equal treatment for everyone. Under Kublai, Chinese subjects were placed in the lowest class.",
+   "cite": [
+    "s18",
+    "s19",
+    "s27"
+   ]
+  },
+  {
+   "claim": "Kublai Khan was a kind ruler of China.",
+   "other_view": "Britannica says he treated the deposed Song family well and forbade indiscriminate slaughter. History.com says he put Chinese subjects in the lowest social class and gave important posts to foreigners.",
+   "cite": [
+    "s15",
+    "s18"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,1292 @@
+{
+ "about": {
+  "title": "High Medieval Europe: Crusades, Castles and Universities",
+  "course": "history-of-everything",
+  "class_n": 33,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. There are five topics, so each gets about six minutes. I left out battle-by-battle detail so each idea can be explained, shown and checked before the next one. The 11 questions give natural pauses."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "What Was Feudalism?",
+   "publisher": "History.com",
+   "date": "undated",
+   "link": "https://www.history.com/articles/feudalism",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Feudalism in Medieval Europe: Lords, Vassals and Fiefs",
+   "publisher": "Passion for History",
+   "date": "undated",
+   "link": "https://passionforhistory.com/medieval/feudalism-medieval-europe/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "First Crusade",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/topic/First-Crusade",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "First Crusade (1095-1099)",
+   "publisher": "Encyclopedia.com",
+   "date": "undated",
+   "link": "https://www.encyclopedia.com/history/news-wires-white-papers-and-books/first-crusade-1095-1099",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Pope Urban II Calls the First Crusade",
+   "publisher": "EBSCO Research Starters",
+   "date": "undated",
+   "link": "https://www.ebsco.com/research-starters/history/pope-urban-ii-calls-first-crusade",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "The Crusades: Voices and Perspectives (teacher lesson plan)",
+   "publisher": "University of Michigan, Center for Middle East and North African Studies",
+   "date": "undated",
+   "link": "https://lsa.umich.edu/content/dam/cmenas-assets/cmenas-documents/K-14-Educational-Resources/Crusades%20Secondary%20Ed%20Lesson.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "No, the Crusades were not simply 'Christians versus Muslims'. The reality was far more complex.",
+   "publisher": "History Skills",
+   "date": "undated",
+   "link": "https://www.historyskills.com/classroom/ancient-history/crusades-religious-complexity/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "The Fourth Crusade",
+   "publisher": "Lumen Learning, Western Civilization",
+   "date": "undated",
+   "link": "https://courses.lumenlearning.com/atd-herkimer-westerncivilization/chapter/the-fourth-crusade/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Saladin - Background, Crusades & Facts",
+   "publisher": "History.com",
+   "date": "undated",
+   "link": "https://www.history.com/articles/saladin",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "The Master Builders of Notre-Dame",
+   "publisher": "Friends of Notre-Dame de Paris",
+   "date": "undated",
+   "link": "https://www.friendsofnotredamedeparis.org/notre-dame-cathedral/history/the-builders/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Gothic architecture, a French invention",
+   "publisher": "CCFS Sorbonne",
+   "date": "undated",
+   "link": "https://www.ccfs-sorbonne.fr/en/gothic-architecture-how-france-invented-it/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Notre-Dame Cathedral, Paris: Gothic Architecture",
+   "publisher": "Visual Arts Cork",
+   "date": "undated",
+   "link": "http://www.visual-arts-cork.com/architecture/notre-dame-paris.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "The Medieval University as Refuge",
+   "publisher": "Europe Now Journal",
+   "date": "2019-10-28",
+   "link": "https://www.europenowjournal.org/2019/10/28/the-medieval-university-as-refuge/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "The Rise of Medieval Universities",
+   "publisher": "Encyclopedia.com",
+   "date": "undated",
+   "link": "https://www.encyclopedia.com/science/encyclopedias-almanacs-transcripts-and-maps/rise-medieval-universities",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "The Universitas Guild: Early Origin of What We Characterize as a University",
+   "publisher": "History of Information",
+   "date": "undated",
+   "link": "https://www.historyofinformation.com/detail.php?id=4153",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Medieval university",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Medieval_university",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Magna Carta and Parliament (booklet)",
+   "publisher": "UK Parliament",
+   "date": "undated",
+   "link": "https://www.parliament.uk/globalassets/documents/magna-carta-and-parliament-booklet.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Magna Carta, 1215 (British Library translation)",
+   "publisher": "The National Archives (UK)",
+   "date": "undated",
+   "link": "https://www.nationalarchives.gov.uk/education/resources/magna-carta/british-library-magna-carta-1215-runnymede/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Magna Carta 1215: Key Clauses, History and Legacy",
+   "publisher": "Passion for History",
+   "date": "undated",
+   "link": "https://passionforhistory.com/medieval/magna-carta-1215-explained/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Magna Carta",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Magna_Carta",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "1215: Magna Carta",
+   "publisher": "Online Library of Liberty (Liberty Fund)",
+   "date": "undated",
+   "link": "https://oll.libertyfund.org/pages/1215-magna-carta",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "The Manor System",
+   "publisher": "Lumen Learning, Western Civilization",
+   "date": "undated",
+   "link": "https://courses.lumenlearning.com/atd-herkimer-westerncivilization/chapter/the-manor-system/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Life of a Medieval Peasant: A Detailed Summary",
+   "publisher": "History Crunch",
+   "date": "undated",
+   "link": "https://historycrunch.com/life-of-a-medieval-peasant/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "What Was Life Like for Medieval Peasants?",
+   "publisher": "History Hit",
+   "date": "undated",
+   "link": "https://www.historyhit.com/life-of-medieval-peasants/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Feudalism: below (MYP History)",
+   "publisher": "International School History",
+   "date": "undated",
+   "link": "https://www.internationalschoolhistory.net/IB/myp_history/4/unit1/feudalism_below.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Medieval Life",
+   "publisher": "History Guild",
+   "date": "undated",
+   "link": "https://historyguild.org/medieval-life/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "12.6: Growth of Towns and Trade (World History: Cultures, States and Societies to 1500)",
+   "publisher": "Humanities LibreTexts",
+   "date": "undated",
+   "link": "https://human.libretexts.org/Bookshelves/History/World_History/Book:_World_History_-_Cultures_States_and_Societies_to_1500_(Berger_et_al.)/12:_Western_Europe_and_Byzantium_circa_1000-1500_CE/12.06:_Growth_of_Towns_and_Trade",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "The Economy of Medieval Europe: Expanding Trade and Cities",
+   "publisher": "TimeMaps",
+   "date": "undated",
+   "link": "https://timemaps.com/encyclopedia/medieval-europe-economy-history/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "Angkor Wat",
+   "publisher": "World History Encyclopedia",
+   "date": "undated",
+   "link": "https://www.worldhistory.org/Angkor_Wat/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "12th century",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/12th_century",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s31",
+   "title": "Jayavarman VII",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Jayavarman_VII",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s32",
+   "title": "Fourth Crusade",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Fourth_Crusade",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s34",
+   "title": "What Exactly Is Feudalism?",
+   "publisher": "History Facts",
+   "date": "undated",
+   "link": "https://historyfacts.com/world-history/article/what-exactly-is-feudalism/",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 33. Today we visit Europe from about the 1000s into the 1200s: knights, peasants, crusaders, cathedral builders and students."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "High Medieval Europe"
+   },
+   "cite": [
+    "s28"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last class we looked at the Americas and the Pacific before 1492. Today we come back to Europe and take five small steps, one at a time."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Feudalism, and whether the word is useful\n2. Life on a manor\n3. The Crusades, through several pairs of eyes\n4. Towns, cathedrals and universities\n5. Magna Carta"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step one: feudalism. It is a name for a way of holding land. A lord gives land, called a fief, and in return gets loyalty and service."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "fief = land held in return for loyalty and service"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The old textbook picture is a pyramid. A king is at the top, then great lords, then knights, then peasants who farm the land."
+   },
+   "show": {
+    "kind": "list",
+    "text": "King\nGreat lords\nKnights\nPeasants"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "In the old picture of feudalism, what is a fief?",
+    "right": "Land held from a lord in return for loyalty and service",
+    "wrong": [
+     "A type of castle tower",
+     "A tax paid to the Church",
+     "A tool used for farming"
+    ],
+    "why": "The word 'feudal' comes from the Latin word for fief. A fief was land held in return for obligations."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "But the pyramid has a catch. It mixes two different things: a knight's promise to a lord, and a peasant's rent and work on a manor."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "A knight's bond with a lord | A peasant's rent and labour on the manor"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Also, nobody at the time said 'feudalism'. Historians made the word up in the 1500s and 1600s to explain how society worked."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "'Feudalism' = a later historians' word"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Laws and customs also differed from place to place. In 1974 historian Elizabeth Brown argued that 'feudalism' was a construct: a tidy label added later."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "construct"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why do many historians warn against using 'feudalism' as one neat system?",
+    "right": "Laws and customs differed from region to region, so one label oversimplifies",
+    "wrong": [
+     "Because castles did not exist yet",
+     "Because there were no kings in medieval Europe",
+     "Because peasants wrote the word themselves"
+    ],
+    "why": "Medieval laws and customs varied by region. Many historians think one simple label hides that."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Not everyone drops the word. Some keep it as shorthand for a world where land, loyalty and power were linked and authority was split among many lords."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Safest habit: say where, and which relationship"
+   },
+   "cite": [
+    "s34",
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step two: life on a manor. That is a lord's estate and the village that worked it. As many as nine in ten Europeans were rural peasants."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Up to 9 in 10 people lived as rural peasants"
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Most peasants were villeins, a kind of serf. They farmed land of their own, and they also worked the lord's fields, often two or three days a week."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "villein = the most common type of serf"
+   },
+   "cite": [
+    "s22",
+    "s23"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In return, villeins had land and protection. But they usually had to ask the lord before moving away or marrying."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Gave: labour, part of the harvest\nGot: land, protection\nNeeded permission: to move, to marry"
+   },
+   "cite": [
+    "s22",
+    "s24"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What did a villein owe the lord of the manor?",
+    "right": "Work on the lord's land and part of what he grew",
+    "wrong": [
+     "A suit of armour",
+     "A trip to Jerusalem each year",
+     "Nothing, because villeins were free"
+    ],
+    "why": "Villeins supplied labour services or part of their output in return for land and protection."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Not every peasant was unfree. Free peasants paid rent and owed fewer duties. How many of each there were depended on the place."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Villein: labour and a share of the crop | Free peasant: rent, more rights"
+   },
+   "cite": [
+    "s22",
+    "s23",
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the farming. Villages split their land into three fields, and each family held strips in each field. Every year, one field rested. Resting a field let its soil recover."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A village seen from above: three big fields cut into long thin strips. Two are green with crops. One is bare and resting."
+   },
+   "cite": [
+    "s25",
+    "s23"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why was one field left to rest each year?",
+    "right": "So the soil could recover its nutrients",
+    "wrong": [
+     "So animals had somewhere to sleep",
+     "Because the lord kept it empty for hunting",
+     "Because peasants had no seeds left"
+    ],
+    "why": "Rotating which field rested stopped the same crops from using up the soil."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Work followed the sun. In summer the day could begin as early as 3 a.m. And if the crops failed, people faced starvation."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "3 a.m. summer start"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Church feast days marked when to sow and when to reap. So the farming year and the church year ran together."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Church feasts marked sowing and reaping"
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One caution. We mostly know peasants through records written by people above them. Historians have to do careful detective work to hear them."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Evidence written by others"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Most people stayed near their own village. Then in 1095 a call from the pope sent thousands of people on a long journey. That is step three."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Step 3: The Crusades"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A crusade was a military expedition from western Europe to the Middle East. Its aim was to recapture the Holy Land from Muslim rule."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "crusade"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In November 1095 Pope Urban II preached at Clermont in France. He had two aims: help the Byzantine Empire against the Seljuk Turks, and reclaim Christian holy sites, above all Jerusalem."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A map of Europe and the Mediterranean. An arrow runs from Clermont in France, through Constantinople, down to Jerusalem."
+   },
+   "cite": [
+    "s5",
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Byzantine emperor, Alexios, had sent envoys asking for help. Urban also promised forgiveness of sins to those who went. Thousands of knights answered."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Alexios asks for help (1095)\nUrban promises forgiveness of sins\nThousands of knights respond"
+   },
+   "cite": [
+    "s3",
+    "s4"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Who sent envoys asking the pope for military help before the First Crusade?",
+    "right": "The Byzantine emperor, Alexios I",
+    "wrong": [
+     "Saladin",
+     "King John of England",
+     "A Mongol khan"
+    ],
+    "why": "Emperor Alexios's envoys arrived in 1095. Urban saw military aid as a way to help the Byzantines."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The crusaders took Jerusalem on 15 July 1099. Many Muslim and Jewish residents were killed. One reason they won was that their opponents were divided."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Jerusalem, 15 July 1099"
+   },
+   "cite": [
+    "s7",
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now let's look through other eyes. First, Jewish communities. In 1096 mobs led by Count Emicho attacked Jews in the Rhineland, before the armies reached the East."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Viewpoint 1: Jewish communities"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Even Bernard of Clairvaux, who preached the Second Crusade, was upset by the violence against Rhineland Jews."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Not everyone in Christian Europe approved"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Second, the Byzantines. They had asked for help and got a huge army. The emperor was not ready for so many. By 1099 the crusaders refused to give Antioch back."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Viewpoint 2: Byzantines"
+   },
+   "cite": [
+    "s4",
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 1202 a crusade meant for Jerusalem turned toward Constantinople. A Byzantine prince had promised money. When it fell through, the crusaders and Venetians decided to conquer the city."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1202: Fourth Crusade sets out\n1203: crusaders back a Byzantine prince\n1204: crusaders and Venetians take the city"
+   },
+   "cite": [
+    "s8",
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In April 1204 they captured Constantinople and sacked it. They set up a Latin Empire there. Byzantines retook the city in 1261."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "1204: Constantinople sacked"
+   },
+   "cite": [
+    "s8",
+    "s32"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What happened to Constantinople in 1204?",
+    "right": "Crusaders captured and sacked it, though it was a Christian city",
+    "wrong": [
+     "Saladin captured it",
+     "The Black Death emptied it",
+     "The Mongols burned it"
+    ],
+    "why": "The Fourth Crusade never reached Jerusalem. It ended with the sack of the Byzantine capital."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Third, Muslim viewpoints. Muslim rulers were rivals, not one block. In 1187 Saladin beat the crusaders at Hattin on 4 July."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Viewpoint 3: Muslim rulers"
+   },
+   "cite": [
+    "s5",
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Jerusalem surrendered to Saladin on 2 October 1187, after 88 years under Christian control. He had planned to kill the Christians there as revenge for 1099. He let them buy their freedom instead."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "88 years of Christian control of Jerusalem"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What did Saladin do with the Christians of Jerusalem in 1187?",
+    "right": "He let them buy their freedom",
+    "wrong": [
+     "He had them all killed",
+     "He ignored them completely",
+     "He sent them to Constantinople"
+    ],
+    "why": "Saladin had planned revenge for the 1099 killings but agreed to ransom instead. Later writers praised his generosity."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So the Crusades were not just Christians against Muslims. There were splits among Christians, rivalries among Muslims, harm to Jews, and trade and diplomacy too."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1095 Urban II calls the crusade | 1099 Jerusalem taken | 1187 Hattin and Jerusalem to Saladin | 1204 Constantinople sacked"
+   },
+   "cite": [
+    "s7",
+    "s3",
+    "s9",
+    "s8"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step four: towns. From the 11th century things grew steadier in western Europe. Population rose, trade expanded, and towns multiplied."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Step 4: Towns, cathedrals and universities"
+   },
+   "cite": [
+    "s28"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why? Knights and bishops wanted luxury goods like silks and spices. So markets grew near castles, and cathedral cities grew too."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Demand for goods\nMarkets near castles and cathedrals\nTowns grow"
+   },
+   "cite": [
+    "s27"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Merchants became rich and powerful. Venice, Genoa, Milan and Florence grew wealthy on trade. A villein who lived in a town for over a year could often gain freedom, but he lost his land."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Towns: wealth, and a way out of the manor"
+   },
+   "cite": [
+    "s28",
+    "s22"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What helped towns grow in the High Middle Ages?",
+    "right": "Trade revived, and markets drew merchants and craftspeople",
+    "wrong": [
+     "The Crusades ended all trade",
+     "The Church banned farming",
+     "Castles were forbidden"
+    ],
+    "why": "Trade expanded, population grew, and markets near castles and cathedrals turned into towns."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Towns also built cathedrals. The new style was Gothic: pointed arches, ribbed vaults, flying buttresses and walls of glass. It began in France."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Gothic"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Take Notre-Dame in Paris. Bishop Maurice de Sully laid the first stone in 1163. Building went on until 1345."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "182 years (1163 to 1345)"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Thousands of artisans and workers built it. The first architect is unknown. It was the largest religious building in the Western world until the mid-1200s."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1",
+    "text": "Notre-Dame de Paris: size in feet"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The flying buttress is an arched stone support outside the wall. It carries the roof's sideways push away, so walls can be thinner and hold more glass."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A cathedral wall with a stone arch leaping from its top to a standing pier outside."
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does a flying buttress do?",
+    "right": "It carries the roof's sideways push away from the wall",
+    "wrong": [
+     "It holds the church bells",
+     "It lets water drain from the roof",
+     "It marks where the bishop sits"
+    ],
+    "why": "The buttress moves the thrust of the vault outward, so walls can be thinner and filled with glass."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Chartres was rebuilt after a fire in 1194. Gothic then spread to England, Germany, Spain and Italy. Builders competed, and towns took pride in their cathedrals."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Chartres, rebuilt from 1194"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next to cathedrals, schools grew so fast they turned into universities, in places like Paris, Bologna and Oxford."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "university: from 'universitas', a guild of students and teachers"
+   },
+   "cite": [
+    "s13",
+    "s16"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "At Bologna, foreign students formed a guild. They wanted fair prices for food and lodging, and protection from unscrupulous professors. In Paris, the teachers formed the guild."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Bologna: guild of students | Paris: guild of teachers"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Who formed the first guild at Bologna?",
+    "right": "Foreign students",
+    "wrong": [
+     "The King of France",
+     "Bishops of Paris",
+     "Merchants from Venice"
+    ],
+    "why": "Students from other places banded together at Bologna to get fair prices and protection."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "These guilds answered to their own members, not to wealthy founders, kings or even bishops. Bigger universities taught arts, theology, law and medicine."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Arts\nTheology\nLaw\nMedicine"
+   },
+   "cite": [
+    "s13",
+    "s15"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "When quarrels broke out, teachers and students sometimes left and started a new university. Padua began in 1222 after moves from Bologna."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Padua, 1222"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step five: Magna Carta. In June 1215 England's King John and rebel barons negotiated a peace. The terms are dated 15 June."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Step 5: Magna Carta, 1215"
+   },
+   "cite": [
+    "s18",
+    "s17"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It had 63 clauses. The barons were angry at the king's money demands. One clause dealt with payments heirs made to inherit land held from the king. Another said taxes needed a general council's consent."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "63 clauses"
+   },
+   "cite": [
+    "s17",
+    "s19",
+    "s21"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Clause 39 is the famous one. It said a free man could not be imprisoned or stripped of his rights except by lawful process. Notice the words 'free man'."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Magna Carta was 'not a modern democratic constitution'. (Passion for History)"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Who did clause 39 protect?",
+    "right": "Free men",
+    "wrong": [
+     "Every person equally, including villeins",
+     "Only the king",
+     "Only merchants"
+    ],
+    "why": "The clause named free men. It was not a promise of equal rights to everyone."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Still, it touched ordinary life. It said London and other towns should keep their liberties. It also said villeins should be fined in proportion to their offence."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Towns keep their liberties\nFines fit the offence, for villeins too"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "At first it failed as a peace plan. But four copies of the 1215 charter survive, and three clauses from the 1297 version are still law in England and Wales."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "4 surviving 1215 copies"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So Magna Carta is two things: a symbol of liberty today, and in 1215 a deal between a king and his barons. Both are true."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Symbol of liberty later | A deal between a king and barons in 1215"
+   },
+   "cite": [
+    "s20",
+    "s19"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now our frame of reference. In 1162 Genghis Khan was born in Mongolia. The next year Bishop Maurice de Sully laid Notre-Dame's first stone."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1162 Genghis Khan born | 1163 Notre-Dame begun"
+   },
+   "cite": [
+    "s30",
+    "s10"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Far away in Cambodia, King Suryavarman II built Angkor Wat between 1113 and 1150. And Jayavarman VII, who built the Bayon, lived from about 1122 to 1218. He was alive for Hattin, 1204 and Magna Carta."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1113-1150 Angkor Wat built | c.1122-1218 life of Jayavarman VII"
+   },
+   "cite": [
+    "s29",
+    "s31"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's recap. 'Feudalism' is a useful but risky word. Peasants worked manors. Crusades looked different to different people. Towns, cathedrals and universities grew. And Magna Carta limited a king."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Feudalism: handle with care\nManor life\nCrusades, several viewpoints\nTowns, cathedrals, universities\nMagna Carta"
+   },
+   "cite": [
+    "s1",
+    "s22",
+    "s7",
+    "s28",
+    "s19"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next class: the Mongol Empire, which grew from that child born in 1162."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: The Mongol Empire"
+   },
+   "cite": [
+    "s30"
+   ],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Notre-Dame de Paris: original design size (feet)",
+   "rows": [
+    {
+     "label": "Length",
+     "value": 420,
+     "source": "s10"
+    },
+    {
+     "label": "Width",
+     "value": 157,
+     "source": "s10"
+    },
+    {
+     "label": "Height",
+     "value": 115,
+     "source": "s10"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Feudalism and the manor",
+   "links": [
+    "[[Byzantium, Early Medieval Europe and the Vikings]]",
+    "[[The Black Death and the Crisis of the 1300s]]"
+   ]
+  },
+  {
+   "topic": "Crusades",
+   "links": [
+    "[[The Rise of Islam and the Caliphates]]",
+    "[[Byzantium, Early Medieval Europe and the Vikings]]",
+    "[[The Mongol Empire]]"
+   ]
+  },
+  {
+   "topic": "Towns, cathedrals and universities",
+   "links": [
+    "[[The Renaissance]]",
+    "[[Tang and Song China and the Islamic Golden Age]]"
+   ]
+  },
+  {
+   "topic": "Magna Carta",
+   "links": [
+    "[[Enlightenment and Absolute Monarchy]]",
+    "[[The American and French Revolutions]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "1113-1150",
+   "elsewhere": "Angkor Wat is built in Cambodia under the Khmer king Suryavarman II. The Crusader states in the Levant were new at this time.",
+   "cite": [
+    "s29",
+    "s3"
+   ]
+  },
+  {
+   "when": "1162-1163",
+   "elsewhere": "Genghis Khan is born in Mongolia in 1162. Notre-Dame's first stone is laid in Paris in 1163.",
+   "cite": [
+    "s30",
+    "s10"
+   ]
+  },
+  {
+   "when": "1187",
+   "elsewhere": "Saladin wins at Hattin and takes Jerusalem. The Khmer king Jayavarman VII (c.1122-1218) is alive and later builds the Bayon.",
+   "cite": [
+    "s9",
+    "s31"
+   ]
+  },
+  {
+   "when": "1204",
+   "elsewhere": "Crusaders sack Constantinople. Jayavarman VII is still alive.",
+   "cite": [
+    "s8",
+    "s31"
+   ]
+  },
+  {
+   "when": "1215",
+   "elsewhere": "King John agrees to Magna Carta in England. Jayavarman VII is still alive and dies in 1218.",
+   "cite": [
+    "s18",
+    "s31"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Medieval Europe ran on one 'feudal system'.",
+   "other_view": "Many historians say laws and customs differed by region, and Elizabeth Brown argued in 1974 that 'feudalism' is a later construct. Others keep it as shorthand for linked land, loyalty and fragmented power. The safest habit is to name the place and the kind of relationship.",
+   "cite": [
+    "s1",
+    "s2",
+    "s34"
+   ]
+  },
+  {
+   "claim": "All medieval peasants were unfree serfs.",
+   "other_view": "Manors held free peasant land as well as villein land, and free peasants paid rent in exchange for more rights. The mix varied by place. Our evidence also comes mostly from people of higher rank, so the picture is incomplete.",
+   "cite": [
+    "s22",
+    "s23",
+    "s25"
+   ]
+  },
+  {
+   "claim": "Pope Urban II called the First Crusade mainly to free Jerusalem.",
+   "other_view": "Sources point to two motives: helping the Byzantine Empire against the Seljuk Turks, and reclaiming holy sites. Britannica adds that Urban probably saw military aid as a way to restore unity between the Western and Eastern churches. Sources also give 26 or 27 November 1095 for the Clermont speech.",
+   "cite": [
+    "s5",
+    "s3",
+    "s4"
+   ]
+  },
+  {
+   "claim": "Muslim rule in the Holy Land was a cruel occupation, as Urban's sermon is said to have described.",
+   "other_view": "One reference work says the Muslims who controlled the Holy Land were more often than not friendly to European pilgrims, who helped the local economy. Crusaders also found a divided Muslim East, not a united one.",
+   "cite": [
+    "s4",
+    "s5"
+   ]
+  },
+  {
+   "claim": "The University of Bologna was founded in 1088.",
+   "other_view": "1088 is the traditional date given in reference works. But historians note the early guilds of Bologna, Paris and Oxford appeared at about the same time, and none can be shown with certainty to be much earlier. The impetus may have come from students, professors or both.",
+   "cite": [
+    "s16",
+    "s15",
+    "s13"
+   ]
+  },
+  {
+   "claim": "Notre-Dame was designed with flying buttresses from the start.",
+   "other_view": "One source says the buttresses were not in the first design. They were added when stress fractures appeared in the thin upper walls.",
+   "cite": [
+    "s12",
+    "s11"
+   ]
+  },
+  {
+   "claim": "Magna Carta was the foundation of modern democratic liberty.",
+   "other_view": "It is widely honoured as a symbol of liberty. But it began as a settlement between King John and rebellious barons, and its protections named free men, not everyone. The 1215 version was an unsuccessful peace attempt and was soon repealed.",
+   "cite": [
+    "s20",
+    "s19"
+   ]
+  }
+ ]
+}

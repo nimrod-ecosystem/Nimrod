@@ -1,0 +1,1082 @@
+{
+ "about": {
+  "title": "Imperialism: Africa, India, China and Japan",
+  "course": "history-of-everything",
+  "class_n": 48,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. The class has 32 short beats, about one minute each, and 10 quick questions. That is enough for six topics (India, the Opium Wars, the Scramble for Africa, Meiji Japan, resistance, and the debate) without rushing. The Congo section is kept short on purpose. Death-toll figures are only estimates, and they are covered under 'other side'."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "British raj (Students)",
+   "publisher": "Britannica Kids",
+   "date": "n.d.",
+   "link": "https://kids.britannica.com/students/article/British-raj/651305",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "British raj",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/event/British-raj",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "The Great Uprising of 1857",
+   "publisher": "Lumen Learning (SUNY World History)",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/suny-worldhistory/chapter/27-3-4-the-great-uprising-of-1857/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "Indian Rebellion of 1857",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Indian_Rebellion_of_1857",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "Indian Muslims in the 1857 Rebellion",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Indian_Muslims_in_the_1857_Rebellion",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "Opium Wars",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/history/opium-wars/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "First Opium War",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/event/First-Opium-War",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "Treaty of Nanjing",
+   "publisher": "Oxford Reference",
+   "date": "n.d.",
+   "link": "https://www.oxfordreference.com/display/10.1093/oi/authority.20110803100222302",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "MHS Collections Online: Harbor at Hong Kong",
+   "publisher": "Massachusetts Historical Society",
+   "date": "n.d.",
+   "link": "https://www.masshist.org/database/viewer.php?item_id=2277&pid=3",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "First Opium War",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/history/first-opium-war",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "Berlin Conference and the Partition of Africa",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/history/berlin-conference-and-partition-africa/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "Scramble for Africa Timeline: 1881-1914 Key Dates",
+   "publisher": "africamap.net",
+   "date": "n.d.",
+   "link": "https://africamap.net/history/scramble-for-africa-timeline",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "Africa During the Scramble: Four Months in Berlin",
+   "publisher": "Sea Lion Press (Gary Oswald)",
+   "date": "n.d.",
+   "link": "https://www.sealionpress.co.uk/post/africa-during-the-scramble-four-months-in-berlin",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "Berlin Conference",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Berlin_Conference",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "Leopold II of Belgium",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Leopold_II_of_Belgium",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "King Leopold's ghost: The legacy of labour coercion in the DRC",
+   "publisher": "CEPR VoxEU",
+   "date": "n.d.",
+   "link": "https://cepr.org/voxeu/columns/king-leopolds-ghost-legacy-labour-coercion-drc",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "Atrocities in the Congo Free State",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Atrocities_in_the_Congo_Free_State",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "The fight against colonialism and imperialism in Africa",
+   "publisher": "South African History Online",
+   "date": "n.d.",
+   "link": "https://sahistory.org.za/article/fight-against-colonialism-and-imperialism-africa",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "Maji Maji Rebellion",
+   "publisher": "Simple English Wikipedia",
+   "date": "n.d.",
+   "link": "https://simple.wikipedia.org/wiki/Maji_Maji_Rebellion",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "The Boxer Rebellion",
+   "publisher": "Lumen Learning (SUNY World History)",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/suny-worldhistory/chapter/27-1-6-the-boxer-rebellion/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "The Boxer Rebellion",
+   "publisher": "National Army Museum (UK)",
+   "date": "n.d.",
+   "link": "https://www.nam.ac.uk/explore/boxer-rebellion",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "Meiji Restoration summary",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/summary/Meiji-Restoration",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "Meiji Restoration",
+   "publisher": "Encyclopedia.com",
+   "date": "n.d.",
+   "link": "https://www.encyclopedia.com/history/asia-and-africa/japanese-history/meiji-restoration",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "Perry's Arrival and the Opening of Japan",
+   "publisher": "Rutgers Meets Japan (Rutgers University)",
+   "date": "n.d.",
+   "link": "https://sites.rutgers.edu/rutgers-meets-japan/our-exhibition/perrys-arrival-and-historical-context/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "Russo-Japanese War",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/event/Russo-Japanese-War",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "Korea Under Japanese Rule",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Korea-Under-Japanese-Rule",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "Railroads and the Demise of Famine in Colonial India",
+   "publisher": "Robin Burgess, London School of Economics (paper)",
+   "date": "n.d.",
+   "link": "https://www.lse.ac.uk/economics/Assets/Documents/personal-pages/robin-burgess/railroads-and-the-demise-of-famine.pdf",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "Indian Railways and Famine 1875-1914: Magic Wheels and Empty Stomachs (abstract)",
+   "publisher": "Essays in Economic and Business History (via DOAJ), Stuart Sweeney",
+   "date": "2008-06",
+   "link": "https://doaj.org/article/78385eae1fed45c1adbc4eca1184fbf9",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s29",
+   "title": "Indian Railways and Famine 1875-1914: Magic Wheels and Empty Stomachs (article text)",
+   "publisher": "Essays in Economic and Business History, Stuart Sweeney",
+   "date": "2008",
+   "link": "https://www.ebhsoc.org/journal/index.php/ebhs/article/download/185/168/371",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s30",
+   "title": "How Britain's Colonial Railways Transformed India",
+   "publisher": "Reconnecting Asia (CSIS)",
+   "date": "n.d.",
+   "link": "https://reconasia.csis.org/how-britians-colonial-railways-transformed-india/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s31",
+   "title": "How British colonialism killed 100 million Indians in 40 years (opinion)",
+   "publisher": "Al Jazeera",
+   "date": "2022-12-02",
+   "link": "https://www.aljazeera.com/opinions/2022/12/2/how-british-colonial-policy-killed-100-million-indians",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s32",
+   "title": "Suez Canal opens",
+   "publisher": "History.com",
+   "date": "n.d.",
+   "link": "https://www.history.com/this-day-in-history/november-17/suez-canal-opens",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s33",
+   "title": "Replicas of the Statue of Liberty",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Replicas_of_the_Statue_of_Liberty",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s34",
+   "title": "Eiffel Tower",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Eiffel_Tower",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s35",
+   "title": "Exposition Universelle (1889)",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Exposition_Universelle_(1889)",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back. Last class we saw nations grow in the 1800s. Today: how some powers took control of far-off lands, and how people answered."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Imperialism: Africa, India, China and Japan"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a word. Imperialism means one country taking control over other lands and the people who live there. Sometimes by direct rule, sometimes by force and treaties."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Imperialism"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which best describes imperialism?",
+    "right": "One country extending control over other lands and peoples",
+    "wrong": [
+     "Two countries agreeing to share power equally",
+     "A country closing its borders to everyone",
+     "A system where people vote on every law"
+    ],
+    "why": "Imperialism is about one power gaining control over others, whether by direct rule or by pressure."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's start in India. For about 100 years, a British trading company, the East India Company, controlled large parts of the country."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "East India Company"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In May 1857, soldiers in the Company's army rebelled at the town of Meerut. These Indian soldiers were called sepoys. The revolt spread across northern India."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sepoy = an Indian soldier in the Company's army"
+   },
+   "cite": [
+    "s3",
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was a sepoy?",
+    "right": "An Indian soldier in the East India Company's army",
+    "wrong": [
+     "A British tax collector",
+     "A prince of the Mughal family",
+     "A ship that carried tea"
+    ],
+    "why": "Sepoys were Hindu or Muslim soldiers employed by the Company, and their uprising began the rebellion."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why did they rebel? Anger had built up: harsh land taxes, British-style social changes, and rough treatment of some princes and landowners."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Harsh land taxes | British-style social reforms | Princes and landowners treated roughly"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The rebellion was put down. Then Britain closed the Company. In August 1858, Parliament moved power over India to the British Crown."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1857 rebellion begins | 1858 Company dissolved, Crown takes over | 1947 end of the British raj"
+   },
+   "cite": [
+    "s1",
+    "s3",
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What changed in India after 1857 to 1858?",
+    "right": "Rule passed from the Company to the British Crown",
+    "wrong": [
+     "India became independent",
+     "The Company took over the Crown's lands",
+     "Britain left India for good"
+    ],
+    "why": "The Government of India Act of 1858 dissolved the Company and began direct Crown rule, the British raj, which lasted until 1947."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Even the name is argued over. People call it the Sepoy Mutiny, the Great Rebellion, or the First War of Independence. Each name tells a different story."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Sepoy Mutiny | Indian Mutiny | Great Rebellion | Revolt of 1857 | First War of Independence"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now China. Britain wanted Chinese tea, but China preferred silver to British goods. So Britain promoted opium grown in India, and addiction spread in China."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Britain wanted: tea | China wanted: silver | Britain's answer: opium from India"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 1839 China tried to stop the opium trade. Britain went to war. The First Opium War lasted until 1842."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1839 China acts against opium | 1842 war ends"
+   },
+   "cite": [
+    "s10",
+    "s7"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was China trying to do in 1839?",
+    "right": "End the opium trade inside its borders",
+    "wrong": [
+     "Start selling opium abroad",
+     "Take over Hong Kong",
+     "Invade India"
+    ],
+    "why": "The war was fought over China's attempt to end the opium trade within its borders."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Britain won, helped by steam-powered warships. In the Treaty of Nanjing, August 1842, China paid money, gave up Hong Kong Island, and opened five ports to foreign trade."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Money paid to Britain | Hong Kong Island handed over | Five ports opened: Xiamen, Guangzhou, Fuzhou, Ningbo, Shanghai"
+   },
+   "cite": [
+    "s10",
+    "s8",
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "This was the first of many 'unequal treaties'. A second war, 1856 to 1860, brought more. In China, this time is remembered as national decline and humiliation."
+   },
+   "show": {
+    "kind": "map",
+    "text": "China's coast with five treaty ports marked, and Hong Kong in the south"
+   },
+   "cite": [
+    "s8",
+    "s9",
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is an 'unequal treaty'?",
+    "right": "A treaty forced on a weaker country that favours the stronger one",
+    "wrong": [
+     "A treaty between two equal empires",
+     "A trade deal where both sides gain equally",
+     "A treaty that lasts only one year"
+    ],
+    "why": "The Treaty of Nanjing was the first of many treaties pressed on China by stronger powers that gave them special privileges."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Not everyone agreed on the cause, even then. American John Quincy Adams argued that opium was not what caused the war."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Adams denied that the illegal opium trade was the cause of the war."
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now Africa. In 1870 about a tenth of the continent was under European rule. By 1914 it was about nine tenths."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Share of Africa under European rule",
+    "chart": "c1"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Two tools helped Europeans push inland from the 1850s: quinine, a drug against malaria, and steamships that shortened journeys."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Quinine (against malaria) | Steamships (shorter travel)"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "From November 1884 to February 1885, fourteen countries met in Berlin to agree rules for claiming African land. No Africans were invited."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "chair",
+    "count": 14,
+    "layout": "group",
+    "text": "14 chairs at the table, none for an African representative"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "How many African representatives were at the Berlin Conference?",
+    "right": "None",
+    "wrong": [
+     "Two",
+     "Fourteen",
+     "One from every African kingdom"
+    ],
+    "why": "Representatives of fourteen nations worked out the rules without consulting Africa's peoples."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Historians warn us not to overstate Berlin. It did not itself carve up Africa. Many separate deals and wars, before and after, did much of the dividing."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Berlin set rules. It did not draw every border."
+   },
+   "cite": [
+    "s11",
+    "s14"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which is the fairest summary of Berlin?",
+    "right": "It set rules for claims, but conquest and separate agreements did much of the dividing",
+    "wrong": [
+     "It drew every African border in one day",
+     "It had no effect at all",
+     "African leaders signed the final act"
+    ],
+    "why": "Scholars say the conference influenced the Scramble, which had already begun, but it did not formally partition Africa."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One claim was personal. King Leopold II of Belgium ran the Congo Free State as his own project. Berlin's powers recognised it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Congo Free State, 1885 to 1908"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First ivory, then rubber, taken by forced labour. Estimates of the population loss vary, from 1 to 15 million. Reformers exposed it, and Belgium took over in 1908."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 10 million: a common estimate (range 1 to 15 million)"
+   },
+   "cite": [
+    "s15",
+    "s16",
+    "s17"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now, how people answered. On 1 March 1896, Ethiopia defeated Italy at the Battle of Adwa and kept its independence."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Ethiopian soldiers gathered in the highlands at Adwa, 1896"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which African country defeated Italy at Adwa in 1896?",
+    "right": "Ethiopia",
+    "wrong": [
+     "Egypt",
+     "The Congo Free State",
+     "South Africa"
+    ],
+    "why": "Ethiopia's victory at Adwa preserved its independence. Liberia was also independent, but it was not part of that battle."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Others fought too. Samori Touré resisted the French until 1898. The Asante fought Britain until 1901. The Zulu beat a British army at Isandlwana in 1879."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Samori Touré vs France, to 1898 | Asante vs Britain, to 1901 | Zulu at Isandlwana, 1879"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 1905, in German East Africa, people rose against forced cotton growing and heavy taxes. This was the Maji Maji revolt. Many believed a sacred water would turn bullets to water."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Maji Maji, 1905 to 1907"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Against machine guns, it failed. Estimates say 75,000 to 300,000 people died, mostly from famine."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "75,000 to 300,000 estimated deaths"
+   },
+   "cite": [
+    "s18",
+    "s19"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Why did the Maji Maji revolt begin?",
+    "right": "Forced cotton growing, forced labour and taxes",
+    "wrong": [
+     "Italy invaded the region",
+     "A new treaty port opened",
+     "A ban on using water in rituals"
+    ],
+    "why": "The revolt was against forced labour and tax policies tied to Germany's cotton scheme."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Back in China, the Boxer movement of 1899 to 1901 was anti-foreign and anti-Christian. Eight nations sent troops, and the Boxer Protocol followed."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1899 to 1901 Boxer uprising | Eight-nation force | 7 September 1901 Boxer Protocol"
+   },
+   "cite": [
+    "s20",
+    "s21"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Protocol made China pay a huge indemnity and let foreign troops stay in Beijing. Resistance had failed, and China lost more control."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Boxer Protocol, 1901"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Japan took a different road. In 1853, US warships under Commodore Perry arrived. Japan was pushed into unequal treaties, as China had been."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Four dark US warships anchored in Tokyo Bay, the 'Black Ships' of 1853"
+   },
+   "cite": [
+    "s24",
+    "s22"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In 1868, young samurai overthrew the shogunate and restored the emperor. Their Charter Oath aimed for a 'rich country with a strong military'."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Meiji Restoration, 1868"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Reforms came fast: a national currency, the yen, a central bank, and Japan's first railway in 1872."
+   },
+   "show": {
+    "kind": "list",
+    "text": "The yen | Bank of Japan | First railway, 1872"
+   },
+   "cite": [
+    "s23",
+    "s24"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What was a main aim of Meiji Japan's reforms?",
+    "right": "To modernise fast and become strong",
+    "wrong": [
+     "To close Japan off from the world again",
+     "To hand power back to the shogun",
+     "To join the Boxers"
+    ],
+    "why": "Japan's leaders had seen how weak it was against Western firepower and set out to build a rich, strong country."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "But Japan also became an imperial power. It beat Russia in 1904 to 1905, the first Asian power in modern times to defeat a European one. It annexed Korea in 1910."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1904 to 1905 Russo-Japanese War | 1910 Korea annexed"
+   },
+   "cite": [
+    "s25",
+    "s26"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the hard question: costs and benefits. Historians look at the same facts and weigh them differently. Let's take Indian railways."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The debate: costs and benefits"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One study finds railways cut trade costs and helped rid India of famine. Another notes the huge spending, with far less going to irrigation."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Spending on railways and irrigation, millions of pounds",
+    "chart": "c2"
+   },
+   "cite": [
+    "s27",
+    "s29",
+    "s28"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Critics add that the railways served colonial trade first. Economist John Hurd says they were not allowed to drive growth as elsewhere."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "India only enjoyed limited economic development under the Raj."
+   },
+   "cite": [
+    "s30"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A writer in an opinion piece cites economist Robert Allen: extreme poverty in India rose from 23 percent in 1810 to over 50 percent by the mid-1900s."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "23% in 1810 to over 50% by the mid-1900s (Allen, cited in opinion piece)"
+   },
+   "cite": [
+    "s31"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So how do we weigh it? Ask three things: compared with what? Who gained? Who paid, and who got to decide?"
+   },
+   "show": {
+    "kind": "list",
+    "text": "Compared with what? | Who gained? | Who paid, and who decided?"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which is a fair way to weigh costs and benefits?",
+    "right": "Ask who gained, who paid, and compared with what",
+    "wrong": [
+     "Count only the things you already like",
+     "Ignore the voices of the people who were ruled",
+     "Choose the numbers that fit your first opinion"
+    ],
+    "why": "Fair weighing looks at all sides, including those who were ruled, and compares real alternatives."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What else was happening? Japan's Meiji era began in 1868. In 1869 the Suez Canal opened. In 1886 the Statue of Liberty went up in New York. In 1889 the Eiffel Tower opened in Paris."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1868 Meiji | 1869 Suez Canal | 1886 Statue of Liberty | 1889 Eiffel Tower"
+   },
+   "cite": [
+    "s22",
+    "s32",
+    "s33",
+    "s34"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To recap: India went from Company to Crown in 1858. China was forced open in 1842. Africa was claimed from the 1880s. Japan modernised and became an empire. People resisted everywhere. Next: science and ideas of the 1800s."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1842 Nanjing | 1858 Crown rule in India | 1868 Meiji | 1884 to 1885 Berlin | 1896 Adwa | 1901 Boxer Protocol | 1905 Maji Maji | 1910 Korea annexed"
+   },
+   "cite": [
+    "s8",
+    "s1",
+    "s22",
+    "s11",
+    "s12",
+    "s21",
+    "s18",
+    "s26"
+   ],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Share of Africa under European rule (percent, approximate)",
+   "rows": [
+    {
+     "label": "1870",
+     "value": 10,
+     "source": "s12"
+    },
+    {
+     "label": "1914",
+     "value": 90,
+     "source": "s12"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "British spending in India: railways and irrigation (millions of pounds)",
+   "rows": [
+    {
+     "label": "Railways",
+     "value": 160,
+     "source": "s29"
+    },
+    {
+     "label": "Irrigation",
+     "value": 20,
+     "source": "s29"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Imperialism and industry",
+   "links": [
+    "[[The Industrial Revolution]]",
+    "[[Nations, Reform and Civil War in the 1800s]]"
+   ]
+  },
+  {
+   "topic": "India under the Company and the Crown",
+   "links": [
+    "[[Mughal, Safavid, Qing and Tokugawa: Early Modern Asia]]",
+    "[[The Road to World War I]]"
+   ]
+  },
+  {
+   "topic": "Opium Wars and the unequal treaties",
+   "links": [
+    "[[Mughal, Safavid, Qing and Tokugawa: Early Modern Asia]]"
+   ]
+  },
+  {
+   "topic": "Scramble for Africa and resistance",
+   "links": [
+    "[[The Atlantic Slave Trade]]",
+    "[[World War I]]"
+   ]
+  },
+  {
+   "topic": "Meiji Japan and Japan's empire",
+   "links": [
+    "[[World War II]]",
+    "[[Science and Ideas in the 1800s]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "1868 to 1869",
+   "elsewhere": "Japan's Meiji era began in 1868. On 17 November 1869 the Suez Canal opened, linking the Mediterranean and the Red Sea.",
+   "cite": [
+    "s22",
+    "s32"
+   ]
+  },
+  {
+   "when": "1884 to 1886",
+   "elsewhere": "While the Berlin Conference met (1884 to 1885), the Statue of Liberty was being completed for New York. Its final installation was in 1886.",
+   "cite": [
+    "s11",
+    "s33"
+   ]
+  },
+  {
+   "when": "1889",
+   "elsewhere": "The Eiffel Tower opened in Paris in May 1889, as part of a world's fair that also featured people from French colonies, such as a jeweller from Senegal.",
+   "cite": [
+    "s34",
+    "s35"
+   ]
+  },
+  {
+   "when": "1905",
+   "elsewhere": "The Maji Maji revolt began in German East Africa in 1905. In September that year, Russia and Japan signed the Treaty of Portsmouth.",
+   "cite": [
+    "s18",
+    "s25"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The 1857 uprising was a 'mutiny' of soldiers.",
+   "other_view": "Others call it a rebellion, or a first war of independence, because many civilians, princes and landowners joined in. The role of religion is also debated. Early British sources stressed religious offence, while later accounts stress taxes, land and loss of rank.",
+   "cite": [
+    "s4",
+    "s5",
+    "s3"
+   ]
+  },
+  {
+   "claim": "The Opium War was fought mainly over opium.",
+   "other_view": "Britannica describes it as a clash over trade, diplomacy and China's effort to stop the opium trade. In his own time John Quincy Adams argued the war was about the way Britain was treated, and that the opium trade was not the cause.",
+   "cite": [
+    "s7",
+    "s9"
+   ]
+  },
+  {
+   "claim": "The Berlin Conference divided up Africa.",
+   "other_view": "Many scholars warn against overstating this. Africa was not formally partitioned there, and many bilateral agreements and conquests came before and after. Others say the conference still mattered because it set rules and fed the Scramble.",
+   "cite": [
+    "s11",
+    "s14"
+   ]
+  },
+  {
+   "claim": "About 10 million people died in Leopold's Congo.",
+   "other_view": "Many historians use about 10 million, about half the population. But no one knows the pre-colonial population exactly, so estimates of the decline range from 1 million to 15 million.",
+   "cite": [
+    "s16",
+    "s15",
+    "s17"
+   ]
+  },
+  {
+   "claim": "Railways helped India by cutting famine and trade costs.",
+   "other_view": "Burgess finds railways did much to rid India of famine. Sweeney finds their effect on famine was questionable and costly. John Hurd argues railways did not become the engine of growth they were elsewhere. A critic writing in Al Jazeera, citing economist Robert Allen, says poverty rose under British rule.",
+   "cite": [
+    "s27",
+    "s28",
+    "s30",
+    "s31"
+   ]
+  },
+  {
+   "claim": "Meiji reforms were mainly defensive, to avoid being colonised.",
+   "other_view": "Japan's leaders did fear Western firepower, and they sought a 'rich country with a strong military'. Britannica also notes that Japan's own empire-building, including the annexation of Korea, began after the Meiji Restoration.",
+   "cite": [
+    "s22",
+    "s26"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,802 @@
+{
+ "about": {
+  "title": "Our Sun and Solar System",
+  "course": "history-of-everything",
+  "class_n": 4,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. This class teaches six ideas in order (the collapsing cloud, the disk, planetesimals, rocky versus giant planets, the age comparison, the migration debate). Each idea gets a short check question, so it fits a half-hour without rushing."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Formation of Our Solar System",
+   "publisher": "American Museum of Natural History",
+   "date": "undated",
+   "link": "https://www.amnh.org/exhibitions/permanent/the-universe/planets/formation-of-our-solar-system",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "7.4 Origin of the Solar System, Astronomy 2e",
+   "publisher": "OpenStax",
+   "date": "undated",
+   "link": "https://openstax.org/books/astronomy-2e/pages/7-4-origin-of-the-solar-system",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "Origin of the Solar System (OpenStax Astronomy, key concepts and glossary)",
+   "publisher": "Maricopa Community Colleges Open Education (OpenStax import)",
+   "date": "undated",
+   "link": "https://open.maricopa.edu/asttemp/chapter/origin-of-the-solar-system/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "Sun: Facts",
+   "publisher": "NASA Science",
+   "date": "undated",
+   "link": "https://science.nasa.gov/sun/facts/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "Planck Mission Brings Universe Into Sharp Focus",
+   "publisher": "NASA Jet Propulsion Laboratory",
+   "date": "undated",
+   "link": "https://www.jpl.nasa.gov/news/planck-mission-brings-universe-into-sharp-focus/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "The Outer Planets: A Star is Born",
+   "publisher": "LASP, University of Colorado Boulder",
+   "date": "undated",
+   "link": "https://lasp.colorado.edu/outerplanets/solsys_star.php",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "Planet formation / Terrestrial Planets Today (lecture slides)",
+   "publisher": "Case Western Reserve University, Astronomy",
+   "date": "2019",
+   "link": "https://astroweb.case.edu/ssm/a101s19/S19c15.pdf",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "Planetary formation and migration",
+   "publisher": "Scholarpedia",
+   "date": "undated",
+   "link": "http://www.scholarpedia.org/article/Planetary_formation_and_migration",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "Lives of planet-forming discs revealed",
+   "publisher": "University College London",
+   "date": "2025",
+   "link": "https://www.ucl.ac.uk/mathematical-physical-sciences/news/2025/jun/lives-planet-forming-discs-revealed",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "When was the Milky Way formed?",
+   "publisher": "Astronomy magazine",
+   "date": "undated",
+   "link": "https://www.astronomy.com/science/when-was-the-milky-way-formed/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "Could the Migration of Jupiter have Accelerated the Atmospheric Evolution of Venus?",
+   "publisher": "arXiv (preprint)",
+   "date": "2020",
+   "link": "https://arxiv.org/pdf/2008.04927",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "The Grand Tack model: a critical review (Raymond and Morbidelli)",
+   "publisher": "arXiv (preprint)",
+   "date": "2014",
+   "link": "https://arxiv.org/pdf/1409.6340",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "Populating the asteroid belt from two parent source regions due to the migration of giant planets: The Grand Tack (Walsh et al.)",
+   "publisher": "Meteoritics & Planetary Science, Wiley",
+   "date": "2012",
+   "link": "https://onlinelibrary.wiley.com/doi/10.1111/j.1945-5100.2012.01418.x",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "Solar System Physics for Exoplanet Research",
+   "publisher": "arXiv (preprint)",
+   "date": "2020",
+   "link": "https://arxiv.org/pdf/2004.13209",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "Onset of Giant Planet Migration before 4480 Million Years Ago",
+   "publisher": "The Astrophysical Journal, IOP Publishing",
+   "date": "undated",
+   "link": "https://iopscience.iop.org/article/10.3847/1538-4357/ab2c03",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "Steam Worlds: The Mystery of How Gas Giants Form",
+   "publisher": "Carnegie Science",
+   "date": "undated",
+   "link": "https://carnegiescience.edu/news/steam-worlds-mystery-how-gas-giants-form",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "How Old Is the Sun?",
+   "publisher": "NASA Space Place",
+   "date": "undated",
+   "link": "https://spaceplace.nasa.gov/sun-age/en/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "Other Worlds: An Introduction to the Solar System (Astronomy 2e, chapter 7, PDF copy)",
+   "publisher": "OpenStax (copy hosted at theexpertta.com)",
+   "date": "undated",
+   "link": "https://www.theexpertta.com/book-files/OpenStaxAstronomy2e/Chapter7_217-244.pdf",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "14.3 Formation of the Solar System (Astronomy, OpenStax-based)",
+   "publisher": "UCF Pressbooks",
+   "date": "undated",
+   "link": "https://pressbooks.online.ucf.edu/astronomybc/chapter/14-3-formation-of-the-solar-system/",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Today's question: how did the Sun and the planets begin, and roughly when?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Our Sun and Solar System"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We begin with one cold cloud of gas and dust, a few light-years wide, floating in our galaxy. Everything in this class starts from that cloud."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A huge, dark, cold cloud of gas and dust drifting in space, with faint stars behind it"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Astronomers call this cloud the solar nebula. It is the cloud of gas and dust that our solar system formed from."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Solar nebula"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Something nudged part of the cloud to start falling inward. A shock wave from a nearby exploding star is the leading guess. Then gravity took over, pulling harder as the cloud shrank."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A cloud shrinking inward, with arrows pointing to the centre, and a distant exploding star sending out a ring-shaped shock wave"
+   },
+   "cite": [
+    "s1",
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What force kept pulling the cloud together once it began to collapse?",
+    "right": "Gravity",
+    "wrong": [
+     "The solar wind",
+     "Light from the planets",
+     "Earth's gravity"
+    ],
+    "why": "Gravity gets stronger as the cloud gets smaller, so the collapse kept going. The solar wind, the planets and Earth did not exist yet."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "As the cloud shrank, it spun faster and flattened into a disk. Think of pizza dough spinning in the air."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A fat, slowly turning cloud becoming a thin, fast-turning disk with a bright bulge in the middle"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What shape did the spinning cloud flatten into?",
+    "right": "A thin disk",
+    "wrong": [
+     "A hollow ball",
+     "A long straight line",
+     "A cube"
+    ],
+    "why": "The cloud rotated as it collapsed, and that made it flatten into a thin disk with the Sun in the centre."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Most of the material fell to the middle and became the Sun. The Sun holds 99.8 percent of the whole solar system's mass. Everything else shares the last 0.2 percent."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c2",
+    "text": "Share of the solar system's mass"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To match the Sun's mass, you would need more than 330,000 Earths. Its core grew hot enough for nuclear fusion, and that is why it shines."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "330,000 Earths"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "About how much of the solar system's mass is in the Sun?",
+    "right": "About 99.8 percent",
+    "wrong": [
+     "About half",
+     "About 75 percent",
+     "About 10 percent"
+    ],
+    "why": "The Sun is by far the biggest thing in the solar system. All the planets, moons and asteroids together make up only about 0.2 percent."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "When did this happen? NASA says the Sun formed about 4.6 billion years ago. Radioactive dating of the oldest meteorites gives ages near 4.5 billion. Those are the same story, rounded a little differently."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 4.6 billion years ago"
+   },
+   "cite": [
+    "s4",
+    "s19",
+    "s1"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Roughly when did the Sun and planets form?",
+    "right": "About 4.6 billion years ago",
+    "wrong": [
+     "About 13.8 billion years ago",
+     "About 460 million years ago",
+     "About 4.6 million years ago"
+    ],
+    "why": "Meteorites and models agree on about 4.5 to 4.6 billion years. The 13.8 billion figure is the age of the whole universe."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the planets. They did not appear all at once. Dust and ice first stuck together into bigger lumps, called planetesimals."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Planetesimals"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Planetesimals were tens to hundreds of kilometres across. Many of them gathered into planets and moons. The ones that were left over are still with us as comets and asteroids."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Dust grains, then planetesimals (tens to hundreds of km), then planets and moons. Leftovers: comets and asteroids."
+   },
+   "cite": [
+    "s3",
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What do we still see today from the leftover planetesimals?",
+    "right": "Comets and asteroids",
+    "wrong": [
+     "Nothing, because they all became planets",
+     "Only the Sun's surface",
+     "Only the Earth's oceans"
+    ],
+    "why": "Not every planetesimal was swept up by a planet. Some survive as asteroids and comets."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why are some planets rocky and some giant? The disk was hot near the Sun and cool far away. The boundary where ice could start to form is called the frost line."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Inside the frost line: too hot for ice, so only rock and metal. | Outside the frost line: cold enough for ice, plus lots of gas."
+   },
+   "cite": [
+    "s1",
+    "s7"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why did only rock and metal form close to the young Sun?",
+    "right": "It was too hot there for ice to form",
+    "wrong": [
+     "There was no gas at all in the whole disk",
+     "Ice does not exist in space",
+     "The planets were pushed out by the frost line"
+    ],
+    "why": "Near the Sun, ice would not survive the heat. Only rock and metal could become solid."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Rock and metal grains in the hot inner disk collided and stuck together. They slowly built the four rocky planets: Mercury, Venus, Earth and Mars."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "rock",
+    "count": 4,
+    "layout": "row",
+    "text": "Four rocky planets: Mercury, Venus, Earth, Mars"
+   },
+   "cite": [
+    "s1",
+    "s18"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Out beyond the frost line there was more solid material, including ice. Cores grew big, around 10 to 20 times the mass of Earth. Then they pulled in huge amounts of hydrogen and helium gas."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Gas giants: Jupiter and Saturn (mostly hydrogen and helium). Ice giants: Uranus and Neptune."
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which kind of planet grabbed huge amounts of hydrogen and helium gas?",
+    "right": "The giant planets, beyond the frost line",
+    "wrong": [
+     "The rocky planets, close to the Sun",
+     "Only the asteroids",
+     "None of them did"
+    ],
+    "why": "Only the big cores in the cold outer disk were massive enough to pull in all that gas."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The giants were racing against a clock. The gas in a planet-forming disk disappears within a few million years. After that, there is nothing left to grab."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "A few million years"
+   },
+   "cite": [
+    "s9",
+    "s8",
+    "s16"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Why did the giant planets have to form quickly?",
+    "right": "The gas they needed was gone from the disk within a few million years",
+    "wrong": [
+     "The Sun was about to explode",
+     "Comets were about to hit them",
+     "The frost line was moving closer"
+    ],
+    "why": "Giant planets are built mostly from disk gas. Once the gas dispersed, they could not grow any more."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "After the Sun ignited, a strong solar wind swept away the leftover gas and dust. Asteroids are the rocky debris that remained."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A young, bright Sun blowing leftover gas outward, leaving planets and a belt of rocks"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Our solar system is one pattern, not the only one. Many other planetary systems look quite different, and some have giant planets close to their star."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Some exoplanet systems even have giant planets close to the star, reversing the order we see in our system."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now let's zoom out and compare ages. The universe is about 13.8 billion years old. The Milky Way is nearly as old. Our solar system is much younger."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1",
+    "text": "Ages in billions of years"
+   },
+   "cite": [
+    "s5",
+    "s10",
+    "s4"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "About how old was the universe when the solar system formed? (13.8 minus 4.6)",
+    "right": "About 9 billion years old",
+    "wrong": [
+     "About 4.6 billion years old",
+     "About 13.8 billion years old",
+     "About 1 billion years old"
+    ],
+    "why": "13.8 minus 4.6 is about 9.2. The universe had already run for roughly two-thirds of its present age."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So by the time our Sun lit up, the galaxy had been making stars for billions of years. Some astronomers think the Milky Way even had a big collision with another galaxy 8 to 10 billion years ago."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "13.8 bya: Big Bang. About 13.6: Milky Way's first stars. 8 to 10 bya: galaxy collision. 4.6 bya: Sun and planets."
+   },
+   "cite": [
+    "s5",
+    "s10",
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "No people yet, and no cities or writing. Those come billions of years later. In this era the planets were still being built, over the first tens of millions of years."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Still no people"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a debate. Did the giant planets stay where they were born? Scientists agree they moved. They argue about how far, how smoothly, and when."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Debate: Did the giant planets move?"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One idea is the Grand Tack. Early on, Jupiter may have drifted inward toward where Mars is now, then swung back out. Sailors call a turn like that a tack."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Jupiter's path drawn as a V: in toward the Sun, then back out, like a sailboat tacking"
+   },
+   "cite": [
+    "s11",
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Its fans say the inward trip cut off the supply of building material near Mars. That would explain why Mars is small. The Grand Tack would have happened in the first few million years, while gas was still around."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Grand Tack: early, driven by the gas disk, explains small Mars and the asteroid belt."
+   },
+   "cite": [
+    "s12",
+    "s13"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Another idea is the Nice model, named after the French city of Nice. It describes a later shake-up, after the gas was gone. Giant planet orbits were disturbed by a disk of icy bodies. One version puts this 400 to 600 million years after the Grand Tack."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Nice model: later, driven by icy bodies, after the gas had gone."
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is the main difference between the Grand Tack and the Nice model?",
+    "right": "The Grand Tack is early and gas-driven; the Nice model is later and driven by icy bodies",
+    "wrong": [
+     "The Grand Tack says the planets never moved",
+     "The Nice model says the Sun moved instead",
+     "They describe the same event with different names"
+    ],
+    "why": "Both ideas have giant planets moving. They differ in timing and in what pushed the planets."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So who is right? Perhaps both. The two models have not been joined into one story, and experts still argue. Some studies even suggest the later shake-up came much earlier than first thought."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Maybe both happened, early then late. | Or the late shake-up was earlier, within about 100 million years."
+   },
+   "cite": [
+    "s14",
+    "s12"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's put the story in order, from the first step to the last."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. A cloud collapses. 2. It spins into a disk. 3. Planetesimals build up. 4. Planets grow. 5. The solar wind clears the gas."
+   },
+   "cite": [
+    "s1",
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which came first in the story?",
+    "right": "The cloud collapsed and flattened into a disk",
+    "wrong": [
+     "The planets formed and then the cloud appeared",
+     "The solar wind cleared the gas before planetesimals formed",
+     "The giant planets formed after the gas had gone"
+    ],
+    "why": "Planets can only grow inside the disk, and the disk only exists after the collapse. The solar wind cleared the gas later."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One last fact. The Sun is about halfway through its life, with roughly five billion years still to go. Next class we zoom in on early Earth and the Moon."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 5 billion years to go"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "count-in"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "How old? (billions of years)",
+   "rows": [
+    {
+     "label": "Universe",
+     "value": 13.8,
+     "source": "s5"
+    },
+    {
+     "label": "Milky Way (about)",
+     "value": 13.6,
+     "source": "s10"
+    },
+    {
+     "label": "Solar system and Sun",
+     "value": 4.6,
+     "source": "s4"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "pie",
+   "title": "Share of the solar system's mass (percent)",
+   "rows": [
+    {
+     "label": "The Sun",
+     "value": 99.8,
+     "source": "s4"
+    },
+    {
+     "label": "Everything else (0.2 is left over from 100)",
+     "value": 0.2,
+     "source": "s4"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Solar nebula",
+   "links": [
+    "[[First stars, galaxies and the making of the elements]]",
+    "[[Our Sun and Solar System]]"
+   ]
+  },
+  {
+   "topic": "Planetesimals and frost line",
+   "links": [
+    "[[Early Earth and the Moon]]",
+    "[[Rocky versus giant planets]]"
+   ]
+  },
+  {
+   "topic": "Giant planet migration (Grand Tack and Nice model)",
+   "links": [
+    "[[Early Earth and the Moon]]",
+    "[[How do we know? Reading the evidence and telling time]]"
+   ]
+  },
+  {
+   "topic": "Age of the solar system versus age of the universe",
+   "links": [
+    "[[The Big Bang and the first minutes]]",
+    "[[Looking ahead: the future of Earth and the universe]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About 4.6 billion years ago: the Sun and planets begin to form",
+   "elsewhere": "The universe was already about 9 billion years old (13.8 minus 4.6). The Milky Way had been making stars for billions of years. There were no humans, no cities and no writing.",
+   "cite": [
+    "s5",
+    "s4",
+    "s10"
+   ]
+  },
+  {
+   "when": "8 to 10 billion years ago, before our solar system",
+   "elsewhere": "The Milky Way is thought to have collided with another galaxy, long before the solar system's cloud collapsed.",
+   "cite": [
+    "s10"
+   ]
+  },
+  {
+   "when": "The first tens of millions of years of the solar system",
+   "elsewhere": "The planets were still being built. Researchers date the giant planets' early migration and the later bombardment to very different periods.",
+   "cite": [
+    "s15"
+   ]
+  },
+  {
+   "when": "Today",
+   "elsewhere": "The Sun is about halfway through its life, with roughly five billion years left. The universe is about 13.8 billion years old.",
+   "cite": [
+    "s17",
+    "s5"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The giant planets moved early, in a Grand Tack (Jupiter drifting in toward Mars, then back out).",
+   "other_view": "Supporters, including its authors, say it explains small Mars and the asteroid belt, and that tests so far do not rule it out. They still call for more tests and for alternative models. Critics point to open questions about the 'tack' itself, such as how fast Jupiter and Saturn gathered their gas. Other models can also produce a small Mars. Some researchers also say people wrongly treat all giant planet migration as the Grand Tack.",
+   "cite": [
+    "s12",
+    "s15"
+   ]
+  },
+  {
+   "claim": "A later shake-up of the giant planets (the Nice model) happened hundreds of millions of years after the planets formed.",
+   "other_view": "A late shake-up could have disturbed the rocky planets' orbits, so some studies place a similar instability much earlier, within the first 100 million years. The Nice model and Grand Tack have not been joined into one agreed story. The 'Late Heavy Bombardment' it was meant to explain is itself described as purported.",
+   "cite": [
+    "s13",
+    "s14",
+    "s15"
+   ]
+  },
+  {
+   "claim": "The collapse of the solar nebula was probably triggered by a nearby supernova.",
+   "other_view": "The supernova trigger is the leading idea. A second proposed cause is a collision between two molecular clouds, so the trigger is not certain.",
+   "cite": [
+    "s1",
+    "s6"
+   ]
+  },
+  {
+   "claim": "Giant planets formed by core accretion: a big solid core first, then a rush of gas.",
+   "other_view": "Core accretion is the standard theory. Its challenge is that a core must grow much larger than Earth before the disk gas disappears. A rival idea, disk instability, says clumps of gas collapse directly into planets. It is called controversial, and the theory is thought more likely for giants far from their star.",
+   "cite": [
+    "s8",
+    "s16"
+   ]
+  }
+ ]
+}

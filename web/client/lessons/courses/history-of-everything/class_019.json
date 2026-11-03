@@ -1,0 +1,1349 @@
+{
+ "about": {
+  "title": "Iron Age Empires: Assyria, Babylon and Persia",
+  "course": "history-of-everything",
+  "class_n": 19,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About half an hour. This class covers five topics and one debate. Each idea gets a short beat and a check question, so you can stop after any question. A good place to split it in two is just before the Phoenicians."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Achaemenid Empire",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Achaemenian-Empire",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "Neo-Babylonian empire",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/place/Neo-Babylonian-Empire",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "Nineveh (Heilbrunn Timeline of Art History)",
+   "publisher": "The Metropolitan Museum of Art",
+   "date": "n.d.",
+   "link": "https://www.metmuseum.org/essays/nineveh",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "A library fit for a king",
+   "publisher": "The British Museum",
+   "date": "n.d.",
+   "link": "https://www.britishmuseum.org/blog/library-fit-king",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "The History of Iron in Ancient Israel",
+   "publisher": "TheTorah.com",
+   "date": "n.d.",
+   "link": "https://www.thetorah.com/article/the-history-of-iron-in-ancient-israel",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "Iron Age facts for kids",
+   "publisher": "Kiddle",
+   "date": "n.d.",
+   "link": "https://kids.kiddle.co/Iron_Age",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "Iron Age History Timeline and Key Facts",
+   "publisher": "Vedantu",
+   "date": "n.d.",
+   "link": "https://www.vedantu.com/history/iron-age",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "Assyrian Deportation and Resettlement: The Story of Samaria",
+   "publisher": "TheTorah.com",
+   "date": "n.d.",
+   "link": "https://www.thetorah.com/article/assyrian-deportation-and-resettlement-the-story-of-samaria",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "The Neo-Assyrian Empire",
+   "publisher": "Ancient History Sites",
+   "date": "n.d.",
+   "link": "https://www.ancient-history-sites.com/assyrian/context/history/neo-assyrian/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "Annals of Tiglath-Pileser III",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Annals_of_Tiglath-Pileser_III",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "Roads and Mass Deportations in the Neo-Assyrian Empire",
+   "publisher": "Academia.edu (scholarly paper summary)",
+   "date": "n.d.",
+   "link": "https://www.academia.edu/2057625/Roads_and_Mass_Deportations_in_the_Neo_Assyrian_Empire",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "Samples for Mass Deportations in the Neo-Assyrian Period",
+   "publisher": "History Studies",
+   "date": "n.d.",
+   "link": "https://www.historystudies.net/eng/samples-for-mass-deportations-in-the-neo-assyrian-period_371",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "What was Ashurbanipal's Library?",
+   "publisher": "The British Museum",
+   "date": "n.d.",
+   "link": "https://www.britishmuseum.org/research/projects/what-was-ashurbanipals-library",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "Yehud (Persian province)",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Yehud_(Persian_province)",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "Achaemenid Empire",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/Achaemenid_Empire/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "The Satrapy System",
+   "publisher": "Achaemenica",
+   "date": "n.d.",
+   "link": "https://achaemenica.org/articles/the-satrapy-system",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "The administration of the Achaemenid Empire",
+   "publisher": "Academia.edu (scholarly paper summary)",
+   "date": "n.d.",
+   "link": "https://www.academia.edu/4251207/The_administration_of_the_Achaemenid_Empire",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "Royal Road: Achaemenid Postal System",
+   "publisher": "Persian Heritage",
+   "date": "n.d.",
+   "link": "https://persianheritage.org/articles/en/royal-road-persian-post",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "Royal Road",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Royal_Road",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "The Achaemenid Empire: Foundations of Imperial Governance",
+   "publisher": "SurfIran",
+   "date": "n.d.",
+   "link": "https://surfiran.com/mag/achaemenid-empire/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "The Cyrus Cylinder and Ancient Persia: A New Beginning",
+   "publisher": "Asian Art Museum, San Francisco",
+   "date": "n.d.",
+   "link": "https://about.asianart.org/press/the-cyrus-cylinder-and-ancient-persia-a-new-beginning/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "The Cyrus Cylinder",
+   "publisher": "Biblical Archaeology Society",
+   "date": "n.d.",
+   "link": "https://www.biblicalarchaeology.org/daily/ancient-cultures/the-cyrus-cylinder/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "First Charter of Human Rights on Display at Peabody",
+   "publisher": "Yale Peabody Museum",
+   "date": "n.d.",
+   "link": "https://peabody.yale.edu/node/962",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "The Cyrus Cylinder and Ancient Persia: A New Beginning (exhibition page)",
+   "publisher": "National Museum of Asian Art, Smithsonian",
+   "date": "2013",
+   "link": "https://asia.si.edu/exhibition/the-cyrus-cylinder-and-ancient-persia-a-new-beginning",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "The Phoenicians: Trade, Ships, and the Alphabet",
+   "publisher": "Mr. Dowling",
+   "date": "n.d.",
+   "link": "https://mrdowling.com/the-phoenicians-and-carthage",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "Phoenicians: The First Rulers of the Mediterranean",
+   "publisher": "GreekReporter.com",
+   "date": "2026-04-20",
+   "link": "https://greekreporter.com/2026/04/20/phoenician/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "The Phoenicians and Carthage",
+   "publisher": "Exploros",
+   "date": "n.d.",
+   "link": "https://www.exploros.com/summary/the-phoenicians-and-carthage-3",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "Names Reveal Unseen History of Biblical Kingdoms of Israel and Judah, Researchers Say",
+   "publisher": "Haaretz",
+   "date": "2025-05-12",
+   "link": "https://www.haaretz.com/archaeology/2025-05-12/ty-article-magazine/names-reveal-unseen-history-of-biblical-kingdoms-of-israel-and-judah-researchers-say/00000196-bf48-dbb0-af9f-bfda96d50000",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s29",
+   "title": "Biblical Israel: History and Historiography to 586 BCE",
+   "publisher": "Academia.edu (scholarly paper)",
+   "date": "n.d.",
+   "link": "https://www.academia.edu/45001883",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s30",
+   "title": "Kingdom of Judah",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Kingdom_of_Judah",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s31",
+   "title": "The Bible Unearthed (Finkelstein and Silberman, introduction)",
+   "publisher": "Bible and Interpretation, University of Arizona",
+   "date": "2001",
+   "link": "https://bibleinterp.arizona.edu/articles/Finkelstein_Silberman022001",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s32",
+   "title": "Archaeology, Biblical Research and Ancient Israel",
+   "publisher": "Bible and Interpretation, University of Arizona",
+   "date": "n.d.",
+   "link": "https://bibleinterp.arizona.edu/articles/archaeology-biblical-research-and-ancient-israel",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s33",
+   "title": "The Bible Unearthed",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/The_Bible_Unearthed",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s34",
+   "title": "The Life of Confucius: Stability in a Time of Change",
+   "publisher": "TheCollector",
+   "date": "n.d.",
+   "link": "https://www.thecollector.com/confucius-stability-time-of-change/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s35",
+   "title": "The Buddha",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/The_Buddha",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s36",
+   "title": "A Complete History Of Iron: From The Ancient Era To Today",
+   "publisher": "Brian D. Colwell",
+   "date": "n.d.",
+   "link": "https://briandcolwell.com/a-complete-history-of-iron-from-the-ancient-era-to-today/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s37",
+   "title": "Satraps and Royal Roads: Governing Diversity in the Achaemenid Empire",
+   "publisher": "Social Studies Help",
+   "date": "n.d.",
+   "link": "https://socialstudieshelp.com/world-history/satraps-and-royal-roads-governing-diversity-in-the-achaemenid-empire/",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 19. Today's big question: how did a few kings come to rule huge areas, and how did they keep hold of them?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Iron Age Empires: Assyria, Babylon and Persia"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last time we saw the Bronze Age world fall apart. The Near East's Iron Age is usually dated from about 1200 BCE, the same time as that collapse."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "c. 1200 BCE: Bronze Age collapse and the start of the Iron Age in the Near East"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First idea: iron. To make it, smiths heated iron ore with charcoal in a furnace, at around 1200 degrees Celsius."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Iron ore | Charcoal | Furnace at about 1200 °C | Usable iron"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Nobody knows for sure where iron was first smelted. The very earliest iron objects may have come from meteorites."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A dark, heavy piece of meteorite iron resting on a smith's workbench"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So why did iron spread? Iron ore was easier to find than the copper and tin that bronze needs."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Iron ore: easy to find"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why did iron spread so widely?",
+    "right": "Iron ore was easier to find than the copper and tin needed for bronze.",
+    "wrong": [
+     "Only one empire was allowed to make it.",
+     "Iron falls from the sky in large amounts.",
+     "Iron is much softer than bronze, so it is cheaper."
+    ],
+    "why": "Copper and tin were harder to get, while iron ore was more widely available."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "You may hear that the Hittites kept iron a secret, and it spread when their kingdom fell. Scholars no longer accept that old theory."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Old story: one people guarded the secret | Now: it spread slowly, over centuries, from many hands"
+   },
+   "cite": [
+    "s5",
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "And it travelled far. Iron furnaces turn up in Nigeria by about 750 BCE. By about 500 BCE, smiths in China's state of Wu were making cast iron."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A world map with three marks: Anatolia and the Near East, Opi in southeast Nigeria, and the state of Wu in southern China"
+   },
+   "cite": [
+    "s36"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Second idea: what is an empire? It is one state that rules many different peoples. Today we meet three empires, and the tools they used to hold on."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Empire: one state, many peoples"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a first look. The Assyrian empire lasted about 325 years by one count, Babylon's only about 87, and Persia's about 220. Counts of Assyria's start differ, from about 934 to about 900 BCE."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "How long each empire lasted",
+    "chart": "c1"
+   },
+   "cite": [
+    "s12",
+    "s2",
+    "s37",
+    "s9"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Assyria first. Its kings ruled from northern Iraq and built an empire stretching from western Iran toward Egypt."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A map of the Near East with the Assyrian heartland in northern Iraq and arrows toward western Iran and toward Egypt"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Assyria ruled in two ways. A province had a governor sent by the king. A vassal kingdom kept its own ruler, but owed tribute and loyalty."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Province: governor sent by the king | Vassal kingdom: own ruler, pays tribute, stays loyal"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "A conquered land keeps its own king, but pays tribute and owes loyalty to Assyria. What is it?",
+    "right": "A vassal kingdom",
+    "wrong": [
+     "A province",
+     "A capital city",
+     "A library"
+    ],
+    "why": "A province had an Assyrian governor. A vassal kingdom kept its own ruler."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Under Tiglath-pileser III, who took the throne in 745 BCE, more conquered kingdoms became provinces run by governors."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "745 BCE: Tiglath-pileser III becomes king of Assyria"
+   },
+   "cite": [
+    "s9",
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A third tool was moving people. Assyria deported people from rebellious lands. This was one way Mesopotamian empires kept control."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Deportation: forced movement of people"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "An example: in 722 BCE Assyria conquered the kingdom of Israel. It deported many people from Samaria and brought in deportees from other lands to take their place."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "722 BCE: Assyria conquers Israel and moves people in and out of Samaria"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "This tied distant provinces into one system. It also split up families and broke apart communities. It was hard, human suffering."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Control, and a cost in human lives"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was one purpose of Assyrian deportation?",
+    "right": "It helped the king keep control of rebellious lands.",
+    "wrong": [
+     "It was a reward for the most loyal towns.",
+     "It was mainly a way to find new iron mines.",
+     "It was a favour to the families who were moved."
+    ],
+    "why": "Deportation was a tool of control. It broke up communities and tied provinces into one system."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Assyria also had royal roads. They carried the king's letters between major cities, and they helped armies and officials move too."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A straight packed-earth road with a rider carrying a clay tablet toward a walled city"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Kings also ruled through knowledge. Ashurbanipal gathered a huge library at Nineveh. He sent scholars to copy texts, especially from Babylonian temples."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "30,000+ clay tablets"
+   },
+   "cite": [
+    "s3",
+    "s13"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Around 612 BCE Nineveh was sacked. Babylonian and Median campaigns ended the Assyrian empire in 609 BCE."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "612 BCE: Nineveh falls | 609 BCE: end of the Assyrian empire"
+   },
+   "cite": [
+    "s3",
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now Babylon. Nabopolassar took the throne of Babylon in 626 BCE and led the conquest of Assyria."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "626 BCE: Nabopolassar founds the Neo-Babylonian dynasty"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "His son Nebuchadnezzar II reigned from about 605 to 562 BCE. Babylon became the great imperial capital, taking Nineveh's place."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Nebuchadnezzar II, about 605 to 562 BCE"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Babylon borrowed Assyria's deportation tool. Judah was a vassal of Babylon. After a failed revolt, many Judahites were exiled to Babylon in 597 BCE."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "597 BCE: first exile from Judah | 586 BCE: Judah's elite in exile in Babylon"
+   },
+   "cite": [
+    "s8",
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Babylon's greatness was short. In 539 BCE the Persian king Cyrus defeated its last king, and entered Babylon without a battle."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "539 BCE: Cyrus takes Babylon"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "Who ended the Babylonian empire in 539 BCE?",
+    "right": "Cyrus the Great of Persia",
+    "wrong": [
+     "Nabopolassar of Babylon",
+     "Tiglath-pileser of Assyria",
+     "Ashurbanipal"
+    ],
+    "why": "Cyrus defeated Nabonidus, Babylon's last king, in 539 BCE."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now Persia. Cyrus II, called Cyrus the Great, founded the Achaemenid Empire. He inherited his father's throne in Anshan in 559 BCE."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "559 BCE: Cyrus inherits the throne of Anshan | 539 BCE: Babylon falls"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Cyrus left a clay cylinder at Babylon. It was found there in 1879 by a British Museum excavation."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A small, broken barrel of baked clay covered in rows of cuneiform writing, in a museum case"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A tablet with the same text was later identified. The Assyriologist Irving Finkel thinks scribes made copies there and sent them out across the empire."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "One message, many copies"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The empire grew huge, so it needed organizing. That job fell to Darius I, who ruled from 522 to 486 BCE. By his own inscriptions, he most wished to be remembered as lawgiver and organizer."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Darius I, 522 to 486 BCE"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "He completed the division of the empire into satrapies, which are provinces. He also fixed the yearly tribute due from each one."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Satrapy = a province | Satrap = its governor | Tribute = a fixed yearly payment"
+   },
+   "cite": [
+    "s1",
+    "s15"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What was a satrap?",
+    "right": "A governor of a province, appointed by the king",
+    "wrong": [
+     "A road that carried the king's messages",
+     "A clay tablet with a royal decree",
+     "A tax paid in silver"
+    ],
+    "why": "Each satrapy was run by a satrap, a governor appointed by the king."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Darius worried that a governor might build his own power base. So he named a separate military commander who answered only to him."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Satrap: runs the province | Military commander: answers only to the king"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why did Darius name a separate military commander in each province?",
+    "right": "So the governor could not build a power base and rebel.",
+    "wrong": [
+     "So the governor would have fewer tax duties.",
+     "So the roads could be built faster.",
+     "So the commander could collect the tribute."
+    ],
+    "why": "Splitting power between governor and commander made rebellion harder."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Royal inspectors, the King's Eyes and Ears, also travelled the empire, checking on loyalty and efficiency."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The King's Eyes and Ears"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Darius took much of this structure from the Assyrians. But his use of tribute was new. Before, it was a kind of protection money. Darius treated it as a tax."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Before: tribute as protection money | Darius: tribute as tax"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "He also standardized coinage, weights and measures. That made trade and tax collecting easier across the empire."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Coinage | Weights | Measures"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Persia did not run everything from the centre. Local temples and villages helped with administration and tax collection. Practices differed from place to place."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Local helpers, not one uniform system"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the road. The Royal Road ran from Susa to Sardis, about 1,677 miles."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1,677 miles"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Darius improved a road network that already existed. The western parts may first have been built by Assyrian kings."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A line from Susa in the east to Sardis in the west, with rest stations marked along it"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The road carried a state relay of mounted couriers. One modern article says a message could cross the empire in as little as seven days."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A courier on a horse handing a sealed message to a fresh rider at a rest station"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What was the Royal Road mainly used for?",
+    "right": "Administration and military movement, such as relaying messages",
+    "wrong": [
+     "Only holiday travel",
+     "Only carrying iron ore",
+     "Only religious processions"
+    ],
+    "why": "The road's primary functions were administrative and military."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a different kind of power: the Phoenicians. They lived on the eastern Mediterranean coast, in today's Lebanon. Their land was poor for farming, so they turned to the sea."
+   },
+   "show": {
+    "kind": "map",
+    "text": "The eastern Mediterranean coast with the cities of Tyre, Sidon and Byblos marked"
+   },
+   "cite": [
+    "s27"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "They traded timber, metals and textiles between Egypt, Mesopotamia, Anatolia and Greece. Tyre founded Carthage in North Africa around 814 BCE."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "c. 814 BCE: Tyre founds Carthage"
+   },
+   "cite": [
+    "s26",
+    "s25"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Phoenicia itself did not stay free. Assyria and then Persia conquered the homeland. After that, Carthage became an independent state."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Homeland conquered, colony independent"
+   },
+   "cite": [
+    "s27"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Phoenicians are linked with the alphabet. It had 22 letters, all for consonants. That was much easier to learn than hundreds of hieroglyphs."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "22 letters"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Greeks adopted and adapted the Phoenician alphabet in the 9th to 8th century BCE, after trading with them."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "9th to 8th century BCE: Greeks adapt the Phoenician alphabet"
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What did the Phoenician alphabet's 22 letters stand for?",
+    "right": "Consonant sounds",
+    "wrong": [
+     "Whole words",
+     "Numbers only",
+     "Pictures of gods"
+    ],
+    "why": "It was an alphabet of 22 consonants, much simpler than hieroglyphs."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next door lived the early Hebrew societies, the kingdoms of Israel and Judah. Both kingdoms are well attested in archaeology and in texts from their neighbours."
+   },
+   "show": {
+    "kind": "map",
+    "text": "The Levant with the northern kingdom of Israel and the southern kingdom of Judah, and Phoenicia on the coast"
+   },
+   "cite": [
+    "s28"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A fragment found at Tel Dan in 1993 mentions a 'king of Israel' and a 'house of David'. The writing is Aramaic, from the late 9th or early 8th century BCE."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A broken stone slab with a few lines of Aramaic letters, found in the north of Israel"
+   },
+   "cite": [
+    "s29"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Their story ties to the empires you have just met. Assyria conquered Israel in 722 BCE. Babylon destroyed Judah by 586 BCE."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "722 BCE: Assyria conquers Israel | 586 BCE: Judah devastated by Babylon"
+   },
+   "cite": [
+    "s8",
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "After Persia took Babylon, Cyrus's edict ended the exile in 538 BCE. The Second Temple in Jerusalem was built between 520 and 515 BCE."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "538 BCE: edict of Cyrus | 520 to 515 BCE: Second Temple built"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which empire conquered the kingdom of Israel in 722 BCE?",
+    "right": "Assyria",
+    "wrong": [
+     "Babylon",
+     "Persia",
+     "Phoenicia"
+    ],
+    "why": "Assyria conquered Israel in 722 BCE. Babylon came later and destroyed Judah."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last idea, a debate. Much of what we know about Israel and Judah comes from the Bible, a sacred text. How should historians use a sacred text as evidence? This question is about evidence, not about faith."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Debate: religious texts as historical evidence"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One approach treats the Bible as an artifact to examine. It is not taken as an unquestioned truth, and finds are not treated as mere illustrations of it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Examine it, don't just assume it"
+   },
+   "cite": [
+    "s33"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Finkelstein and Silberman argue that key biblical narratives link to the Judean kingdom of the 7th century BCE. They still call the Bible important testimony for early Israel."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Link to the 7th century BCE kingdom of Judah | Still important testimony"
+   },
+   "cite": [
+    "s31"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Another scholar's view: the exile in Babylon pushed people to gather old traditions. Those were woven into a grand narrative with a clear historical core."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Exile: old traditions gathered together"
+   },
+   "cite": [
+    "s32"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Cross-checking helps. Before the Nineveh tablets were found, almost everything about Assyria came from the Bible and classical historians. Then the tablets let Assyrians speak in their own words."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Before: Bible and classical historians | After: thousands of Assyrian tablets"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "But Assyrian royal inscriptions are not neutral either. They show the king as divinely supported, defeating enemies and punishing rebels."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Kings' inscriptions have a purpose too"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So a sacred text and a royal inscription get the same questions. Who wrote it, when, for whom, and why? And what do independent sources say?"
+   },
+   "show": {
+    "kind": "list",
+    "text": "Who wrote it? | When? | For whom? | Why? | What do other sources say?"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is a good way to use a religious text as historical evidence?",
+    "right": "Ask who wrote it, when and why, and compare it with independent evidence.",
+    "wrong": [
+     "Accept every detail as exact history.",
+     "Reject all of it because it is religious.",
+     "Use it only when archaeologists have already proved every line."
+    ],
+    "why": "Historians treat sacred texts like other sources: ask who wrote them and why, and compare them with outside evidence."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Same time elsewhere: Confucius was born in 551 BCE, so he was about 12 when Cyrus entered Babylon. The Buddha lived in India in these years too, though his dates are debated."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "551 BCE: Confucius born | 539 BCE: Cyrus enters Babylon | Buddha: 563 or 480 BCE birth, uncertain"
+   },
+   "cite": [
+    "s34",
+    "s2",
+    "s35"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's recap. Iron spread because ore was easy to find. Assyria used governors, vassals, deportation and roads. Babylon followed. Persia added satraps, checks, fixed tribute and the Royal Road."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Iron | Assyria | Babylon | Persia | Phoenicians and Hebrews | Weighing sacred texts"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next time we meet thinkers and teachers: the Buddha, Confucius, the Greeks and the prophets. You've just seen the world they lived in."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Thinkers and Teachers"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "About how many years each empire lasted",
+   "rows": [
+    {
+     "label": "Neo-Assyrian (ca. 934 to 609 BCE)",
+     "value": 325,
+     "source": "s12"
+    },
+    {
+     "label": "Neo-Babylonian (626 to 539 BCE)",
+     "value": 87,
+     "source": "s2"
+    },
+    {
+     "label": "Persian / Achaemenid (550 to 330 BCE)",
+     "value": 220,
+     "source": "s37"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Iron smelting and the Iron Age",
+   "links": [
+    "[[The Bronze Age World and Its Collapse]]",
+    "[[Other Early Worlds: Africa, the Americas and the Pacific]]"
+   ]
+  },
+  {
+   "topic": "Assyrian rule: provinces, vassals and deportation",
+   "links": [
+    "[[The Bronze Age World and Its Collapse]]"
+   ]
+  },
+  {
+   "topic": "Babylon and the exile of Judah",
+   "links": [
+    "[[Thinkers and Teachers: Buddha, Confucius, the Greeks and the Prophets]]"
+   ]
+  },
+  {
+   "topic": "Persian administration: satraps and the Royal Road",
+   "links": [
+    "[[Alexander and the Hellenistic World]]",
+    "[[Classical Greece]]"
+   ]
+  },
+  {
+   "topic": "The Phoenician alphabet",
+   "links": [
+    "[[The First Cities and the Invention of Writing]]",
+    "[[Classical Greece]]"
+   ]
+  },
+  {
+   "topic": "Using religious texts as historical evidence",
+   "links": [
+    "[[How Do We Know? Reading the Evidence and Telling Time]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "c. 750 BCE",
+   "elsewhere": "Iron furnaces and slag are found at Opi in southeast Nigeria. Around the same time, Greeks were adopting the Phoenician alphabet (9th to 8th century BCE).",
+   "cite": [
+    "s36",
+    "s26"
+   ]
+  },
+  {
+   "when": "745 BCE",
+   "elsewhere": "Tiglath-pileser III takes the Assyrian throne and turns more conquered lands into provinces.",
+   "cite": [
+    "s10",
+    "s9"
+   ]
+  },
+  {
+   "when": "668 to 631 BCE",
+   "elsewhere": "Ashurbanipal rules Assyria and gathers the Nineveh library.",
+   "cite": [
+    "s13"
+   ]
+  },
+  {
+   "when": "612 BCE",
+   "elsewhere": "Nineveh is sacked, and the Assyrian empire ends soon after.",
+   "cite": [
+    "s3",
+    "s9"
+   ]
+  },
+  {
+   "when": "563 or 480 BCE (disputed)",
+   "elsewhere": "The birth of the Buddha in India; historians still debate the date.",
+   "cite": [
+    "s35"
+   ]
+  },
+  {
+   "when": "551 BCE",
+   "elsewhere": "Confucius is born in China. His contemporaries included Pythagoras, Heraclitus and Parmenides in Greece.",
+   "cite": [
+    "s34"
+   ]
+  },
+  {
+   "when": "539 BCE",
+   "elsewhere": "Cyrus takes Babylon. Confucius was about 12 years old.",
+   "cite": [
+    "s2",
+    "s34"
+   ]
+  },
+  {
+   "when": "522 to 486 BCE",
+   "elsewhere": "Darius I rules Persia and organizes the empire.",
+   "cite": [
+    "s1"
+   ]
+  },
+  {
+   "when": "c. 500 BCE",
+   "elsewhere": "Metalworkers in the southern Chinese state of Wu make cast iron.",
+   "cite": [
+    "s36"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The Hittites kept iron-making a secret, and it spread when their kingdom fell.",
+   "other_view": "This old theory is no longer accepted. Iron objects appear in the Near East for centuries before the Hittites fell, and the technology seems to have spread slowly.",
+   "cite": [
+    "s5",
+    "s6"
+   ]
+  },
+  {
+   "claim": "Darius I invented the system of twenty satrapies.",
+   "other_view": "Britannica says Cyrus began the organization and Darius completed it. Herodotus lists twenty tribute districts. Modern scholars doubt this neat picture, because the number and borders of satrapies shifted over time.",
+   "cite": [
+    "s1",
+    "s16"
+   ]
+  },
+  {
+   "claim": "The Cyrus Cylinder is the first charter of human rights.",
+   "other_view": "It is often called that, and exhibitions say Cyrus's tolerance has inspired many people. But since its rediscovery it has also been used to promote political agendas. Curators urge asking what Cyrus himself was thinking.",
+   "cite": [
+    "s23",
+    "s24"
+   ]
+  },
+  {
+   "claim": "The Bible's account of a great united monarchy under David and Solomon is historical.",
+   "other_view": "Scholars disagree. The kingdoms of Israel and Judah are well attested. Whether a great united monarchy existed in the 10th century BCE is still debated between maximalists and minimalists. Some scholars say the evidence for an extensive early kingdom is too weak. Others say the Bible has a historical core.",
+   "cite": [
+    "s28",
+    "s29",
+    "s30",
+    "s32"
+   ]
+  },
+  {
+   "claim": "The Buddha lived from about 563 to 483 BCE.",
+   "other_view": "This was the common dating among early 20th-century historians. Some now place his birth about 480 BCE, and the dates remain uncertain.",
+   "cite": [
+    "s35"
+   ]
+  }
+ ]
+}

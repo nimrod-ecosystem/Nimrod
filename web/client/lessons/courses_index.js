@@ -724,6 +724,672 @@ export const COURSES = [
     "n": 3,
     "title": "First Stars, Galaxies and the Making of the Elements",
     "file": "class_003.json"
+   },
+   {
+    "n": 4,
+    "title": "Our Sun and Solar System",
+    "file": "class_004.json"
+   },
+   {
+    "n": 5,
+    "title": "Early Earth and the Moon",
+    "file": "class_005.json"
+   },
+   {
+    "n": 6,
+    "title": "The Origin of Life",
+    "file": "class_006.json"
+   },
+   {
+    "n": 7,
+    "title": "Complex Cells, Oxygen and a Changing Planet",
+    "file": "class_007.json"
+   },
+   {
+    "n": 8,
+    "title": "Animals Appear: The Cambrian to Life on Land",
+    "file": "class_008.json"
+   },
+   {
+    "n": 9,
+    "title": "Extinctions, Dinosaurs and the Rise of Mammals",
+    "file": "class_009.json"
+   },
+   {
+    "n": 10,
+    "title": "From Primates to Early Hominins",
+    "file": "class_010.json"
+   },
+   {
+    "n": 11,
+    "title": "The Genus Homo: Neanderthals, Denisovans and Us",
+    "file": "class_011.json"
+   },
+   {
+    "n": 12,
+    "title": "Ice Age Minds: Fire, Tools, Language and Art",
+    "file": "class_012.json"
+   },
+   {
+    "n": 13,
+    "title": "People Spread Across the Planet",
+    "file": "class_013.json"
+   },
+   {
+    "n": 14,
+    "title": "The Farming Revolution",
+    "file": "class_014.json"
+   },
+   {
+    "n": 15,
+    "title": "The First Cities and the Invention of Writing",
+    "file": "class_015.json"
+   },
+   {
+    "n": 16,
+    "title": "Egypt and the Indus Valley",
+    "file": "class_016.json"
+   },
+   {
+    "n": 17,
+    "title": "The Bronze Age World and Its Collapse",
+    "file": "class_017.json"
+   },
+   {
+    "n": 18,
+    "title": "Other Early Worlds: Africa, the Americas and the Pacific",
+    "file": "class_018.json"
+   },
+   {
+    "n": 19,
+    "title": "Iron Age Empires: Assyria, Babylon and Persia",
+    "file": "class_019.json"
+   },
+   {
+    "n": 20,
+    "title": "Thinkers and Teachers: Buddha, Confucius, the Greeks and the Prophets",
+    "file": "class_020.json"
+   },
+   {
+    "n": 21,
+    "title": "Classical Greece",
+    "file": "class_021.json"
+   },
+   {
+    "n": 22,
+    "title": "Alexander and the Hellenistic World",
+    "file": "class_022.json"
+   },
+   {
+    "n": 23,
+    "title": "The Rise of Rome",
+    "file": "class_023.json"
+   },
+   {
+    "n": 24,
+    "title": "Mauryan India, Qin and Han China",
+    "file": "class_024.json"
+   },
+   {
+    "n": 25,
+    "title": "The Roman Empire, the Silk Roads and Early Christianity",
+    "file": "class_025.json"
+   },
+   {
+    "n": 26,
+    "title": "Late Antiquity: Changing Empires",
+    "file": "class_026.json"
+   },
+   {
+    "n": 27,
+    "title": "The Rise of Islam and the Caliphates",
+    "file": "class_027.json"
+   },
+   {
+    "n": 28,
+    "title": "Byzantium, Early Medieval Europe and the Vikings",
+    "file": "class_028.json"
+   },
+   {
+    "n": 29,
+    "title": "Tang and Song China and the Islamic Golden Age",
+    "file": "class_029.json"
+   },
+   {
+    "n": 30,
+    "title": "Japan, Korea, Southeast Asia and Medieval India",
+    "file": "class_030.json"
+   },
+   {
+    "n": 31,
+    "title": "Medieval Africa: Ghana, Mali, Great Zimbabwe and the Swahili Coast",
+    "file": "class_031.json"
+   },
+   {
+    "n": 32,
+    "title": "The Americas and Pacific Before 1492",
+    "file": "class_032.json"
+   },
+   {
+    "n": 33,
+    "title": "High Medieval Europe: Crusades, Castles and Universities",
+    "file": "class_033.json"
+   },
+   {
+    "n": 34,
+    "title": "The Mongol Empire",
+    "file": "class_034.json"
+   },
+   {
+    "n": 35,
+    "title": "The Black Death and the Crisis of the 1300s",
+    "file": "class_035.json"
+   },
+   {
+    "n": 36,
+    "title": "The Renaissance",
+    "file": "class_036.json"
+   },
+   {
+    "n": 37,
+    "title": "Ottomans, Ming China and the Age of Exploration",
+    "file": "class_037.json"
+   },
+   {
+    "n": 38,
+    "title": "Contact and the Columbian Exchange",
+    "file": "class_038.json"
+   },
+   {
+    "n": 39,
+    "title": "The Reformation and the Wars of Religion",
+    "file": "class_039.json"
+   },
+   {
+    "n": 40,
+    "title": "The Scientific Revolution",
+    "file": "class_040.json"
+   },
+   {
+    "n": 41,
+    "title": "The Atlantic Slave Trade",
+    "file": "class_041.json"
+   },
+   {
+    "n": 42,
+    "title": "Mughal, Safavid, Qing and Tokugawa: Early Modern Asia",
+    "file": "class_042.json"
+   },
+   {
+    "n": 43,
+    "title": "Enlightenment and Absolute Monarchy",
+    "file": "class_043.json"
+   },
+   {
+    "n": 44,
+    "title": "The American and French Revolutions",
+    "file": "class_044.json"
+   },
+   {
+    "n": 45,
+    "title": "Napoleon, Haiti and Latin American Independence",
+    "file": "class_045.json"
+   },
+   {
+    "n": 46,
+    "title": "The Industrial Revolution",
+    "file": "class_046.json"
+   },
+   {
+    "n": 47,
+    "title": "Nations, Reform and Civil War in the 1800s",
+    "file": "class_047.json"
+   },
+   {
+    "n": 48,
+    "title": "Imperialism: Africa, India, China and Japan",
+    "file": "class_048.json"
+   },
+   {
+    "n": 49,
+    "title": "Science and Ideas in the 1800s",
+    "file": "class_049.json"
+   },
+   {
+    "n": 50,
+    "title": "The Road to World War I",
+    "file": "class_050.json"
+   },
+   {
+    "n": 51,
+    "title": "World War I: Course, Cost and Consequences",
+    "file": "class_051.json"
+   },
+   {
+    "n": 52,
+    "title": "Revolution, Flu and the Roaring Twenties",
+    "file": "class_052.json"
+   },
+   {
+    "n": 53,
+    "title": "Depression, Dictators and the Slide to War",
+    "file": "class_053.json"
+   },
+   {
+    "n": 54,
+    "title": "World War II",
+    "file": "class_054.json"
+   },
+   {
+    "n": 55,
+    "title": "The Holocaust and the Memory of Genocide",
+    "file": "class_055.json"
+   },
+   {
+    "n": 56,
+    "title": "A New World Order: The UN, the Cold War and Decolonization",
+    "file": "class_056.json"
+   },
+   {
+    "n": 57,
+    "title": "The 1950s and early 1960s: Space, Nuclear Fear and Civil Rights",
+    "file": "class_057.json"
+   },
+   {
+    "n": 58,
+    "title": "The Late 1960s and 1970s: Protest, War and Oil",
+    "file": "class_058.json"
+   },
+   {
+    "n": 59,
+    "title": "20th-Century Science and Technology",
+    "file": "class_059.json"
+   },
+   {
+    "n": 60,
+    "title": "The End of the Cold War",
+    "file": "class_060.json"
+   },
+   {
+    "n": 61,
+    "title": "Globalization, the Internet and a New Century",
+    "file": "class_061.json"
+   },
+   {
+    "n": 62,
+    "title": "2008 to Today",
+    "file": "class_062.json"
+   },
+   {
+    "n": 63,
+    "title": "Looking Ahead: The Future of Earth and the Universe",
+    "file": "class_063.json"
+   }
+  ]
+ },
+ {
+  "id": "assistive-tech-and-aac",
+  "title": "Assistive technology and AAC: tools that give people a voice",
+  "audience": [
+   "adult"
+  ],
+  "total": 9,
+  "otherSide": true,
+  "classes": [
+   {
+    "n": 1,
+    "title": "What assistive technology and AAC are, and who uses them",
+    "file": "class_001.json"
+   },
+   {
+    "n": 2,
+    "title": "The AAC toolbox: from gestures to speech-generating devices",
+    "file": "class_002.json"
+   },
+   {
+    "n": 3,
+    "title": "Core and fringe vocabulary",
+    "file": "class_003.json"
+   },
+   {
+    "n": 4,
+    "title": "Symbol sets and how pages are laid out",
+    "file": "class_004.json"
+   },
+   {
+    "n": 5,
+    "title": "Switches and scanning",
+    "file": "class_005.json"
+   },
+   {
+    "n": 6,
+    "title": "Eye gaze and other ways to access a device",
+    "file": "class_006.json"
+   }
+  ]
+ },
+ {
+  "id": "consciousness",
+  "title": "What is consciousness? Science and philosophy",
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "total": 12,
+  "otherSide": true,
+  "classes": [
+   {
+    "n": 1,
+    "title": "What do we mean by 'consciousness'?",
+    "file": "class_001.json"
+   },
+   {
+    "n": 2,
+    "title": "The hard problem",
+    "file": "class_002.json"
+   },
+   {
+    "n": 3,
+    "title": "Looking for consciousness in the brain",
+    "file": "class_003.json"
+   },
+   {
+    "n": 4,
+    "title": "Global workspace theory: the brain's broadcast",
+    "file": "class_004.json"
+   },
+   {
+    "n": 5,
+    "title": "Higher-order theories: when the mind represents itself",
+    "file": "class_005.json"
+   },
+   {
+    "n": 6,
+    "title": "Integrated information theory",
+    "file": "class_006.json"
+   }
+  ]
+ },
+ {
+  "id": "cumulative-culture",
+  "title": "How Humans Build on Each Other: Cumulative Culture and Recursive Self-Improvement",
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "total": 9,
+  "otherSide": true,
+  "classes": [
+   {
+    "n": 1,
+    "title": "The Ratchet: What Cumulative Culture Is",
+    "file": "class_001.json"
+   },
+   {
+    "n": 2,
+    "title": "Built to Learn From Others: Gene-Culture Coevolution",
+    "file": "class_002.json"
+   },
+   {
+    "n": 3,
+    "title": "Speech: The First Great Handing-Down",
+    "file": "class_003.json"
+   },
+   {
+    "n": 4,
+    "title": "Writing: Memory Outside the Head",
+    "file": "class_004.json"
+   },
+   {
+    "n": 5,
+    "title": "Printing and Schools: Copying at Scale",
+    "file": "class_005.json"
+   },
+   {
+    "n": 6,
+    "title": "Science: A Method That Improves the Methods",
+    "file": "class_006.json"
+   }
+  ]
+ },
+ {
+  "id": "early-civilizations",
+  "title": "Early Civilizations: Mesopotamia, Egypt, the Indus, China and the Americas",
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "total": 13,
+  "otherSide": true,
+  "classes": [
+   {
+    "n": 1,
+    "title": "Mesopotamia I: Rivers, Farms and the First Cities",
+    "file": "class_001.json"
+   },
+   {
+    "n": 2,
+    "title": "Mesopotamia II: Writing, Law and Religion",
+    "file": "class_002.json"
+   },
+   {
+    "n": 3,
+    "title": "Mesopotamia III: Trade, Everyday Life and Empires",
+    "file": "class_003.json"
+   },
+   {
+    "n": 4,
+    "title": "Egypt I: The Nile, Unification and the Pharaoh",
+    "file": "class_004.json"
+   },
+   {
+    "n": 5,
+    "title": "Egypt II: Hieroglyphs, Religion and Law",
+    "file": "class_005.json"
+   },
+   {
+    "n": 6,
+    "title": "Egypt III: Trade, Everyday Life and Neighbours",
+    "file": "class_006.json"
+   }
+  ]
+ },
+ {
+  "id": "hard-to-define",
+  "title": "Hard to Define: Consciousness, Energy, Time, Life and Information",
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "total": 6,
+  "otherSide": true,
+  "classes": [
+   {
+    "n": 1,
+    "title": "What does it mean to define something?",
+    "file": "class_001.json"
+   },
+   {
+    "n": 2,
+    "title": "Energy: precise to calculate, slippery to explain",
+    "file": "class_002.json"
+   },
+   {
+    "n": 3,
+    "title": "Information: from yes/no questions to meaning",
+    "file": "class_003.json"
+   },
+   {
+    "n": 4,
+    "title": "Time: the clock on the wall and the time we feel",
+    "file": "class_004.json"
+   },
+   {
+    "n": 5,
+    "title": "Life: a word for a pattern, not a clear line",
+    "file": "class_005.json"
+   }
+  ]
+ },
+ {
+  "id": "prehistory",
+  "title": "Prehistory: from the first humans to the first farms",
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "total": 10,
+  "otherSide": true,
+  "classes": [
+   {
+    "n": 1,
+    "title": "How we know: reading the deep past without writing",
+    "file": "class_001.json"
+   },
+   {
+    "n": 2,
+    "title": "Walking upright: the first human relatives",
+    "file": "class_002.json"
+   },
+   {
+    "n": 3,
+    "title": "The first stone tools",
+    "file": "class_003.json"
+   },
+   {
+    "n": 4,
+    "title": "Fire and the changing body",
+    "file": "class_004.json"
+   },
+   {
+    "n": 5,
+    "title": "Leaving Africa the first time",
+    "file": "class_005.json"
+   },
+   {
+    "n": 6,
+    "title": "Our species, our cousins: Homo sapiens, Neanderthals and Denisovans",
+    "file": "class_006.json"
+   }
+  ]
+ },
+ {
+  "id": "religions-of-the-world",
+  "title": "Religions of the World, Large and Small",
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "total": 17,
+  "otherSide": true,
+  "classes": [
+   {
+    "n": 1,
+    "title": "How to Learn About Religions Respectfully",
+    "file": "class_001.json"
+   },
+   {
+    "n": 2,
+    "title": "Hinduism",
+    "file": "class_002.json"
+   },
+   {
+    "n": 3,
+    "title": "Jainism",
+    "file": "class_003.json"
+   },
+   {
+    "n": 4,
+    "title": "Buddhism",
+    "file": "class_004.json"
+   },
+   {
+    "n": 5,
+    "title": "Sikhism",
+    "file": "class_005.json"
+   },
+   {
+    "n": 6,
+    "title": "Judaism",
+    "file": "class_006.json"
+   }
+  ]
+ },
+ {
+  "id": "science-fiction-thought-experiments",
+  "title": "Science-Fiction Thought Experiments: Real Science Through Invented Worlds",
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "total": 11,
+  "otherSide": true,
+  "classes": [
+   {
+    "n": 1,
+    "title": "What a Thought Experiment Is, and How to Tell Fact from Story",
+    "file": "class_001.json"
+   },
+   {
+    "n": 2,
+    "title": "Outbreak, Part 1: How an Infection Spreads",
+    "file": "class_002.json"
+   },
+   {
+    "n": 3,
+    "title": "Outbreak, Part 2: Slowing It Down",
+    "file": "class_003.json"
+   },
+   {
+    "n": 4,
+    "title": "Logistics: Keeping a Community Going",
+    "file": "class_004.json"
+   },
+   {
+    "n": 5,
+    "title": "Diplomacy: The Intergalactic Model UN",
+    "file": "class_005.json"
+   }
+  ]
+ },
+ {
+  "id": "what-if",
+  "title": "What if? Ideas outside the mainstream",
+  "audience": [
+   "adult"
+  ],
+  "total": 11,
+  "otherSide": true,
+  "classes": [
+   {
+    "n": 1,
+    "title": "How to play 'What if?': the five tiers and the evidence toolkit",
+    "file": "class_001.json"
+   },
+   {
+    "n": 2,
+    "title": "The Younger Dryas: what happened at the end of the Ice Age?",
+    "file": "class_002.json"
+   },
+   {
+    "n": 3,
+    "title": "Civilizations before the end of the Ice Age?",
+    "file": "class_003.json"
+   },
+   {
+    "n": 4,
+    "title": "The Big Bang and the rival that lost: steady state",
+    "file": "class_004.json"
+   },
+   {
+    "n": 5,
+    "title": "Cycles and bounces: universes that begin again",
+    "file": "class_005.json"
+   },
+   {
+    "n": 6,
+    "title": "Challenges evolution absorbed: when outsiders improved the science",
+    "file": "class_006.json"
    }
   ]
  }

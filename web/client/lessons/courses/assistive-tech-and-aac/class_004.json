@@ -1,0 +1,882 @@
+{
+ "about": {
+  "title": "Symbol sets and how pages are laid out",
+  "course": "assistive-tech-and-aac",
+  "class_n": 4,
+  "audience": [
+   "adult"
+  ],
+  "minutes": 25,
+  "length_note": "About 25 minutes fits the plan. The class teaches one idea per step: kinds of symbols, then how guessable they are, then the main sets, then page layouts, then motor planning, then spelling, then personalising. There are 11 short checks, so there is time to stop and think. It is general information, not clinical advice. A speech-language pathologist (SLP) can advise on one person."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Augmentative and Alternative Communication (AAC), Practice Portal",
+   "publisher": "American Speech-Language-Hearing Association (ASHA)",
+   "date": "n.d.",
+   "link": "https://www.asha.org/practice-portal/professional-issues/augmentative-and-alternative-communication/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Symbols (Communication Competence / Deepen Your Understanding)",
+   "publisher": "AAC Community",
+   "date": "n.d.",
+   "link": "https://aaccommunity.net/ccc/symbols/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Choosing Words",
+   "publisher": "AAC Community",
+   "date": "n.d.",
+   "link": "https://aaccommunity.net/ccc/choosing-words/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "SCAAC-N: Assessing Symbol Association",
+   "publisher": "SCAAC-N (blog)",
+   "date": "2012-10-07",
+   "link": "https://scaacn.blogspot.com/2012/10/assessing-symbol-association.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "ARASAAC symbol set",
+   "publisher": "Global Symbols",
+   "date": "n.d.",
+   "link": "https://globalsymbols.com/symbolsets/arasaac?locale=en",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Picture communication symbols",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Picture_communication_symbols",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Symbol Set Comparison",
+   "publisher": "Spectronics - Inclusive Learning Technologies",
+   "date": "n.d.",
+   "link": "https://www.spectronics.com.au/article/symbol-set-comparison/print",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Widgit Licensing and Design Services",
+   "publisher": "Widgit",
+   "date": "n.d.",
+   "link": "https://www.widgit.com/symbol-services/index.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Suggested equipment for creating accessible communication",
+   "publisher": "Symbols for All (Scotland)",
+   "date": "n.d.",
+   "link": "https://www.symbolsforall.org.uk/assistive-technology/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Why not leverage a \"standard\" symbol set?",
+   "publisher": "Volksswitch",
+   "date": "n.d.",
+   "link": "https://volksswitch.org/index.php/volks-devices/bliss-tactile-symbols/why-not-leverage-a-standard-symbol-set/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "AAC & Motor Planning: Building Automaticity for Communication",
+   "publisher": "AAC Language Lab",
+   "date": "n.d.",
+   "link": "https://aaclanguagelab.com/assets/uploads/AAC_and_Motor_Planning_for_Readtopia.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "AACademics: December 2018 (summary of Thistle et al., consistent symbol location and motor learning)",
+   "publisher": "NWACS",
+   "date": "2018-12",
+   "link": "https://nwacs.info/aac/research/consistent-symbol-location-affects-motor-learning-preschoolers-without-disabilities/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Episode 280: Recast: Chris Klein: The Importance of Motor Planning",
+   "publisher": "Talking With Tech",
+   "date": "n.d.",
+   "link": "https://www.talkingwithtech.org/episodes/recast-motor-planning",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Core Vocabulary in AAC: An SLP Guide to First Words",
+   "publisher": "QuickTalker Freestyle",
+   "date": "n.d.",
+   "link": "https://quicktalkerfreestyle.com/blog/aac-core-vocabulary-slp-guide/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Journal of Developmental and Physical Disabilities article on visual scene displays (DOI 10.1007/s10882-024-10000-w)",
+   "publisher": "Springer",
+   "date": "n.d.",
+   "link": "https://link.springer.com/article/10.1007/s10882-024-10000-w",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Predictive Anchoring: A Novel Interaction to Support Contextualized Suggestions for Grid Displays",
+   "publisher": "arXiv",
+   "date": "2024-08",
+   "link": "https://arxiv.org/pdf/2408.11140",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Should I try text-based AAC?",
+   "publisher": "AssistiveWare",
+   "date": "n.d.",
+   "link": "https://www.assistiveware.com/learn-aac/should-i-try-text-based-aac",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Overcoming barriers to literacy for individuals who need or use AAC: lived experiences, key research findings, and future directions",
+   "publisher": "Augmentative and Alternative Communication (Taylor & Francis)",
+   "date": "2025",
+   "link": "https://www.tandfonline.com/doi/full/10.1080/07434618.2025.2502032",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Phonics, spelling, and keyboards for children who cannot speak",
+   "publisher": "AssistiveWare",
+   "date": "n.d.",
+   "link": "https://www.assistiveware.com/blog/teaching-phonics-children-cannot-speak",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "The Changing World of Augmentative and Alternative Communication (AAC): Examining Three Realities Faced by Today's AAC Provider",
+   "publisher": "ResearchGate (journal article)",
+   "date": "n.d.",
+   "link": "https://www.researchgate.net/publication/327117618_The_Changing_World_of_Augmentative_and_Alternative_Communication_AAC_Examining_Three_Realities_Faced_by_Today's_AAC_Provider",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Get Real With Visual Scene Displays",
+   "publisher": "The ASHA Leader",
+   "date": "2014-06",
+   "link": "https://leader.pubs.asha.org/doi/10.1044/leader.APP.19062014.34",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Designing effective AAC displays for individuals with developmental or acquired disabilities: State of the science and future research directions",
+   "publisher": "Oregon Health & Science University (hosted PDF)",
+   "date": "n.d.",
+   "link": "https://www.ohsu.edu/sites/default/files/2019-05/Designing%20effective%20AAC%20displays%20for%20individuals%20with%20developmental%20or%20acquired%20disabilities%20State%20of%20the%20science%20and%20future%20research%20directions.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Terms of Use - Aula abierta de ARASAAC",
+   "publisher": "ARASAAC (Government of Aragon)",
+   "date": "n.d.",
+   "link": "https://aulaabierta.arasaac.org/en/terms-of-use",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "ARASAAC repository",
+   "publisher": "Open Symbols",
+   "date": "n.d.",
+   "link": "https://www.opensymbols.org/repositories/arasaac",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Methods to integrate a language model with semantic information for a word prediction component",
+   "publisher": "arXiv",
+   "date": "2008-01",
+   "link": "https://arxiv.org/pdf/0801.4716",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Effect of translucency on transparency and symbol learning for children with and without cerebral palsy",
+   "publisher": "ScienceDirect (Research in Developmental Disabilities)",
+   "date": "n.d.",
+   "link": "https://www.sciencedirect.com/science/article/abs/pii/S0891422211001326",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 4. Today we look at the pictures and words on an AAC page, and how the page is arranged."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Symbol sets and how pages are laid out"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "By the end you should be able to name the main kinds of symbol. You should also be able to say why a page's layout can make it easy or hard to use."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Kinds of symbol | How easy a symbol is to guess | Well-known symbol sets | Grids and visual scenes | Motor planning | Spelling and word prediction | Personalising"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, what is a symbol? It is something that stands for something else. The thing it stands for is called its referent."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Symbol = stands for something else"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In AAC, what is a referent?",
+    "right": "The thing that the symbol stands for",
+    "wrong": [
+     "The device that speaks the message",
+     "The person who made the symbol",
+     "The page the symbol sits on"
+    ],
+    "why": "A symbol is something that stands for something else, and that something else is its referent."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Symbols come in many kinds. They can be real objects, photographs, drawings or facial expressions. They can also be small picture icons, or written words made of letters."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Real objects | Photographs | Line drawings | Icons (small picture symbols) | Written words (letters)"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Is a written word such as DOG a symbol?",
+    "right": "Yes. The letters are an alphabet-based symbol that stands for the word.",
+    "wrong": [
+     "No. Only pictures count as symbols.",
+     "No. Written words are only for people who can speak.",
+     "Yes, but only when it sits next to a photo."
+    ],
+    "why": "Alphabet-based writing (orthography) is listed alongside drawings and photographs as a kind of symbol."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a useful idea: how easy is a symbol to guess? Symbols sit on a line, from very easy to guess to not guessable at all."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Iconicity: a line from easy-to-guess to arbitrary"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "At the easy end are transparent symbols. They look like the thing they stand for, so you can guess them. A photo of a dog for DOG is one example."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A clear colour photograph of a brown dog sitting on grass, labelled 'transparent'."
+   },
+   "cite": [
+    "s2",
+    "s4"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which symbol is most likely to be transparent for the word DOG?",
+    "right": "A clear photo of a dog",
+    "wrong": [
+     "A tiny abstract squiggle",
+     "A plain grey square",
+     "The letters D-O-G, for a person who cannot read"
+    ],
+    "why": "Transparent symbols look like their referent, so almost anyone can guess them. A photo of a dog is the example given."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In the middle are translucent symbols, like a sparse line drawing of a dog. You may not guess it cold, but it makes sense once someone tells you."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A simple black outline of a dog made of a few lines, labelled 'translucent'."
+   },
+   "cite": [
+    "s2",
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "At the far end are opaque symbols. They have no obvious visual link to their meaning. Little words like IT, THAT and HER are often like this, and so are some verbs such as HELP or ALL DONE."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Easy to picture: dog, cup, apple | Hard to picture (often opaque): it, that, her, help, all done"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which word is most likely to be given an opaque symbol?",
+    "right": "IT",
+    "wrong": [
+     "DOG",
+     "CUP",
+     "BANANA"
+    ],
+    "why": "Pronouns such as IT, THAT and HER are hard to draw, so they are often given arbitrary symbols. Concrete things like a dog are easy to picture."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Opaque is not bad. A symbol can be learned by use, just as we learn that letters stand for sounds. It just needs more teaching and practice."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Translucent symbols are often described in terms of how learnable they are."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A helpful trick: put the written word with the symbol. Partners who do not know the symbol can then read it. That matters most when the device has no voice."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A button showing a line drawing of a cup, with the word 'drink' printed above it."
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why show the written word next to a symbol?",
+    "right": "It helps communication partners learn and understand the symbol",
+    "wrong": [
+     "It makes the symbol more opaque",
+     "It means the person must be able to read",
+     "It replaces the need for any voice"
+    ],
+    "why": "Showing the word with the symbol helps partners interpret it, especially when no voice output is available."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Symbols are gathered into sets, and sets differ in style, size, cost and licence. Let's meet a few. The Picture Communication Symbols, or PCS, are colour and black-and-white drawings."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Symbol set = a family of symbols in one style"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "PCS began with Mayer-Johnson and are now owned by Tobii Dynavox. There is a core library of about 5,000 symbols, and 80,000 or more in total once the add-on libraries are counted."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "about 5,000 core PCS symbols (80,000+ with add-on libraries)"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Widgit Symbols come from the UK and were once called Rebus. They were designed to support literacy. They follow rules, so they get easier to learn once you know the rules."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "PCS: drawings, now owned by Tobii Dynavox | Widgit: rule-based, built to support reading"
+   },
+   "cite": [
+    "s7",
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Cost and licence matter here. Widgit is protected by copyright. One UK page listed Widgit Online for home users at £6 a month or £60 a year. Prices change, so always check."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Widgit: copyright protected, paid subscription or licence | Prices change: check the seller"
+   },
+   "cite": [
+    "s8",
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Some sets are free. ARASAAC is made by the Government of Aragon in Spain, drawn by Sergio Palao. It is under a Creative Commons licence called BY-NC-SA."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "ARASAAC: CC BY-NC-SA 4.0"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In plain words, that licence means you give credit and you share your changes under the same licence. You do not use the symbols commercially. Open Symbols lists over 12,900 ARASAAC symbols."
+   },
+   "show": {
+    "kind": "list",
+    "text": "BY: give credit | NC: no commercial use | SA: share changes under the same licence"
+   },
+   "cite": [
+    "s23",
+    "s24"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which statement about ARASAAC is true?",
+    "right": "It is free to use if you credit it and do not use it commercially",
+    "wrong": [
+     "It must be bought separately for each device",
+     "It has no conditions at all",
+     "It can only be used in Spain"
+    ],
+    "why": "Its BY-NC-SA licence requires credit and share-alike, and it forbids commercial use. It does not require payment."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "There are others too. SymbolStix is sold by subscription and sits inside apps such as Proloquo2Go. Blissymbols are a different idea, built from shapes. One advocate describes them as free to use, with more than 6,000 official symbols."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "SymbolStix: yearly subscription, inside some apps | Blissymbols: built from shapes, curated official set"
+   },
+   "cite": [
+    "s7",
+    "s10"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the page itself. The most common layout is a grid: symbols in rows and columns. Each button speaks a word when you touch it. A grid fits lots of words on one screen."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A tablet screen with a neat grid of 6 columns and 4 rows of small picture buttons, each with a word above."
+   },
+   "cite": [
+    "s16",
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The trade-off is that a grid can feel cluttered for someone just starting. The words are also pulled out of any real-life setting. But grids cut down the page-turning for people with big vocabularies."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Grid strengths: many words at once, less navigating | Grid challenges: visual clutter, words without context"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is one challenge of grid displays for beginning communicators?",
+    "right": "Visual clutter, and words separated from real-life context",
+    "wrong": [
+     "They can only hold five words",
+     "They cannot speak aloud",
+     "They only work for people who can read"
+    ],
+    "why": "Grids offer many words at once, but clutter and the lack of context can be hard for beginners."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The other main layout is a visual scene. It is a photo of a real situation, like a playground. Touch part of the photo, a hotspot, and the device speaks a message."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A photo of a child on a swing at a park. A glowing circle on the swing is labelled 'hotspot: I want to swing'."
+   },
+   "cite": [
+    "s1",
+    "s15"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Visual scenes may be easier to learn for beginning communicators, such as young children. They may also help people with acquired needs, like aphasia. They keep the activity in view and cut down on page-hunting."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Real photo of a meaningful moment | Fewer pages to hunt through | Can be mixed with a grid (hybrid)"
+   },
+   "cite": [
+    "s1",
+    "s15"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is a hotspot on a visual scene?",
+    "right": "A part of the photo you touch to make the device speak",
+    "wrong": [
+     "A button that turns the device off",
+     "A warning that the battery is low",
+     "A type of switch worn on the head"
+    ],
+    "why": "In a visual scene display, the words for the scene are pre-programmed onto hotspots in the picture."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a big idea: motor planning. It means learning and repeating the same movement to reach a word, until it becomes automatic, like typing or riding a bike."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Motor planning = movements that become automatic"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "For that to work, a word has to stay where it is. If the layout keeps changing, the person has to search by eye every time. If the word stays put, the hand can learn the path."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two screens side by side. Left: the word 'go' in the same top-left square on both pages. Right: 'go' jumping to a different square each time, with a question mark."
+   },
+   "cite": [
+    "s11",
+    "s14"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A small study with preschoolers without disabilities found that keeping symbols in the same place supported motor learning. It was only a study of children who were not AAC users, so it is a hint, not a promise."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Research hint: same place, easier to find."
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Speed matters too. If finding a button takes too long, a person may forget what they meant to say. Or they may say less. That is why many therapists add new words around a steady core rather than moving things."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Keep learned words where they are | Add new words around the core | Avoid changing button size once learned"
+   },
+   "cite": [
+    "s13",
+    "s14",
+    "s11"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A person's device needs new words. What best supports motor planning?",
+    "right": "Add the new words around the stable core, leaving learned words where they are",
+    "wrong": [
+     "Shuffle every button to keep things fresh",
+     "Shrink all the buttons to squeeze more in",
+     "Move the favourite words to a new page each month"
+    ],
+    "why": "Consistent placement lets movements become automatic. Many SLPs add new words around a stable core rather than rearranging it."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now think of people who can read and write. Many prefer text-based AAC: spelling, plus pre-written messages. Most of these systems add word prediction, which suggests words as you type."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A typing screen with the letters 'hel' typed and three suggestion buttons below: 'help', 'hello', 'helping'."
+   },
+   "cite": [
+    "s17",
+    "s25"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Spelling is powerful because it lets someone say any word, even one with no symbol. Literacy gives open-ended communication. People who do not read can still communicate well with symbols."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Spelling: any word, any time | Symbols: fast and clear for people who do not read"
+   },
+   "cite": [
+    "s18",
+    "s19"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "For adults, this matters. Someone who reads well but sometimes loses speech may still find symbols useful. They can remind the person of phrases they could say."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Reading well and still liking symbols is normal."
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "An adult reads and writes well but sometimes loses speech. What might suit them?",
+    "right": "Text-based AAC with word prediction, with symbols available if they help",
+    "wrong": [
+     "Symbols only, because they cannot read",
+     "Nothing, because they can read",
+     "A grid with no words on it"
+    ],
+    "why": "Many people who read prefer text-based AAC with word prediction. Some also find symbols useful at times, especially if they lose speech now and then."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last idea: personalising. Layout, symbol type, symbol size and how many symbols fit are all matched to the person. Their eyesight, understanding, senses and movement all matter."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Eyesight | Communication and thinking skills | Senses | Movement and control"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Personalised photos of meaningful activities can work well on scenes. For someone with low vision, black-and-white, line-drawn or high-contrast symbols may be easier to see."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Meaningful photos of the person's own life | High-contrast, simple symbols for low vision"
+   },
+   "cite": [
+    "s22",
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "A person has low vision. What might make symbols easier for them?",
+    "right": "Black-and-white, line-drawn or high-contrast symbols",
+    "wrong": [
+     "Very small, pale pastel symbols",
+     "Symbols that all look the same colour",
+     "Hiding the symbols and using only a grid line"
+    ],
+    "why": "People with visual impairments may find black and white, line drawings or high-contrast colours easier."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So there is no one best symbol set or layout. Ask what suits this person today, and try things. An AAC evaluation with a speech-language pathologist is the natural place to settle grid size and access."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ask a speech-language pathologist (SLP)"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To recap: symbols run from transparent to opaque. Sets differ in style and licence. Grids and scenes each help in different ways. A word that stays in place helps motor planning. Spelling can unlock any word. This class is general learning, not clinical advice. Next time we look at switches and scanning."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Transparent to opaque | Sets differ in style and licence | Grids and scenes | Steady word positions | Spelling and prediction | Personalise"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Symbol and referent",
+   "links": [
+    "[[core and fringe vocabulary]]",
+    "[[iconicity: transparent, translucent, opaque]]"
+   ]
+  },
+  {
+   "topic": "Iconicity: transparent, translucent, opaque",
+   "links": [
+    "[[symbol sets]]",
+    "[[symbol plus written word]]"
+   ]
+  },
+  {
+   "topic": "Symbol sets (PCS, Widgit, SymbolStix, ARASAAC, Blissymbols)",
+   "links": [
+    "[[licensing and cost]]",
+    "[[personalising symbols]]"
+   ]
+  },
+  {
+   "topic": "Grid displays and visual scene displays",
+   "links": [
+    "[[motor planning]]",
+    "[[hybrid displays]]"
+   ]
+  },
+  {
+   "topic": "Motor planning",
+   "links": [
+    "[[core and fringe vocabulary]]",
+    "[[switches and scanning]]",
+    "[[eye gaze and other access methods]]"
+   ]
+  },
+  {
+   "topic": "Spelling and word prediction",
+   "links": [
+    "[[literacy and AAC]]",
+    "[[text-based AAC]]"
+   ]
+  },
+  {
+   "topic": "Getting professional help",
+   "links": [
+    "[[AAC evaluation]]",
+    "[[speech-language pathologists]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "The most guessable (transparent) symbols are always the best choice.",
+   "other_view": "Guessability is useful, but one review says common assumptions about symbol transparency and display are not supported by data and can limit users. One study paper asks whether it is worth much effort to explore iconicity before choosing symbols. A symbol's meaning can also be learned from where it sits or from what happens when it is used.",
+   "cite": [
+    "s20",
+    "s26",
+    "s4"
+   ]
+  },
+  {
+   "claim": "Visual scenes are the best starting point for beginning communicators.",
+   "other_view": "Scenes may be easier to learn than grids for beginners, but they have limited support for complex, flexible language. Grids still dominate AAC technology and are what SLPs choose most often. Many people use hybrid pages that combine both.",
+   "cite": [
+    "s1",
+    "s21",
+    "s16"
+   ]
+  },
+  {
+   "claim": "Start with a large grid so that word positions never have to change.",
+   "other_view": "Chris Klein argues for starting with a large vocabulary so the motor plan is not disturbed as pages grow. One SLP guide instead suggests choosing a grid size from the person's own visual and motor profile and then keeping it consistent.",
+   "cite": [
+    "s13",
+    "s14"
+   ]
+  },
+  {
+   "claim": "Blissymbols are a free, well-curated and well-studied option.",
+   "other_view": "The page that says this sits within a section about Bliss tactile symbols, so treat it as an advocate's view. A journal article notes that Blissymbols are rarely adopted in AAC systems. Many people use sets like PCS and Widgit, which are widespread in AAC and school products.",
+   "cite": [
+    "s10",
+    "s26",
+    "s7"
+   ]
+  }
+ ]
+}

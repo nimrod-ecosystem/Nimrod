@@ -1,0 +1,596 @@
+{
+ "about": {
+  "title": "The AAC toolbox: from gestures to speech-generating devices",
+  "course": "assistive-tech-and-aac",
+  "class_n": 2,
+  "audience": [
+   "adult"
+  ],
+  "minutes": 25,
+  "length_note": "About 25 minutes as planned. There are eight topics, so each gets short steps with a check question after the ideas it tests. This is general information, not clinical advice. A speech-language pathologist (SLP) can advise on any one person."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Augmentative and Alternative Communication (AAC)",
+   "publisher": "American Speech-Language-Hearing Association (ASHA), National Joint Committee page",
+   "date": "n.d.",
+   "link": "https://www.asha.org/njc/aac/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Augmentative and Alternative Communication (AAC) - Practice Portal",
+   "publisher": "American Speech-Language-Hearing Association (ASHA)",
+   "date": "n.d.",
+   "link": "https://www.asha.org/practice-portal/professional-issues/augmentative-and-alternative-communication/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Aided augmentative and alternative communication intervention for adults with developmental disabilities: a scoping review",
+   "publisher": "PMC (National Library of Medicine)",
+   "date": "n.d.",
+   "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC13202668/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Augmentative and Alternative Communication",
+   "publisher": "Craig Hospital",
+   "date": "n.d.",
+   "link": "https://craighospital.org/inpatient/assistive-technology/alternative-communication",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "FYI: A Guide to Voice Banking Services",
+   "publisher": "The ALS Association",
+   "date": "n.d.",
+   "link": "https://www.als.org/navigating-als/resources/fyi-guide-voice-banking-services",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Message and Voice Banking",
+   "publisher": "PrAACtical AAC",
+   "date": "n.d.",
+   "link": "https://praacticalaac.org/praactical/message-and-voice-banking/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Voice Banking & Message Banking",
+   "publisher": "Minnesota State University Moorhead, Regional Assistive Technology Center",
+   "date": "n.d.",
+   "link": "https://www.mnstate.edu/academics/colleges-schools/cehs/speech-clinic/ratc/voice-message-banking",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Do's and Don'ts of AAC - Multimodal communication",
+   "publisher": "AssistiveWare",
+   "date": "n.d.",
+   "link": "https://www.assistiveware.com/blog/dos-and-donts-aac-multimodal",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Low tech communication strategies - Low tech partner assisted scanning",
+   "publisher": "Sussex Community NHS Foundation Trust",
+   "date": "n.d.",
+   "link": "https://www.sussexcommunity.nhs.uk/patients-and-visitors/resources/patient-resources/low-tech-communication-strategies/low-tech-partner-assisted-scanning",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Augmentative and Alternative Communication (AAC): Tools That Aid Aphasia",
+   "publisher": "Adler Aphasia Center",
+   "date": "n.d.",
+   "link": "https://adleraphasiacenter.org/aac-tools-for-aphasia/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "The Impact of Augmentative and Alternative Communication Intervention on the Speech Production of Individuals With Developmental Disabilities: A Research Review (Millar, Light et al., 2006), evidence map summary",
+   "publisher": "ASHA Evidence Maps",
+   "date": "2006",
+   "link": "https://apps.asha.org/EvidenceMaps/Articles/ArticleSummary/48f75b29-1b15-4e0b-8e36-f65092d0d145",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "AAC devices: what they are, who needs them, and how to get one",
+   "publisher": "Little Words",
+   "date": "n.d.",
+   "link": "https://littlewords.ai/blog/aac-devices",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Can you use an iPad for AAC devices?",
+   "publisher": "AAC Plus",
+   "date": "n.d.",
+   "link": "https://blog.aac-plus.com/can-you-use-an-ipad-for-aac-devices/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Augmentative and Alternative Communication (AAC)",
+   "publisher": "Association for Science in Autism Treatment",
+   "date": "n.d.",
+   "link": "https://asatonline.org/for-parents/learn-more-about-specific-treatments/augmentative-communication/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Low-tech & High-tech AAC",
+   "publisher": "Liberator Ltd",
+   "date": "n.d.",
+   "link": "https://liberator.net.au/articles/low-tech-high-tech-aac/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Voice, identity and ALS/MND",
+   "publisher": "Smartbox",
+   "date": "n.d.",
+   "link": "https://smartboxaac.com/news/voice-and-identity-in-als-mnd-2/",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back. In class 1 we met AAC: many ways to communicate that add to speech or stand in for it. Today we open the toolbox and look at what is inside."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The AAC toolbox"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The first split is unaided or aided. Unaided AAC uses only your own body. That means gestures, facial expressions and manual signs."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Unaided = your body only"
+   },
+   "cite": [
+    "s1",
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Everyday examples: a nod for yes, a thumbs-up, a raised eyebrow. It needs no equipment, so it is always with you. But the listener has to be able to read it, and the body has to be able to make it."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two friends at a table. One nods and smiles, and the other smiles back."
+   },
+   "cite": [
+    "s1",
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does unaided AAC need?",
+    "right": "Only the person's own body",
+    "wrong": [
+     "A tablet that speaks aloud",
+     "A printed book of pictures",
+     "A battery-powered button"
+    ],
+    "why": "Unaided AAC means gesture, facial expression and sign, so nothing outside the body is needed."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Sounds count too. AAC works with any speech or vocalising a person already has. A hum, a word attempt or a happy squeal can all carry meaning."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Gesture|Facial expression|Manual sign|Vocalising and word attempts"
+   },
+   "cite": [
+    "s1",
+    "s8"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now aided AAC. Aided means using something outside the body, a tool or a device. It might be a sheet of paper or an electronic gadget."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Aided = a tool or device"
+   },
+   "cite": [
+    "s14",
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Start with paper. A picture board is a page of pictures or words you point to. Collect many pages together and you have a communication book."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A laminated page with a grid of simple pictures: drink, food, toilet, help, more, stop. A finger rests on the picture for drink."
+   },
+   "cite": [
+    "s4",
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "An alphabet board lists the letters. A person points to them one at a time to spell out words. It is simple, and it can say almost anything, though slowly."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A card printed with the alphabet in rows, with a pencil tip resting on one letter."
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Some people cannot point at all. In partner-assisted scanning, the helper offers choices one at a time. The person signals yes with an agreed move, such as a blink or a nod."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Helper offers choices in order|Person signals yes (blink, nod, hand raise)|Helper repeats the message to check"
+   },
+   "cite": [
+    "s2",
+    "s9"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A good habit from one NHS guide: once the person says yes to a line, the helper reads the whole message back to check it was understood."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Read it back to check"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which of these is aided AAC?",
+    "right": "Pointing to pictures in a communication book",
+    "wrong": [
+     "A smile",
+     "A wave hello",
+     "A nod for yes"
+    ],
+    "why": "A communication book is a tool outside the body. The other three use only the body, so they are unaided."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next, a second split. Aided AAC is often sorted by how much technology it uses. Low-tech means basic equipment, like paper and pen, a whiteboard or a picture book."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Low-tech = basic equipment, no speech output"
+   },
+   "cite": [
+    "s3",
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In between sits mid-tech. These are simple battery-powered devices. You press a button and it plays a message someone recorded earlier."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A large round button on a table. A hand presses it and a speaker icon shows a recorded message playing."
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "High-tech means computer-based speech. That can be a tablet or phone running an AAC app. It can also be a dedicated speech-generating device, built just for communication."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "High-tech = computer-based speech"
+   },
+   "cite": [
+    "s4",
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "With a speech-generating device you pick symbols or type text, and the device speaks the words aloud. Low-tech tools still need a partner to read the message."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Low-tech: paper, boards, books; the partner reads the message|High-tech: the device speaks it; tablets, phones or dedicated devices"
+   },
+   "cite": [
+    "s4",
+    "s10"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which of these is a high-tech AAC tool?",
+    "right": "A tablet app that speaks the symbols or words you choose",
+    "wrong": [
+     "A printed alphabet board",
+     "A paper communication book",
+     "A nod and a smile"
+    ],
+    "why": "High-tech AAC produces speech from a computer-based system. The other three are low-tech or unaided."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Text-to-speech is one high-tech feature. You type, and the device reads your words aloud in a synthetic voice. It suits people who can type or spell but cannot speak clearly."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Text-to-speech: type it, hear it"
+   },
+   "cite": [
+    "s10",
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Some people know their speech will fade, for example with ALS. Voice banking records lots of their speech, so a computer can build a synthetic voice that sounds like them."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Voice banking = a synthetic voice made from your recordings"
+   },
+   "cite": [
+    "s6",
+    "s5",
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Message banking is different. You record the actual phrases that matter, in your own voice, to play back later. A phrase like I love you keeps your real voice."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Message banking = your real recordings, saved to play back"
+   },
+   "cite": [
+    "s5",
+    "s6",
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Banking works best early, while the voice is strongest. It is often talked about with ALS, but it matters for other diagnoses too. An SLP can help with timing and choices."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Voice banking: builds a synthetic voice|Message banking: saves real recordings|Best started early|Not only for ALS"
+   },
+   "cite": [
+    "s5",
+    "s16",
+    "s7"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is the difference between voice banking and message banking?",
+    "right": "Voice banking builds a synthetic voice from many recordings. Message banking saves your own recordings of chosen messages.",
+    "wrong": [
+     "Voice banking is for paper boards and message banking is for tablets.",
+     "They are two names for exactly the same thing.",
+     "Message banking builds a synthetic voice and voice banking saves single phrases."
+    ],
+    "why": "Voice banking makes a computer voice that sounds like you. Message banking keeps real recordings of the phrases you choose."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So far we have looked at tools one by one. In real life, people mix them. This is called multimodal communication: using every mode available."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Multimodal = many methods together"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "For example, someone might say a word on their device while pointing at the thing they want. Another person might sign with family at home and use a picture system or device with other people."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Device plus pointing|Sign at home, device elsewhere|Gesture, sound and pictures together"
+   },
+   "cite": [
+    "s8",
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why mix them? People often pick the fastest method for the moment. They may fall back on gestures at times, or use the device when gestures are not understood. All of it is communication and deserves a reply."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Every method counts"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why do many AAC users use several methods together?",
+    "right": "Different methods work best in different moments and with different people.",
+    "wrong": [
+     "Because any single method always fails.",
+     "Because they have not been taught properly.",
+     "Because professionals ask them to stop speaking."
+    ],
+    "why": "People choose the quickest, most useful mode in the moment, and all modes are valued."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That brings us to why no single tool suits everyone. People differ in eyesight, movement, language and daily life. SLPs match a tool's features to the person, and those needs can change over time."
+   },
+   "show": {
+    "kind": "list",
+    "text": "What can the person see?|How can they move?|What language do they use?|Where and with whom do they talk?|Needs change over time"
+   },
+   "cite": [
+    "s2",
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why is there no single AAC tool that suits everyone?",
+    "right": "People differ in what they can see, how they move, the language they use and where they communicate.",
+    "wrong": [
+     "Most AAC tools are poor quality.",
+     "Only high-tech tools work, and they cost too much.",
+     "Everyone should start with the same tool and swap it later."
+    ],
+    "why": "A tool has to match the individual's skills, needs and situations, and those change over time."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To recap: unaided uses the body, aided uses a tool. Aided runs from low-tech to high-tech. Text-to-speech and banking help with voice, and most people use many methods. Next class: core and fringe vocabulary."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Unaided: body only|Aided: low-tech, mid-tech, high-tech|Text-to-speech and banking|Multimodal is normal|No one tool fits all|Next: core and fringe vocabulary"
+   },
+   "cite": [
+    "s1",
+    "s4"
+   ],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Unaided and aided AAC",
+   "links": [
+    "[[What assistive technology and AAC are]]",
+    "[[Switches and scanning]]"
+   ]
+  },
+  {
+   "topic": "Low-tech, mid-tech and high-tech tools",
+   "links": [
+    "[[Symbol sets and how pages are laid out]]",
+    "[[Eye gaze and other ways to access a device]]"
+   ]
+  },
+  {
+   "topic": "Text-to-speech, voice banking and message banking",
+   "links": [
+    "[[A short history of AAC]]",
+    "[[How to support a communicator]]"
+   ]
+  },
+  {
+   "topic": "Multimodal communication",
+   "links": [
+    "[[How to support a communicator]]",
+    "[[Core and fringe vocabulary]]"
+   ]
+  },
+  {
+   "topic": "Choosing a tool with an SLP",
+   "links": [
+    "[[Getting professional help and what to do next]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Using AAC helps people communicate and does not hold back speech.",
+   "other_view": "Many families worry that a device or board will stop someone from learning to talk. One research review found only preliminary evidence, but that evidence suggests AAC does not prevent speech and may support it. The same review says more research is needed, so the question is not fully settled.",
+   "cite": [
+    "s11"
+   ]
+  },
+  {
+   "claim": "A tablet with an AAC app can work as a high-tech tool.",
+   "other_view": "Experts and suppliers weigh this differently. Apps and tablets cost less, are portable and are easy to update. Dedicated devices are usually tougher and offer built-in mounting and access options such as eye gaze. They are also more likely to be covered by insurance as medical equipment. The best choice depends on the person, and an SLP can advise.",
+   "cite": [
+    "s12",
+    "s13"
+   ]
+  },
+  {
+   "claim": "The labels no-tech, low-tech and high-tech are fixed.",
+   "other_view": "Sources sort things differently. ASHA places manual signs under unaided AAC. One supplier lists sign language among low-tech systems. Some sources use three groups (low, mid, high) and others just two. Treat the labels as handy guides, not strict rules.",
+   "cite": [
+    "s1",
+    "s15",
+    "s3",
+    "s4"
+   ]
+  }
+ ]
+}

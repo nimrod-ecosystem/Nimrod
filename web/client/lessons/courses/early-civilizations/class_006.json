@@ -1,0 +1,1562 @@
+{
+ "about": {
+  "title": "Egypt III: Trade, Everyday Life and Neighbours",
+  "course": "early-civilizations",
+  "class_n": 6,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 35,
+  "length_note": "About 35 minutes. The class has about 40 short steps and 14 quick checks. It covers four topics and five sites that each need a built date and a found date. If you are short on time, do the Kerma step and the Uluburun steps in a second sitting. Every step still makes sense without them."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Daily Life in Ancient Egypt",
+   "publisher": "The Archaeologist",
+   "date": "n.d.",
+   "link": "https://www.thearchaeologist.org/blog/daily-life-in-ancient-egypt",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Daily Life in Ancient Egypt",
+   "publisher": "Ancient History Sites",
+   "date": "n.d.",
+   "link": "https://www.ancient-history-sites.com/egyptian/daily-life/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Daily Life in Ancient Egypt",
+   "publisher": "Ancient Egypt Online",
+   "date": "n.d.",
+   "link": "https://www.ancient-egypt-online.com/daily-life-in-ancient-egypt.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Ancient Egypt Daily Life of the Egyptians",
+   "publisher": "Book Units Teacher",
+   "date": "n.d.",
+   "link": "https://bookunitsteacher.com/ancient_egypt/egyptiandailylife.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Daily Life of Farmers in Ancient Egypt History",
+   "publisher": "Visit Egypt",
+   "date": "n.d.",
+   "link": "https://visitegypt.com/news-blog/daily-life-of-farmers-in-ancient-egypt/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Ancient Egyptian Slavery (book chapter)",
+   "publisher": "Springer",
+   "date": "n.d.",
+   "link": "https://link.springer.com/chapter/10.1007/978-3-031-13260-5_3",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Taxes in Ancient Egypt: Types, History, Collection, Punishments",
+   "publisher": "Facts and Details",
+   "date": "n.d.",
+   "link": "https://africame.factsanddetails.com/article/entry-1173.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "In Ancient Egypt, People Paid to Become Temple Servants",
+   "publisher": "Smithsonian Magazine",
+   "date": "n.d.",
+   "link": "https://www.smithsonianmag.com/smart-news/in-ancient-egypt-people-paid-to-become-temple-servants-674595/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Deir el-Medina",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/Deir_el-Medina/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Deir el-Medina strikes",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Deir_el-Medina_strikes",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Overlapping Circles Grid Drawn with Compass and Straightedge on an Egyptian Artifact of 14th Century BC",
+   "publisher": "arXiv",
+   "date": "n.d.",
+   "link": "https://arxiv.org/pdf/1603.08536",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Ancient Egyptian Trade",
+   "publisher": "Lumen Learning (SUNY HCCC World Civilization)",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/suny-hccc-worldcivilization/chapter/ancient-egyptian-trade/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Trade in Ancient Egypt",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/article/1079/trade-in-ancient-egypt/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Ancient Egyptian Trade: 7 Amazing Facts About Goods & Routes",
+   "publisher": "Egypt United Tours",
+   "date": "n.d.",
+   "link": "https://egyptunitedtours.com/ancient-egypt-economy-trade/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Ancient Egyptian Economy: 10 Powerful Facts About Its Wealth",
+   "publisher": "Egypt United Tours",
+   "date": "n.d.",
+   "link": "https://egyptunitedtours.com/ancient-egypt-economy/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Trade in Ancient Egypt",
+   "publisher": "Facts and Details",
+   "date": "n.d.",
+   "link": "https://africame.factsanddetails.com/article/entry-209.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Ancient Egyptian Trade: The Barter System",
+   "publisher": "Egypt Fun Tours",
+   "date": "n.d.",
+   "link": "https://egyptfuntours.com/blog/ancient-egyptian-trade-merchants/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Middle Kingdom Egypt and Nubia",
+   "publisher": "University College London, Digital Egypt",
+   "date": "2002",
+   "link": "https://www.ucl.ac.uk/museums-static/digitalegypt/nubia/mk.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "The Kingdom of Kush",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/Kush/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Kerma Kingdom Rules Nubia",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/anthropology/kerma-kingdom-rules-nubia/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Egypt–Mesopotamia relations",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Egypt%E2%80%93Mesopotamia_relations",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Gebel el-Arak Knife",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Gebel_el-Arak_Knife",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "The Materiality and 'Enchantment' of the Gebel el-Arak Knife and the Gerzean Flint Blade (Liebau Library Prize paper)",
+   "publisher": "UC Berkeley, eScholarship",
+   "date": "n.d.",
+   "link": "https://escholarship.org/content/qt8bx0r2nr/qt8bx0r2nr.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "The Hierakonpolis painting and the Gebel el Arak knife (blog post)",
+   "publisher": "Artistic licence or why i trust no one (blog)",
+   "date": "2018-04",
+   "link": "http://artisticlicenseorwhyitrustnoone.blogspot.com/2018/04/the-hierakonpolis-painting-and-gebel-el.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Monumental Record",
+   "publisher": "History Today",
+   "date": "2022-01",
+   "link": "https://www.historytoday.com/archive/history-matters/monumental-record",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "This ancient diary reveals how Egyptians built the Great Pyramid",
+   "publisher": "National Geographic",
+   "date": "n.d.",
+   "link": "https://www.nationalgeographic.com/premium/article/red-sea-scrolls-pyramids-egypt",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "Diary of Merer",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Diary_of_Merer",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "Ancient Egyptian Logbook of Inspector Who Helped Construct the Great Pyramid Revealed",
+   "publisher": "Ancient Origins",
+   "date": "n.d.",
+   "link": "https://www.ancient-origins.net/news-history-archaeology/ancient-egyptian-logbook-inspector-who-helped-construct-great-pyramid-020905",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "The Wadi al-Jarf Papyri (Diary of Merer): An Analytical Perspective on Text, Context, and Interpretation",
+   "publisher": "Academia.edu",
+   "date": "n.d.",
+   "link": "https://www.academia.edu/165255517/The_Wadi_al_Jarf_Papyri_Diary_of_Merer_An_Analytical_Perspective_on_Text_Context_and_Interpretation",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "Kahun",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/place/Kahun",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s31",
+   "title": "El Lahun",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/El_Lahun",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s32",
+   "title": "Uluburun Shipwreck: Discovery, Cargo, and What It Reveals About Bronze Age Trade",
+   "publisher": "Bodrum Museum",
+   "date": "n.d.",
+   "link": "https://www.bodrum-museum.com/uluburun-shipwreck/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s33",
+   "title": "World's oldest shipwreck reveals incredible cargo",
+   "publisher": "HeritageDaily",
+   "date": "2013-01",
+   "link": "https://www.heritagedaily.com/2013/01/worlds-oldest-shipwreck-reveals-incredible-cargo/71101",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s34",
+   "title": "In Square Circle: Geometric Knowledge of the Indus Civilization",
+   "publisher": "arXiv",
+   "date": "n.d.",
+   "link": "https://arxiv.org/pdf/1112.6232",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s35",
+   "title": "17: Early Indus Valley Civilizations",
+   "publisher": "Humanities LibreTexts",
+   "date": "n.d.",
+   "link": "https://human.libretexts.org/Workbench/Intro_to_Art/17:_Early_Indus_Valley_Civilizations",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s36",
+   "title": "The Indus River Valley Civilizations",
+   "publisher": "History Guild",
+   "date": "n.d.",
+   "link": "https://historyguild.org/the-indus-river-valley-civilizations/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s37",
+   "title": "Anyang",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/place/Anyang-China",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s38",
+   "title": "Dong Zuobin",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Dong_Zuobin",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s39",
+   "title": "Micro-Raman spectroscopy of Shang oracle bone inscriptions",
+   "publisher": "ScienceDirect (journal abstract)",
+   "date": "n.d.",
+   "link": "https://www.sciencedirect.com/science/article/abs/pii/S2352409X2100122X",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s40",
+   "title": "Yin Xu Shang Capital Oracle Bones Anyang: Guide",
+   "publisher": "Cultural Heritage Online",
+   "date": "n.d.",
+   "link": "https://culturalheritageonline.com/magazine/unesco-world-heritage-sites-near-yin-xu-ruins-of-yin-anyang-china/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s41",
+   "title": "Deir El Medina",
+   "publisher": "Egypt Tours Plus",
+   "date": "n.d.",
+   "link": "https://www.egypttoursplus.com/deir-el-medina/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s42",
+   "title": "El-Lahun Pyramid",
+   "publisher": "Ask Aladdin",
+   "date": "n.d.",
+   "link": "https://www.ask-aladdin.com/all-destinations/egypt/category/the-pyramids-of-egypt/page/the-pyramid-of-lahoun",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s43",
+   "title": "Pyramid of Senusret II",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Pyramid_of_Senusret_II",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s44",
+   "title": "Ancient Africa",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Ancient_Africa",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s45",
+   "title": "Daily Life in Ancient Egypt",
+   "publisher": "Study.com",
+   "date": "n.d.",
+   "link": "https://study.com/academy/lesson/daily-life-in-ancient-egypt.html",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back. So far we have met the Nile, the pharaoh, hieroglyphs and religion. Today we look at ordinary life, trade, and the wider world."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Egypt III: Trade, Everyday Life and Neighbours"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, who were most Egyptians? Farmers. And how you lived depended on your place in society."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Everyday life"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Farmers grew wheat, barley, vegetables and fruit. They kept cattle, goats and poultry, and fishing added to the diet."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Crops: wheat, barley, vegetables, fruit; Animals: cattle, goats, poultry; Extra food: fishing and hunting"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The river set the farming year. When the flood water drew back, the soil was soft and black, and farmers sowed quickly."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A field beside a canal. Farmers scatter seed on dark, damp soil."
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "At mealtimes, the staples were bread and beer. Onions, garlic, lentils and fish often went with them."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Bread and beer"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Richer people ate a wider range: meat, wine, and pastries sweetened with honey. Wine was mostly found on wealthy tables."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Most people: bread, beer, onions, garlic, lentils, fish | Wealthier people: meat, wine, honey-sweetened pastries"
+   },
+   "cite": [
+    "s1",
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which two foods were the everyday staples for most Egyptians?",
+    "right": "Bread and beer",
+    "wrong": [
+     "Roast meat and wine",
+     "Rice and tea",
+     "Honey cakes and cheese"
+    ],
+    "why": "Bread and beer were the staples. Meat, wine and honey pastries were enjoyed more by wealthier people."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now homes. Ordinary families lived in small mud-brick houses, usually near their farm or workshop."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Commoners: smaller mud-brick houses, basic furnishings, near work | Wealthy: roomy homes with many rooms, courtyards, paintings and gardens"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Inside, mats covered the floor and gave a place to rest. Baskets held belongings and pottery jars held food and water. Beds and stools cost more."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A simple mud-brick room with a reed mat on the floor, a basket in the corner and tall pottery jars by the wall."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What were ordinary Egyptian houses mostly built from?",
+    "right": "Mud brick",
+    "wrong": [
+     "Cut limestone blocks",
+     "Cedar planks",
+     "Woollen tents"
+    ],
+    "why": "Commoners lived in small mud-brick houses."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Clothes were mostly linen. Linen comes from the flax plant, and it is light and cool, so it was wrapped or draped around the body."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Linen"
+   },
+   "cite": [
+    "s3",
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Status showed in the cloth. Wealthy people wore finer linen, often pleated or decorated."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two figures side by side. One wears a plain knee-length linen wrap. The other wears fine pleated linen with a decorated collar."
+   },
+   "cite": [
+    "s1",
+    "s4"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What cloth did most Egyptians wear?",
+    "right": "Linen, made from the flax plant",
+    "wrong": [
+     "Cotton",
+     "Silk",
+     "Leather only"
+    ],
+    "why": "Linen from flax was the usual cloth, light and cool for a hot country."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Family life was practical teamwork. Adults prepared food and cloth, looked after young children, and supported older relatives."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Prepare food; Make cloth; Care for children; Support older relatives"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let us visit a real town. Kahun was built for the overseers and workmen who made a pyramid for King Senusret II."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Site: Kahun (El Lahun) - when it was built"
+   },
+   "cite": [
+    "s30"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That was in the 19th century BCE. Sources differ on the exact reign dates. The town was left empty when the pyramid was finished."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "19th century BCE"
+   },
+   "cite": [
+    "s30",
+    "s42",
+    "s43"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now when it was found. The English archaeologist Flinders Petrie dug there from 1888 to 1890. He found streets laid out in a regular pattern."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Site: Kahun - when it was found (1888-1890)"
+   },
+   "cite": [
+    "s30"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Houses had flat mud roofs and open courts. Petrie also found many objects from daily life, and about 1,000 papyrus fragments on law and medicine."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A plan of Kahun drawn from above: straight streets and rows of rectangular houses."
+   },
+   "cite": [
+    "s30",
+    "s31",
+    "s42"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why is Kahun so useful to historians?",
+    "right": "Its houses held tools and everyday objects, so it shows ordinary daily life",
+    "wrong": [
+     "It was Egypt's capital city",
+     "It was a royal tomb full of gold",
+     "It was built by Mesopotamian architects"
+    ],
+    "why": "Petrie found many household objects and tools, which show how people lived."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Egypt also had skilled craftworkers. They were painters, sculptors, architects and engineers, and they made jewellery, pottery and clothing."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Painters; Sculptors; Architects and engineers; Jewellery, pottery and clothing makers"
+   },
+   "cite": [
+    "s45"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Some lived in Deir el-Medina, a planned village. King Amenhotep I founded it, about 1541 to 1520 BCE, to house workers on royal tombs."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Site: Deir el-Medina - when it was built (c. 1541-1520 BCE)"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Their food, fuel, clothes and tools came from the state. The state paid their wages out of taxes."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Food; Fuel; Clothes; Tools - all supplied by the state"
+   },
+   "cite": [
+    "s2",
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now when it was found. In February 1906 Ernesto Schiaparelli, digging there, found an untouched tomb. It belonged to Kha, a foreman and architect, and his wife Merit."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Site: Deir el-Medina - when it was found (tomb of Kha, 1906)"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The tomb was full of well-kept goods. They show how a wealthy family lived about 3,400 years ago."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A painted wooden coffin with a geometric pattern, among jars and furniture in a rock-cut tomb chamber."
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Who lived in Deir el-Medina?",
+    "right": "Craftworkers who made royal tombs, and their families",
+    "wrong": [
+     "Farmers who grew grain for the king",
+     "Sailors who sailed to Punt",
+     "Foreign merchants from Nubia"
+    ],
+    "why": "The village was planned and founded to house the workers on royal tombs."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next, taxes. Most Egyptians paid in goods, not coins. Until the first millennium BCE, tax was paid in grain, cattle and other goods."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Taxes"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Work could be a tax too. This is called corvée: forced work for the state, as a form of tax."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Corvée = work as tax"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Corvée first shows up in the Old Kingdom, though the evidence is thin. It was used for quarries, roads and water works, not for the pyramids."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Quarries; Roads; Water works (not the pyramids)"
+   },
+   "cite": [
+    "s6",
+    "s8"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What was corvée?",
+    "right": "Work done for the state as a form of tax",
+    "wrong": [
+     "A tax paid in gold",
+     "A type of Egyptian boat",
+     "A festival for the Nile flood"
+    ],
+    "why": "Corvée meant forced work for the state, counted as tax."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Taxes fed the workers' pay. Around 1158 BCE, at Deir el-Medina, the tomb workers stopped work. This is thought to be the earliest recorded strike."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "c. 1158 BCE"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Their complaints were written on pottery pieces and speak of hunger and thirst. Even a pharaoh's projects depended on keeping workers fed."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A flat pottery fragment covered in short lines of black ink writing."
+   },
+   "cite": [
+    "s41",
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now trade. In Egypt the Nile was the main road. The main form of travel was by boat."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Trade by river and sea"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Three partners to remember: Nubia to the south, Punt on the southern Red Sea, and the Levant to the northeast. Trade with the Levant and Nubia was under way by the First Dynasty."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Egypt along the Nile in the centre. Arrows: south to Nubia, south by the Red Sea to Punt, and northeast to the Levant (Lebanon coast)."
+   },
+   "cite": [
+    "s13",
+    "s14"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Nubia was rich in gold. The name Nubia may come from the Egyptian word for gold, nub. It also supplied ivory and ebony."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Nubia = gold"
+   },
+   "cite": [
+    "s13",
+    "s14",
+    "s16"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was Nubia best known for supplying?",
+    "right": "Gold",
+    "wrong": [
+     "Cedar wood",
+     "Wine",
+     "Papyrus"
+    ],
+    "why": "Nubia was rich in gold, and also supplied ivory and ebony."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In the Middle Kingdom, Egypt conquered parts of Lower Nubia. It built forts such as Buhen and Semna to hold them."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Buhen (built under Senusret I); Semna (built under Senusret III)"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Nubia was not just a shop. The city of Kerma grew strong enough to threaten Egypt, and kings of both lands profited from trade."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A mud-brick fortress on a river bend, with soldiers on the walls and boats below."
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "When Egypt weakened in the Thirteenth Dynasty, it gave up its Nubian forts. By about 1650 BCE, all Lower Nubia was ruled by the kingdom of Kush."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "c. 1650 BCE"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What happened when Egypt weakened in the Thirteenth Dynasty?",
+    "right": "It gave up its Nubian forts, and Kush came to rule Lower Nubia",
+    "wrong": [
+     "Egypt took over all of Punt",
+     "Nubia stopped making gold",
+     "Egypt moved its capital to Kerma"
+    ],
+    "why": "Egypt withdrew its southern border to Aswan, and Kush took over Lower Nubia."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "From the Levant came cedar and other timber. It also supplied wine and oils."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The Levant = cedar"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Egypt had few big trees. Cedar made strong ships, temple doors and fine coffins. Ships sailed regularly to Lebanon for it."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Ships; Temple doors; Coffins"
+   },
+   "cite": [
+    "s17",
+    "s13"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why did Egypt import cedar?",
+    "right": "Egypt had few large trees and needed strong timber",
+    "wrong": [
+     "Cedar was used as money",
+     "Cedar was needed to make linen",
+     "Cedar was cheaper than mud brick"
+    ],
+    "why": "Egypt had few large trees, so cedar from Lebanon was used for ships, doors and coffins."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Punt was reached by sea. It supplied myrrh, incense, ebony, ivory, gold and live animals."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Punt"
+   },
+   "cite": [
+    "s16",
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Nobody knows exactly where Punt was. Many place it around Somalia, Djibouti or Eritrea. Queen Hatshepsut's expedition there is the best known."
+   },
+   "show": {
+    "kind": "map",
+    "text": "The Red Sea with an arrow from Egypt's coast south towards the Horn of Africa. A question mark marks Punt."
+   },
+   "cite": [
+    "s16",
+    "s44",
+    "s13"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What did Egypt sell? Grain, gold, linen, papyrus, and finished goods such as glass and stone objects. There were no coins yet, so people swapped goods."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Exports: grain, gold, linen, papyrus, glass and stone objects | Imports: cedar and other timber, silver, copper, wine, oils, resins, incense, ivory, ebony, lapis lazuli"
+   },
+   "cite": [
+    "s12",
+    "s15",
+    "s17"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which of these did Egypt mainly export?",
+    "right": "Linen and papyrus",
+    "wrong": [
+     "Cedar timber",
+     "Ebony",
+     "Incense"
+    ],
+    "why": "Egypt sold grain, gold, linen, papyrus and finished goods. Cedar, ebony and incense were imports."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Egypt traded by sea too. Wadi al-Jarf on the Red Sea held the oldest harbour in Egypt, used in the reign of Khufu, around 2500 BCE."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Site: Wadi al-Jarf - when it was built (c. 2500 BCE)"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now when it was found. In 2013 a French-led team under Pierre Tallet and Gregory Marouard found about 30 papyri hidden in man-made limestone caves there."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Site: Wadi al-Jarf - when it was found (2013)"
+   },
+   "cite": [
+    "s27",
+    "s26"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Some papyri are the logbook of an inspector named Merer. It records his crew's work carrying limestone for Khufu's Great Pyramid."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A strip of papyrus covered in neat lines of red and black hieroglyphic writing, with a reed pen beside it."
+   },
+   "cite": [
+    "s27",
+    "s28"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does Merer's logbook record?",
+    "right": "The daily work of a boat crew moving limestone for the Great Pyramid",
+    "wrong": [
+     "A list of Egyptian kings",
+     "A treaty with Mesopotamia",
+     "A recipe for beer"
+    ],
+    "why": "It is the logbook of an inspector whose team moved stone for Khufu's pyramid."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a ship from the Late Bronze Age. Around 1320 BCE a merchant ship sank off Turkey. This is when it was lost."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Site: Uluburun shipwreck - when it sank (c. 1320 BCE)"
+   },
+   "cite": [
+    "s32"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A local sponge diver found it in 1982. The cargo came from at least seven cultures. It included a gold scarab with Queen Nefertiti's name."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Site: Uluburun shipwreck - when it was found (1982)"
+   },
+   "cite": [
+    "s32",
+    "s33"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why carry copper and tin? Melted together, they make bronze. The ship held about ten tons of copper and one ton of tin."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1",
+    "text": "Main metal cargo of the Uluburun ship"
+   },
+   "cite": [
+    "s33",
+    "s32"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Which two metals are mixed to make bronze?",
+    "right": "Copper and tin",
+    "wrong": [
+     "Gold and silver",
+     "Iron and lead",
+     "Copper and ebony"
+    ],
+    "why": "The ship's copper and tin were likely meant to be made into bronze."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Egypt's contacts reached beyond its neighbours. Early on there are signs of contact with Mesopotamia. Egypt's early cultures and Mesopotamia's Uruk period were running at the same time."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Contact with Mesopotamia"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Take the Gebel el-Arak knife. It has a flint blade and a carved ivory handle, made around 3300 to 3200 BCE."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A flint knife with a pale ivory handle carved with a robed figure between two lions, and rows of fighting men on the other side."
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The figure on the handle is in Mesopotamian style, like the rulers of Uruk. That is the sign of contact."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Egyptian knife, Mesopotamian style"
+   },
+   "cite": [
+    "s22",
+    "s21"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now when it was found. Georges Bénédite bought the knife in Cairo in 1914 for the Louvre. The dealer named a place, but scholars think it came from Abydos."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Gebel el-Arak knife - when it was found (bought 1914)"
+   },
+   "cite": [
+    "s23",
+    "s22"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "What does the knife handle suggest?",
+    "right": "Egypt was in contact with Mesopotamia, and influenced by it, very early on",
+    "wrong": [
+     "Mesopotamians ruled Egypt at the time",
+     "Egyptians invented cuneiform writing",
+     "Egypt and Mesopotamia never met"
+    ],
+    "why": "The Mesopotamian-style carving suggests early influence. Experts disagree about how direct the contact was."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now zoom out. While Egypt's Old and Middle Kingdoms ran, the Indus cities flourished. Their mature phase was about 2600 to 1900 BCE."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "2600-1900 BCE: Indus Mature Harappan phase | Old Kingdom Egypt: about 2613-2181 BCE"
+   },
+   "cite": [
+    "s35",
+    "s34",
+    "s13"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Harappa and Mohenjo-daro were the two great cities. They had planned streets, multistory brick buildings, drains, and a shared system of weights."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Harappa; Mohenjo-daro; Planned streets; Drains; Shared weights"
+   },
+   "cite": [
+    "s36",
+    "s35",
+    "s34"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Roughly when was the Indus Valley's Mature phase?",
+    "right": "About 2600 to 1900 BCE",
+    "wrong": [
+     "About 1250 to 1046 BCE",
+     "About 3300 to 3200 BCE",
+     "About 1550 to 1070 BCE"
+    ],
+    "why": "The Mature Harappan phase ran from about 2600 to 1900 BCE."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Later, during Egypt's New Kingdom, China had the Shang dynasty, from about 1600 to 1046 BCE. Egypt's New Kingdom ran about 1550 to 1070 BCE."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Shang dynasty: about 1600-1046 BCE | Egypt's New Kingdom: about 1550-1070 BCE"
+   },
+   "cite": [
+    "s37",
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Shang kings used oracle bones, which are shells and bones, to ask questions of the spirits. Their carved marks are the earliest known Chinese writing."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A turtle shell with rows of small carved characters and a few cracks."
+   },
+   "cite": [
+    "s39"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The last Shang capital was Yinxu, at Anyang. People lived there from about 1300 to 1046 BCE. That is when it was built and used."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Site: Yinxu - when it was built (c. 1300-1046 BCE)"
+   },
+   "cite": [
+    "s40"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now when it was found. Oracle bones turned up by accident in 1899. The first systematic dig was in 1928, supervised by Dong Zuobin."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Site: Yinxu - when it was found (1899 and 1928)"
+   },
+   "cite": [
+    "s37",
+    "s38"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "What are oracle bones?",
+    "right": "Shells and animal bones the Shang kings used for divination, carved with early Chinese writing",
+    "wrong": [
+     "Counting sticks used by Egyptian tax collectors",
+     "Bones of Egyptian pyramid workers",
+     "Dice used in Indus games"
+    ],
+    "why": "Oracle bones were scapulae and turtle shells used for royal divination, and they carry the earliest known Chinese writing."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let us put the sites on one line. Every date here is approximate."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "c. 3300-3200 BCE: Gebel el-Arak knife made | c. 2600-1900 BCE: Indus Mature phase | c. 2500 BCE: Wadi al-Jarf harbour (Khufu) | 19th century BCE: Kahun built | c. 1541-1520 BCE: Deir el-Medina founded | c. 1320 BCE: Uluburun ship sinks | c. 1300-1046 BCE: Yinxu | c. 1158 BCE: Deir el-Medina strike"
+   },
+   "cite": [
+    "s22",
+    "s35",
+    "s25",
+    "s30",
+    "s9",
+    "s32",
+    "s40",
+    "s10"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To finish: farmers, craftworkers and the wealthy lived very different lives, and everyone paid tax in goods or work. Egypt traded with Nubia, the Levant and Punt. Far away, the Indus and Shang China were growing too."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Farmers, craftworkers, elites: different lives; Tax in goods and in work; Partners: Nubia (gold), Levant (cedar), Punt (incense); Elsewhere: Indus cities and Shang China"
+   },
+   "cite": [
+    "s1",
+    "s7",
+    "s14",
+    "s15",
+    "s35",
+    "s37"
+   ],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Main metal cargo of the Uluburun ship (tons, about)",
+   "rows": [
+    {
+     "label": "Copper",
+     "value": 10,
+     "source": "s32"
+    },
+    {
+     "label": "Tin",
+     "value": 1,
+     "source": "s32"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Everyday life of Egyptian farmers",
+   "links": [
+    "[[Egypt I: the Nile and the flood]]",
+    "[[Egyptian food and clothing]]"
+   ]
+  },
+  {
+   "topic": "Corvée and taxes",
+   "links": [
+    "[[Egypt II: law]]",
+    "[[Taxes in Mesopotamia]]"
+   ]
+  },
+  {
+   "topic": "Kahun (El Lahun)",
+   "links": [
+    "[[Flinders Petrie]]",
+    "[[Middle Kingdom Egypt]]"
+   ]
+  },
+  {
+   "topic": "Deir el-Medina",
+   "links": [
+    "[[Valley of the Kings]]",
+    "[[Ernesto Schiaparelli]]",
+    "[[Corvée and taxes]]"
+   ]
+  },
+  {
+   "topic": "Nubia and Kerma",
+   "links": [
+    "[[Egypt I: unification]]",
+    "[[Middle Kingdom Egypt]]"
+   ]
+  },
+  {
+   "topic": "Punt and the Red Sea",
+   "links": [
+    "[[Hatshepsut]]",
+    "[[Wadi al-Jarf]]"
+   ]
+  },
+  {
+   "topic": "The Levant and cedar",
+   "links": [
+    "[[Byblos]]",
+    "[[Egyptian shipbuilding]]"
+   ]
+  },
+  {
+   "topic": "Wadi al-Jarf and the Diary of Merer",
+   "links": [
+    "[[Khufu and the Great Pyramid]]",
+    "[[Egypt II: hieroglyphs and papyrus]]"
+   ]
+  },
+  {
+   "topic": "Uluburun shipwreck",
+   "links": [
+    "[[Bronze Age trade]]",
+    "[[Nefertiti]]"
+   ]
+  },
+  {
+   "topic": "Gebel el-Arak knife",
+   "links": [
+    "[[Mesopotamia I: first cities]]",
+    "[[Uruk]]"
+   ]
+  },
+  {
+   "topic": "Indus Mature phase",
+   "links": [
+    "[[The Indus Valley I: planned cities and water]]"
+   ]
+  },
+  {
+   "topic": "Shang dynasty and Yinxu",
+   "links": [
+    "[[Early China I: the Yellow River and the Shang]]",
+    "[[Oracle bones]]"
+   ]
+  },
+  {
+   "topic": "Source check for Mike: several daily-life and trade sources are general-audience or tour-company pages. Swap in museum or textbook pages (British Museum, Met, OpenStax) for farming, housing, clothing and trade before publishing.",
+   "links": []
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "c. 3300-3200 BCE (Gebel el-Arak knife made)",
+   "elsewhere": "In Mesopotamia the Late Uruk period (about 3600-3100 BCE) was under way. The Indus Early Harappan phase began around 3300 BCE.",
+   "cite": [
+    "s21",
+    "s35"
+   ]
+  },
+  {
+   "when": "c. 2600-1900 BCE (Egypt's Old and Middle Kingdoms)",
+   "elsewhere": "The Indus Mature Harappan cities, including Harappa and Mohenjo-daro, flourished. This is roughly the time of Old Kingdom Egypt.",
+   "cite": [
+    "s34",
+    "s35",
+    "s36"
+   ]
+  },
+  {
+   "when": "c. 2500 BCE (Wadi al-Jarf harbour under Khufu)",
+   "elsewhere": "The Kerma culture is attested in Nubia, and the city of Kerma was established by about 2400 BCE.",
+   "cite": [
+    "s25",
+    "s19"
+   ]
+  },
+  {
+   "when": "19th century BCE (Kahun built)",
+   "elsewhere": "The Indus Mature phase was ending around 1900 BCE, and the Late Harappan phase followed.",
+   "cite": [
+    "s30",
+    "s35"
+   ]
+  },
+  {
+   "when": "c. 1650 BCE (Kush rules Lower Nubia)",
+   "elsewhere": "In China the Shang dynasty was already ruling, from about 1600 BCE.",
+   "cite": [
+    "s20",
+    "s37"
+   ]
+  },
+  {
+   "when": "c. 1541-1520 BCE (Deir el-Medina founded)",
+   "elsewhere": "The Shang dynasty ruled in China, and the Indus Late Harappan phase (about 1900-1300 BCE) was under way.",
+   "cite": [
+    "s9",
+    "s37",
+    "s35"
+   ]
+  },
+  {
+   "when": "c. 1320 BCE (Uluburun ship sinks)",
+   "elsewhere": "The Shang capital at Yinxu was occupied from about 1300 BCE.",
+   "cite": [
+    "s32",
+    "s40"
+   ]
+  },
+  {
+   "when": "c. 1250-1192 BCE (reign of King Wu Ding)",
+   "elsewhere": "In Egypt this was the New Kingdom. In China, Wu Ding's reign produced most of the royal oracle bones found in one pit at Anyang.",
+   "cite": [
+    "s39",
+    "s7"
+   ]
+  },
+  {
+   "when": "c. 1158 BCE (Deir el-Medina strike)",
+   "elsewhere": "The Shang dynasty was still ruling in China and lasted until about 1046 BCE.",
+   "cite": [
+    "s10",
+    "s37"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Deir el-Medina shows us what ordinary Egyptian life was like.",
+   "other_view": "Deir el-Medina was unusual. Its residents were skilled artisans, not farmers. They were paid by the state and were more literate than villagers elsewhere. Farming families left far less written evidence.",
+   "cite": [
+    "s10",
+    "s41"
+   ]
+  },
+  {
+   "claim": "Egypt's big building projects were done by slaves.",
+   "other_view": "Evidence points to forced labour as a tax (corvée), not the pyramids. Historians also say the line between slave and forced labourer was often blurred, so a simple label does not fit.",
+   "cite": [
+    "s8",
+    "s6"
+   ]
+  },
+  {
+   "claim": "The Gebel el-Arak knife shows Mesopotamia influenced early Egypt.",
+   "other_view": "The handle carving looks Mesopotamian and points to contact. But the knife was bought from a dealer, so its find-spot is uncertain. One blogger argues the evidence favours links to Susa in Iran, reached by long-distance trade. Experts still debate how direct the contact was.",
+   "cite": [
+    "s22",
+    "s23",
+    "s24"
+   ]
+  },
+  {
+   "claim": "The Wadi al-Jarf papyri prove how the Great Pyramid was built.",
+   "other_view": "They give a detailed snapshot of the final stage of building the pyramid. One scholarly study says the papyri should be read carefully, and that the limits of what they can prove should be spelled out.",
+   "cite": [
+    "s26",
+    "s29"
+   ]
+  },
+  {
+   "claim": "Senusret II built Kahun and his pyramid in a known year.",
+   "other_view": "Sources give different reign dates. One has about 1844-1837 BCE, another about 1897 BCE, and another just the early 19th century BCE. This lesson says only 'the 19th century BCE'.",
+   "cite": [
+    "s30",
+    "s42",
+    "s43"
+   ]
+  },
+  {
+   "claim": "We know where Punt was.",
+   "other_view": "Its exact location is still unknown. Many place it near Somalia, Djibouti or Eritrea.",
+   "cite": [
+    "s16",
+    "s44"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,1577 @@
+{
+ "about": {
+  "title": "Egypt II: Hieroglyphs, Religion and Law",
+  "course": "early-civilizations",
+  "class_n": 5,
+  "audience": [
+   "high school",
+   "adult",
+   "Mike",
+   "anyone"
+  ],
+  "minutes": 45,
+  "length_note": "This runs a little over 40 minutes. It covers six topics, and each one is taught as say it, explain it, give an example, then check it. Every step has a pause for a question. It splits cleanly into two sittings: stop after the Rosetta Stone beats (writing) and start again at 'Gods and temples'."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Champollion reveals decipherment of the Rosetta Stone",
+   "publisher": "Oxford University Press blog",
+   "date": "2011-09",
+   "link": "https://blog.oup.com/2011/09/rosetta-stone-2/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Two Hundred Years Ago, the Rosetta Stone Unlocked the Secrets of Ancient Egypt",
+   "publisher": "Smithsonian Magazine",
+   "date": "n.d.",
+   "link": "https://www.smithsonianmag.com/history/rosetta-stone-hieroglyphs-champollion-decipherment-egypt-180980834/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Jean-François Champollion Deciphers the Rosetta Stone",
+   "publisher": "JSTOR Daily",
+   "date": "n.d.",
+   "link": "https://daily.jstor.org/jean-francois-champollion-deciphers-the-rosetta-stone/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Jean Francois Champollion: Deciphering the Rosetta Stone (7 Facts)",
+   "publisher": "TheCollector",
+   "date": "n.d.",
+   "link": "https://www.thecollector.com/jean-francois-champollion/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Ancient Egyptian Writing",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/Egyptian_Writing/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Why Ancient Egyptian Writing Is More Than Just Hieroglyphics (Timeline of Ancient Egyptian Writing)",
+   "publisher": "Encyclopaedia Britannica (video transcript)",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/video/types-of-ancient-egyptian-writing-hieroglyphics/-351016",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Scripts of the Ancient Egyptian Language",
+   "publisher": "Bibliotheca Alexandrina, Learn Hieroglyphs",
+   "date": "n.d.",
+   "link": "https://www.bibalex.org/learnhieroglyphs/lesson/LessonDetails_En.aspx?l=20",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Ancient Egyptian Writing: Hieroglyphs, Hieratic, and Demotic",
+   "publisher": "The Archaeologist",
+   "date": "n.d.",
+   "link": "https://www.thearchaeologist.org/blog/ancient-egyptian-writing-hieroglyphs-hieratic-and-demotic",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Temples in Ancient Egypt",
+   "publisher": "Egypt Exploration Society",
+   "date": "n.d.",
+   "link": "https://www.ees.ac.uk/resource/temples-in-ancient-egypt.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "A Day in the Life of an Ancient Egyptian Priest",
+   "publisher": "Ancient Origins",
+   "date": "n.d.",
+   "link": "https://www.ancient-origins.net/history-ancient-traditions/egyptian-priest-0017166",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Egyptian temple",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Egyptian_temple",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "The Top Ten Steps of Egyptian Mummification (Ancient Egypt: Death and the Afterlife)",
+   "publisher": "MyLearning",
+   "date": "n.d.",
+   "link": "https://www.mylearning.org/stories/ancient-egypt-death-and-the-afterlife/the-top-ten-steps-of-egyptian-mummification",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "The book of death: weighing your heart (Francesco Carelli)",
+   "publisher": "PubMed Central (NIH)",
+   "date": "n.d.",
+   "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3960665/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Ancient Egyptian Mummification Process: Steps, Purpose, History, and Facts",
+   "publisher": "Egypt United Tours",
+   "date": "n.d.",
+   "link": "https://egyptunitedtours.com/mummification-process/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "35 Who Made a Difference: Mark Lehner",
+   "publisher": "Smithsonian Magazine",
+   "date": "n.d.",
+   "link": "https://www.smithsonianmag.com/history/35-who-made-a-difference-mark-lehner-114734077/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Who Built the Pyramids?",
+   "publisher": "PBS NOVA",
+   "date": "n.d.",
+   "link": "https://www.pbs.org/wgbh/nova/article/who-built-the-pyramids/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Excavating the Lost City",
+   "publisher": "PBS NOVA",
+   "date": "n.d.",
+   "link": "https://www.pbs.org/wgbh/nova/article/lehner-giza/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Lost City",
+   "publisher": "Discover Magazine",
+   "date": "n.d.",
+   "link": "https://www.discovermagazine.com/lost-city-14855",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Interview with Mark Lehner: The People Behind the Pyramids",
+   "publisher": "ROST Architects",
+   "date": "2025-09-11",
+   "link": "https://www.rostarchitects.com/articles/2025/9/11/interview-with-mark-lehner-the-people-behind-the-pyramids",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Tutankhamun",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/biography/Tutankhamun",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "KV62 (King Tut's Tomb)",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/history/kv62-king-tuts-tomb/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "This ancient diary reveals how Egyptians built the Great Pyramid",
+   "publisher": "National Geographic",
+   "date": "n.d.",
+   "link": "https://www.nationalgeographic.com/premium/article/red-sea-scrolls-pyramids-egypt",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Diary of Merer",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Diary_of_Merer",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "Egyptian law summary",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/summary/Egyptian-law",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Law in ancient Egypt",
+   "publisher": "UCL Museums, Digital Egypt for Universities",
+   "date": "n.d.",
+   "link": "https://www.ucl.ac.uk/museums-static/digitalegypt//administration/law.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Ancient Egyptian Law",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/Egyptian_Law/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "Egyptian law",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Egyptian-law",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "7 Surprising Facts About Law in Ancient Egypt",
+   "publisher": "TheCollector",
+   "date": "n.d.",
+   "link": "https://www.thecollector.com/law-ancient-egypt/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "Peruvian Excavation (Caral)",
+   "publisher": "NPR",
+   "date": "2001-04-27",
+   "link": "https://www.npr.org/2001/04/27/1122107/peruvian-excavation",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "Rekhmire",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Rekhmire",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s31",
+   "title": "Timekeeping at Akhet Khufu, as shown by the Diary of Merer",
+   "publisher": "ResearchGate",
+   "date": "n.d.",
+   "link": "https://www.researchgate.net/publication/385786202_Timekeeping_at_Akhet_Khufu_as_shown_by_the_Diary_of_Merer",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s32",
+   "title": "Wadi al-Jarf",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Wadi_al-Jarf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s33",
+   "title": "The Wadi al-Jarf Papyri (Diary of Merer): An Analytical Perspective on Text, Context, and Interpretation",
+   "publisher": "Academia.edu",
+   "date": "n.d.",
+   "link": "https://www.academia.edu/165255517/The_Wadi_al_Jarf_Papyri_Diary_of_Merer_An_Analytical_Perspective_on_Text_Context_and_Interpretation",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class five. Last time we met the Nile and the pharaoh. Today: how Egypt wrote, worshipped, buried its dead and kept order."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Egypt II: Hieroglyphs, Religion and Law"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Six steps today, one at a time. Writing. The Rosetta Stone. Gods and temples. Burial. Pyramids and tombs. Then law."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Writing | 2. The Rosetta Stone | 3. Gods, temples, priests | 4. Burial and the afterlife | 5. Pyramids and tombs | 6. Law and ma'at"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Start with hieroglyphs. They are Egypt's picture writing. Some signs stand for an idea. Other signs stand for a sound."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Hieroglyphs"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "They developed around 3200 BCE. In time they became the script of monuments and temples."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "about 3200 BCE"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "A hieroglyph sign could stand for what?",
+    "right": "Either an idea or a sound",
+    "wrong": [
+     "Only a number",
+     "Only a sound, like a letter in English",
+     "Only a decoration with no meaning"
+    ],
+    "why": "Hieroglyphic signs were sometimes ideograms (ideas) and sometimes phonetic (sounds)."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is an example. A king's name was written inside an oval ring called a cartouche. The signs inside spell the name by sound."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "An oval ring around a row of small picture signs: a royal name written in a cartouche."
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Carving signs takes time. So scribes made a faster form, called hieratic. It is a simplified, joined-up version of the same signs."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Hieratic"
+   },
+   "cite": [
+    "s5",
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Scribes wrote hieratic with a reed brush and black ink, on papyrus. Scribes were the trained writers in palaces and temples."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A scribe sitting with a reed brush and a papyrus sheet, writing quick, flowing signs."
+   },
+   "cite": [
+    "s8",
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Example: a scribe might use hieratic for a ledger or a contract. If the same text went on a tomb wall, he would switch to formal hieroglyphs."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Ledger or contract on papyrus: hieratic | Tomb wall or temple wall: hieroglyphs"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "A scribe is writing a grain ledger on papyrus. Which script is he most likely to use?",
+    "right": "Hieratic",
+    "wrong": [
+     "Formal hieroglyphs carved in stone",
+     "A picture painted on a tomb wall",
+     "None, because Egyptians kept no records"
+    ],
+    "why": "Hieratic was the quick everyday script for ledgers, contracts and letters. Formal hieroglyphs were kept mostly for monuments and tombs."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A third script came later. Around 700 BCE, an even quicker script called demotic took over from hieratic. Hieroglyphs stayed in use for sacred and monumental writing."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "3200 BCE hieroglyphs | soon after: hieratic | about 700 BCE: demotic"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Later still, Egyptian was written with Greek letters. That form is called Coptic. It spelled the end of hieroglyphs in daily use."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Coptic: Egyptian in Greek letters"
+   },
+   "cite": [
+    "s6",
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One important point. Hieroglyphs are a script, not a language. There was one Egyptian language, written in several scripts."
+   },
+   "show": {
+    "kind": "list",
+    "text": "One language | Hieroglyphic | Hieratic | Demotic | Coptic"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "How many ancient Egyptian languages were there in these scripts?",
+    "right": "One language, written in several scripts",
+    "wrong": [
+     "Four languages, one for each script",
+     "Hieroglyphs were the only language",
+     "Hieratic was a language and hieroglyphs were not"
+    ],
+    "why": "The Egyptian language was written in hieroglyphic, hieratic, demotic and Coptic scripts. A script is the writing, not the language."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a real example of everyday writing. Merer was a middle-ranking official, and he kept a logbook on papyrus about 4,500 years ago."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A papyrus logbook: rows of small hand-written signs recording daily boat trips."
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "His log records crews shipping limestone from the Tura quarries to the Great Pyramid. It dates to about the 26th year of King Khufu."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Merer's crew | limestone from Tura | to Khufu's pyramid"
+   },
+   "cite": [
+    "s23",
+    "s31"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Archaeologists found these papyri in 2013, in caves at Wadi al-Jarf on the Red Sea coast. They are the oldest papyri found in Egypt."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "About 4,500 years ago: Merer writes his log | 2013: papyri found at Wadi al-Jarf"
+   },
+   "cite": [
+    "s22",
+    "s32",
+    "s23"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What did Merer's logbook record?",
+    "right": "Hauling limestone to the Great Pyramid",
+    "wrong": [
+     "A list of Egyptian gods",
+     "A full law code",
+     "A poem about the Nile"
+    ],
+    "why": "Merer's log records his crew moving limestone from Tura to Khufu's pyramid."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "How did we learn to read hieroglyphs again? The key was one famous stone."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The Rosetta Stone"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The stone carries one decree in three scripts: hieroglyphic, demotic and ancient Greek. It was written in 196 BCE, under King Ptolemy V."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A dark stone slab with three bands of writing, one above another."
+   },
+   "cite": [
+    "s8",
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "French troops found it in 1799 at Rashid. The British took it after defeating France, in 1801. It has been in the British Museum since 1802."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "196 BCE: made | 1799: found by French troops | 1801: British take it | 1802: British Museum"
+   },
+   "cite": [
+    "s1",
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "When was the Rosetta Stone made, and when was it found?",
+    "right": "Made in 196 BCE, found in 1799",
+    "wrong": [
+     "Made in 1799, found in 196 BCE",
+     "Made in 1799, found in 1822",
+     "Made in 1822, found in 196 BCE"
+    ],
+    "why": "The decree was written in 196 BCE. French troops found the stone in 1799, so the date made and the date found are about 2,000 years apart."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the clue. Scholars could already read Greek. So they could compare the Greek with the Egyptian parts of the stone."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Greek: readable | Demotic: unknown | Hieroglyphic: unknown | Same decree in all three"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why was the Greek text so helpful?",
+    "right": "Scholars could read it, giving a way into the other two scripts",
+    "wrong": [
+     "Greek was the oldest script on the stone",
+     "Greek told them the names of the gods",
+     "The Greek text was a dictionary of hieroglyphs"
+    ],
+    "why": "The same decree appears in three scripts. Because scholars could read Greek, they could use it to unlock the other two."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "An English scientist, Thomas Young, made early progress. He published in 1819 and linked the signs in the cartouche to the sounds of Ptolemy's name."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Thomas Young: the first steps"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The French scholar Champollion knew Coptic. He saw it as a late form of the Egyptian language. He combined that with Young's method."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Champollion and Coptic"
+   },
+   "cite": [
+    "s4",
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "He announced his decipherment on 27 September 1822. He recognised that the signs were sometimes ideas and sometimes sounds."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "27 September 1822"
+   },
+   "cite": [
+    "s2",
+    "s1"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What did Champollion learn about the hieroglyphic signs?",
+    "right": "Some stood for ideas and some for sounds",
+    "wrong": [
+     "All of them were only pictures of objects",
+     "All of them were letters, like English",
+     "They were only decoration"
+    ],
+    "why": "Champollion saw that the writing mixed signs for ideas with signs for sounds."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So who gets the credit? Young made early progress. Champollion took it further and is widely credited with cracking the code."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Young: early steps, 1819 | Champollion: full breakthrough, 1822"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Writing is done. Now religion. Egypt had many gods. A temple was a house for a god, and each temple had one main god."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Gods and temples"
+   },
+   "cite": [
+    "s9",
+    "s11"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "People believed the god lived in its statue, in a shrine deep inside the temple."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A small stone shrine in a dark inner room, holding a statue of a god."
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That inner room was the darkest and most enclosed part, with the highest floor. It protected the statue and recalled the mound of creation."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Darkest room | Enclosed | Highest floor | Protects the statue | Recalls the mound of creation"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Where did Egyptians believe a god lived in its temple?",
+    "right": "In its statue, in the shrine",
+    "wrong": [
+     "In the sacred lake",
+     "In the priests' houses",
+     "Inside a pyramid"
+    ],
+    "why": "Gods were believed to live within their statues in the temple's shrine."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Priests served the gods. A priest's duty was to care for the god of his temple. They did not preach or hold weekly services."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Priests: caring for the god"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Many temples had a sacred lake, where priests bathed to be pure. Apart from the high priest, most priests were part-time."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Sacred lake: bathing to be pure | Most priests: part-time"
+   },
+   "cite": [
+    "s9",
+    "s10"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What was a priest's main duty?",
+    "right": "To care for the god of his temple",
+    "wrong": [
+     "To preach weekly sermons to crowds",
+     "To build the pyramids",
+     "To judge all court cases"
+    ],
+    "why": "Egyptian priests tended the god's needs. They did not preach or run weekly services for the public."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Ordinary people usually could not enter the inner parts. But at festivals, priests carried the god's statue out in a boat-shaped shrine called a barque."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Priests carrying a boat-shaped shrine through a crowd."
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "People could ask the god a question. If the barque rocked forward, the answer was yes. If it rocked backward, no."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Barque rocks forward: yes | Barque rocks backward: no"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Caring for the gods was every pharaoh's duty. Temples were designed to reflect and maintain the universe. Keep that idea of order in mind; it returns."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Order of the universe"
+   },
+   "cite": [
+    "s11",
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now burial. Egyptians believed that after death came a new kind of life. They would need their bodies and their belongings."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The afterlife"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So they preserved the body. This is called mummification: preparing the body so it does not decay."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Mummification"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Embalmers removed the moist parts that rot, and dried the body. Then they wrapped it in linen over 15 days, while spells were said."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Remove the parts that rot | 2. Dry the body | 3. Wrap in linen, 15 days, with spells"
+   },
+   "cite": [
+    "s12",
+    "s14"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A full elite mummification took about 70 days. Ancient methods varied; there is no single surviving instruction manual."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Days in an elite mummification",
+    "chart": "c1"
+   },
+   "cite": [
+    "s14",
+    "s12"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Roughly how long did a full elite mummification take?",
+    "right": "About 70 days",
+    "wrong": [
+     "About 7 days",
+     "About 15 days",
+     "About 700 days"
+    ],
+    "why": "The whole process took about 70 days. The 15-day figure is only the wrapping stage."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The embalmers left the heart in the body. Egyptians saw the heart, not the brain, as the centre of wisdom, feeling and memory."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The heart stays"
+   },
+   "cite": [
+    "s13",
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "They believed the heart could reveal your true character, even after death. That is why it was kept."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "The heart was left in the body so it could be weighed in the afterlife."
+   },
+   "cite": [
+    "s13",
+    "s12"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which organ was left in the body, and why?",
+    "right": "The heart, because it was thought to be the centre of thought and character",
+    "wrong": [
+     "The brain, because it held memory",
+     "The liver, because it was the lightest organ",
+     "None; all organs were removed"
+    ],
+    "why": "Egyptians believed the heart, not the brain, was the source of wisdom and memory. It had to stay for the judgement."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The coffin went into the tomb with possessions and small model workers called shabtis. They were meant to work for the dead."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Possessions | Shabtis: model workers | A priest touches the coffin's face to restore speech, sight and hearing"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Then came the judgement. The dead person's heart was weighed on a scale against the feather of Ma'at. Anubis watched over it."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A balance scale: a heart on one side, a single feather on the other, and a jackal-headed god beside it."
+   },
+   "cite": [
+    "s13",
+    "s12"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A heart that balanced the feather meant entry to the afterlife. A heavy heart was eaten by the monster Ammit."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Heart balances the feather: allowed in | Heart too heavy: eaten by Ammit"
+   },
+   "cite": [
+    "s13",
+    "s12"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "People even placed heart scarabs in the tomb. A spell on them begged the heart not to speak against its owner."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A carved scarab beetle placed with a mummy, inscribed with a spell."
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What was the heart weighed against?",
+    "right": "The feather of Ma'at",
+    "wrong": [
+     "A golden scarab",
+     "A jar of natron",
+     "The pharaoh's crown"
+    ],
+    "why": "In the weighing of the heart, the dead person's heart was set against Ma'at's feather."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a key word: Ma'at. It means order, truth and what is right. Egyptians pictured it as a goddess."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ma'at: order, truth, what is right"
+   },
+   "cite": [
+    "s13",
+    "s28"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Living by ma'at was thought necessary to pass the Hall of Judgment into the afterlife."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Truth | Order | Balance | Justice"
+   },
+   "cite": [
+    "s28"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Ma'at is best described as what?",
+    "right": "The ideal of truth, order and justice, personified as a goddess",
+    "wrong": [
+     "A type of pyramid",
+     "A kind of script",
+     "A river festival"
+    ],
+    "why": "Ma'at personified order, truth and what is right. Her feather was used in the judgement of the dead."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now pyramids. A pyramid was a king's tomb. The Great Pyramid is the tomb of Khufu. Khufu, Khafre and Menkaure built the three big ones at Giza."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Pyramids: royal tombs"
+   },
+   "cite": [
+    "s31",
+    "s18"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Khufu ruled about 2589 to 2566 BCE. His pyramid's ancient name was Akhet-Khufu, meaning 'Horizon of Khufu'."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "About 2589 to 2566 BCE: Khufu rules, Great Pyramid built"
+   },
+   "cite": [
+    "s32",
+    "s23"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why did the giant pyramids stop? Mark Lehner notes that the effort was enormous. There were only about five giant pyramids, and later ones got smaller."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "about 5 giant pyramids"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Who built them? Many people picture slaves. The Greek writer Herodotus, centuries later, mentioned some 100,000 slaves."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Herodotus: 100,000 slaves?"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Archaeology points elsewhere. The builders were more likely skilled, well-compensated craftsmen plus manual labourers. All were well fed."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Workforce numbers given for the Great Pyramid",
+    "chart": "c2"
+   },
+   "cite": [
+    "s15",
+    "s16"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "What does the evidence say about who built the Giza pyramids?",
+    "right": "Egyptian workers, skilled craftsmen and labourers who were well fed",
+    "wrong": [
+     "Mostly slaves brought from abroad",
+     "Priests only",
+     "Nobody knows anything about them"
+    ],
+    "why": "Excavations show Egyptian workers who were fed and housed, and buried near the monuments they built."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "How do we know? In 1991, Mark Lehner found two ancient bakeries near Giza. They led to a whole town."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "1991: the bakeries"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The team dug a 4,500-year-old town where stoneworkers, weavers and bakers lived. Zahi Hawass dug the workers' cemetery."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "About 4,500 years ago: workers' town lived in | 1990s: bakeries and town found, workers' cemetery dug"
+   },
+   "cite": [
+    "s17",
+    "s16",
+    "s15"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What did the bakeries and the town tell archaeologists?",
+    "right": "The pyramid builders lived in an organised town and were fed",
+    "wrong": [
+     "The pyramids were built by robots",
+     "The builders had no homes",
+     "The pyramids were never finished"
+    ],
+    "why": "Bakeries, a town and a cemetery show an organised, well-fed workforce, not an army of starving slaves."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Later, kings stopped building giant pyramids. At the time of Tutankhamun, kings were buried in underground tombs in the Valley of the Kings, to protect them from thieves."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Old Kingdom: giant pyramids at Giza | Later: underground tombs, Valley of the Kings"
+   },
+   "cite": [
+    "s19",
+    "s21"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Most of those tombs were looted in ancient times. Tutankhamun ruled about 1333 to 1324 BCE and was buried in a small tomb hastily converted for him."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A narrow stairway cut down into rock, leading to a small sealed doorway."
+   },
+   "cite": [
+    "s21",
+    "s20"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "His tomb's location was forgotten, so it escaped most robbery. Howard Carter's team found it in November 1922."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "About 1324 BCE: Tutankhamun buried in KV62 | November 1922: tomb found by Howard Carter's team"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why was Tutankhamun's tomb found so intact?",
+    "right": "Its location was forgotten, so later robbers missed it",
+    "wrong": [
+     "It was sealed inside a giant pyramid",
+     "No one had ever entered it at all",
+     "It had no door"
+    ],
+    "why": "Britannica notes his burial place was forgotten. The tomb was entered and briefly plundered, but it was mostly intact when found in 1922."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last topic: law. Egyptians believed law was handed to people by the gods at creation. Ma'at, truth and order, was the ideal behind it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Law and ma'at"
+   },
+   "cite": [
+    "s26",
+    "s28"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "No Egyptian law code survives. But legal documents like deeds and contracts do survive."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "No law code, but legal documents"
+   },
+   "cite": [
+    "s24",
+    "s25"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So how were cases decided? By the king's decrees, and by earlier cases used as precedent. English law works in a similar way today."
+   },
+   "show": {
+    "kind": "list",
+    "text": "King's decrees | Earlier cases (precedent)"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Does a complete Egyptian law code survive?",
+    "right": "No, so historians use decrees, contracts and court records",
+    "wrong": [
+     "Yes, carved on a stone at Giza",
+     "Yes, on the Rosetta Stone",
+     "Yes, inside Khufu's pyramid"
+    ],
+    "why": "No legal code survives from ancient Egypt, only legal manuscripts, inscriptions and letters that show how law worked."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "At the top was the pharaoh, the final authority in disputes. Next was the vizier, who directed the government, sat in judgment and appointed magistrates."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Pharaoh: final authority | Vizier: judge and chief official | Magistrates and councils"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The vizier was called a priest of ma'at. The pharaoh judged the worst crimes, sometimes after the vizier investigated."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Vizier: priest of ma'at"
+   },
+   "cite": [
+    "s28",
+    "s27"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Local cases went to councils called kenbet. Officials who judged also did other jobs, and no special court building was set aside."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Kenbet: a council of officials"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In court there were no lawyers. People spoke for themselves, showed documents, and sometimes called witnesses."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Speak for yourself | Show documents | Call witnesses"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Men and women could both own and leave property, go to court, and bear witness."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Men and women could sue and own property"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In an Egyptian court, who spoke for you?",
+    "right": "You did, yourself",
+    "wrong": [
+     "A trained lawyer",
+     "A priest of Anubis",
+     "The pharaoh"
+    ],
+    "why": "Parties to a dispute were not represented by lawyers. They spoke for themselves and presented evidence."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Law even protected tombs. Records of tomb-robbery trials from the 20th Dynasty survive."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Tomb-robbery trials"
+   },
+   "cite": [
+    "s27"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The tomb of the vizier Rekhmire, from about 1400 BCE, holds a long text on a vizier's duties."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A painted tomb wall at Thebes covered in hieroglyphic text: the Installation of the Vizier."
+   },
+   "cite": [
+    "s30",
+    "s25"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Compare with Mesopotamia. There we have law codes such as Hammurabi's. Egypt has none, but its law ranks with Sumerian law as among the world's oldest surviving systems."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Mesopotamia: law codes such as Hammurabi's | Egypt: no code, but decrees, precedent and documents"
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's gather it up. Writing, gods, the afterlife, pyramids and law each have one clear example."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Writing: hieroglyphs for stone, hieratic for papyrus | Rosetta Stone: three scripts, read by 1822 | Gods: houses called temples | Afterlife: weighing of the heart | Pyramids: built by paid workers | Law: vizier, kenbet, ma'at"
+   },
+   "cite": [
+    "s5",
+    "s1",
+    "s9",
+    "s13",
+    "s15",
+    "s24"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One last check. What links the weighing of the heart and the courts?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "What links them?"
+   },
+   "cite": [
+    "s13",
+    "s28"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which idea links the weighing of the heart and the law courts?",
+    "right": "Ma'at: truth, order and justice",
+    "wrong": [
+     "Hieratic",
+     "The barque",
+     "Natron"
+    ],
+    "why": "The heart was weighed against Ma'at's feather. Courts were meant to uphold ma'at, and the vizier was called her priest."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Well done. Next class: Egypt III, with trade, everyday life and Egypt's neighbours."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Egypt III: Trade, Everyday Life and Neighbours"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Days in an elite mummification",
+   "rows": [
+    {
+     "label": "Whole process (about)",
+     "value": 70,
+     "source": "s14"
+    },
+    {
+     "label": "Wrapping in linen",
+     "value": 15,
+     "source": "s12"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Workforce figures given for the Great Pyramid (people)",
+   "rows": [
+    {
+     "label": "Herodotus, centuries later (slaves)",
+     "value": 100000,
+     "source": "s15"
+    },
+    {
+     "label": "Estimate: upper (NOVA)",
+     "value": 30000,
+     "source": "s16"
+    },
+    {
+     "label": "Estimate: lower (NOVA)",
+     "value": 20000,
+     "source": "s16"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Writing systems",
+   "links": [
+    "[[Mesopotamia II: Writing, Law and Religion]]",
+    "[[The Indus Valley II: Script, Beliefs, Trade and Change]]",
+    "[[The Americas II: Maya Writing, Calendars and the Andes]]"
+   ]
+  },
+  {
+   "topic": "Ma'at, law and the afterlife",
+   "links": [
+    "[[Mesopotamia II: Writing, Law and Religion]]",
+    "[[Egypt III: Trade, Everyday Life and Neighbours]]"
+   ]
+  },
+  {
+   "topic": "Giza pyramids and the workers' town",
+   "links": [
+    "[[Egypt I: The Nile, Unification and the Pharaoh]]",
+    "[[Egypt III: Trade, Everyday Life and Neighbours]]"
+   ]
+  },
+  {
+   "topic": "Rosetta Stone and decipherment",
+   "links": [
+    "[[Putting It All Together: Compare, Connect and Place on One Timeline]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About 2600 to 2500 BCE, when the Giza pyramids rose",
+   "elsewhere": "In Peru, the city of Caral was being built at roughly the same time. NPR reports its buildings as about 4,600 years old, around the time of the Egyptian pyramids. Lesson 11 covers it.",
+   "cite": [
+    "s29"
+   ]
+  },
+  {
+   "when": "Early Egyptian law, about 3000 BCE onward",
+   "elsewhere": "Mesopotamia also had law, and Egyptian law ranks with Sumerian as one of the world's oldest surviving legal systems. Unlike Egypt, Mesopotamia left law codes such as Hammurabi's. Lesson 2 covers this.",
+   "cite": [
+    "s26"
+   ]
+  },
+  {
+   "when": "196 BCE, when the Rosetta Stone decree was written",
+   "elsewhere": "Egypt was ruled by Greek-speaking Ptolemaic kings, which is why the decree includes Greek for the ruling elite.",
+   "cite": [
+    "s8",
+    "s1"
+   ]
+  },
+  {
+   "when": "1799 to 1822, when the Rosetta Stone was found and read",
+   "elsewhere": "France and Britain were great rivals. The stone passed to the British after the French defeat in 1801.",
+   "cite": [
+    "s1",
+    "s3",
+    "s2"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The Giza pyramids were built by paid, well-fed Egyptian workers, not slaves.",
+   "other_view": "The 'slave' idea comes from the Greek writer Herodotus, who wrote centuries later and mentioned some 100,000 slaves. Modern archaeology has not confirmed that picture. Estimates of the workforce also vary: 20,000 to 30,000 workers by one Egyptologists' count, and 'a few thousand' skilled craftsmen plus manual labourers by another description. Experts agree the builders were Egyptians but not on the exact numbers.",
+   "cite": [
+    "s15",
+    "s16",
+    "s18"
+   ]
+  },
+  {
+   "claim": "Champollion deciphered hieroglyphs.",
+   "other_view": "Thomas Young made early steps, including the name Ptolemy and the cartouche, and Champollion built on Young's method. It is unclear how much Champollion drew on Young's work. Champollion took the decipherment further and is the one widely credited.",
+   "cite": [
+    "s4",
+    "s2",
+    "s3"
+   ]
+  },
+  {
+   "claim": "The Rosetta Stone belongs in the British Museum, where it has been since 1802.",
+   "other_view": "Egypt has renewed calls for its return, including from archaeologist Zahi Hawass. The stone passed to Britain as a spoil of war, and Britain and France paid little attention to 'international norms' then. The sources I read do not give the museum's own reasons for keeping it.",
+   "cite": [
+    "s3"
+   ]
+  },
+  {
+   "claim": "Egypt had no law code, and the legal system worked from decrees and precedent.",
+   "other_view": "Some writers argue a code must have existed, because precedent was in use by the Early Dynastic Period. Others note that none has been found and that Egyptian law operated through decrees and earlier cases.",
+   "cite": [
+    "s26",
+    "s25",
+    "s27"
+   ]
+  },
+  {
+   "claim": "The Diary of Merer shows how the Great Pyramid was built.",
+   "other_view": "The diary is widely used as evidence for how stone reached Giza under Khufu. At least one scholar argues it needs careful re-examination, because the text has interpretive limits for claims about monumental construction.",
+   "cite": [
+    "s23",
+    "s33"
+   ]
+  }
+ ]
+}

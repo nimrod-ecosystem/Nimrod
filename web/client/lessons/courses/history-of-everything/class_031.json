@@ -1,0 +1,1418 @@
+{
+ "about": {
+  "title": "Medieval Africa: Ghana, Mali, Great Zimbabwe and the Swahili Coast",
+  "course": "history-of-everything",
+  "class_n": 31,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "This class is built for about half an hour: 47 short beats and 11 check questions, at roughly 40 seconds a beat. It covers five places plus a closing section on evidence. Each place gets a few beats and one check. The evidence debate gets its own closing section so it is not squeezed."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "The Gold Trade of Ancient & Medieval West Africa",
+   "publisher": "World History Encyclopedia",
+   "date": "undated",
+   "link": "https://www.worldhistory.org/article/1383/the-gold-trade-of-ancient--medieval-west-africa/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "The Salt Trade of Ancient West Africa",
+   "publisher": "World History Encyclopedia",
+   "date": "undated",
+   "link": "https://www.worldhistory.org/article/1342/the-salt-trade-of-ancient-west-africa/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "West African Gold First Reaches North Africa",
+   "publisher": "EBSCO Research Starters",
+   "date": "undated",
+   "link": "https://www.ebsco.com/research-starters/history/west-african-gold-first-reaches-north-africa/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "Jihad over Centuries (historical background on Ghana, Mali and Songhai)",
+   "publisher": "arXiv",
+   "date": "2022",
+   "link": "https://arxiv.org/pdf/2211.04763",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "Mansa Musa",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Mansa_Musa",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "Al-Umari's Account of Mansa Musa's Visit to Cairo",
+   "publisher": "World History Commons",
+   "date": "undated",
+   "link": "https://worldhistorycommons.org/al-umaris-account-mansa-musas-visit-cairo",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "Mansa Musa",
+   "publisher": "Simple English Wikipedia",
+   "date": "undated",
+   "link": "https://simple.wikipedia.org/wiki/Mansa_Musa",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "Mansa Musa's Hajj and Its Impact On The Arab World",
+   "publisher": "Arab America",
+   "date": "undated",
+   "link": "https://www.arabamerica.com/mansa-musas-hajj-and-its-impact-on-the-arab-world/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "Mansa Musa Makes His Hajj, Displaying Mali's Wealth in Gold",
+   "publisher": "Encyclopedia.com",
+   "date": "undated",
+   "link": "https://www.encyclopedia.com/science/encyclopedias-almanacs-transcripts-and-maps/mansa-musa-makes-his-hajj-displaying-malis-wealth-gold-and-becoming-first-sub-saharan-african-widely",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "Ibn Battuta Timeline",
+   "publisher": "Preceden",
+   "date": "undated",
+   "link": "https://www.preceden.com/timeline/ibn-battuta",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "Ibn Battuta in Black Africa",
+   "publisher": "Encyclopedia.com",
+   "date": "undated",
+   "link": "https://www.encyclopedia.com/arts/culture-magazines/ibn-battuta-black-africa",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "Sulayman of Mali",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Sulayman_of_Mali",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "Timeline: Ibn Battuta",
+   "publisher": "World History Encyclopedia",
+   "date": "undated",
+   "link": "https://www.worldhistory.org/timeline/Ibn_Battuta/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "Great Zimbabwe",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/place/Great-Zimbabwe",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "Great Zimbabwe: African City of Stone",
+   "publisher": "Live Science",
+   "date": "undated",
+   "link": "https://www.livescience.com/58200-great-zimbabwe.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "Great Zimbabwe UNESCO World Heritage: History & Facts",
+   "publisher": "GeographyWorlds",
+   "date": "undated",
+   "link": "https://geographyworlds.com/blog/great-zimbabwe-unesco-world-heritage/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "Great Zimbabwe",
+   "publisher": "Current World Archaeology",
+   "date": "undated",
+   "link": "https://www.world-archaeology.com/great-discoveries/great-zimbabwe/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "Great Zimbabwe",
+   "publisher": "Scientific American",
+   "date": "2005-01",
+   "link": "https://www.scientificamerican.com/article/great-zimbabwe-2005-01/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "Great Zimbabwe: Stone City of Southern Africa",
+   "publisher": "Mr. Dowling",
+   "date": "undated",
+   "link": "https://mrdowling.com/ruins-of-great-zimbabwe-ancient-stone-construction",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "The Impact of Prejudice on the History of Great Zimbabwe",
+   "publisher": "World History Encyclopedia",
+   "date": "undated",
+   "link": "https://www.worldhistory.org/article/1429/the-impact-of-prejudice-on-the-history-of-great-zi/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "Kilwa Kisiwani",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Kilwa_Kisiwani",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "The People of the Swahili Coast",
+   "publisher": "National Geographic Education",
+   "date": "undated",
+   "link": "https://education.nationalgeographic.org/resource/people-coast/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "The Swahili Coast and the Indian Ocean Trade (A Brief History, ch. 6)",
+   "publisher": "Pressbooks",
+   "date": "undated",
+   "link": "https://pressbooks.pub/abriefhistory1/chapter/chapter-6-the-swahili-coast-and-the-indian-ocean-trade/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "Swahili Coast",
+   "publisher": "World History Encyclopedia",
+   "date": "undated",
+   "link": "https://www.worldhistory.org/Swahili_Coast/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "Site - Kilwa Kisiwani - Swahili monuments",
+   "publisher": "Zamani Project, University of Cape Town",
+   "date": "undated",
+   "link": "https://www.zamaniproject.org/site-tanzania-kilwa-kisiwani.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "East African City-States, Kilwa Kisiwani, and Indian Ocean Trade",
+   "publisher": "Charter Cities Institute",
+   "date": "undated",
+   "link": "https://chartercitiesinstitute.org/blog-posts/building-africa-kilwa-kisiwani-the-indian-ocean-trade-and-the-rise-of-east-african-city-states/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "Mombasa",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Mombasa",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "The Swahili Culture",
+   "publisher": "Lumen Learning (SUNY World Civilization)",
+   "date": "undated",
+   "link": "https://courses.lumenlearning.com/suny-hccc-worldcivilization/chapter/the-swahili-culture/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s29",
+   "title": "Rock-Hewn Churches of Lalibela, Ethiopia",
+   "publisher": "The Metropolitan Museum of Art",
+   "date": "undated",
+   "link": "https://www.metmuseum.org/perspectives/lalibela",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s30",
+   "title": "Lalibela - Rock-hewn churches",
+   "publisher": "UNESCO World Heritage Centre",
+   "date": "undated",
+   "link": "https://whc.unesco.org/en/activities/160/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s31",
+   "title": "Site - Lalibela Rock-Hewn Churches",
+   "publisher": "Zamani Project, University of Cape Town",
+   "date": "undated",
+   "link": "https://www.zamaniproject.org/site-ethiopia-lalibela-rock-hewn-churches.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s32",
+   "title": "Ethiopia - Zagwe and Solomonic Dynasties",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/place/Ethiopia/The-Zagwe-and-Solomonic-dynasties",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s33",
+   "title": "Solomonic Descent in Ethiopian History",
+   "publisher": "World History Encyclopedia",
+   "date": "undated",
+   "link": "https://www.worldhistory.org/article/1875/solomonic-descent-in-ethiopian-history/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s34",
+   "title": "Solomonic dynasty",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Solomonic_dynasty",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s35",
+   "title": "Ethiopia in the Middle Ages",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Ethiopia_in_the_Middle_Ages",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s36",
+   "title": "Sundiata Keita and the Rise of the Mali Empire",
+   "publisher": "Mr. Dowling",
+   "date": "undated",
+   "link": "https://mrdowling.com/sundiata-oral-legend-of-the-first-mansa-of-mali",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s37",
+   "title": "Epic of Sundiata",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Epic_of_Sundiata",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s38",
+   "title": "AP African American Studies 1.6: Learning Traditions",
+   "publisher": "Fiveable",
+   "date": "undated",
+   "link": "https://fiveable.me/ap-african-american-studies/unit-1/6-learning-traditions/study-guide/Vi4ux6ywE5h5UvsT",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s39",
+   "title": "Lalibela: Medieval Ethiopian Rock-Hewn Churches",
+   "publisher": "Gates of History",
+   "date": "undated",
+   "link": "https://gatesofhistory.com/en/article/rock-hewn-churches-lalibela-architecture",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s40",
+   "title": "Great Mosque of Kilwa",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Great_Mosque_of_Kilwa",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s41",
+   "title": "Great Zimbabwe Visitor Guide",
+   "publisher": "Visit Zimbabwe",
+   "date": "undated",
+   "link": "https://visitzimbabwe.com/zimbabwe/landmarks/great-zimbabwe",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s42",
+   "title": "Great Zimbabwe",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Great_Zimbabwe",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s43",
+   "title": "Rock-Hewn Churches, Lalibela",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Rock-Hewn_Churches,_Lalibela",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s44",
+   "title": "Great Mosque, Kilwa",
+   "publisher": "World History Encyclopedia",
+   "date": "undated",
+   "link": "https://www.worldhistory.org/image/10325/great-mosque-kilwa/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s45",
+   "title": "The Trans-Saharan Salt and Gold Trade (500 BCE-1800 AD)",
+   "publisher": "BlackPast",
+   "date": "undated",
+   "link": "https://blackpast.org/global-african-history/the-trans-saharan-salt-and-gold-trade-500-bce-1800-ad/",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 31. Today we travel across Africa in the Middle Ages, the years from about 500 to 1500."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Medieval Africa: Gold, Stone and Sea Trade"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We will visit four places: West African gold kingdoms, the stone city of Great Zimbabwe, the ports of the Swahili coast, and Ethiopia. Then we ask how we know any of it."
+   },
+   "show": {
+    "kind": "list",
+    "text": "West Africa: Ghana and Mali\nGreat Zimbabwe\nThe Swahili coast\nEthiopia\nThe big question: how do we know?"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, one idea. A trade network is a web of routes. Traders carry goods from places that have plenty to places that lack them."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Trade network"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Our first network crossed the Sahara desert. Heavy loads of salt, gold and cloth went by camel."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A long line of camels walking over golden sand dunes, each loaded with two grey slabs of rock salt."
+   },
+   "cite": [
+    "s3",
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the swap. Caravans took slabs of rock salt south from desert mines. They brought gold back north."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Going south, from the desert: slabs of rock salt || Going north, from the savanna: gold"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which way did the gold travel on the caravans?",
+    "right": "North, from West Africa across the Sahara",
+    "wrong": [
+     "South, into the desert",
+     "It never left the mines",
+     "It went only by sea"
+    ],
+    "why": "Caravans carried salt south and brought gold north across the Sahara."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why was salt wanted so badly? It was scarce in the south, and it held its value. In some rural areas small pieces were used as money."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Salt held its value"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The kings of Ghana even kept stockpiles of salt next to their gold in the royal treasury."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A royal storeroom with gold nuggets in baskets beside stacked slabs of salt."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "You can still see this today. Tuareg caravans carry salt slabs from Taoudenni, each about 90 kilograms. But the salt sellers no longer get gold dust for it."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "90 kg per slab"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So who controlled this trade? The first big power was the Ghana Empire. It lay along the caravan routes, linking forest communities with the markets of the Sahel."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Ghana Empire"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Ghana's kings did not just watch caravans pass. They taxed them. About 1076 the traveller al-Bakri wrote that salt paid one gold dinar coming in and two going out, per donkey-load."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Salt tax in Ghana, about 1076",
+    "chart": "c1"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "According to al-Bakri, how much did Ghana's king charge on a donkey-load of salt sent out of the country?",
+    "right": "Two gold dinars",
+    "wrong": [
+     "One gold dinar",
+     "Five gold dinars",
+     "Nothing at all"
+    ],
+    "why": "Al-Bakri wrote that salt paid one dinar coming in and two when sent out."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Ghana did not last forever. It is dated to about the 6th to the 13th century. After its collapse in 1235, the Mali Empire was founded under a ruler named Sundiata."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "6th to 13th century: Ghana Empire | 1235: Ghana collapses; Mali begins under Sundiata"
+   },
+   "cite": [
+    "s2",
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Mali grew rich the same way Ghana did. It had gold, and it taxed trade in salt, copper and other goods."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Gold + taxes = Mali's wealth"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "We should say one hard thing plainly. Enslaved people were among the goods traded across the Sahara, and on the East African coast too. We come back to this in class 41."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Enslaved people were also traded"
+   },
+   "cite": [
+    "s1",
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Mali's most famous ruler was Mansa Musa. Mansa is the title of Mali's emperor. Under Musa the empire reached its largest size and took in the cities of Gao and Timbuktu."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Mansa Musa of Mali"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 1324 Musa went on the hajj, the pilgrimage to Mecca that Muslims are expected to make once if they can. He travelled with a huge entourage and a vast supply of gold."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1324: the hajj"
+   },
+   "cite": [
+    "s9",
+    "s5"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "How big was the party? Sources disagree. One estimate says about 12,000 people. Another says Musa's caravan may have had 60,000. Nobody counted exactly."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Estimates of Mansa Musa's travelling party",
+    "chart": "c2"
+   },
+   "cite": [
+    "s8",
+    "s7"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In Cairo, Musa spent and gave so freely that it hit the price of gold. The writer al-Umari said gold had been expensive in Egypt until Musa's party came that year."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "So much gold arrived that its price fell"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "According to al-Umari, what happened to the price of gold in Cairo after Musa's visit?",
+    "right": "It fell, because so much gold arrived",
+    "wrong": [
+     "It rose, because gold became scarce",
+     "It did not change",
+     "Egypt banned all gold sales"
+    ],
+    "why": "Al-Umari wrote that gold was at a high price in Egypt until Musa's party came, then it dropped."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "How do we know this? Much of it comes from Arabic writers who wrote after the hajj. Cairo officials learned about Musa and passed it on to historians such as al-Umari."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Secondhand source: written from what others told the writer"
+   },
+   "cite": [
+    "s5",
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Musa's fame reached Europe too. A Spanish map, the Catalan Atlas of 1375, shows him on a throne of gold."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A medieval map painting: a crowned, bearded king on a golden throne, holding a gold nugget, in the lands south of the Sahara."
+   },
+   "cite": [
+    "s5",
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A few decades later, the traveller Ibn Battuta visited Mali in 1352. He praised how safe it was. He found Timbuktu small, though it would grow in later centuries."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A traveller on camelback entering a small walled town beside a river, with mud-brick houses."
+   },
+   "cite": [
+    "s12",
+    "s10",
+    "s11"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What did Ibn Battuta find at Timbuktu in the early 1350s?",
+    "right": "A small town that would become more important later",
+    "wrong": [
+     "The great capital of the Mali Empire",
+     "A ruined, empty city",
+     "A busy sea port"
+    ],
+    "why": "He found Timbuktu small and fairly unimportant. It became the region's most important city in later centuries."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let us pause. So far: a desert trade network, Ghana's taxes, and Mali's gold. Now we go south and east, away from the desert."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Camel caravans crossed the Sahara\nSalt went south; gold went north\nGhana taxed the trade\nMali grew rich on gold; Mansa Musa made it famous"
+   },
+   "cite": [
+    "s1",
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Our next place is Great Zimbabwe, a city of stone ruins in southeastern Zimbabwe, near the town of Masvingo."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Southern Africa, with a marker in the hills of southeastern Zimbabwe, about 30 km southeast of Masvingo."
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The word zimbabwe means houses of stone in the Shona language. In 1980 the country took its name from this city."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Zimbabwe = houses of stone"
+   },
+   "cite": [
+    "s14",
+    "s15"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does the word zimbabwe mean in the Shona language?",
+    "right": "Houses of stone",
+    "wrong": [
+     "Great river",
+     "Mountain of gold",
+     "Land of kings"
+    ],
+    "why": "Zimbabwe is a Shona word that means stone houses, or houses of stone."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The walls are huge. Some stand as tall as 11 metres, and they were built from granite blocks fitted together without mortar."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "11 metres high"
+   },
+   "cite": [
+    "s15",
+    "s16"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The site has three main parts: the Hill Complex, the Great Enclosure, and the Valley ruins. The city flourished roughly from the 11th to the 15th century."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Hill Complex\nGreat Enclosure\nValley ruins"
+   },
+   "cite": [
+    "s14",
+    "s15"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What paid for all this? Cattle, crops, and trade in gold, copper and ivory. Chinese pottery and glass have been found there. So have coins from Kilwa, a port on the coast."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Made and grown nearby: cattle, crops, gold, copper, ivory || Found at the site from far away: Chinese pottery and glass, Kilwa coins"
+   },
+   "cite": [
+    "s17",
+    "s21"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which find shows that Great Zimbabwe traded with faraway places?",
+    "right": "Chinese pottery and glass, and coins from Kilwa",
+    "wrong": [
+     "Its tall granite walls",
+     "Its Shona name",
+     "Its herds of cattle"
+    ],
+    "why": "Goods and coins from far away show that trade reached the city. Walls, name and cattle are local."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the big puzzle. Who built it? In the 1800s and early 1900s many European settlers refused to believe Africans could have. They said Phoenicians, Arabs, or even the Queen of Sheba."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Who built Great Zimbabwe?"
+   },
+   "cite": [
+    "s19",
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Digging settled it. In 1905 and 1906 David Randall-MacIver found mostly African objects. In 1929 Gertrude Caton-Thompson's careful dig confirmed that Bantu speakers built it."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1905-1906: Randall-MacIver finds African artefacts | 1929: Caton-Thompson confirms African builders"
+   },
+   "cite": [
+    "s17",
+    "s19"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What did the careful excavations of 1905 and 1929 show about Great Zimbabwe?",
+    "right": "It was built by Africans, in the Middle Ages",
+    "wrong": [
+     "It was built by Phoenician sailors",
+     "It was built by the Queen of Sheba",
+     "No one can say anything about its builders"
+    ],
+    "why": "Both excavations found African artefacts and building traditions, and pointed to African builders."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Even so, the denial did not stop at once. From 1965 until independence in 1980, Rhodesia's government censored books about the site. Today scholars widely accept that the ancestors of the Shona and nearby groups built it."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Politics shaped what people were allowed to say about the evidence."
+   },
+   "cite": [
+    "s18",
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A lot is still unknown. Only a small share had been dug when that report was written, and the purpose of the conical tower is still debated."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Still being studied"
+   },
+   "cite": [
+    "s15",
+    "s41"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now we move to the east coast, the Swahili coast. The word Swahili comes from the Arabic for coast, so it means people of the coast. Their language is a Bantu language."
+   },
+   "show": {
+    "kind": "map",
+    "text": "The East African coast, from Somalia in the north to Mozambique in the south, with Kilwa, Mombasa and Zanzibar marked."
+   },
+   "cite": [
+    "s24",
+    "s22"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here we find city-states. A city-state is a city that governs itself and the land around it. Kilwa, Mombasa and Zanzibar were independent sultanates that shared a language and Islam."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Kilwa\nMombasa\nZanzibar\nEach ruled itself; all shared one language and one religion"
+   },
+   "cite": [
+    "s22",
+    "s23"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "They lived by the sea. They sat in the path of the monsoon winds, which suited the Indian Ocean trade. They traded pottery, silks and glassware from across the ocean."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Indian Ocean trade by sailing ship"
+   },
+   "cite": [
+    "s23",
+    "s22"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Gold from the interior came to the coast from Sofala. Kilwa's merchants tried to cut out the go-betweens and buy gold directly. That made Kilwa the most important Swahili town."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Kilwa: master of the gold trade"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why did Kilwa become the most important Swahili town?",
+    "right": "It dominated the gold trade",
+    "wrong": [
+     "It had the biggest army in Africa",
+     "It was the capital of the Mali Empire",
+     "It sat on the Sahara caravan route"
+    ],
+    "why": "Mostly because Kilwa dominated the gold trade, buying gold directly instead of through go-betweens."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Kilwa built in stone. Its Great Mosque is made of coral rock blocks, and the Husuni Kubwa palace dates to the 1320s and 1330s. Ibn Battuta called Kilwa amongst the most beautiful of cities."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The ruins of a coral-stone mosque with rows of domes and vaults, beside a calm blue sea."
+   },
+   "cite": [
+    "s24",
+    "s25"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The golden age ended when the Portuguese came. They tried to control all Indian Ocean trade and set up bases along the coast. Trade shrank. We meet them again in class 37."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Portuguese arrival: trade shrinks"
+   },
+   "cite": [
+    "s22",
+    "s26"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Our last place is Ethiopia, in the highlands. Its story is different. Aksum took up Christianity in the mid-4th century, while Mali and the Swahili cities took up Islam."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Ethiopia: a Christian kingdom in the highlands"
+   },
+   "cite": [
+    "s35",
+    "s4",
+    "s22"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "After Aksum declined, power moved to Roha, in Lasta. The Zagwe dynasty ruled there from about 1137 to 1270. At Roha the 11 churches of Lalibela were carved."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "11 rock-hewn churches"
+   },
+   "cite": [
+    "s30",
+    "s29"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "They are not built up; they are carved down. Workers cut each church out of volcanic rock from the top, so walls, roof and pillars are one piece of stone."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A church shaped like a cross, carved down into a deep pit in red volcanic rock, seen from above."
+   },
+   "cite": [
+    "s29"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "How were the churches of Lalibela made?",
+    "right": "They were carved down into volcanic rock, from the top",
+    "wrong": [
+     "They were built from stacked bricks",
+     "They were assembled from imported marble",
+     "They were grown from living trees"
+    ],
+    "why": "The churches were carved from volcanic rock from top to bottom, not built up from the ground."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Tradition credits King Lalibela, who ruled about 1181 to 1221. The idea was a New Jerusalem, since Muslim conquests had halted pilgrimages to Jerusalem. The churches are a World Heritage Site and still in use."
+   },
+   "show": {
+    "kind": "list",
+    "text": "King Lalibela (about 1181-1221)\nA 'New Jerusalem' in the highlands\nBiete Medhani Alem: the largest monolithic church\nWorld Heritage Site since 1978"
+   },
+   "cite": [
+    "s30",
+    "s31",
+    "s43"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 1270 a nobleman named Yekuno Amlak rebelled and overthrew the Zagwe. A group of church leaders backed him, and his family became known as the Solomonic dynasty."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1137-1270: Zagwe dynasty | 1270: Yekuno Amlak founds the Solomonic dynasty"
+   },
+   "cite": [
+    "s32",
+    "s29"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Their story, in a book called the Kebra Nagast, said they descended from King Solomon. Most historians say the book was written to support Yekuno Amlak's rule. There is no historical evidence for the descent."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "The tradition: kings descended from Solomon and the Queen of Sheba || The historians: a story written to legitimise a new dynasty"
+   },
+   "cite": [
+    "s33",
+    "s34"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What do most historians think the Kebra Nagast was written for?",
+    "right": "To support Yekuno Amlak's claim to rule",
+    "wrong": [
+     "To record the Lalibela building plans",
+     "To count the gold of Ghana",
+     "To list the Swahili city-states"
+    ],
+    "why": "Most historians agree it was written to legitimise the dynasty of Yekuno Amlak."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the question we promised. How do we know all this? Historians use three kinds of evidence. Oral tradition is stories passed on by speaking. Written sources are texts. Archaeology is what we dig up."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Oral tradition: stories told by trained speakers, such as griots\nWritten sources: travellers' and scholars' texts\nArchaeology: buildings, pottery, coins"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Take Sundiata, Mali's founder. Griots, the oral historians of the Mande peoples, have told his story for generations. No account written in his lifetime survives."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sundiata: a story kept by memory"
+   },
+   "cite": [
+    "s36",
+    "s37"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Historians disagree about how far to trust it. Some say oral tradition is real historical knowledge, kept by trained people. Others note that oral stories change over centuries. For example, we have no independent evidence that Sumanguru was the villain the stories describe."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Trust it: trained keepers preserved records across generations || Be careful: tellings change, and many details cannot be checked"
+   },
+   "cite": [
+    "s38",
+    "s37",
+    "s36"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Archaeology helps, but it is not neutral. At Great Zimbabwe, pottery and trade goods answered the question. Still, prejudice kept false myths alive for years."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Evidence needs honest readers"
+   },
+   "cite": [
+    "s20",
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Written sources have limits too. Ibn Battuta was an outsider, yet he is the only eyewitness we have of both Mali and the East African city-states in the 1300s. So we cross-check: story against text against dig."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Cross-check your sources"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A griot's story says Sundiata beat a cruel sorcerer king. No account from his lifetime survives. What is the best way to treat the story?",
+    "right": "As a real memory worth checking against other evidence, since details may have changed",
+    "wrong": [
+     "Ignore it completely, because it is only a fairy tale",
+     "Accept every detail as exact fact",
+     "Trust only sources that are written down"
+    ],
+    "why": "Historians treat oral tradition as real evidence, but they check details against other sources because tellings change."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let us finish with the whole picture. Gold and salt built Ghana and Mali. Stone and cattle built Great Zimbabwe. Sea trade built the Swahili cities. Faith and rock built Lalibela."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Ghana and Mali: gold and salt across the Sahara\nGreat Zimbabwe: stone, cattle, trade to the coast\nSwahili coast: Indian Ocean trade, Kilwa's gold\nEthiopia: a Christian kingdom; Lalibela's churches\nEvidence: oral, written and archaeological"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Well done. These were rich, connected worlds, and not far from the story we tell next. In class 32 we cross the oceans to the Americas and the Pacific before 1492."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: The Americas and Pacific Before 1492"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Ghana's salt tax per donkey-load, about 1076 (gold dinars)",
+   "rows": [
+    {
+     "label": "Salt brought in",
+     "value": 1,
+     "source": "s2"
+    },
+    {
+     "label": "Salt sent out",
+     "value": 2,
+     "source": "s2"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Two estimates of the size of Mansa Musa's travelling party (people)",
+   "rows": [
+    {
+     "label": "Estimate in Arab America",
+     "value": 12000,
+     "source": "s8"
+    },
+    {
+     "label": "Estimate in Simple English Wikipedia ('may have had')",
+     "value": 60000,
+     "source": "s7"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Trans-Saharan trade",
+   "links": [
+    "[[The Rise of Islam and the Caliphates]]",
+    "[[The Atlantic Slave Trade]]"
+   ]
+  },
+  {
+   "topic": "Mali Empire and Mansa Musa",
+   "links": [
+    "[[The Black Death and the Crisis of the 1300s]]",
+    "[[The Mongol Empire]]"
+   ]
+  },
+  {
+   "topic": "Great Zimbabwe",
+   "links": [
+    "[[Imperialism: Africa, India, China and Japan]]",
+    "[[The Bronze Age World and Its Collapse]]"
+   ]
+  },
+  {
+   "topic": "Swahili city-states and Indian Ocean trade",
+   "links": [
+    "[[Ottomans, Ming China and the Age of Exploration]]",
+    "[[Tang and Song China and the Islamic Golden Age]]"
+   ]
+  },
+  {
+   "topic": "Ethiopia and the Zagwe and Solomonic dynasties",
+   "links": [
+    "[[Late Antiquity: Changing Empires]]",
+    "[[High Medieval Europe: Crusades, Castles and Universities]]"
+   ]
+  },
+  {
+   "topic": "Oral tradition and archaeology as evidence",
+   "links": [
+    "[[How Do We Know? Reading the Evidence and Telling Time]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About 1181-1221",
+   "elsewhere": "King Lalibela reigns in Ethiopia. In 1187 Saladin captured Jerusalem, which one modern guide links to Lalibela's 'New Jerusalem' project. Another source says only that Muslim conquests had halted pilgrimages.",
+   "cite": [
+    "s30",
+    "s39",
+    "s31"
+   ]
+  },
+  {
+   "when": "1270 and the late 1200s",
+   "elsewhere": "Yekuno Amlak overthrows the Zagwe in Ethiopia in 1270. Mali has been a new empire for a few decades, founded after Ghana collapsed in 1235. Between 1294 and 1302 Kilwa's Great Mosque is extended southward.",
+   "cite": [
+    "s32",
+    "s4",
+    "s40"
+   ]
+  },
+  {
+   "when": "1320s",
+   "elsewhere": "Mansa Musa makes his hajj in 1324-1325. At the same time Kilwa's ruler al-Hasan ibn Suleiman reigns (1320-1333), and Kilwa's Husuni Kubwa palace is built in the 1320s-30s. Ibn Battuta, born in Tangier in 1304, begins his great travels in 1325, the year Musa's hajj ends.",
+   "cite": [
+    "s6",
+    "s44",
+    "s24",
+    "s13"
+   ]
+  },
+  {
+   "when": "About 1330",
+   "elsewhere": "Ibn Battuta visits Kilwa, then ruled by Sultan al-Hasan ibn Sulaiman, and praises its ruler. Sources date the visit between 1329 and 1331.",
+   "cite": [
+    "s10",
+    "s11"
+   ]
+  },
+  {
+   "when": "1352-1353",
+   "elsewhere": "Ibn Battuta visits Mali, whose king since 1341 is Sulayman. The Black Death is breaking out in Europe and North Africa, though it does not seem to have reached Mali itself until after 1352-1353.",
+   "cite": [
+    "s10",
+    "s12"
+   ]
+  },
+  {
+   "when": "1375",
+   "elsewhere": "The Catalan Atlas, a Spanish map, shows Mansa Musa holding a gold nugget. Europeans now know of Mali's gold.",
+   "cite": [
+    "s5",
+    "s9"
+   ]
+  },
+  {
+   "when": "About 1100-1450",
+   "elsewhere": "Great Zimbabwe flourishes. Chinese pottery and glass, and coins from Kilwa, reach it, showing links across the Indian Ocean.",
+   "cite": [
+    "s17",
+    "s21"
+   ]
+  },
+  {
+   "when": "1400s-1500s",
+   "elsewhere": "Portuguese ships arrive in the Indian Ocean in the late 15th century and later take control of Kilwa. In 1531 Ethiopia is invaded by Adal, supported by the Ottoman Empire.",
+   "cite": [
+    "s22",
+    "s26",
+    "s35"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Great Zimbabwe was built by the ancestors of the Shona and nearby African peoples in the Middle Ages.",
+   "other_view": "For about a century many European settlers and officials held the opposite. They said Phoenicians, Arabs, or the Queen of Sheba built it, and the Rhodesian government censored contrary books from 1965 to 1980. Excavation evidence (African artefacts, local building traditions, trade goods) has overturned this view. Even the archaeologist who confirmed African origins in 1929, Gertrude Caton-Thompson, held views influenced by the racism of her time.",
+   "cite": [
+    "s19",
+    "s17",
+    "s18",
+    "s20"
+   ]
+  },
+  {
+   "claim": "Great Zimbabwe peaked with about 18,000 people and was abandoned in the 15th century.",
+   "other_view": "Population estimates vary, and one archaeology magazine says up to about 20,000. Britannica says the city was abandoned in the 15th century, while another account says the 16th or 17th. Only a small part of the site had been excavated when one report was written, so these numbers may change.",
+   "cite": [
+    "s17",
+    "s14",
+    "s42",
+    "s15"
+   ]
+  },
+  {
+   "claim": "Oral tradition, such as the griots' Epic of Sundiata, is real historical evidence.",
+   "other_view": "Many scholars agree that trained keepers preserved real knowledge. Others stress that oral tellings change over the centuries and that many dramatic details cannot be confirmed. No account written in Sundiata's lifetime survives. The earliest written mention is by Ibn Khaldun, over a century later, and he may have been repeating the same Mande traditions. Scholars generally use oral sources together with written and archaeological evidence.",
+   "cite": [
+    "s38",
+    "s37",
+    "s36"
+   ]
+  },
+  {
+   "claim": "Mansa Musa was the richest person in history.",
+   "other_view": "Popular accounts say so, but the main evidence is secondhand reports by Arabic writers who heard about him from Cairo officials. Sources even disagree on how big his party was (about 12,000 to 60,000 people). Wealth is also very hard to compare across eras. This is our own cautious reading of the sources, not a claim by one named historian.",
+   "cite": [
+    "s6",
+    "s5",
+    "s7",
+    "s8"
+   ]
+  },
+  {
+   "claim": "The Swahili city-states grew from African communities, shaped by Indian Ocean contact.",
+   "other_view": "An older view traced Swahili culture to Arab or Persian settlers. Traditions even name a legendary founder from Shiraz. Other evidence points the other way. The Swahili language is Bantu, the towns began as fishing and farming communities, and some architecture looks like a local African creation. All agree that Arabic, Persian, Indian and Chinese cultures influenced the coast.",
+   "cite": [
+    "s24",
+    "s26",
+    "s27",
+    "s28",
+    "s10"
+   ]
+  },
+  {
+   "claim": "The Ethiopian kings descended from King Solomon and the Queen of Sheba.",
+   "other_view": "This is the dynasty's own tradition, set out in the Kebra Nagast. Most historians say the book was written about 40 years after Yekuno Amlak's death to legitimise his rule, and there is no historical evidence for the descent. Other sources note that Aksum, not Solomon, was the center of many legitimising stories.",
+   "cite": [
+    "s33",
+    "s34",
+    "s32"
+   ]
+  },
+  {
+   "claim": "Ghana collapsed in 1235.",
+   "other_view": "Some sources give a date, 1235, for Ghana's fall. Others describe a longer decline. They point to Sanhaja Berbers challenging Ghana's control of the trade in the 10th century and to trade routes shifting eastward.",
+   "cite": [
+    "s4",
+    "s2",
+    "s45"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,1510 @@
+{
+ "about": {
+  "title": "The Holocaust and the Memory of Genocide",
+  "course": "history-of-everything",
+  "class_n": 55,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "Planned for about 30 minutes, including pauses for the 13 check questions. The subject is heavy, so the class is split into nine short parts with headings. A listener can stop after any part and pick up later. The Roma, disability and Nuremberg parts are kept short on purpose and have fuller articles in the sources."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Introduction to the Holocaust: What was the Holocaust?",
+   "publisher": "United States Holocaust Memorial Museum (Holocaust Encyclopedia)",
+   "date": "n.d.",
+   "link": "https://encyclopedia.ushmm.org/content/en/article/introduction-to-the-holocaust",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "Introduction to the Holocaust - Animated Map/Map",
+   "publisher": "United States Holocaust Memorial Museum (Holocaust Encyclopedia)",
+   "date": "n.d.",
+   "link": "https://encyclopedia.ushmm.org/content/en/gallery/introduction-to-the-holocaust-maps",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "How Many People did the Nazis Murder?",
+   "publisher": "United States Holocaust Memorial Museum (Holocaust Encyclopedia)",
+   "date": "n.d.",
+   "link": "https://encyclopedia.ushmm.org/content/en/article/documenting-numbers-of-victims-of-the-holocaust-and-nazi-persecution",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "Documenting Numbers of Victims of the Holocaust and Nazi Persecution (table of estimates; copy on the museum's test site)",
+   "publisher": "United States Holocaust Memorial Museum (Holocaust Encyclopedia)",
+   "date": "n.d.",
+   "link": "https://testencyclopedia.ushmm.org/content/en/article/documenting-numbers-of-victims-of-the-holocaust-and-nazi-persecution",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "Documenting Numbers of Victims of the Holocaust & Nazi Persecution (quoting USHMM)",
+   "publisher": "Jewish Virtual Library",
+   "date": "n.d.",
+   "link": "https://jewishvirtuallibrary.org/documenting-numbers-of-victims-of-the-holocaust",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "The \"Final Solution\"",
+   "publisher": "United States Holocaust Memorial Museum (Holocaust Encyclopedia)",
+   "date": "n.d.",
+   "link": "https://encyclopedia.ushmm.org/content/en/article/the-final-solution",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "Wannsee Conference and the \"Final Solution\"",
+   "publisher": "United States Holocaust Memorial Museum (Holocaust Encyclopedia)",
+   "date": "n.d.",
+   "link": "https://encyclopedia.ushmm.org/content/en/article/wannsee-conference-and-the-final-solution",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "What People Get Wrong About the Nazi Conference to Plan the 'Final Solution'",
+   "publisher": "TIME",
+   "date": "n.d.",
+   "link": "https://time.com/4636171/wannsee-conference-75-years/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "Holocaust: From Kristallnacht to the Final Solution (Victims of Nazism)",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/event/Holocaust/From-Kristallnacht-to-the-final-solution",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "Genocide of European Roma (Gypsies), 1939-1945",
+   "publisher": "United States Holocaust Memorial Museum (Holocaust Encyclopedia)",
+   "date": "n.d.",
+   "link": "https://encyclopedia.ushmm.org/content/en/article/genocide-of-european-roma-gypsies-1939-1945",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "The Genocide of the Roma",
+   "publisher": "The National WWII Museum",
+   "date": "n.d.",
+   "link": "https://www.nationalww2museum.org/war/articles/genocide-roma",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "Who was Anne Frank?",
+   "publisher": "Anne Frank House",
+   "date": "n.d.",
+   "link": "https://www.annefrank.org/en/anne-frank/who-was-anne-frank/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "Anne Frank: Diary",
+   "publisher": "United States Holocaust Memorial Museum (Holocaust Encyclopedia)",
+   "date": "n.d.",
+   "link": "https://encyclopedia.ushmm.org/content/en/article/anne-frank-diary",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "About Anne Frank",
+   "publisher": "Anne Frank The Exhibition",
+   "date": "n.d.",
+   "link": "https://www.annefrankexhibit.org/anne-frank",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "Warsaw Ghetto Uprising",
+   "publisher": "United States Holocaust Memorial Museum (Holocaust Encyclopedia)",
+   "date": "n.d.",
+   "link": "https://encyclopedia.ushmm.org/content/en/article/warsaw-ghetto-uprising",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "Resistance and rescuers",
+   "publisher": "Holocaust Memorial Day Trust",
+   "date": "n.d.",
+   "link": "https://hmd.org.uk/learn-about-the-holocaust-and-genocides/the-holocaust/resistance-rescuers-and-liberation/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "Unit 7: Resistance (Warsaw Ghetto Uprising)",
+   "publisher": "Echoes & Reflections",
+   "date": "n.d.",
+   "link": "https://echoesandreflections.org/unit-7/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "Holocaust: Jewish Resistance to the Nazis",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/event/Holocaust/Jewish-resistance-to-the-Nazis",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "Resistance during the Holocaust",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Resistance_during_the_Holocaust",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "Matylda Getter",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Matylda_Getter",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "Holocaust distortion",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Holocaust_distortion",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "What Were the Nuremberg Trials?",
+   "publisher": "United States Holocaust Memorial Museum",
+   "date": "n.d.",
+   "link": "https://www.ushmm.org/learn/holocaust/holocaust-explainer-videos/nuremberg-trials-explainer",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "International Criminal Justice Since Nuremberg",
+   "publisher": "United States Holocaust Memorial Museum",
+   "date": "n.d.",
+   "link": "https://www.ushmm.org/genocide-prevention/simon-skjodt-center/work/ferencz-international-justice-initiative/transitional-justice/international-criminal-justice-since-nuremberg",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "The Nuremberg Trials",
+   "publisher": "The National WWII Museum",
+   "date": "n.d.",
+   "link": "https://www.nationalww2museum.org/war/topics/nuremberg-trials",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "The Nuremberg Trial and its Legacy",
+   "publisher": "The National WWII Museum",
+   "date": "n.d.",
+   "link": "https://www.nationalww2museum.org/war/articles/the-nuremberg-trial-and-its-legacy",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "Examining the Nuremberg Trials for Nazi War Criminals (video transcript)",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/video/Overview-Nurnberg-trials/-194315",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "What is Genocide?",
+   "publisher": "United States Holocaust Memorial Museum (Holocaust Encyclopedia)",
+   "date": "n.d.",
+   "link": "https://encyclopedia.ushmm.org/content/en/article/what-is-genocide",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "Raphael Lemkin and the Genocide Convention",
+   "publisher": "Facing History and Ourselves",
+   "date": "n.d.",
+   "link": "https://www.facinghistory.org/resource-library/raphael-lemkin-genocide-convention",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s29",
+   "title": "Raphael Lemkin Defines Genocide",
+   "publisher": "Genocide Watch",
+   "date": "2013-03-14",
+   "link": "http://genocidewatch.net/2013/03/14/raphael-lemkin-defines-genocide-2/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s30",
+   "title": "Why the Genocide Convention Sets an Intentionally High Bar",
+   "publisher": "Combat Antisemitism Movement",
+   "date": "n.d.",
+   "link": "https://combatantisemitism.org/special-features/raphael-lemkin-genocide/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s31",
+   "title": "Genocide: Lemkin and the 1948 Convention (study notes)",
+   "publisher": "LotusArise",
+   "date": "n.d.",
+   "link": "https://lotusarise.com/genocide-lemkin-convention-arendt-banality-of-evil-jaspers-four-guilts-philosophy-optional/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s32",
+   "title": "International Holocaust Remembrance Day",
+   "publisher": "United States Holocaust Memorial Museum (Holocaust Encyclopedia)",
+   "date": "n.d.",
+   "link": "https://encyclopedia.ushmm.org/content/en/article/international-holocaust-remembrance-day",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s33",
+   "title": "The Origins of International Holocaust Remembrance Day",
+   "publisher": "The National WWII Museum",
+   "date": "2024-01-27",
+   "link": "https://www.nationalww2museum.org/war/articles/origins-international-holocaust-remembrance-day",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s34",
+   "title": "Holocaust Survivors and Victims Names Database",
+   "publisher": "United States Holocaust Memorial Museum",
+   "date": "n.d.",
+   "link": "https://www.ushmm.org/remember/resources-holocaust-survivors-victims/database-of-holocaust-survivor-and-victim-names",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s35",
+   "title": "What is Holocaust Denial?",
+   "publisher": "Museum of Tolerance",
+   "date": "n.d.",
+   "link": "https://museumoftolerance.com/learn/educator-resources/what-is-holocaust-denial",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s36",
+   "title": "Why Confronting Holocaust Distortion and Denial Matters",
+   "publisher": "United States Department of State",
+   "date": "n.d.",
+   "link": "https://2021-2025.state.gov/why-confronting-holocaust-distortion-and-denial-matters/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s37",
+   "title": "Holocaust denial - strategies of lies and distortion (podcast transcript)",
+   "publisher": "Auschwitz-Birkenau Memorial and Museum",
+   "date": "n.d.",
+   "link": "https://www.auschwitz.org/en/education/e-learning/podcast/holocaust-denial--strategies-of-lies-and-distortion/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s38",
+   "title": "A more insidious form of Holocaust denial emerges",
+   "publisher": "Northeastern University",
+   "date": "2022-04-08",
+   "link": "https://news.northeastern.edu/2022/04/08/holocaust-distortion/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s39",
+   "title": "Nazi genocides",
+   "publisher": "Texas Holocaust, Genocide, and Antisemitism Advisory Commission",
+   "date": "n.d.",
+   "link": "https://thgaac.texas.gov/learning/genocides/nazi-genocides",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s40",
+   "title": "Learn about the Holocaust",
+   "publisher": "United States Holocaust Memorial Museum",
+   "date": "n.d.",
+   "link": "https://www.ushmm.org/learn/learn-about-the-holocaust",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s41",
+   "title": "Evidence and documentation for the Holocaust",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Evidence_and_documentation_for_the_Holocaust",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s42",
+   "title": "Wannsee Conference",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Wannsee_Conference",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s43",
+   "title": "Raphael Lemkin",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Raphael_Lemkin",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s44",
+   "title": "Nuremberg trials",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Nuremberg_trials",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s45",
+   "title": "Addressing Holocaust Denial, Distortion and Trivialization (Teaching Aid 6)",
+   "publisher": "OSCE Office for Democratic Institutions and Human Rights",
+   "date": "n.d.",
+   "link": "https://odihr.osce.org/sites/default/files/f/documents/5/5/441122.pdf",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "A note before we start. Today's class is about genocide: the Nazi murder of Jews and of other people. It is written with care. You can pause, take a break, or stop at any point."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Content note: this class covers genocide"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last class followed World War II. Today we look closely at the Holocaust, which happened inside that war. We ask three things: what it was, how it happened, and how it is remembered."
+   },
+   "show": {
+    "kind": "list",
+    "text": "What it was | How it happened | How it is remembered"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Part one: what it was. The Holocaust was the systematic, state-sponsored persecution and murder of six million Jews by the Nazi regime and its allies and collaborators."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Holocaust"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Two words need explaining. 'Systematic' means planned and organised, not random. 'State-sponsored' means a government was behind it, using its laws, offices and police."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Systematic = planned and organised | State-sponsored = carried out by a government"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The museum dates the Holocaust from 1933 to 1945. It began in January 1933, when Adolf Hitler and the Nazi Party came to power in Germany. Another name for it is the Shoah, a Hebrew word meaning catastrophe."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "January 1933: Nazis come to power | 1945: end of the Holocaust era"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "According to the US Holocaust Memorial Museum, when did the Holocaust era begin?",
+    "right": "In January 1933, when Hitler and the Nazi Party came to power in Germany",
+    "wrong": [
+     "In 1914, when World War I began",
+     "In September 1939, when World War II began",
+     "In 1945, when the war ended"
+    ],
+    "why": "The museum defines the Holocaust years as 1933 to 1945, starting when Hitler and the Nazi Party took power."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the number. Six million Jews were murdered. By 1945, nearly two out of every three Jews in Europe had been killed. Each one of them was a person with a name and a life."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "6,000,000"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "How do we know that number? No single Nazi document adds up every death. Scholars compared census records, post-war investigations and captured German and Axis archives to build the estimates."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Census records | Post-war investigations | Captured German and Axis archives"
+   },
+   "cite": [
+    "s3",
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Part two: the ideas behind it. We start with one word. Antisemitism means hatred of, or prejudice against, Jews. The museum says it was at the foundation of the Holocaust."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Antisemitism"
+   },
+   "cite": [
+    "s1",
+    "s3"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Nazis also held a false idea about race. They claimed Germans belonged to a 'superior' race, and that Jews belonged to an 'inferior' race that threatened the German community. Those were their claims, not facts."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Nazi claim: Germans were a 'superior' race and Jews were a threat. This was prejudice, not science."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "According to the museum, what was at the foundation of the Holocaust?",
+    "right": "Antisemitism, which is hatred of or prejudice against Jews",
+    "wrong": [
+     "A food shortage in Germany",
+     "A dispute over the border with France",
+     "A scientific discovery about human races"
+    ],
+    "why": "The museum states that antisemitism was at the foundation of the Holocaust and was a basic part of Nazi ideology."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Part three: how it happened. The Holocaust was not one event. It was an evolving process, each step more extreme than the one before. We will take four steps in order."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Laws | 2. Riots and pressure to leave | 3. War and ghettos | 4. Mass murder"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step one: laws. In 1935 came the Nuremberg Laws. They set up racial categories, forbade relationships between Jews and Germans, and took away Jews' citizenship and civil rights."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1935: Nuremberg Laws"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step two: violence. On November 9 and 10, 1938, Nazis led a nationwide riot called Kristallnacht, the Night of Broken Glass. The aim of these policies was to make life so unbearable that German Jews would emigrate."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "November 9-10, 1938: Kristallnacht"
+   },
+   "cite": [
+    "s6",
+    "s26"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Quick check. The Nuremberg Laws of 1935 are not the same as the Nuremberg Trials after the war. Do you remember what the laws did?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Nuremberg Laws (1935)"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What did the Nuremberg Laws of 1935 do?",
+    "right": "They set racial categories and took away Jews' citizenship and civil rights",
+    "wrong": [
+     "They put Nazi leaders on trial",
+     "They ended World War II",
+     "They created the United Nations"
+    ],
+    "why": "The 1935 laws denied Jews citizenship and rights and set racial categories. The trials came after the war, in 1945."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step three: war and ghettos. After World War II began in September 1939, the Nazi camp system grew fast. Jewish people were also imprisoned in ghettos."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map of Europe in 1942 under German and Axis control, with ghettos and camps marked as dots"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step four: the 'Final Solution'. This was the Nazi name for the mass murder of Europe's Jews between 1941 and 1945. It was carried out by mass shootings and in gas chambers."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The 'Final Solution' (1941-1945)"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "On January 20, 1942, officials met at a villa in Wannsee, near Berlin, to coordinate the plan. The museum says none of the officials present objected. But the killing had already begun before that meeting."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "January 20, 1942: Wannsee Conference"
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's check how these two terms fit together. Remember: the Holocaust ran from 1933 to 1945, and the Final Solution was one part of it."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Holocaust: 1933-1945, the whole process | Final Solution: 1941-1945, the last stage"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "How does the museum describe the 'Final Solution'?",
+    "right": "The last stage of the Holocaust, the systematic mass murder of Jews from 1941 to 1945",
+    "wrong": [
+     "Another name for the whole of World War II",
+     "The name of the 1935 racial laws",
+     "The name of a single camp"
+    ],
+    "why": "The museum says the Final Solution is part of the Holocaust, not the same thing, and was its last stage."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Many people took part. Nazi leaders relied on German institutions. One office directed the deportations, the transport ministry organised train schedules, and the foreign office pressed German-allied states to hand over their Jews."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Deportation office | Transport ministry | Foreign office | Millions of Germans and other Europeans"
+   },
+   "cite": [
+    "s1",
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Nazis built five killing centers specifically to murder Jewish people with poison gas. About 2.7 million Jewish victims were murdered at those five places. We say this plainly and with respect."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "5 killing centers"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The end of the story. In January 1945, as Allied forces approached, the SS forced camp prisoners on long death marches in harsh conditions. Auschwitz-Birkenau was liberated on January 27, 1945."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "January 1945: death marches | January 27, 1945: Auschwitz-Birkenau liberated"
+   },
+   "cite": [
+    "s2",
+    "s32"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Part four: other victims. Nazi leaders saw the destruction of the Jews as their main goal. But they also persecuted and murdered other groups, and the museum records their numbers too."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Part 4: Other victims of Nazi persecution"
+   },
+   "cite": [
+    "s39",
+    "s3"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "This chart shows the museum's best estimates, in thousands. Jews: six million. Soviet civilians: about seven million. Notice that 1.3 million Soviet Jewish civilians are counted in both of those bars."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1",
+    "text": "Estimated deaths by group (thousands)"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The chart also includes Soviet prisoners of war, non-Jewish Polish civilians, Serb civilians, disabled people, Roma and Jehovah's Witnesses. Remember these are estimates, and some people appear in more than one group."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Soviet prisoners of war | Non-Jewish Polish civilians | Serb civilians | Disabled people | Roma | Jehovah's Witnesses"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why can't we simply add up every bar on the chart to get one total?",
+    "right": "Some victims are counted in more than one group, such as 1.3 million Soviet Jewish civilians",
+    "wrong": [
+     "The bars use different units, like years and dollars",
+     "The museum refuses to give any estimates",
+     "Only the biggest bar is a real number"
+    ],
+    "why": "The museum's table notes that Soviet Jewish civilians are included in the 6 million for Jews as well as in the Soviet civilian figure."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Disabled people were among the first victims of Nazi mass murder. In 1939 the Nazis began the T4 program, which they called 'euthanasia'. It murdered disabled and emotionally disturbed people. Up to 250,000 people in institutions died."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Aktion T4 (from 1939)"
+   },
+   "cite": [
+    "s9",
+    "s4"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Some Germans protested these murders, including a Catholic bishop who preached against them. The program was formally halted. But the killing and sterilisation went on in secret, and T4 staff later helped run death camps."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Public protest | Formal halt | Secret killing continued | T4 staff later used in death camps"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What was the T4 program?",
+    "right": "A Nazi program from 1939 that murdered disabled people and called it 'euthanasia'",
+    "wrong": [
+     "A network that hid Jewish children",
+     "An international court that tried Nazi leaders",
+     "A set of laws about marriage"
+    ],
+    "why": "Britannica describes T4 as the program begun in 1939 to murder intellectually or physically disabled people."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Roma and Sinti were also targeted as 'racially inferior'. Nazi authorities interned, sterilised, deported and killed them. At least 250,000 European Roma were killed. Britannica says they were the only other group systematically gassed alongside Jews."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Roma and Sinti"
+   },
+   "cite": [
+    "s10",
+    "s9"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In May 1944 Roma prisoners at Auschwitz-Birkenau refused to leave their barracks and armed themselves with tools. The SS withdrew for a time. Even so, about 21,000 of 23,000 Roma and Sinti sent there died. Historians still debate the best name for this genocide."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Wooden barracks at Auschwitz-Birkenau in grey light, with the doors closed"
+   },
+   "cite": [
+    "s11",
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Part five: voices of the victims. Numbers cannot tell us what one person felt. So we turn to one young person who wrote it down: Anne Frank."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Part 5: Victims' own voices"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "On her thirteenth birthday Anne was given a diary. In July 1942 she, her parents Otto and Edith, and her sister Margot went into hiding in an annex behind her father's business in Amsterdam. The Van Pels family joined them the next week."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A narrow wooden staircase behind a swinging bookcase in an old Amsterdam canal house"
+   },
+   "cite": [
+    "s14",
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Eight people hid there for 671 days, helped by Otto's office staff. Anne wrote about events in the annex and also about her feelings and thoughts. She hoped to become a writer."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "671 days in hiding"
+   },
+   "cite": [
+    "s14",
+    "s12"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 1944 Anne began editing her diary, hoping to publish it after the war as 'The Secret Annex'. On August 4, 1944, the people in hiding were discovered and arrested."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1944: Anne edits her diary | August 4, 1944: arrest"
+   },
+   "cite": [
+    "s13",
+    "s12"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Of the eight people in the annex, only Otto Frank survived. The diary was thrown on the floor by an SS man and was left behind. Otto later said that if it had been taken, no one would ever have heard of his daughter."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Eight in hiding | One survivor: Otto Frank | The diary left behind"
+   },
+   "cite": [
+    "s14",
+    "s13"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Friends convinced Otto to publish it. In June 1947, 3,000 copies of 'Het Achterhuis' were printed. In 1960 the hiding place became the Anne Frank House museum. Otto hoped readers would see the dangers of hatred."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "June 1947: diary published | 1960: Anne Frank House opens"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "After the war, who was the only one of the eight in the annex to survive and see the diary published?",
+    "right": "Her father, Otto Frank",
+    "wrong": [
+     "Her sister, Margot",
+     "Peter van Pels",
+     "Her mother, Edith"
+    ],
+    "why": "Otto Frank was the only one of the eight to survive. Friends persuaded him to publish the diary in 1947."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Part six: resistance and rescue. People resisted in many ways. In the ghettos they smuggled food and medicine. They also kept schools and prayer going in secret, which some call spiritual resistance."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Smuggling food and medicine | Secret schools | Secret religious gatherings"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Warsaw Ghetto Uprising began on April 19, 1943, when German troops entered to deport the people left. About 700 young Jewish fighters took part, and civilians hid in bunkers. It lasted almost a month."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "April 19 - May 16, 1943: Warsaw Ghetto Uprising"
+   },
+   "cite": [
+    "s15",
+    "s16",
+    "s17"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The fighters were few and poorly armed. The Germans brought heavy artillery and set the ghetto on fire. It was still the largest Jewish uprising of the war and the first major urban revolt against German rule in Europe."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Largest Jewish uprising of World War II"
+   },
+   "cite": [
+    "s15",
+    "s17"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "What was the Warsaw Ghetto Uprising?",
+    "right": "An armed revolt by Jewish fighters in April 1943 when German troops came to deport the ghetto's remaining people",
+    "wrong": [
+     "The Allied landing in Poland",
+     "A trial of Nazi leaders",
+     "The name of a rescue organisation"
+    ],
+    "why": "The museum describes it as the largest Jewish uprising of the war, begun on April 19, 1943."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Some people risked their lives to rescue Jews. Yad Vashem gives rescuers the title Righteous Among the Nations. Matylda Getter worked with Irena Sendler and the underground to save hundreds of Jewish children from the Warsaw Ghetto."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Righteous Among the Nations"
+   },
+   "cite": [
+    "s19",
+    "s20"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We should be honest about limits. Rescue helped many, but it did not stop the killing. A US Treasury memo in January 1944 accused the State Department of acquiescing in the murders. Historians also warn against exaggerating how many rescuers there were."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Rescuers were real and brave | Governments acted late and little; the number of rescuers can be exaggerated"
+   },
+   "cite": [
+    "s18",
+    "s21"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Part seven: justice and law. On November 20, 1945, the International Military Tribunal began in Nuremberg. Twenty-four leaders were indicted, and 21 stood trial. It was the first time an international tribunal was used to bring national leaders to justice."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "November 20, 1945: Nuremberg trial begins"
+   },
+   "cite": [
+    "s23",
+    "s24",
+    "s25"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The charges were crimes against peace, war crimes, crimes against humanity, and conspiracy. Most defendants admitted the crimes happened but said they were following orders. Twelve were sentenced to death. Later trials, including the Einsatzgruppen case, followed."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Crimes against peace | War crimes | Crimes against humanity | Conspiracy"
+   },
+   "cite": [
+    "s22",
+    "s26",
+    "s23"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What principle did the Nuremberg trials help to establish?",
+    "right": "That crimes against humanity should not go unpunished",
+    "wrong": [
+     "That wars can never happen again",
+     "That only soldiers can be tried for crimes",
+     "That genocide is not a crime"
+    ],
+    "why": "The museum says the trials helped to establish that crimes against humanity should not go unpunished."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the word 'genocide'. The Polish-Jewish lawyer Raphael Lemkin made it up from Greek and Latin roots. Winston Churchill had called the killing 'a crime without a name'. Lemkin's book Axis Rule in Occupied Europe printed the word in 1944."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Genocide: coined by Raphael Lemkin"
+   },
+   "cite": [
+    "s27",
+    "s28",
+    "s29"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Lemkin saw genocide as a coordinated plan to destroy the essential foundations of the life of a group. The Nuremberg prosecutors used the word in their indictment, but it was not yet an international crime."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A pencil sketch of a man with glasses at a desk piled with legal papers"
+   },
+   "cite": [
+    "s27"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "On December 9, 1948, the United Nations adopted the Genocide Convention. It makes genocide an international crime. It covers killing, serious harm, conditions meant to destroy a group, and preventing births."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "December 9, 1948: UN Genocide Convention"
+   },
+   "cite": [
+    "s27",
+    "s29"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The key idea is intent. Genocide means these acts are done with intent to destroy, in whole or in part, a national, ethnic, racial or religious group. Intent sits at the center of the definition."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Intent to destroy a group"
+   },
+   "cite": [
+    "s29",
+    "s30"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "What sits at the center of the Genocide Convention's definition?",
+    "right": "Intent to destroy a national, ethnic, racial or religious group",
+    "wrong": [
+     "A death toll of over one million",
+     "The use of poison gas",
+     "Being at war at the time"
+    ],
+    "why": "The convention defines genocide by acts committed with intent to destroy a protected group, in whole or in part."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Part eight: remembering. January 27 is the anniversary of the liberation of Auschwitz. On November 1, 2005, the UN General Assembly made it International Holocaust Remembrance Day. The first ceremony was held in 2006."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "January 27, 1945: Auschwitz liberated | November 1, 2005: UN resolution 60/7 | 2006: first UN ceremony"
+   },
+   "cite": [
+    "s32"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The same resolution rejects Holocaust denial. Germany adopted the date as an official day of remembrance first, after a 1995 ceremony at Auschwitz. Remembering also means names. The museum keeps a database of survivors and victims so each person can be found."
+   },
+   "show": {
+    "kind": "list",
+    "text": "January 27 as a remembrance day | Rejecting denial | Names databases"
+   },
+   "cite": [
+    "s32",
+    "s33",
+    "s34",
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Part nine: denial. Holocaust denial tries to deny or play down what Nazi Germany did. Deniers claim survivors lied, photos were faked, and captured documents were forged. These claims rest on flawed research."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Holocaust denial"
+   },
+   "cite": [
+    "s35"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Historians answer with evidence. It includes SS train schedules and statistics, photographs, perpetrators' own words, and survivor accounts. The Auschwitz museum alone holds more than 400 volumes of survivor accounts."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "For deniers to be right, all survivors would have to be wrong. (Historian Deborah Lipstadt)"
+   },
+   "cite": [
+    "s36",
+    "s41",
+    "s37"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Distortion is subtler than denial. It does not say nothing happened. It can exaggerate how many people helped Jews, or whitewash collaborators. Some historians have faced legal action for writing about local complicity."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Denial: says it did not happen | Distortion: bends the story"
+   },
+   "cite": [
+    "s21",
+    "s38"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why do historians trust the history of the Holocaust, even though no single document counts every victim?",
+    "right": "Many independent kinds of evidence agree: documents, perpetrators' admissions, photographs and survivor testimony",
+    "wrong": [
+     "Because one Nazi list names every victim",
+     "Because only governments say it happened",
+     "Because survivors alone have told the story"
+    ],
+    "why": "The museum notes no single document counts every death, but the evidence from many sources fits together."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's gather it together. The Holocaust was the murder of six million Jews, built step by step on antisemitism. Other groups were persecuted and murdered too. We remember through voices, rescue, law and records."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Six million Jews | Roma, disabled people and others | Anne Frank and other voices | Nuremberg and the Genocide Convention | Remembrance and evidence"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Thank you for staying with a hard subject. Next, in class 56, we see how the world tried to rebuild: the United Nations, the Cold War and decolonization."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: A New World Order"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Estimated deaths by group, in thousands (groups overlap, so do not add)",
+   "rows": [
+    {
+     "label": "Jews",
+     "value": 6000,
+     "source": "s4"
+    },
+    {
+     "label": "Soviet civilians (includes about 1,300 Jewish)",
+     "value": 7000,
+     "source": "s4"
+    },
+    {
+     "label": "Soviet prisoners of war",
+     "value": 3000,
+     "source": "s4"
+    },
+    {
+     "label": "Non-Jewish Polish civilians",
+     "value": 1800,
+     "source": "s4"
+    },
+    {
+     "label": "Serb civilians (Croatia, Bosnia and Herzegovina)",
+     "value": 312,
+     "source": "s4"
+    },
+    {
+     "label": "Disabled people in institutions (up to)",
+     "value": 250,
+     "source": "s4"
+    },
+    {
+     "label": "Roma (at least)",
+     "value": 250,
+     "source": "s4"
+    },
+    {
+     "label": "Jehovah's Witnesses",
+     "value": 1.9,
+     "source": "s4"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "The Holocaust",
+   "links": [
+    "[[World War II]]",
+    "[[Antisemitism]]",
+    "[[Final Solution]]"
+   ]
+  },
+  {
+   "topic": "Anne Frank and victims' diaries",
+   "links": [
+    "[[World War II]]",
+    "[[Holocaust memory]]"
+   ]
+  },
+  {
+   "topic": "Roma and Sinti genocide",
+   "links": [
+    "[[The Holocaust]]",
+    "[[Aktion T4]]"
+   ]
+  },
+  {
+   "topic": "Aktion T4 and the murder of disabled people",
+   "links": [
+    "[[The Holocaust]]",
+    "[[Nazi racial ideology]]"
+   ]
+  },
+  {
+   "topic": "Resistance and rescue",
+   "links": [
+    "[[Warsaw Ghetto Uprising]]",
+    "[[Righteous Among the Nations]]"
+   ]
+  },
+  {
+   "topic": "Nuremberg trials and crimes against humanity",
+   "links": [
+    "[[The United Nations]]",
+    "[[Genocide Convention]]"
+   ]
+  },
+  {
+   "topic": "Raphael Lemkin and the word genocide",
+   "links": [
+    "[[Genocide Convention]]",
+    "[[The United Nations]]"
+   ]
+  },
+  {
+   "topic": "Holocaust denial and distortion",
+   "links": [
+    "[[How Do We Know? Reading the Evidence]]",
+    "[[Holocaust memory]]"
+   ]
+  },
+  {
+   "topic": "Wider frame of reference",
+   "links": [
+    "[[World War II]]",
+    "[[20th-Century Science and Technology]]",
+    "[[A New World Order]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "January 1933",
+   "elsewhere": "Adolf Hitler is appointed chancellor and the Nazi Party takes power in Germany. The museum treats this as the start of the Holocaust era.",
+   "cite": [
+    "s1"
+   ]
+  },
+  {
+   "when": "1935",
+   "elsewhere": "The Nuremberg Laws strip Jews of citizenship and set racial categories.",
+   "cite": [
+    "s8"
+   ]
+  },
+  {
+   "when": "November 9-10, 1938",
+   "elsewhere": "Kristallnacht, the nationwide riot known as the Night of Broken Glass.",
+   "cite": [
+    "s26",
+    "s6"
+   ]
+  },
+  {
+   "when": "September 1939",
+   "elsewhere": "World War II begins and the Nazi camp system expands as forced labor becomes important to war production. T4 killings of disabled people also begin this year.",
+   "cite": [
+    "s2",
+    "s9"
+   ]
+  },
+  {
+   "when": "January 20, 1942",
+   "elsewhere": "Officials meet at Wannsee to coordinate the 'Final Solution'.",
+   "cite": [
+    "s7"
+   ]
+  },
+  {
+   "when": "July 1942",
+   "elsewhere": "The Frank family goes into hiding in Amsterdam. That same year about 300,000 Jews were deported from the Warsaw Ghetto.",
+   "cite": [
+    "s13",
+    "s16"
+   ]
+  },
+  {
+   "when": "April 19 - May 16, 1943",
+   "elsewhere": "The Warsaw Ghetto Uprising takes place while World War II rages across Europe.",
+   "cite": [
+    "s15",
+    "s17"
+   ]
+  },
+  {
+   "when": "August 4, 1944",
+   "elsewhere": "The people hiding in the Secret Annex are discovered and arrested.",
+   "cite": [
+    "s12"
+   ]
+  },
+  {
+   "when": "January 27, 1945",
+   "elsewhere": "Auschwitz-Birkenau is liberated, in the final months of the war in Europe.",
+   "cite": [
+    "s32"
+   ]
+  },
+  {
+   "when": "November 20, 1945",
+   "elsewhere": "The International Military Tribunal opens in Nuremberg.",
+   "cite": [
+    "s23"
+   ]
+  },
+  {
+   "when": "June 1947",
+   "elsewhere": "Anne Frank's diary is first printed in the Netherlands. In September 1947 the United States begins a series of further war crimes trials at Nuremberg.",
+   "cite": [
+    "s12",
+    "s23"
+   ]
+  },
+  {
+   "when": "December 9, 1948",
+   "elsewhere": "The UN adopts the Genocide Convention. According to study notes, this was the day before the Universal Declaration of Human Rights.",
+   "cite": [
+    "s27",
+    "s31"
+   ]
+  },
+  {
+   "when": "1960",
+   "elsewhere": "The Anne Frank House opens as a museum.",
+   "cite": [
+    "s12"
+   ]
+  },
+  {
+   "when": "1995 and 2005",
+   "elsewhere": "A 1995 ceremony at Auschwitz marks 50 years since the war's end. In 2005 the UN General Assembly sets January 27 as International Holocaust Remembrance Day.",
+   "cite": [
+    "s33",
+    "s32"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The Holocaust began in 1933, when the Nazis took power (the museum's dating).",
+   "other_view": "Many historians point to Kristallnacht in November 1938 as the start of the Holocaust. Others, such as Christopher Browning, describe a slow, gradual process in which genocide was always implied. The museum separates the whole 1933 to 1945 Holocaust from the 1941 to 1945 'Final Solution'.",
+   "cite": [
+    "s1",
+    "s8",
+    "s6"
+   ]
+  },
+  {
+   "claim": "At least 250,000 Roma were killed, and up to 250,000 disabled people in institutions.",
+   "other_view": "These are estimates, and the Roma figure is given as a range of 250,000 to 500,000. Scholars have also debated for decades what the genocide of the Roma should be called. No single Nazi document counts all victims.",
+   "cite": [
+    "s4",
+    "s10",
+    "s11"
+   ]
+  },
+  {
+   "claim": "The Genocide Convention's definition is the right one.",
+   "other_view": "One view is that the narrow, intent-based definition is deliberate, since a definition capturing everything would protect no one. The other view, held by many scholars, is that it left out political and social groups and 'cultural genocide', which Lemkin wanted included. The convention took many but not all of his ideas.",
+   "cite": [
+    "s30",
+    "s31",
+    "s28"
+   ]
+  },
+  {
+   "claim": "Lemkin coined the word 'genocide' in 1944.",
+   "other_view": "Sources differ on timing. The museum says he coined it in 1942 and first printed it in 1944. Genocide Watch dates the book to 1943, and Wikipedia says he coined it in either 1943 or 1944. The first print appearance in 1944 is the best-supported date.",
+   "cite": [
+    "s27",
+    "s29",
+    "s43"
+   ]
+  },
+  {
+   "claim": "The Holocaust was not the main focus of the main Nuremberg trial.",
+   "other_view": "The museum video says the Holocaust was not the trial's main focus, but that much of what we know about it came to light there. Wikipedia calls it a major focus and says later trials focused more on it. Historians stress different things depending on which trials they count.",
+   "cite": [
+    "s22",
+    "s44"
+   ]
+  },
+  {
+   "claim": "Historians can accurately say how widespread local help or complicity was in occupied Europe.",
+   "other_view": "This is contested in some places. Historian Jan Grabowski reports a Polish court finding against historians who wrote about local complicity, and polling that 40% of Poles think such historians should be tried. He says plaintiffs were told they could sue if their national pride was hurt. This lesson gives his account only; it does not set out the views of those who disagree with him. Separately, researchers warn against exaggerating the number of rescuers.",
+   "cite": [
+    "s38",
+    "s21"
+   ]
+  },
+  {
+   "claim": "Holocaust deniers call themselves 'revisionist historians'.",
+   "other_view": "Historians reply that denial only imitates legitimate revisionism, the normal scholarly work of testing and refining details with evidence. Real scholarship has revised details, such as Auschwitz death estimates, without doubting the genocide. Deniers dismiss survivor testimony, photographs and documents that historians judge authentic.",
+   "cite": [
+    "s45",
+    "s35"
+   ]
+  }
+ ]
+}

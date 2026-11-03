@@ -1,0 +1,1135 @@
+{
+ "about": {
+  "title": "Switches and scanning",
+  "course": "assistive-tech-and-aac",
+  "class_n": 5,
+  "audience": [
+   "adult"
+  ],
+  "minutes": 28,
+  "length_note": "About 28 minutes, a little over the 25-minute aim. This class has seven separate ideas (switches, switch types, how scanning works, scan methods, scan patterns, timing and effort, positioning and assessment). Each one needs a plain explanation, an example and a check, and cutting them would bring back the rushing Mike flagged."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Augmentative and Alternative Communication (AAC) Practice Portal",
+   "publisher": "American Speech-Language-Hearing Association (ASHA)",
+   "date": "n.d.",
+   "link": "https://www.asha.org/practice-portal/professional-issues/augmentative-and-alternative-communication/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Switch access scanning",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Switch_access_scanning",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Set up Switch Access for Android",
+   "publisher": "Google, Android Accessibility Help",
+   "date": "n.d.",
+   "link": "https://support.google.com/accessibility/android/answer/6301490?hl=en",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Choose a scanning mode and pattern (Proloquo2Go)",
+   "publisher": "AssistiveWare",
+   "date": "n.d.",
+   "link": "https://www.assistiveware.com/support/proloquo2go/alternative-access/scanning-mode",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Switches 101: Switches as Assistive Technology",
+   "publisher": "University of Vermont, Center on Disability and Community Inclusion",
+   "date": "n.d.",
+   "link": "https://cdci.w3.uvm.edu/blog/pedsprovt/switches-101-switches-as-assistive-technology/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Different Types of Adaptive Switches for Individuals With Disabilities",
+   "publisher": "Enabling Devices",
+   "date": "n.d.",
+   "link": "https://enablingdevices.com/blog/different-types-of-adaptive-switches-for-individuals-with-disabilities/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Assistive Technologies – The Switch",
+   "publisher": "Axess Lab",
+   "date": "n.d.",
+   "link": "https://axesslab.com/switches/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Switch Assessment (Article 3669), by Michelle Lange, OT",
+   "publisher": "OccupationalTherapy.com",
+   "date": "n.d.",
+   "link": "https://www.occupationaltherapy.com/articles/switch-assessment-3669",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "What Criteria Is Necessary To Create An Ideal Placement For A Switch Site? (Ask the Experts 4520)",
+   "publisher": "OccupationalTherapy.com",
+   "date": "n.d.",
+   "link": "https://occupationaltherapy.com/ask-the-experts/switch-assessment-4520-4520",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Switch Assessment for Type and Location and Switch Mounting (Lange)",
+   "publisher": "Access to Independence, via NVATLL",
+   "date": "n.d.",
+   "link": "https://nvatll.wordpress.com/wp-content/uploads/2012/11/langeswitchassessment.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Switches Part 2: Switch Assessment",
+   "publisher": "Communicate AT (Australia)",
+   "date": "n.d.",
+   "link": "https://www.communicateat.com.au/at-support/knowledge-library/switch-assistance/switches-part2-switch-assessment",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Augmentative and Alternative Communication (AAC) Advances: A Review of Configurations for Individuals with a Speech Disability",
+   "publisher": "PubMed Central (PMC6515262)",
+   "date": "n.d.",
+   "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6515262/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Multi-modal access method (eye-tracking + switch-scanning) for individuals with severe motor impairment: A preliminary investigation",
+   "publisher": "PubMed Central (PMC9576815)",
+   "date": "n.d.",
+   "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9576815/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Modelling Noise-Resilient Single-Switch Scanning Systems",
+   "publisher": "arXiv (1712.10073)",
+   "date": "n.d.",
+   "link": "https://arxiv.org/pdf/1712.10073",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Development of a new high sensitivity mechanical switch for AAC access in people with amyotrophic lateral sclerosis",
+   "publisher": "PubMed Central (PMC6884866)",
+   "date": "n.d.",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6884866/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "AAC System Design: Examples of AAC Tools and Techniques",
+   "publisher": "The Bridge School, Communicative Competence",
+   "date": "n.d.",
+   "link": "https://communication.bridgeschool.org/intervention/aac-system-design-guiding-principles/aac-system-design-examples-of-aac-tools-and-techniques/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Partner-Assisted Scanning",
+   "publisher": "University of Kentucky, Human Development Institute (KY Speaks AAC)",
+   "date": "n.d.",
+   "link": "https://hdi.uky.edu/ky-speaks-aac/partner-assisted-scanning/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Augmentative and Alternative Communication",
+   "publisher": "Craig Hospital",
+   "date": "n.d.",
+   "link": "https://craighospital.org/inpatient/assistive-technology/alternative-communication",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Switch Access Devices: What They Are and Who Needs Them",
+   "publisher": "SpecialNeeds.com",
+   "date": "n.d.",
+   "link": "https://www.specialneeds.com/articles/assistive-tech/hardware/switch-access-devices-what-they-are-and-who-needs-them/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Switch access",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Switch_access",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Switches",
+   "publisher": "PRC-Saltillo",
+   "date": "n.d.",
+   "link": "https://prc-saltillo.com/access-methods/switches",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Planning for communication when AAC is not available",
+   "publisher": "AssistiveWare",
+   "date": "n.d.",
+   "link": "https://www.assistiveware.com/learn-aac/planning-communication-when-aac-is-not-available",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Adaptive Switches for People With Disabilities",
+   "publisher": "Enabling Devices",
+   "date": "n.d.",
+   "link": "https://enablingdevices.com/product-category/switches/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "Quick Reference Guide to Switch Access to AAC Apps",
+   "publisher": "Special Education Technology Center",
+   "date": "n.d.",
+   "link": "https://www.specialedtechcenter.org/images/PDF/Switch%20Access%20to%20AAC%20Apps-%20Quick%20Reference.pdf",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 5 of 9: switches and scanning. By the end, you will know how someone who cannot point or touch a screen can still choose what to say."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Switches and scanning"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last class we looked at how symbol pages are laid out. A page only helps if the person can choose from it. Many people choose by touching. Some cannot."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A tablet showing a page of colourful symbol buttons, with a question mark floating where a finger would normally touch."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Good news: a device does not have to be touched. Selections can also be made by eye gaze, head pointing, or scanning. Today is scanning."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Ways to choose: touch | eye gaze | head pointing | scanning (today's topic)"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First word: switch. A switch is a device that sends a signal when someone activates it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "switch"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That one signal can move a highlight on a screen, trigger a communication device, or control other equipment. A switch does one small job: it says 'now'."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A single round switch with a cable running to a tablet on a stand."
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What activates it? A small movement. A hand, foot, elbow or knee can press one. Others respond to a cheek movement, a blink, or a breath."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Hand | foot | elbow | knee | head | cheek | blink | breath"
+   },
+   "cite": [
+    "s21",
+    "s18",
+    "s7",
+    "s5",
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Stephen Hawking is a well-known example. Earlier he used a handheld clicker. As his hand muscles weakened, he moved to a switch worked by his cheek."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A small sensor resting near a cheek, connected to a computer on a wheelchair."
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The lesson: the switch can change as a body changes, and the person still has a voice. Good AAC plans for that."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The switch changes. The voice stays."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Quick check before we move on."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Check: what is a switch?"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does a switch actually do?",
+    "right": "It sends a signal when the person activates it with a movement they can control.",
+    "wrong": [
+     "It speaks words by itself, without any signal.",
+     "It reads the person's thoughts.",
+     "It only works if the person can point at a screen."
+    ],
+    "why": "A switch is a device that sends a signal when activated. That signal can move a highlight, trigger a device or control other equipment."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now, what do switches look like? The most common are button and plate switches. You press them directly."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A large round button switch on a table, and a flat plate switch fixed beside a wheelchair headrest."
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "They come in sizes from big paddles to small buttons. A plate switch can be mounted near any body part that moves reliably, and they are often fixed to wheelchair headrests."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Big paddle | small button | plate on a headrest"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A pillow switch has a soft foam top and is built to respond to the gentlest touch. It can be pressed with hands, arms, shoulders or head."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A soft foam pillow-shaped switch resting against a person's shoulder."
+   },
+   "cite": [
+    "s6",
+    "s23"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A team may also try lever switches or wobble switches. Wobble switches are a popular one to try out."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Lever switch | wobble switch"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A sip-and-puff switch has a mouthpiece. Breathing in, a sip, or out, a puff, activates it. Two different actions means one switch can work two things."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Sip = breathe in, one action | Puff = breathe out, a second action"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Some switches have no button at all. An eye-blink switch uses an infrared sensor. A sound switch can respond to a whisper in a quiet room. Sensor-based ones are called electrical switches."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Eye-blink (infrared) | sound | other sensor switches"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A practical point: a switch usually cannot plug straight into a tablet. It needs a switch interface, a small box with switch ports that connects by Bluetooth."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A switch cable plugged into a small interface box, which links by Bluetooth to a tablet."
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Check time. We have met button, plate, pillow, lever, wobble, sip-and-puff and sensor switches."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Check: sip-and-puff"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "How is a sip-and-puff switch activated?",
+    "right": "By breathing in (a sip) or breathing out (a puff) through a mouthpiece.",
+    "wrong": [
+     "By pressing a foot pedal.",
+     "By blinking at an infrared sensor.",
+     "By saying a word out loud."
+    ],
+    "why": "A sip-and-puff switch has a mouthpiece. Breathing in or out through it activates the switch."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the puzzle. One switch gives one click. A page has dozens of symbols. How can one click choose among them? The answer is scanning."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "scanning"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In scanning, the device highlights items one at a time. When the highlight lands on the item the person wants, they hit the switch. The device does the moving. The person does the choosing."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "star",
+    "count": 6,
+    "layout": "row",
+    "text": "A row of six items. The highlight lights each in turn."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "If seeing the screen is hard, the device can say each item aloud instead of lighting it. That is called auditory scanning."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A speaker icon announcing items one after another: 'drink... eat... more... stop...'"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Check: so far, the person's job is simple."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Check: when do you press?"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In the basic scanning we have described, when does the person press the switch?",
+    "right": "When the item they want is highlighted, or spoken aloud.",
+    "wrong": [
+     "At the very start, to read the whole page aloud.",
+     "At any moment, because the device guesses the item.",
+     "Only when the screen goes blank."
+    ],
+    "why": "The device highlights or speaks items one at a time. The person hits the switch when their chosen item comes up."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next: who sets the pace? There are three common ways to control the scan."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Automatic | step | inverse (also called directed)"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Automatic scanning: the highlight moves on its own, at a set speed. One switch is enough. Press when the wanted item is lit."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A highlight box sliding along a row of symbols by itself; a single switch below it."
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step scanning: the person moves the highlight. One switch steps to the next item. A second switch selects the highlighted item. So the person sets the pace."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two switches side by side: one labelled 'next', one labelled 'choose'."
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Inverse, or directed, scanning works the other way round. The highlight moves only while the switch is held down. Letting go on an item selects it."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A hand holding a switch down while the highlight travels, then releasing it on one symbol."
+   },
+   "cite": [
+    "s2",
+    "s24"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's put automatic and step side by side."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Automatic: one switch, the device sets the pace | Step: two switches, the person sets the pace"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In step scanning, what moves the highlight to the next item?",
+    "right": "The person presses a switch each time.",
+    "wrong": [
+     "The device moves it by itself at a set speed.",
+     "Holding the switch down and letting go.",
+     "Saying the item's name aloud."
+    ],
+    "why": "In step scanning, the person controls each movement of the highlight by hitting a switch. A second switch selects the item."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A different question: in what order does the highlight travel? That is the scan pattern. The simplest is linear: item by item across the whole screen."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A grid of symbols with a highlight visiting every square in order, left to right, row after row."
+   },
+   "cite": [
+    "s4",
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Row-column scanning highlights whole rows first. Hit the switch on the right row. The highlight then moves through the items in that row. Hit again to choose."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A grid with the second row lit up. Then only the items in that row light one by one."
+   },
+   "cite": [
+    "s4",
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Row-column is one kind of group-item scanning. The groups could be rows, columns or other meaningful categories. The device scans groups first, then the items inside the chosen group."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "group-item scanning"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why bother? Take a grid of 4 rows and 8 columns, 32 items. Linear might step past all 32. Row-column needs at most 4 row highlights, then 8 item highlights. That is 12."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "12 instead of 32 (worst case, 4 x 8 grid)"
+   },
+   "cite": [
+    "s4",
+    "s2"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The trade-off is that you press twice for each item, and the person has to learn the two-step rhythm. Check that you can count the saving."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Check: row-column on a 4 x 8 grid"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A grid has 4 rows and 8 columns. With row-column scanning, what is the most highlights you would wait through to reach one item?",
+    "right": "12 (up to 4 rows, then up to 8 items in the chosen row).",
+    "wrong": [
+     "32, because every item is highlighted.",
+     "8, because only one row is scanned.",
+     "24, because rows and columns multiply."
+    ],
+    "why": "Row-column scanning highlights rows first (up to 4), then the items in the chosen row (up to 8). 4 + 8 = 12, against 32 for linear scanning."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now timing. The scan speed is how long each item stays lit before the highlight moves on. On most devices it can be changed."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "scan speed"
+   },
+   "cite": [
+    "s24",
+    "s3"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Too fast, and the person misses items and spends time fixing mistakes. Too slow, and time is wasted on every item. One study found a big gain from setting the delay to suit each user's own reaction time."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Too fast: missed items and corrections | Too slow: waiting on every item"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Even well tuned, scanning is slow. Natural speech runs at around 125 to 185 words per minute. Scanning is reported at around 2. A fast single-switch user may reach 7 to 8."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Words per minute: speech and scanning",
+    "chart": "c1"
+   },
+   "cite": [
+    "s12",
+    "s14"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That is about the method, not the person's mind. Give a scanning communicator time, and do not finish their sentences for them."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Slow method, not slow thinking"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Scanning is also tiring. Studies of children note that its thinking and movement demands often make it slow, with errors common. Where movement is weak, working a switch can take minutes and cause fatigue."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Watch the highlight | wait | anticipate | press at the right moment | repeat"
+   },
+   "cite": [
+    "s13",
+    "s15"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "For scanning, one therapist's guide says the person must anticipate the right choice, wait, then press accurately and quickly, again and again over time."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Check: why can scanning tire a person?"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why can scanning be tiring, even when the switch needs only a tiny movement?",
+    "right": "The person has to watch, wait, anticipate and press accurately at the right moment, over and over.",
+    "wrong": [
+     "The device shouts each item at full volume.",
+     "The switch always has to be pressed with great force.",
+     "Scanning only works if the person is standing."
+    ],
+    "why": "Scanning asks the person to anticipate the right choice, wait, and activate the switch accurately and quickly, repeatedly. That takes thinking effort as well as movement effort."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Some people switch between methods to share the load. Access methods can be combined. One small study mixed eye tracking with switch scanning, so people could switch back and forth and tire less with eye tracking."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Switch scanning for some tasks | Eye tracking for others"
+   },
+   "cite": [
+    "s12",
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "There is also scanning with no device. In partner-assisted scanning, the partner offers choices one after another, by sight or by voice. The person answers with an agreed movement such as a blink, a nod or a sound."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A parent holding two picture cards and speaking each option, while the child looks up for 'yes'."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A common tip: offer two or three options, say each, and wait for the person to confirm or reject. A partner can also read faster or slower on a tired day, which a computer program cannot do."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Offer 2 or 3 options | say each one | wait | confirm or reject"
+   },
+   "cite": [
+    "s17",
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the body side. A switch is only useful if the person can reach it reliably, every time. A therapist's switch-assessment guide says the first step is to check the person's seating and positioning."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Position first"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The same guide lists other things to think about: how far the switch has to move before it activates, its size, safety near the eyes and mouth, and a mount that gives repeatable access."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Travel distance | size | safety | a mount that holds steady"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Mounts matter too. An adjustable mount holds the switch in the same spot on a wheelchair or desk. One therapist writes that she changes a person's positioning in about 80 percent of switch assessments to find a good switch location."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A switch on a flexible arm clamped beside a headrest, held exactly where a cheek or head movement reaches it."
+   },
+   "cite": [
+    "s11",
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Check: if a switch is not working well, where do you start?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Check: first step with a switch"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "According to one assessment guide, what should be the first step when setting up a switch for someone?",
+    "right": "Check the person's seating and positioning.",
+    "wrong": [
+     "Buy the biggest switch available.",
+     "Speed the scan up as far as it will go.",
+     "Choose a switch from a catalogue by price."
+    ],
+    "why": "The guide says to begin by checking seating and positioning, because a switch only works if the person can reach and activate it reliably."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The place on the body and the movement used is called the switch site. An ideal one uses as small a movement as possible, and the movement is isolated and deliberate, with controlled activation."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "switch site"
+   },
+   "cite": [
+    "s8",
+    "s9"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The same experts list the hands as the most common site. They also note a general order that clinicians may work through, from hands through head and mouth to feet. The best site depends on the person."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Hands | head | mouth | feet | other body sites"
+   },
+   "cite": [
+    "s9",
+    "s10"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Check: what makes a good switch site?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Check: a good switch site"
+   },
+   "cite": [
+    "s8",
+    "s9"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which describes a good switch site?",
+    "right": "A small movement the person can make on purpose, in a controlled way, again and again.",
+    "wrong": [
+     "The biggest movement the person can manage.",
+     "A movement that happens by reflex.",
+     "Whichever movement needs the most force."
+    ],
+    "why": "Experts describe an ideal site as using as small a movement as possible, isolated and deliberate, with controlled activation."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "This is why a professional should assess it. Access assessment is usually coordinated by an occupational therapist or assistive technology specialist. It looks at strength, range, accuracy and fatigue."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Strength | range of movement | accuracy | fatigue"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Occupational therapists join AAC evaluations to help work out the best access method. Speech-language pathologists, as the communication specialists, work alongside them. Most people also need practice time with the switch before relying on it."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A speech-language pathologist and an occupational therapist trying different switches with a family."
+   },
+   "cite": [
+    "s18",
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Remember: this course explains ideas. It is not clinical advice. For one person's switch, scan settings or seating, please ask a speech-language pathologist or occupational therapist."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Individual advice comes from professionals"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To recap: a switch sends a signal from a small movement. Scanning lets one switch choose from many items. You can scan automatically, by steps or by holding and releasing. The pattern can be linear or in groups."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Switch = a signal | scanning = highlight then press | step, automatic, inverse | linear and group-item patterns"
+   },
+   "cite": [
+    "s19",
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Timing needs tuning, scanning takes effort, and the switch must be positioned so it can be reached reliably. Next time: eye gaze and other ways to access a device."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: eye gaze and other ways to access a device"
+   },
+   "cite": [
+    "s13",
+    "s11"
+   ],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Words per minute: natural speech and scanning (lower bound or reported figure)",
+   "rows": [
+    {
+     "label": "Natural speech (low end of 125 to 185)",
+     "value": 125,
+     "source": "s12"
+    },
+    {
+     "label": "Fast single-switch scanning user (low end of 7 to 8)",
+     "value": 7,
+     "source": "s14"
+    },
+    {
+     "label": "Scanning, reported rate",
+     "value": 2,
+     "source": "s12"
+    },
+    {
+     "label": "Single-switch scanning, common rate of 1 or lower",
+     "value": 1,
+     "source": "s14"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "switch",
+   "links": [
+    "[[switch types]]",
+    "[[switch site]]",
+    "[[switch interface]]"
+   ]
+  },
+  {
+   "topic": "scanning",
+   "links": [
+    "[[scan methods]]",
+    "[[scan patterns]]",
+    "[[auditory scanning]]",
+    "[[partner-assisted scanning]]"
+   ]
+  },
+  {
+   "topic": "scan methods",
+   "links": [
+    "[[automatic scanning]]",
+    "[[step scanning]]",
+    "[[inverse scanning]]"
+   ]
+  },
+  {
+   "topic": "scan patterns",
+   "links": [
+    "[[linear scanning]]",
+    "[[row-column scanning]]",
+    "[[group-item scanning]]",
+    "[[symbol sets and page layout]]"
+   ]
+  },
+  {
+   "topic": "scan speed and fatigue",
+   "links": [
+    "[[core and fringe vocabulary]]",
+    "[[eye gaze]]"
+   ]
+  },
+  {
+   "topic": "positioning and assessment",
+   "links": [
+    "[[switch site]]",
+    "[[getting professional help]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Scanning is so slow and tiring that it should be a last resort.",
+   "other_view": "Reported scanning rates are low (around 2 words per minute) and the thinking and movement load can be heavy, so many teams look first at direct methods such as eye gaze or head pointing. But scanning needs only a small, reliable movement. Developers of one low-force switch for people with ALS describe the approach as reliable and cheap. It can be combined with other methods, such as eye tracking, to share the effort. And some people have no other dependable option. ASHA lists scanning alongside eye gaze and head pointing as valid ways to access a system.",
+   "cite": [
+    "s12",
+    "s13",
+    "s15",
+    "s1"
+   ]
+  },
+  {
+   "claim": "A device is always better than a partner reading the options aloud.",
+   "other_view": "A device can scan without a partner. But partner-assisted scanning lets the partner speed up or slow down on a tired day, which a computer program cannot do. AssistiveWare suggests every AAC user practise it as a back-up for moments when their usual access does not work. Its limit is that the person depends on a partner being there and skilled at it.",
+   "cite": [
+    "s16",
+    "s22",
+    "s1"
+   ]
+  }
+ ]
+}

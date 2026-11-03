@@ -1,0 +1,852 @@
+{
+ "about": {
+  "title": "Egypt and the Indus Valley",
+  "course": "history-of-everything",
+  "class_n": 16,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. This class covers two civilizations and two debates (the Indus script and the Indus decline). It is split into about 21 short beats, each with one idea and, in most cases, a check question."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Indus script",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/topic/Harappan-script",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "India: The Indus civilization",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/place/India/The-Indus-civilization",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "Khufu",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/biography/Khufu",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "Great Pyramid of Giza",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/place/Great-Pyramid-of-Giza",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "Old Kingdom of Egypt: The Age of the Pyramids",
+   "publisher": "World History Encyclopedia",
+   "date": "undated",
+   "link": "https://www.worldhistory.org/Old_Kingdom_of_Egypt/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "The Middle Asian Interaction Sphere",
+   "publisher": "Expedition Magazine, Penn Museum",
+   "date": "undated",
+   "link": "https://www.penn.museum/sites/expedition/the-middle-asian-interaction-sphere/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "Climate Change Likely Caused Migration, Demise of Ancient Indus Valley Civilization",
+   "publisher": "Woods Hole Oceanographic Institution",
+   "date": "2018-11-13",
+   "link": "https://www.whoi.edu/press-room/news-release/climate-change-likely-caused-migration-demise-of-ancient-indus-valley-civilization/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "Scientists finally uncovered why the Indus Valley Civilization collapsed",
+   "publisher": "ScienceDaily",
+   "date": "2025-12-14",
+   "link": "https://www.sciencedaily.com/releases/2025/12/251214100930.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "Oxygen isotope in archaeological bioapatites from India: Implications to climate change and decline of Bronze Age Harappan civilization",
+   "publisher": "PubMed Central (NCBI)",
+   "date": "undated",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4879637/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "Disappearance of the Indus Valley Civilization",
+   "publisher": "Lumen Learning (SUNY World History)",
+   "date": "undated",
+   "link": "https://courses.lumenlearning.com/suny-worldhistory/chapter/disappearance-of-the-indus-valley-civilization/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "Cities of the Indus Valley Civilization",
+   "publisher": "Lumen Learning (SUNY World Civilization)",
+   "date": "undated",
+   "link": "https://courses.lumenlearning.com/suny-hccc-worldcivilization/chapter/cities-of-the-indus-valley-civilization/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "Ancient Egypt (chapter 6, A Brief History)",
+   "publisher": "Pressbooks open textbook",
+   "date": "undated",
+   "link": "https://pressbooks.pub/abriefhistory1/chapter/chapter-3-egypt/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "Impact of the Nile River on Ancient Egypt",
+   "publisher": "Vassar College",
+   "date": "undated",
+   "link": "https://pages.vassar.edu/impact-of-the-nile-river-on-ancient-egypt/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "A timeline of Stonehenge",
+   "publisher": "The British Museum",
+   "date": "undated",
+   "link": "https://www.britishmuseum.org/exhibitions/world-stonehenge/stonehenge-timeline",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "Sargon",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/biography/Sargon",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "5 Mysterious Writing Systems That No One Has Deciphered",
+   "publisher": "History.com",
+   "date": "undated",
+   "link": "https://www.history.com/articles/ancient-writing-systems-never-decoded",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "The Harappan Drainage System: Ancient Engineering at Its Best",
+   "publisher": "The Archaeologist",
+   "date": "undated",
+   "link": "https://www.thearchaeologist.org/blog/the-harappan-drainage-system-ancient-engineering-at-its-best",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "Fluvial landscapes of the Harappan civilization",
+   "publisher": "PubMed Central (NCBI)",
+   "date": "undated",
+   "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3387054",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "Great Pyramid of Giza",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Great_Pyramid_of_Giza",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "Decline of the Indus River Valley Civilization (c. 3300-1300 BCE)",
+   "publisher": "Smith College, Climate in Arts and History",
+   "date": "undated",
+   "link": "https://www.science.smith.edu/climatelit/decline-of-the-indus-river-valley-civilization-c-3300-1300-bce/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "Sargon of Akkad",
+   "publisher": "World History Encyclopedia",
+   "date": "undated",
+   "link": "https://www.worldhistory.org/Sargon_of_Akkad/",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back. Last class we met the first cities and the first writing. Today we put two early river civilizations side by side: Egypt and the Indus Valley."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Two Rivers, Two Civilizations"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a term. A river civilization is an early society whose farms and cities grew up beside a great river."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "River civilization"
+   },
+   "cite": [
+    "s13",
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Take the Nile in Egypt. Every year it flooded, and when the water went down it left a layer of dark, nutrient-rich mud called silt. Farmers could plant in that silt."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A narrow green strip of farmland along the Nile, with dry desert on both sides."
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What did the Nile flood leave behind that helped farming?",
+    "right": "Rich silt",
+    "wrong": [
+     "Salt",
+     "Loose sand dunes",
+     "Stones"
+    ],
+    "why": "The receding Nile left a brown layer of silt full of nutrients, which allowed farming."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Indus people also lived by a river. Their land sat at the dry edge of the monsoon rains, so farming depended heavily on river water."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Two areas marked. Egypt: the Nile in northeast Africa. Indus: the Indus River in what is now Pakistan and northwest India."
+   },
+   "cite": [
+    "s18",
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the timing. Egypt was joined into one kingdom first. Indus cities were big by about 2600 BCE, around when Egypt's Great Pyramid was built."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "c. 3150 BCE Egypt unified | by 2600 BCE Indus cities are large | c. 2589–2566 BCE Khufu's reign"
+   },
+   "cite": [
+    "s12",
+    "s11",
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's start with Egypt's ruler. The word pharaoh is usually explained as meaning \"big house\", probably the great palace where the king lived."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Pharaoh"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Egypt was unified about 3150 BCE under one king. Egyptians believed the pharaoh's divine presence kept justice, peace and good harvests, and the yearly Nile flood was seen as a sign of that."
+   },
+   "show": {
+    "kind": "list",
+    "text": "One kingdom|One king|Believed divine|Linked to the Nile flood"
+   },
+   "cite": [
+    "s12",
+    "s13"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What did ancient Egyptians believe about the pharaoh?",
+    "right": "He had a divine presence that kept justice, peace and prosperity",
+    "wrong": [
+     "He was an ordinary farmer chosen by lottery",
+     "He was a foreign general with no religious role",
+     "He had no connection to the Nile"
+    ],
+    "why": "The pressbook says Egyptians believed the pharaoh's divine presence kept justice and prosperity, as the annual Nile flooding showed."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A pharaoh's power showed in stone. The Great Pyramid was the tomb of King Khufu, and it was the largest building in the world up to that time."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "c. 2589–2566 BCE: Khufu's reign (dates vary by source)"
+   },
+   "cite": [
+    "s3",
+    "s4",
+    "s5"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Who was the Great Pyramid built for?",
+    "right": "King Khufu, as his tomb",
+    "wrong": [
+     "Tutankhamun, as his palace",
+     "Cleopatra, as a temple",
+     "Alexander the Great, as a fortress"
+    ],
+    "why": "Britannica says it was built as a royal tomb for Khufu, second king of the 4th dynasty."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Who built it? Not slaves, say historians today. Skilled and unskilled Egyptian workers were paid, and the Nile carried the heavy stone on boats."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Paid Egyptian workers|Stone moved by boat on the Nile|Granite came from Aswan|Limestone casing came from Tura"
+   },
+   "cite": [
+    "s5",
+    "s19"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "According to historians today, who built the pyramids?",
+    "right": "Skilled and unskilled Egyptian workers who were paid",
+    "wrong": [
+     "Mostly enslaved foreign captives",
+     "Visitors from other planets",
+     "Only soldiers"
+    ],
+    "why": "World History Encyclopedia says Egyptian workers were compensated, and worker housing has been found at Giza."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the Indus. Egypt is famous for royal tombs. The Indus is famous for something different: its planned cities. We call these people the Harappans, after the city of Harappa."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Harappan (Indus) civilization"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "By 2600 BCE small farming communities had grown into big cities. Archaeologists have found more than 1,052 cities and settlements, mostly along the Indus and its tributaries."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1,052+ cities and settlements found"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "About how many Indus cities and settlements have been found?",
+    "right": "More than a thousand",
+    "wrong": [
+     "About ten",
+     "About fifty",
+     "About two hundred"
+    ],
+    "why": "More than 1,052 cities and settlements have been found, mainly near the Indus and its tributaries."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The cities had a plan. A grid means straight streets that cross each other at right angles, like a chessboard. Mohenjo-daro had a raised citadel to the west and a grid-patterned lower city to the east."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A bird's-eye drawing of a city: a raised walled area on the west side, and rows of houses on straight crossing streets to the east."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is a grid street plan?",
+    "right": "Straight streets that cross at right angles",
+    "wrong": [
+     "Winding lanes with no pattern",
+     "One road in a circle",
+     "Streets built only along the river"
+    ],
+    "why": "Britannica says the lower city of Indus towns was laid out in a grid pattern of streets."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Bricks, weights and seals were also made in standard sizes across the Indus lands. That sameness suggests some kind of authority was regulating them."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Standardization"
+   },
+   "cite": [
+    "s11",
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does the sameness of Indus bricks and weights suggest?",
+    "right": "Some authority or governance regulated them",
+    "wrong": [
+     "Every town copied by pure accident",
+     "The cities never traded",
+     "The bricks were all made in one workshop"
+    ],
+    "why": "The uniform bricks, weights and seals suggest some form of authority and governance."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Cities need clean water and a way to remove waste. Indus streets had covered drains of baked brick, connected to household bathing areas and latrines."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A street in cross-section: a covered brick drain running under the road, with small channels leading from houses."
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Where did household waste water go in Harappan cities?",
+    "right": "Into covered brick drains along the streets",
+    "wrong": [
+     "Straight onto the street",
+     "Into the royal palace",
+     "Into the pyramids"
+    ],
+    "why": "Streets had covered drains of baked bricks linked to household bathing areas and latrines."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So we can compare. Egypt: one divine king, a huge royal tomb. Indus: planned cities, but no agreed palace or royal tomb. Sources differ even on whether the Indus had monumental buildings."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "EGYPT: Nile floods | one divine pharaoh | pyramid tombs ||| INDUS: river floods and monsoon | grid cities, drains, standard bricks | no clear ruler, palace or temple identified"
+   },
+   "cite": [
+    "s12",
+    "s5",
+    "s11",
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which describes the Indus cities better?",
+    "right": "Planned grid streets and drains, with no clear palace or royal tomb identified",
+    "wrong": [
+     "Giant pyramids for kings",
+     "Cities without any streets",
+     "Tents that moved with the seasons"
+    ],
+    "why": "The sources describe planned streets and drainage. One source says there is no evidence of monuments, palaces or temples, and another mentions monumental architecture, so the evidence is debated."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next, trade. Mesopotamian texts name a distant land, Meluhha. Most scholars link Meluhha to the Indus. Indus seals, beads and pottery turn up in Mesopotamia. Carnelian beads made in the Indus were found in Queen Puabi's tomb at Ur."
+   },
+   "show": {
+    "kind": "map",
+    "text": "An arrow from the Indus region by sea to Mesopotamia, passing the Persian Gulf."
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which Indus-made stone beads were probably found in a Mesopotamian queen's tomb?",
+    "right": "Carnelian beads",
+    "wrong": [
+     "Diamond beads",
+     "Coal beads",
+     "Chalk beads"
+    ],
+    "why": "The cloak of beads from Queen Puabi's tomb at Ur is probably made largely of Indian beads, particularly carnelian."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Indus people also used signs, about 400 of them. Most are on small stamp seals, probably used in trade. Nobody can read them yet."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Indus script (undeciphered)"
+   },
+   "cite": [
+    "s1",
+    "s16"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why not? The inscriptions are very short, and no bilingual text has been found. A bilingual text is the same message in a known language beside the unknown one. Over a hundred attempts have been published, and none is widely accepted."
+   },
+   "show": {
+    "kind": "list",
+    "text": "About 400 signs|Very short inscriptions|No bilingual text|100+ attempts, none accepted"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why is the Indus script still unread?",
+    "right": "The inscriptions are very short and there is no bilingual text",
+    "wrong": [
+     "All the seals were destroyed",
+     "Scholars all agree it is just decoration",
+     "It is written in modern English"
+    ],
+    "why": "Britannica names brevity of inscriptions and lack of bilingual inscriptions."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Experts disagree about what the script is. Some propose a Dravidian language, some an Indo-Aryan one. Others think it may not be a full writing system at all."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "A LANGUAGE: Dravidian proposals | Indo-Aryan proposals ||| NOT A FULL LANGUAGE: pictographic signs for a mixed population | maybe not full writing"
+   },
+   "cite": [
+    "s1",
+    "s16"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Do scholars agree on what language the Indus script records?",
+    "right": "No, there is no agreement",
+    "wrong": [
+     "Yes, it is clearly Egyptian",
+     "Yes, it is clearly Sumerian",
+     "Yes, it is clearly Latin"
+    ],
+    "why": "Britannica says no decipherment is widely accepted, and links to Egyptian and Sumerian are now mostly considered discredited."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a puzzle: why did the Indus cities decline? One leading idea is climate. From about 2500 BCE the summer monsoon rains gradually dried up, making farming near the cities hard. People moved east toward the Ganges basin."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Monsoon: seasonal rain-bearing winds"
+   },
+   "cite": [
+    "s7",
+    "s10"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is the leading climate idea about the Indus decline?",
+    "right": "Monsoon rains weakened, so farming near the cities got harder",
+    "wrong": [
+     "Rain became too heavy every year",
+     "The Nile stopped flowing",
+     "Pyramids blocked the rivers"
+    ],
+    "why": "WHOI researchers found that from about 2500 BCE the summer monsoon gradually dried up, and people moved east."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It wasn't overnight. A 2025 study found repeated droughts, each over 85 years long. Smaller settlements kept going, spread out to new places. The big-city era lasted about 700 years, versus about 430 for Egypt's Old Kingdom."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Years covered by the periods in this class",
+    "chart": "c1"
+   },
+   "cite": [
+    "s8",
+    "s9",
+    "s17",
+    "s5"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Did Indus life vanish overnight?",
+    "right": "No, the decline was gradual and smaller settlements continued",
+    "wrong": [
+     "Yes, everyone disappeared in one day",
+     "Yes, a pyramid fell on the cities",
+     "Yes, the river turned into a lake"
+    ],
+    "why": "Researchers describe a gradual decline, and evidence suggests small settlements continued, dispersed to other areas."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Not everyone agrees on the cause. An older theory blamed invaders called Aryans. Many scholars now favor climate. Others point to river shifts or floods, and some say the timing of climate change and collapse is still debated."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "MANY NOW: climate change, repeated droughts ||| OTHERS: river shifts or floods | older invasion theory | debate over timing"
+   },
+   "cite": [
+    "s10",
+    "s9",
+    "s20"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why are some experts careful about blaming climate alone?",
+    "right": "Timing is debated and other factors such as river shifts may have mattered",
+    "wrong": [
+     "Because there was never any monsoon",
+     "Because the Indus had no rivers",
+     "Because the cities are still occupied"
+    ],
+    "why": "One study notes controversy about how closely climate change and collapse lined up, and another says climate alone was probably not the cause."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Frame of reference. Around 2500 BCE, Khufu's pyramid was being built in Egypt and Indus cities were large. In England, Stonehenge's biggest stones were raised. Sargon of Akkad ruled Mesopotamia from 2334 to 2279 BCE."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "c. 2589–2566 BCE Khufu | c. 2500 BCE Stonehenge sarsens raised | 2334–2279 BCE Sargon of Akkad | 2181 BCE Old Kingdom ends"
+   },
+   "cite": [
+    "s5",
+    "s14",
+    "s15"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What was being raised in England around 2500 BCE?",
+    "right": "Stonehenge's large sarsen stones",
+    "wrong": [
+     "The Great Wall",
+     "The Parthenon",
+     "The Colosseum"
+    ],
+    "why": "The British Museum says the larger sarsen stones were raised around 2500 BC."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To wrap up: both civilizations grew up beside rivers, but they looked different. Egypt had a divine king and pyramids. The Indus had planned cities and an unread script. Next class, we look at the wider Bronze Age world and its collapse."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Rivers fed farms|Egypt: pharaohs and pyramids|Indus: planned cities, trade, unread script|Indus decline: gradual, debated"
+   },
+   "cite": [
+    "s12",
+    "s11",
+    "s1",
+    "s8"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What did Egypt and the Indus have in common?",
+    "right": "Both grew along rivers whose water supported farming",
+    "wrong": [
+     "Both built the Great Pyramid",
+     "Both used the same readable script",
+     "Both ended in a single day"
+    ],
+    "why": "Egypt relied on the Nile flood and silt, and the Indus relied on river water for farming."
+   }
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Approximate years covered by the periods in this class (calculated from the dates given)",
+   "rows": [
+    {
+     "label": "Egypt's Old Kingdom (c. 2613–2181 BCE)",
+     "value": 432,
+     "source": "s5"
+    },
+    {
+     "label": "Indus cities at their peak (c. 2600–1900 BCE)",
+     "value": 700,
+     "source": "s17"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "River civilizations",
+   "links": [
+    "[[The First Cities and the Invention of Writing]]",
+    "[[The Bronze Age World and Its Collapse]]"
+   ]
+  },
+  {
+   "topic": "Great Pyramid of Giza",
+   "links": [
+    "[[Old Kingdom of Egypt]]",
+    "[[Khufu]]"
+   ]
+  },
+  {
+   "topic": "Harappan cities and planning",
+   "links": [
+    "[[Mohenjo-daro]]",
+    "[[Harappa]]"
+   ]
+  },
+  {
+   "topic": "Indus script",
+   "links": [
+    "[[Undeciphered writing systems]]"
+   ]
+  },
+  {
+   "topic": "Meluhha and Indus trade",
+   "links": [
+    "[[Mesopotamia]]"
+   ]
+  },
+  {
+   "topic": "Indus decline and monsoon change",
+   "links": [
+    "[[Climate and history]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "c. 2600–2500 BCE",
+   "elsewhere": "The Great Pyramid is built for Khufu in Egypt, and the Indus cities are large urban centers.",
+   "cite": [
+    "s5",
+    "s4",
+    "s11"
+   ]
+  },
+  {
+   "when": "c. 2500 BCE",
+   "elsewhere": "The large sarsen stones of Stonehenge in England are raised.",
+   "cite": [
+    "s14"
+   ]
+  },
+  {
+   "when": "2334–2279 BCE",
+   "elsewhere": "Sargon of Akkad rules and builds the first Mesopotamian empire; his empire ends around 2154 BCE.",
+   "cite": [
+    "s15",
+    "s21"
+   ]
+  },
+  {
+   "when": "2181 BCE",
+   "elsewhere": "Egypt's Old Kingdom ends, while the Indus people are slowly shifting east as the monsoon weakens.",
+   "cite": [
+    "s5",
+    "s7"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The Indus script is a true writing system for a spoken language.",
+   "other_view": "Some scholars argue the signs may not be a fully developed writing system, and others propose a pictographic system meant for a mixed-language population. Proposals for the language include Dravidian and Indo-Aryan, and none is widely accepted.",
+   "cite": [
+    "s1",
+    "s16"
+   ]
+  },
+  {
+   "claim": "Climate change (weakening monsoons and droughts) was a key cause of the Indus decline.",
+   "other_view": "An older theory blamed Aryan invaders. Some experts stress river changes or a great flood. One study says controversy remains about how closely climate change and collapse lined up, and another says climate alone was probably not the cause.",
+   "cite": [
+    "s10",
+    "s9",
+    "s20"
+   ]
+  },
+  {
+   "claim": "A central authority governed the Indus cities, because bricks, weights and seals are so uniform.",
+   "other_view": "Archaeological records give no clear center of authority or images of rulers, and one source finds no evidence of palaces or temples. Britannica does describe monumental architecture, so sources differ.",
+   "cite": [
+    "s11",
+    "s2"
+   ]
+  },
+  {
+   "claim": "Khufu reigned c. 2589–2566 BCE and the Great Pyramid was built in that time.",
+   "other_view": "Dates differ by source. Britannica places Khufu's 4th dynasty at about 2543–2436 BCE and says the pyramid was completed in the early 25th century BCE. Other sources give around 2560 or 2600 BCE.",
+   "cite": [
+    "s5",
+    "s3",
+    "s4"
+   ]
+  },
+  {
+   "claim": "Slaves built the pyramids.",
+   "other_view": "Historians today say Egyptian workers, skilled and unskilled, were paid. Worker towns and overseers' homes have been found at Giza.",
+   "cite": [
+    "s5"
+   ]
+  }
+ ]
+}

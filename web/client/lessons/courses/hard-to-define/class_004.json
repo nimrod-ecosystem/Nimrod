@@ -1,0 +1,995 @@
+{
+ "about": {
+  "title": "Time: the clock on the wall and the time we feel",
+  "course": "hard-to-define",
+  "class_n": 4,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. This class has six topics, and each one gets a short explanation and a check question. Pause at any question and take your time."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "SI base unit: second (s)",
+   "publisher": "BIPM (International Bureau of Weights and Measures)",
+   "date": "n.d.",
+   "link": "https://www.bipm.org/en/si-base-units/second",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Cesium",
+   "publisher": "Energy Education (University of Calgary)",
+   "date": "n.d.",
+   "link": "https://energyeducation.ca/encyclopedia/Cesium",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Resolution 1 of the 13th CGPM (1967): SI unit of time (second)",
+   "publisher": "BIPM",
+   "date": "1967",
+   "link": "https://www.bipm.org/en/committees/cg/cgpm/13-1967/resolution-1",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "si-unit:second",
+   "publisher": "SI Digital Framework (BIPM)",
+   "date": "n.d.",
+   "link": "https://si-digital-framework.org/SI/units/second",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Newton's Views on Space, Time, and Motion",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://plato.stanford.edu/entries/newton-stm/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Newton's Scholium on Time, Space, Place and Motion",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://plato.stanford.edu/entries/newton-stm/scholium.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "University Physics Volume 3, Chapter 5 summary: Relativity",
+   "publisher": "OpenStax (Rice University)",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/university-physics-volume-3/pages/5-summary",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "10.2 Consequences of Special Relativity",
+   "publisher": "OpenStax, Physics",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/physics/pages/10-2-consequences-of-special-relativity",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "28.2: Simultaneity and Time Dilation (OpenStax College Physics)",
+   "publisher": "LibreTexts Physics",
+   "date": "n.d.",
+   "link": "https://phys.libretexts.org/Bookshelves/College_Physics/College_Physics_1e_(OpenStax)/28:_Special_Relativity/28.02:_Simultaneity_and_Time_Dilation",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "5.3: Relativity of Simultaneity (OpenStax University Physics III)",
+   "publisher": "LibreTexts Physics",
+   "date": "n.d.",
+   "link": "https://phys.libretexts.org/Bookshelves/University_Physics/University_Physics_(OpenStax)/University_Physics_III_-_Optics_and_Modern_Physics_(OpenStax)/05:__Relativity/5.03:_Relativity_of_Simultaneity",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Real-World Relativity: The GPS Navigation System",
+   "publisher": "The Ohio State University, Department of Astronomy",
+   "date": "n.d.",
+   "link": "https://www.astronomy.ohio-state.edu/pogge.1/Ast162/Unit5/gps.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "GPS takes into account mysterious black hole time warps",
+   "publisher": "GPS World",
+   "date": "n.d.",
+   "link": "https://www.gpsworld.com/gps-takes-into-account-mysterious-black-hole-time-warps/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Arrow of Time",
+   "publisher": "Internet Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://iep.utm.edu/arrow-of-time/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "The Semantic Arrow of Time, Part I: From Eddington to Ethernet (arXiv preprint)",
+   "publisher": "arXiv",
+   "date": "2026-03",
+   "link": "https://arxiv.org/pdf/2603.01440",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Being and Becoming in Modern Physics",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://plato.stanford.edu/entries/spacetime-bebecome/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Time Travel",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://plato.stanford.edu/entries/time-travel/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Temporal Consciousness",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://plato.stanford.edu/entries/consciousness-temporal/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Does Time Slow In Crisis? No, Say Researchers",
+   "publisher": "ScienceDaily (Baylor College of Medicine release)",
+   "date": "2007-12-11",
+   "link": "https://www.sciencedaily.com/releases/2007/12/071211233934.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "An Odd Sense of Timing",
+   "publisher": "Scientific American",
+   "date": "n.d.",
+   "link": "https://www.scientificamerican.com/article/an-odd-sense-of-timing/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Experiencing time in daily life",
+   "publisher": "The British Psychological Society, The Psychologist",
+   "date": "n.d.",
+   "link": "https://www.bps.org.uk/psychologist/experiencing-time-daily-life",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "How to alter the passage of time to feel fast or slow",
+   "publisher": "Psyche",
+   "date": "n.d.",
+   "link": "https://psyche.co/guides/how-to-alter-the-passage-of-time-to-feel-fast-or-slow",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Time perception changes in stroke patients: A systematic literature review",
+   "publisher": "Frontiers in Neurology",
+   "date": "2022",
+   "link": "https://www.frontiersin.org/journals/neurology/articles/10.3389/fneur.2022.938367/full",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Time perception impairment following thalamic stroke: A case study",
+   "publisher": "PubMed (National Library of Medicine)",
+   "date": "n.d.",
+   "link": "https://pubmed.ncbi.nlm.nih.gov/29108479/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "Time perception in severe traumatic brain injury patients: A study comparing different methodologies",
+   "publisher": "ScienceDirect (journal abstract)",
+   "date": "n.d.",
+   "link": "https://www.sciencedirect.com/science/article/abs/pii/S0278262613000109",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Is 'time' fundamental in quantum mechanics?",
+   "publisher": "Perimeter Institute for Theoretical Physics",
+   "date": "n.d.",
+   "link": "https://perimeterinstitute.ca/news/time-fundamental-quantum-mechanics",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Quantum Gravity's Time Problem",
+   "publisher": "Quanta Magazine",
+   "date": "2016-12-01",
+   "link": "https://www.quantamagazine.org/quantum-gravitys-time-problem-20161201/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "Time and its arrow: an empiricist's perspective (arXiv preprint)",
+   "publisher": "arXiv",
+   "date": "2021-07",
+   "link": "https://arxiv.org/pdf/2107.07913",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "Slow time perception can be learned",
+   "publisher": "Frontiers in Psychology (via PubMed Central)",
+   "date": "2014-03-12",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3950412/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "Absolute and Relational Theories of Space and Motion (Winter 2016 Edition)",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "2016",
+   "link": "https://plato.stanford.edu/archives/win2016/entries/spacetime-theories/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "5.S: Relativity (Summary) (OpenStax University Physics III)",
+   "publisher": "LibreTexts Physics",
+   "date": "n.d.",
+   "link": "https://phys.libretexts.org/Bookshelves/University_Physics/University_Physics_(OpenStax)/University_Physics_III_-_Optics_and_Modern_Physics_(OpenStax)/05%3A__Relativity/5.S%3A_Relativity_(Summary)",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s31",
+   "title": "Feedback Control and the Arrow of Time (arXiv preprint)",
+   "publisher": "arXiv",
+   "date": "2008-04",
+   "link": "https://arxiv.org/pdf/0804.3117",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s32",
+   "title": "The arrow of time (second law) as a randomness-driven emergent property of large systems (arXiv preprint)",
+   "publisher": "arXiv",
+   "date": "2020-07",
+   "link": "https://arxiv.org/pdf/2007.10418",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Today we look at time. There are really two stories: the time on the clock, and the time you feel."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Time: the clock on the wall and the time we feel"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, the clock. To measure time, we count something that repeats, like a swing, a spin or a vibration. A clock is a repeat-counter."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Measuring time = counting repeats"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does a clock actually do?",
+    "right": "It counts something that repeats at a steady pace.",
+    "wrong": [
+     "It creates time.",
+     "It slows time down so we can see it.",
+     "It remembers the past."
+    ],
+    "why": "We measure time by counting repeating motions. Newton called such measures, like the hour and the day, the 'relative' time we use in daily life."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "For a long time, the repeating thing was the spinning Earth. A second was one 86,400th of an average day."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "86,400 seconds in a day"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Today the repeating thing is an atom. One second is exactly 9,192,631,770 wiggles of the radiation from a caesium-133 atom. That was agreed in 1967."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "9,192,631,770 caesium wiggles = 1 second"
+   },
+   "cite": [
+    "s1",
+    "s3"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "In today's official definition, what is one second?",
+    "right": "The time for 9,192,631,770 periods of a particular radiation from caesium-133 atoms.",
+    "wrong": [
+     "One 86,400th of a day, as measured by the Earth's spin.",
+     "One beat of an average human heart.",
+     "One swing of a one-metre pendulum."
+    ],
+    "why": "The Earth's spin was the old basis. The modern second counts the atom's radiation."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the physics. Newton pictured one time that flows evenly everywhere, whatever happens. He called it absolute time."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Absolute time: true, even, the same everywhere | Relative time: what clocks measure, like hours and days"
+   },
+   "cite": [
+    "s6",
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Newton knew clocks are imperfect. He said there might be no perfectly even motion to measure time by. So clocks only approximate the true time."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Newton: perhaps no perfectly even motion exists to measure time by (paraphrase)"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In Newton's picture, what are clocks doing?",
+    "right": "Approximating one universal time that flows the same for everyone.",
+    "wrong": [
+     "Making time flow.",
+     "Changing time for each person.",
+     "Measuring nothing real."
+    ],
+    "why": "For Newton, absolute time is real and clocks are only measures of it."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Einstein changed this. Take two flashes of light at opposite ends of a moving railcar. A rider and a person on the platform can disagree about whether they happened together."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A railcar with a flash at each end. A rider inside and a person on the platform each hold a clock and disagree about 'at the same time'."
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Both people are right in their own frame. This is called the relativity of simultaneity. Whether distant events are 'at the same time' depends on how you are moving."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Simultaneity is not absolute"
+   },
+   "cite": [
+    "s10",
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A second result follows: time dilation. A clock moving relative to you ticks more slowly, as seen by you."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Time dilation: moving clocks tick slower"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "At everyday speeds the effect is tiny. It only becomes big when speeds get close to the speed of light."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Walking, driving, flying: effect tiny but real | Near the speed of light: effect large"
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "When does time dilation become large?",
+    "right": "At speeds comparable to the speed of light.",
+    "wrong": [
+     "At walking speed.",
+     "Only when you are tired.",
+     "Only inside buildings."
+    ],
+    "why": "It occurs at all speeds, but it is negligible at low speeds."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "This has been tested. In 1971, Hafele and Keating flew very accurate atomic clocks around the world on ordinary passenger planes. The results matched relativity."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "An airliner in flight with an atomic clock on a seat, next to an identical clock on the ground."
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Your phone uses it every day. GPS satellite clocks lose about 7 millionths of a second per day from their speed. They gain about 45 from weaker gravity up there."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "GPS clock shifts per day, in millionths of a second",
+    "chart": "c1"
+   },
+   "cite": [
+    "s11",
+    "s12"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Net result: the satellite clocks run about 38 millionths of a second per day fast. Without correction, GPS positions would drift by about 10 kilometres."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "38 millionths of a second per day"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Which effect is bigger for GPS satellites?",
+    "right": "The gravity effect (clocks run faster higher up).",
+    "wrong": [
+     "The speed effect (clocks run slower when moving fast).",
+     "They are exactly equal.",
+     "Neither matters."
+    ],
+    "why": "The gravity effect is about 45 millionths of a second a day. The speed effect is about 7, going the other way."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So physics has no single master clock. Each clock gives the 'proper time' for whoever carries it. The official second is defined as that kind of time."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Proper time: time on the clock that travels with you"
+   },
+   "cite": [
+    "s30",
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is how the measuring story fits together."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1687: Newton's Principia, with absolute time | 1967: atomic second adopted | 1971: clocks flown round the world | 2019: today's wording of the second takes effect"
+   },
+   "cite": [
+    "s29",
+    "s3",
+    "s9"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next topic: the arrow of time. The laws of motion work the same forwards and backwards. Yet we never see a broken egg put itself back together."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "An egg falling and breaking, shown left to right. An arrow below points the same way."
+   },
+   "cite": [
+    "s14",
+    "s27"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The arrow of time is that one-way direction: things go from past to future and not the other way. The name came from Eddington."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Arrow of time = the one-way direction of events"
+   },
+   "cite": [
+    "s32"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does 'the arrow of time' mean?",
+    "right": "The one-way direction in which events unfold, from past to future.",
+    "wrong": [
+     "How fast time passes.",
+     "The hand of a clock.",
+     "The distance light travels in a second."
+    ],
+    "why": "It describes direction, not speed. Eggs break but do not un-break."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The usual explanation uses entropy, which you met in the information class. Entropy is a measure of randomness or disorder, and it counts how many arrangements fit what we see."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Entropy: a measure of disorder"
+   },
+   "cite": [
+    "s32"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The second law says an isolated system very probably moves to higher entropy. It is a law of odds, not a promise. And small parts of the universe can lose entropy."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Whole isolated system: entropy very probably rises | Small parts: entropy can fall"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What does the second law of thermodynamics say?",
+    "right": "An isolated system very probably moves to higher entropy.",
+    "wrong": [
+     "Entropy can never change.",
+     "Entropy always falls.",
+     "Entropy rises only in refrigerators."
+    ],
+    "why": "It is a statement about probability. Smaller sub-systems can still lose entropy."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why was entropy so low to begin with? The standard answer is that the universe began in a very orderly state. The laws are symmetric, and the arrow comes from that starting point."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The arrow comes from a low-entropy beginning"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In the standard account, why do eggs break but never un-break?",
+    "right": "Disordered states are far more likely, and the universe started in a very orderly state.",
+    "wrong": [
+     "The laws of physics forbid un-breaking.",
+     "Clocks only run one way.",
+     "Eggs are special."
+    ],
+    "why": "The microscopic laws are time-symmetric. The direction comes from the universe's low-entropy start plus the odds."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now: past, present and future. In daily life 'now' feels special and always moving. Does physics have a 'now'?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Does 'now' exist in physics?"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Remember: distant events can be 'simultaneous' for one observer and not another. So there is no single 'now' across the universe that everyone agrees on. Einstein worried that passage and the 'now' find no place in physics."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "'Now' depends on the observer"
+   },
+   "cite": [
+    "s10",
+    "s15"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why is it hard to define one universal 'now' in relativity?",
+    "right": "Observers moving differently disagree about which distant events are simultaneous.",
+    "wrong": [
+     "Clocks are too inaccurate.",
+     "Time stops at night.",
+     "Light has no speed."
+    ],
+    "why": "Simultaneity depends on motion, so there is no single shared 'now' for everyone."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Philosophers split here. The B-theory says flow and 'now' are features of our experience. The A-theory says they are real features of the world."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "A-theory: flow and 'now' are real | B-theory: flow and 'now' come from our experience; all times equally real (the 'block universe')"
+   },
+   "cite": [
+    "s16",
+    "s17"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What does the B-theory say about the flow of time?",
+    "right": "It is a feature of our experience, not of reality out there.",
+    "wrong": [
+     "It is an objective fact.",
+     "Only the present exists.",
+     "Only the future exists."
+    ],
+    "why": "B-theorists say all times are equally real and the sense of flow is how we experience them."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the time we feel. Physical clocks tick steadily. A human mind can be a 'remarkably lousy clock'."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "\"a remarkably lousy clock\""
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Psychologists separate two ways of judging time. Prospective is while it passes, which uses attention. Retrospective is looking back, which uses memory."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Prospective: judged as it passes (attention) | Retrospective: judged in hindsight (memory)"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The more you watch the clock, the slower time drags. That is why waiting in a queue feels long."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Attention on time stretches it"
+   },
+   "cite": [
+    "s20",
+    "s21"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why does a long wait feel slow when you keep checking the clock?",
+    "right": "Paying attention to time makes it feel stretched out.",
+    "wrong": [
+     "Clocks run slower when watched.",
+     "Your heart stops.",
+     "The wait is longer."
+    ],
+    "why": "Prospective time depends on attention. The more attention goes to time itself, the longer it feels."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Looking back is different. A day full of new events can fly by while it happens, yet feel long in memory."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "More new memories = longer in hindsight"
+   },
+   "cite": [
+    "s21",
+    "s18"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A busy holiday week flew by at the time. How will it likely feel when you look back?",
+    "right": "Longer, because of the many new memories.",
+    "wrong": [
+     "Shorter, because it went fast.",
+     "Exactly seven days.",
+     "It will be forgotten."
+    ],
+    "why": "In hindsight, duration follows how many memories were laid down."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What about fear? People often say time slows down. A neuroscientist tested it by dropping volunteers about 150 feet into a safety net."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A volunteer in free fall toward a net, wearing a wrist device that flashes numbers."
+   },
+   "cite": [
+    "s19",
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The fall felt long, but they could not read the numbers any better than usual. So the brain was not speeding up. A fear-linked brain area, the amygdala, lays down extra memories, and that makes the fall feel long in hindsight."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Fear: longer in memory, not faster perception"
+   },
+   "cite": [
+    "s19",
+    "s18"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What did the free-fall experiment suggest?",
+    "right": "Fear makes an event feel longer in memory, but does not speed up perception.",
+    "wrong": [
+     "Time physically slows when we are afraid.",
+     "Fear improves reading speed.",
+     "Memory plays no role."
+    ],
+    "why": "Participants did not read the flickering numbers better, even though the fall felt long."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A kind note. Time sense can change after a stroke or brain injury. This is recognised, and still not well understood. A visible clock or timer can be a simple help."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Time sense can change after brain injury"
+   },
+   "cite": [
+    "s22",
+    "s23",
+    "s24"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is known about time perception after stroke?",
+    "right": "It can change, many brain areas are involved, and there is much we do not yet understand.",
+    "wrong": [
+     "It never changes.",
+     "It always speeds up.",
+     "It is fully understood."
+    ],
+    "why": "Reviews find many brain locations linked to time-perception changes, and say knowledge remains scarce."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last, open questions. First: is time fundamental? Relativity treats time as relative and woven into space. Quantum theory treats it as a steady background."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Relativity: time is relative and part of spacetime | Quantum theory: time is a steady, universal background"
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Do physicists agree on whether time is fundamental?",
+    "right": "No. Some think it emerges from something deeper, and others think it is basic.",
+    "wrong": [
+     "Yes, it is settled as fundamental.",
+     "Yes, it is settled as an illusion.",
+     "Nobody has studied it."
+    ],
+    "why": "Some theorists think time emerges from relationships between quantum particles, while others think it should be basic to everything."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Second: why does time seem to flow? Philosophers consider passage one of the deepest puzzles. Physics also has other arrows besides entropy: a psychological one and a cosmological one."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Thermodynamic arrow: entropy rises | Cosmological arrow: the universe expands | Psychological arrow: how we sense the direction of time"
+   },
+   "cite": [
+    "s15",
+    "s31"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To sum up: clocks count repeats. Relativity ties time to motion and gravity. Entropy gives time its arrow. Our felt time follows attention and memory. And the biggest questions are open."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Clocks count repeats | Time depends on motion and gravity | Entropy gives the arrow | Felt time follows attention and memory | Open: is time fundamental? Why does it flow?"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which statement best matches this class?",
+    "right": "Clock time and felt time are different things, and physics still has open questions about time.",
+    "wrong": [
+     "Time is exactly the same for every observer.",
+     "Fear speeds up our perception.",
+     "The arrow of time is fully explained."
+    ],
+    "why": "Clock time is measured by physics. Felt time comes from the brain's attention and memory, and open questions remain."
+   }
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "GPS satellite clock shifts per day (millionths of a second)",
+   "rows": [
+    {
+     "label": "Speed effect (clock runs slower)",
+     "value": 7,
+     "source": "s11"
+    },
+    {
+     "label": "Gravity effect (clock runs faster)",
+     "value": 45,
+     "source": "s12"
+    },
+    {
+     "label": "Net effect (clock gains)",
+     "value": 38,
+     "source": "s12"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Time",
+   "links": [
+    "[[Information and entropy]]",
+    "[[Energy]]",
+    "[[Consciousness]]",
+    "[[What does it mean to define something?]]"
+   ]
+  },
+  {
+   "topic": "Arrow of time",
+   "links": [
+    "[[Entropy]]",
+    "[[Second law of thermodynamics]]"
+   ]
+  },
+  {
+   "topic": "Time perception",
+   "links": [
+    "[[Memory]]",
+    "[[Attention]]",
+    "[[Consciousness]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Entropy increase is what gives time its arrow.",
+   "other_view": "The entropy view is the most common answer. One physicist writes that he is sympathetic, but doubts that an inequality like the second law can serve as a basis for interpreting time. Other work suggests the second law and the arrow may be emergent rather than fundamental.",
+   "cite": [
+    "s13",
+    "s27",
+    "s32"
+   ]
+  },
+  {
+   "claim": "The flow of time and a special 'now' are not real features of the world.",
+   "other_view": "B-theorists say flow and 'now' are only features of our experience. A-theorists say they are objective features of reality. Philosophers have not settled this.",
+   "cite": [
+    "s16",
+    "s17"
+   ]
+  },
+  {
+   "claim": "Time does not really slow down in danger. It only seems longer in memory.",
+   "other_view": "The free-fall experiment supports this memory account. Another researcher points out that reports of slow time are linked with sudden danger and with a feeling of faster, clearer thinking. That researcher also reports that slow-time perception may be learnable.",
+   "cite": [
+    "s18",
+    "s19",
+    "s28"
+   ]
+  },
+  {
+   "claim": "Time is a basic ingredient of reality.",
+   "other_view": "Some theoretical physicists think time may not be fundamental and may emerge from quantum relationships. Others argue that time is basic and still present at the quantum level. The 'problem of time' remains open.",
+   "cite": [
+    "s25",
+    "s26"
+   ]
+  }
+ ]
+}

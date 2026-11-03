@@ -1,0 +1,1279 @@
+{
+ "about": {
+  "title": "Enlightenment and Absolute Monarchy",
+  "course": "history-of-everything",
+  "class_n": 43,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 35,
+  "length_note": "This class runs a little over half an hour. It covers six topics, and the debate about slavery, women and empire needs a slow pace. You can pause after the beat on Rousseau and the beat on Wollstonecraft and de Gouges."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Louis XIV (1638-1715)",
+   "publisher": "Château de Versailles",
+   "date": "n.d.",
+   "link": "https://en.chateauversailles.fr/discover/history/great-characters/louis-xiv",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "Louis XIV",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/biography/Louis-XIV-king-of-France",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "Absolute Monarchy emerges in France",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/history/absolute-monarchy-emerges-france/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "Louis XIV: Sun King, Spouse & Versailles",
+   "publisher": "HISTORY",
+   "date": "n.d.",
+   "link": "https://www.history.com/articles/louis-xiv",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "Louis XIV and the Huguenots",
+   "publisher": "Lumen Learning (Western Civilization)",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/atd-herkimer-westerncivilization/chapter/louis-xiv-and-the-huguenots/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "The Edict of Fontainebleau or the Revocation (1685)",
+   "publisher": "Musée protestant",
+   "date": "n.d.",
+   "link": "https://museeprotestant.org/en/notice/the-edict-of-fontainebleau-or-the-revocation-1685/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "The English Bill of Rights",
+   "publisher": "Encyclopedia.com",
+   "date": "n.d.",
+   "link": "https://www.encyclopedia.com/history/news-wires-white-papers-and-books/english-bill-rights",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "The Convention and Bill of Rights",
+   "publisher": "UK Parliament",
+   "date": "n.d.",
+   "link": "https://www.parliament.uk/about/living-heritage/evolutionofparliament/parliamentaryauthority/revolution/overview/billofrights/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "1689 Bill of Rights",
+   "publisher": "UK Parliament",
+   "date": "n.d.",
+   "link": "https://www.parliament.uk/about/living-heritage/evolutionofparliament/2015-parliament-in-the-making/get-involved1/2015-banners-exhibition/ross-sinclair/1689-bill-of-rights-gallery/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "Bill of Rights 1689",
+   "publisher": "UK Parliament",
+   "date": "n.d.",
+   "link": "https://www.parliament.uk/about/living-heritage/evolutionofparliament/parliamentaryauthority/revolution/collections1/collections-glorious-revolution/billofrights/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "Glorious Revolution of 1688: A Detailed Summary",
+   "publisher": "History Crunch",
+   "date": "n.d.",
+   "link": "https://historycrunch.com/glorious-revolution-of-1688/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "Locke's Political Philosophy",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://plato.stanford.edu/entries/locke-political/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "Two Treatises of Government",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Two-Treatises-of-Government",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "John Locke on the rights to life, liberty, and property of ourselves and others (1689)",
+   "publisher": "Online Library of Liberty (Liberty Fund)",
+   "date": "n.d.",
+   "link": "https://oll.libertyfund.org/quotes/john-locke-on-the-rights-to-life-liberty-and-property-of-ourselves-and-others-1689",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "Locke Publishes Two Treatises of Government",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/history/locke-publishes-two-treatises-government/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "Two Treatises of Government by John Locke",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/history/two-treatises-government-john-locke/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "The key thinkers of the Enlightenment and their revolutionary ideas",
+   "publisher": "History Skills",
+   "date": "n.d.",
+   "link": "https://www.historyskills.com/classroom/year-9/enlightenment-thinkers/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "Influential Political Thinkers of the Enlightenment",
+   "publisher": "PolSci Institute",
+   "date": "n.d.",
+   "link": "https://polsci.institute/modern-political-philosophy/influential-political-thinkers-enlightenment/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "Social Contract",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/Social_Contract/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "Treatise on Tolerance",
+   "publisher": "Abdorrahman Boroumand Center",
+   "date": "n.d.",
+   "link": "https://www.iranrights.org/library/document/1943/treatise-on-tolerance",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "French Enlightenment",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/French_Enlightenment",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "The Social Contract: Background (Rousseau)",
+   "publisher": "SparkNotes",
+   "date": "n.d.",
+   "link": "https://www.sparknotes.com/philosophy/socialcontract/context/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "Enlightenment Philosophers (advanced concepts)",
+   "publisher": "Alloprof",
+   "date": "n.d.",
+   "link": "https://www.alloprof.qc.ca/en/students/vl/history/enlightenment-philosophers-advanced-concepts-h1301",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "The Enlightenment: Ideas & Revolutions (AP World History)",
+   "publisher": "OER Project",
+   "date": "n.d.",
+   "link": "https://www.oerproject.com/OER-Materials/OER-Media/HTML-Articles/AP-World-History/Unit5/The-Enlightenment",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "The Enlightenment (Origins, Unit 7)",
+   "publisher": "OER Project",
+   "date": "n.d.",
+   "link": "https://www.oerproject.com/OER-Materials/OER-Media/HTML-Articles/Origins/Unit7/The-Enlightenment/740L",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "Does Locke's entanglement with slavery undermine his philosophy?",
+   "publisher": "Aeon",
+   "date": "n.d.",
+   "link": "https://aeon.co/essays/does-lockes-entanglement-with-slavery-undermine-his-philosophy",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "John Locke",
+   "publisher": "Lumen Learning (World History)",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/suny-hccc-worldhistory2/chapter/john-locke/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "A Vindication of the Rights of Woman",
+   "publisher": "Encyclopedia.com",
+   "date": "n.d.",
+   "link": "https://www.encyclopedia.com/arts/applied-and-social-sciences-magazines/vindication-rights-woman",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s29",
+   "title": "Baroque music",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/art/Baroque-music",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s30",
+   "title": "Music of the Baroque Period",
+   "publisher": "Music Appreciation (Pressbooks)",
+   "date": "n.d.",
+   "link": "https://louis.pressbooks.pub/musicappreciation/chapter/music-of-the-baroque-period/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s31",
+   "title": "Music History 102: The Classical or Viennese Period",
+   "publisher": "Internet Public Library",
+   "date": "n.d.",
+   "link": "https://www.ipl.org/div/mushist/clas/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s32",
+   "title": "Baroque period",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/music/baroque-period/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s33",
+   "title": "Art Bites 178: Baroque Music, Bernini for Your Ears",
+   "publisher": "PBS (Rick Steves' Europe)",
+   "date": "n.d.",
+   "link": "https://www.pbs.org/video/art-bites-178-JdQMXg",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s34",
+   "title": "What is Baroque Music?",
+   "publisher": "Music of the Baroque",
+   "date": "n.d.",
+   "link": "https://www.baroque.org/baroque/whatis",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s35",
+   "title": "English Bill of Rights - Definition & Legacy",
+   "publisher": "HISTORY",
+   "date": "n.d.",
+   "link": "https://www.history.com/articles/english-bill-of-rights",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s36",
+   "title": "Absolute monarchy in France",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Absolute_monarchy_in_France",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s37",
+   "title": "Voltaire: Treatise on Tolerance",
+   "publisher": "Constitution Society (constitution.org)",
+   "date": "n.d.",
+   "link": "https://constitution.org/2-Authors/volt/tolerance.htm",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 43. Last time we toured Asia. Today we're back in Europe for a big argument: does a ruler's power come from God, or from the people?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Enlightenment and Absolute Monarchy"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here's the plan. A king in France. A revolution in England. Three famous thinkers. A hard look at who got left out. Then the music."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Louis XIV; England's revolutions; Locke; Voltaire and Rousseau; Who was left out?; Music and art"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First word: absolutism. It means one ruler holds the power, with no real limits. Its main support was the 'divine right of kings': the belief that God put the king on the throne."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Absolutism"
+   },
+   "cite": [
+    "s3",
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Our example is Louis XIV of France. He became king in 1643, aged four, and ruled for 72 years."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "72 years on the throne"
+   },
+   "cite": [
+    "s2",
+    "s1"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "About how long did Louis XIV reign?",
+    "right": "72 years",
+    "wrong": [
+     "7 years",
+     "27 years",
+     "12 years"
+    ],
+    "why": "He took the throne in 1643 and died in 1715, after 72 years as king."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "He chose the sun as his emblem, so he's known as the Sun King. In 1682 he moved his court to the Palace of Versailles, the great symbol of his power."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The Palace of Versailles glowing in gold, with a sun emblem above its gates"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which emblem did Louis XIV choose for himself?",
+    "right": "The sun",
+    "wrong": [
+     "The moon",
+     "A crown of thorns",
+     "An eagle"
+    ],
+    "why": "He chose the sun, which is why he is called the Sun King."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Versailles was also a tool. Historians describe it as a way of taming the high nobles, while Louis stayed the 'source of all privileges'."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Nobles in silk crowding a palace hall, all facing the king"
+   },
+   "cite": [
+    "s36",
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "He took control in 1661. When his chief minister Mazarin died, Louis announced he would rule without one. As a child he had lived through a rebellion, the Fronde, which taught him that a divided government can collapse."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1643 Louis becomes king; 1661 Mazarin dies, Louis rules alone; 1682 Court moves to Versailles"
+   },
+   "cite": [
+    "s4",
+    "s36",
+    "s2",
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Louis saw himself as God's representative on earth, and he thought disobedience was sinful. So he wanted one faith in his kingdom."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "One king, one faith"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 1598 a law called the Edict of Nantes let French Protestants, the Huguenots, practise their religion. In 1685 Louis revoked it. Protestant worship was banned, and so was Protestants leaving the country."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1598 Edict of Nantes allows Protestant worship; 1685 Louis XIV revokes it"
+   },
+   "cite": [
+    "s5",
+    "s6"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What did Louis XIV's 1685 edict do?",
+    "right": "It ended the right of French Protestants to worship",
+    "wrong": [
+     "It gave Parliament the power to tax",
+     "It moved the court to Versailles",
+     "It made Louis king"
+    ],
+    "why": "The 1685 edict revoked the Edict of Nantes, banned Protestant worship and closed Protestant churches."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Many left anyway. Historians cite about 200,000 Huguenots who defied the ban, roughly a quarter of the Protestant population. France lost many skilled craftsmen."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Roughly one in four Huguenots left France",
+    "chart": "c1"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A caution. Louis claimed absolute power, but one source says in practice his powers were absolute only in a relative sense. And 'I am the State' is a line he may never have said."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "'L'État, c'est moi' - attribution questioned by some historians"
+   },
+   "cite": [
+    "s3",
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now across the Channel. England was fighting over the same question. Parliament, the assembly that agreed laws and taxes, struggled with the Stuart kings over who held power, and whether the king must obey the law."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "England: king against Parliament"
+   },
+   "cite": [
+    "s7",
+    "s9"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The first struggle ended in civil war. A Puritan-dominated Parliament won, and in 1649 it executed King Charles I for treason."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1640s Civil War; 1649 Charles I executed"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What happened to King Charles I in 1649?",
+    "right": "Parliament, having won the civil war, had him executed",
+    "wrong": [
+     "He moved to Versailles",
+     "He was crowned emperor",
+     "He signed the Edict of Nantes"
+    ],
+    "why": "Parliament won the English Civil War and executed Charles I for treason in 1649."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Ruling without a king proved awkward, and the Stuarts returned in 1660. In 1685 the Catholic James II took the throne, and the old quarrels came back."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1660 Stuarts restored; 1685 James II becomes king"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 1688 seven parliamentarians asked Mary, James's daughter, and her Dutch husband William of Orange to step in. William arrived with an army and James fled."
+   },
+   "show": {
+    "kind": "map",
+    "text": "William of Orange crossing the sea from the Netherlands to England in 1688"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "This is called the Glorious Revolution. The name comes from how little violence it needed in England itself. Parliament offered the crown to William and Mary, who accepted it with a Bill of Rights."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Glorious Revolution, 1688-1689"
+   },
+   "cite": [
+    "s11",
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Bill of Rights said monarchs could not change laws, raise taxes or keep an army without Parliament's consent. It also guaranteed regular, free elections and free speech in Parliament."
+   },
+   "show": {
+    "kind": "list",
+    "text": "No new taxes without Parliament; No army without Parliament; Free elections; Free speech in Parliament"
+   },
+   "cite": [
+    "s9",
+    "s7"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Under the Bill of Rights, whose agreement did a monarch need to raise taxes?",
+    "right": "Parliament's",
+    "wrong": [
+     "The Pope's",
+     "The nobles at Versailles",
+     "Nobody's"
+    ],
+    "why": "The Bill of Rights barred monarchs from raising taxes without Parliament's consent."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Be fair to it, though. The UK Parliament says it was not a revolutionary statement of universal liberties, because it mostly dealt with James II's specific misdeeds. Still, it became a landmark and a model for the US Bill of Rights."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A landmark, but not for everyone"
+   },
+   "cite": [
+    "s8",
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So by 1689 there were two models. In France the state revolved around the king. In England the crown shared power with Parliament."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "France under Louis XIV: the state revolves around the king | England after 1689: crown needs Parliament's consent"
+   },
+   "cite": [
+    "s1",
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the ideas. The Enlightenment was a movement of thinkers with great faith in reason. They believed reason and knowledge could slowly make life better."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Enlightenment: faith in reason"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What did Enlightenment thinkers put their faith in?",
+    "right": "Reason",
+    "wrong": [
+     "Divine right",
+     "Royal tradition",
+     "Blind obedience"
+    ],
+    "why": "They believed reason and knowledge could slowly bring about the betterment of humankind."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First thinker: John Locke, an Englishman who lived from 1632 to 1704. His Two Treatises of Government appeared around 1689 to 1690. His big idea was natural rights: life, liberty and property, which exist whether or not any government grants them."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Life; Liberty; Property"
+   },
+   "cite": [
+    "s14",
+    "s16",
+    "s12"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which three natural rights is Locke best known for?",
+    "right": "Life, liberty and property",
+    "wrong": [
+     "Faith, hope and charity",
+     "Crown, church and army",
+     "Speech, trade and travel"
+    ],
+    "why": "Locke argued people have rights to life, liberty and property, independent of any particular society's laws."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here's Locke in his own words, from his Two Treatises."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "\"no one ought to harm another in his life, health, liberty, or possessions\""
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next idea: the social contract. People form a government to protect their rights. If a ruler violates those rights, Locke said, the ruler can justly be overthrown."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Social contract"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "According to Locke, what can people justly do if a ruler violates their rights?",
+    "right": "Remove him",
+    "wrong": [
+     "Pay him more taxes",
+     "Wait for God to act",
+     "Nothing at all"
+    ],
+    "why": "Locke held that obedience depends on the ruler protecting natural rights, and rulers who violate them can be overthrown."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Notice the clash with divine right. Defenders of divine right, like Sir Robert Filmer, saw rulers as chosen by God. Locke saw no natural hierarchy among people."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Divine right (Filmer, Louis XIV): God chooses the king | Locke: no natural hierarchy; government rests on consent"
+   },
+   "cite": [
+    "s3",
+    "s13"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Locke's phrase 'life, liberty and property' foreshadows the American Declaration of Independence. We'll meet that in the next class."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1689-1690 Locke's Two Treatises; 1776 Declaration of Independence (next class)"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Second thinker: Voltaire, who lived from 1694 to 1778. His real name was François-Marie Arouet. His weapons were satire and wit against injustice, superstition and intolerance."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Voltaire: wit as a weapon"
+   },
+   "cite": [
+    "s17",
+    "s19"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was Voltaire's main weapon?",
+    "right": "Satire and wit",
+    "wrong": [
+     "An army",
+     "A royal title",
+     "A secret police"
+    ],
+    "why": "Voltaire used satire and wit to expose injustice, superstition and hypocrisy."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Voltaire was censored and imprisoned. In 1762 he took up a case. Jean Calas, a Protestant merchant in Toulouse, was executed after being accused of murdering his son. Voltaire campaigned, and Calas was cleared in 1765."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "9 March 1762 Calas executed; 1763 Treatise on Tolerance; 1765 Calas officially cleared"
+   },
+   "cite": [
+    "s17",
+    "s37",
+    "s20",
+    "s21"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "His 1763 Treatise on Tolerance argued for freedom of conscience and religious freedom. One source calls the Calas campaign perhaps Europe's first modern human rights campaign."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Tolerance"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What did Voltaire's Treatise on Tolerance defend?",
+    "right": "Freedom of conscience and religious freedom",
+    "wrong": [
+     "The divine right of kings",
+     "A ban on all churches",
+     "A bigger royal army"
+    ],
+    "why": "The treatise defended freedom of conscience and religious freedom, after the Calas case."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Third thinker: Jean-Jacques Rousseau, born in Geneva in 1712. In The Social Contract (1762) he argued that power should rest on the agreement of free people, not divine right or inherited privilege."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "\"Man is born free, and everywhere he is in chains\""
+   },
+   "cite": [
+    "s17",
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Rousseau's key phrase was the 'general will': the common interest of the whole community. French and Genevan authorities banned the book soon after it appeared."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "General will"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "On what did Rousseau say a just political order should rest?",
+    "right": "The collective agreement of free people",
+    "wrong": [
+     "Divine right",
+     "Inherited privilege",
+     "The strongest army"
+    ],
+    "why": "Rousseau based legitimate power on the collective agreement of free people, not on divine right or hereditary privilege."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A bit of gossip: these thinkers did not agree. Rousseau's later quarrel with Voltaire was legendary for its violence. Both died in 1778."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1694-1778 Voltaire; 1712-1778 Rousseau"
+   },
+   "cite": [
+    "s22",
+    "s19"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Ideas travelled in salons and in print. Salons were gatherings hosted at home. And Diderot and d'Alembert's Encyclopaedia set out to take stock of what the human mind had achieved."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A candlelit Paris salon, people talking around a table piled with books"
+   },
+   "cite": [
+    "s21",
+    "s23"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the hard question: who counted? Take slavery. Locke owned stock in the Royal African Company, which profited from enslaving Africans. And he argued slavery could be acceptable if it came from a 'just war'."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Debate: the limits of Enlightenment ideals"
+   },
+   "cite": [
+    "s24",
+    "s26"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "Under what condition did Locke say slavery could be acceptable?",
+    "right": "If it resulted from a 'just war'",
+    "wrong": [
+     "If the king approved",
+     "If the slave consented",
+     "He thought it always acceptable"
+    ],
+    "why": "One source reports Locke argued slavery was acceptable if it resulted from a just war."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Historians disagree about what this means. Some say Locke was a hypocrite whose liberty was for Europeans. Others say he wrote the Carolina constitution only as a secretary, and that his Two Treatises helped justify rebelling against absolutism and slavery."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Hypocrisy: stock, Carolina constitution, just-war slavery | Defence: he was a secretary; the Two Treatises attacked absolutism and slavery"
+   },
+   "cite": [
+    "s27",
+    "s26"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It wasn't only Locke. One course says Enlightenment thinkers struggled with the fact that 'progress' depended on slavery. Many philosophes also thought colonised peoples were less developed than white European men."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Progress built on slavery"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Women faced limits too. The idea of women having a political voice was almost nonexistent. Rousseau thought women's education should aim to please men."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Women left out"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Some pushed back. Olympe de Gouges, a French playwright and abolitionist, wrote a Declaration of the Rights of Woman in 1791. Mary Wollstonecraft wrote A Vindication of the Rights of Woman in 1792, calling for universal education."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1791 de Gouges, Declaration of the Rights of Woman; 1792 Wollstonecraft, A Vindication"
+   },
+   "cite": [
+    "s24",
+    "s28"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Who wrote a Declaration of the Rights of Woman in 1791?",
+    "right": "Olympe de Gouges",
+    "wrong": [
+     "John Locke",
+     "Louis XIV",
+     "Voltaire"
+    ],
+    "why": "De Gouges, a French playwright and abolitionist, wrote it in 1791. Wollstonecraft's Vindication followed in 1792."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Historians also say people pushing the Enlightenment further were multi-racial, multi-national and working class. The effects were liberating, but with limits."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Liberating, but with limits"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the music and art. The Baroque era ran from about 1600 to about 1750, and its art was grand and dramatic. One source calls Baroque art propaganda for the state or the Church, and Versailles was decorated by leading artists."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A gilded Baroque hall at Versailles, with painted ceilings and mirrors"
+   },
+   "cite": [
+    "s29",
+    "s33",
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Bach and Handel were both born in Germany in 1685, the year Louis revoked the Edict of Nantes. Many composers then earned a living only on the payroll of a political or religious institution."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1685 Bach and Handel born; 1741 Handel's Messiah in Dublin; 1750 Bach dies"
+   },
+   "cite": [
+    "s30",
+    "s34"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Handel wrote Water Music when King George I wanted an evening's entertainment. Bach's music was undervalued after his death, but Mozart and Beethoven admired it."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Handel: Water Music for a king; Messiah, 1741 | Bach: admired later by Mozart and Beethoven"
+   },
+   "cite": [
+    "s30"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Then tastes shifted. Rococo preferred lighthearted subjects over the political and religious themes of the Baroque. Later the Classical style of Haydn and Mozart produced the symphony. In 1764 an eight-year-old Mozart met J. C. Bach in London."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Baroque: grand and dramatic; Rococo: light and playful; Classical: Haydn, Mozart, the symphony"
+   },
+   "cite": [
+    "s32",
+    "s31"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which style rejected the political and religious themes of the Baroque for lighter subjects?",
+    "right": "Rococo",
+    "wrong": [
+     "Absolutism",
+     "The social contract",
+     "The Edict of Nantes"
+    ],
+    "why": "Rococo preferred lighthearted subject matter instead of the Baroque's political and religious themes."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To sum up: Louis XIV claimed power from God. England limited its monarchy through the Bill of Rights. Locke, Voltaire and Rousseau argued power should rest on rights, reason and consent. And those ideals often excluded enslaved people and women."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Louis XIV: power from God; 1689: Bill of Rights limits the crown; Locke, Voltaire, Rousseau: rights, reason, consent; Limits: slavery, gender, empire"
+   },
+   "cite": [
+    "s3",
+    "s9",
+    "s13",
+    "s24"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next class we see these ideas set off revolutions, in America and in France. See you there."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: The American and French Revolutions"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "pie",
+   "title": "Huguenots after 1685: roughly one in four left France (approximate)",
+   "rows": [
+    {
+     "label": "Left France (about 200,000)",
+     "value": 25,
+     "source": "s5"
+    },
+    {
+     "label": "Stayed in France (rest)",
+     "value": 75,
+     "source": "s5"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Divine right of kings",
+   "links": [
+    "[[The Reformation and the Wars of Religion]]",
+    "[[The Rise of Rome]]"
+   ]
+  },
+  {
+   "topic": "Louis XIV and Versailles",
+   "links": [
+    "[[The Renaissance]]",
+    "[[The American and French Revolutions]]"
+   ]
+  },
+  {
+   "topic": "English Civil War and Glorious Revolution",
+   "links": [
+    "[[The Scientific Revolution]]",
+    "[[The American and French Revolutions]]"
+   ]
+  },
+  {
+   "topic": "Locke, Voltaire, Rousseau and the social contract",
+   "links": [
+    "[[The American and French Revolutions]]",
+    "[[Napoleon, Haiti and Latin American Independence]]"
+   ]
+  },
+  {
+   "topic": "Slavery, gender and empire: limits of Enlightenment ideals",
+   "links": [
+    "[[The Atlantic Slave Trade]]",
+    "[[Imperialism: Africa, India, China and Japan]]",
+    "[[Nations, Reform and Civil War in the 1800s]]"
+   ]
+  },
+  {
+   "topic": "Baroque, Rococo and Classical music and art",
+   "links": [
+    "[[The Renaissance]]",
+    "[[Science and Ideas in the 1800s]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "1643",
+   "elsewhere": "Louis XIV became king of France as a small child. In England in the 1640s, Parliament was struggling with the Stuart kings over who held power.",
+   "cite": [
+    "s2",
+    "s7"
+   ]
+  },
+  {
+   "when": "1649",
+   "elsewhere": "Parliament executed Charles I for treason. Louis XIV, born in 1638, was ten years old.",
+   "cite": [
+    "s7",
+    "s2"
+   ]
+  },
+  {
+   "when": "1685",
+   "elsewhere": "Louis XIV revoked the Edict of Nantes. In England the Catholic James II became king. Bach and Handel were both born in Germany.",
+   "cite": [
+    "s6",
+    "s7",
+    "s30"
+   ]
+  },
+  {
+   "when": "1688-1689",
+   "elsewhere": "William and Mary accepted the English crown with the Bill of Rights. Locke's Two Treatises appeared at about the same time.",
+   "cite": [
+    "s9",
+    "s14",
+    "s16"
+   ]
+  },
+  {
+   "when": "1715",
+   "elsewhere": "Louis XIV died after 72 years on the throne. His five-year-old great-grandson became Louis XV.",
+   "cite": [
+    "s1"
+   ]
+  },
+  {
+   "when": "1741",
+   "elsewhere": "Handel's Messiah was performed in Dublin. Bach was still alive; he died in 1750.",
+   "cite": [
+    "s30"
+   ]
+  },
+  {
+   "when": "1762-1764",
+   "elsewhere": "Rousseau published The Social Contract in 1762. Jean Calas was executed in Toulouse that March, and Voltaire's Treatise on Tolerance followed in 1763. In 1764 an eight-year-old Mozart met J. C. Bach in London.",
+   "cite": [
+    "s17",
+    "s37",
+    "s20",
+    "s31"
+   ]
+  },
+  {
+   "when": "1778",
+   "elsewhere": "Voltaire and Rousseau both died this year.",
+   "cite": [
+    "s19",
+    "s22"
+   ]
+  },
+  {
+   "when": "1791-1792",
+   "elsewhere": "Olympe de Gouges wrote her Declaration of the Rights of Woman in 1791. Mary Wollstonecraft published A Vindication of the Rights of Woman in 1792.",
+   "cite": [
+    "s24",
+    "s28"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Louis XIV was an absolute monarch who said 'I am the State'.",
+   "other_view": "One source says Louis claimed absolute power but in practice his powers were absolute only in a relative sense. Some historians also doubt he ever said 'L'État, c'est moi'.",
+   "cite": [
+    "s3",
+    "s4"
+   ]
+  },
+  {
+   "claim": "Locke's ideas shaped the English Bill of Rights.",
+   "other_view": "Many historians think Locke greatly influenced it. The UK Parliament, however, stresses that the Bill was mostly about the specific misdeeds of James II, not a statement of universal liberties.",
+   "cite": [
+    "s35",
+    "s8"
+   ]
+  },
+  {
+   "claim": "Locke's liberalism was bound up with slavery and was hypocritical.",
+   "other_view": "Some scholars point to his Royal African Company stock, his involvement in the Carolina constitutions and his just-war argument. Others say he was only a secretary drafting the Carolina document, and that his Two Treatises opposed absolutism and slavery. Scholars still debate this.",
+   "cite": [
+    "s27",
+    "s26",
+    "s24"
+   ]
+  },
+  {
+   "claim": "Locke's key idea was natural rights.",
+   "other_view": "Some scholars argue that natural law, not natural rights, is primary for Locke. On this view, his 'life, liberty and property' were mainly about our duties not to kill, enslave or steal.",
+   "cite": [
+    "s12"
+   ]
+  },
+  {
+   "claim": "The Enlightenment was held back by slavery and exclusion.",
+   "other_view": "Some sources stress that thinkers struggled with progress that depended on slavery. Others note that multi-racial, multi-national and working-class rebels pushed the Enlightenment further, so its effects were liberating but limited.",
+   "cite": [
+    "s24",
+    "s25"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,960 @@
+{
+ "about": {
+  "title": "Civilizations before the end of the Ice Age?",
+  "course": "what-if",
+  "class_n": 3,
+  "audience": [
+   "adult",
+   "anyone who enjoys thought experiments"
+  ],
+  "minutes": 35,
+  "length_note": "About 35 minutes. There are 29 short beats and 8 check questions, and each of the six topics gets its own steps. The two voices are the contrary voice (A) and the regular teacher playing devil's advocate (B). Take the questions at your own pace and pause whenever you like."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Göbekli Tepe (World Heritage List entry 1572)",
+   "publisher": "UNESCO World Heritage Centre",
+   "date": "inscribed 2018",
+   "link": "https://whc.unesco.org/en/list/1572",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Göbekli Tepe",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/G%C3%B6bekli_Tepe",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "3.1 Early Civilizations, World History Volume 1, to 1500",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/world-history-volume-1/pages/3-1-early-civilizations",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "2.3 The Neolithic Revolution, World History Volume 1, to 1500",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/world-history-volume-1/pages/2-3-the-neolithic-revolution",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Sea Level Rise",
+   "publisher": "Smithsonian Ocean (Smithsonian National Museum of Natural History)",
+   "date": "n.d.",
+   "link": "https://ocean.si.edu/through-time/ancient-seas/sea-level-rise",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "U.S. Geological Survey Professional Paper 1815",
+   "publisher": "U.S. Geological Survey",
+   "date": "n.d.",
+   "link": "https://pubs.usgs.gov/pp/1815/pp1815.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Doggerland - The Europe That Was",
+   "publisher": "National Geographic Education",
+   "date": "n.d.",
+   "link": "https://education.nationalgeographic.org/resource/doggerland/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Mammoths and stone-age humans once roamed Doggerland, the lost land submerged by the North Sea",
+   "publisher": "ABC News (Australia)",
+   "date": "2019-11-20",
+   "link": "https://www.abc.net.au/news/science/2019-11-20/searching-for-doggerland-archaeology-palaeontology-scandinavia/11707174",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Book chapter on submerged Stone Age coasts and underwater archaeological material (Bouldnor Cliff and other sites)",
+   "publisher": "Springer",
+   "date": "n.d.",
+   "link": "https://link.springer.com/doi/10.1007/978-3-030-37367-2_10",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Conjuring the Lost Land Beneath the North Sea",
+   "publisher": "Hakai Magazine",
+   "date": "n.d.",
+   "link": "https://hakaimagazine.com/features/conjuring-the-lost-land-beneath-the-north-sea/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "SAA Sends Letter to Netflix Concerning 'Ancient Apocalypse' Series",
+   "publisher": "Society for American Archaeology",
+   "date": "2022-11-30 (letter date)",
+   "link": "https://saa.org/Member/SAAMember/Media-Room/News/SAA-Sends-Letter-to-Netflix-Concerning-Ancient-Apocalypse-Series.aspx",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Netflix's 'Ancient Apocalypse' is more fiction than fact, say experts",
+   "publisher": "Phys.org (University of Alberta)",
+   "date": "2022-12",
+   "link": "https://phys.org/news/2022-12-netflix-ancient-apocalypse-fiction-fact.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Why Netflix's 'Ancient Apocalypse' has got archaeologists up in arms",
+   "publisher": "Malay Mail",
+   "date": "2022-12-07",
+   "link": "https://www.malaymail.com/amp/news/showbiz/2022/12/07/why-netflixs-ancient-apocalypse-has-got-archaeologists-up-in-arms-video/43929",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Ancient Apocalypse",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Ancient_Apocalypse",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "The Younger Dryas Impact: A Failed Hypothesis",
+   "publisher": "Skeptical Inquirer",
+   "date": "2025-06",
+   "link": "https://skepticalinquirer.org/2025/06/the-younger-dryas-impact-a-failed-hypothesis/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "The Younger Dryas impact hypothesis: A critical review",
+   "publisher": "Utrecht University research portal",
+   "date": "n.d.",
+   "link": "https://research-portal.uu.nl/en/publications/the-younger-dryas-impact-hypothesis-a-critical-review/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Premature rejection in science: The case of the Younger Dryas Impact Hypothesis",
+   "publisher": "Science Progress (via PubMed Central)",
+   "date": "2022",
+   "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10450282",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Rejection of Holliday et al.'s alleged refutation of the Younger Dryas impact hypothesis",
+   "publisher": "Earth-Science Reviews (ScienceDirect)",
+   "date": "2024",
+   "link": "https://www.sciencedirect.com/science/article/pii/S0012825224002885",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Transcript for Graham Hancock: Lost Civilization of the Ice Age & Ancient Human History (Podcast #449)",
+   "publisher": "Lex Fridman Podcast",
+   "date": "2024-10",
+   "link": "https://lexfridman.com/graham-hancock-transcript/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Finally, the Beauty of France's Chauvet Cave Makes its Grand Public Debut",
+   "publisher": "Smithsonian Magazine",
+   "date": "n.d.",
+   "link": "https://www.smithsonianmag.com/history/france-chauvet-cave-makes-grand-debut-180954582/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "The Development of Agriculture",
+   "publisher": "National Geographic Education",
+   "date": "n.d.",
+   "link": "https://education.nationalgeographic.org/resource/development-agriculture/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Why did Uruk outshine Eridu to become Mesopotamia's powerhouse?",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/uruk/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Did a comet end the Ice Age and wipe out a civilization? Fact check",
+   "publisher": "Ancient Origins",
+   "date": "n.d.",
+   "link": "https://www.ancient-origins.net/news-history-archaeology/younger-dryas-comet-fact-check-00103277",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "Younger Dryas impact hypothesis",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Younger_Dryas_impact_hypothesis",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "First, where this idea stands. Today's idea is that an advanced civilization lived during the Ice Age and was then lost. It sits in the tier we call popular speculation."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Where this idea stands: popular speculation"
+   },
+   "cite": [
+    "s13",
+    "s11"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the full ladder from class 1. Five tiers: mainstream consensus, active research debate, minority scholarly view, popular speculation, and fiction."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "star",
+    "count": 5,
+    "layout": "row",
+    "text": "Five credibility tiers"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Popular speculation means lots of people share the idea in books, shows and videos. Archaeologists who study the Ice Age say they have found no evidence for it. The accepted view is that cities came much later."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "The idea: an advanced Ice Age civilization, then lost | The accepted view: farming first, cities thousands of years later"
+   },
+   "cite": [
+    "s13",
+    "s3",
+    "s22"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which tier did we give the idea of a lost Ice Age civilization?",
+    "right": "Popular speculation",
+    "wrong": [
+     "Mainstream consensus",
+     "Active research debate",
+     "Minority scholarly view"
+    ],
+    "why": "Many people enjoy and share the idea, but archaeologists report no evidence for it, so it sits at the popular speculation tier."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "I'll argue the contrary side today, and B will push back. Nobody is mocked here. People who like this idea are asking real questions, and archaeology has surprised itself before."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Fair play"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step one is the accepted view. Ice Age people were not simple. In a French cave, painted animals about 36,000 years old are still there to see."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Charcoal-drawn horses and lions on a cave wall in Chauvet Cave, France"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "For most of human history, people lived as hunter-gatherers. The coldest point of the last Ice Age was about 20,000 years ago. Farming came much later."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Hunter-gatherers"
+   },
+   "cite": [
+    "s21",
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Farming took root about 12,000 years ago in the Fertile Crescent. That is a curve of land through the Middle East."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A crescent-shaped band running from the Mediterranean coast through eastern Türkiye to Iraq and Iran, highlighted in green"
+   },
+   "cite": [
+    "s21",
+    "s4"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Roughly when did farming take root in the Fertile Crescent?",
+    "right": "About 12,000 years ago",
+    "wrong": [
+     "About 2,000 years ago",
+     "About 36,000 years ago",
+     "About 200,000 years ago"
+    ],
+    "why": "National Geographic Education dates the start of farming to around 12,000 years ago, in the Fertile Crescent."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Villages and early towns followed. Jericho and Çatalhöyük were among the earliest. Mehrgarh in Pakistan had farmers by about 7000 BCE."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "About 8000 BCE: farming settlements in China | About 7000 BCE: Mehrgarh, Pakistan | Jericho and Çatalhöyük: among the earliest Neolithic towns"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Then came the first great city. Uruk, in Mesopotamia, was the largest urban center between about 4100 and 3000 BCE."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Uruk: about 5,500 years ago"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Even Uruk was lost for a long time. It was abandoned and buried, then excavated in 1853. That matters for our thought experiment later."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Abandoned, buried, found"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the site that makes people ask 'What if?'. Göbekli Tepe, in Türkiye, has circles of huge carved stone pillars."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A ring of tall T-shaped stone pillars on a hilltop, with animal carvings on the stone"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Who built it? UNESCO says hunter-gatherers, in the Pre-Pottery Neolithic. The first monuments date to about 9500 BCE, roughly 11,500 years ago."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 11,500 years old"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is why it surprised people. Big monuments were expected to come after farming. Göbekli sits right at the shift from foraging to farming."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "one of the first manifestations of human-made monumental architecture (UNESCO)"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's be careful about what it shows. It shows early people could organise, build and carve on a grand scale. It does not show a hidden advanced civilization."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "It does show: hunter-gatherers built monuments before farming | It does not show: a lost civilization behind them"
+   },
+   "cite": [
+    "s1",
+    "s13"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What does Göbekli Tepe show?",
+    "right": "People who were not yet farming could build monuments",
+    "wrong": [
+     "That a hidden advanced civilization built it",
+     "That farmers with metal tools built it",
+     "That cities existed 20,000 years ago"
+    ],
+    "why": "UNESCO describes it as built by hunter-gatherers. That changed ideas about what early people could do, but it points to no lost civilization."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here's my best contrary point. Evidence has changed the picture before. Chauvet's art was once said to be 10,000 years younger, until radiocarbon dating of about 80 samples settled it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Evidence changes minds"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Agreed, and notice what changed minds there. It was dated material, tested and repeated. Now let's line up the dates we have met."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1",
+    "text": "Roughly how many years ago?"
+   },
+   "cite": [
+    "s20",
+    "s6",
+    "s21",
+    "s2",
+    "s8",
+    "s22"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "On the chart, which is older: Göbekli Tepe's first monuments or the great city of Uruk?",
+    "right": "Göbekli Tepe, by about 6,000 years",
+    "wrong": [
+     "Uruk, by about 6,000 years",
+     "They are the same age",
+     "The chart cannot tell us"
+    ],
+    "why": "A longer bar means longer ago. Göbekli Tepe's bar is about 11,500 years and Uruk's is about 5,500."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the sea, which is why some people suspect a lost world. At the coldest point of the Ice Age, sea level was about 120 metres lower than today."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A world map with today's coastlines solid and the Ice Age coastlines dashed farther out to sea"
+   },
+   "cite": [
+    "s6",
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Then the ice melted. Over about 20,000 years the sea climbed some 120 metres, around 400 feet. Land people once walked on is now under water."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 120 metres (400 feet)"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "About how far did sea level rise over the past 20,000 years?",
+    "right": "About 120 metres (400 feet)",
+    "wrong": [
+     "About 12 metres",
+     "About 2 metres",
+     "It has not changed"
+    ],
+    "why": "The Smithsonian says sea level has climbed some 120 metres over the past 20,000 years or so."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A real example is Doggerland, the lowland that once joined Britain to Europe. The sea covered it completely about 8,000 years ago."
+   },
+   "show": {
+    "kind": "map",
+    "text": "The North Sea with a shaded land area between England and Denmark, labelled Doggerland"
+   },
+   "cite": [
+    "s8",
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Researchers rebuilt about 46,620 square kilometres of it from oil-company survey data. One report says buildings could potentially lie there as well as tools. So 'what is underwater?' is a fair question."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 46,620 square kilometres rebuilt"
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So what have underwater searches found? Stone Age settlements and burials around the coast, and worked timbers at Bouldnor Cliff. These are hunter-gatherer sites, not cities."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Mesolithic settlements and burial sites | Worked timbers at Bouldnor Cliff | Ice Age animal remains"
+   },
+   "cite": [
+    "s10",
+    "s9"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What have underwater surveys around Britain and the North Sea found so far?",
+    "right": "Stone Age hunter-gatherer remains, such as worked timbers",
+    "wrong": [
+     "Sunken stone cities",
+     "Ancient machines",
+     "Written records from 15,000 years ago"
+    ],
+    "why": "The sources describe Stone Age settlements, burials and timbers. They do not describe sunken cities."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the thought experiment. Imagine a big city, built 15,000 years ago. Fast-forward to today. What would we expect it to leave behind?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Thought experiment: what would a lost civilization leave behind after 12,000 years?"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Clue one: big places leave big marks. Mud-brick Uruk was found again after about 5,000 years. Göbekli's stone pillars have lasted about 11,500."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Big places leave big marks"
+   },
+   "cite": [
+    "s22",
+    "s1",
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Clue two: ordinary things last too. Doggerland's story was first pieced together from shards and fragments that kept turning up."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Everyday leftovers"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Clue three: the sea does not erase everything. Worked timbers survive under water. Stone Age coasts should be well represented in the underwater record."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The sea keeps things"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So here's a fair checklist for any lost-civilization claim: dated remains, many sites rather than one, everyday leftovers, and results other teams can repeat. Repeating results is the hard part."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Dated remains | Many sites, not one | Tools, food, burials | Results other teams can repeat"
+   },
+   "cite": [
+    "s16",
+    "s6"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which is the strongest kind of evidence for a lost civilization?",
+    "right": "Dated everyday remains found at many sites and checked by independent teams",
+    "wrong": [
+     "One striking building that looks very old",
+     "A story from myth",
+     "A famous person saying it is true"
+    ],
+    "why": "Dated, repeatable evidence from many places is hard to explain away. A single look-alike site, a story or a famous voice can all be mistaken."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A comet is often added to this story. A 2007 proposal said an impact about 12,850 years ago started the Younger Dryas cold spell. Most experts reject it and prefer a meltwater pulse, as class 2 covered."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Class 2 recap: impact idea, mostly rejected"
+   },
+   "cite": [
+    "s17",
+    "s15",
+    "s24"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last topic. A common argument goes: 'Ancient people couldn't have done that, so someone more advanced did.' It turns 'I don't know how' into 'someone else did it'."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Why 'ancient people couldn't have done it' is a weak argument"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The evidence keeps proving the old argument wrong. Göbekli Tepe was built by hunter-gatherers. UNESCO calls it a showcase of the creative human genius of those early societies."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "People did it"
+   },
+   "cite": [
+    "s1",
+    "s20"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why is 'ancient people couldn't have done it' a weak argument?",
+    "right": "It treats a gap in our knowledge as proof that someone else did it, and past people kept proving more capable than expected",
+    "wrong": [
+     "Because ancient people never built anything big",
+     "Because archaeologists have proved no lost civilization could exist",
+     "Because it is just impolite and has nothing to do with evidence"
+    ],
+    "why": "Not knowing how something was done is not evidence of who did it. Göbekli Tepe and Chauvet show real early people doing remarkable things."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "There's also a human side. Experts criticised one popular series for undervaluing the achievements of Indigenous peoples. The Society for American Archaeology said it aligned with racist ideologies."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Credit the real builders"
+   },
+   "cite": [
+    "s14",
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That does not mean everyone who enjoys the idea thinks that way. The worry is what the story does to the real builders. A kind way to play is to give them the credit and ask what evidence would change your mind."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Give credit to the real builders | Ask what evidence would change your mind | Enjoy the 'What if?' and then test it"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Fair credit to the contrary side: the sea floor is not fully searched, and archaeologists say they would investigate credible evidence. The 'What if?' is welcome. The testing is the work."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Welcome the question, test the claim"
+   },
+   "cite": [
+    "s23",
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To recap: cities came after farming, and Göbekli Tepe shows early monument-building before it. Seas rose about 120 metres, and surveys so far find Stone Age sites. A lost civilization needs dated, repeatable, widespread evidence."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Accepted view: farming about 12,000 years ago, cities about 5,500 | Göbekli Tepe: hunter-gatherers built monuments | Sea rose about 120 m; finds so far are Stone Age sites | Lost civilization: popular speculation, no evidence yet | Give past peoples credit"
+   },
+   "cite": [
+    "s21",
+    "s22",
+    "s1",
+    "s5",
+    "s9",
+    "s13"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next class we go from the Earth to the sky. The Big Bang and the rival that lost: steady state. Bring your curiosity."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: The Big Bang and the rival that lost"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Roughly how many years ago?",
+   "rows": [
+    {
+     "label": "Chauvet Cave paintings",
+     "value": 36000,
+     "source": "s20"
+    },
+    {
+     "label": "Coldest point of the Ice Age (seas about 120 m lower)",
+     "value": 20000,
+     "source": "s6"
+    },
+    {
+     "label": "Farming takes root in the Fertile Crescent",
+     "value": 12000,
+     "source": "s21"
+    },
+    {
+     "label": "Göbekli Tepe's first monuments (about 9500 BCE)",
+     "value": 11500,
+     "source": "s2"
+    },
+    {
+     "label": "Doggerland fully under water",
+     "value": 8000,
+     "source": "s8"
+    },
+    {
+     "label": "Uruk, a great city (about 3500 BCE)",
+     "value": 5500,
+     "source": "s22"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Göbekli Tepe",
+   "links": [
+    "[[The Younger Dryas]]",
+    "[[Hunter-gatherers and monuments]]"
+   ]
+  },
+  {
+   "topic": "Doggerland and sea level rise",
+   "links": [
+    "[[Underwater archaeology]]",
+    "[[The Younger Dryas]]"
+   ]
+  },
+  {
+   "topic": "Credibility tiers",
+   "links": [
+    "[[How to play 'What if?']]",
+    "[[Evidence toolkit]]"
+   ]
+  },
+  {
+   "topic": "Argument from 'I can't imagine it'",
+   "links": [
+    "[[Ancient astronauts]]",
+    "[[Respect for past peoples]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About 36,000 years ago",
+   "elsewhere": "People painted animals on the walls of Chauvet Cave in what is now France.",
+   "cite": [
+    "s20"
+   ]
+  },
+  {
+   "when": "About 20,000 years ago",
+   "elsewhere": "The Ice Age was at its coldest, and sea level was about 120 metres lower than today.",
+   "cite": [
+    "s6",
+    "s5"
+   ]
+  },
+  {
+   "when": "About 12,850 years ago, for about 1,200 years",
+   "elsewhere": "The Younger Dryas cold spell began. Whether a comet caused it is disputed.",
+   "cite": [
+    "s17"
+   ]
+  },
+  {
+   "when": "About 9500 BCE",
+   "elsewhere": "Hunter-gatherers began raising the first monuments at Göbekli Tepe.",
+   "cite": [
+    "s1",
+    "s2"
+   ]
+  },
+  {
+   "when": "About 8000 BCE",
+   "elsewhere": "Neolithic settlements appeared along the Yellow and Yangtze Rivers in China, and farming was taking root in the Fertile Crescent.",
+   "cite": [
+    "s3",
+    "s21"
+   ]
+  },
+  {
+   "when": "About 8,000 years ago",
+   "elsewhere": "Rising seas completely covered Doggerland, as Mesolithic people were starting to develop agriculture.",
+   "cite": [
+    "s8"
+   ]
+  },
+  {
+   "when": "About 7000 BCE",
+   "elsewhere": "Farmers and traders lived at Mehrgarh, in what is now Pakistan.",
+   "cite": [
+    "s3"
+   ]
+  },
+  {
+   "when": "About 4100 to 3000 BCE",
+   "elsewhere": "Uruk was the largest urban center in Mesopotamia.",
+   "cite": [
+    "s22"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Archaeology has missed or ignored evidence of an advanced Ice Age civilization.",
+   "other_view": "Supporters point out that drowned coastal land is still hard to search, and a Doggerland researcher says buildings could potentially lie under the sea. Archaeologists reply that they have investigated hundreds of Ice Age sites and do not suppress evidence. The Society for American Archaeology also says archaeologists would investigate credible evidence.",
+   "cite": [
+    "s8",
+    "s13",
+    "s23"
+   ]
+  },
+  {
+   "claim": "A comet impact about 12,850 years ago caused the Younger Dryas and may have destroyed a civilization.",
+   "other_view": "Supporters say key evidence has been replicated many times and was rejected too early. Critics say other groups could not reproduce key results, no crater has been found, and most experts reject the idea. The most widely accepted cause is a burst of meltwater into the Atlantic. Hancock himself notes the comet idea is still controversial, and he says the Younger Dryas matters more to his case than the impact.",
+   "cite": [
+    "s18",
+    "s17",
+    "s16",
+    "s15",
+    "s24",
+    "s23",
+    "s19"
+   ]
+  },
+  {
+   "claim": "Archaeologists dismiss the idea mainly out of professional territory.",
+   "other_view": "Hancock says the dismissal is partly territorial. The Society for American Archaeology says that the show disparages archaeologists and misrepresents archaeology. One Alberta archaeologist says labelling the series fiction is not the best answer. He would rather give people the tools to judge claims for themselves.",
+   "cite": [
+    "s19",
+    "s11",
+    "s12"
+   ]
+  },
+  {
+   "claim": "Göbekli Tepe was simply a temple built by mobile hunter-gatherers.",
+   "other_view": "That is the usual description. But findings published in 2019 suggest a settlement with domestic structures at the site, so researchers are still debating how the site was used.",
+   "cite": [
+    "s1",
+    "s2"
+   ]
+  }
+ ]
+}

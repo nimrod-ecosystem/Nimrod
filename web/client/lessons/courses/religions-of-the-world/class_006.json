@@ -1,0 +1,1190 @@
+{
+ "about": {
+  "title": "Judaism",
+  "course": "religions-of-the-world",
+  "class_n": 6,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 33,
+  "length_note": "This runs a little over the usual 30 minutes. Judaism has six topics here: history, texts and study, Shabbat and the calendar, festivals, movements, and communities. The 36 steps are short, so you can pause at any question. The calendar steps and the communities steps can be taken as a second sitting."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Judaism",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/topic/Judaism",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Talmud and Midrash",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/topic/Talmud",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "What Is the Talmud?",
+   "publisher": "My Jewish Learning",
+   "date": "undated",
+   "link": "https://www.myjewishlearning.com/article/talmud-101/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Sabbath",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/topic/Sabbath-Judaism",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Jewish religious year",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/topic/Jewish-religious-year",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Jewish festivals",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/topic/Jewish-festivals",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Jewish Holidays: Fact Sheet (CRS report R45002)",
+   "publisher": "Congressional Research Service, U.S. Congress",
+   "date": "undated",
+   "link": "https://www.congress.gov/crs-product/R45002",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Countries with the most Jews & global Jewish population change, 2010-2020",
+   "publisher": "Pew Research Center",
+   "date": "2025-06-09",
+   "link": "https://www.pewresearch.org/religion/2025/06/09/jewish-population-change/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Temple of Jerusalem",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/topic/Temple-of-Jerusalem",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "The Jewish Denominations",
+   "publisher": "My Jewish Learning",
+   "date": "undated",
+   "link": "https://www.myjewishlearning.com/article/the-jewish-denominations/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Reform and Conservative Jews",
+   "publisher": "Rossing Center for Education and Dialogue",
+   "date": "undated",
+   "link": "https://rossingcenter.org/judaisms/reform-and-conservative-jews/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Jews (Global Religious Landscape)",
+   "publisher": "Pew Research Center",
+   "date": "2012-12-18",
+   "link": "https://www.pewresearch.org/religion/2012/12/18/global-religious-landscape-jew/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Sephardic, Ashkenazic, Mizrahi and Ethiopian Jews",
+   "publisher": "My Jewish Learning",
+   "date": "undated",
+   "link": "https://www.myjewishlearning.com/article/sephardic-ashkenazic-mizrahi-jews-jewish-ethnic-diversity/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Second Temple Judaism: Meaning and Timeline",
+   "publisher": "Bart Ehrman (bartehrman.com)",
+   "date": "undated",
+   "link": "https://www.bartehrman.com/second-temple-judaism/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "A Quick Guide to Judaism",
+   "publisher": "The Great Synagogue, Sydney",
+   "date": "undated",
+   "link": "https://www.greatsynagogue.org.au/information/judaism",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "What Is Shabbat?",
+   "publisher": "Chabad.org",
+   "date": "undated",
+   "link": "https://www.chabad.org/library/article_cdo/aid/633659/jewish/What-Is-Shabbat.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Jewish Holidays",
+   "publisher": "Weinstein JCC",
+   "date": "undated",
+   "link": "https://weinsteinjcc.org/jewish-holidays/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "A Gentile's Guide to the Jewish Holidays",
+   "publisher": "Judaism 101 (JewFAQ)",
+   "date": "undated",
+   "link": "https://www.jewfaq.org/gentiles_guide_to_holidays",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Jewish Holidays and Observances",
+   "publisher": "Whittemore Library, Framingham State University",
+   "date": "undated",
+   "link": "https://library.framingham.edu/holidaysandobservances/jewish",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Jewish Holidays: Fasting and Feasting",
+   "publisher": "Christianity Today",
+   "date": "2025-06",
+   "link": "https://www.christianitytoday.com/2025/06/judaism-holidays-passover-yom-kippur-rosh-hashanah-purim-hanukkah/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "What Is The Talmud?",
+   "publisher": "Aish",
+   "date": "undated",
+   "link": "https://aish.com/what-is-the-talmud/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Chavrusa",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Chavrusa",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Shabbat at Home",
+   "publisher": "Movement for Reform Judaism (UK)",
+   "date": "undated",
+   "link": "https://www.reformjudaism.org.uk/wp-content/uploads/2019/09/RJ-Shabbat-at-home-1.1-Updated.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "Sabbath (older entry)",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://britannica.com/EBchecked/topic/514970/Sabbath",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Shabbat",
+   "publisher": "CIJA – The Centre for Israel and Jewish Affairs",
+   "date": "undated",
+   "link": "https://www.cija.ca/shabbat",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Israel's Great Divide",
+   "publisher": "Al Jazeera",
+   "date": "2016-07-13",
+   "link": "https://www.aljazeera.com/video/al-jazeera-world/2016/7/13/israels-great-divide",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "Mizrahi Jews",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Mizrahi_Jews",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "Shabbat",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Shabbat",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "Shabbat of the Full Moon",
+   "publisher": "TheTorah.com",
+   "date": "undated",
+   "link": "https://www.thetorah.com/article/shabbat-of-the-full-moon",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "Movements of Judaism",
+   "publisher": "Judaism 101 (JewFAQ)",
+   "date": "undated",
+   "link": "https://www.jewfaq.org/movement.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s31",
+   "title": "Global Jewish population still trails pre-Holocaust numbers, study finds",
+   "publisher": "Ynetnews",
+   "date": "undated",
+   "link": "https://www.ynetnews.com/jewish-world/article/syyurb3blx",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s32",
+   "title": "Months of the Jewish Year",
+   "publisher": "My Jewish Learning",
+   "date": "undated",
+   "link": "https://www.myjewishlearning.com/article/months-of-the-jewish-year/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s33",
+   "title": "Orthodox vs Reform Judaism: A Three-Way Guide",
+   "publisher": "RevisionDojo",
+   "date": "undated",
+   "link": "https://www.revisiondojo.com/blog/orthodox-vs-reform-judaism",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s34",
+   "title": "Matrilineality in Judaism",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Matrilineality_in_Judaism",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s35",
+   "title": "Rabbinic Judaism and Its Development: A.D. First to Fifth Centuries",
+   "publisher": "Facts and Details",
+   "date": "undated",
+   "link": "https://africame.factsanddetails.com/article/entry-773.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s36",
+   "title": "Rabbinic Judaism (2nd–18th century): Religious rites and customs in Palestine",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://britannica.com/topic/Judaism/Religious-rites-and-customs-in-Palestine-the-Temple-and-the-synagogues",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class six: Judaism. Today: beliefs, texts, practices, festivals, movements, and where Jews live. We describe Judaism the way Jewish people and scholars do."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Judaism"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Judaism is a religion built on belief in one God. It is traced to the ancient Hebrews. Its followers are the Jewish people."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Judaism: belief in one God"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That belief is central. A key Jewish declaration, the Shema, says that God is one."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Shema: God is one"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does the Shema declare?",
+    "right": "That God is one.",
+    "wrong": [
+     "That the Temple will be rebuilt.",
+     "That Shabbat begins on Friday.",
+     "That everyone must fast once a year."
+    ],
+    "why": "The Shema is a central declaration that God is one."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Jewish tradition also speaks of a covenant: a binding relationship between God and the Jewish people. Tradition links belief in one God to Abraham, and the Torah to Moses."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Abraham: belief in one God | Moses: the Torah | Covenant: a binding relationship with God"
+   },
+   "cite": [
+    "s1",
+    "s15"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now some history. In Jerusalem stood a Temple, the most important Jewish religious centre. There was a First Temple and a Second Temple."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "957 BCE: First Temple completed | 587/586 BCE: destroyed by the Babylonians | 515 BCE: Second Temple completed | 70 CE: destroyed by the Romans"
+   },
+   "cite": [
+    "s9",
+    "s36"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Who destroyed the Second Temple in 70 CE?",
+    "right": "The Romans.",
+    "wrong": [
+     "The Babylonians.",
+     "The Greeks.",
+     "The Persians."
+    ],
+    "why": "The Babylonians destroyed the First Temple. The Romans destroyed the Second Temple in 70 CE."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Jewish life had to go on without the Temple. Rabbis, meaning teachers, could travel and teach anywhere. Their message: serve God through study, prayer and the commandments."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Rabbi: teacher"
+   },
+   "cite": [
+    "s14",
+    "s35",
+    "s9"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "After the Temple fell, how did the rabbis say Jews could still serve God?",
+    "right": "Through study, prayer and keeping the commandments.",
+    "wrong": [
+     "Only by rebuilding the Temple at once.",
+     "Only by leaving every ritual behind.",
+     "Only by moving to Egypt."
+    ],
+    "why": "The rabbis taught that study, prayer and the commandments (mitzvot) could carry on without the Temple."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the texts. Torah means teaching or guidance. Strictly, it is the first five books of Scripture, the Five Books of Moses."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A handwritten Torah scroll lying open on a reading table"
+   },
+   "cite": [
+    "s1",
+    "s15"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Strictly speaking, what is the Torah?",
+    "right": "The first five books of Scripture, the Five Books of Moses.",
+    "wrong": [
+     "The collection of rabbis' debates called the Talmud.",
+     "Every Jewish book ever written.",
+     "A prayer said on Friday evening."
+    ],
+    "why": "Strictly the Torah is the Five Books of Moses. The word is also used for Jewish teaching as a whole."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The name Torah is also used for Jewish teaching as a whole. Tradition says unwritten laws, customs and explanations were handed down by word of mouth."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Oral tradition"
+   },
+   "cite": [
+    "s15",
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Much of that oral teaching was written down in the Mishnah, published around 200 CE by Rabbi Judah the Prince. It is short and compact."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Mishnah: compact teachings, about 200 CE"
+   },
+   "cite": [
+    "s3",
+    "s21"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is the Mishnah?",
+    "right": "A compact collection of Jewish law and teaching, published around 200 CE.",
+    "wrong": [
+     "The Five Books of Moses.",
+     "A prayer said at Passover.",
+     "A calendar of festival dates."
+    ],
+    "why": "The Mishnah is a compact collection of law and teaching. It was first memorised and later written down."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Later rabbis discussed and debated the Mishnah. That discussion is the Gemara. Mishnah and Gemara together make the Talmud."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Mishnah: short rulings | Gemara: discussion and debate about those rulings"
+   },
+   "cite": [
+    "s21",
+    "s2",
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which best describes the Gemara?",
+    "right": "Discussion and debate that explains and expands the Mishnah.",
+    "wrong": [
+     "The first five books of Scripture.",
+     "A list of holiday dates.",
+     "A short Friday evening prayer."
+    ],
+    "why": "The Gemara is the rabbis' discussion of the Mishnah. Together they form the Talmud."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Sages in the land of Israel and in Babylonia each made their own Gemara. So there are two Talmuds. The word Talmud means study."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Talmud = study"
+   },
+   "cite": [
+    "s3",
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "For many Jews, study is itself a way to serve God. It is often done in pairs, called chavruta. The Talmud records many opinions, so talking it through with a partner helps."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Chavruta: a study partner"
+   },
+   "cite": [
+    "s35",
+    "s21",
+    "s22"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is a chavruta?",
+    "right": "A study partner.",
+    "wrong": [
+     "A kind of festival.",
+     "A cover for a scroll.",
+     "A leader of prayer."
+    ],
+    "why": "Chavruta means companion or study partner. Jewish study is often done in pairs."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Jewish practice centres on mitzvot, the commandments. A synagogue is a place for worship, gathering and study."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Mitzvot = commandments"
+   },
+   "cite": [
+    "s35",
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What are mitzvot?",
+    "right": "The commandments.",
+    "wrong": [
+     "Study partners.",
+     "Holy days of the year.",
+     "Torah scrolls."
+    ],
+    "why": "Mitzvot are the commandments that Jews observe."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now time. In the Jewish calendar, each day begins in the evening, at sundown."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A day begins at sundown"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "When does a new day begin in the Jewish calendar?",
+    "right": "In the evening, at sundown.",
+    "wrong": [
+     "At midnight.",
+     "At sunrise.",
+     "At noon."
+    ],
+    "why": "Every Jewish day begins at sundown. That is why Shabbat and holidays start the evening before."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That is why Shabbat starts on Friday evening. Shabbat is a weekly day of rest, from Friday sunset to Saturday nightfall. It remembers God resting after creation."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Shabbat: a weekly day of rest"
+   },
+   "cite": [
+    "s4",
+    "s17"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Shabbat is welcomed with candles, a blessing over wine, and braided bread called challah. Two loaves are customary. They recall a double portion of manna in the wilderness."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "bread",
+    "count": 2,
+    "layout": "row",
+    "text": "Two challah loaves"
+   },
+   "cite": [
+    "s25",
+    "s23",
+    "s24"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "How many loaves of challah are customary on Friday evening?",
+    "right": "Two.",
+    "wrong": [
+     "One.",
+     "Three.",
+     "Seven."
+    ],
+    "why": "Two loaves are customary. They recall the double portion of manna."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "On Shabbat, work stops. In Jewish tradition, work means creative acts like cooking or writing, not only hard labour. The day is for rest, prayer, study and family."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Stops: cooking, travel, commerce, lighting fires | Fills: prayer, study, family meals"
+   },
+   "cite": [
+    "s4",
+    "s25"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "In Jewish tradition, what does ‘work’ on Shabbat include?",
+    "right": "Creative acts such as cooking and writing, not only hard physical labour.",
+    "wrong": [
+     "Only heavy lifting.",
+     "Only paid jobs.",
+     "Only things done outdoors."
+    ],
+    "why": "Jewish tradition counts a range of creative activities as work. Practice varies: Orthodox Jews also avoid driving and electronics, while other movements decide differently."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Shabbat ends with Havdalah, a ceremony with wine, spices and a candle. It marks the step back into the week."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Havdalah: ending Shabbat"
+   },
+   "cite": [
+    "s16",
+    "s28"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next, the year. Jewish months follow the moon, so each month lasts 29 or 30 days and begins with the new moon."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Lunar months: 29 or 30 days"
+   },
+   "cite": [
+    "s32",
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "How long is a month in the Jewish calendar?",
+    "right": "29 or 30 days.",
+    "wrong": [
+     "Always 31 days.",
+     "Exactly 28 days.",
+     "Exactly 7 days."
+    ],
+    "why": "A moon cycle is about 29.5 days. So Jewish months are 29 or 30 days long."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Twelve moon months are about 11 days shorter than a sun year. So a leap month is added seven times in every 19 years."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "7 leap years in every 19"
+   },
+   "cite": [
+    "s32",
+    "s5"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Why does the Jewish calendar add a leap month?",
+    "right": "To keep festivals in their proper season.",
+    "wrong": [
+     "To make Shabbat last two days.",
+     "To make every month 31 days.",
+     "To move Passover to winter."
+    ],
+    "why": "Without a leap month the festivals would drift through the seasons. The extra month keeps spring holidays in spring and fall holidays in fall."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So a holiday has the same Jewish date every year, but moves around on a wall calendar. Rosh Hashanah is generally in September or October. In 2026 it began at sundown on September 11."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Same Jewish date, different wall-calendar date"
+   },
+   "cite": [
+    "s18",
+    "s7",
+    "s17"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In which months does Rosh Hashanah generally fall on the Gregorian calendar?",
+    "right": "September or October.",
+    "wrong": [
+     "January or February.",
+     "April or May.",
+     "November or December."
+    ],
+    "why": "Rosh Hashanah is generally observed in September or October."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Rosh Hashanah is the Jewish New Year. The name means ‘Head of the Year’. The shofar, a ram’s horn, is sounded, and many eat apples dipped in honey for a sweet year."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Rosh Hashanah: Jewish New Year"
+   },
+   "cite": [
+    "s17",
+    "s6",
+    "s7"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is the shofar?",
+    "right": "A ram’s horn that is sounded at Rosh Hashanah.",
+    "wrong": [
+     "A braided bread.",
+     "A Shabbat candle holder.",
+     "A study partner."
+    ],
+    "why": "The shofar is a ram’s horn. Its sound calls people to reflection and renewal."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Rosh Hashanah begins ten days of reflection, the Days of Awe. They end with Yom Kippur, the Day of Atonement, the holiest day. Many fast, pray and reflect on repentance."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Rosh Hashanah (1 Tishrei) | Days of Awe: ten days | Yom Kippur (10 Tishrei)"
+   },
+   "cite": [
+    "s6",
+    "s17",
+    "s18",
+    "s7"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What are the Days of Awe?",
+    "right": "The ten days from Rosh Hashanah to Yom Kippur.",
+    "wrong": [
+     "The eight days of Passover.",
+     "The days of Shabbat each month.",
+     "The days of a leap month."
+    ],
+    "why": "The Days of Awe run from Rosh Hashanah to the end at Yom Kippur."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Passover, or Pesach, remembers the Exodus: the journey from slavery in Egypt to freedom. It is a spring holiday lasting seven or eight days."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Passover (Pesach): freedom from slavery"
+   },
+   "cite": [
+    "s17",
+    "s6",
+    "s20"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "At a Seder, a ceremonial meal, the story is told. Leavened bread is left out. Matzah is eaten instead, recalling a hurried escape with no time for bread to rise."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Seder: a meal where the story is told | Matzah in place of leavened bread"
+   },
+   "cite": [
+    "s20",
+    "s19"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why is matzah eaten at Passover?",
+    "right": "Leavened bread is left out, recalling the Israelites’ hurried escape from Egypt.",
+    "wrong": [
+     "It is the only food allowed all year.",
+     "It marks the end of Shabbat.",
+     "It is eaten to start the New Year."
+    ],
+    "why": "Passover excludes leaven. Matzah recalls that the Israelites left Egypt too quickly for bread to rise."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "There are more festivals: Sukkot, a fall harvest festival; Shavuot; Hanukkah; and Purim. Observance varies a lot between communities."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Sukkot (fall harvest) | Shavuot | Hanukkah | Purim"
+   },
+   "cite": [
+    "s20",
+    "s18",
+    "s19",
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Today Jews follow different movements. They differ mainly in how binding the Torah and halakhah, Jewish law, are. The big three are Orthodox, Conservative and Reform. Smaller ones exist, like Reconstructionist."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Movements: Orthodox, Conservative, Reform"
+   },
+   "cite": [
+    "s33",
+    "s12"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What do the main Jewish movements mainly differ about?",
+    "right": "How binding the Torah and Jewish law are, and how to apply them.",
+    "wrong": [
+     "Which country each movement began in.",
+     "What colour clothing members wear.",
+     "How many children members have."
+    ],
+    "why": "The movements mainly differ in the authority and application of Torah and halakhah, Jewish law."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Orthodox Judaism holds Jewish law as binding and keeps traditional practice. It is not one organisation. It includes Modern Orthodox, Haredi and Hasidic communities. About one in ten American Jews is Orthodox."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Orthodox: binding law | Modern Orthodox, Haredi, Hasidic"
+   },
+   "cite": [
+    "s33",
+    "s10"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Conservative Judaism also sees Jewish law as binding, but holds that it can change over time. Outside North America it is called Masorti. Most Conservative synagogues pray with men and women equally."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Conservative (Masorti): law binding, able to change"
+   },
+   "cite": [
+    "s30",
+    "s10",
+    "s33"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "How does Conservative Judaism treat Jewish law?",
+    "right": "As binding, but able to change and adapt over time.",
+    "wrong": [
+     "As optional in every case.",
+     "As unchangeable in every detail.",
+     "As something only rabbis may study."
+    ],
+    "why": "Conservative Judaism accepts the binding nature of halakhah and believes it should adapt over time."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Reform Judaism, also called Progressive or Liberal, puts the ethical tradition first and encourages personal choice in ritual. About 35% of American Jews call themselves Reform. It also accepts Jewish descent through either parent."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Reform: ethics first, personal choice"
+   },
+   "cite": [
+    "s10",
+    "s11",
+    "s34"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which movement most emphasises personal choice in ritual observance?",
+    "right": "Reform Judaism.",
+    "wrong": [
+     "Orthodox Judaism.",
+     "Conservative Judaism.",
+     "None of the movements."
+    ],
+    "why": "Reform Judaism emphasises personal choice in ritual. Orthodox and Conservative Judaism treat Jewish law as binding."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now, where Jews live. There are about 14.8 million Jews worldwide, around 0.2% of the world’s people. The number grew about 6% between 2010 and 2020."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "14.8 million"
+   },
+   "cite": [
+    "s31",
+    "s8"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 2010, about 41% of Jews lived in Israel and 41% in the United States. By 2020, about 85% lived in one of those two. Israel is the only Jewish-majority country."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1",
+    "text": "Where the world’s Jews lived, 2010 (percent)"
+   },
+   "cite": [
+    "s12",
+    "s8"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Which two countries are home to most of the world’s Jews?",
+    "right": "Israel and the United States.",
+    "wrong": [
+     "Israel and France.",
+     "The United States and Russia.",
+     "Canada and the United Kingdom."
+    ],
+    "why": "About 85% of Jews live in Israel or the United States."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Jewish communities have many roots. Ashkenazi comes from the Hebrew word for Germany. Sephardi comes from the word for Spain. Mizrahi means eastern. Ethiopian Jews are another long-established community."
+   },
+   "show": {
+    "kind": "map",
+    "text": "World map: Germany and Central Europe (Ashkenazi), Spain and Portugal (Sephardi), Iraq, Iran and Yemen (Mizrahi), Ethiopia (Ethiopian Jews)"
+   },
+   "cite": [
+    "s26",
+    "s13"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What does ‘Ashkenazi’ come from?",
+    "right": "The Hebrew word for Germany.",
+    "wrong": [
+     "The Hebrew word for Spain.",
+     "The Hebrew word for east.",
+     "The Hebrew word for Egypt."
+    ],
+    "why": "Ashkenazi comes from the Hebrew word for Germany. Sephardi comes from the word for Spain, and Mizrahi means eastern."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "After the 1492 expulsion from Spain, many Sephardi Jews settled where older Jewish communities already lived. Mizrahi communities, some of the oldest in the Diaspora, were in Iraq, Iran and Yemen. In 2018, 45% of Jewish Israelis called themselves Mizrahi or Sephardi."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1492: Jews expelled from Spain | Mizrahi: Iraq, Iran, Yemen | Israel, 2018: 45% Mizrahi or Sephardi"
+   },
+   "cite": [
+    "s27",
+    "s13"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Counting Jews is not simple. By religion alone, Jews are 1.7% of people in the U.S. A broader definition, including culture and ancestry, gives 7.5 million. Worldwide, the total is still below the number before the Holocaust."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Who is counted depends on the definition"
+   },
+   "cite": [
+    "s8",
+    "s31"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why do estimates of the U.S. Jewish population differ?",
+    "right": "People use different definitions of who counts as Jewish.",
+    "wrong": [
+     "Only Orthodox Jews are ever counted.",
+     "The Jewish calendar changes the count each year.",
+     "Jews are not counted in the United States."
+    ],
+    "why": "Counting by religion alone gives a smaller number. A broader definition that includes culture and ancestry gives a larger one."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To sum up: one God, Torah and Talmud, study, Shabbat, a moon-based calendar and its festivals, several movements, and communities around the world. Next class: Christianity."
+   },
+   "show": {
+    "kind": "list",
+    "text": "One God and covenant | Torah, Mishnah, Gemara | Shabbat and the calendar | Rosh Hashanah, Yom Kippur, Passover | Movements | Communities today"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which is the weekly day of rest that runs from Friday sunset to Saturday nightfall?",
+    "right": "Shabbat.",
+    "wrong": [
+     "Passover.",
+     "The Mishnah.",
+     "The Seder."
+    ],
+    "why": "Shabbat is the weekly day of rest, observed from sunset on Friday to nightfall on Saturday."
+   }
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Where the world’s Jews lived, 2010 (percent of all Jews, Pew Research Center)",
+   "rows": [
+    {
+     "label": "Israel",
+     "value": 41,
+     "source": "s12"
+    },
+    {
+     "label": "United States",
+     "value": 41,
+     "source": "s12"
+    },
+    {
+     "label": "Europe",
+     "value": 10,
+     "source": "s12"
+    },
+    {
+     "label": "Canada (about)",
+     "value": 3,
+     "source": "s12"
+    },
+    {
+     "label": "Latin America and the Caribbean",
+     "value": 3,
+     "source": "s12"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Abraham in Judaism",
+   "links": [
+    "[[Christianity]]",
+    "[[Islam]]"
+   ]
+  },
+  {
+   "topic": "The Jewish calendar and festivals",
+   "links": [
+    "[[Putting It Together: Calendars, Sacred Places and Living Side by Side]]"
+   ]
+  },
+  {
+   "topic": "The Temple in Jerusalem and the Western Wall",
+   "links": [
+    "[[Putting It Together: Calendars, Sacred Places and Living Side by Side]]"
+   ]
+  },
+  {
+   "topic": "Describing a faith as its followers do",
+   "links": [
+    "[[How to Learn About Religions Respectfully]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Jewish tradition holds that the seventh-day Shabbat began among the Jewish people as their first and most sacred institution.",
+   "other_view": "Some scholars have proposed that Shabbat is connected to a Babylonian lunar cycle. Some biblical scholars argue that early texts use the word for a moon phase such as the full moon, not a day of the week. Others have challenged the Babylonian theory, noting that the days it relies on did not always fall every seven days.",
+   "cite": [
+    "s28",
+    "s29"
+   ]
+  },
+  {
+   "claim": "Rabbinic Judaism carries on what Jews had always practised, including an oral tradition handed down over the generations.",
+   "other_view": "Many historians see the shift from Second Temple Judaism to rabbinic Judaism as more than a change of dates. Shaye Cohen, quoted on one scholar’s site, calls it “a substantive change.” They describe rabbis, who grew out of the Pharisees, as becoming the leading group after 70 CE.",
+   "cite": [
+    "s1",
+    "s14",
+    "s35"
+   ]
+  },
+  {
+   "claim": "Orthodox teaching holds that the Torah we have is the one given to Moses and will never change, and that Jewish law is binding.",
+   "other_view": "Conservative Judaism also treats law as binding but says it adapts over time. Reform Judaism puts ethics first and stresses personal choice. In 1997 one Orthodox rabbinic body said the Conservative and Reform movements were “outside of Torah and outside of Judaism.” Those movements describe themselves as ways of adapting Jewish tradition to modern life.",
+   "cite": [
+    "s15",
+    "s10",
+    "s30"
+   ]
+  },
+  {
+   "claim": "The Jewish population of the United States is about 1.7% of the population.",
+   "other_view": "That figure counts only people who identify as Jewish by religion. A broader Pew definition also counts people who consider themselves Jewish through culture, ancestry or family background. It gives about 7.5 million.",
+   "cite": [
+    "s8"
+   ]
+  }
+ ]
+}

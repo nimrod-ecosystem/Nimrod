@@ -1,0 +1,1115 @@
+{
+ "about": {
+  "title": "2008 to Today",
+  "course": "history-of-everything",
+  "class_n": 62,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes, as planned. Five stories get roughly four minutes each, and the closing section on why recent history is hard gets the rest. Pause on the questions if you need to; the class may run a few minutes over."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Support for Specific Institutions (2007-09 financial crisis)",
+   "publisher": "Federal Reserve History (Federal Reserve Board)",
+   "date": "n.d.",
+   "link": "https://www.federalreservehistory.org/essays/support-for-specific-institutions",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "What the Fed Did and Why (speech)",
+   "publisher": "Federal Reserve Bank of New York",
+   "date": "2010",
+   "link": "https://www.newyorkfed.org/newsevents/speeches/2010/tra100625",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "Financial Crisis Timeline - Financial Crisis and Recovery",
+   "publisher": "Elisabeth Haub School of Law, Pace University (research guide)",
+   "date": "n.d.",
+   "link": "https://libraryguides.law.pace.edu/financialcrisis",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "The Global Economic & Financial Crisis: A Timeline (Mauro F. Guillen)",
+   "publisher": "Wharton School, University of Pennsylvania (Lauder Institute)",
+   "date": "n.d.",
+   "link": "https://lauder.wharton.upenn.edu/wp-content/uploads/2015/06/Chronology_Economic_Financial_Crisis.pdf",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "2008 financial crisis",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/2008_financial_crisis",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "Americans' Use of Mobile Devices in 2026 (Mobile Fact Sheet)",
+   "publisher": "Pew Research Center",
+   "date": "2026",
+   "link": "https://www.pewresearch.org/internet/fact-sheet/mobile/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "Internet use, smartphone ownership, digital divides in the US: What we know",
+   "publisher": "Pew Research Center",
+   "date": "2026-01-08",
+   "link": "https://www.pewresearch.org/short-reads/2026/01/08/internet-use-smartphone-ownership-digital-divides-in-u-s/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "To Minimize Harms and Maximize Benefits of Social Media to Adolescent Health, New Report Recommends Setting Industrywide Standards (news release on Social Media and Adolescent Health)",
+   "publisher": "National Academies of Sciences, Engineering, and Medicine",
+   "date": "2023-12",
+   "link": "https://www.nationalacademies.org/news/to-minimize-harms-and-maximize-benefits-of-social-media-to-adolescent-health-new-report-recommends-setting-industrywide-standards-new-protections-against-harassment",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "Social media is harming adolescents at a scale large enough to cause changes at the population level",
+   "publisher": "World Happiness Report 2026",
+   "date": "2026",
+   "link": "https://www.worldhappiness.report/ed/2026/social-media-is-harming-adolescents-at-a-scale-large-enough-to-cause-changes-at-the-population-level/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "Evidence (Climate Change)",
+   "publisher": "NASA Science",
+   "date": "n.d.",
+   "link": "https://science.nasa.gov/climate-change/evidence/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "Climate change: global temperature",
+   "publisher": "NOAA Climate.gov",
+   "date": "n.d.",
+   "link": "https://www.climate.gov/news-features/understanding-climate/climate-change-global-temperature",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "NASA Releases Global Temperature Data",
+   "publisher": "NASA (Goddard Space Flight Center)",
+   "date": "2026",
+   "link": "https://www.nasa.gov/news-release/nasa-releases-global-temperature-data/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "FAQ Chapter 1 - Global Warming of 1.5 C",
+   "publisher": "Intergovernmental Panel on Climate Change (IPCC)",
+   "date": "2018",
+   "link": "https://www.ipcc.ch/sr15/faq/faq-chapter-1/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "Paris Agreement",
+   "publisher": "Asian Development Bank (Law and Policy Reform resource)",
+   "date": "n.d.",
+   "link": "https://lpr.adb.org/resource/paris-agreement",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "The 1.5 C goal of the Paris Agreement",
+   "publisher": "Umweltbundesamt (German Environment Agency)",
+   "date": "n.d.",
+   "link": "https://www.umweltbundesamt.de/en/topics/climate-energy/the-15degc-goal-of-the-paris-agreement",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "Coronavirus disease (COVID-19) pandemic",
+   "publisher": "World Health Organization, Europe",
+   "date": "n.d.",
+   "link": "https://www.who.int/europe/emergencies/situations/covid-19",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "Coronavirus disease 2019 (COVID-19) Situation Report 51, data as of 11 March 2020",
+   "publisher": "World Health Organization",
+   "date": "2020-03-11",
+   "link": "https://www.who.int/docs/default-source/coronaviruses/situation-reports/20200311-sitrep-51-covid-19.pdf",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "Global excess deaths associated with COVID-19, January 2020 - December 2021",
+   "publisher": "World Health Organization",
+   "date": "2022",
+   "link": "https://www.who.int/data/stories/global-excess-deaths-associated-with-covid-19-january-2020-december-2021",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "14.9 million excess deaths were associated with the COVID-19 pandemic in 2020 and 2021",
+   "publisher": "World Health Organization",
+   "date": "2022-05-05",
+   "link": "https://www.who.int/news/item/05-05-2022-14.9-million-excess-deaths-were-associated-with-the-COVID-19-pandemic-in-2020-and-2021",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "Global excess deaths associated with the COVID-19 pandemic (Q&A)",
+   "publisher": "World Health Organization",
+   "date": "n.d.",
+   "link": "https://www.who.int/news-room/questions-and-answers/item/global-excess-deaths-associated-with-the-COVID-19-pandemic",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "COVID-19 pandemic",
+   "publisher": "Wikipedia",
+   "date": "figures as of 18 September 2026",
+   "link": "https://en.wikipedia.org/wiki/COVID-19_pandemic",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "A Brief History of Generative AI",
+   "publisher": "Dataversity (secondary summary)",
+   "date": "n.d.",
+   "link": "https://www.dataversity.net/articles/a-brief-history-of-generative-ai/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "How ChatGPT Began: The 2022 Launch That Took Generative AI Mainstream (summary of OpenAI's 30 Nov 2022 announcement; a secondary blog, not the announcement itself)",
+   "publisher": "Elevate Conecta",
+   "date": "n.d.",
+   "link": "https://elevateconecta.com/blog/en/lanzamiento-chatgpt-2022-historia-ia-generativa-negocios/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "The 2025 AI Index Report",
+   "publisher": "Stanford Institute for Human-Centered AI (HAI)",
+   "date": "2025",
+   "link": "https://hai.stanford.edu/ai-index/2025-ai-index-report",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "Key findings from Stanford's 2025 AI Index Report (summary of the report)",
+   "publisher": "IBM Think",
+   "date": "2025",
+   "link": "https://www.ibm.com/think/news/stanford-hai-2025-ai-index-report",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "Contemporary History - Now or Never (Peter Hennessy and Anthony Seldon)",
+   "publisher": "History Today",
+   "date": "n.d.",
+   "link": "https://www.historytoday.com/archive/contemporary-history-now-or-never",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "Contemporary History - an overview",
+   "publisher": "ScienceDirect Topics",
+   "date": "n.d.",
+   "link": "https://www.sciencedirect.com/topics/social-sciences/contemporary-history",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "The Challenge of Writing Contemporary History",
+   "publisher": "History News Network",
+   "date": "n.d.",
+   "link": "https://www.hnn.us/article/the-challenge-of-writing-contemporary-history",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s29",
+   "title": "The Importance of Doing Recent History",
+   "publisher": "History News Network",
+   "date": "n.d.",
+   "link": "https://www.historynewsnetwork.org/article/the-importance-of-doing-recent-history",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s30",
+   "title": "Writing the Perilously Recent Past",
+   "publisher": "American Historical Association, Perspectives on History",
+   "date": "2013-10",
+   "link": "https://www.historians.org/research-and-publications/perspectives-on-history/october-2013/writing-the-perilously-recent-past-the-historians-dilemma",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s31",
+   "title": "Chapter 1 - Global Warming of 1.5 C",
+   "publisher": "Intergovernmental Panel on Climate Change (IPCC)",
+   "date": "2018",
+   "link": "https://www.ipcc.ch/sr15/chapter/chapter-1/",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 62. Today we reach the years that many of us have lived through: 2008 to today."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "2008 to Today"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We will look at five stories: the 2008 money crisis, smartphones and social media, climate change, COVID-19, and artificial intelligence. Then we ask why recent history is hard to judge."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. The 2008 financial crisis\n2. Smartphones and social media\n3. Climate change\n4. COVID-19\n5. Artificial intelligence\nThen: why is recent history hard to judge?"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, money. A financial crisis is when banks and investors panic and stop lending to each other. The 2008 crisis started in the United States and spread around the world."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Financial crisis"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In spring 2008, a bank called Bear Stearns was bought by JPMorgan Chase, with help from the Federal Reserve. On 15 September 2008, another investment bank, Lehman Brothers, filed for bankruptcy."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Spring 2008: Bear Stearns bought by JPMorgan Chase | 15 September 2008: Lehman Brothers files for bankruptcy"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The next day, the Fed approved a loan of up to 85 billion dollars to AIG, a giant insurer. After Lehman failed, a big money fund also lost value, and the panic spread to other funds."
+   },
+   "show": {
+    "kind": "list",
+    "text": "16 Sept 2008: Fed lends up to $85 billion to AIG\nAfter Lehman: a money market fund loses value\nThe run spreads to other money funds"
+   },
+   "cite": [
+    "s3",
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which firm filed for bankruptcy on 15 September 2008?",
+    "right": "Lehman Brothers",
+    "wrong": [
+     "Bear Stearns",
+     "AIG",
+     "JPMorgan Chase"
+    ],
+    "why": "Bear Stearns was bought by JPMorgan Chase, AIG got a Fed loan, and Lehman Brothers filed for bankruptcy."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Many people call the slump that followed the Great Recession, and date it from Lehman's bankruptcy. But experts still argue about how much Lehman itself mattered."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Often said: the Great Recession dates from Lehman's bankruptcy | Also said: the trouble began in 2007, and Lehman's importance is disputed"
+   },
+   "cite": [
+    "s2",
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Fed's chair, Ben Bernanke, said the Fed could not lend to Lehman safely. He said there was not enough good collateral to be sure a loan would be repaid."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "The Fed's explanation: not enough collateral of good quality to protect a loan to Lehman."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next, phones. A smartphone is a phone that runs apps and connects to the internet. Social media means apps and sites where people share posts, photos and messages."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Smartphone"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Pew Research Center surveys US adults. In its first smartphone survey, in 2011, 35 percent owned one. Today it is 91 percent."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Share of US adults who own a smartphone",
+    "chart": "c1"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That is about nine in every ten US adults. These figures cover the United States only."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "phone",
+    "count": 9,
+    "layout": "ten-frame",
+    "text": "About 9 in every 10 US adults own a smartphone"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Phones also matter for access. Pew says 16 percent of US adults are smartphone dependent: they have a smartphone but no home broadband. In 2013 it was 8 percent."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "16% (up from 8% in 2013)"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "In Pew's survey, what does smartphone dependent mean?",
+    "right": "Having a smartphone but no home broadband",
+    "wrong": [
+     "Never being able to put the phone down",
+     "Owning more than one smartphone",
+     "Having no phone at all"
+    ],
+    "why": "Pew counts people as smartphone dependent if they have a smartphone but do not subscribe to home broadband."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a debate. Many people worry that social media harms teenagers' mental health. In December 2023, a National Academies committee reviewed the research."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Does social media harm teenagers?"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It found not enough evidence to say social media changes teen health across the whole population. It said social media can both harm and help, and the research often cannot tell which way cause runs."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Can harm | Can help (for example, connection with friends and family, and support for teens who are ill or grieving)"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Others disagree. A 2026 World Happiness Report chapter argues that social media is harming adolescents at a scale big enough to show up across whole populations."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "National Academies, 2023: not enough evidence yet | World Happiness Report chapter, 2026: harm is large enough to show at population level"
+   },
+   "cite": [
+    "s9",
+    "s8"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What did the National Academies committee conclude in 2023?",
+    "right": "Not enough evidence to say social media changes teen health across the whole population, though it can harm and help",
+    "wrong": [
+     "It was proven to harm every teenager",
+     "It was proven to be harmless",
+     "The committee did not look at any research"
+    ],
+    "why": "The committee said the evidence did not support that conclusion at the population level, and that social media has potential to both harm and benefit."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now climate. Weather is what happens today. Climate is the pattern over many years. Climate change means that long pattern is shifting."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Climate change"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "NASA says Earth's average surface temperature has risen about 1 degree Celsius, or 2 Fahrenheit, since the late 1800s. Most of that warming happened in the past 40 years."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "about 1 °C (2 °F) since the late 1800s"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "NOAA measures the speed. Warming averaged 0.06 degrees Celsius per decade since 1850, but 0.20 per decade since 1975. That is more than three times faster."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Warming rate in degrees Celsius per decade",
+    "chart": "c3"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "How do we know? Think back to class one: we read the evidence. Weather stations, ships and buoys tell the recent story. Tree rings, ocean sediments, coral reefs and rock layers tell the older one."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Recent: weather stations, ship and buoy measurements\nOlder: tree rings, ocean sediments, coral reefs, rock layers"
+   },
+   "cite": [
+    "s12",
+    "s10"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Several groups analyse the temperature separately: NASA, NOAA, Berkeley Earth, the UK Met Office and Copernicus in Europe. Their methods differ, but they show the same ongoing warming trend."
+   },
+   "show": {
+    "kind": "list",
+    "text": "NASA\nNOAA\nBerkeley Earth\nUK Met Office (Hadley Centre)\nCopernicus (Europe)\nDifferent methods, same trend"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "NASA, NOAA and other groups analyse temperature separately. What do they find?",
+    "right": "Different methods, but the same ongoing warming trend",
+    "wrong": [
+     "Each finds a different trend, so nobody can tell",
+     "They agree only about Europe",
+     "They all find the world is cooling"
+    ],
+    "why": "NASA reports that the independent groups use different methods and models, yet show the same ongoing warming trend."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "On the cause, NASA says human activity is the principal cause. It quotes the IPCC, which says this has moved from theory to established fact."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "NASA: human activity is the principal cause of the warming."
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Governments responded. In December 2015, 195 nations adopted the Paris Agreement. They aimed to hold warming well below 2 degrees Celsius, and pursue efforts to keep it to 1.5."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "December 2015: 195 nations adopt the Paris Agreement | Goal: well below 2 °C, pursue 1.5 °C above pre-industrial levels"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Policy is still debated. One source says the agreement sets no quantitative emissions target. A German government agency says it is binding under international law. The IPCC stresses fairness between countries."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "No quantitative emissions target (Asian Development Bank resource) | Binding under international law (German Environment Agency)"
+   },
+   "cite": [
+    "s14",
+    "s15",
+    "s31"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What temperature goal did the Paris Agreement set?",
+    "right": "Hold warming well below 2 °C above pre-industrial levels, and pursue efforts to keep it to 1.5 °C",
+    "wrong": [
+     "Hold warming at exactly 5 °C",
+     "Return Earth to its 1850 temperature by 2020",
+     "It set no goal and only started a discussion"
+    ],
+    "why": "Countries agreed to hold warming well below 2 °C above pre-industrial levels and pursue efforts to limit it to 1.5 °C."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now COVID-19. A pandemic is a disease outbreak spreading across many countries at once. COVID-19 is caused by the coronavirus SARS-CoV-2."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Pandemic"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Cases were first detected in China in December 2019. The World Health Organization declared a global emergency on 30 January 2020, and called it a pandemic on 11 March."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "December 2019: first cases detected in China | 30 January 2020: WHO declares a global health emergency | 11 March 2020: WHO calls it a pandemic"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "On 11 March 2020, WHO reported 118,319 confirmed cases and 4,292 deaths. They were spread across 113 countries, territories or areas."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "118,319 confirmed cases on 11 March 2020"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "How many people died? Countries reported 5.42 million deaths in 2020 and 2021. WHO estimates 14.91 million excess deaths in the same two years."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Reported deaths and estimated excess deaths, 2020-2021",
+    "chart": "c2"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Excess deaths are deaths above the number expected without the crisis. They include people who died because overstretched hospitals could not treat other illnesses."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Excess deaths"
+   },
+   "cite": [
+    "s20",
+    "s19"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What are excess deaths?",
+    "right": "Deaths above the number expected without the crisis",
+    "wrong": [
+     "Only deaths confirmed by a COVID test",
+     "Only deaths of people over 60",
+     "Only deaths in one country"
+    ],
+    "why": "Excess mortality is the difference between the deaths that occurred and the number expected without the crisis. It counts direct and indirect deaths."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Counts still differ. One summary lists about 7.1 million confirmed deaths but estimates from 18.5 to 35.2 million. WHO ended its emergency in May 2023, yet experts disagree on whether COVID-19 is now pandemic or endemic."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Confirmed deaths: about 7.1 million | Estimated deaths: 18.5 to 35.2 million"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last story: artificial intelligence, or AI. It means computer systems that do tasks we link to human thinking, like handling language. Generative AI makes new text, pictures and audio."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Artificial intelligence (AI)"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In November 2022, OpenAI released ChatGPT, a chatbot, as a free research preview. From the first day, OpenAI warned it could give plausible-sounding but wrong answers."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "30 November 2022: ChatGPT released as a free research preview"
+   },
+   "cite": [
+    "s22",
+    "s23"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What did OpenAI warn when ChatGPT launched?",
+    "right": "It could give answers that sound right but are wrong",
+    "wrong": [
+     "It was always correct",
+     "It could only be used by scientists",
+     "It only worked without the internet"
+    ],
+    "why": "OpenAI's first announcement warned that ChatGPT could give plausible-sounding but incorrect answers."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Stanford AI Index is an independent yearly report. It found that 78 percent of organizations reported using AI in 2024, up from 55 percent the year before."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "78% of organizations used AI in 2024 (55% in 2023)"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Governments are reacting too. In 2024, US federal agencies introduced 59 AI-related regulations, more than double the number in 2023."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "59 US federal AI-related regulations in 2024"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Views differ by place. The report says 80 percent of people in Indonesia think AI products do more good than harm, but only 39 percent in the US. It also says AI still struggles with some complex reasoning tests."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Indonesia: 80% say AI is more beneficial than harmful | United States: 39% say the same"
+   },
+   "cite": [
+    "s25",
+    "s24"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Five stories, and none is finished. So why do many historians hesitate to judge the very recent past?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Why recent history is hard to judge"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Reason one: documents. In Britain, most government papers reach the public only after thirty years. In many countries, government archives stay closed for forty or fifty."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "30 to 50 years: how long many government archives stay closed"
+   },
+   "cite": [
+    "s26",
+    "s27"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Reason two: perspective. A historian needs to know what happened next. For recent events, we do not know the consequences yet."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Perspective"
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Reason three: the people involved are alive and may dispute the story. Reason four: today leaves huge amounts of material, which brings its own challenges."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Documents may still be closed\n2. We cannot see the consequences yet\n3. The people involved are alive and may disagree\n4. A flood of sources is hard to master"
+   },
+   "cite": [
+    "s28",
+    "s29"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which is a reason historians are cautious about the very recent past?",
+    "right": "Key documents may still be closed, and the consequences are not yet known",
+    "wrong": [
+     "Nothing important has happened recently",
+     "Historians are not allowed to study events after the year 2000",
+     "Recent events always have complete records"
+    ],
+    "why": "Government papers often stay closed for decades, and a clear perspective needs time. Both make recent history harder to judge."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We saw this today. NASA says 2025 was effectively tied with 2023 as warmest, while other groups ranked it third. COVID-19 death counts range very widely."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "2025 temperature: NASA says tied with 2023; other groups say third warmest | COVID-19 deaths: 5.42 million reported vs 14.91 million estimated (2020-21)"
+   },
+   "cite": [
+    "s12",
+    "s18"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Not every historian agrees we should wait. Two historians note that the recent past is where lessons matter most, yet gets the least attention. A growing number now write recent history."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Wait: documents and distance first | Do not wait: recent history matters and others will fill the gap"
+   },
+   "cite": [
+    "s26",
+    "s29"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So hold facts firmly and conclusions loosely. Next time, our final class looks ahead to the future of Earth and the universe."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Facts firmly, conclusions loosely"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Share of US adults who own a smartphone (%)",
+   "rows": [
+    {
+     "label": "2011 (Pew's first survey)",
+     "value": 35,
+     "source": "s6"
+    },
+    {
+     "label": "Latest (Pew fact sheet, 2026)",
+     "value": 91,
+     "source": "s6"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "COVID-19 deaths, Jan 2020 to Dec 2021 (millions)",
+   "rows": [
+    {
+     "label": "Reported to WHO by countries",
+     "value": 5.42,
+     "source": "s18"
+    },
+    {
+     "label": "WHO estimate of excess deaths",
+     "value": 14.91,
+     "source": "s18"
+    }
+   ]
+  },
+  {
+   "id": "c3",
+   "kind": "bar",
+   "title": "Global warming rate (degrees Celsius per decade)",
+   "rows": [
+    {
+     "label": "Average since 1850",
+     "value": 0.06,
+     "source": "s11"
+    },
+    {
+     "label": "Average since 1975",
+     "value": 0.2,
+     "source": "s11"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "2008 financial crisis",
+   "links": [
+    "[[Depression, Dictators and the Slide to War]]",
+    "[[Globalization, the Internet and a New Century]]"
+   ]
+  },
+  {
+   "topic": "Smartphones and social media",
+   "links": [
+    "[[Globalization, the Internet and a New Century]]",
+    "[[20th-Century Science and Technology]]"
+   ]
+  },
+  {
+   "topic": "Climate change",
+   "links": [
+    "[[The Industrial Revolution]]",
+    "[[Looking Ahead: The Future of Earth and the Universe]]"
+   ]
+  },
+  {
+   "topic": "COVID-19 pandemic",
+   "links": [
+    "[[The Black Death and the Crisis of the 1300s]]",
+    "[[Revolution, Flu and the Roaring Twenties]]"
+   ]
+  },
+  {
+   "topic": "Artificial intelligence",
+   "links": [
+    "[[20th-Century Science and Technology]]",
+    "[[Looking Ahead: The Future of Earth and the Universe]]"
+   ]
+  },
+  {
+   "topic": "Why historians are cautious about the very recent past",
+   "links": [
+    "[[How Do We Know? Reading the Evidence and Telling Time]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "2008",
+   "elsewhere": "Bear Stearns was bought by JPMorgan Chase in spring 2008. Lehman Brothers filed for bankruptcy on 15 September, and the Fed approved an $85 billion loan to AIG the next day.",
+   "cite": [
+    "s1",
+    "s3"
+   ]
+  },
+  {
+   "when": "2011",
+   "elsewhere": "Pew ran its first survey of smartphone ownership. It found 35 percent of US adults owned one.",
+   "cite": [
+    "s6"
+   ]
+  },
+  {
+   "when": "December 2015",
+   "elsewhere": "195 nations adopted the Paris Agreement on climate change at COP21.",
+   "cite": [
+    "s13"
+   ]
+  },
+  {
+   "when": "2020",
+   "elsewhere": "WHO declared a global health emergency on 30 January and called COVID-19 a pandemic on 11 March. That day it counted 118,319 confirmed cases in 113 countries, territories or areas.",
+   "cite": [
+    "s16",
+    "s17"
+   ]
+  },
+  {
+   "when": "30 November 2022",
+   "elsewhere": "OpenAI released ChatGPT as a free research preview.",
+   "cite": [
+    "s22",
+    "s23"
+   ]
+  },
+  {
+   "when": "2024",
+   "elsewhere": "NOAA reports 2024 as the warmest year since global records began in 1850. In the same year, 78 percent of organizations reported using AI.",
+   "cite": [
+    "s11",
+    "s24"
+   ]
+  },
+  {
+   "when": "2025",
+   "elsewhere": "NASA found 2025 effectively tied with 2023 for warmest year, while other groups ranked it third warmest.",
+   "cite": [
+    "s12"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Letting Lehman Brothers fail caused the 2008 panic, or was the key mistake.",
+   "other_view": "Fed Chair Ben Bernanke indicated the Fed could not lend safely because Lehman lacked enough good collateral. A Wharton timeline notes that the bankruptcy's significance is disputed, and the New York Fed describes a Panic of 2007 that was already under way before Lehman.",
+   "cite": [
+    "s1",
+    "s4",
+    "s2"
+   ]
+  },
+  {
+   "claim": "Social media is not shown to change teen mental health across the whole population (National Academies, 2023).",
+   "other_view": "A 2026 World Happiness Report chapter argues that social media is harming adolescents at a scale large enough to show up at the population level. The National Academies also noted that much research cannot tell which way cause runs, and that social media has benefits for some teens.",
+   "cite": [
+    "s8",
+    "s9"
+   ]
+  },
+  {
+   "claim": "The Paris Agreement is a binding treaty that drives emissions cuts.",
+   "other_view": "One resource notes it sets no quantitative emission reduction target. A German government agency says it is binding under international law. The IPCC stresses that equity between countries is part of the debate.",
+   "cite": [
+    "s14",
+    "s15",
+    "s31"
+   ]
+  },
+  {
+   "claim": "The COVID-19 pandemic is over.",
+   "other_view": "WHO ended its public health emergency in May 2023 but said COVID-19 remained a global health threat. Time reported that expert opinions differ on whether it is now endemic or still pandemic.",
+   "cite": [
+    "s21"
+   ]
+  },
+  {
+   "claim": "People are broadly positive about AI.",
+   "other_view": "The Stanford AI Index reports big regional differences: 80 percent of people surveyed in Indonesia say AI products are more beneficial than harmful, against 39 percent in the US. It also notes that AI still struggles with some complex reasoning tests.",
+   "cite": [
+    "s25",
+    "s24"
+   ]
+  },
+  {
+   "claim": "Historians should wait decades before writing about recent events.",
+   "other_view": "Hennessy and Seldon say the recent past is where lessons would be most useful, yet gets the least attention. History News Network authors say a growing number of historians now write about the recent past. An American Historical Association essay adds that such work brings practical and moral dilemmas, such as closed archives and ethics.",
+   "cite": [
+    "s26",
+    "s29",
+    "s30"
+   ]
+  }
+ ]
+}

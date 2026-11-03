@@ -1,0 +1,1134 @@
+{
+ "about": {
+  "title": "The Industrial Revolution",
+  "course": "history-of-everything",
+  "class_n": 46,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. There are six topics and 36 short beats, with a check question after most new ideas. The 'Why Britain?' debate gets the most room because it has three competing theories. The frame of reference is shorter than usual because I only used facts I had read in sources."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "9.1 The Second Industrial Revolution, World History Volume 2 (OpenStax)",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/world-history-volume-2/pages/9-1-the-second-industrial-revolution",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Industrial Revolution and Technology",
+   "publisher": "National Geographic Education",
+   "date": "n.d.",
+   "link": "https://education.nationalgeographic.org/resource/industrial-revolution-and-technology/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Textile Manufacturing (World History 2)",
+   "publisher": "Lumen Learning (SUNY)",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/suny-hccc-worldhistory2/chapter/textile-manufacturing/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Technological Developments in Textiles",
+   "publisher": "Lumen Learning (SUNY)",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/suny-hccc-worldhistory2/chapter/technological-developments-in-textiles/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "In Pursuit Of Power",
+   "publisher": "Science Museum Group blog",
+   "date": "2012-07-31",
+   "link": "https://blog.sciencemuseum.org.uk/a-new-age/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Steam Condensing Engine, 1769",
+   "publisher": "National MagLab Magnet Academy",
+   "date": "n.d.",
+   "link": "https://nationalmaglab.org/magnet-academy/history-of-electricity-magnetism/museum/steam-condensing-engine-1769/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "The Impact of the British Industrial Revolution",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/article/2226/the-impact-of-the-british-industrial-revolution/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Limited waterpower contributed to rise of steam power in British 'Cottonopolis'",
+   "publisher": "PNAS Nexus (via PubMed Central)",
+   "date": "2024",
+   "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11249955/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Keynes Lecture in Economics: The British Industrial Revolution (Robert C. Allen)",
+   "publisher": "The British Academy",
+   "date": "n.d.",
+   "link": "https://www.thebritishacademy.ac.uk/documents/2079/pba167p199_0.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Why was the Industrial Revolution British? (Robert Allen)",
+   "publisher": "CEPR VoxEU",
+   "date": "n.d.",
+   "link": "https://cepr.org/voxeu/columns/why-was-industrial-revolution-british",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Review of Two Paths to Prosperity: Culture and Institutions in Europe and China, 1000-2000",
+   "publisher": "EH.Net (Economic History Association)",
+   "date": "2025",
+   "link": "https://eh.net/book_reviews/two-paths-to-prosperity-culture-and-institutions-in-europe-and-china-1000-2000/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "The Great Divergence: China, Europe, and the Making of the Modern World Economy (publisher's description)",
+   "publisher": "Princeton University Press, via Google Books",
+   "date": "2000",
+   "link": "https://books.google.com/books/about/The_Great_Divergence.html?id=W2GYDwAAQBAJ",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Jack Goldstone: Is the Great Divergence Debate really over?",
+   "publisher": "Guest post on Mark Koyama's newsletter",
+   "date": "2026",
+   "link": "https://www.markkoyama.com/p/jack-goldstone-is-the-great-divergence",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Factory Act (United Kingdom, 1833)",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/event/Factory-Act-United-Kingdom-1833",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Sadler, Michael",
+   "publisher": "Encyclopedia.com",
+   "date": "n.d.",
+   "link": "https://www.encyclopedia.com/history/encyclopedias-almanacs-transcripts-and-maps/sadler-michael",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Mortality and epidemiological change in Manchester, 1750-1850",
+   "publisher": "University of Cambridge, Department of Geography",
+   "date": "n.d.",
+   "link": "https://www.geog.cam.ac.uk/research/projects/mortalitymanchester/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Proximity and Segregation in Industrial Manchester",
+   "publisher": "The Historical Journal, Cambridge University Press",
+   "date": "n.d.",
+   "link": "https://www.cambridge.org/core/journals/historical-journal/article/proximity-and-segregation-in-industrial-manchester/1D109B09C3402C4A3A9598C1E1FC4714",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Manchester's smoke nuisance: air pollution in the industrial city",
+   "publisher": "Science and Industry Museum, Manchester",
+   "date": "n.d.",
+   "link": "https://www.scienceandindustrymuseum.org.uk/objects-and-stories/air-pollution",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Frequently Asked Questions: How much has the amount of CO2 in the atmosphere changed in the past?",
+   "publisher": "NOAA Global Monitoring Laboratory",
+   "date": "n.d.",
+   "link": "https://gml.noaa.gov/outreach/faq_cat-3.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Ecological impacts of the industrial revolution in a lowland raised peat bog near Manchester, NW England",
+   "publisher": "Ecology and Evolution (via PubMed Central)",
+   "date": "2023-02-14",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9926178/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Reconciling ice core CO2 and land-use change following New World-Old World contact",
+   "publisher": "PubMed Central",
+   "date": "2024",
+   "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10915154/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Liverpool and Manchester Railway",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Liverpool-and-Manchester-Railway",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "The Liverpool and Manchester Railway",
+   "publisher": "The John Rylands Library (University of Manchester), Rylands Blog",
+   "date": "2022-09-15",
+   "link": "https://rylandscollections.com/2022/09/15/the-liverpool-and-manchester-railway/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "Liverpool & Manchester Railway",
+   "publisher": "London & North Western Railway Society",
+   "date": "n.d.",
+   "link": "https://lnwrs.org.uk/liverpool-manchester-railway",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Railway 200: Telecoms",
+   "publisher": "Rail Engineer",
+   "date": "n.d.",
+   "link": "https://www.railengineer.co.uk/railway-200-telecoms/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "First telegraphic message, 24 May 1844",
+   "publisher": "Library of Congress",
+   "date": "1844",
+   "link": "https://www.loc.gov/item/mmorse000107/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "Morse Code Celebrates 175 Years and Counting",
+   "publisher": "Smithsonian Magazine",
+   "date": "2019",
+   "link": "https://www.smithsonianmag.com/innovation/morse-code-celebrates-175-years-and-counting-180972248/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "Spinning jenny",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/technology/spinning-jenny",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "Timeline of the Industrial Revolution",
+   "publisher": "Historic UK",
+   "date": "n.d.",
+   "link": "https://www.historic-uk.com/HistoryUK/HistoryofBritain/Timeline-Industrial-Revolution/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "1830s-1860s: Telegraph",
+   "publisher": "Elon University, Imagining the Internet",
+   "date": "n.d.",
+   "link": "https://www.elon.edu/u/imagining/time-capsule/150-years/back-1830-1860/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s31",
+   "title": "How the Telegraph Went From Semaphore to Communication Game Changer",
+   "publisher": "Smithsonian Magazine",
+   "date": "n.d.",
+   "link": "https://www.smithsonianmag.com/arts-culture/how-the-telegraph-went-from-semaphore-to-communication-game-changer-1403433/",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 46. We step back a little in time today, to a few workshops in northern England where machines, coal and steam began to change how everyone lives."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Industrial Revolution"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is today's plan. Six topics, one at a time: machines and cloth, steam and coal, city life and work, the big question of why Britain, smoke and climate, then railways and the telegraph."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Cloth and machines | Steam and coal | Cities and work | Why Britain? | Smoke and climate | Railways and telegraph"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, the main word. Industrialization means making goods with machines, in factories, driven by engines and water power instead of only human and animal muscle."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Industrialization"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Historians usually mark the Industrial Revolution as the years 1750 to 1850. Britain was the first country to start mechanizing production, in the 1700s."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1750 to 1850"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Which country was the first to begin mechanizing the production of goods?",
+    "right": "Great Britain",
+    "wrong": [
+     "France",
+     "Russia",
+     "India"
+    ],
+    "why": "Britain was the first nation to enter the Industrial Revolution, starting to mechanize in the 1700s."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's begin with cloth. Before machines, one person at a spinning wheel made one thread at a time."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "dot",
+    "count": 1,
+    "layout": "row",
+    "text": "Old way: one worker, one thread"
+   },
+   "cite": [
+    "s28"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Then came the spinning jenny, around 1764, from James Hargreaves of Lancashire. The first one had eight spindles, so one worker spun eight threads at once. It was still turned by hand."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "dot",
+    "count": 8,
+    "layout": "row",
+    "text": "Spinning jenny: one worker, eight threads"
+   },
+   "cite": [
+    "s28",
+    "s29"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "About how many threads could one worker spin at once on the first spinning jenny?",
+    "right": "Eight",
+    "wrong": [
+     "One",
+     "Two",
+     "Four"
+    ],
+    "why": "The first jenny had a frame with eight spindles, so eight threads at once, compared with one on a spinning wheel."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next, Richard Arkwright's water frame, patented in 1769. A water wheel powered it, and it made stronger thread than the jenny."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Water frame"
+   },
+   "cite": [
+    "s28"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A water frame was too big for a cottage and needed running water. So spinning moved out of homes and into mills built by streams. That is the factory: many machines and many workers in one building."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Factory"
+   },
+   "cite": [
+    "s28"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why did the water frame push spinning out of homes and into mills?",
+    "right": "It was driven by a water wheel, so it needed big buildings near running water.",
+    "wrong": [
+     "A law banned spinning at home.",
+     "Workers disliked their cottages.",
+     "It made weaker thread than hand spinning."
+    ],
+    "why": "Its reliance on water power encouraged large textile factories, while the hand-powered jenny could still work in homes."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Spinning got faster, so weaving had to catch up. Samuel Crompton's spinning mule came in 1779. Edmund Cartwright patented a power loom in 1785. Add steam, and the pieces were in place."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1764 spinning jenny | 1769 water frame | 1779 spinning mule | 1785 power loom"
+   },
+   "cite": [
+    "s4",
+    "s28"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Britain did not grow cotton. It came by ship from American plantations, and the cloth was sent back out. This links to class 41, the Atlantic slave trade. By 1803 cotton had overtaken wool as Britain's biggest export."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About half of British exports were cotton textiles in the 1830s"
+   },
+   "cite": [
+    "s29",
+    "s7"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "In the 1830s, cotton textiles made up about what share of Britain's exports?",
+    "right": "About half",
+    "wrong": [
+     "About one in twenty",
+     "Almost none",
+     "All of them"
+    ],
+    "why": "By the 1830s, cotton textiles accounted for half of Britain's total exports."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the second big idea: coal. Britain had been running short of wood since the 1500s. By the end of the 1600s, coal was its main fuel."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Coal"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Coal mines had a problem: they flooded. Thomas Newcomen improved an earlier steam pump. His first engine was set up near Dudley Castle in 1712. Engines like it pumped water out of mines."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A 1719 engraving of the Newcomen engine near Dudley Castle: a tall engine house with a big rocking beam on top and a boiler beside it."
+   },
+   "cite": [
+    "s5",
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Note: James Watt did not invent the steam engine. Newcomen's came first. But it wasted heat. It heated and cooled the same cylinder again and again."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Newcomen engine: one cylinder, heated then cooled, much heat wasted | Watt's idea: keep one cylinder always hot, condense the steam in a second, cool one"
+   },
+   "cite": [
+    "s5",
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Watt was an instrument maker in Glasgow, and he was asked to fix a Newcomen engine. He saw the waste, and he patented his separate condenser in 1769. The result: about a quarter to a third of the coal."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1",
+    "text": "Coal needed to do the same work"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "What did Watt's separate condenser achieve?",
+    "right": "The same work with much less coal",
+    "wrong": [
+     "It made the engine burn wood instead",
+     "It removed the need for a boiler",
+     "It let horses replace the pump"
+    ],
+    "why": "Watt's engine used only about 25 to 30 percent of the fuel a Newcomen engine needed."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Steam then moved into the mills. The first steam-driven textile mills appeared in the last quarter of the 1700s. At first, engines mostly helped water wheels. By the 1830s, three in four cotton mills ran on steam."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "75% of cotton mills used steam by the 1830s"
+   },
+   "cite": [
+    "s3",
+    "s8",
+    "s7"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "By the 1830s, about how many cotton mills used steam power?",
+    "right": "About three out of four",
+    "wrong": [
+     "About one out of four",
+     "About one out of ten",
+     "None of them"
+    ],
+    "why": "By the 1830s, 75% of cotton mills were using steam power."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The scale got huge. By the middle of the 1800s, Britain held over 69% of the world's spindles, the parts that twist thread. It was the top maker of finished cotton cloth."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Over 69% of the world's spindles"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Steam and coal fed each other. Steam power raised the demand for coal. Coal, iron and steel industries boomed to supply the machines. New furnaces and the stirring of molten iron, called puddling, made more wrought iron."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Steam engines need coal | More engines mean more mining | Coal also smelts iron | Iron builds more machines"
+   },
+   "cite": [
+    "s3",
+    "s7",
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now people. Many rural families moved to the new industrial towns. Manchester grew about fifteen-fold in the century before 1850, from under 20,000 people to around a third of a million."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 15 times bigger"
+   },
+   "cite": [
+    "s16",
+    "s2"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Roughly how much did Manchester grow in the century before 1850?",
+    "right": "About fifteen times bigger",
+    "wrong": [
+     "It doubled",
+     "It stayed about the same",
+     "It got smaller"
+    ],
+    "why": "Manchester grew about fifteen-fold, from under 20,000 to around a third of a million."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Housing could not keep up. Hundreds of thousands of people came from the countryside. Old buildings were split into tenements, and overcrowding was widespread."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A crowded street of small brick houses and mill chimneys in an industrial town, with smoke rising behind."
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A gentle heads-up: this next part is about children at work. It is real history, told plainly. In 1832, a committee led by MP Michael Sadler heard from 89 children who worked in textile mills."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sadler committee, 1832"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Doctors and children hurt in factory accidents also gave evidence. The result was the Factory Act of 1833. It barred workers under 9 and limited hours for older children."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c2",
+    "text": "Daily hour limits in textile mills, 1833"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The 1833 Act also said children under 13 must get two hours of school each day. Mines were dangerous too: coal dust caused lung disease among miners."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Under 9: not allowed to work in textile mills | 9 to 12: 8 hours | 13 to 17: 12 hours | Under 13: 2 hours of school a day"
+   },
+   "cite": [
+    "s14",
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Quick recap. Machines moved cloth-making into factories. Watt's engine used far less coal. Steam spread through the mills. Cities swelled. Parliament began to limit child labour."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Machines and factories | Newcomen to Watt: less coal | Steam in the mills | Crowded new cities | First limits on child labour"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the big question. Why did this start in Britain, and why then? Historians call the later gap between industrial Western Europe and other regions the Great Divergence."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The Great Divergence"
+   },
+   "cite": [
+    "s11",
+    "s12"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here's the honest part: there is no final answer. Economic historians still disagree about why it happened in 1700s Britain. We will look at three main ideas, one at a time."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Idea 1: High wages and cheap coal | Idea 2: Coal and colonies | Idea 3: Knowledge and culture"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Idea 1, from economist Robert Allen. In Britain, workers were paid well, and coal was cheap. So a machine that saved labour but burned coal paid for itself there. Newcastle had some of the cheapest energy in the world."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Britain: high wages, cheap coal, so machines pay off | Much of Asia and Europe: low wages, dear energy, so little reason to build them"
+   },
+   "cite": [
+    "s9",
+    "s10"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What two conditions does Allen say made inventing machines pay off in Britain?",
+    "right": "High wages and cheap energy",
+    "wrong": [
+     "Low wages and cheap energy",
+     "High wages and expensive energy",
+     "Many colonies and few schools"
+    ],
+    "why": "Allen argues that high British wages and cheap coal made labour-saving, coal-using machines worth building."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Idea 2, from historian Kenneth Pomeranz. Around 1750, the richest parts of China and Europe looked alike. Britain pulled ahead, he argues, because coal replaced timber and the New World supplied resources."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "About 1750: similar life expectancy and consumption in advanced parts of China and Europe | Later edge: coal in place of timber, plus New World resources"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which two things does Pomeranz stress to explain Britain's lead over China?",
+    "right": "Coal and the New World",
+    "wrong": [
+     "Printing and universities",
+     "Canals and roads",
+     "Gold and silver mines"
+    ],
+    "why": "Pomeranz argues that coal, which substituted for timber, and the New World together let Europe grow along resource-intensive, labour-saving paths."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Idea 3, from economic historian Joel Mokyr and others. It is about knowledge and culture. Think of the Scientific Revolution and Enlightenment ideas, plus skilled craftsmen who could build and fix machines."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Theoretical knowledge: science and Enlightenment ideas | Practical knowledge: highly skilled craftsmen"
+   },
+   "cite": [
+    "s13",
+    "s11"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which idea puts knowledge, culture and skilled craftsmen at the centre?",
+    "right": "Mokyr's idea",
+    "wrong": [
+     "Allen's idea about wages and coal",
+     "Pomeranz's idea about coal and colonies",
+     "None of these ideas"
+    ],
+    "why": "Mokyr stresses theoretical knowledge from science and the Enlightenment, plus practical knowledge held by skilled craftsmen."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "These ideas are not always rivals. Even Allen's story reaches back to Britain's success in world trade, which he says created the high wages and cheap energy. See the other-side notes for where the experts disagree."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "No single cause has won agreement among economic historians."
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the cost to the air. Manchester was the world's first industrial city, and it burned a lot of coal. Cheap, plentiful coal from the nearby Lancashire coalfield kept the smoke coming."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A smoky industrial skyline: many tall chimneys, dark clouds, and a canal in the foreground."
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "As early as 1835, the inventor Charles Babbage noticed that burning coal released huge amounts of carbon dioxide. He did not know the long-term effects. Scientists began theorizing about a greenhouse effect near the end of that century."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Carbon dioxide"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "How do we know today? Ice cores. Air bubbles trapped in ice record the air from long ago. They show about 280 parts per million of carbon dioxide before industrialization."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 280 ppm before industrialization"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What do air bubbles trapped in ice cores tell scientists?",
+    "right": "What the air was made of when the ice formed",
+    "wrong": [
+     "How much coal Britain mined",
+     "How many people lived in cities",
+     "What the weather will be next week"
+    ],
+    "why": "Air bubbles trapped in the ice can be analysed to reconstruct the atmosphere at the time the ice formed."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The land kept a record too. A peat bog between Manchester and Liverpool shows plants changing as industry grew, and the plants have not fully returned to how they were before."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A flat, wet peat bog with mosses and cotton-grass, with a distant city on the horizon."
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last topic: moving things and moving words. On 15 September 1830 the Liverpool and Manchester Railway opened. It was the first inter-city railway with a timetable that used steam locomotives throughout."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "15 September 1830"
+   },
+   "cite": [
+    "s22",
+    "s23"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It was built to link the port of Liverpool with Manchester's cotton mills. The Prime Minister, the Duke of Wellington, opened it. Before the railway, goods could cross the Atlantic faster than they could be hauled the last 30 miles."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A simple map of north-west England: Liverpool on the coast, Manchester inland, about 30 miles apart, joined by one railway line."
+   },
+   "cite": [
+    "s24",
+    "s23",
+    "s22"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why was the Liverpool and Manchester Railway built?",
+    "right": "To move raw materials, goods and people between Liverpool's port and Manchester's cotton mills",
+    "wrong": [
+     "To carry tourists to the seaside",
+     "To replace the coal mines",
+     "To connect London to Scotland"
+    ],
+    "why": "It was built mainly to provide faster transport between the port of Liverpool and the cotton mills and factories of Manchester."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Railways also helped the telegraph. In 1837, William Cooke suggested a simple electric telegraph for a railway incline. By 1845, a company was formed to sell telegraph services in Britain."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1830 first timetabled steam railway | 1837 Cooke proposes railway telegraph | 1845 Electric Telegraph Company formed"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "On 24 May 1844, Samuel Morse sent a message from the US Capitol to his assistant Alfred Vail in Baltimore: 'What hath God wrought?' Morse was not alone. By 1838, 62 people had claimed to have invented the telegraph. The telegraph sent messages along wires in moments, from city to city."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "24 May 1844"
+   },
+   "cite": [
+    "s26",
+    "s30"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What did the telegraph let people do?",
+    "right": "Send messages over long distances almost instantly",
+    "wrong": [
+     "Carry passengers between cities",
+     "Print newspapers at home",
+     "Power textile mills"
+    ],
+    "why": "The telegraph let people send complex messages over long distances almost instantly."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now zoom out. What else was happening at the same time? Here are a few connections from our sources."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "About 1750: China and Europe alike | 1764 to 1769: jenny, Watt, water frame | 1830 to 1833: railway, Sadler, Factory Act | 1835: Babbage | 1842 to 1844: Engels, Morse"
+   },
+   "cite": [
+    "s12",
+    "s28",
+    "s6",
+    "s23",
+    "s14",
+    "s18",
+    "s17",
+    "s26"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Today we saw machines, coal and steam change work, cities and the air. We also met three competing ideas about why Britain went first. Next class: nations, reform and civil war in the 1800s."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Industrialization: machines, factories, engines | Steam and coal: Newcomen to Watt | Cities, children and the Factory Act | Three theories of why Britain | Smoke, ice cores and early climate clues | Railways and the telegraph"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Coal needed for the same work (Newcomen engine = 100; Watt engine shown at the top of the 25 to 30 range)",
+   "rows": [
+    {
+     "label": "Newcomen engine (baseline)",
+     "value": 100,
+     "source": "s6"
+    },
+    {
+     "label": "Watt engine (25 to 30 percent; 30 shown)",
+     "value": 30,
+     "source": "s6"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Maximum daily working hours in textile mills under the 1833 Factory Act",
+   "rows": [
+    {
+     "label": "Ages 9 to 12",
+     "value": 8,
+     "source": "s14"
+    },
+    {
+     "label": "Ages 13 to 17",
+     "value": 12,
+     "source": "s14"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Cotton, plantations and the slave trade",
+   "links": [
+    "[[The Atlantic Slave Trade]]",
+    "[[Contact and the Columbian Exchange]]"
+   ]
+  },
+  {
+   "topic": "Why Britain: the Great Divergence",
+   "links": [
+    "[[The Scientific Revolution]]",
+    "[[Enlightenment and Absolute Monarchy]]",
+    "[[Mughal, Safavid, Qing and Tokugawa: Early Modern Asia]]"
+   ]
+  },
+  {
+   "topic": "Child labour and factory reform",
+   "links": [
+    "[[Nations, Reform and Civil War in the 1800s]]"
+   ]
+  },
+  {
+   "topic": "Coal smoke and early climate change",
+   "links": [
+    "[[Science and Ideas in the 1800s]]",
+    "[[2008 to Today]]",
+    "[[Looking Ahead: The Future of Earth and the Universe]]"
+   ]
+  },
+  {
+   "topic": "Railways and the telegraph",
+   "links": [
+    "[[Nations, Reform and Civil War in the 1800s]]",
+    "[[Imperialism: Africa, India, China and Japan]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About 1750",
+   "elsewhere": "In China's Lower Yangzi region, living standards were close to those of north-west Europe, according to Pomeranz. Historians still debate why the paths later split.",
+   "cite": [
+    "s12"
+   ]
+  },
+  {
+   "when": "1764 to 1769",
+   "elsewhere": "In five years in Britain: Hargreaves's spinning jenny (about 1764), Arkwright's water frame (patented 1769) and Watt's separate-condenser engine (patented 1769).",
+   "cite": [
+    "s28",
+    "s6"
+   ]
+  },
+  {
+   "when": "1830 to 1833",
+   "elsewhere": "The Liverpool and Manchester Railway opened in 1830, with the Prime Minister, the Duke of Wellington, present. Sadler's committee heard child workers in 1832, and the Factory Act passed in 1833.",
+   "cite": [
+    "s23",
+    "s15",
+    "s14"
+   ]
+  },
+  {
+   "when": "1832 to 1835",
+   "elsewhere": "Samuel Morse began work on his telegraph in 1832. In 1835 Charles Babbage remarked on the carbon dioxide released by burning coal.",
+   "cite": [
+    "s30",
+    "s18"
+   ]
+  },
+  {
+   "when": "1842 to 1844",
+   "elsewhere": "Friedrich Engels arrived in Manchester in 1842. In 1844 Samuel Morse, an artist by trade, sent the first long-distance telegraph message from Washington to Baltimore.",
+   "cite": [
+    "s17",
+    "s31",
+    "s26"
+   ]
+  },
+  {
+   "when": "1845",
+   "elsewhere": "The Electric Telegraph Company was formed in Britain.",
+   "cite": [
+    "s25"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Britain industrialized first because wages were high and coal was cheap, so machines paid off (Robert Allen).",
+   "other_view": "Joel Mokyr stresses a broader and deeper story about knowledge and culture, including science, Enlightenment ideas and skilled craftsmen. Jack Goldstone argues that long-term changes in the knowledge economy were the crucial element. Allen's own account also traces his high wages back to Britain's earlier success in trade.",
+   "cite": [
+    "s9",
+    "s10",
+    "s11",
+    "s13"
+   ]
+  },
+  {
+   "claim": "Coal and colonies explain why Britain pulled ahead of China (Kenneth Pomeranz).",
+   "other_view": "Other scholars of the 'California School' never accepted the 'coal and colonies' claim, though they agreed on the later, 1700s dating of the divergence. Pomeranz's own argument is that China and Europe were similar around 1750.",
+   "cite": [
+    "s12",
+    "s13"
+   ]
+  },
+  {
+   "claim": "Steam replaced water power because Britain ran short of water power.",
+   "other_view": "A 2024 study found most British counties used under 2% of their potential waterpower. Limited water explains steam near Manchester, but other causes are needed to explain steam's spread elsewhere.",
+   "cite": [
+    "s8"
+   ]
+  },
+  {
+   "claim": "Industrial towns made life worse, as Engels described.",
+   "other_view": "Engels is a vivid source, but a Cambridge historian warns that historians have leaned on him too much. Another Cambridge project finds big improvements in urban death rates after 1750, then apparent reversals in 1820 to 1850. That pattern is still debated.",
+   "cite": [
+    "s17",
+    "s16"
+   ]
+  },
+  {
+   "claim": "Human-driven carbon dioxide change began with the Industrial Revolution.",
+   "other_view": "Babbage noticed coal's carbon dioxide in 1835, and later scientists developed the greenhouse idea. Some researchers have suggested that a dip in the Law Dome ice core around 1610 marks an earlier human influence, linked to events after New World contact. A 2024 paper re-examines whether that dip is a land-abandonment signal or an artefact of ice-core data.",
+   "cite": [
+    "s18",
+    "s21"
+   ]
+  }
+ ]
+}

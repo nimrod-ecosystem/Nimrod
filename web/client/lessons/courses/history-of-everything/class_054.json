@@ -1,0 +1,1518 @@
+{
+ "about": {
+  "title": "World War II",
+  "course": "history-of-everything",
+  "class_n": 54,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. The class has about 50 short beats of 30 to 40 seconds each, which fits a half-hour. The war is huge, so each region gets only its main turning points. The Holocaust has its own class (55), so it appears here only as a pointer."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "WW2 Dates & Timeline",
+   "publisher": "United States Holocaust Memorial Museum",
+   "date": "n.d.",
+   "link": "https://encyclopedia.ushmm.org/content/en/article/world-war-ii-key-dates",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "Timeline of World War II",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Timeline-of-World-War-II",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "World War II: European Theater",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/history/world-war-ii-european-theater/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "The History Place - World War II in Europe Timeline",
+   "publisher": "The History Place",
+   "date": "n.d.",
+   "link": "https://www.historyplace.com/worldwar2/timeline/ww2time.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "What You Need To Know About The Battle Of The Atlantic",
+   "publisher": "Imperial War Museums",
+   "date": "n.d.",
+   "link": "https://www.iwm.org.uk/history/what-you-need-to-know-about-the-battle-of-the-atlantic",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "Battle of the Atlantic",
+   "publisher": "Veterans Affairs Canada",
+   "date": "n.d.",
+   "link": "https://veterans.gc.ca/en/remembrance/military-history/second-world-war/battle-atlantic",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "From Crisis to Victory in the North Atlantic",
+   "publisher": "U.S. Naval Institute, Naval History Magazine",
+   "date": "2023-06",
+   "link": "https://www.usni.org/magazines/naval-history-magazine/2023/june/crisis-victory-north-atlantic",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "Convoy SC 7",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Convoy_SC_7",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "The Battle of the Atlantic: The Longest Struggle",
+   "publisher": "Warfare History Network",
+   "date": "n.d.",
+   "link": "https://warfarehistorynetwork.com/article/the-longest-struggle/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "The Eastern Front",
+   "publisher": "The National WWII Museum",
+   "date": "n.d.",
+   "link": "https://www.nationalww2museum.org/war/articles/eastern-front",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "Battle of Stalingrad",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/event/Battle-of-Stalingrad",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "Stalingrad at 75, the Turning Point of World War II in Europe",
+   "publisher": "Origins, Ohio State University",
+   "date": "2017-08",
+   "link": "https://origins.osu.edu/milestones/august-2017-stalingrad-75-turning-point-world-war-ii-europe?language_content_entity=en",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "Eastern Front (World War II)",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Eastern_Front_(World_War_II)",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "Liberation in China and the Pacific",
+   "publisher": "The National WWII Museum",
+   "date": "n.d.",
+   "link": "https://www.nationalww2museum.org/war/articles/liberation-china-and-pacific",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "The Pacific Strategy, 1941-1944",
+   "publisher": "The National WWII Museum",
+   "date": "n.d.",
+   "link": "https://www.nationalww2museum.org/war/articles/pacific-strategy-1941-1944",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "A Short History Of The War In The Pacific During The Second World War",
+   "publisher": "Imperial War Museums",
+   "date": "n.d.",
+   "link": "https://www.iwm.org.uk/history/a-short-history-of-the-war-in-the-pacific-during-the-second-world-war",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "Pacific War",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Pacific-War",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "World War II Timeline (1939–1945): Key Events That Changed History",
+   "publisher": "Sheet of History",
+   "date": "2026-05",
+   "link": "https://www.sheetofhistory.com/2026/05/world-war-ii-timeline-19391945-key.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "The home front in the Second World War",
+   "publisher": "The National Archives (UK)",
+   "date": "n.d.",
+   "link": "https://www.nationalarchives.gov.uk/education/resources/home-front/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "Home Front During World War II: Rationing",
+   "publisher": "HISTORY",
+   "date": "2010-03-24 (updated 2026)",
+   "link": "https://www.history.com/articles/us-home-front-during-world-war-ii",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "American women and World War II",
+   "publisher": "Khan Academy",
+   "date": "n.d.",
+   "link": "https://www.khanacademy.org/humanities/us-history/rise-to-world-power/x71a94f19:the-beginning-of-world-war-ii/a/american-women-and-world-war-ii",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "Home front during World War II",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Home_front_during_World_War_II",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "Soviet home front during World War II",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Soviet_home_front_during_World_War_II",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "Non-Jewish Resistance",
+   "publisher": "United States Holocaust Memorial Museum",
+   "date": "n.d.",
+   "link": "https://encyclopedia.ushmm.org/content/en/article/non-jewish-resistance",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "Jewish Resistance",
+   "publisher": "United States Holocaust Memorial Museum",
+   "date": "n.d.",
+   "link": "https://encyclopedia.ushmm.org/content/en/article/jewish-resistance",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "Resistance inside Germany",
+   "publisher": "United States Holocaust Memorial Museum",
+   "date": "n.d.",
+   "link": "https://encyclopedia.ushmm.org/content/en/article/resistance-inside-germany",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "Resistance during World War II",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Resistance_during_World_War_II",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "Debate over the Bomb: An Annotated Bibliography",
+   "publisher": "Atomic Heritage Foundation / National Museum of Nuclear Science & History",
+   "date": "n.d.",
+   "link": "https://ahf.nuclearmuseum.org/ahf/history/debate-over-bomb-annotated-bibliography/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s29",
+   "title": "Debate over the Japanese Surrender",
+   "publisher": "Atomic Heritage Foundation / National Museum of Nuclear Science & History",
+   "date": "n.d.",
+   "link": "https://ahf.nuclearmuseum.org/ahf/history/debate-over-japanese-surrender/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s30",
+   "title": "The Atomic Bombings of Japan and the End of World War II, 80 Years Later",
+   "publisher": "National Security Archive, George Washington University",
+   "date": "2025-08-05",
+   "link": "https://nsarchive.gwu.edu/briefing-book/nuclear-vault/2025-08-05/atomic-bombings-japan-and-end-world-war-ii-80-years-later",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s31",
+   "title": "The Atomic Bomb and the End of World War II",
+   "publisher": "National Security Archive, George Washington University",
+   "date": "2020-08-04",
+   "link": "https://nsarchive.gwu.edu/briefing-book/nuclear-vault/2020-08-04/atomic-bomb-end-world-war-ii",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s32",
+   "title": "Can the Atomic Bombings on Japan Be Justified? A Conversation with Dr. Tsuyoshi Hasegawa",
+   "publisher": "Taylor & Francis (journal article)",
+   "date": "2019",
+   "link": "https://www.tandfonline.com/doi/full/10.1080/25751654.2019.1625112",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s33",
+   "title": "Debate over the atomic bombings of Hiroshima and Nagasaki",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Debate_over_the_atomic_bombings_of_Hiroshima_and_Nagasaki",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s34",
+   "title": "Hiroshima and the Historians: Debating America's Most Controversial Decision (Kenneth Pyle)",
+   "publisher": "University of Washington Jackson School / Cambridge University Press",
+   "date": "2024",
+   "link": "https://jsis.washington.edu/publication/hiroshima-and-the-historians-debating-americas-most-controversial-decision/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s35",
+   "title": "Casualties of World War II",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/military-history-and-science/casualties-world-war-ii/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s36",
+   "title": "Casualties of World War II",
+   "publisher": "Lumen Learning (SUNY HCCC World History 2)",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/suny-hccc-worldhistory2/chapter/casualties-of-world-war-ii/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s37",
+   "title": "World War II casualties",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/World_War_II_casualties",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s38",
+   "title": "List of wars by death toll",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/List_of_wars_by_death_toll",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s39",
+   "title": "European theatre of World War II",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/European_theatre_of_World_War_II",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s40",
+   "title": "Colossus",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/technology/Colossus-computer",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s41",
+   "title": "7 Innovations That Came Out of World War II",
+   "publisher": "History Facts",
+   "date": "n.d.",
+   "link": "https://historyfacts.com/science-industry/article/7-innovations-that-came-out-of-world-war-ii/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s42",
+   "title": "Stephen Hawking biography",
+   "publisher": "Stephen Hawking official website (hawking.org.uk)",
+   "date": "n.d.",
+   "link": "https://www.hawking.org.uk/biography",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s43",
+   "title": "John Lennon",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/John_Lennon",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s44",
+   "title": "Muhammad Ali",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Muhammad_Ali",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s45",
+   "title": "1943 in science",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/1943_in_science",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s46",
+   "title": "World War II",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/World_War_II",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s47",
+   "title": "WW2 in the Pacific (Japan) for Kids",
+   "publisher": "Ducksters",
+   "date": "n.d.",
+   "link": "https://www.ducksters.com/history/world_war_ii/ww2_in_pacific.php",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 54: World War II. Today we outline where it was fought, and how it ended."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "World War II: the main fronts and the ending"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, one word. A 'theater' is a large region where a war is fought. This war had two main ones: Europe and the Pacific."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Theater = a large region of fighting"
+   },
+   "cite": [
+    "s39"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In war language, what is a 'theater'?",
+    "right": "A large region where a war is fought",
+    "wrong": [
+     "A building where plays are shown",
+     "A type of warship",
+     "A peace treaty"
+    ],
+    "why": "A theater is a large region of fighting. The European theater and the Pacific War were the two main ones."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Most histories count the war as six years long, from 1939 to 1945."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1 Sep 1939 Germany invades Poland | 1940 France falls | 1941 Germany attacks USSR; Pearl Harbor | 1944 D-Day | 8 May 1945 war ends in Europe | 2 Sep 1945 formal Japanese surrender"
+   },
+   "cite": [
+    "s1",
+    "s17"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We'll go region by region, starting with Europe. On 1 September 1939, Germany invaded Poland."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map of Europe: arrow from Germany into western Poland, marked 1 Sep 1939"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Two days later, Britain and France declared war on Germany. On 17 September the Soviet Union invaded Poland from the east, and the two powers divided it between them."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Same map: second arrow from the east, 17 Sep 1939. Poland split in two."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which two countries declared war on Germany on 3 September 1939?",
+    "right": "Britain and France",
+    "wrong": [
+     "The United States and Japan",
+     "Italy and Spain",
+     "Poland and the Soviet Union"
+    ],
+    "why": "Britain and France declared war on 3 September 1939, honoring their promise to protect Poland's borders."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Germany fought with 'blitzkrieg', which means 'lightning war': a swift, hard-hitting attack."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Blitzkrieg = lightning war"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does 'blitzkrieg' mean?",
+    "right": "Lightning war",
+    "wrong": [
+     "Long siege",
+     "Sea battle",
+     "Peace talks"
+    ],
+    "why": "Blitzkrieg means 'lightning war'. Germany opened the war in Europe with swift, brutal attacks."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 1940 the tide of conquest rolled west. France signed an armistice with Germany on 22 June 1940."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A map of western Europe shaded in German-held colors, June 1940"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Britain stood on. In the Battle of Britain, July to September 1940, the Royal Air Force beat the German air force."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Battle of Britain, July–September 1940"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In June 1941, Germany attacked the Soviet Union. This opened the Soviet front, also called the Eastern Front."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Eastern Front = Germany vs the Soviet Union"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "This front was enormous. The historian Geoffrey Roberts says more than 80 percent of all combat in the war took place there."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "80%+ of all combat (Roberts's estimate)"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "At first the German invasion went very well. By September 1941 the Red Army had lost about 2.5 million men, and Germany besieged Leningrad to starve its people."
+   },
+   "show": {
+    "kind": "list",
+    "text": "By Sept 1941: about 2.5 million Red Army casualties | Leningrad besieged and starved"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The turning point came at Stalingrad. It was a five-month battle, and in February 1943 the trapped German forces surrendered."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map of southern USSR with Stalingrad on the Volga marked; arrows closing around it"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The cost was huge. Estimates vary: Britannica gives about 800,000 Axis and 1.1 million Soviet casualties, plus about 40,000 civilians."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Battle of Stalingrad: estimated casualties",
+    "chart": "c2"
+   },
+   "cite": [
+    "s11",
+    "s12"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Why is Stalingrad called a turning point?",
+    "right": "After it, the momentum on the Eastern Front shifted to the Soviets",
+    "wrong": [
+     "It was the last battle of the war",
+     "Germany captured Moscow there",
+     "It was where the United States joined the war"
+    ],
+    "why": "After the German surrender at Stalingrad in February 1943, the momentum on the Eastern Front had shifted."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now to the sea. Britain needed supplies and troops shipped across the Atlantic, and German submarines called U-boats tried to cut that lifeline."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Atlantic: a lifeline under attack"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Allies grouped merchant ships into convoys with warship escorts. The first convoy sailed on 2 September 1939, and the Battle of the Atlantic was the longest campaign of the war."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Convoy = merchant ships sailing together with escorts"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "U-boats answered with 'wolf packs': groups that attacked convoys together, usually at night. In convoy SC 7 in October 1940, 20 of 35 cargo ships were sunk."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "boat",
+    "count": 20,
+    "layout": "group",
+    "text": "20 of the 35 cargo ships in convoy SC 7 were sunk"
+   },
+   "cite": [
+    "s6",
+    "s8"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What is a 'wolf pack'?",
+    "right": "A group of U-boats that attack a convoy together",
+    "wrong": [
+     "A group of Allied destroyers",
+     "A type of torpedo",
+     "A kind of convoy escort"
+    ],
+    "why": "Wolf packs were groups of U-boats, often six or more, that attacked convoys together at night."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The worst month was March 1943, when U-boats sank 108 Allied ships. Then the tide turned. Long-range aircraft and new escort groups arrived, and in May 1943 the U-boats were beaten back."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "108 ships sunk in March 1943"
+   },
+   "cite": [
+    "s6",
+    "s7"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Admiral Dönitz, who led the U-boats, admitted the result privately."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "'We had lost the Battle of the Atlantic.' (Admiral Karl Dönitz, privately, as reported by Warfare History Network)"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What helped turn the Battle of the Atlantic in 1943?",
+    "right": "Long-range aircraft and extra escort groups protecting the convoys",
+    "wrong": [
+     "The convoys stopped sailing",
+     "The U-boats ran out of torpedoes",
+     "Britain left the war"
+    ],
+    "why": "Long-range aircraft and support groups gave convoys far better protection. In May 1943 the U-boats lost heavily."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Back on land. On 6 June 1944, D-Day, American, British and Canadian troops landed in Normandy, in occupied France."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map of the Normandy coast with five landing beaches, 6 June 1944"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now Germany was squeezed from both sides. In January 1945 Soviet forces freed Warsaw and Krakow, and on 21 April they entered Berlin."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Europe map: arrows from the west and from the east closing on Berlin"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Germany surrendered unconditionally on 7 May 1945. The surrender took effect on 8 May, called V-E Day, Victory in Europe. Because of the time difference, the Soviets marked Victory Day on 9 May."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "7 May 1945 surrender signed | 8 May V-E Day | 9 May Soviet Victory Day"
+   },
+   "cite": [
+    "s1",
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why did Soviet forces announce their Victory Day on 9 May?",
+    "right": "Because of the time difference, the surrender reached them on 9 May",
+    "wrong": [
+     "They surrendered a day later than Germany",
+     "They were fighting a different war",
+     "They did not sign the surrender"
+    ],
+    "why": "The time difference put the end of the fighting on 9 May for Soviet forces. Most of Europe marked it on 8 May."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now Asia. The National WWII Museum says the war began on 7 July 1937, in China, when Japanese and Chinese troops clashed near Beijing."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map of East Asia: clash near Beijing, 7 July 1937; Japanese advance to Nanjing"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "On 7 December 1941, Japan attacked the US naval base at Pearl Harbor in Hawaii. Japan also overran Allied lands in south-east Asia and the Philippines."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Pacific map: Pearl Harbor, the Philippines, Malaya"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Days later, Germany and Italy declared war on the United States. America found itself in a global war."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Global war"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "After Germany and Italy declared war on the US, what did America find itself in?",
+    "right": "A global war",
+    "wrong": [
+     "A war only in the Pacific",
+     "A war only in Europe",
+     "A peace conference"
+    ],
+    "why": "Germany and Italy declared war on the US days after Pearl Harbor, so America faced enemies in Europe and the Pacific."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In June 1942 came the Battle of Midway. American carrier aircraft destroyed four Japanese aircraft carriers. It was a turning point, and the US could now go on the attack."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Midway, June 1942: four Japanese carriers destroyed"
+   },
+   "cite": [
+    "s15",
+    "s17"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "Which June 1942 naval battle was a turning point in the Pacific?",
+    "right": "Midway",
+    "wrong": [
+     "Pearl Harbor",
+     "Stalingrad",
+     "D-Day"
+    ],
+    "why": "At Midway, US aircraft destroyed four Japanese carriers. That shifted naval power and let the US attack."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "By 1945 Japan was squeezed. A firebombing of Tokyo on 9 to 10 March killed some 80,000 civilians. In April, American forces landed on Okinawa, only 350 miles from Japan."
+   },
+   "show": {
+    "kind": "list",
+    "text": "March 1945: Tokyo firebombing, about 80,000 civilians killed | April 1945: Okinawa landings, kamikaze attacks | Bombing and a submarine blockade"
+   },
+   "cite": [
+    "s14",
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a different question. What was life like away from the fighting? In 'total war', whole societies join in: factories, farms and families."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Total war = whole societies join the war effort"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Governments handled new problems: rationing, who works where, defending the home, and moving people away from air raids."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Rationing | Shifting workers | Home defense | Evacuation from air raids"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Britain brought in rationing in 1940. Every man, woman and child got a ration book. Men aged 18 to 41 were needed in the forces, so women took jobs in factories and on farms."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A British ration book beside a poster urging women to work in factories"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In the United States, food, gas and clothing were rationed. Families planted 'victory gardens' to grow their own food. Women and African Americans took defense-plant jobs."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A family working in a backyard victory garden"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What was a 'victory garden'?",
+    "right": "A home garden grown to add to rationed food",
+    "wrong": [
+     "A park honoring fallen soldiers",
+     "A field where soldiers trained",
+     "A prize for winning a battle"
+    ],
+    "why": "Americans grew their own food in victory gardens as an alternative to rationing."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "People often say the war was the first time American women worked for pay. That's a myth. About a quarter already did in 1940, but five million more joined the workforce by 1945."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "1940: about a quarter of women worked | 1940–1945: five million more joined"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Soviet Union mobilized millions of people, rationed goods, evacuated people and ran heavy propaganda. Women filled many jobs left by men at the front."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Mass mobilization | Rationing | Evacuation | Propaganda | Women replacing men"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Under occupation there was another kind of home front: resistance. It ranged from refusing to cooperate, to spreading news, to hiding crashed pilots, to open fighting."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Resistance = opposing occupation, from quiet refusal to fighting"
+   },
+   "cite": [
+    "s27"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Danish resistance sabotaged rail lines. In February 1941 the Dutch held a general strike over the arrests and brutal treatment of Jews. In Germany, students in the White Rose group spoke out."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Denmark: sabotage | Netherlands: general strike, Feb 1941 | Germany: the White Rose, Hans and Sophie Scholl"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In February 1941, how did the Dutch protest the arrests of Jews?",
+    "right": "With a general strike",
+    "wrong": [
+     "By sinking U-boats",
+     "By invading Germany",
+     "By crossing the Atlantic"
+    ],
+    "why": "Called by the banned Communist Party with union activists, the Dutch held a general strike in February 1941."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Jewish people resisted too. Armed resistance arose in over 100 ghettos in occupied Poland and the Soviet Union. Elsewhere it often meant aid and rescue. The Holocaust has its own class next."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Armed resistance: over 100 ghettos | Aid and rescue: many countries"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Resistance was dangerous. At Ploetzensee prison the Nazis executed hundreds of Germans for opposing Hitler. Overall, resistance is judged more by its moral and political impact than by military results."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Ploetzensee prison entrance, Berlin, a memorial to those executed"
+   },
+   "cite": [
+    "s26",
+    "s27"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the end of the war in Asia. By summer 1945 Japan was bombed and blockaded. On 6 August 1945, an atomic bomb was dropped on Hiroshima."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "6 August 1945: Hiroshima"
+   },
+   "cite": [
+    "s16",
+    "s4"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Around then the Soviet Union entered the war on Japan: on 8 August, or 9 August depending on the source. On 9 August a second atomic bomb hit Nagasaki, and about 40,000 people died."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "6 Aug Hiroshima | 8–9 Aug Soviet Union enters war on Japan | 9 Aug Nagasaki"
+   },
+   "cite": [
+    "s4",
+    "s14",
+    "s2",
+    "s35"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "These are hard numbers, so take a breath if you need one. About 80,000 died at Hiroshima at first. Counting injuries and radiation, estimates reach 90,000 to 140,000."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Hiroshima: 90,000–140,000 estimated deaths"
+   },
+   "cite": [
+    "s35"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Emperor Hirohito announced Japan's surrender on 15 August. The formal surrender was signed on 2 September 1945, which ended the war."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "15 Aug 1945 emperor announces surrender | 2 Sep 1945 formal surrender"
+   },
+   "cite": [
+    "s47",
+    "s17"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "On what date was Japan's formal surrender signed?",
+    "right": "2 September 1945",
+    "wrong": [
+     "8 May 1945",
+     "6 August 1945",
+     "7 December 1941"
+    ],
+    "why": "Japan's formal surrender on 2 September 1945 concluded the Pacific War. The 15 August date was the emperor's announcement."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Were the bombings justified? Historians still debate it. Defenders say the bombs avoided a costly invasion of Japan, saving lives on both sides."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Defenders: bombs ended the war and avoided invasion | Critics: see next beat"
+   },
+   "cite": [
+    "s28",
+    "s33"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Critics, often called revisionists, argue Japan was already ready to surrender. Some say the aim was partly to impress the Soviet Union. Others raise moral objections."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Defenders: avoided invasion | Critics: Japan near surrender; other motives; moral questions"
+   },
+   "cite": [
+    "s29",
+    "s31"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Historians also disagree about why Japan surrendered. Sadao Asada stresses the shock of the bombs. Herbert Bix argues the bombs and the Soviet declaration of war together pushed the emperor's court. Tsuyoshi Hasegawa says there's no smoking gun."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Asada: shock of the bombs | Bix: bombs plus Soviet entry | Hasegawa: no single proven cause"
+   },
+   "cite": [
+    "s30",
+    "s32"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which statement is true?",
+    "right": "Historians still disagree about why Japan surrendered",
+    "wrong": [
+     "All historians agree the bombs alone ended the war",
+     "Records prove exactly which factor decided it",
+     "Historians agree Japan surrendered before 6 August"
+    ],
+    "why": "One 2024 book on the debate says historians have reached no final resolution on the decision."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last topic: counting the dead. Most estimates say 70 to 85 million people died, about 3 percent of the world's population."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "70–85 million deaths (estimate)"
+   },
+   "cite": [
+    "s38",
+    "s36"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Sources do not all agree. Wikipedia's article on the war says 60 to 75 million, and its list of wars says 70 to 85 million."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Estimated total deaths, in millions",
+    "chart": "c1"
+   },
+   "cite": [
+    "s46",
+    "s38"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why the gap? Many deaths went unrecorded. Also, some counts include 19 to 25 million war-related famine deaths that other compilations leave out."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Many deaths never recorded | Famine deaths counted in some lists, left out of others"
+   },
+   "cite": [
+    "s36",
+    "s37"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why do estimates of World War II deaths differ?",
+    "right": "Many deaths went unrecorded, and sources count different kinds of deaths, such as famine",
+    "wrong": [
+     "Historians refuse to count civilians",
+     "The war has no agreed end date",
+     "All estimates copy a single source"
+    ],
+    "why": "Many deaths went unrecorded, and lists differ on whether to include famine and disease deaths."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Most of the dead were civilians. One estimate gives about 20 million military and 40 million civilians. Estimates for the Soviet Union range from about 19 to 27 million."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Military: about 20 million | Civilians: about 40 million (one estimate)"
+   },
+   "cite": [
+    "s36",
+    "s35",
+    "s46"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Among the people who died in World War II, which group was the majority in most estimates?",
+    "right": "Civilians",
+    "wrong": [
+     "Soldiers",
+     "Sailors",
+     "Pilots"
+    ],
+    "why": "Most estimates say a majority of the dead were civilians."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "For comparison, World War I killed an estimated 15 to 22 million people. World War II was several times deadlier."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "WWI: 15–22 million | WWII: 70–85 million (one range)"
+   },
+   "cite": [
+    "s38"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now our frame of reference: what else was going on in these years? In 1943 a Dutch doctor built the first dialysis machine in occupied Netherlands. In Britain, Colossus, an early electronic computer, reached the codebreakers at Bletchley Park."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1943: first dialysis machine, occupied Netherlands | Dec 1943–Jan 1944: Colossus at Bletchley Park | 1945: ENIAC computer completed"
+   },
+   "cite": [
+    "s45",
+    "s40",
+    "s41"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Medicine moved too. By D-Day, 2.3 million doses of penicillin had been made. And these years had births. John Lennon was born in 1940. Stephen Hawking and Muhammad Ali were both born in January 1942."
+   },
+   "show": {
+    "kind": "list",
+    "text": "June 1944: 2.3 million penicillin doses | 9 Oct 1940: John Lennon | 8 Jan 1942: Stephen Hawking | 17 Jan 1942: Muhammad Ali"
+   },
+   "cite": [
+    "s41",
+    "s43",
+    "s42",
+    "s44"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which two famous people were both born in January 1942?",
+    "right": "Stephen Hawking and Muhammad Ali",
+    "wrong": [
+     "John Lennon and Stephen Hawking",
+     "John Lennon and Muhammad Ali",
+     "Galileo and Stephen Hawking"
+    ],
+    "why": "Hawking was born on 8 January 1942 and Ali on 17 January 1942. Lennon was born in October 1940."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The big world was changing too. On 26 June 1945 the United Nations Charter was signed in San Francisco. On 26 July, Clement Attlee replaced Winston Churchill as British Prime Minister."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "26 Jun 1945 UN Charter signed | 26 Jul 1945 Attlee succeeds Churchill"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To sum up: war in Europe, the Atlantic, the Soviet front, and Asia and the Pacific. It ended with Germany's surrender in May and Japan's in August and September 1945."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Europe | Atlantic | Soviet front | Pacific and Asia | Home fronts and resistance | Atomic bombs and the debate | Counting the dead"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next class is about the Holocaust: how it happened, and how the world remembers genocide. Thank you for learning with us."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Class 55, The Holocaust and the Memory of Genocide"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Estimates of total World War II deaths (millions)",
+   "rows": [
+    {
+     "label": "Low end, Wikipedia's World War II article",
+     "value": 60,
+     "source": "s46"
+    },
+    {
+     "label": "High end, Wikipedia's World War II article",
+     "value": 75,
+     "source": "s46"
+    },
+    {
+     "label": "Low end, list of wars by death toll",
+     "value": 70,
+     "source": "s38"
+    },
+    {
+     "label": "High end, list of wars by death toll",
+     "value": 85,
+     "source": "s38"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Battle of Stalingrad: estimated casualties (Britannica)",
+   "rows": [
+    {
+     "label": "Axis casualties (dead, wounded, missing, captured)",
+     "value": 800000,
+     "source": "s11"
+    },
+    {
+     "label": "Soviet casualties (dead, wounded, missing, captured)",
+     "value": 1100000,
+     "source": "s11"
+    },
+    {
+     "label": "Civilian deaths",
+     "value": 40000,
+     "source": "s11"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Theater of war",
+   "links": [
+    "[[Eastern Front]]",
+    "[[Pacific War]]",
+    "[[European theatre]]"
+   ]
+  },
+  {
+   "topic": "Battle of the Atlantic",
+   "links": [
+    "[[Convoy]]",
+    "[[Wolf pack]]",
+    "[[Depression, Dictators and the Slide to War]]"
+   ]
+  },
+  {
+   "topic": "Stalingrad and the Eastern Front",
+   "links": [
+    "[[Leningrad siege]]",
+    "[[A New World Order: The UN, the Cold War and Decolonization]]"
+   ]
+  },
+  {
+   "topic": "Resistance movements",
+   "links": [
+    "[[The Holocaust and the Memory of Genocide]]",
+    "[[White Rose]]"
+   ]
+  },
+  {
+   "topic": "Atomic bombings and the debate",
+   "links": [
+    "[[20th-Century Science and Technology]]",
+    "[[The 1950s and early 1960s: Space, Nuclear Fear and Civil Rights]]"
+   ]
+  },
+  {
+   "topic": "Counting war dead",
+   "links": [
+    "[[World War I]]",
+    "[[The Holocaust and the Memory of Genocide]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "9 October 1940",
+   "elsewhere": "The musician and songwriter John Lennon is born in Liverpool, England.",
+   "cite": [
+    "s43"
+   ]
+  },
+  {
+   "when": "8 and 17 January 1942",
+   "elsewhere": "Stephen Hawking is born on 8 January in Oxford, exactly 300 years after Galileo's death. Muhammad Ali is born on 17 January in Louisville, Kentucky.",
+   "cite": [
+    "s42",
+    "s44"
+   ]
+  },
+  {
+   "when": "1943",
+   "elsewhere": "Willem Kolff builds the first dialysis machine in the occupied Netherlands. The US Army contracts with the University of Pennsylvania to develop ENIAC. A British prototype of the Colossus computer is built.",
+   "cite": [
+    "s45"
+   ]
+  },
+  {
+   "when": "December 1943 to January 1944",
+   "elsewhere": "The first Colossus is assembled at Bletchley Park and is working by January 1944.",
+   "cite": [
+    "s40"
+   ]
+  },
+  {
+   "when": "June 1944",
+   "elsewhere": "Allied scientists have made 2.3 million doses of penicillin ready for the D-Day invasion.",
+   "cite": [
+    "s41"
+   ]
+  },
+  {
+   "when": "1945",
+   "elsewhere": "The ENIAC computer is completed in the United States.",
+   "cite": [
+    "s41"
+   ]
+  },
+  {
+   "when": "26 June and 26 July 1945",
+   "elsewhere": "The United Nations Charter is signed in San Francisco. Clement Attlee succeeds Winston Churchill as British Prime Minister.",
+   "cite": [
+    "s4"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "World War II began on 1 September 1939 with Germany's invasion of Poland.",
+   "other_view": "The National WWII Museum dates the war's beginning to 7 July 1937, when Japanese and Chinese troops clashed near Beijing and a full undeclared war followed. Which start date you pick depends on whether you count Europe or Asia first.",
+   "cite": [
+    "s1",
+    "s14"
+   ]
+  },
+  {
+   "claim": "The atomic bombs were needed to end the war and avoid a costly invasion of Japan.",
+   "other_view": "Revisionist historians argue Japan was already ready to surrender and that the decision to use the bombs suggests other motives. The estimates of casualties in the planned invasion are themselves debated. A 2024 book on the debate says it has produced no final resolution.",
+   "cite": [
+    "s28",
+    "s29",
+    "s33",
+    "s34"
+   ]
+  },
+  {
+   "claim": "The atomic bombs caused Japan's surrender.",
+   "other_view": "Some historians stress the Soviet declaration of war and invasion of Manchuria. Sadao Asada stresses the shock of the bombs, and Herbert Bix argues the bombs and the Soviet entry together convinced the emperor's court. Tsuyoshi Hasegawa says there is no smoking gun showing which mattered most. Japanese records suggest Nagasaki had little effect on decision-making.",
+   "cite": [
+    "s30",
+    "s31",
+    "s32",
+    "s29"
+   ]
+  },
+  {
+   "claim": "About 70 to 85 million people died in World War II.",
+   "other_view": "Some tallies give lower totals, such as 60 to 75 million, or 'nearly 70 million'. Ranges differ partly because many deaths went unrecorded and partly because lists differ on whether to include famine and disease deaths.",
+   "cite": [
+    "s38",
+    "s46",
+    "s35",
+    "s36",
+    "s37"
+   ]
+  },
+  {
+   "claim": "World War II was the first time American women worked outside the home in large numbers.",
+   "other_view": "About a quarter of American women already worked outside the home in 1940. The war changed the type of work and how many women did it, with five million joining the workforce between 1940 and 1945.",
+   "cite": [
+    "s21"
+   ]
+  }
+ ]
+}

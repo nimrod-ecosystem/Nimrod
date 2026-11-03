@@ -1,0 +1,1180 @@
+{
+ "about": {
+  "title": "Globalization, the Internet and a New Century",
+  "course": "history-of-everything",
+  "class_n": 61,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. Five topics each get a short explanation and a check question. The class ends with a debate and a frame-of-reference section, which fits the half-hour format. The 9/11 section is slow and gentle on purpose."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "A short history of the Web",
+   "publisher": "CERN",
+   "date": "n.d.",
+   "link": "https://home.cern/science/computing/the-birth-of-the-web/short-history-web/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "The birth of the Web",
+   "publisher": "CERN",
+   "date": "n.d.",
+   "link": "https://home.cern/science/computing/the-birth-of-the-web/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "30 years of the web: a short history of the invention that changed the world",
+   "publisher": "British Council",
+   "date": "n.d.",
+   "link": "https://www.britishcouncil.org/anyone-anywhere/history-web",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "ICT Facts & Figures (2015)",
+   "publisher": "International Telecommunication Union (ITU)",
+   "date": "2015",
+   "link": "https://www.itu.int/en/ITU-D/Statistics/Documents/facts/ICTFactsFigures2015.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "The World in 2010: Facts and Figures",
+   "publisher": "International Telecommunication Union (ITU)",
+   "date": "2010",
+   "link": "https://www.itu.int/ITU-D/ict/material/FactsFigures2010.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "ITU sees 5 billion mobile subscriptions globally in 2010",
+   "publisher": "International Telecommunication Union (ITU)",
+   "date": "2010-02-15",
+   "link": "https://www.itu.int/net/pressoffice/press_releases/2010/06.aspx",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Annex I: China - Growth and Economic Reforms, World Economic Outlook",
+   "publisher": "International Monetary Fund",
+   "date": "n.d.",
+   "link": "https://www.elibrary.imf.org/display/book/9781557756817/C06.xml",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Poverty, inequality and social disparities during China's economic reform (Policy Research Working Paper 4253)",
+   "publisher": "World Bank",
+   "date": "n.d.",
+   "link": "https://documents1.worldbank.org/curated/en/182041468241155669/pdf/wps4253.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "China and the WTO: accession page",
+   "publisher": "World Trade Organization",
+   "date": "n.d.",
+   "link": "https://www.wto.org/english/thewto_e/acc_e/a1_chine_e.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "How influential is China in the WTO?",
+   "publisher": "ChinaPower Project, Center for Strategic and International Studies",
+   "date": "n.d.",
+   "link": "https://chinapower.csis.org/china-world-trade-organization-wto/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "India's Economic Reforms: What Has Been Accomplished? What Remains to Be Done?",
+   "publisher": "Asian Development Bank",
+   "date": "n.d.",
+   "link": "https://www.adb.org/publications/indias-economic-reforms-what-has-been-accomplished-what-remains-be-done",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Politics of Economic Reforms: Real Lessons from 1991",
+   "publisher": "Friedrich Naumann Foundation for Freedom",
+   "date": "2021-07",
+   "link": "https://www.freiheit.org/india/politics-economic-reforms-real-lessons-1991",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "September 11, 2001 (Historical Exhibition)",
+   "publisher": "National September 11 Memorial & Museum",
+   "date": "n.d.",
+   "link": "https://www.911memorial.org/visit/museum/Exhibitions/historical-exhibition-september-11-2001",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "What were the 9/11 terrorist attacks?",
+   "publisher": "Imperial War Museums",
+   "date": "n.d.",
+   "link": "https://www.iwm.org.uk/history/contemporary-conflict/9-11/what-were-the-911-terrorist-attacks",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Timeline of the history of Islam (21st century)",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Timeline_of_the_history_of_Islam_(21st_century)",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Operation Iraqi Freedom",
+   "publisher": "Council on Foreign Relations",
+   "date": "n.d.",
+   "link": "https://www.cfr.org/articles/remembering-operation-iraqi-freedom",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "The Invasion of Iraq (The 10 Best and 10 Worst U.S. Foreign Policy Decisions: A Survey of Historians)",
+   "publisher": "Council on Foreign Relations",
+   "date": "n.d.",
+   "link": "https://www.cfr.org/ten-best-ten-worst-us-foreign-policy-decisions/the-iraq-war/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "2003 invasion of Iraq",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/2003_invasion_of_Iraq",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "History of the European Union 1990-99",
+   "publisher": "European Union (european-union.europa.eu)",
+   "date": "n.d.",
+   "link": "https://european-union.europa.eu/principles-countries-history/history-eu/1990-99_en",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "European Union (EU)",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/European-Union",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "The Maastricht Treaty",
+   "publisher": "Maastricht University research portal",
+   "date": "n.d.",
+   "link": "https://cris.maastrichtuniversity.nl/en/publications/the-maastricht-treaty/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Five things you need to know about the Maastricht Treaty",
+   "publisher": "European Central Bank",
+   "date": "n.d.",
+   "link": "https://www.ecb.europa.eu/ecb-and-you/explainers/tell-me-more/html/maastricht_treaty.en.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "The latest threat from the rise of Chinese manufacturing",
+   "publisher": "MIT Technology Review",
+   "date": "2025-07-07",
+   "link": "https://www.technologyreview.com/2025/07/07/1119658/the-latest-threat-from-the-rise-of-chinese-manufacturing/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "The 'China Shock' Demystified: Its Origins, Effects, and Lessons for Today",
+   "publisher": "Cato Institute",
+   "date": "n.d.",
+   "link": "https://www.cato.org/publications/china-shock",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "The China Shock: Reevaluating the Debate",
+   "publisher": "Big Data China, Center for Strategic and International Studies",
+   "date": "n.d.",
+   "link": "https://bigdatachina.csis.org/the-china-shock-reevaluating-the-debate/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "China and the World Trade Organization",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/China_and_the_World_Trade_Organization",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "Human Genome Project Timeline",
+   "publisher": "National Human Genome Research Institute (NIH)",
+   "date": "n.d.",
+   "link": "https://www.genome.gov/human-genome-project/timeline",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "Revisiting the China Shock (with Joseph Francis)",
+   "publisher": "EconTalk, Econlib",
+   "date": "n.d.",
+   "link": "https://www.econtalk.org/revisiting-the-china-shock-with-joseph-francis",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "Maastricht Treaty Goes Into Effect",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/history/maastricht-treaty-goes-into-effect/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "Looking Back, Looking Forward: China and the World Trade Organization 10 Years after Accession",
+   "publisher": "Centre for International Governance Innovation",
+   "date": "n.d.",
+   "link": "https://www.cigionline.org/publications/publication-series/looking-back-looking-forward-china-and-world-trade-organization-10-years-after-accession/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s31",
+   "title": "September 11 attacks",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/event/September-11-attacks",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s32",
+   "title": "The Human Genome Project",
+   "publisher": "National Human Genome Research Institute (NIH)",
+   "date": "n.d.",
+   "link": "https://www.genome.gov/human-genome-project",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 61. Today we look at the 1990s and 2000s, when the world became more tightly connected than ever."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Globalization, the Internet and a New Century"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We will take five topics one at a time: the Web and mobile phones, China and India, September 11 and the wars after it, the European Union, and a debate about who gained and who lost."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. The Web and mobile phones\n2. China and India\n3. September 11 and the wars after\n4. The European Union\n5. Debate: winners and losers"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, one word. Globalization means people and countries becoming more linked through trade, travel, money and information."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Globalization"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The first link is the Web. The Internet is a network of connected computers. The Web is a way of sharing linked pages across that network."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The Web = linked pages on the Internet"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Tim Berners-Lee wrote his proposal in March 1989 at CERN, a physics lab. His aim was to help scientists around the world share information."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "March 1989: proposal at CERN\nEnd of 1990: first Web server and browser running\nAugust 1991: software announced to the world\nApril 1993: software put in the public domain\n1994: World Wide Web Consortium founded"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why was the Web first created at CERN?",
+    "right": "To help scientists in different places share information",
+    "wrong": [
+     "To sell products online",
+     "To let people play games",
+     "To make phone calls cheaper"
+    ],
+    "why": "CERN says the Web was first built to meet scientists' need to share information between universities and institutes."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In April 1993, CERN put the software in the public domain. That means anyone could use it freely. This helped it spread."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Public domain: free for anyone to use"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does it mean that the Web software was put in the public domain?",
+    "right": "Anyone could use it freely",
+    "wrong": [
+     "Only CERN could use it",
+     "Users had to pay CERN a fee",
+     "Only governments could use it"
+    ],
+    "why": "CERN released the software in 1993, and Berners-Lee and others worked to keep it royalty-free."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So how many people went online? In 2000, about 6.5 out of every 100 people used the Internet. By 2015 it was 43 out of 100."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c2",
+    "text": "Share of the world using the Internet"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "In 2000, about how much of the world used the Internet?",
+    "right": "Fewer than 1 in 10 people",
+    "wrong": [
+     "About half",
+     "About 4 in 10",
+     "Nearly everyone"
+    ],
+    "why": "The ITU puts it at 6.5% in 2000, which is fewer than 1 in 10."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next, mobile phones. Statistics count subscriptions, meaning phone plans or SIM cards, not people. By 2010, rich countries averaged 116 subscriptions per 100 people."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "116 subscriptions per 100 people (developed countries, 2010)"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "A country has 116 mobile subscriptions per 100 people. What does that tell us?",
+    "right": "Some people have more than one subscription",
+    "wrong": [
+     "Every person has exactly one phone",
+     "The statistics must be wrong",
+     "Nobody there uses a phone"
+    ],
+    "why": "A subscription is a plan, not a person, so one person can hold two or more."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the growth. The ITU counted 738 million subscriptions in 2000, and more than 7 billion by the end of 2015."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1",
+    "text": "Mobile cellular subscriptions worldwide, in billions"
+   },
+   "cite": [
+    "s4",
+    "s5",
+    "s6"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "About how many mobile subscriptions were there worldwide in 2000?",
+    "right": "About 738 million",
+    "wrong": [
+     "About 7 billion",
+     "About 4.6 billion",
+     "About 73 million"
+    ],
+    "why": "The ITU reports 738 million in 2000. The 4.6 billion figure is for 2009, and 7 billion is for 2015."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The growth was not only in rich countries. The developing world's share of subscriptions rose from 53% at the end of 2005 to 73% at the end of 2010."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "73% of subscriptions in the developing world, 2010"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The ITU also noted that many people in developing countries had a phone subscription but no bank account. More of them were starting to use their phones for banking."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A person in a village checking a mobile phone to send money"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which part of the world held the larger share of mobile subscriptions by 2010?",
+    "right": "The developing world",
+    "wrong": [
+     "The developed world",
+     "They were exactly equal",
+     "Nobody counted"
+    ],
+    "why": "The ITU says the developing world's share rose to 73% by the end of 2010."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Phones spread fastest in Asia. The ITU expected India and China alone to add over 300 million subscriptions in 2010. So let us look at those two economies."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "China and India: two economies change"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "China began market reforms in 1978, starting with farming. At that time as much as 70% of its workers were in agriculture."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Up to 70% of workers farmed in 1978"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Growth was fast. From 1978 to 1996, China's economy grew by over 9% a year on average, and income per person nearly quadrupled."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Over 9% growth a year, 1978-1996"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Growth changed lives. The World Bank estimates that 64% of Chinese people were below its one-dollar-a-day line in 1981, and about 10% in 2004. That is about 500 million people in one generation."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c3",
+    "text": "Share of Chinese people below the World Bank's one-dollar-a-day line"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "By 2004, about what share of China's people were below that poverty line?",
+    "right": "About 10%",
+    "wrong": [
+     "About 64%",
+     "About 30%",
+     "None at all"
+    ],
+    "why": "The World Bank estimate fell from 64% in 1981 to about 10% in 2004."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "China then joined the World Trade Organization, a group of countries with shared trade rules. It became the 143rd member on 11 December 2001, after about 15 years of talks. It promised to cut trade barriers and reform at home."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "WTO: China joins, 11 December 2001"
+   },
+   "cite": [
+    "s9",
+    "s10"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "About how long did China's talks to join the WTO take?",
+    "right": "About 15 years",
+    "wrong": [
+     "About 1 year",
+     "About 3 years",
+     "About 40 years"
+    ],
+    "why": "China's accession process lasted about 15 years before it joined in December 2001."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now India. In 1991 India nearly ran out of foreign money, called reserves, which it used to pay for imports. Reserves had fallen below one billion dollars, enough for about three weeks of essential imports."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 3 weeks of imports covered, 1991"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The government responded with reform. It lowered import taxes, devalued the rupee, and dismantled the license and quota system that held industry back. The Asian Development Bank says reforms began in earnest in July 1991."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Lower import taxes\nDevalue the rupee\nEnd most licenses and quotas\nIMF support program"
+   },
+   "cite": [
+    "s11",
+    "s12"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What pushed India toward reform in 1991?",
+    "right": "It was almost out of foreign money to pay for imports",
+    "wrong": [
+     "It had just won a war",
+     "It had too many tourists",
+     "It had joined the euro"
+    ],
+    "why": "India faced a payments crisis and very low reserves, which opened the way to an IMF program and reforms."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The next topic is hard. It is September 11, 2001. Please take a break at any point if you need one. I will keep it plain and gentle."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "A hard day: September 11, 2001"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "On the morning of 11 September 2001, 19 al-Qaeda terrorists hijacked four planes in the United States. Two hit the Twin Towers in New York and one hit the Pentagon. The fourth crashed in Pennsylvania after the crew and passengers fought the hijackers."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Plane 1 and 2: World Trade Center, New York\nPlane 3: the Pentagon, Virginia\nPlane 4: a field in Pennsylvania"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Nearly 3,000 people died. The museum describes it as the largest loss of life from a foreign attack on American soil. People from more than 90 countries were among the dead."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Nearly 3,000 lives lost"
+   },
+   "cite": [
+    "s13",
+    "s14"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What does it tell us that people from more than 90 countries died?",
+    "right": "The attack touched people around the world",
+    "wrong": [
+     "Only Americans were affected",
+     "The attack happened in 90 places",
+     "Nobody outside the US noticed"
+    ],
+    "why": "The Imperial War Museum notes that more than 90 countries lost citizens."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The US government declared a war on terror. It began with the invasion of Afghanistan, which became a long war."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The war on terror begins with Afghanistan"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In March 2003 a US-led coalition invaded Iraq. Its stated aims were to disarm Iraq of weapons of mass destruction, meaning nuclear, chemical and biological weapons, and to remove Saddam Hussein."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Iraq, March 2003: the stated aim was weapons of mass destruction"
+   },
+   "cite": [
+    "s16",
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Inspectors then found no evidence of those weapons. A US commission in 2005 said prewar judgments were \"dead wrong in almost all of its prewar judgments\" about them. The occupation lasted eight years, and tens of thousands of Iraqis died."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Dead wrong in almost all of its prewar judgments (2005 US commission)"
+   },
+   "cite": [
+    "s16",
+    "s17"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was the main stated reason for the 2003 invasion of Iraq?",
+    "right": "The fear that Iraq had weapons of mass destruction",
+    "wrong": [
+     "A dispute over the euro",
+     "A trade deal with China",
+     "An attack by Iraq on the US in 2001"
+    ],
+    "why": "The coalition said it aimed to disarm Iraq of such weapons, and inspectors later found no evidence that they existed."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Not everyone agreed with the invasion. On 15 February 2003 there were worldwide protests, including a rally of three million in Rome. Some long-standing US allies were also opposed."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "3 million marched in Rome, 15 February 2003"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now to Europe. The Maastricht Treaty was signed on 7 February 1992 and took effect on 1 November 1993. It created the European Union, which started with 12 member states."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "chair",
+    "count": 12,
+    "layout": "group",
+    "text": "12 member states at the start"
+   },
+   "cite": [
+    "s19",
+    "s21"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The single market began on 1 January 1993 with four freedoms: free movement of people, goods, services and money. The treaty also created European citizenship."
+   },
+   "show": {
+    "kind": "list",
+    "text": "People\nGoods\nServices\nMoney"
+   },
+   "cite": [
+    "s19",
+    "s22"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which of these is one of the single market's four freedoms?",
+    "right": "Free movement of people",
+    "wrong": [
+     "Free movement of weapons",
+     "Free universities for all",
+     "Free television in every home"
+    ],
+    "why": "The four freedoms are free movement of people, goods, services and money."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The treaty also set a path to one currency, the euro. It started on 1 January 1999 in 11 countries, for business and finance only. Notes and coins came on 1 January 2002."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1992: treaty sets the path\n1 Jan 1999: euro starts in 11 countries (business and finance only)\n1 Jan 2002: euro notes and coins appear\nAfter 28 Feb 2002: the euro is the only currency in 12 states"
+   },
+   "cite": [
+    "s19",
+    "s20"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "When did people first get euro notes and coins in their hands?",
+    "right": "1 January 2002",
+    "wrong": [
+     "1 January 1999",
+     "1 November 1993",
+     "7 February 1992"
+    ],
+    "why": "The euro began in 1999 for business and finance only. Cash came on 1 January 2002."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the debate. For years economists argued that free trade brings lower prices and wide prosperity, even if some people lose out. The key question is who gains and who loses."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Debate: winners and losers of globalization"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here are examples. Winners include many in China lifted out of poverty. Losers include US factory workers in hard-hit towns, and many Chinese state-factory workers who were laid off in the 1990s."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Gains: about 500 million Chinese people out of poverty by 2004; the economists' argument of lower prices.\nLosses: a well-known study counted 1 million lost US factory jobs by 2011; about 35 million Chinese state-factory workers laid off 1995-2001."
+   },
+   "cite": [
+    "s8",
+    "s23",
+    "s26"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "According to that study, where were the US job losses concentrated?",
+    "right": "In particular towns and cities hit by imports",
+    "wrong": [
+     "Evenly across every town",
+     "Only in big banks",
+     "Only in farming areas"
+    ],
+    "why": "The study found losses were heavily concentrated in trade-exposed towns and cities."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the disagreement. Most economists agree some US factory workers lost jobs, but they argue about how many and about the net effect on the whole economy. Some say winners outnumbered losers. Others, like Joseph Francis, say the original job-loss estimate was too high."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "One side: large, lasting harm in some places (David Autor and colleagues).\nOther side: smaller job losses, and net gains for the nation (Cato authors, Joseph Francis)."
+   },
+   "cite": [
+    "s24",
+    "s25",
+    "s28"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which statement is true about economists and the China shock?",
+    "right": "Most agree some workers lost jobs but disagree about how many and about the overall effect",
+    "wrong": [
+     "All agree that no jobs were lost",
+     "All agree that a million jobs were lost",
+     "Economists have never studied it"
+    ],
+    "why": "Sources agree that some manufacturing workers lost jobs. They disagree about scale and net effect."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To place all this in time: by the end of 1990 the first Web server was running, and in October 1990 the Human Genome Project launched. In July 1991 India's reforms began, and in August 1991 the Web software was announced."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1990: first Web server; Human Genome Project launches (Oct)\n1991: India's reforms (July); Web announced (Aug)\n1993: single market (Jan); Web public domain (Apr); EU created (Nov)"
+   },
+   "cite": [
+    "s1",
+    "s11",
+    "s19",
+    "s2",
+    "s32"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the early 2000s. In September 2001 came the attacks. On 11 December 2001 China joined the WTO. On 1 January 2002 euro cash arrived. Then, in spring 2003, Iraq was invaded and the human genome sequence was declared complete."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Sept 2001: attacks of 9/11\n11 Dec 2001: China joins the WTO\n1 Jan 2002: euro notes and coins\n20 Mar 2003: invasion of Iraq begins\n14 Apr 2003: Human Genome Project completed"
+   },
+   "cite": [
+    "s9",
+    "s13",
+    "s18",
+    "s20",
+    "s27"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "In 2003, which came first?",
+    "right": "The invasion of Iraq began, then the genome project was completed",
+    "wrong": [
+     "The genome project was completed, then Iraq was invaded",
+     "They happened on the same day",
+     "Both happened in 1999"
+    ],
+    "why": "The invasion began on 20 March 2003, and the Human Genome Project was announced complete on 14 April 2003."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let us recap. The Web and mobile phones linked people. China and India opened up and grew. 9/11 and the wars changed politics. The EU built a single market and a currency. And we saw that gains and losses fell on different people."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Web and phones\nChina and India\n9/11 and the wars\nEU and the euro\nWho gained, who lost?"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which happened first?",
+    "right": "India's major reforms in 1991",
+    "wrong": [
+     "The EU was created in 1993",
+     "China joined the WTO in 2001",
+     "Euro cash appeared in 2002"
+    ],
+    "why": "India's reforms began in 1991, then the EU in 1993, China's WTO entry in 2001, and euro cash in 2002."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Well done. You covered a lot today. Next is class 62, 2008 to today, where we pick up the story and come close to the present."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: 2008 to Today"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Mobile cellular subscriptions worldwide (billions)",
+   "rows": [
+    {
+     "label": "2000",
+     "value": 0.738,
+     "source": "s4"
+    },
+    {
+     "label": "End of 2009 (around)",
+     "value": 4.6,
+     "source": "s6"
+    },
+    {
+     "label": "End of 2010 (ITU estimate)",
+     "value": 5.3,
+     "source": "s5"
+    },
+    {
+     "label": "End of 2015 (more than 7)",
+     "value": 7,
+     "source": "s4"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "People using the Internet (% of world population)",
+   "rows": [
+    {
+     "label": "2000",
+     "value": 6.5,
+     "source": "s4"
+    },
+    {
+     "label": "2015",
+     "value": 43,
+     "source": "s4"
+    }
+   ]
+  },
+  {
+   "id": "c3",
+   "kind": "bar",
+   "title": "Share of Chinese people below the World Bank's $1-a-day line (%)",
+   "rows": [
+    {
+     "label": "1981",
+     "value": 64,
+     "source": "s8"
+    },
+    {
+     "label": "2004",
+     "value": 10,
+     "source": "s8"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "World Wide Web and the Internet",
+   "links": [
+    "[[20th-Century Science and Technology]]",
+    "[[2008 to Today]]"
+   ]
+  },
+  {
+   "topic": "China's economic rise",
+   "links": [
+    "[[Imperialism: Africa, India, China and Japan]]",
+    "[[The End of the Cold War]]"
+   ]
+  },
+  {
+   "topic": "India's 1991 reforms",
+   "links": [
+    "[[A New World Order: The UN, the Cold War and Decolonization]]",
+    "[[Imperialism: Africa, India, China and Japan]]"
+   ]
+  },
+  {
+   "topic": "September 11 and the war on terror",
+   "links": [
+    "[[The End of the Cold War]]",
+    "[[2008 to Today]]"
+   ]
+  },
+  {
+   "topic": "European Union and the euro",
+   "links": [
+    "[[World War II]]",
+    "[[A New World Order: The UN, the Cold War and Decolonization]]"
+   ]
+  },
+  {
+   "topic": "Winners and losers of globalization",
+   "links": [
+    "[[The Industrial Revolution]]",
+    "[[2008 to Today]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "1990",
+   "elsewhere": "By the end of the year the first Web server and browser were running at CERN. In October the international Human Genome Project was launched.",
+   "cite": [
+    "s1",
+    "s32"
+   ]
+  },
+  {
+   "when": "1991",
+   "elsewhere": "In July India began its major economic reforms. In August Berners-Lee announced the Web software on Internet newsgroups.",
+   "cite": [
+    "s11",
+    "s1"
+   ]
+  },
+  {
+   "when": "1992-1993",
+   "elsewhere": "The Maastricht Treaty was signed on 7 February 1992. The single market began on 1 January 1993, and the Web software entered the public domain on 30 April 1993. The EU was created on 1 November 1993.",
+   "cite": [
+    "s19",
+    "s2"
+   ]
+  },
+  {
+   "when": "1994",
+   "elsewhere": "Berners-Lee left CERN for MIT and founded the World Wide Web Consortium.",
+   "cite": [
+    "s1"
+   ]
+  },
+  {
+   "when": "1995-2001",
+   "elsewhere": "About 35 million Chinese state-enterprise workers were laid off, a period that included the 1998 restructuring before China joined the WTO.",
+   "cite": [
+    "s26"
+   ]
+  },
+  {
+   "when": "1999",
+   "elsewhere": "The euro was launched on 1 January in 11 countries for business and finance.",
+   "cite": [
+    "s19"
+   ]
+  },
+  {
+   "when": "2001",
+   "elsewhere": "On 11 September came the 9/11 attacks. On 11 December China became the WTO's 143rd member.",
+   "cite": [
+    "s13",
+    "s9"
+   ]
+  },
+  {
+   "when": "2002",
+   "elsewhere": "Euro notes and coins appeared on 1 January.",
+   "cite": [
+    "s20"
+   ]
+  },
+  {
+   "when": "2003",
+   "elsewhere": "The invasion of Iraq began on 20 March. The Human Genome Project was announced complete on 14 April.",
+   "cite": [
+    "s18",
+    "s27"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Trade with China created more winners than losers.",
+   "other_view": "Cato Institute authors say winners outnumbered losers in the US. They also say most economists agree on this. David Autor and colleagues found large, lasting job losses in some places. Joseph Francis argues a 2022 correction roughly halved the original estimate. Scholars summarized by CSIS find mixed results on the net effect.",
+   "cite": [
+    "s24",
+    "s23",
+    "s25",
+    "s28"
+   ]
+  },
+  {
+   "claim": "India's reforms began in 1991.",
+   "other_view": "The Asian Development Bank says reforms began in earnest in July 1991, but liberalization can be traced to the late 1970s. It adds that reform continued in a stop-go fashion rather than in one burst.",
+   "cite": [
+    "s11"
+   ]
+  },
+  {
+   "claim": "The Iraq invasion was justified by weapons of mass destruction.",
+   "other_view": "The coalition's stated aims included disarming Iraq and freeing the Iraqi people. Inspectors found no evidence of such weapons. A 2005 US commission found prewar judgments were wrong. Historians surveyed by the Council on Foreign Relations say Hussein hid that he had disbanded his programs. Millions protested before the invasion and some allies opposed it.",
+   "cite": [
+    "s16",
+    "s17",
+    "s18"
+   ]
+  },
+  {
+   "claim": "China's joining the WTO was a clear victory for free trade.",
+   "other_view": "It was widely welcomed as a victory for free trade. Some people inside China felt the commitments amounted to selling the farm. Later critics blamed it for shocks to workers elsewhere.",
+   "cite": [
+    "s10",
+    "s30",
+    "s23"
+   ]
+  },
+  {
+   "claim": "The EU was a smooth step toward unity.",
+   "other_view": "Ratification was difficult. Danish and British voters gave their assent reluctantly in 1993, which led to Danish opt-outs.",
+   "cite": [
+    "s29"
+   ]
+  },
+  {
+   "claim": "The 9/11 death toll is nearly 3,000.",
+   "other_view": "The museum uses nearly 3,000. Britannica says more than 3,000 died in the attacks and rescue efforts. Counts differ by what they include. Illness deaths since then are counted separately.",
+   "cite": [
+    "s13",
+    "s31"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,268 @@
+{
+ "course_id": "religions-of-the-world",
+ "title": "Religions of the World, Large and Small",
+ "audience": [
+  "high school",
+  "adult"
+ ],
+ "length_note": "17 classes, about 8 hours in total. Class 1 sets the ground rules. Classes 2 to 5 cover the traditions that began in South Asia. Classes 6 to 10 cover the Abrahamic traditions and their neighbours in West Asia. Classes 11 and 12 cover East Asia. Classes 13 to 15 cover Indigenous and traditional religions, which get three classes so they are not squeezed into an afterthought. Class 16 covers newer movements and non-religious worldviews. Class 17 pulls the course together. Each class is 20 to 35 minutes, so a learner can finish it in one sitting, or in short pieces with breaks, without getting tired. The largest and most varied traditions (Christianity, Hinduism, Buddhism, Islam, Judaism) get the longest classes. Smaller traditions are grouped only where they share a region or history, so each one still gets real attention. Every class describes each tradition as its own followers and scholars do, covering beliefs, practices, history, holidays and where it is practised today. No class ranks religions or says which is true. Every class needs sourced research, including numbers and dates, before the lesson is written.",
+ "classes": [
+  {
+   "n": 1,
+   "title": "How to Learn About Religions Respectfully",
+   "goal": "Explain the difference between describing a belief and endorsing it. Use the course's basic vocabulary. Know the five questions asked about every tradition: beliefs, practices, history, holidays, where practised today.",
+   "minutes": 20,
+   "topics": [
+    "Describing, not judging: how this course works",
+    "Insider and outsider views",
+    "Words we will use: belief, practice, scripture, ritual, community, denomination",
+    "Why size does not equal importance",
+    "Why there is no ranking and no verdict on truth",
+    "How religious calendars differ from each other"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 2,
+   "title": "Hinduism",
+   "goal": "Describe the main ideas, texts, practices and festivals of Hinduism. Explain why Hindus themselves describe it as diverse, and say where it is practised today.",
+   "minutes": 30,
+   "topics": [
+    "Origins and history as Hindus and scholars describe them",
+    "Key ideas: dharma, karma, rebirth, liberation",
+    "Texts such as the Vedas and the Bhagavad Gita",
+    "Many paths and many ways of understanding the divine",
+    "Worship at home and in temples, pilgrimage",
+    "Festivals such as Diwali and Holi",
+    "Where Hindus live today"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 3,
+   "title": "Jainism",
+   "goal": "Describe Jain beliefs and practices, especially non-violence. Name key Jain festivals and say where Jains live today.",
+   "minutes": 25,
+   "topics": [
+    "History and the teachers called Tirthankaras",
+    "Non-violence (ahimsa) and its everyday forms",
+    "Karma, the soul and liberation",
+    "Main traditions within Jainism",
+    "Fasting, temples and festivals such as Paryushana",
+    "Where Jains live today"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 4,
+   "title": "Buddhism",
+   "goal": "Describe the Buddha's life as Buddhists tell it and the core teachings. Tell apart the main Buddhist traditions and say where each is practised.",
+   "minutes": 30,
+   "topics": [
+    "The life of the Buddha",
+    "The Four Noble Truths and the Eightfold Path",
+    "Main traditions: Theravada, Mahayana, Vajrayana",
+    "Meditation, monastic life and lay practice",
+    "Festivals such as Vesak",
+    "Where Buddhists live today"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 5,
+   "title": "Sikhism",
+   "goal": "Describe the Sikh Gurus, core beliefs, the Guru Granth Sahib, and Sikh practices such as the langar. Say where Sikhs live today.",
+   "minutes": 25,
+   "topics": [
+    "The ten Gurus and the founding of Sikhism",
+    "Core beliefs: one God, equality, service",
+    "The Guru Granth Sahib",
+    "The gurdwara and the langar (community kitchen)",
+    "The Khalsa and the Five Ks",
+    "Festivals such as Vaisakhi",
+    "Where Sikhs live today"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 6,
+   "title": "Judaism",
+   "goal": "Describe the main beliefs, texts, practices and festivals of Judaism. Explain the main Jewish movements and say where Jews live today.",
+   "minutes": 30,
+   "topics": [
+    "History as Jewish tradition and historians describe it",
+    "Torah, Talmud and the role of study",
+    "Shabbat and the Jewish calendar",
+    "Festivals such as Passover, Rosh Hashanah, Yom Kippur",
+    "Movements: Orthodox, Conservative, Reform and others",
+    "Jewish communities around the world today"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 7,
+   "title": "Christianity",
+   "goal": "Describe the central beliefs and practices shared by many Christians. Name the major branches and how they differ. Say where Christians live today.",
+   "minutes": 35,
+   "topics": [
+    "The life and teaching of Jesus as Christians understand them",
+    "The Bible and its use",
+    "Branches: Catholic, Orthodox, Protestant, and others",
+    "Worship, sacraments and prayer",
+    "Festivals such as Christmas and Easter, and how calendars differ",
+    "Where Christians live today"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 8,
+   "title": "Islam",
+   "goal": "Describe the beliefs, the Five Pillars and the main branches of Islam. Name key festivals and say where Muslims live today.",
+   "minutes": 30,
+   "topics": [
+    "The life of the Prophet Muhammad as Muslims tell it",
+    "The Quran and the Hadith",
+    "The Five Pillars",
+    "Sunni and Shia Islam, and Sufism",
+    "Ramadan, Eid al-Fitr and Eid al-Adha",
+    "Where Muslims live today"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 9,
+   "title": "Zoroastrianism and the Baháʼí Faith",
+   "goal": "Describe the beliefs, practices and festivals of these two traditions of Iranian origin. Say where followers live today.",
+   "minutes": 30,
+   "topics": [
+    "Zoroastrianism: Zarathustra, the Avesta, fire temples",
+    "Zoroastrian festivals such as Nowruz, and the Parsi communities",
+    "The Baháʼí Faith: its history and founders",
+    "Baháʼí teachings on the unity of humanity",
+    "Baháʼí practices, calendar and holy days",
+    "Where followers of each live today"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 10,
+   "title": "Smaller Faiths of West Asia: Yazidis, Druze, Mandaeans and Samaritans",
+   "goal": "Describe the main beliefs, practices and history of each of these four communities as they describe themselves. Say where each lives today.",
+   "minutes": 30,
+   "topics": [
+    "Yazidi beliefs, sacred sites and festivals",
+    "Druze beliefs and community life",
+    "Mandaean teachings and the practice of baptism",
+    "Samaritan history, scripture and Passover practice",
+    "Why these communities are small, and how they keep their traditions",
+    "Where each community lives today"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 11,
+   "title": "Chinese Traditions: Confucianism, Daoism and Folk Religion",
+   "goal": "Describe the main ideas and practices of Confucian, Daoist and Chinese folk traditions. Explain how people often combine them, and say where they are practised today.",
+   "minutes": 30,
+   "topics": [
+    "Confucius and the emphasis on family and ethics",
+    "Daoism: the Dao, key texts and temple practice",
+    "Chinese folk religion: ancestors, local deities, festivals",
+    "Festivals such as Lunar New Year, Qingming and Mid-Autumn",
+    "Why many people do not see these as separate religions",
+    "Where these traditions are practised today"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 12,
+   "title": "Shinto and Other Religions of Japan, Korea and Vietnam",
+   "goal": "Describe Shinto and at least three other religions of this region. Name key practices and festivals and say where they are practised today.",
+   "minutes": 30,
+   "topics": [
+    "Shinto: kami, shrines and purification",
+    "Shinto festivals (matsuri) and New Year visits",
+    "Tenrikyo, a religion that began in Japan",
+    "Korean shamanic practice (Muism)",
+    "Cao Dai in Vietnam",
+    "Where these traditions are practised today"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 13,
+   "title": "Traditional Religions of Africa and the African Diaspora",
+   "goal": "Describe some African traditional religions and the traditions that grew from them in the Americas. Explain a few shared themes without treating Africa as one religion.",
+   "minutes": 30,
+   "topics": [
+    "Diversity of African religions, such as Yoruba religion",
+    "Ideas about a creator, spirits and ancestors",
+    "Ritual, music, dance and divination",
+    "Diaspora traditions: Santería, Candomblé, Vodou",
+    "Festivals and community life",
+    "Where these traditions are practised today"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 14,
+   "title": "Indigenous Religions of the Americas and the Arctic",
+   "goal": "Describe a few Indigenous spiritual traditions of the Americas and the Arctic in their own terms. Explain the importance of land and ceremony, and why practices differ between nations.",
+   "minutes": 30,
+   "topics": [
+    "Why there is no single Native American religion",
+    "Land, story and ceremony",
+    "Examples of specific nations' traditions, as described by those nations",
+    "Inuit and Sámi spiritual traditions",
+    "History of restrictions on practice, and revival",
+    "Where these traditions are practised today"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 15,
+   "title": "Indigenous Religions of Australia and the Pacific",
+   "goal": "Describe Aboriginal and Torres Strait Islander spirituality and a few Pacific traditions in their own terms. Explain the roles of story, land and ancestors.",
+   "minutes": 25,
+   "topics": [
+    "Aboriginal and Torres Strait Islander spirituality and the Dreaming",
+    "Connection to Country and ceremony",
+    "Māori beliefs and practices",
+    "Other Polynesian, Melanesian and Micronesian traditions",
+    "Interaction with Christianity and continuing practice",
+    "Where these traditions are practised today"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 16,
+   "title": "Newer Movements and Non-Religious Worldviews",
+   "goal": "Describe several religious movements that began in the last two centuries or were revived in that time. Explain how humanist and other non-religious worldviews fit in the picture.",
+   "minutes": 30,
+   "topics": [
+    "Rastafari",
+    "Modern Paganism, Wicca and Heathenry",
+    "Unitarian Universalism",
+    "Humanism, atheism and agnosticism, in the words of those who hold them",
+    "People who are spiritual but not religious",
+    "Where these groups are found today"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 17,
+   "title": "Putting It Together: Calendars, Sacred Places and Living Side by Side",
+   "goal": "Compare how different traditions mark time and place, and give examples of people of different faiths living and working together. Show you can talk about any tradition respectfully.",
+   "minutes": 25,
+   "topics": [
+    "Religious calendars: lunar, solar, and mixed",
+    "Holidays in different traditions that fall near each other",
+    "Sacred places and pilgrimage",
+    "Interfaith cooperation, and the difficulties",
+    "Where to learn more: asking followers, reading their own sources",
+    "Course review"
+   ],
+   "needs_research": true
+  }
+ ]
+}

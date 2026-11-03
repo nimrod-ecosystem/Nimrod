@@ -1,0 +1,573 @@
+{
+ "about": {
+  "title": "Core and fringe vocabulary",
+  "course": "assistive-tech-and-aac",
+  "class_n": 3,
+  "audience": [
+   "adult"
+  ],
+  "minutes": 25,
+  "length_note": "About 25 minutes. There are 21 short beats and 9 check questions, one idea at a time. That gives time to explain core words, fringe words, why a board needs both, and how to review a vocabulary set. I read search extracts of each source, not every page in full."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Augmentative and Alternative Communication (AAC) - Practice Portal",
+   "publisher": "American Speech-Language-Hearing Association (ASHA)",
+   "date": "n.d.",
+   "link": "https://www.asha.org/practice-portal/professional-issues/augmentative-and-alternative-communication/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Core/Content and Fringe Vocabulary",
+   "publisher": "Children's Treatment Network (Ontario)",
+   "date": "n.d.",
+   "link": "https://www.ctnsy.ca/Program-Services/Augmentative-Communication-Consultation-Services/Core-Content-and-Fringe-Vocabulary.aspx",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "4 things every AAC system needs",
+   "publisher": "AssistiveWare",
+   "date": "n.d.",
+   "link": "https://www.assistiveware.com/learn-aac/4-things-every-robust-aac-has",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Join Together Core & Fringe Vocabulary",
+   "publisher": "PrAACtical AAC",
+   "date": "n.d.",
+   "link": "https://praacticalaac.org/strategy/join-together-core-fringe-vocabulary/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Choosing Words",
+   "publisher": "AAC Community",
+   "date": "n.d.",
+   "link": "https://aaccommunity.net/ccc/choosing-words/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Vocabulary Selection in AAC: Application of Core Vocabulary in Atypical Populations",
+   "publisher": "ASHA Perspectives, SIG 12 (copy hosted by KSHA)",
+   "date": "2016",
+   "link": "https://ksha.org/docs/autism_intervention_handout_3.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Teaching with core words: building blocks for communication",
+   "publisher": "AssistiveWare",
+   "date": "n.d.",
+   "link": "https://www.assistiveware.com/blog/teaching-core-words-building-blocks-communication-and-curriculum",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "The prevalence of relational basic concepts on core vocabulary lists for AAC: is frequency enough?",
+   "publisher": "Augmentative and Alternative Communication (Taylor & Francis)",
+   "date": "2024",
+   "link": "https://www.tandfonline.com/doi/full/10.1080/07434618.2024.2332648",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Hold That Core: When Do You NOT Use a Core Vocabulary Approach?",
+   "publisher": "PrAACtical AAC",
+   "date": "n.d.",
+   "link": "https://praacticalaac.org/praactical/hold-that-core-when-do-you-not-use-a-core-vocabulary-approach/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Personalizing your AAC system and vocabulary",
+   "publisher": "AssistiveWare",
+   "date": "n.d.",
+   "link": "https://www.assistiveware.com/learn-aac/personalize-vocabulary-and-system",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Augmentative and Alternative Communication in Early Intervention",
+   "publisher": "American Speech-Language-Hearing Association (ASHA)",
+   "date": "n.d.",
+   "link": "https://www.asha.org/practice/early-intervention-provider-support/augmentative-and-alternative-communication-in-early-intervention/",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 3. Last time we saw the AAC toolbox. Today we look at what goes inside the tools: the words."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Core and fringe vocabulary"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a plain word. Vocabulary means the words a person can say or choose. On an AAC board or device, it is the words that are there to pick."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Vocabulary: the words a person has available"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Words come in two broad kinds. The first kind is core words: a small set of common words that make up most of what we say."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Core words: common, useful almost anywhere"
+   },
+   "cite": [
+    "s2",
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here are some examples. Go. More. Stop. Help. All done. And small pronouns like 'it'. They are short, and they fit almost any topic."
+   },
+   "show": {
+    "kind": "list",
+    "text": "go; more; stop; help; all done; it"
+   },
+   "cite": [
+    "s11",
+    "s7"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which of these is a core word?",
+    "right": "stop",
+    "wrong": [
+     "Grandma Rosa",
+     "trampoline",
+     "Lake Michigan"
+    ],
+    "why": "'Stop' works in almost any place or topic. The other three name one specific person, thing or place."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "How big is 'most'? Studies suggest a few hundred words cover about 80% of what people say. The exact figure differs a little between studies."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "about 80% of what we say comes from a few hundred core words"
+   },
+   "cite": [
+    "s7",
+    "s6"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So about four words in every five are core. The remaining fifth is where things get personal."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Roughly how much of what we say is core and fringe",
+    "chart": "c1"
+   },
+   "cite": [
+    "s2",
+    "s5"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Roughly what share of what we say is made of core words?",
+    "right": "About four words in five",
+    "wrong": [
+     "About one word in five",
+     "Almost none of it",
+     "Exactly half"
+    ],
+    "why": "Studies find roughly 80% core, with fringe words making up the other 20% or so."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That other fifth is fringe words. These are specific, personal words, tied to one topic, one place or one person."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Fringe words: specific and personal"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Think of names of family, friends and pets. Think of places, favourite foods and favourite shows. Some specific verbs and adjectives count too, like 'leap' or 'delicious'."
+   },
+   "show": {
+    "kind": "list",
+    "text": "names of family, friends, pets; places; favourite foods, characters, topics; specific words like 'leap', 'delicious'"
+   },
+   "cite": [
+    "s2",
+    "s3",
+    "s5"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A family's dog is called Biscuit. Is 'Biscuit' a core or a fringe word?",
+    "right": "Fringe: it is a specific name that matters to one person or family",
+    "wrong": [
+     "Core: because dogs are common",
+     "Core: because it is a short word",
+     "Neither: AAC does not need names"
+    ],
+    "why": "A name is specific and personal, which is what fringe means. AAC systems need these words too."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why are core words so flexible? Take 'go'. Go home. Go away. Let's go! One small word, many jobs, with many people."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A speech bubble saying 'go' with four arrows leading to: home, away, a park, and a bus stop"
+   },
+   "cite": [
+    "s4",
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why is a core word like 'go' so flexible?",
+    "right": "It is not tied to one topic, so it works in many places and with many people",
+    "wrong": [
+     "It is the longest word on a board",
+     "Only one person can use it",
+     "It names a single object"
+    ],
+    "why": "Core words are useful across all environments, so one word can serve many messages."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Fringe is the opposite. 'Biscuit' means one thing to one family. A train fan and a keen cook will each need very different fringe words."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two boards side by side: one with train, station, ticket; one with oven, soup, basil"
+   },
+   "cite": [
+    "s3",
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So a good system needs both. Core words give the frame of a message. Fringe words add the detail. 'I don't want broccoli': 'broccoli' is fringe, the rest is core."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Core (the frame): I, don't, want | Fringe (the detail): broccoli"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In 'I want more pizza', which word is the fringe word?",
+    "right": "pizza",
+    "wrong": [
+     "I",
+     "want",
+     "more"
+    ],
+    "why": "'I', 'want' and 'more' are common words that fit many messages. 'Pizza' is the specific detail."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now picture a board with only nouns: pizza, juice, ball, cat. A person can name things and ask for them. That is about all."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A board of four large pictures: pizza, juice, ball, cat, with nothing else on it"
+   },
+   "cite": [
+    "s2",
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What would be hard to say on that board?",
+    "right": "'Stop, I don't like that'",
+    "wrong": [
+     "Ball",
+     "Juice",
+     "Cat"
+    ],
+    "why": "Single nouns can name or ask for things. Saying stop, not, or like needs other kinds of words, mostly core."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Boards made only of requests have the same limit. Asking for things matters. But a person is more than their requests: they want to comment, refuse, joke and share news."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Nouns tend to dominate AAC vocabulary sets; adding verbs and other word types can increase acceptance and use."
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The reverse also fails. With core words but no names or favourites, a person cannot talk about their own life. Most people do best with mostly core, some fringe, and a few stored phrases."
+   },
+   "show": {
+    "kind": "list",
+    "text": "mostly core words; some fringe for important people, things and activities; a few stored social phrases"
+   },
+   "cite": [
+    "s5",
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "How do boards hold both? One common layout keeps core in a steady spot and swaps the fringe words to match the activity."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A board with a fixed block of core words on the left, and on the right a swappable strip: 'baking' words today, 'football' words tomorrow"
+   },
+   "cite": [
+    "s4",
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In that layout, what stays in the same place?",
+    "right": "The core words",
+    "wrong": [
+     "The fringe words",
+     "Nothing",
+     "Only the food pictures"
+    ],
+    "why": "Core stays constant so it is easy to learn by habit. The fringe changes with the context."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Fringe also changes over time. A person's words shift as their life, age and needs shift, so a good system lets words be added or changed."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Vocabulary changes as life changes"
+   },
+   "cite": [
+    "s1",
+    "s10"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A teenager using AAC starts a new job. What is a sensible step?",
+    "right": "Add the new people, places and work words to the fringe",
+    "wrong": [
+     "Leave it: the board is finished",
+     "Remove the core words to make room",
+     "Wait a year to see if there is a problem"
+    ],
+    "why": "A well-designed system allows vocabulary to change over time, so new people, places and interests can be added."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "You do not have to add every word. Some words can be typed and spoken on the spot. Add the ones likely to come up again."
+   },
+   "show": {
+    "kind": "list",
+    "text": "will it be used again? search for it first; type and speak it if it is a one-off; add it if it will recur"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a skill. When you see a vocabulary set (a board, a page or an app), here are questions to ask."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1 Are there core words like stop, more, help, go, it? 2 Is there more than nouns and requests? 3 Are this person's own people, places and favourites there? 4 Are words in the same place each time? 5 Can it change as life changes? 6 Did the person have a say?"
+   },
+   "cite": [
+    "s1",
+    "s3",
+    "s4",
+    "s10"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's try it. A board has 40 pictures, all foods and toys."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A board of forty small pictures: pizza, cake, juice, teddy, ball, car and similar items, with no small words"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is the best first question to ask about this board?",
+    "right": "Where are words like stop, more and help that work everywhere?",
+    "wrong": [
+     "How colourful are the pictures?",
+     "How many pictures could fit on one page?",
+     "What did the board cost?"
+    ],
+    "why": "All nouns and requests is the common gap. Core words are what let a person say far more."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One caution. Every person is different. A speech-language pathologist can look at one person's needs and help choose and order words. This class is general learning, not clinical advice."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ask a speech-language pathologist about one person's words"
+   },
+   "cite": [
+    "s1",
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To sum up: core words are few, common and flexible. Fringe words are many, specific and personal. A good system has both and grows with the person. Next class: symbol sets and page layouts."
+   },
+   "show": {
+    "kind": "list",
+    "text": "core: common, flexible; fringe: specific, personal; both needed; vocabulary changes over time; ask the six questions"
+   },
+   "cite": [
+    "s2",
+    "s1"
+   ],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "pie",
+   "title": "Roughly how much of what we say is core and fringe (approximate)",
+   "rows": [
+    {
+     "label": "Core words (about)",
+     "value": 80,
+     "source": "s2"
+    },
+    {
+     "label": "Fringe words (about)",
+     "value": 20,
+     "source": "s5"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Core words",
+   "links": [
+    "[[fringe words]]",
+    "[[how to support a communicator]]"
+   ]
+  },
+  {
+   "topic": "Fringe words",
+   "links": [
+    "[[core words]]",
+    "[[symbol sets and page layout]]"
+   ]
+  },
+  {
+   "topic": "Vocabulary changes over time",
+   "links": [
+    "[[getting professional help]]",
+    "[[how to support a communicator]]"
+   ]
+  },
+  {
+   "topic": "Questions to ask about a vocabulary set",
+   "links": [
+    "[[symbol sets and page layout]]",
+    "[[getting professional help]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Core words should be the heart of an AAC vocabulary.",
+   "other_view": "Most experts agree. Some warn against forcing core words when there are urgent needs that fringe words could meet right away. Motivating, personal words can build engagement, and core words can then be modelled around them. Others say the core/fringe split can miss useful words, such as relational words, so lists alone are not enough.",
+   "cite": [
+    "s9",
+    "s8"
+   ]
+  },
+  {
+   "claim": "About 80% of what we say is core, so a few hundred words are enough.",
+   "other_view": "The 80% figure is a rough guide. Studies and word lists differ in size and in who was sampled. Some authors note that core words are not always the most motivating to use. Fringe words, though used less often, are what make a message about the person's own life. One reader comment on a PrAACtical AAC post says that core vocabulary was the last to be lost in semantic dementia, so those patients needed fringe words instead. That is a single anecdote, not research.",
+   "cite": [
+    "s7",
+    "s6",
+    "s9"
+   ]
+  }
+ ]
+}

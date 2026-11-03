@@ -1,0 +1,1190 @@
+{
+ "about": {
+  "title": "Mesopotamia II: Writing, Law and Religion",
+  "course": "early-civilizations",
+  "class_n": 2,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 45,
+  "length_note": "The aim was about 40 minutes. This class runs about 45. It covers five topics, each with a check question. It also gives three objects twice (when made, then when found): the Ur-Nammu law code, the Hammurabi stele and the Ur ziggurat. The Gilgamesh tablets get the same treatment. The class splits cleanly after the law beats if you want two shorter sittings."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "The Evolution of Writing",
+   "publisher": "University of Texas at Austin (Denise Schmandt-Besserat's tokens site)",
+   "date": "undated",
+   "link": "https://sites.utexas.edu/dsb/tokens/the-evolution-of-writing/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Mesopotamian seals and the birth of writing",
+   "publisher": "Language Log, University of Pennsylvania",
+   "date": "undated",
+   "link": "https://languagelog.ldc.upenn.edu/nll/?p=66964",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Cuneiform",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Cuneiform",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "How Cuneiform Evolved: From Uruk Accounts to a Multilingual Script",
+   "publisher": "Mythology Vault",
+   "date": "undated",
+   "link": "https://mythologyvault.com/symbols/artifacts/sumerian-cuneiform-writing-evolution/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Code of Ur-Nammu",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/topic/Code-of-Ur-Nammu",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Code of Ur-Nammu: The Oldest Law Code in the World",
+   "publisher": "World History Encyclopedia",
+   "date": "undated",
+   "link": "https://www.worldhistory.org/Code_of_Ur-Nammu/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "The Ur-Nammu Law Code, the Oldest Known Legal Code",
+   "publisher": "historyofinformation.com",
+   "date": "undated",
+   "link": "https://www.historyofinformation.com/detail.php?id=1884",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Centers of Progress, Pt. 5: Ur (Law)",
+   "publisher": "Human Progress (Cato Institute)",
+   "date": "undated",
+   "link": "https://humanprogress.org/centers-of-progress-pt-5-ur-law/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Diorite or basalt: controversy concerning the world-famous Code of Hammurabi stele in the Louvre",
+   "publisher": "Nature Portfolio",
+   "date": "2026",
+   "link": "https://www.nature.com/articles/s40494-026-02411-z",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "eHammurabi",
+   "publisher": "eHammurabi project",
+   "date": "undated",
+   "link": "https://ehammurabi.org/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Code of Hammurabi (concept page, Wikipedia text)",
+   "publisher": "EPFL GraphSearch",
+   "date": "undated",
+   "link": "https://graphsearch.epfl.ch/en/concept/7604",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Scribes in Ancient Mesopotamia: The Beginning of History",
+   "publisher": "World History Encyclopedia",
+   "date": "undated",
+   "link": "https://www.worldhistory.org/article/249/scribes-in-ancient-mesopotamia/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Mesopotamian Education: Creating the First Written Works in History",
+   "publisher": "World History Encyclopedia",
+   "date": "undated",
+   "link": "https://www.worldhistory.org/article/2203/mesopotamian-education/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Floating calculation in Mesopotamia",
+   "publisher": "arXiv",
+   "date": "undated",
+   "link": "https://arxiv.org/pdf/2302.13607",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "A Gallery of Ziggurats of Ancient Mesopotamia",
+   "publisher": "World History Encyclopedia",
+   "date": "undated",
+   "link": "https://www.worldhistory.org/collection/248/a-gallery-of-ziggurats-of-ancient-mesopotamia/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Ziggurat: Mountains of the Gods",
+   "publisher": "World History Encyclopedia",
+   "date": "undated",
+   "link": "https://www.worldhistory.org/ziggurat/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Ur: The Ziggurat",
+   "publisher": "The Metropolitan Museum of Art",
+   "date": "undated",
+   "link": "https://www.metmuseum.org/essays/ur-the-ziggurat",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Great Ziggurat (Ur)",
+   "publisher": "Madain Project",
+   "date": "undated",
+   "link": "https://madainproject.com/great_ziggurat_(ur)",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Discovering Gilgamesh, the World's First Action Hero",
+   "publisher": "National Geographic",
+   "date": "undated",
+   "link": "https://www.nationalgeographic.com/history/history-magazine/article/history-gilgamesh-epic-discovery",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "George Smith",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/biography/George-Smith-British-Assyriologist",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "The World's Oldest Writing - Religion",
+   "publisher": "Archaeology Magazine",
+   "date": "May/June 2016",
+   "link": "https://www.archaeology.org/issues/213-1605/features/4363-cuneiform-religion",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "The Flood Tablet, relating part of the Epic of Gilgamesh, Neo-Assyrian, Nineveh, Iraq",
+   "publisher": "British Museum Images",
+   "date": "undated",
+   "link": "https://www.bmimages.com/preview.asp?image=00396940001",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "The greatest library in the world was built by this ruthless king",
+   "publisher": "National Geographic",
+   "date": "undated",
+   "link": "https://www.nationalgeographic.com/history/article/ancient-assyria-library-nineveh",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "The discovery of Tomb U-j",
+   "publisher": "The Past",
+   "date": "undated",
+   "link": "https://the-past.com/shorts/the-picture-desk/the-discovery-of-tomb-u-j/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Hieroglyphs on bone, ivory tags of Abydos probably describe goods and localities",
+   "publisher": "Academia.edu",
+   "date": "undated",
+   "link": "https://www.academia.edu/34518277/Hieroglyphs_on_bone_ivory_tags_of_Abydos_probably_describe_goods_and_localities_Possible_link_to_Indus_Script_cipher",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Great Pyramid of Giza",
+   "publisher": "World History Encyclopedia",
+   "date": "undated",
+   "link": "https://www.worldhistory.org/Great_Pyramid_of_Giza/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "Radiocarbon dating of oracle bones of Late Shang period in ancient China",
+   "publisher": "Radiocarbon (Cambridge University Press)",
+   "date": "undated",
+   "link": "https://www.cambridge.org/core/journals/radiocarbon/article/radiocarbon-dating-of-oracle-bones-of-late-shang-period-in-ancient-china/38A7B64D6D538A3A7B96F912BBEE9592",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "The Origins of Chinese Writing",
+   "publisher": "Oxford University Press",
+   "date": "2024-09-26",
+   "link": "https://academic.oup.com/book/58672/chapter/485387630",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "Inscribed tortoiseshell (oracle bone)",
+   "publisher": "Smithsonian's National Museum of Asian Art",
+   "date": "undated",
+   "link": "https://asia-archive.si.edu/learn/for-educators/teaching-china-with-the-smithsonian/explore-by-object/inscribed-tortoise-shell-oracle-bone/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "The royal tombs of Ur reveal Mesopotamia's ancient splendor",
+   "publisher": "National Geographic",
+   "date": "undated",
+   "link": "https://www.nationalgeographic.com/history/history-magazine/article/mesopotamia-ur-royal-tombs",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class two: Mesopotamia, writing, law and religion."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Mesopotamia II: Writing, Law and Religion"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "By the end, you will know how writing began, you will have one law to point to, and you will see how gods shaped a city."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. How cuneiform began and what it was for\n2. An example of Mesopotamian law\n3. How religion shaped city life"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last class we met the first cities, such as Uruk. A big city has a big problem: who owes what to whom?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The problem: keeping track"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Memory runs out. So people used clay. Long before writing, they used small clay tokens in different shapes, and each shape stood for a kind of goods."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A handful of small clay tokens in different shapes, such as cones, discs and balls, laid out on a table."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What did the clay tokens stand for?",
+    "right": "Units of goods, such as measures of grain or animals",
+    "wrong": [
+     "The names of gods",
+     "The days of the week",
+     "Songs and poems"
+    ],
+    "why": "Tokens were a counting and record system. Each shape stood for a type of goods."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next, tokens were sealed inside clay balls, with marks pressed on the outside. About 3200 BCE, flat clay tablets with those marks replaced the balls."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A hollow clay ball with marks pressed into its surface, next to a flat cushion-shaped clay tablet with similar marks."
+   },
+   "cite": [
+    "s1",
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The first big group of tablets comes from Uruk, about 3350 to 3000 BCE. They are mostly accounts: grain, animals, workers."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "3350–3000 BCE"
+   },
+   "cite": [
+    "s2",
+    "s4"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What did the earliest tablets mostly record?",
+    "right": "Amounts of goods, such as grain and animals",
+    "wrong": [
+     "Poems and myths",
+     "Laws for the whole city",
+     "Letters to the gods"
+    ],
+    "why": "Writing began as bookkeeping. Literature came later."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Then writing grew up. Signs began to stand for sounds, first for people's names. Now writing could copy speech."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sound signs = writing can record speech"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why did signs for sounds matter?",
+    "right": "They let writing record spoken words, so it could be used for any subject",
+    "wrong": [
+     "They made tablets smaller",
+     "They replaced the need for scribes",
+     "They let people count faster"
+    ],
+    "why": "Once signs could stand for sounds, writing could cover every part of life, not just counting goods."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The name is cuneiform, which means wedge-shaped writing. Scribes pressed a cut reed into damp clay."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A hand pressing the end of a cut reed into a soft clay tablet, leaving small wedge-shaped marks."
+   },
+   "cite": [
+    "s3",
+    "s4"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What tool made cuneiform marks?",
+    "right": "A cut reed pressed into soft clay",
+    "wrong": [
+     "A brush dipped in ink",
+     "A metal pen on paper",
+     "A hammer on a stone slab only"
+    ],
+    "why": "The wedge shape comes from pressing a reed stylus into damp clay."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Cuneiform was not one language. It wrote Sumerian, Akkadian, Hittite and others. The latest dated tablet found so far is from about 79 or 80 CE."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Sumerian\nAkkadian\nHittite\nHurrian and Elamite"
+   },
+   "cite": [
+    "s4",
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Who did the writing? Scribes. A scribe learned around 600 signs, plus farming, building, maths and religion."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "about 600 signs"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Scribes trained in a school called the edubba, the House of Tablets. Students seem to have started at about eight and finished in their early twenties."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Edubba = House of Tablets"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In class, the teacher wrote on one side of a tablet and the student copied on the other. Beginners practised on small lentil-shaped tablets."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two clay tablets side by side: a small round lentil-shaped practice tablet, and a larger one with the teacher's lines on the left and a student's copy on the right."
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Thousands of student tablets survive, and most come from one city, Nippur. Many are sign practice, and some 10 to 20 percent at school sites are maths."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Most school tablets: Nippur"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does edubba mean?",
+    "right": "House of Tablets",
+    "wrong": [
+     "House of Gods",
+     "Field of Barley",
+     "Hall of Kings"
+    ],
+    "why": "Students wrote on clay tablets, so the school was named after them."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Writing let rulers do something new: write the rules down so people could see them."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Law"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A law code is a written list of rules and punishments. The oldest one that survives is from Ur-Nammu, king of Ur, who ruled about 2112 to 2095 BCE."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Code of Ur-Nammu, written about 2100–2050 BCE"
+   },
+   "cite": [
+    "s6",
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Older codes existed, such as Urukagina's. But we only know them from later mentions, so Ur-Nammu's is the oldest we can actually read."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Oldest we can read: Ur-Nammu"
+   },
+   "cite": [
+    "s8",
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the second date. A tablet of the code was unearthed in Iraq in 1948. Samuel Kramer translated fragments from Nippur in 1952, and more tablets from Ur were translated in 1965."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Written: about 2100–2050 BCE | Found and read: 1948 to 1965 CE"
+   },
+   "cite": [
+    "s6",
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The code has 57 laws, though not all are fully rebuilt. One example: knocking out another man's eye cost half a mina of silver."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "57 laws"
+   },
+   "cite": [
+    "s6",
+    "s8"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Under Ur-Nammu's code, what was the penalty for knocking out a man's eye?",
+    "right": "A payment of silver",
+    "wrong": [
+     "Losing your own eye",
+     "Being sent away from the city",
+     "No penalty at all"
+    ],
+    "why": "The code used money fines for injuries."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Not everything was a fine. Murder, robbery, adultery and rape were still punished by death. The code also covered witchcraft and slaves who ran away."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Fines for injury\nDeath for the worst crimes\nWitchcraft\nSlaves who fled"
+   },
+   "cite": [
+    "s7",
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now Hammurabi, king of Babylon. His laws date to about 1750 BCE, roughly three centuries after Ur-Nammu, and they were written in Akkadian."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Hammurabi: about 1750 BCE"
+   },
+   "cite": [
+    "s11",
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The laws were carved on a tall stone stele. At the top, Hammurabi faces Shamash, the sun god and god of justice."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A tall dark stone pillar. At the top is a carved scene of a king standing before a seated god. Below are many columns of wedge-shaped writing."
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Below the picture are about 4,130 lines of cuneiform. One fifth is a prologue and epilogue, and the rest are the laws."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "about 4,130 lines"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In the prologue, Hammurabi says the gods gave him power to stop the strong from crushing the weak. So the law is tied to religion."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Law given with the gods' blessing"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The laws read like 'if this, then that'. Law 6 says that if a man steals property of a god or the palace, he is put to death. So is anyone who receives the stolen goods."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "If: a man steals from a god or the palace | Then: he is executed, and so is the person who received the goods"
+   },
+   "cite": [
+    "s11",
+    "s10"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Whose property does law 6 protect?",
+    "right": "A god's (the temple's) and the palace's",
+    "wrong": [
+     "Only private farmers'",
+     "Only scribes'",
+     "Only foreign traders'"
+    ],
+    "why": "The law names property of a god or the palace. It shows that temples and palaces held wealth that needed protection."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now when the stele was made. It was set up about 1750 BCE. About 600 years later, in the 12th century BCE, an Elamite ruler carried it off to Susa as plunder."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Made: about 1750 BCE, in Babylonian lands | Carried to Susa: 12th century BCE"
+   },
+   "cite": [
+    "s11",
+    "s10"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "And when it was found. French archaeologists dug it up at Susa, in modern Iran, in 1901. A translation was published in 1902, and the stele is now in the Louvre."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Found: 1901 CE, at Susa (Iran) | Now: the Louvre Museum, Paris"
+   },
+   "cite": [
+    "s9",
+    "s10"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Where was the Hammurabi stele found in 1901?",
+    "right": "At Susa, in modern Iran",
+    "wrong": [
+     "At Babylon, in Iraq",
+     "At Ur, beside the ziggurat",
+     "At Nippur, in a school house"
+    ],
+    "why": "The stele was taken to Susa in ancient times. French archaeologists found it there."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Compare the two. Ur-Nammu's code is the older one, by about three centuries. It leans on fines for injury, while Babylonian law later used the idea of matching the harm."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Ur-Nammu (about 2100 BCE): silver fines for injury | Hammurabi (about 1750 BCE): harm answered with matching harm"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which code is older, and by about how much?",
+    "right": "Ur-Nammu's, by about 300 years",
+    "wrong": [
+     "Hammurabi's, by about 300 years",
+     "Ur-Nammu's, by about 30 years",
+     "They are the same age"
+    ],
+    "why": "Ur-Nammu's code is dated to about 2100 BCE. Hammurabi's is dated to about 1750 BCE."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What do these laws tell us about life? There were slaves and fears of witchcraft. Silver was used as payment. Temples and palaces owned property worth guarding."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Slavery existed\nSilver as payment\nTemples and palaces owned property\nPunishments for the worst crimes"
+   },
+   "cite": [
+    "s5",
+    "s8",
+    "s10"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That brings us to religion. Mesopotamians worshipped many gods, and each city had a patron god."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Gods, temples and priests"
+   },
+   "cite": [
+    "s15",
+    "s16"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The temple was the god's house on earth, and priests looked after the god. At Ur, the god was Nanna, the moon god."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ur's patron god: Nanna, the moon god"
+   },
+   "cite": [
+    "s16",
+    "s30"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The grand temple building was the ziggurat. It was a stepped tower, like an artificial mountain, with the god's temple on top."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A huge stepped tower of brick with three levels, each smaller than the one below. A long staircase leads up to a small temple on top."
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "It was not a church for the public. There were no weekly services. The high priest and clergy made offerings to the god."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Home of the god, not a public church"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was a ziggurat mainly for?",
+    "right": "The earthly home of the city's god, with a temple on top",
+    "wrong": [
+     "A fort for the army",
+     "A school for children",
+     "A market for traders"
+    ],
+    "why": "The ziggurat housed the god, and priests cared for the god there. It was not a place for public services."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Around the ziggurat stood a temple complex. Festivals began there, grain and goods were stored, and scribes worked. So religion, trade and writing met in one place."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Festivals\nStored grain and goods\nScribes at work\nOfferings to the god"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Religion also backed rulers. In the Uruk period the high priest was also the ruler. Later kings said the god supported them, and victories and a rich city were taken as signs the god was pleased."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Rulers ruled with the god's approval"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Ur's great ziggurat was built about 2100 BCE by King Ur-Nammu, for Nanna. He also built ziggurats at Eridu, Uruk and Nippur."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Built: about 2100 BCE, by Ur-Nammu | For: Nanna, the moon god"
+   },
+   "cite": [
+    "s17",
+    "s30"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now when it was found. A traveller named William Loftus first noticed the ruin in 1850. Leonard Woolley dug it out between 1922 and 1934. The upper stages were gone, so Woolley rebuilt them on paper from ancient descriptions. Iraqi antiquities staff later restored the lower stages."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Noticed: 1850 CE | Excavated: 1922–1934 CE"
+   },
+   "cite": [
+    "s18",
+    "s17"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which statement about the Ziggurat of Ur is correct?",
+    "right": "It was built about 2100 BCE, and Woolley's dig began in 1922 CE",
+    "wrong": [
+     "It was built in 1922, and Woolley's dig began about 2100 BCE",
+     "It was built in 1901 and found in 1850",
+     "It was built in 1750 BCE and found in 1948"
+    ],
+    "why": "Two dates matter for a site: when people built it, and when archaeologists found it."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last, stories. A myth is a story about gods and heroes. The most famous Mesopotamian one is about Gilgamesh, a semi-divine king who learns that he must die."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Myths and stories: Gilgamesh"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The fullest version is on 12 broken tablets. The 11th tablet tells how Gilgamesh meets Utnapishtim, who survived a great flood."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "12 tablets"
+   },
+   "cite": [
+    "s20",
+    "s22"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "In the 11th tablet, who does Gilgamesh meet?",
+    "right": "Utnapishtim, who survived a flood",
+    "wrong": [
+     "Hammurabi, the lawgiver",
+     "Nanna, the moon god",
+     "Ur-Nammu, the king of Ur"
+    ],
+    "why": "The 11th tablet, called the Flood Tablet, describes Gilgamesh meeting Utnapishtim."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "When was it written? This full version comes from the library of Ashurbanipal, king of Assyria, who reigned 668 to 627 BCE at Nineveh. The flood story itself is older. Earlier flood tablets predate the earliest known Bible flood text by about a thousand years."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "This copy: 7th century BCE, Nineveh | Flood tale: far older"
+   },
+   "cite": [
+    "s20",
+    "s21"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "And when was it found? Tablets were dug up at Nineveh in the mid-1800s and sent to the British Museum. In November 1872, assistant George Smith read the flood tablet and saw what it was."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Dug up: mid-1800s CE, Nineveh | Read and recognised: November 1872"
+   },
+   "cite": [
+    "s20",
+    "s21",
+    "s19"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Who recognised the flood tablet in 1872?",
+    "right": "George Smith, an assistant at the British Museum",
+    "wrong": [
+     "Leonard Woolley, at Ur",
+     "Samuel Kramer, at Nippur",
+     "Ashurbanipal, in his library"
+    ],
+    "why": "Smith, a self-taught scholar at the British Museum, found and read the Flood Tablet in 1872."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let us put our dates in order. Here they are as years BCE, taking the earliest date of each range."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Dates from this class (years BCE)",
+    "chart": "c1"
+   },
+   "cite": [
+    "s2",
+    "s26",
+    "s6",
+    "s11",
+    "s29"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Meanwhile, beyond Mesopotamia: in Egypt, tags with the earliest known hieroglyphs come from a tomb at Abydos, about 3300 to 3200 BCE. The Great Pyramid was built about 2560 BCE. And in China, oracle bones carry writing from about 1250 BCE."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "c. 3300 BCE Egypt: tags with the earliest hieroglyphs | c. 2560 BCE Egypt: Great Pyramid | c. 1250 BCE China: oracle bones"
+   },
+   "cite": [
+    "s24",
+    "s25",
+    "s26",
+    "s29"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which is older: the Hammurabi stele (about 1750 BCE) or the Shang oracle bones (about 1250 BCE)?",
+    "right": "The Hammurabi stele, by about 500 years",
+    "wrong": [
+     "The oracle bones, by about 500 years",
+     "They are the same age",
+     "The oracle bones, by about 50 years"
+    ],
+    "why": "Going back in BCE years means a bigger number is older. 1750 BCE is older than 1250 BCE."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let us gather it up. Writing began as bookkeeping, and scribes learned it in schools. Kings wrote down laws, and temples and gods shaped the city."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Cuneiform began as accounting, then grew into law and literature\nScribes trained in the edubba\nUr-Nammu's code, then Hammurabi's\nZiggurats and priests served the city's god\nGilgamesh: a king, a flood and the fear of death"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next class: trade, everyday life and empires in Mesopotamia. Well done."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Mesopotamia III: Trade, Everyday Life and Empires"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Dates from this class (years BCE, earliest date of each range)",
+   "rows": [
+    {
+     "label": "Earliest proto-cuneiform tablets, Uruk",
+     "value": 3350,
+     "source": "s2"
+    },
+    {
+     "label": "Great Pyramid of Giza built (about)",
+     "value": 2560,
+     "source": "s26"
+    },
+    {
+     "label": "Ur-Nammu's reign begins (ziggurat and law code)",
+     "value": 2112,
+     "source": "s6"
+    },
+    {
+     "label": "Hammurabi's stele made (about)",
+     "value": 1750,
+     "source": "s11"
+    },
+    {
+     "label": "Shang oracle bone writing",
+     "value": 1250,
+     "source": "s29"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Cuneiform and the first writing",
+   "links": [
+    "[[Mesopotamia I: Rivers, Farms and the First Cities]]",
+    "[[Egypt II: Hieroglyphs, Religion and Law]]",
+    "[[The Indus Valley II: Script, Beliefs, Trade and Change]]"
+   ]
+  },
+  {
+   "topic": "Scribes and schools (edubba)",
+   "links": [
+    "[[Mesopotamia III: Trade, Everyday Life and Empires]]"
+   ]
+  },
+  {
+   "topic": "Law codes: Ur-Nammu and Hammurabi",
+   "links": [
+    "[[Egypt II: Hieroglyphs, Religion and Law]]",
+    "[[Early China II: Zhou Rule, Ritual, Trade and Daily Life]]"
+   ]
+  },
+  {
+   "topic": "Ziggurats, gods and priests",
+   "links": [
+    "[[Mesopotamia III: Trade, Everyday Life and Empires]]",
+    "[[Egypt II: Hieroglyphs, Religion and Law]]"
+   ]
+  },
+  {
+   "topic": "Epic of Gilgamesh",
+   "links": [
+    "[[Putting It All Together: Compare, Connect and Place on One Timeline]]"
+   ]
+  },
+  {
+   "topic": "Sites given twice (built, then found): Ur ziggurat, Hammurabi stele, Nineveh tablets",
+   "links": [
+    "[[Putting It All Together: Compare, Connect and Place on One Timeline]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "c. 3350–3000 BCE (first tablets at Uruk)",
+   "elsewhere": "In Egypt, bone and ivory tags with the earliest known hieroglyphs were placed in a royal tomb at Abydos, dated to about 3320–3150 BCE. Both writing systems began as ways to label and count goods. The date ranges overlap, so this lesson does not say which came first.",
+   "cite": [
+    "s2",
+    "s24",
+    "s25"
+   ]
+  },
+  {
+   "when": "c. 2560 BCE (scribal schools already running; Great Pyramid built)",
+   "elsewhere": "In Egypt, King Khufu's Great Pyramid at Giza was built, and it was a tomb. The Mesopotamian scribal school system is thought to have been in place before about 2350 BCE.",
+   "cite": [
+    "s26",
+    "s13"
+   ]
+  },
+  {
+   "when": "c. 2100 BCE (Ur-Nammu's ziggurat and law code)",
+   "elsewhere": "By then the Great Pyramid at Giza was already about 450 years old. Mesopotamian kings were building brick temple towers while Egyptian kings had long been building stone pyramid tombs.",
+   "cite": [
+    "s26",
+    "s17"
+   ]
+  },
+  {
+   "when": "c. 1250 BCE (about 500 years after Hammurabi)",
+   "elsewhere": "In China, the Late Shang court at Anyang used oracle bones: ox bones and turtle shells inscribed with questions to royal ancestor spirits. This is the earliest large body of Chinese writing.",
+   "cite": [
+    "s27",
+    "s29"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Writing grew straight out of clay tokens.",
+   "other_view": "The token story is well known, and writers such as Denise Schmandt-Besserat have championed it. Other scholars agree that accounting drove early cuneiform. But they doubt that the token shapes were the direct ancestor of the signs on the earliest tablets.",
+   "cite": [
+    "s1",
+    "s2"
+   ]
+  },
+  {
+   "claim": "King Ur-Nammu wrote the Code of Ur-Nammu.",
+   "other_view": "The prologue credits Ur-Nammu. Some historians think the code belongs to his son Shulgi, and that it was credited to the father later.",
+   "cite": [
+    "s5",
+    "s7"
+   ]
+  },
+  {
+   "claim": "The Code of Ur-Nammu is the oldest law code in the world.",
+   "other_view": "It is the oldest law code whose text survives. An earlier code, Urukagina's from about the 24th century BCE, is known only from later references, so we cannot read it.",
+   "cite": [
+    "s8",
+    "s6"
+   ]
+  },
+  {
+   "claim": "Hammurabi's 'code' was a set of laws that courts followed.",
+   "other_view": "Outside the field, it is treated as a true legal code. Among Assyriologists there is debate about its purpose, its principles and how it relates to earlier and later law collections.",
+   "cite": [
+    "s11"
+   ]
+  },
+  {
+   "claim": "The Ziggurat of Ur today is what Ur-Nammu built.",
+   "other_view": "The upper stages did not survive. Woolley reconstructed Ur-Nammu's building from ancient descriptions, and Iraqi antiquities staff later restored the lower stages. What visitors see is partly modern work on an ancient core.",
+   "cite": [
+    "s17"
+   ]
+  },
+  {
+   "claim": "Writing in China began with the Shang oracle bones.",
+   "other_view": "This is the usual story, but one scholar calls it only partly true. Earlier signs that may relate to the origins of writing appear in the Late Neolithic, about 3000–2000 BCE. By 1250 BCE the Shang script was already a full writing system.",
+   "cite": [
+    "s28"
+   ]
+  }
+ ]
+}

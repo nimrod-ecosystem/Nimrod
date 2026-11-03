@@ -1,0 +1,1122 @@
+{
+ "about": {
+  "title": "Our species, our cousins: Homo sapiens, Neanderthals and Denisovans",
+  "course": "prehistory",
+  "class_n": 6,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. This class has six topics, two real disagreements, and four sites that each need two dates. The DNA beats and the two debates are the slowest parts. If you need a break, pause after the 'Two models of origin' beats, then after the Neanderthal DNA beats."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "New fossils from Jebel Irhoud, Morocco and the pan-African origin of Homo sapiens",
+   "publisher": "Nature (Hublin et al.)",
+   "date": "2017-06-08",
+   "link": "https://www.nature.com/articles/nature22336",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "The first of our kind: scientists discover the oldest Homo sapiens fossils at Jebel Irhoud, Morocco",
+   "publisher": "Max Planck Institute for Evolutionary Anthropology",
+   "date": "2017-06-07",
+   "link": "https://www.eva.mpg.de/press/news/2017/2017-06-07-the-first-of-our-kind/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Scientists discover the oldest Homo sapiens fossils at Jebel Irhoud, Morocco",
+   "publisher": "Phys.org (Max Planck press material)",
+   "date": "2017-06-07",
+   "link": "https://phys.org/news/2017-06-scientists-oldest-homo-sapiens-fossils.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "World's oldest Homo sapiens fossils found in Morocco",
+   "publisher": "Science (AAAS) news",
+   "date": "2017",
+   "link": "https://www.science.org/content/article/world-s-oldest-homo-sapiens-fossils-found-morocco",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Oldest members of our species discovered in Morocco",
+   "publisher": "Science (AAAS)",
+   "date": "2017",
+   "link": "https://www.science.org/doi/10.1126/science.356.6342.993",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Homo neanderthalensis",
+   "publisher": "Smithsonian Human Origins Program",
+   "date": "n.d.",
+   "link": "https://humanorigins.si.edu/evidence/human-fossils/species/homo-neanderthalensis",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Ancient DNA and Neanderthals",
+   "publisher": "Smithsonian Human Origins Program",
+   "date": "n.d.",
+   "link": "https://humanorigins.si.edu/evidence/genetics/ancient-dna-and-neanderthals",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "The Neanderthal Genome",
+   "publisher": "Smithsonian Human Origins Program",
+   "date": "n.d.",
+   "link": "https://humanorigins.si.edu/research/whats-hot-human-origins/neanderthal-genome",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Shanidar 3 - Neanderthal Skeleton",
+   "publisher": "Smithsonian Human Origins Program",
+   "date": "n.d.",
+   "link": "https://humanorigins.si.edu/evidence/human-fossils/shanidar-3-neanderthal-skeleton",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Neanderthal Composite Skeleton",
+   "publisher": "Smithsonian Human Origins Program",
+   "date": "n.d.",
+   "link": "https://humanorigins.si.edu/evidence/human-fossils/fossils/neanderthal-composite-skeleton",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Key facts about human origins",
+   "publisher": "Smithsonian Institution",
+   "date": "n.d.",
+   "link": "https://www.si.edu/stories/human-origins-facts",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Entire genome of extinct human decoded from fossil",
+   "publisher": "Max Planck Society",
+   "date": "n.d.",
+   "link": "https://www.mpg.de/5018269/denisovan-genome",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Denisovan",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Denisovan",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Denisovans: The enigmatic ancient humans who finally have a face",
+   "publisher": "Natural History Museum, London",
+   "date": "n.d.",
+   "link": "https://www.nhm.ac.uk/discover/denisovans.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Denisovan DNA",
+   "publisher": "Becoming Human (Institute of Human Origins, Arizona State University)",
+   "date": "n.d.",
+   "link": "https://becominghuman.org/pathways-to-discovery/our-genetic-past-and-future/denisovan-dna/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Deciphering the Denisovans",
+   "publisher": "Proceedings of the National Academy of Sciences (PNAS)",
+   "date": "n.d.",
+   "link": "https://www.pnas.org/doi/10.1073/pnas.1522477112",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "The way we have been thinking about the first modern humans in Africa could be wrong",
+   "publisher": "Natural History Museum, London",
+   "date": "2018-07-11",
+   "link": "https://www.nhm.ac.uk/discover/news/2018/july/the-way-we-think-about-the-first-modern-humans-in-africa.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "New Thoughts on Human Evolution",
+   "publisher": "Archaeology Magazine (Archaeological Institute of America)",
+   "date": "2018-07-11",
+   "link": "https://archaeology.org/news/2018/07/11/180711-evolution-african-multiregionalism/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "When and where did our species originate?",
+   "publisher": "The Australian Museum",
+   "date": "n.d.",
+   "link": "https://australian.museum/learn/science/human-evolution/when-and-where-did-our-species-originate/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Pan-Africanism vs. single-origin of Homo sapiens: Putting the debate in the light of evolutionary biology",
+   "publisher": "Evolutionary Anthropology (Wiley), Meneganzin et al.",
+   "date": "2022",
+   "link": "https://onlinelibrary.wiley.com/doi/10.1002/evan.21955",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "How Neanderthal DNA Helps Humanity",
+   "publisher": "Quanta Magazine",
+   "date": "2016-05-26",
+   "link": "https://www.quantamagazine.org/how-neanderthal-dna-helps-humanity-20160526/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Here's What We Know About Neanderthals So Far",
+   "publisher": "Smithsonian Magazine",
+   "date": "n.d.",
+   "link": "https://www.smithsonianmag.com/science-nature/heres-what-we-now-know-about-neanderthals-180983344/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Neanderthal",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Neanderthal",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "A simple analytical model for Neanderthal disappearance due to genetic dilution by recurrent small-scale immigrations of modern humans",
+   "publisher": "Scientific Reports (Nature Portfolio)",
+   "date": "2025",
+   "link": "https://www.nature.com/articles/s41598-025-22376-6",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Neanderthal Extinction by Competitive Exclusion",
+   "publisher": "PLoS ONE",
+   "date": "2008",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2600607/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "The Neanderthals may have become extinct because of their isolated lifestyle",
+   "publisher": "ScienceDaily (University of Copenhagen, Globe Institute)",
+   "date": "2024-09-11",
+   "link": "https://www.sciencedaily.com/releases/2024/09/240911112132.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "Inbreeding, Allee effects and stochasticity might be sufficient to account for Neanderthal extinction",
+   "publisher": "PLoS ONE (via PubMed Central)",
+   "date": "n.d.",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6880983/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "New archaeology dives into the mysterious demise of the Neanderthals",
+   "publisher": "European Commission, Horizon Magazine",
+   "date": "n.d.",
+   "link": "https://projects.research-and-innovation.ec.europa.eu/en/horizon-magazine/new-archaeology-dives-mysterious-demise-neanderthals",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "Introducing Jebel Irhoud",
+   "publisher": "FutureLearn, Human Fossils course",
+   "date": "n.d.",
+   "link": "https://www.futurelearn.com/info/courses/human-fossils/0/steps/49027",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "You may have more Neanderthal DNA than you think",
+   "publisher": "National Geographic",
+   "date": "n.d.",
+   "link": "https://www.nationalgeographic.com/science/article/more-neanderthal-dna-than-you-think",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s31",
+   "title": "The spread and disappearance of the Neanderthals",
+   "publisher": "Naturhistorisches Museum Zürich (University of Zurich)",
+   "date": "n.d.",
+   "link": "https://www.nmz.uzh.ch/en/permanentexhibition/NMZ_2024/neanderthaler.html",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome. Today we meet two groups of human cousins, the Neanderthals and the Denisovans. Then we ask where our own species came from."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Our species, our cousins"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is a surprise to start. Seventy thousand years ago we were not alone. At least four kinds of human were alive."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "dot",
+    "count": 4,
+    "layout": "group",
+    "text": "Four human species: Homo luzonensis, Homo floresiensis, Homo neanderthalensis, Homo sapiens"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "About 70,000 years ago, how many human species were alive?",
+    "right": "At least four",
+    "wrong": [
+     "Only one: us",
+     "Exactly two",
+     "Hundreds"
+    ],
+    "why": "The Smithsonian says that just 70,000 years ago there were at least four human species on Earth."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's meet the closest cousin first. Neanderthals are our closest extinct human relative. The first fossils called Neanderthal were found in 1856, in Germany's Neander Valley."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Neanderthals"
+   },
+   "cite": [
+    "s6",
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Their bodies were built for the cold. Short and stocky, with shorter lower arms and legs. That shape helps hold heat in."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A reconstructed Neanderthal skeleton: a broad chest and short lower arm and leg bones, shown next to a taller, leaner skeleton of an earlier human."
+   },
+   "cite": [
+    "s6",
+    "s10"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why would a short, broad body help in an Ice Age winter?",
+    "right": "It helps the body keep its heat in",
+    "wrong": [
+     "It makes running faster",
+     "It makes the body lighter",
+     "It helps with swimming"
+    ],
+    "why": "The Smithsonian explains that a short, broad body shape retains heat, which is useful in cold places."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now their tools. The style is called Mousterian. The maker first prepared a stone core, then struck off flakes of a planned shape."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Mousterian: flakes struck from a prepared core"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Those flakes did real work. Scrapers cleaned animal hides. Awls punched holes so strips could lace hides into loose clothing."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Scraper: cleans a hide; Awl: pokes holes in a hide; Thrusting spear: used for hunting large animals"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What was a scraper used for?",
+    "right": "Cleaning an animal hide",
+    "wrong": [
+     "Cutting down trees",
+     "Digging graves",
+     "Lighting fires"
+    ],
+    "why": "The Smithsonian says a Neanderthal would probably use a scraper first to clean a hide, then an awl to make holes."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Where did they live? Across Europe and from south-west to central Asia, from about 400,000 to 40,000 years ago. In warm spells they reached northern Germany."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A map of Europe and western to central Asia shaded as Neanderthal range, with the Neander Valley (Germany) and Shanidar Cave (Iraq) marked."
+   },
+   "cite": [
+    "s6",
+    "s31"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One famous Neanderthal place is Shanidar Cave, in Iraq. Caves are not built, so we give two dates: when people lived there, and when scientists found them."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "45,000 to 35,000 years ago: Shanidar 3 lived; 1953 to 1960: ten Neanderthals dug out of the cave; 1957: Shanidar 3 found"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The cave held tools, hearths and signs of purposeful burial. But be careful. The museum says Shanidar 3 may have been buried by his group, or covered by a rock fall."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Buried by his group | Covered by a rock fall from the cave roof. The evidence cannot settle it."
+   },
+   "cite": [
+    "s9",
+    "s23"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is a fair summary of how Shanidar 3 came to be buried?",
+    "right": "Either his group buried him or a rock fall covered him; it is not certain",
+    "wrong": [
+     "Proven: a ceremony by Homo sapiens",
+     "Proven: a rock fall only",
+     "Proven: he was placed in a grave with gifts"
+    ],
+    "why": "The Smithsonian says he may have been buried by members of his group or by a rock fall from the cave roof."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a cousin we first met through DNA. In 2008, diggers in Denisova Cave, in southern Siberia, found a small piece of finger bone."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A tiny fragment of a finger bone, laid on a lab tray, with Denisova Cave in the Altai Mountains of Siberia in the background."
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 2010 the DNA from that bone was published. It matched neither Neanderthals nor us. It came from a group no one knew, now called Denisovans."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Denisovans"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "What told scientists the finger bone came from a new group?",
+    "right": "Its DNA",
+    "wrong": [
+     "Its shape",
+     "The tools lying next to it",
+     "Its colour"
+    ],
+    "why": "The DNA sequences showed the bone came from a previously unknown group of extinct humans."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Denisova Cave also has two dates. People used it from as long as 280,000 years ago. But the world only took notice in 2010."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Up to 280,000 years ago: people begin using the cave; 2008: finger bone dug up; 2010: DNA published and the cave becomes famous. Neanderthals and Homo sapiens used it too."
+   },
+   "cite": [
+    "s12",
+    "s16",
+    "s14"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Denisovans are closer kin to Neanderthals than to us. Their line split off around 300,000 to 400,000 years ago. Yet we have only a handful of their bones."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Closer to Neanderthals than to us; split about 300,000 to 400,000 years ago; known from a handful of finger bones, molars and jaw pieces found in caves in Russia, China and Laos"
+   },
+   "cite": [
+    "s7",
+    "s13"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One jaw came from Baishiya Karst Cave, high on the Tibetan Plateau. The jaw is about 160,000 years old. It was discovered in 1980."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "About 160,000 years ago: the owner of the Xiahe jaw lived; 1980: jaw found at Baishiya Karst Cave; later: Denisovan DNA recovered from the cave sediments, the first outside Denisova Cave"
+   },
+   "cite": [
+    "s13",
+    "s15"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Cousins also mixed with each other. 'Interbred' means had children together. A bone nicknamed Denny, from Denisova Cave, was a first-generation hybrid, about 90,000 years old."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Denny: a Neanderthal-Denisovan hybrid"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What did Denny's DNA show?",
+    "right": "She was the child of one Neanderthal parent and one Denisovan parent",
+    "wrong": [
+     "She was a Homo sapiens",
+     "She was the oldest Denisovan known",
+     "She lived in Africa"
+    ],
+    "why": "DNA in the bone showed she was a first-generation hybrid of Neanderthal and Denisovan."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now our own species, Homo sapiens. The oldest fossils we know come from Jebel Irhoud, in Morocco. They are about 300,000 years old."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 300,000 years ago"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Jebel Irhoud has two dates too. People lived there some 300,000 years ago. Miners found the first skull in 1961, and its true age was only worked out in 2017."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "300,000 to 350,000 years ago: people live at Jebel Irhoud; 1961: miners digging for barite find a skull; 2017: new fossils and new dates published"
+   },
+   "cite": [
+    "s1",
+    "s5",
+    "s29"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why was it missed for so long? The skull was first taken for an African Neanderthal. The mining also carted away rock, so the layers were partly lost. Burnt flint tools gave the new date."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Thought to be a Neanderthal; much rock lost to mining; new dating from burnt flint tools"
+   },
+   "cite": [
+    "s5",
+    "s29"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Who first found the Jebel Irhoud skull?",
+    "right": "Miners digging for the mineral barite",
+    "wrong": [
+     "Archaeologists on a planned dig",
+     "A team studying Neanderthals",
+     "Farmers ploughing a field"
+    ],
+    "why": "Miners searching for barite stumbled on the skull in 1961."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The skulls look like a mix. The face and jaw are modern, like ours. The braincase is long, and the teeth are large, like older humans."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Looks like ours: the face and jaw | Looks older: a long braincase and very large teeth"
+   },
+   "cite": [
+    "s1",
+    "s5"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which part of the Jebel Irhoud fossils looked most like ours?",
+    "right": "The face",
+    "wrong": [
+     "The braincase",
+     "The teeth",
+     "The whole skeleton"
+    ],
+    "why": "The fossils combine a modern-looking face with a more primitive, elongated braincase."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Other early finds lie across Africa. Florisbad, in South Africa, is about 260,000 years old. Omo Kibish, in Ethiopia, is about 195,000."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Oldest known Homo sapiens fossils by site",
+    "chart": "c1"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Which of these three sites has the oldest fossils?",
+    "right": "Jebel Irhoud, Morocco",
+    "wrong": [
+     "Florisbad, South Africa",
+     "Omo Kibish, Ethiopia",
+     "They are all the same age"
+    ],
+    "why": "Jebel Irhoud is about 300 thousand years old, Florisbad about 260 thousand, Omo Kibish about 195 thousand."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That spread across Africa raises a big question. Did our species begin in one place, or many? Experts do not fully agree."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Two models of origin"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, an older debate. Did we begin in Africa and spread, or evolve from local ancestors around the world? DNA studies generally favoured Africa."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Began in Africa, then spread | Evolved from local ancestors across the globe (the 'multiregional' idea)"
+   },
+   "cite": [
+    "s19",
+    "s20"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a newer debate, inside Africa. In 2018, Eleanor Scerri and colleagues argued that no single population or region made us. Many connected groups swapped genes and ideas."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two drawings side by side: a tree with one trunk and many branches, and a braided river whose streams weave into and out of each other."
+   },
+   "cite": [
+    "s17",
+    "s18",
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So, side by side. One view says a single population in one region became us. The pan-African view says several linked African groups did. A middle road is also argued."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Single African origin: one population, one region | Pan-African: many linked populations across Africa. Middle road: an 'extended single African origin'."
+   },
+   "cite": [
+    "s17",
+    "s20"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In the pan-African picture, how did our species arise?",
+    "right": "From several connected African populations that swapped genes and culture",
+    "wrong": [
+     "From one village in East Africa",
+     "From Neanderthals in Europe",
+     "From Denisovans in Asia"
+    ],
+    "why": "Pan-African supporters say our species emerged from admixture among numerous African populations, not a single origin."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Jebel Irhoud team leans this way. They did not say those people were parents of everyone. They saw a large, interbreeding population across a green Sahara."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A map of Africa with a green Sahara, linking North, East and South African early Homo sapiens sites."
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now to the DNA. Neanderthals were the first extinct humans to have their genome decoded. It came from three bones in Vindija Cave, Croatia, about 44,000 years old."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The Neanderthal genome"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Comparing it with living people gave a surprise. Many people with European or Asian ancestry carry a little Neanderthal DNA. Estimates run from about 1 to 4 percent. Many newer ones say 1 to 2."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 1 to 2 percent"
+   },
+   "cite": [
+    "s8",
+    "s21"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "How did it happen? Around 60,000 years ago, early Homo sapiens spread out of Africa. They met Neanderthals and rarely had children with them. Groups that stayed in Africa never met them."
+   },
+   "show": {
+    "kind": "list",
+    "text": "About 60,000 years ago: Homo sapiens spread to Asia and Europe; met Neanderthals; rare interbreeding; groups staying in Africa did not meet them"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "According to the Smithsonian, why would Africans who stayed in Africa have had no first-hand contact with Neanderthals?",
+    "right": "Neanderthals lived in Europe and Asia, and those groups never met them",
+    "wrong": [
+     "Neanderthals refused to meet them",
+     "Neanderthals lived only underwater",
+     "They had no DNA at all"
+    ],
+    "why": "The Smithsonian says Homo sapiens populations that stayed in Africa would never have met Neanderthals."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "But there is a twist. Newer work finds some Neanderthal DNA in Africans too, likely carried back by people who migrated into Africa. Some of the signal may also be a false alarm."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Neanderthal DNA reached Africa indirectly, by migrations back into Africa; one study found about a third as much as in Europeans and Asians; some 'Neanderthal' stretches may be modern-human DNA inside the Neanderthal genome"
+   },
+   "cite": [
+    "s7",
+    "s30"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Denisovan DNA shows up most in Asia and the Pacific. In some island populations it reaches up to about 6 percent."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Share of the genome from other humans (approximate percent)",
+    "chart": "c2"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Which group's DNA reaches up to about 6 percent in some Asian and Oceanic island populations?",
+    "right": "Denisovan DNA",
+    "wrong": [
+     "Neanderthal DNA",
+     "Homo erectus DNA",
+     "No other human DNA at all"
+    ],
+    "why": "Some Asian and Oceanic island populations have as much as 6 percent Denisovan DNA."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Some of this borrowed DNA helped. Tibetans likely got a high-altitude gene from Denisovans. It spread among people living high up."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A Denisovan gene for high altitude"
+   },
+   "cite": [
+    "s21",
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A palaeoanthropologist at London's Natural History Museum put it neatly."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Neanderthals are partly our ancestors, even if we didn't evolve from them. (Chris Stringer)"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "True or false: Homo sapiens evolved from Neanderthals.",
+    "right": "False. We share a common ancestor with them, and some of our DNA is Neanderthal",
+    "wrong": [
+     "True. We descend directly from Neanderthals",
+     "True. Neanderthals came after us",
+     "False. We have no connection at all"
+    ],
+    "why": "The Smithsonian says Neanderthals and modern humans evolved from a common ancestor between 700,000 and 300,000 years ago, and later interbred."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last question. Why did Neanderthals vanish? All traces were gone by about 40,000 years ago. Four main ideas are still argued."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Population decline; changing climate; competition with Homo sapiens; absorption through interbreeding"
+   },
+   "cite": [
+    "s6",
+    "s24"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Idea one is competition. A 2008 study found Neanderthals and our species used similar niches. It argued that our spread, not climate, caused the Neanderthals' range to shrink."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Competition"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Idea two is climate. Some scholars say a changing climate pushed Neanderthals to extinction. A European team said that did not fit Italy."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Climate change"
+   },
+   "cite": [
+    "s28"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Idea three is being few. Neanderthal genomes show small groups and inbreeding. One model says small numbers alone could have been enough."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Small, isolated groups"
+   },
+   "cite": [
+    "s26",
+    "s27"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Idea four is absorption. If small waves of Homo sapiens kept arriving and mixing, Neanderthal DNA could fade into ours. Other factors may also have played a part."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Absorption"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Do scientists agree on why Neanderthals disappeared?",
+    "right": "No. Several explanations are still debated, and more than one may have played a part",
+    "wrong": [
+     "Yes. Climate change alone",
+     "Yes. War alone",
+     "Yes. Disease alone"
+    ],
+    "why": "Researchers describe the disappearance as a subject of intense debate, with several competing hypotheses, and other factors may also have contributed."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's gather it up. Three kinds of human shared the world. DNA shows they mixed. Where our own species began, and why Neanderthals vanished, are still open questions."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Neanderthals: cold-adapted, Mousterian tools; Denisovans: known mainly from DNA; Homo sapiens: at least 300,000 years old, found in Africa; DNA: about 1 to 2 percent Neanderthal outside Africa; Open questions: one origin or many, and why Neanderthals vanished"
+   },
+   "cite": [
+    "s6",
+    "s1",
+    "s12",
+    "s21"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which statement about most people living outside Africa today fits what we learned?",
+    "right": "A small share of their DNA, around 1 to 2 percent, comes from Neanderthals",
+    "wrong": [
+     "None of their DNA comes from any other humans",
+     "Half of their DNA comes from Neanderthals",
+     "All of their DNA comes from Denisovans"
+    ],
+    "why": "Genomes show a small Neanderthal share, about 1 to 2 percent in many estimates, in most people outside Africa."
+   }
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Oldest known Homo sapiens fossils by site (thousand years ago)",
+   "rows": [
+    {
+     "label": "Jebel Irhoud, Morocco",
+     "value": 300,
+     "source": "s3"
+    },
+    {
+     "label": "Florisbad, South Africa",
+     "value": 260,
+     "source": "s3"
+    },
+    {
+     "label": "Omo Kibish, Ethiopia",
+     "value": 195,
+     "source": "s3"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Share of the genome from other humans (approximate percent)",
+   "rows": [
+    {
+     "label": "Neanderthal DNA, non-Africans (estimates 1 to 2; top of range shown)",
+     "value": 2,
+     "source": "s21"
+    },
+    {
+     "label": "Denisovan DNA, highest in some Asian and Oceanic island populations (up to)",
+     "value": 6,
+     "source": "s21"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Homo sapiens origins",
+   "links": [
+    "[[Leaving Africa the first time]]",
+    "[[Spreading across the world]]",
+    "[[How we know: reading the deep past without writing]]"
+   ]
+  },
+  {
+   "topic": "Neanderthal tools (Mousterian)",
+   "links": [
+    "[[The first stone tools]]",
+    "[[Fire and the changing body]]"
+   ]
+  },
+  {
+   "topic": "Ancient DNA",
+   "links": [
+    "[[How we know: reading the deep past without writing]]"
+   ]
+  },
+  {
+   "topic": "Sites in this class: Shanidar Cave, Denisova Cave, Baishiya Karst Cave, Jebel Irhoud",
+   "links": [
+    "[[Leaving Africa the first time]]",
+    "[[Art, symbols and the mind: cave paintings and beyond]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About 300,000 years ago",
+   "elsewhere": "The Sahara was green and early Homo sapiens groups spread across Africa. The Neanderthal line had already split from ours, about 550,000 years ago.",
+   "cite": [
+    "s4",
+    "s7"
+   ]
+  },
+  {
+   "when": "About 200,000 years ago",
+   "elsewhere": "Neanderthals had evolved in Europe by about this time and were enduring winter cold and ice ages. In Ethiopia, Omo Kibish is about 195,000 years old.",
+   "cite": [
+    "s10",
+    "s3"
+   ]
+  },
+  {
+   "when": "About 70,000 years ago",
+   "elsewhere": "At least four human species were alive: Homo luzonensis, Homo floresiensis, Homo neanderthalensis and Homo sapiens.",
+   "cite": [
+    "s11"
+   ]
+  },
+  {
+   "when": "About 60,000 years ago",
+   "elsewhere": "The earliest Homo sapiens populations were spreading from Africa to Asia and Europe, where they met Neanderthals.",
+   "cite": [
+    "s8"
+   ]
+  },
+  {
+   "when": "About 40,000 years ago",
+   "elsewhere": "All traces of Neanderthals had disappeared by about this time.",
+   "cite": [
+    "s6"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Our species arose from a single population in one region of Africa.",
+   "other_view": "Eleanor Scerri, Chris Stringer and colleagues argue that fossils, tools and genes fit a pan-African picture better. In this picture, many linked African populations swapped genes and culture, so our features arose at different times in different places. Other researchers say the real choice is between that view and an 'extended single African origin' with key changes in the braincase. The Jebel Irhoud team itself does not say those people were the direct ancestors of everyone alive.",
+   "cite": [
+    "s17",
+    "s18",
+    "s20",
+    "s4"
+   ]
+  },
+  {
+   "claim": "Neanderthals vanished mainly because Homo sapiens out-competed them.",
+   "other_view": "Some scholars point to climate change instead, though a European team said it did not fit Italy. Others say small, inbred groups could have gone extinct on their own. Others argue they were gradually absorbed by repeated mixing with Homo sapiens, though one paper notes that the model does not prove this alone explains it. Many researchers think several factors combined.",
+   "cite": [
+    "s25",
+    "s28",
+    "s27",
+    "s26",
+    "s24"
+   ]
+  },
+  {
+   "claim": "Neanderthals buried their dead.",
+   "other_view": "The Smithsonian notes that the Shanidar 3 skeleton may have been buried by his group, or may have been covered by a rock fall from the cave roof. Britannica says evidence suggests burial and symbolic behaviour in Neanderthals more generally.",
+   "cite": [
+    "s9",
+    "s23"
+   ]
+  },
+  {
+   "claim": "Only people with ancestry outside Africa carry Neanderthal DNA.",
+   "other_view": "The Smithsonian says Neanderthal DNA reached African-descended people indirectly, through ancient migrations back into Africa. One study found Africans carry about a third as much as Europeans and Asians, but its authors note that some stretches called Neanderthal may really be modern-human DNA inside the Neanderthal genome. Estimates are still being worked out.",
+   "cite": [
+    "s7",
+    "s30"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,1427 @@
+{
+ "about": {
+  "title": "Animals Appear: The Cambrian to Life on Land",
+  "course": "history-of-everything",
+  "class_n": 8,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. This is an estimate from the word count (about 1,800 words read aloud) plus pauses for the pictures and nine check questions. Five topics and a debate fit in half an hour because each idea gets one short step at a time."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Enigmatic Ediacarans",
+   "publisher": "Royal Ontario Museum, The Burgess Shale",
+   "date": "undated",
+   "link": "https://burgess-shale.rom.on.ca/science/origin-of-animals-and-the-cambrian-explosion/enigmatic-ediacarans/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "Discovery of the oldest bilaterian from the Ediacaran of South Australia",
+   "publisher": "PNAS",
+   "date": "2020",
+   "link": "https://www.pnas.org/doi/10.1073/pnas.2001045117",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "567-million-year-old fossils rewrite the dawn of animal life",
+   "publisher": "ScienceDaily",
+   "date": "2026-08-04",
+   "link": "https://www.sciencedaily.com/releases/2026/08/260804034644.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "Did mystery worms cause world's first mass extinction?",
+   "publisher": "Smithsonian Insider",
+   "date": "2015-09",
+   "link": "https://insider.si.edu/2015/09/did-mystery-worms-cause-worlds-first-mass-extinction/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "Mass Extinctions: The Case of the Vanishing Ediacarans",
+   "publisher": "KQED",
+   "date": "undated",
+   "link": "https://www.kqed.org/science/244968/mass-extinctions-the-case-of-the-vanishing-ediacarans",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "Say Hello to Dickinsonia, the Animal Kingdom's Newest (and Oldest) Member",
+   "publisher": "Scientific American",
+   "date": "undated",
+   "link": "https://www.scientificamerican.com/article/say-hello-to-dickinsonia-the-animal-kingdoms-newest-and-oldest-member/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "Food sources for the Ediacara biota communities",
+   "publisher": "PubMed Central (NCBI)",
+   "date": "undated",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7062841/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "Trilobite",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/animal/trilobite",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "Cambrian explosion",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/science/Cambrian-explosion",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "Cambrian explosion",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Cambrian_explosion",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "The Cambrian Explosion",
+   "publisher": "BBC Discover Wildlife",
+   "date": "undated",
+   "link": "https://www.discoverwildlife.com/prehistoric-life/the-cambrian-explosion",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "Cambrian Period, 541 to 485.4 MYA",
+   "publisher": "U.S. National Park Service",
+   "date": "undated",
+   "link": "https://www.nps.gov/articles/000/cambrian-period.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "Paleozoic",
+   "publisher": "U.S. Geological Survey",
+   "date": "undated",
+   "link": "https://www.usgs.gov/youth-and-education-in-science/paleozoic",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "Cambrian Period",
+   "publisher": "Humboldt State University Natural History Museum",
+   "date": "undated",
+   "link": "https://natmus.humboldt.edu/exhibits/life-through-time/visual-timeline/cambrian-period",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "Newly found Chinese fossils from 518 million years ago show explosion of life",
+   "publisher": "ABC News",
+   "date": "undated",
+   "link": "https://abcnews.com/Technology/newly-found-chinese-fossils-518-million-years-ago/story?id=61951707",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "When a 520 million-year-old Chengjiang fossil meets a modern micro-CT",
+   "publisher": "PubMed Central (NCBI)",
+   "date": "undated",
+   "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4523851/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "Molecular clocks and the early evolution of metazoan nervous systems",
+   "publisher": "Philosophical Transactions of the Royal Society B",
+   "date": "2015",
+   "link": "https://royalsocietypublishing.org/rstb/article/370/1684/20150046/22734/Molecular-clocks-and-the-early-evolution-of",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "Molecular clocks do not support the Cambrian explosion",
+   "publisher": "Molecular Biology and Evolution (via PubMed)",
+   "date": "2005",
+   "link": "https://pubmed.ncbi.nlm.nih.gov/15537810/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "Beyond \"Rocks versus Clocks\"",
+   "publisher": "Extinct (blog)",
+   "date": "2026-03-14",
+   "link": "http://www.extinctblog.org/extinct/2026/3/14/beyond-rocks-vs-clocks",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "Devonian",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Devonian",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "Prehistoric fish: 11 of the largest, weirdest and most significant",
+   "publisher": "Natural History Museum, London",
+   "date": "undated",
+   "link": "https://www.nhm.ac.uk/discover/prehistoric-fish-timeline.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "Dunkleosteus",
+   "publisher": "BBC Discover Wildlife",
+   "date": "undated",
+   "link": "https://www.discoverwildlife.com/prehistoric-life/dunkleosteus-prehistoric-fish",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "The pectoral fin of Tiktaalik roseae and the origin of the tetrapod limb",
+   "publisher": "Nature",
+   "date": "2006",
+   "link": "https://www.nature.com/articles/nature04637",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "Newfound Fossil Is Transitional between Fish and Landlubbers",
+   "publisher": "Scientific American",
+   "date": "undated",
+   "link": "https://www.scientificamerican.com/article/newfound-fossil-is-transi/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "The Fish–Tetrapod Transition: New Fossils and Interpretations",
+   "publisher": "Evolution: Education and Outreach (Springer)",
+   "date": "undated",
+   "link": "https://link.springer.com/article/10.1007/s12052-009-0119-2",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "Walking Towards Land",
+   "publisher": "National Geographic",
+   "date": "undated",
+   "link": "https://www.nationalgeographic.com/science/article/walking-towards-land",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "Tetrapodomorpha",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Tetrapodomorpha",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "Fragments of the earliest land plants",
+   "publisher": "Nature",
+   "date": "2003",
+   "link": "https://www.nature.com/articles/nature01884",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s29",
+   "title": "The first terrestrial ecosystems",
+   "publisher": "Encyclopedia of the Environment",
+   "date": "undated",
+   "link": "https://www.encyclopedie-environnement.org/en/life/first-terrestrial-ecosystems/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s30",
+   "title": "Oldest Fossilized Land Plant Spores Have Scientists Rethinking How Plants Evolved",
+   "publisher": "ScienceAlert",
+   "date": "undated",
+   "link": "https://www.sciencealert.com/480-million-year-old-fossil-spores-has-scientists-rethinking-how-plants-evolved-on-land",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s31",
+   "title": "Evolutionary history of plants",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Evolutionary_history_of_plants",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s32",
+   "title": "Cryptic terrestrial fungus-like fossils of the early Ediacaran Period",
+   "publisher": "PubMed Central (NCBI)",
+   "date": "undated",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7843733/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s33",
+   "title": "Colonization of the land",
+   "publisher": "EBSCO Research Starters",
+   "date": "undated",
+   "link": "https://www.ebsco.com/research-starters/environmental-sciences/colonization-land/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s34",
+   "title": "The first forests",
+   "publisher": "Nature Scitable",
+   "date": "undated",
+   "link": "https://www.nature.com/scitable/blog/accumulating-glitches/the_first_forests/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s35",
+   "title": "First trees and forests",
+   "publisher": "Earth History (earthhistory.org.uk)",
+   "date": "undated",
+   "link": "https://www.earthhistory.org.uk/recolonisation/vegetation-in-devonian",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s36",
+   "title": "Coal's formation is a window on an ancient world",
+   "publisher": "The Conversation",
+   "date": "undated",
+   "link": "https://theconversation.com/coals-formation-is-a-window-on-an-ancient-world-54333",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s37",
+   "title": "How Ancient Forests Formed Coal and Fueled Life as We Know It",
+   "publisher": "Discover Magazine",
+   "date": "undated",
+   "link": "https://www.discovermagazine.com/how-ancient-forests-formed-coal-and-fueled-life-as-we-know-it-42343",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s38",
+   "title": "Delayed fungal evolution did not cause the Paleozoic peak in coal production",
+   "publisher": "PNAS",
+   "date": "2016",
+   "link": "https://www.pnas.org/doi/10.1073/pnas.1517943113",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s39",
+   "title": "Climate, decay, and the death of the coal forests",
+   "publisher": "Current Biology (ScienceDirect)",
+   "date": "undated",
+   "link": "https://www.sciencedirect.com/science/article/pii/S0960982216000646",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s40",
+   "title": "Molecular clocks: Defusing the Cambrian 'explosion'?",
+   "publisher": "Current Biology (ScienceDirect)",
+   "date": "2006",
+   "link": "https://www.sciencedirect.com/science/article/pii/S096098220600039X",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s41",
+   "title": "Life in the Devonian: 419 to 359 million years ago",
+   "publisher": "Australian Environmental Education",
+   "date": "undated",
+   "link": "https://www.australianenvironmentaleducation.com.au/education-resources/life-in-the-devonian/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s42",
+   "title": "Testing the Cambrian explosion hypothesis by using a molecular dating technique",
+   "publisher": "PubMed Central (NCBI)",
+   "date": "undated",
+   "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC22841",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s43",
+   "title": "Evolution of fish",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Evolution_of_fish",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 8 of The History of Everything. Last time we met complex cells, oxygen and a changing planet. Today we watch animals, plants and fungi fill the seas, and then the land."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Animals Appear: The Cambrian to Life on Land"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We have five stops. The strange Ediacaran creatures. The Cambrian explosion. Fish and the first four-limbed animals. The first forests and coal. Then a debate about how sudden it all was."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Ediacaran creatures | 2. The Cambrian explosion | 3. Fish, then four-limbed animals | 4. First forests and coal | 5. Debate: how sudden?"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, one word we need: animal. An animal is a many-celled living thing that cannot make its own food. It has to get its energy from other living things."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Animal: a many-celled living thing that gets its energy from other living things"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Early animals were soft-bodied, a bit like jellyfish. Soft bodies rarely turn into fossils. So the early record has gaps. Keep that in mind, because it matters in the debate at the end."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Soft bodies rarely fossilize, so the early record has gaps"
+   },
+   "cite": [
+    "s6",
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Stop one: the Ediacaran Period. It holds the oldest large, complex living things we have preserved. Their fossils date from about 571 to 539 million years ago."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "571 to 539 million years ago"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What did they look like? Flat discs, leafy shapes and ribbed ovals. Some are linked to animal groups still alive, such as jellyfish and corals. Others look like nothing alive today."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A sea floor with flat discs, leaf-shaped fronds and ribbed oval creatures, none with shells or eyes"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One famous example is Dickinsonia. It was segmented and pancake-shaped, and it could reach a metre long. These creatures lived stuck to mats of microbes on shallow sea floors."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A flat, ribbed, pancake-shaped Dickinsonia, up to one metre long, lying on a slimy microbial mat"
+   },
+   "cite": [
+    "s6",
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Some Ediacaran animals could already move to find food. The best-known site is Mistaken Point in Newfoundland, about 575 million years old. Not all of them just sat still."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Mistaken Point, southeastern Newfoundland, Canada, marked as one of the oldest and best-preserved Ediacaran sites"
+   },
+   "cite": [
+    "s3",
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Quick check. Think back to what we just said about these creatures."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Why are Ediacaran fossils hard to understand?"
+   },
+   "cite": [
+    "s5",
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why are Ediacaran fossils hard to understand?",
+    "right": "They were soft-bodied, and some look like nothing alive today.",
+    "wrong": [
+     "They were all tiny single cells.",
+     "They had thick shells like trilobites.",
+     "They lived on dry land."
+    ],
+    "why": "Ediacaran creatures were soft-bodied, so fossils are rare. Some resemble no living animal, so scientists are not sure what they were."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So were they animals? Scientists do not all agree. Some seem to be, such as Kimberella, which may be an early cousin of molluscs. Others might be something else entirely. We list both views in the notes."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Likely animals: Kimberella, Ikaria | Unclear: some may be plants, giant single cells, fungus-like, or extinct forms of life"
+   },
+   "cite": [
+    "s1",
+    "s2",
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "What happened to them? One idea is that newer animals crowded them out. Digging and mixing up the sea floor may have slowly ruined the Ediacaran way of life."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ediacarans faded as new Cambrian animals changed the sea floor"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Stop two: the Cambrian Period. It began about 538.8 million years ago. Older books may say 541 or 542. The date was revised in 2004, 2012 and 2022 as the evidence improved."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "538.8 million years ago: the Cambrian begins"
+   },
+   "cite": [
+    "s8",
+    "s10"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Early in the Cambrian we find the \"Cambrian explosion\". Most major animal groups first appear in the fossil record. Estimates say this took roughly 13 to 25 million years. It is called an explosion because that is fast on the geological clock."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Cambrian explosion: most major animal groups appear in the fossils within about 13 to 25 million years"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Scientists sort animals into big groups called phyla. One group is a phylum. Examples are molluscs, arthropods, echinoderms and chordates. There are about 32 phyla, and most of them appeared in the Cambrian."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Phylum: a very large group of animals, just below a kingdom"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let us test that."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "What is a phylum?"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is a phylum?",
+    "right": "A very large group of animals, such as arthropods or chordates.",
+    "wrong": [
+     "One single species, like one kind of trilobite.",
+     "A layer of rock.",
+     "A long span of geological time."
+    ],
+    "why": "A phylum is a level of classification just below a kingdom. Arthropods, molluscs and chordates are examples."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The star of the Cambrian was the trilobite. It was an armoured animal with a hard skeleton. Trilobites first appear about 521 million years ago and ranged from the size of a coin to the size of a tyre."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A trilobite: an oval, three-lobed armoured animal with segments, walking on the sea floor"
+   },
+   "cite": [
+    "s8",
+    "s13"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Hard skeletons fossilize well. So trilobites make up most of the skeleton fossils from the Cambrian, about 80 to 90 percent. They also had very advanced eyes."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "80 to 90 percent of Cambrian skeleton fossils are trilobites"
+   },
+   "cite": [
+    "s14",
+    "s13"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Cambrian is also when large hunters first show up in the record. Eating other animals became a way of life, and the sea became a more dangerous place."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "First large predators"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Most of what we know comes from rare sites that kept soft parts. The Burgess Shale in the Canadian Rockies was found in 1909. It preserved skin, eyes, guts and even brains."
+   },
+   "show": {
+    "kind": "map",
+    "text": "The Canadian Rocky Mountains, British Columbia, Canada: the Burgess Shale fossil site"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "An older site is Chengjiang in China, about 520 million years old. It became a UNESCO World Heritage Site in 2012. It records the early Cambrian explosion in fine detail."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Chengjiang, Yunnan province, southwest China: a 520-million-year-old fossil site"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A check on both sites."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Why are the Burgess Shale and Chengjiang so important?"
+   },
+   "cite": [
+    "s15",
+    "s16"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why are the Burgess Shale and Chengjiang so valuable to scientists?",
+    "right": "They preserve soft parts, like eyes and guts, that usually rot away.",
+    "wrong": [
+     "They are the only places where trilobites have been found.",
+     "They are where the first dinosaurs lived.",
+     "They contain no fossils, only rock layers."
+    ],
+    "why": "Both sites preserved soft tissue, which gives a rare window into Cambrian animals."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Stop three: fish. The first fish had no jaws. Armoured, jawless fish ruled the early oceans. Jawed fish came later and spread widely."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Jawless fish first, then jawed fish"
+   },
+   "cite": [
+    "s22",
+    "s43"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "By the Devonian Period, about 419 to 359 million years ago, fish were so varied that it is called the Age of Fishes."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Devonian: 419 to 359 million years ago, the Age of Fishes"
+   },
+   "cite": [
+    "s41",
+    "s20"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A giant of that age was Dunkleosteus, an armoured fish with bony blades for biting. It may have been the first vertebrate top predator. Its size is an informed guess, because mostly the head survives. A 2022 analysis suggests under five metres."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Dunkleosteus: a heavy fish with a plated head and a wide jaw edged with sharp bony blades"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the big step. Some fish with fleshy, lobed fins began to change. Over millions of years their fins gained wrists, ankles and digits. Animals with such limbs are called tetrapods."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Tetrapod: a vertebrate with four limbs, with wrists, ankles and digits"
+   },
+   "cite": [
+    "s23",
+    "s27"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The fossil that made this vivid is Tiktaalik, found on Ellesmere Island in northern Canada. It was found by a team from Chicago, Harvard and Philadelphia. It was perhaps three feet long."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Tiktaalik: a flat-headed fish about three feet long, with eyes on top of its head and sturdy front fins"
+   },
+   "cite": [
+    "s25",
+    "s26"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Tiktaalik was still a fish, with fins and scales. But it also had ribs, a mobile neck and a wrist in its fin. That mix is why its discoverers jokingly called it a fishapod."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Fish features: fins, scales | Tetrapod features: ribs, mobile neck, wrist-like fin joints"
+   },
+   "cite": [
+    "s25",
+    "s23",
+    "s24"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "It fits a gap in time. Panderichthys, a tetrapod-like fish, lived about 385 million years ago. The first clear tetrapods, Acanthostega and Ichthyostega, lived about 365 million years ago. Tiktaalik sits between them."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "385 million years ago: Panderichthys | between them: Tiktaalik | 365 million years ago: Acanthostega and Ichthyostega"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let us check what made Tiktaalik special."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "What made Tiktaalik special?"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What made Tiktaalik special?",
+    "right": "It had both fish features and limb-like features, blurring the line between fish and land animals.",
+    "wrong": [
+     "It was the first dinosaur.",
+     "It had wings and could fly.",
+     "It was a soft Ediacaran creature."
+    ],
+    "why": "Tiktaalik was a fish with fins and scales, but it also had a neck, ribs and wrist-like joints. This blurs the boundary between fish and land animals."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is a surprise. Tiktaalik's fins already had much of what a limb needs, even wrist bones. It lived mostly in shallow water. So limbs began changing in water, before animals walked on land."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Limbs began to form in the water first"
+   },
+   "cite": [
+    "s26",
+    "s23",
+    "s24"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Stop four: the land itself. It needed living things first. Plants came out of freshwater algae. The earliest evidence is tiny spores from about 475 million years ago."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 475 million years ago: earliest land-plant spores"
+   },
+   "cite": [
+    "s30",
+    "s28"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Fossils of whole plant parts come about 50 million years after the spores. The first land plants were small, like liverworts, with no true roots, stems or leaves. The oldest stems and roots are about 430 million years old."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "About 475 million years ago: spores | about 430 million years ago: first stems and roots"
+   },
+   "cite": [
+    "s28",
+    "s29"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now fungi, the group with mushrooms and moulds. They are not plants or animals. Plants may have teamed up with fungi to cope with life on land. By genetic estimates fungi are far older, but their early fossils are scarce."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Fungi: their own kingdom, neither plants nor animals"
+   },
+   "cite": [
+    "s31",
+    "s32"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A check on the first land plants."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "What is the earliest evidence of land plants?"
+   },
+   "cite": [
+    "s28"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is the earliest evidence of land plants?",
+    "right": "Tiny fossil spores about 475 million years old.",
+    "wrong": [
+     "Giant forests with trees 30 metres tall.",
+     "Flowers with petals.",
+     "Footprints in mud."
+    ],
+    "why": "The earliest generally accepted evidence is microscopic spores from the mid-Ordovician, about 475 million years ago. Larger plant fossils came about 50 million years later."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Plants then grew taller. By the Late Devonian, trees like Archaeopteris stood about ten metres tall. It is not the bird Archaeopteryx, just a confusingly similar name. Together with other early trees, it formed the first forests."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A forest of tall, branching Archaeopteris trees with fern-like leaves, standing beside a Devonian river"
+   },
+   "cite": [
+    "s34",
+    "s35"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Those first forests shrank after the extinctions at the end of the Devonian. That event killed around 75 percent of species. Big forests only returned well into the Carboniferous, with new kinds of trees."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 75 percent of species lost at the end of the Devonian"
+   },
+   "cite": [
+    "s35",
+    "s21"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Carboniferous Period means coal-bearing. It ran from about 359 to 299 million years ago. A British geologist, William Conybeare, named it in 1822 after the coal beds of Britain."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Carboniferous: coal-bearing, about 359 to 299 million years ago"
+   },
+   "cite": [
+    "s36"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Its forests were swampy and coastal. Giant club mosses like Lepidodendron and Sigillaria towered over them. Later, tree ferns spread too."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A wet coastal swamp forest with tall, scaly club-moss trees and tree ferns"
+   },
+   "cite": [
+    "s35",
+    "s39"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "How does a forest become coal? Dead plants are buried and become peat. More layers pile on top. The weight squeezes out water, and the peat slowly hardens."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Buried plants | Peat | Lignite (brown coal) | Bituminous coal | Anthracite"
+   },
+   "cite": [
+    "s34",
+    "s37"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A check on that chain."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "What comes first on the way to coal?"
+   },
+   "cite": [
+    "s34"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "On the way to becoming coal, what do buried dead plants turn into first?",
+    "right": "Peat.",
+    "wrong": [
+     "Anthracite.",
+     "Limestone.",
+     "Oil."
+    ],
+    "why": "Buried plant remains become peat. Over time, pressure and heat harden it into coal."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why so much coal back then? An old explanation said wood had just appeared and fungi could not rot it yet. Many scientists now reject that. Fungi were already breaking down wood, and many coal beds came from plants with little lignin."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Old idea: fungi too slow to rot wood | Newer view: climate and moving continents made the perfect conditions"
+   },
+   "cite": [
+    "s37",
+    "s38",
+    "s36"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let us check the newer view."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "What does the newer research say?"
+   },
+   "cite": [
+    "s38"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does the newer research say about the idea that slow fungi caused the coal?",
+    "right": "It says delayed fungi did not explain the coal; climate and tectonics mattered more.",
+    "wrong": [
+     "It proved the fungi idea was right.",
+     "It says coal comes from animal bones.",
+     "It says coal only formed in the Carboniferous."
+    ],
+    "why": "Researchers found that coal production did not match the fungus timeline. Large coal deposits also formed much later, in the age of dinosaurs."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Stop five: a debate. How sudden was the Cambrian explosion, really? We start with the fossil view. Many animal groups seem to appear quite quickly in the rocks."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Debate: how sudden was the Cambrian explosion?"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Even the length is counted differently. Britannica gives about 11 million years. Many sources say 13 to 25. The U.S. Park Service says about 40 million years for almost all major groups."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c2",
+    "text": "Estimates of how long the Cambrian explosion lasted"
+   },
+   "cite": [
+    "s9",
+    "s10",
+    "s12"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The other side uses molecular clocks. These use the genetic differences between living animals to estimate when their family lines split. Many such studies put the splits at 800 to 1,200 million years ago, long before the Cambrian."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Molecular clock: genetic differences used to estimate when lineages split"
+   },
+   "cite": [
+    "s42",
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So there are two pictures. One: a real burst, with fossils showing it. Two: a long hidden history before it, sometimes called the 'long fuse' view. Critics say clock rates can vary. As of a 2026 review, the debate is still unresolved."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Rocks: animals appear fast in the Cambrian | Clocks: animal lineages split long before"
+   },
+   "cite": [
+    "s17",
+    "s18",
+    "s19",
+    "s40",
+    "s42"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Remember soft bodies rarely fossilize. And Ediacaran fossils show that complex, animal-like life existed before the Cambrian. So most agree something big happened. The argument is about how much was real speed, and how much was what the rocks kept."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Real burst, or partly what the rocks preserved?"
+   },
+   "cite": [
+    "s2",
+    "s6",
+    "s40"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One last check on the debate."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "What is the long fuse view?"
+   },
+   "cite": [
+    "s18",
+    "s19"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does the \"long fuse\" view say?",
+    "right": "Animal lineages began splitting long before the Cambrian, so the explosion hides a longer history.",
+    "wrong": [
+     "The explosion happened in a single day.",
+     "Animals appeared only after the Cambrian.",
+     "Every scientist already agrees on the answer."
+    ],
+    "why": "Molecular clock studies often date animal splits well before the Cambrian. But the debate is still unresolved."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the frame of reference: what else was going on? There were no people, politics or art yet. Instead, think of the planet: shifting continents, no polar ice, and new life in the seas and on the land."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "575 million years ago: Mistaken Point creatures | 538.8: Cambrian begins | 521: trilobites | 475: land-plant spores | 385 to 365: Tiktaalik era | 359 to 299: coal forests"
+   },
+   "cite": [
+    "s1",
+    "s8",
+    "s28",
+    "s24",
+    "s36"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here are the dates on one chart. Read them as millions of years ago. The bigger the bar, the further back in time."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1",
+    "text": "When things first appear, in millions of years ago"
+   },
+   "cite": [
+    "s1",
+    "s8",
+    "s28",
+    "s29",
+    "s24",
+    "s36"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To recap. Ediacaran creatures came first and are puzzling. The Cambrian brought skeletons, eyes and hunters. Fish led to four-limbed animals. Plants, fungi and forests changed the land and left us coal."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Ediacaran: strange, soft, debated | Cambrian: skeletons, eyes, predators | Fish to tetrapods | Plants, fungi, forests, coal | Debate: how sudden?"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next class, number 9: extinctions, dinosaurs and the rise of mammals. Thanks for learning with us."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Extinctions, Dinosaurs and the Rise of Mammals"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "When things first appear (millions of years ago)",
+   "rows": [
+    {
+     "label": "Mistaken Point Ediacaran creatures",
+     "value": 575,
+     "source": "s1"
+    },
+    {
+     "label": "Start of the Cambrian",
+     "value": 538.8,
+     "source": "s8"
+    },
+    {
+     "label": "First trilobites",
+     "value": 521,
+     "source": "s8"
+    },
+    {
+     "label": "Earliest land-plant spores",
+     "value": 475,
+     "source": "s28"
+    },
+    {
+     "label": "Oldest plant stems and roots",
+     "value": 430,
+     "source": "s29"
+    },
+    {
+     "label": "Panderichthys, tetrapod-like fish",
+     "value": 385,
+     "source": "s24"
+    },
+    {
+     "label": "First clear tetrapods",
+     "value": 365,
+     "source": "s24"
+    },
+    {
+     "label": "Start of the Carboniferous",
+     "value": 359,
+     "source": "s36"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Estimates of how long the Cambrian explosion lasted (millions of years)",
+   "rows": [
+    {
+     "label": "Britannica: about 541 to 530",
+     "value": 11,
+     "source": "s9"
+    },
+    {
+     "label": "Shorter common estimate",
+     "value": 13,
+     "source": "s10"
+    },
+    {
+     "label": "Longer common estimate",
+     "value": 25,
+     "source": "s10"
+    },
+    {
+     "label": "National Park Service: almost all major groups",
+     "value": 40,
+     "source": "s12"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Ediacaran biota",
+   "links": [
+    "[[The Origin of Life]]",
+    "[[Complex Cells, Oxygen and a Changing Planet]]",
+    "[[fossils and how we date them]]"
+   ]
+  },
+  {
+   "topic": "Cambrian explosion",
+   "links": [
+    "[[Animals Appear: The Cambrian to Life on Land]]",
+    "[[molecular clocks]]",
+    "[[Burgess Shale]]"
+   ]
+  },
+  {
+   "topic": "Fish to tetrapods",
+   "links": [
+    "[[Tiktaalik]]",
+    "[[Devonian Age of Fishes]]",
+    "[[Extinctions, Dinosaurs and the Rise of Mammals]]"
+   ]
+  },
+  {
+   "topic": "First forests and coal",
+   "links": [
+    "[[Carboniferous Period]]",
+    "[[fungi]]",
+    "[[The Industrial Revolution]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About 575 million years ago (late Ediacaran)",
+   "elsewhere": "At Mistaken Point in Newfoundland, frond-like soft-bodied creatures lived. Large Ediacaran life was stuck to mats of microbes on shallow sea floors.",
+   "cite": [
+    "s1",
+    "s4"
+   ]
+  },
+  {
+   "when": "538.8 million years ago (start of the Cambrian)",
+   "elsewhere": "Earth had one large supercontinent, Gondwana, and eight smaller continents, mostly in the south. There were no polar ice caps, and the climate was warm and wet.",
+   "cite": [
+    "s13",
+    "s8"
+   ]
+  },
+  {
+   "when": "About 521 to 518 million years ago",
+   "elsewhere": "The first trilobites appeared. The Chengjiang and Qingjiang fossil communities in China lived in the same era.",
+   "cite": [
+    "s8",
+    "s16",
+    "s15"
+   ]
+  },
+  {
+   "when": "About 475 to 450 million years ago",
+   "elsewhere": "The first land-plant spores appeared. By about 450 million years ago plants and animals lived on land. Jawed vertebrates appeared by the Late Ordovician.",
+   "cite": [
+    "s28",
+    "s33",
+    "s43"
+   ]
+  },
+  {
+   "when": "About 390 to 380 million years ago",
+   "elsewhere": "Tetrapod-line fish evolved from lobe-finned fish while giant armoured fish like Dunkleosteus hunted in the seas.",
+   "cite": [
+    "s27",
+    "s22"
+   ]
+  },
+  {
+   "when": "About 375 to 359 million years ago",
+   "elsewhere": "A Late Devonian extinction hit marine life hard, killing around 75 percent of species. The first clear tetrapods lived about 365 million years ago.",
+   "cite": [
+    "s20",
+    "s21",
+    "s24"
+   ]
+  },
+  {
+   "when": "359 to 299 million years ago (Carboniferous)",
+   "elsewhere": "Swampy coal forests grew. Much later, in 1822, British geologist William Conybeare named the period after Britain's coal beds.",
+   "cite": [
+    "s36",
+    "s39"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Ediacaran fossils are early animals.",
+   "other_view": "Some are tied to animal groups. Kimberella may be an early relative of molluscs, and Ikaria is argued to be a very early bilaterian. But some experts say we do not know if Ediacaran creatures were animals, plants, giant single cells, fungus-like, or an extinct kind of life.",
+   "cite": [
+    "s1",
+    "s2",
+    "s5",
+    "s6"
+   ]
+  },
+  {
+   "claim": "The Cambrian explosion was a real, sudden burst of new animal groups.",
+   "other_view": "Many molecular clock studies put the splits among animal groups hundreds of millions of years earlier, a long 'fuse'. Others say clock estimates are imprecise because rates of change vary. The fossils themselves seem to tell a different story, and a 2026 review calls the debate unresolved.",
+   "cite": [
+    "s17",
+    "s18",
+    "s19",
+    "s40",
+    "s42"
+   ]
+  },
+  {
+   "claim": "The Carboniferous had so much coal because fungi had not yet evolved to rot wood.",
+   "other_view": "A 2016 study rejected this. Much Carboniferous coal came from plants with little lignin. Large coal deposits also formed later, when lignin-rotting fungi were present. The authors point to a combination of climate and tectonics.",
+   "cite": [
+    "s37",
+    "s38",
+    "s36"
+   ]
+  },
+  {
+   "claim": "Tiktaalik shows how fish became land animals.",
+   "other_view": "Tiktaalik is still a fish, though a very tetrapod-like one. Experts note that the exact moment fish became tetrapods remains obscure, because fossils from that stretch of time are incomplete.",
+   "cite": [
+    "s23",
+    "s25"
+   ]
+  },
+  {
+   "claim": "Land plants arose about 475 million years ago, based on fossils.",
+   "other_view": "Molecular clock data suggest land colonization around 515 million years ago, in the Cambrian. The earliest plant stem fossils come much later, about 430 million years ago.",
+   "cite": [
+    "s30"
+   ]
+  }
+ ]
+}

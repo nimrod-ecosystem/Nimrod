@@ -1,0 +1,1120 @@
+{
+ "about": {
+  "title": "Extinctions, Dinosaurs and the Rise of Mammals",
+  "course": "history-of-everything",
+  "class_n": 9,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. The five topics fit in 27 short beats, each followed by a pause or a question. The extinction debate has its own beats so it isn't rushed."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Siberian Traps likely culprit for end-Permian extinction",
+   "publisher": "MIT News",
+   "date": "2015-09-16",
+   "link": "https://news.mit.edu/2015/siberian-traps-end-permian-extinction-0916",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "Permian extinction",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/science/Permian-extinction",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "New research reveals how a 252 million year old climate crisis accompanied the 'Great Dying' mass extinction event",
+   "publisher": "Frontiers",
+   "date": "2025-03-11",
+   "link": "https://www.frontiersin.org/news/2025/03/11/252-million-year-old-climate-crisis-permian-extinction-co2-frontiers-earth-sciences",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "There have been five mass extinctions in Earth's history",
+   "publisher": "Our World in Data",
+   "date": "n.d.",
+   "link": "https://ourworldindata.org/mass-extinctions",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "What were the 'Big Five' mass extinctions - and are we living in a sixth?",
+   "publisher": "ThinkLandscape (Global Landscapes Forum)",
+   "date": "n.d.",
+   "link": "https://thinklandscape.globallandscapesforum.org/101797/big-five-mass-extinctions/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "Here we go again: Earth's major 'mass extinctions'",
+   "publisher": "Phys.org (AFP)",
+   "date": "2019-04",
+   "link": "https://phys.org/news/2019-04-earth-major-mass-extinctions.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "When did dinosaurs live?",
+   "publisher": "Natural History Museum, London",
+   "date": "n.d.",
+   "link": "https://www.nhm.ac.uk/discover/when-did-dinosaurs-live.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "Rise of the dinosaurs",
+   "publisher": "MIT News",
+   "date": "2014-08-12",
+   "link": "https://news.mit.edu/2014/early-dinosaur-evolution-0812",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "The living dinosaurs",
+   "publisher": "The Australian Museum",
+   "date": "n.d.",
+   "link": "https://australian.museum/learn/dinosaurs/the-living-dinosaurs/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "Archaeopteryx",
+   "publisher": "Natural History Museum, London",
+   "date": "n.d.",
+   "link": "https://www.nhm.ac.uk/discover/dino-directory/archaeopteryx.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "The origin of birds",
+   "publisher": "Understanding Evolution, University of California Museum of Paleontology (Berkeley)",
+   "date": "n.d.",
+   "link": "https://evolution.berkeley.edu/what-are-evograms/the-origin-of-birds/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "Finally, You Can See Dinosaurs in All Their Feathered Glory",
+   "publisher": "National Geographic",
+   "date": "2016-04-05",
+   "link": "https://www.nationalgeographic.com/animals/article/160405-dinosaurs-feathers-birds-museum-new-york-science",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "Feathered Dinosaurs/Bird Origins",
+   "publisher": "NPR",
+   "date": "1998-06-26",
+   "link": "https://www.npr.org/1998/06/26/1010509/feathered-dinosaurs-bird-origins",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "Birds: they're small flying dinosaurs",
+   "publisher": "RSPB",
+   "date": "n.d.",
+   "link": "https://www.rspb.org.uk/whats-happening/news/birds-theyre-small-flying-dinosaurs",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "An 150-Million-Year-Old Fossil Is the Link Between Birds and Dinosaurs",
+   "publisher": "Natural History Museum of Utah, University of Utah",
+   "date": "n.d.",
+   "link": "https://nhmu.utah.edu/articles/150-million-year-old-fossil-link-between-birds-and-dinosaurs",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "When Did Dinosaurs Live?",
+   "publisher": "Dino-Walk",
+   "date": "n.d.",
+   "link": "https://www.dino-walk.com/news/when-did-dinosaurs-live.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "Chicxulub Asteroid Caused End-Cretaceous Mass Extinction, New Study Confirms",
+   "publisher": "Sci.News",
+   "date": "n.d.",
+   "link": "https://www.sci.news/paleontology/chicxulub-asteroid-end-cretaceous-mass-extinction-08594.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "Asteroid impact, not volcanism, caused the end-Cretaceous dinosaur extinction",
+   "publisher": "Proceedings of the National Academy of Sciences (PNAS)",
+   "date": "2020",
+   "link": "https://www.pnas.org/doi/10.1073/pnas.2006087117",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "End-Cretaceous extinction in Antarctica linked to both Deccan volcanism and meteorite impact via climate change",
+   "publisher": "Nature Communications (via PubMed Central)",
+   "date": "2016",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4935969/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "The 1-2 Punch of the End-Cretaceous Extinction",
+   "publisher": "Discover Magazine",
+   "date": "n.d.",
+   "link": "https://www.discovermagazine.com/the-1-2-punch-of-the-end-cretaceous-extinction-12624",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "How the dinosaurs went extinct: asteroid collision triggered potentially deadly volcanic eruptions",
+   "publisher": "The Conversation",
+   "date": "n.d.",
+   "link": "https://theconversation.com/how-the-dinosaurs-went-extinct-asteroid-collision-triggered-potentially-deadly-volcanic-eruptions-112134",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "Scientists have found dust from the asteroid that wiped out the dinosaurs inside the crater it left",
+   "publisher": "The Conversation",
+   "date": "n.d.",
+   "link": "https://theconversation.com/scientists-have-found-dust-from-the-asteroid-that-wiped-out-the-dinosaurs-inside-the-crater-it-left-156232",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "Alvarez asteroid impact theory",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/earth-and-atmospheric-sciences/alvarez-asteroid-impact-theory",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "Chicxulub Asteroid Impact Sulfur Release Was Less Lethal In Dinosaur Extinction",
+   "publisher": "Astrobiology.com",
+   "date": "2025-01-17",
+   "link": "https://astrobiology.com/2025/01/17/chicxulub-asteroid-impact-sulfur-release-was-less-lethal-in-dinosaur-extinction/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "From impact to extinction to recovery: Discoveries of IODP-ICDP Expedition 364 to the Chicxulub impact structure",
+   "publisher": "ScienceDirect (research article)",
+   "date": "n.d.",
+   "link": "https://www.sciencedirect.com/science/article/pii/S0025322725001860",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "Mammal diversity exploded immediately after dinosaur extinction",
+   "publisher": "ScienceDaily (University College London research)",
+   "date": "2015-12-21",
+   "link": "https://www.sciencedaily.com/releases/2015/12/151221193937.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "Mammals diversified only after dinosaur extinction left space",
+   "publisher": "ScienceDaily (Queensland University of Technology research)",
+   "date": "2016-07-05",
+   "link": "https://www.sciencedaily.com/releases/2016/07/160705120145.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "Mammals in the time of dinosaurs held each other back",
+   "publisher": "Oxford University Museum of Natural History",
+   "date": "n.d.",
+   "link": "https://oumnh.ox.ac.uk/learn-mammals-time-dinosaurs-held-each-other-back",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s29",
+   "title": "Quantitative assessment of tarsal morphology illuminates locomotor behaviour in Palaeocene mammals following the end-Cretaceous mass extinction",
+   "publisher": "Proceedings of the Royal Society B (via PubMed Central)",
+   "date": "2021",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8114852/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s30",
+   "title": "How Mammals Conquered the World after the Asteroid Apocalypse",
+   "publisher": "Scientific American",
+   "date": "n.d.",
+   "link": "https://www.scientificamerican.com/article/how-mammals-conquered-the-world-after-the-asteroid-apocalypse/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s31",
+   "title": "The global effects of the Siberian Traps eruptions, and the 'Great Dying' at the end of the Permian Period (~252 million years ago)",
+   "publisher": "Springer Nature Research Communities",
+   "date": "n.d.",
+   "link": "https://communities.springernature.com/posts/the-global-effects-of-the-siberian-traps-eruptions-and-the-great-dying-at-the-end-of-the-permian-period-252-million-years-ago",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s32",
+   "title": "Evolution of mammals (study guide)",
+   "publisher": "Fiveable",
+   "date": "n.d.",
+   "link": "https://fiveable.me/paleontology/unit-6/evolution-mammals/study-guide/mLVkI0W6YLL725zh",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s33",
+   "title": "The Earth's five major mass extinctions",
+   "publisher": "Futura-Sciences",
+   "date": "n.d.",
+   "link": "https://www.futura-sciences.com/en/the-earths-five-major-mass-extinctions_16647/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s34",
+   "title": "Mass extinction (MIT News topic page)",
+   "publisher": "MIT News",
+   "date": "n.d.",
+   "link": "https://news.mit.edu/topic/mass-extinction",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back. Last class, animals appeared and moved onto land. Today we meet the times when life nearly vanished, and the story of what ended the dinosaurs."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Extinctions, Dinosaurs and the Rise of Mammals"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a word we need. A species is one kind of living thing. Extinct means that kind is gone for good. A mass extinction is when a huge share of species vanish in a short stretch of time."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Mass extinction"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What makes an extinction a 'mass' extinction?",
+    "right": "A large share of all species, often around three-quarters or more, disappear in a short stretch of geological time.",
+    "wrong": [
+     "One famous animal dies out.",
+     "One species slowly changes into a new one over millions of years.",
+     "People hunt one animal until none are left."
+    ],
+    "why": "A mass extinction is about the scale: many species lost quickly. Scientists often use about 75 percent as the benchmark."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Over roughly the last half-billion years, scientists count five of these big wipe-outs. They call them the Big Five."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "tally-mark",
+    "count": 5,
+    "layout": "five-frame",
+    "text": "The Big Five mass extinctions"
+   },
+   "cite": [
+    "s6",
+    "s4"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In order, from oldest: Ordovician, Devonian, Permian, Triassic and Cretaceous. Each is named for the time period it ended."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Ordovician (about 445 million years ago)\n2. Devonian (about 360 million years ago)\n3. Permian (about 252 million years ago)\n4. Triassic (about 200 million years ago)\n5. Cretaceous (about 66 million years ago)"
+   },
+   "cite": [
+    "s4",
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is how much each one took. Look at the third bar. The Permian extinction was by far the worst."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1",
+    "text": "Share of species lost in each of the Big Five"
+   },
+   "cite": [
+    "s4",
+    "s5"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Looking at the chart, which of the Big Five took the largest share of species?",
+    "right": "The Permian extinction",
+    "wrong": [
+     "The Cretaceous extinction",
+     "The Devonian extinction",
+     "The Triassic extinction"
+    ],
+    "why": "The Permian bar is the tallest, at roughly 96 percent in this estimate."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's take the Permian first. It happened about 252 million years ago, and people call it the Great Dying."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "252 million years ago"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It is the most severe extinction known. Roughly 95 percent of ocean species and 70 percent of land species were wiped out."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 95% of ocean species and 70% of land species lost"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What caused it? Most scientists point to giant volcanic eruptions in Siberia, known as the Siberian Traps. They ran for around a million years."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A vast plain of dark lava rock in Siberia, with thick layers of lava piled one on another"
+   },
+   "cite": [
+    "s31",
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is how eruptions kill. They pumped huge amounts of carbon dioxide into the air. That caused sharp global warming, and the oceans lost oxygen."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Eruptions for about 1 million years | Carbon dioxide rises, the planet warms, oceans lose oxygen"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is thought to have triggered the Great Dying?",
+    "right": "Enormous volcanic eruptions in Siberia",
+    "wrong": [
+     "An asteroid hitting Mexico",
+     "A sudden ice age",
+     "A worldwide disease"
+    ],
+    "why": "Dating shows the Siberian eruptions happened at the right time, and the greenhouse gases they released changed the climate."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Life did come back, but slowly. A few survivors rebuilt the living world over several million years. Those survivors included the ancestors of the first dinosaurs."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Recovery took several million years"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The fourth of the Big Five came about 200 million years ago, at the end of the Triassic. It killed many big land animals, but dinosaurs survived it. Its cause is still debated."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "End-Triassic: about 200 million years ago"
+   },
+   "cite": [
+    "s6",
+    "s7",
+    "s33"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So what are dinosaurs? They are a group of reptiles that first appeared in the Triassic, around 230 million years ago. Fossils in South America suggest that is where they began."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "252 Permian extinction | 230 first dinosaurs | 200 Triassic extinction | 150 Archaeopteryx | 66 end of the age of dinosaurs (millions of years ago)"
+   },
+   "cite": [
+    "s8",
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "From then until 66 million years ago is roughly 160 million years. Along the way, flowering plants appeared and the continents drifted toward the places we know today."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 160 million years of dinosaurs"
+   },
+   "cite": [
+    "s22",
+    "s16"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Roughly when did non-bird dinosaurs live?",
+    "right": "From about 230 million years ago until 66 million years ago",
+    "wrong": [
+     "From 66 million years ago until today",
+     "Only in the last few million years",
+     "Only before the Permian extinction, over 252 million years ago"
+    ],
+    "why": "Dinosaurs first appeared in the Triassic, after the Great Dying, and non-bird dinosaurs ended 66 million years ago."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a surprise. Not every dinosaur died out. Birds are dinosaurs. Strictly speaking, all birds are dinosaurs, but not all dinosaurs are birds."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Birds are living dinosaurs"
+   },
+   "cite": [
+    "s14",
+    "s10"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Scientists use the term 'non-avian dinosaurs' for dinosaurs that are not birds. That is the group that ended 66 million years ago."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Avian dinosaurs = birds | Non-avian dinosaurs = all the others"
+   },
+   "cite": [
+    "s10",
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is a famous example, Archaeopteryx. It lived about 150 million years ago, was about the size of a magpie, and had feathered wings."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A fossil of Archaeopteryx: a small animal with feathers fanned out along its arms and a long tail"
+   },
+   "cite": [
+    "s10",
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It also had sharp teeth and a long bony tail, which no living bird has. So it sits between small meat-eating dinosaurs and today's birds."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Like birds: feathers, wings | Like small dinosaurs: teeth, long bony tail"
+   },
+   "cite": [
+    "s10",
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Birds belong to a group of two-legged meat-eaters called theropods. Since then, thousands of feathered dinosaurs have been found, and brain scans show dinosaur brains were bird-like."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Theropods: two-legged meat-eating dinosaurs"
+   },
+   "cite": [
+    "s12",
+    "s11"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which statement fits the evidence?",
+    "right": "Birds are living dinosaurs, descended from small feathered theropods.",
+    "wrong": [
+     "Birds and dinosaurs are completely unrelated.",
+     "Birds evolved from today's lizards.",
+     "Every dinosaur died out and left no descendants."
+    ],
+    "why": "Fossils with feathers, shared skeleton features and brain scans all point to birds being a branch of the dinosaur family tree."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Birds are the only dinosaurs that survived the extinction at the end of the Cretaceous. Archaeopteryx and the non-bird dinosaurs did not."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Only birds survived"
+   },
+   "cite": [
+    "s15",
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now to that extinction. It happened 66 million years ago and wiped out about 75 percent of species, including all non-bird dinosaurs and the sea animals called ammonites."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "66 million years ago: about 75% of species lost"
+   },
+   "cite": [
+    "s17",
+    "s6"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The first big clue came in 1980. A team led by Luis and Walter Alvarez found a clay layer in Italy with far more iridium than the rock around it. Iridium is common in asteroids but rare on Earth's surface."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A cliff face in Italy with a thin band of clay between layers of limestone"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The team proposed that a giant asteroid had hit Earth. The same iridium layer was later found around the world."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Iridium layer: a fingerprint of an impact"
+   },
+   "cite": [
+    "s23",
+    "s25"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What did the extra iridium in the clay suggest?",
+    "right": "Something from space, like an asteroid, hit Earth.",
+    "wrong": [
+     "A huge flood washed over the land.",
+     "The dinosaurs ate a lot of metal.",
+     "People had buried it long ago."
+    ],
+    "why": "Iridium is rare in Earth's surface rocks but common in asteroids, so a worldwide layer pointed to an impact."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The impact site was found too. It is Chicxulub, in the Gulf of Mexico off the Yucatán Peninsula. The crater is about 180 to 200 kilometres wide, and the asteroid was roughly 10 kilometres across."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map of the Gulf of Mexico with the Yucatán Peninsula marked and a ring-shaped crater off its north coast"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In 2016, scientists drilled into the crater and brought up rock from deep inside it. The results linked the crater to the global iridium layer."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Drilling in 2016 confirmed the link"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "How does one asteroid end the dinosaurs? Dust, soot and sulfur filled the sky and blocked sunlight. Plants make food from sunlight, so plants struggled and food chains broke down."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Impact throws dust, soot and sulfur into the air\n2. Sunlight is blocked, the world turns cold: an impact winter\n3. Plants fail, and food chains collapse"
+   },
+   "cite": [
+    "s24",
+    "s17"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why did an asteroid hit lead to starvation around the world?",
+    "right": "Dust, soot and sulfur blocked sunlight, so plants could not make food and food chains collapsed.",
+    "wrong": [
+     "The asteroid ate all the plants.",
+     "The asteroid's heat dried up every ocean.",
+     "The asteroid turned the air into poison for a day, and then it was fine."
+    ],
+    "why": "With less sunlight there was less plant growth, so animals that depended on plants, or on animals that ate plants, starved."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "But there is a second suspect. The Deccan Traps are huge volcanic lava fields in India. They erupted for a long time, including a very active stretch around the time of the extinction."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map of India with the Deccan Traps lava region in the west-central part"
+   },
+   "cite": [
+    "s17",
+    "s22",
+    "s21"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Sound familiar? The Permian extinction and this one both line up with huge floods of volcanic lava. That is why some scientists take the volcano idea seriously."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Permian: Siberian Traps | Cretaceous: Deccan Traps (and an asteroid)"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The case for the asteroid: one 2020 study modelled the climate. Only the asteroid made every dinosaur habitat unlivable. Volcanoes alone left some safe places near the equator."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Asteroid impact, not volcanism, caused the end-Cretaceous dinosaur extinction (PNAS, 2020)"
+   },
+   "cite": [
+    "s18",
+    "s17"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The case for volcanoes: other studies found that some species died off before the asteroid, as the Deccan eruptions warmed the climate. A fossil study from Antarctica found two extinction pulses, one matching each event."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Asteroid as main cause | Volcanoes as main cause, or both together"
+   },
+   "cite": [
+    "s20",
+    "s19"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A third idea blends them: the impact's shock may have sped up the volcanic eruptions. Many scientists see the asteroid as the main trigger, and the debate is about how much each mattered."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Asteroid, volcanoes, or both?"
+   },
+   "cite": [
+    "s21",
+    "s22",
+    "s17"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which statement best sums up the debate today?",
+    "right": "Many scientists see the asteroid as the main trigger, but some argue the Deccan volcanoes mattered too, and the two may have worked together.",
+    "wrong": [
+     "Everyone agrees only volcanoes did it.",
+     "Everyone agrees only the asteroid did it, with nothing left to argue about.",
+     "Scientists agree a disease killed the dinosaurs."
+    ],
+    "why": "The evidence shows both events happened around the same time, so scientists still argue about how much each one contributed."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the winners. Mammals had been around since about 200 million years ago, but most that lived alongside the dinosaurs were small, often under 100 grams."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Most dinosaur-era mammals: under 100 grams"
+   },
+   "cite": [
+    "s28",
+    "s32"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "After 66 million years ago, mammals boomed. Placental mammals, the group that includes us, became far more varied in the 10 million years that followed. The earliest placental fossils appear within a few hundred thousand years."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Placental mammals: the group that includes humans"
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The dinosaurs' disappearance opened up roles to fill. Over millions of years, mammals grew larger and took up new ways of life, and modern groups such as horses, bats and whales took over."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Space opens up\nMammals grow bigger and more varied\nModern groups such as horses, bats and whales appear"
+   },
+   "cite": [
+    "s27",
+    "s30"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What changed for mammals after 66 million years ago?",
+    "right": "The dinosaurs' extinction left room, and mammals diversified into many new forms.",
+    "wrong": [
+     "Mammals first appeared at that moment.",
+     "Mammals caused the dinosaurs to die out.",
+     "Mammals almost disappeared."
+    ],
+    "why": "Mammals already existed, but they stayed mostly small until the extinction opened up space."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A caution: scientists do not agree on the details of the timing. Some DNA-based studies pointed to an earlier start, and one study says other mammal groups dying out mattered most. See the other-side notes for that."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Details still debated"
+   },
+   "cite": [
+    "s27",
+    "s28",
+    "s29"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's recap. Life has been hit by five big mass extinctions. The Permian, from Siberian volcanoes, was the worst. Birds are living dinosaurs. And the end-Cretaceous extinction, mainly from an asteroid, cleared the way for mammals."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Five mass extinctions; Permian the worst\nDinosaurs from about 230 million years ago\nBirds are living dinosaurs\nEnd-Cretaceous: 66 million years ago\nMammals diversify afterwards"
+   },
+   "cite": [
+    "s4",
+    "s1",
+    "s11",
+    "s17",
+    "s26"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which extinction ended the age of non-bird dinosaurs?",
+    "right": "The end-Cretaceous extinction, 66 million years ago",
+    "wrong": [
+     "The Permian extinction, 252 million years ago",
+     "The end-Triassic extinction, about 200 million years ago",
+     "The Ordovician extinction, about 445 million years ago"
+    ],
+    "why": "The end-Triassic event is often mistaken for the dinosaurs' end, but dinosaurs survived it. The end-Cretaceous extinction is the one that killed the non-bird dinosaurs."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next time, we follow some of those small mammals toward primates, and then toward the earliest members of the human family."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: From Primates to Early Hominins"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Share of species lost in each of the Big Five (estimates; sources differ)",
+   "rows": [
+    {
+     "label": "Ordovician (445 million years ago)",
+     "value": 86,
+     "source": "s4"
+    },
+    {
+     "label": "Devonian (360 million years ago)",
+     "value": 75,
+     "source": "s4"
+    },
+    {
+     "label": "Permian (250 million years ago)",
+     "value": 96,
+     "source": "s4"
+    },
+    {
+     "label": "Triassic (200 million years ago)",
+     "value": 80,
+     "source": "s5"
+    },
+    {
+     "label": "Cretaceous (65 million years ago)",
+     "value": 76,
+     "source": "s4"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Mass extinction",
+   "links": [
+    "[[Big Five mass extinctions]]",
+    "[[Species]]"
+   ]
+  },
+  {
+   "topic": "Permian extinction (the Great Dying)",
+   "links": [
+    "[[Siberian Traps]]",
+    "[[Pangaea]]"
+   ]
+  },
+  {
+   "topic": "Dinosaurs",
+   "links": [
+    "[[Theropods]]",
+    "[[Mesozoic Era]]"
+   ]
+  },
+  {
+   "topic": "Birds as living dinosaurs",
+   "links": [
+    "[[Archaeopteryx]]",
+    "[[Non-avian dinosaurs]]"
+   ]
+  },
+  {
+   "topic": "End-Cretaceous extinction",
+   "links": [
+    "[[Chicxulub crater]]",
+    "[[Deccan Traps]]",
+    "[[Impact winter]]"
+   ]
+  },
+  {
+   "topic": "Mammals after the dinosaurs",
+   "links": [
+    "[[Placental mammals]]",
+    "[[Paleocene]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About 252 million years ago",
+   "elsewhere": "All the continents were joined in one landmass, Pangaea, and the Mesozoic Era began after the Great Dying. Survivors of that extinction included the ancestors of the first dinosaurs.",
+   "cite": [
+    "s3",
+    "s7"
+   ]
+  },
+  {
+   "when": "About 230 million years ago",
+   "elsewhere": "The first dinosaurs appeared, probably in what is now South America, while the continents were still fused as Pangaea. They shared the world with other reptile groups.",
+   "cite": [
+    "s8"
+   ]
+  },
+  {
+   "when": "About 200 million years ago",
+   "elsewhere": "The end-Triassic extinction cleared away many big land animals. The first true mammals appeared around this time, in the Late Triassic or Early Jurassic.",
+   "cite": [
+    "s6",
+    "s32"
+   ]
+  },
+  {
+   "when": "About 150 million years ago",
+   "elsewhere": "Archaeopteryx lived, and feathered dinosaurs and early birds lived side by side.",
+   "cite": [
+    "s10",
+    "s9"
+   ]
+  },
+  {
+   "when": "145 to 66 million years ago (Cretaceous)",
+   "elsewhere": "Flowering plants and new insects such as bees appeared, and the continents drifted closer to where they are today.",
+   "cite": [
+    "s16"
+   ]
+  },
+  {
+   "when": "66 million years ago",
+   "elsewhere": "The Chicxulub asteroid hit Mexico, and the Deccan Traps were erupting in India.",
+   "cite": [
+    "s18",
+    "s17"
+   ]
+  },
+  {
+   "when": "66 to 56 million years ago (Paleocene)",
+   "elsewhere": "Early placental mammals diversified, and a sudden global warming event called the Paleocene-Eocene Thermal Maximum then tested them.",
+   "cite": [
+    "s32",
+    "s30"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "An asteroid impact was the main cause of the end-Cretaceous extinction.",
+   "other_view": "The Deccan Traps volcanoes are the other main suspect. One study argued they may have been the main driver, since some species died before the impact. An Antarctic study linked two extinction pulses to both events, and others suggest the impact sped up the volcanism. A 2025 study estimated the impact released less sulfur than earlier work assumed, which suggests a milder impact winter. Whether dinosaurs were already declining before the end is also debated.",
+   "cite": [
+    "s20",
+    "s19",
+    "s21",
+    "s22",
+    "s24",
+    "s18"
+   ]
+  },
+  {
+   "claim": "The Great Dying was a sudden event caused by the Siberian Traps.",
+   "other_view": "The volcanic trigger is widely accepted. How long the extinction took is not. MIT researchers estimated about 60,000 years, but Britannica notes that many geologists see a series of extinction pulses over about 15 million years. Percentage estimates also differ, from about 90 percent of all species to 96 percent of marine species.",
+   "cite": [
+    "s31",
+    "s34",
+    "s2",
+    "s1"
+   ]
+  },
+  {
+   "claim": "Birds are living dinosaurs.",
+   "other_view": "This is now the mainstream view. As late as 1998, some scientists were not convinced that birds are living dinosaurs, until feathered-dinosaur discoveries piled up. The debate has since moved to details of when and how birds evolved.",
+   "cite": [
+    "s13",
+    "s12",
+    "s9"
+   ]
+  },
+  {
+   "claim": "There were exactly five mass extinctions.",
+   "other_view": "Five is the established view, but some estimates count more than 20, and a few scientists question whether some events qualify. The 75 percent cutoff is somewhat arbitrary. The numbers for each event also vary between sources, and the cause of the end-Triassic event is still debated.",
+   "cite": [
+    "s5",
+    "s4",
+    "s6",
+    "s33"
+   ]
+  },
+  {
+   "claim": "Mammals diversified mainly after the dinosaurs died out.",
+   "other_view": "Many fossil studies support this. But some DNA-based dating studies had placed the placental mammals' big diversification about 20 million years earlier, before the extinction. An Oxford-led study argues that the extinction of other mammal groups may have mattered more than the dinosaurs' extinction. A 2021 paper called the nature of post-extinction mammal diversification contentious.",
+   "cite": [
+    "s26",
+    "s27",
+    "s28",
+    "s29"
+   ]
+  },
+  {
+   "claim": "Dinosaurs first appeared about 230 million years ago.",
+   "other_view": "The Natural History Museum in London gives about 245 million years ago, and the fossil record does not identify one definite first dinosaur.",
+   "cite": [
+    "s8",
+    "s7"
+   ]
+  }
+ ]
+}

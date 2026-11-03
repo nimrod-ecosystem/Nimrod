@@ -1,0 +1,901 @@
+{
+ "about": {
+  "title": "Cycles and bounces: universes that begin again",
+  "course": "what-if",
+  "class_n": 5,
+  "audience": [
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. There are 28 short beats, each teaching one idea, with eight pause questions. It is a little longer than the usual lesson because the standard picture has to be set out first, so you can judge the rival ideas fairly. You can pause at any beat and pick up there."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "What Is the Big Bang?",
+   "publisher": "NASA Space Place",
+   "date": "n.d.",
+   "link": "https://spaceplace.nasa.gov/big-bang/en/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "The Early Universe",
+   "publisher": "Las Cumbres Observatory",
+   "date": "n.d.",
+   "link": "https://lco.global/spacebook/cosmology/early-universe/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "What If the Big Bang Wasn't the Beginning? New Study Proposes Alternative",
+   "publisher": "Space.com",
+   "date": "n.d.",
+   "link": "https://www.space.com/38982-no-big-bang-bouncing-cosmology-theory.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Microwave anomalies strengthen the case for loop quantum cosmology, say physicists",
+   "publisher": "Physics World (IOP Publishing)",
+   "date": "n.d.",
+   "link": "https://physicsworld.com/a/microwave-anomalies-strengthen-the-case-for-loop-quantum-cosmology-say-physicists/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "From an almost perfect Universe to the best of both worlds",
+   "publisher": "ESA Science & Technology (Planck mission)",
+   "date": "n.d.",
+   "link": "https://sci.esa.int/web/planck/-/60499-from-an-almost-perfect-universe-to-the-best-of-both-worlds",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Planck: final data from the mission lends strong support to the standard cosmological model",
+   "publisher": "Observatoire de Paris (PSL)",
+   "date": "n.d.",
+   "link": "https://observatoiredeparis.psl.eu/planck-s-definitive-data.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Bouncing Cosmology and String Theory",
+   "publisher": "Paul J. Steinhardt, Princeton University (personal research page)",
+   "date": "n.d.",
+   "link": "https://paulsteinhardt.org/bouncing-cosmology/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "The Cyclic Model Simplified",
+   "publisher": "Paul J. Steinhardt and Neil Turok (paper, as hosted online)",
+   "date": "n.d.",
+   "link": "http://stoqatpul.org/lat/materials/cosmologia_metafisica/steinhardt1.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Loop quantum cosmology may explain smoothness of cosmic microwave background",
+   "publisher": "Physics World (IOP Publishing)",
+   "date": "n.d.",
+   "link": "https://physicsworld.com/a/loop-quantum-cosmology-may-explain-smoothness-of-cosmic-microwave-background/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Testing loop quantum cosmology",
+   "publisher": "ScienceDirect (Elsevier), journal abstract",
+   "date": "n.d.",
+   "link": "https://www.sciencedirect.com/science/article/pii/S1631070517300294",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Topological defects: A problem for cyclic universes?",
+   "publisher": "arXiv (astro-ph/0206287)",
+   "date": "2002",
+   "link": "https://arxiv.org/pdf/astro-ph/0206287",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Cyclic model",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Cyclic_model",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "New evidence for cyclic universe claimed by Roger Penrose and colleagues",
+   "publisher": "Physics World (IOP Publishing)",
+   "date": "n.d.",
+   "link": "https://physicsworld.com/a/new-evidence-for-cyclic-universe-claimed-by-roger-penrose-and-colleagues/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "The quest for CMB signatures of Conformal Cyclic Cosmology",
+   "publisher": "arXiv (2208.06021)",
+   "date": "2022",
+   "link": "https://arxiv.org/pdf/2208.06021",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "No, Roger Penrose, We See No Evidence Of A 'Universe Before The Big Bang'",
+   "publisher": "Forbes (Starts With A Bang column; a critic's opinion piece)",
+   "date": "2020-10-08",
+   "link": "https://www.forbes.com/sites/startswithabang/2020/10/08/no-roger-penrose-we-see-no-evidence-of-a-universe-before-the-big-bang/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "A critical review of classical bouncing cosmologies",
+   "publisher": "ScienceDirect (Elsevier), journal abstract",
+   "date": "n.d.",
+   "link": "https://www.sciencedirect.com/science/article/abs/pii/S0370157314004505",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Squeezing down the Theory Space for Cosmic Inflation",
+   "publisher": "Physics, American Physical Society",
+   "date": "2021-10-04",
+   "link": "https://physics.aps.org/articles/v14/135",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Improved limits on the tensor-to-scalar ratio using BICEP and Planck",
+   "publisher": "arXiv (2112.07961)",
+   "date": "2021-12",
+   "link": "https://arxiv.org/pdf/2112.07961",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Smoking-gun Signatures of Bounce Cosmology from Echoes of Relic Gravitational Waves",
+   "publisher": "The Astrophysical Journal Letters (IOP Publishing)",
+   "date": "2026",
+   "link": "https://iopscience.iop.org/article/10.3847/2041-8213/ae6f10",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "What Came Before the Big Bang?",
+   "publisher": "Discovery",
+   "date": "n.d.",
+   "link": "https://www.discovery.com/science/What-Came-Before-Big-Bang",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "The cosmic microwave background and inflation",
+   "publisher": "ESA (Planck mission)",
+   "date": "n.d.",
+   "link": "https://www.esa.int/Science_Exploration/Space_Science/Planck/The_cosmic_microwave_background_and_inflation",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Conformal cyclic cosmology",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Conformal_cyclic_cosmology",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Did The Universe Really Begin With a Singularity?",
+   "publisher": "Matt Strassler, 'Of Particular Significance' (physicist's blog)",
+   "date": "2014-03-21",
+   "link": "https://profmattstrassler.com/2014/03/21/did-the-universe-begin-with-a-singularity/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "A Consideration of Cosmic Evolution from the Points of View of the Inflationary and Cyclic Theories",
+   "publisher": "arXiv (1812.05728)",
+   "date": "2018",
+   "link": "https://arxiv.org/pdf/1812.05728",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "A Critical Review of Classical Bouncing Cosmologies",
+   "publisher": "arXiv (1406.2790)",
+   "date": "2014",
+   "link": "https://arxiv.org/pdf/1406.2790",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class five. I'm A, today's contrary voice. B will speak for the standard view and push back on me. Today's idea: what if our universe's 'beginning' was really a turning point?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Cycles and bounces: universes that begin again"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, where this idea stands. Cyclic and bounce cosmologies are a minority scholarly view. Trained physicists study and test them, and that deserves respect. They are not the consensus."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Mainstream consensus | Active research debate | >> Minority scholarly view (cyclic and bounce ideas) | Popular speculation | Fiction"
+   },
+   "cite": [
+    "s16",
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "And here is the accepted view, plainly. The universe has been expanding and cooling from a hot, dense early state for roughly 13.75 billion years. The bounce ideas keep that expansion."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Accepted view: the universe expanded and cooled from a hot, dense early state. | Bounce and cyclic view: the expansion is real, but the start may have been a turn, not a first moment."
+   },
+   "cite": [
+    "s1",
+    "s2",
+    "s20"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's check that we have the status right before moving on."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Minority scholarly view"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which tier did we give cyclic and bounce ideas?",
+    "right": "Minority scholarly view: studied by trained physicists, but not the consensus.",
+    "wrong": [
+     "Mainstream consensus",
+     "Popular speculation",
+     "Fiction"
+    ],
+    "why": "These models are published and tested by professional cosmologists, but a review of them found most are far from replacing the standard picture, though a handful deserve further research."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why do most physicists prefer the standard picture? Partly the oldest light. ESA's Planck satellite mapped it. The final data strongly support the standard model, though a few oddities remain."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "An oval map of the whole sky in soft blues and oranges. It shows the faint afterglow of the early universe, with tiny temperature differences from patch to patch."
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That model includes inflation: a very brief, very fast stretch of growth in the first tiny fraction of a second. Planck's data gave further evidence for it."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Inflation: size grew by a factor of about 10^30"
+   },
+   "cite": [
+    "s5",
+    "s21"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now I press B on the very first instant. Run the movie backward and the equations point to a singularity, a point of infinite density. There, general relativity suggests our usual physics breaks down."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "singularity"
+   },
+   "cite": [
+    "s3",
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Fair point. There is no direct evidence of that original singularity, and nobody knows what triggered the Big Bang. One physicist says the modern theory starts after a 'period of ignorance'."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "The modern Big Bang theory starts after a period of ignorance."
+   },
+   "cite": [
+    "s3",
+    "s2",
+    "s23"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does the standard picture honestly say about the very first moment?",
+    "right": "Our current theories can't describe it, and it is still an open question.",
+    "wrong": [
+     "It is fully explained by the singularity.",
+     "It has been proven to be a bounce.",
+     "Planck's map disproved it."
+    ],
+    "why": "Sources agree there is no direct evidence of the original singularity and that what triggered the Big Bang is not known."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So here is the opening for my side. A bounce model says the Big Bang was not a start. It was a turn from an earlier, shrinking universe into the expanding one we live in."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "ball",
+    "count": 1,
+    "layout": "row",
+    "text": "One ball: it falls, bounces, and rises again."
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A cyclic model goes one step further: the turn repeats. The bounce might happen only once, or it might come around again and again."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Bounce model: one turning point, at least | Cyclic model: the turning point repeats, cycle after cycle"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is the difference between a bounce model and a cyclic model?",
+    "right": "A bounce model has a turning point. A cyclic model has the turning point repeat again and again.",
+    "wrong": [
+     "A bounce model says the universe never changed.",
+     "A cyclic model says the universe has always been expanding.",
+     "There is no difference. They are two names for the standard Big Bang."
+    ],
+    "why": "A bounce may be a one-time event, or in a cyclic universe it recurs at intervals."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Cyclic universes are an old idea. Alexander Friedmann introduced an oscillating universe. But in 1934 Richard Tolman showed those early versions had a serious problem."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Tolman, 1934"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is Tolman's problem, plainly. The second law of thermodynamics says disorder, called entropy, only grows. So disorder would pile up cycle after cycle, and the universe would still have had a beginning."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "entropy = disorder, and it only grows"
+   },
+   "cite": [
+    "s11",
+    "s12"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was Tolman's objection to the old cyclic universe?",
+    "right": "Disorder (entropy) would build up from cycle to cycle, so the cycles could not repeat unchanged forever.",
+    "wrong": [
+     "He showed the universe is not expanding.",
+     "He showed the Big Bang never happened.",
+     "He showed the cycles would be too short to measure."
+    ],
+    "why": "The second law means entropy grows each cycle. That undermines the 'no beginning' hope."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 2002 Paul Steinhardt and Neil Turok revived the idea. Their view: the Big Bang is not the beginning of time, but a transition from an earlier phase. Their first version leans on M-theory and extra dimensions."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "The big bang is a transition to an earlier phase, not a beginning."
+   },
+   "cite": [
+    "s8",
+    "s7",
+    "s24"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "How do they answer Tolman? In a newer version, each cycle grows the universe enormously. So the disorder is spread thin instead of piling up."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Old cyclic model: disorder piles up, cycle after cycle | Newer cyclic model: huge growth each cycle spreads the disorder thin"
+   },
+   "cite": [
+    "s7",
+    "s12"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "How does the newer cyclic model answer Tolman's problem?",
+    "right": "The universe grows a great deal each cycle, so disorder is spread thin instead of piling up.",
+    "wrong": [
+     "It says the second law of thermodynamics is false.",
+     "It says there has only ever been one cycle.",
+     "It ignores the problem."
+    ],
+    "why": "The newer model has the scale of the universe grow by a large factor from one cycle to the next."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A second route is loop quantum cosmology. At extreme densities, quantum effects make gravity act like a push instead of a pull. Collapse stops and rebounds. The singularity is replaced by a bounce."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "loop quantum cosmology: a quantum bounce"
+   },
+   "cite": [
+    "s9",
+    "s10",
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A third route is Roger Penrose's conformal cyclic cosmology. The far future of one universe, cold and empty, is joined to the Big Bang of the next. Penrose calls each universe an 'aeon'."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Aeon one: ends cold and empty | Joined to | Aeon two: begins with our Big Bang"
+   },
+   "cite": [
+    "s22",
+    "s13"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let me test you on the three, one at a time."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Brane-collision cyclic model (Steinhardt and Turok) | Loop quantum cosmology | Conformal cyclic cosmology (Penrose)"
+   },
+   "cite": [
+    "s9",
+    "s7",
+    "s13"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which proposal says quantum effects make gravity push, replacing the singularity with a bounce?",
+    "right": "Loop quantum cosmology",
+    "wrong": [
+     "Penrose's conformal cyclic cosmology",
+     "The Steinhardt and Turok brane-collision cyclic model",
+     "The standard Big Bang with inflation"
+    ],
+    "why": "Loop quantum cosmology says gravity in effect becomes repulsive at extreme density, so the universe bounces."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now: what would each idea need to show to be taken more seriously? A good idea sticks its neck out and predicts something we could check. First test: gravitational waves from the very early universe."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "primordial gravitational waves"
+   },
+   "cite": [
+    "s18",
+    "s25"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Inflation can leave such waves. The brane cyclic model predicts they would be very weak. A 2014 claimed detection did not hold up, and the limits have tightened since."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Upper limit on the gravitational-wave signal (r). A lower number means a weaker signal is allowed.",
+    "chart": "c1"
+   },
+   "cite": [
+    "s18",
+    "s25"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "No waves found yet. That is comfortable for the cyclic model, but it doesn't prove it. B, can inflation and the cyclic model be told apart by the usual density ripples alone?"
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "If strong waves are found: some bounce models, such as the cyclic scenario, are in trouble. | If none are found: it pressures some popular models, but proves no single one."
+   },
+   "cite": [
+    "s17",
+    "s8",
+    "s16"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "If strong primordial gravitational waves were found, which idea would be in trouble?",
+    "right": "The brane cyclic model, which predicts very weak ones.",
+    "wrong": [
+     "Inflation",
+     "The Big Bang itself",
+     "Every bounce model, without exception"
+    ],
+    "why": "A review found that certain bouncing cosmologies, such as the cyclic scenario, would be in trouble, while others remain valid."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Loop quantum cosmology's backers point to the oldest light. They say the bounce could leave marks at large angles, and that this could explain some oddities in the cosmic microwave background."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The all-sky map again, with one big, faint patch outlined. It marks the large-angle oddity that bounce supporters say they can explain."
+   },
+   "cite": [
+    "s4",
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A fair worry from me: oddities can be flukes. To be taken seriously, an idea should make a prediction first, then have it confirmed. A match found after the fact counts for less."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "prediction first, then check"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Penrose predicted rings and hot spots in the oldest light, left by black holes of the earlier aeon. He called the hot spots 'Hawking points'. His team reported signs of them."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Hawking points"
+   },
+   "cite": [
+    "s13",
+    "s14"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Critics disagree, and I'll say so fairly. One writer in Forbes argues these features are not robust and the data don't support a universe before the Big Bang. He still calls Penrose's idea imaginative. The jury is out."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Penrose's team: reports rings and hot spots in the oldest light. | Critics: say the features are not robust enough to be evidence."
+   },
+   "cite": [
+    "s15",
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more live proposal, from 2026. A paper says bounce models might leave a distinctive ripple pattern in high-frequency gravitational waves, a pattern inflation would not make. This is a proposed test, not an observation."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "proposed test, not yet seen"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's put the story in order. Each step is one idea, and each is tested against the evidence."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1934: Tolman's entropy objection | 1960s: 'Big Bounce' idea proposed | 2002: Steinhardt and Turok cyclic model | 2010: Penrose and a colleague claim rings in the oldest light | 2018: Planck's final data | 2021: BICEP/Keck sets r < 0.036 | 2026: proposed gravitational-wave echo test"
+   },
+   "cite": [
+    "s12",
+    "s20",
+    "s7",
+    "s13",
+    "s6",
+    "s17",
+    "s19"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Thought experiment time. Drop a ball. It hits the floor and bounces up. If you only started watching at the bounce, you might think the floor was where the ball began."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "ball",
+    "count": 1,
+    "layout": "row",
+    "text": "A ball at the floor, just starting to rise."
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now translate it. Our whole history would be the ball after the bounce. The fall before it, an earlier contracting universe, would be hidden from us."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "The ball: rising, with the fall unseen. | Our universe: expanding, with an earlier contraction unseen."
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In the thought experiment, what is the 'fall' before the bounce?",
+    "right": "The earlier contracting phase of the universe.",
+    "wrong": [
+     "The first moment of the expanding universe.",
+     "The brief period of inflation.",
+     "The oldest light we can see today."
+    ],
+    "why": "A bounce model connects an earlier contracting phase to the expansion we see now."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Devil's advocate: why believe in a fall nobody saw? Only if the idea predicts something checkable, like the tests we just met. Note that nothing here denies the expansion we measure."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "a hidden fall needs a checkable prediction"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So which is right? Honestly, nobody knows yet. 'We don't know yet' is a real answer. It marks the place where the evidence runs out."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "we don't know yet"
+   },
+   "cite": [
+    "s2",
+    "s20"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "And an honest 'don't know' still has a lean. The standard picture has the strongest evidence. The bounce ideas are worth testing, and a few warrant further research."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Strongest evidence: the standard picture, after the very first instant. | Open and worth testing: what came at or before the start."
+   },
+   "cite": [
+    "s16",
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which statement is most honest today?",
+    "right": "The standard picture is well supported, the very first moment is unknown, and bounce ideas are open, untested possibilities.",
+    "wrong": [
+     "Bounce models have been proven, so the Big Bang is wrong.",
+     "Bounce models have been disproven, so nobody studies them.",
+     "Nobody knows anything, so every idea is equally likely."
+    ],
+    "why": "The standard model has strong support. The start is an open question, and a handful of bounce proposals warrant further research."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To recap, in four lines. Bounce models say the Big Bang was a turn. Cyclic models say the turn repeats. They are a minority scholarly view, still being tested. Next class: challenges that evolution absorbed."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Bounce: the Big Bang was a turn | Cyclic: the turn repeats | Status: a minority scholarly view, still being researched | Honest answer: we don't know yet"
+   },
+   "cite": [
+    "s7",
+    "s16",
+    "s2"
+   ],
+   "move": "slide-in-left"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "line",
+   "title": "Upper limit on primordial gravitational waves (r, 95% confidence): limits have tightened",
+   "rows": [
+    {
+     "label": "2013 (Planck)",
+     "value": 0.11,
+     "source": "s18"
+    },
+    {
+     "label": "2015 (BICEP/Keck + Planck)",
+     "value": 0.12,
+     "source": "s18"
+    },
+    {
+     "label": "2016",
+     "value": 0.09,
+     "source": "s18"
+    },
+    {
+     "label": "2018",
+     "value": 0.07,
+     "source": "s18"
+    },
+    {
+     "label": "2019",
+     "value": 0.065,
+     "source": "s18"
+    },
+    {
+     "label": "2021 (Planck + BK15)",
+     "value": 0.044,
+     "source": "s18"
+    },
+    {
+     "label": "2021 (BK18)",
+     "value": 0.036,
+     "source": "s18"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Cyclic and bounce cosmologies",
+   "links": [
+    "[[steady state theory]]",
+    "[[inflation]]",
+    "[[cosmic microwave background]]"
+   ]
+  },
+  {
+   "topic": "Singularity",
+   "links": [
+    "[[general relativity]]",
+    "[[Big Bang theory]]"
+   ]
+  },
+  {
+   "topic": "Entropy and the second law",
+   "links": [
+    "[[heat death of the universe]]"
+   ]
+  },
+  {
+   "topic": "Primordial gravitational waves",
+   "links": [
+    "[[inflation]]",
+    "[[BICEP/Keck]]"
+   ]
+  },
+  {
+   "topic": "Credibility tiers",
+   "links": [
+    "[[How to play 'What if?']]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "The Big Bang may have been a bounce from an earlier universe.",
+   "other_view": "Most cosmologists keep the standard picture with inflation. Planck's final data strongly support that model, though a few oddities remain. A critical review found most bouncing models are far from rivalling inflation, while a handful of proposals warrant further research.",
+   "cite": [
+    "s6",
+    "s5",
+    "s16"
+   ]
+  },
+  {
+   "claim": "Penrose's team has found signs of an earlier universe (rings and Hawking points) in the oldest light.",
+   "other_view": "Penrose's team reported these signs. A critic writing in Forbes argues the features are not robust and do not support the claim. This is disputed, not settled.",
+   "cite": [
+    "s13",
+    "s14",
+    "s15"
+   ]
+  },
+  {
+   "claim": "No primordial gravitational waves have been found, so inflation is in trouble and bounce ideas gain.",
+   "other_view": "The null results put pressure on some popular early-universe models. They do not prove any one rival. Some bounce models would be hurt if waves were found, and others would not.",
+   "cite": [
+    "s17",
+    "s16",
+    "s8"
+   ]
+  }
+ ]
+}

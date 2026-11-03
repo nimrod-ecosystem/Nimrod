@@ -1,0 +1,1097 @@
+{
+ "about": {
+  "title": "How we know: reading the deep past without writing",
+  "course": "prehistory",
+  "class_n": 1,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "This runs a little over 25 minutes. Dating methods only make sense one small step at a time, and the course notes ask for each site to be given with two dates (when it was made, and when it was found). Pause after any beat and come back whenever you like."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Explainer: what is radiocarbon dating and how does it work?",
+   "publisher": "The Conversation",
+   "date": "n.d.",
+   "link": "https://theconversation.com/explainer-what-is-radiocarbon-dating-and-how-does-it-work-9690",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Radiocarbon Dating Principles",
+   "publisher": "Canadian Archaeological Association (canadianarchaeology.ca)",
+   "date": "n.d.",
+   "link": "https://www.canadianarchaeology.ca/dating",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Prehistory (dictionary entry)",
+   "publisher": "Cambridge Dictionary",
+   "date": "n.d.",
+   "link": "https://dictionary.cambridge.org/dictionary/english/prehistory",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Prehistoric archaeology",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/science/prehistoric-archaeology",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Prehistory",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Prehistory",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Genetics",
+   "publisher": "Smithsonian Institution Human Origins Program",
+   "date": "n.d.",
+   "link": "https://humanorigins.si.edu/evidence/genetics",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "These are the Decade's Biggest Discoveries in Human Evolution",
+   "publisher": "Smithsonian National Museum of Natural History",
+   "date": "2020-04-28",
+   "link": "https://www.smithsonianmag.com/blogs/national-museum-of-natural-history/2020/04/28/these-decades-biggest-discoveries-human-evolution/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "DNA and the first Neanderthals",
+   "publisher": "Smithsonian Institution Human Origins Program",
+   "date": "n.d.",
+   "link": "https://humanorigins.si.edu/research/whats-hot-human-origins/dna-and-first-neanderthals",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Dating dinosaurs and other fossils",
+   "publisher": "The Australian Museum",
+   "date": "n.d.",
+   "link": "https://australian.museum/learn/australia-over-time/fossils/dating-dinosaurs-and-other-fossils/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "New Evidence of Mysterious Homo naledi Raises Questions about How Humans Evolved",
+   "publisher": "Scientific American",
+   "date": "2017",
+   "link": "https://www.scientificamerican.com/article/new-evidence-of-mysterious-homo-naledi-raises-questions-about-how-humans-evolved/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "This mysterious human species lived alongside our ancestors, newly dated fossils suggest",
+   "publisher": "Science (AAAS), Ann Gibbons",
+   "date": "2017-05-09",
+   "link": "https://www.science.org/content/article/mysterious-human-species-lived-alongside-our-ancestors-newly-dated-fossils-suggest",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Dates for Homo naledi Just Released",
+   "publisher": "Archaeology Almanac",
+   "date": "2017-05-09",
+   "link": "https://www.archaeologyalmanac.com/2017/05/09/dates-for-homo-naledi-just-released/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Homo naledi, your recently discovered human relative",
+   "publisher": "Natural History Museum, London",
+   "date": "n.d.",
+   "link": "https://www.nhm.ac.uk/discover/homo-naledi-your-most-recently-discovered-human-relative.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Göbekli Tepe (project page)",
+   "publisher": "German Archaeological Institute (DAI)",
+   "date": "n.d.",
+   "link": "https://www.dainst.org/en/research/projects/noslug/5746",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Göbekli Tepe archaeological excavations",
+   "publisher": "Atlas Anatolia",
+   "date": "n.d.",
+   "link": "https://atlasanatolia.com/archaeological-sites/gobekli-tepe-excavations",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Göbekli Tepe",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/G%C3%B6bekli_Tepe",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Oldest cave art Indonesia",
+   "publisher": "Southern Cross University",
+   "date": "2024",
+   "link": "https://www.scu.edu.au/news/2024/oldest-cave-art-indonesia/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "World's oldest cave painting is at least 51,200 years old, scientists say",
+   "publisher": "NBC News",
+   "date": "2024-07-03",
+   "link": "https://www.nbcnews.com/news/rcna160304",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "World's oldest narrative art discovered in Indonesian cave",
+   "publisher": "Archaeology Magazine (archaeologymag.com)",
+   "date": "2024-07",
+   "link": "https://archaeologymag.com/2024/07/worlds-oldest-narrative-art-discovered-in-indonesian-cave/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Earliest evidence of making fire",
+   "publisher": "Nature",
+   "date": "2025",
+   "link": "https://www.nature.com/articles/s41586-025-09855-6",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Control of fire by early humans",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Control_of_fire_by_early_humans",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Could These 400,000-Year-Old Rock Fragments Be the Oldest Known Evidence of Human Fire-Making?",
+   "publisher": "Smithsonian Magazine",
+   "date": "2025",
+   "link": "https://www.smithsonianmag.com/smart-news/could-these-400000-year-old-rock-fragments-be-the-oldest-known-evidence-of-human-fire-making-180987861/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "The Earliest Example of Hominid Fire",
+   "publisher": "Smithsonian Magazine",
+   "date": "2012",
+   "link": "https://www.smithsonianmag.com/science-nature/the-earliest-example-of-hominid-fire-171693652/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "How Long Was the Ice Age?",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/How-Long-Was-the-Ice-Age",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Outline of prehistoric technology",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Outline_of_prehistoric_technology",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "How Radiocarbon Dating Works: Carbon-14 Explained",
+   "publisher": "ScienceInsights",
+   "date": "n.d.",
+   "link": "https://scienceinsights.org/how-radiocarbon-dating-works-carbon-14-explained/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "Fire-Altered Stone Tools",
+   "publisher": "Smithsonian Institution Human Origins Program",
+   "date": "n.d.",
+   "link": "https://humanorigins.si.edu/evidence/behavior/hearths-shelters/fire-altered-stone-tools",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "Human Evolution Evidence",
+   "publisher": "Smithsonian Institution Human Origins Program",
+   "date": "n.d.",
+   "link": "https://humanorigins.si.edu/evidence",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "Human evolution: a tale from ancient genomes",
+   "publisher": "Philosophical Transactions of the Royal Society B",
+   "date": "2017",
+   "link": "https://royalsocietypublishing.org/rstb/article/372/1713/20150484/23064/Human-evolution-a-tale-from-ancient-genomesAncient",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "How Should Scientists Navigate the Ethics of Ancient Human DNA Research?",
+   "publisher": "Smithsonian Magazine",
+   "date": "n.d.",
+   "link": "https://www.smithsonianmag.com/science-nature/how-should-scientists-navigate-the-ethics-of-ancient-human-dna-research-180981489/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s31",
+   "title": "KBS Tuff",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/KBS_Tuff",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s32",
+   "title": "Carbon Dating",
+   "publisher": "Arizona Ruins (arizonaruins.com)",
+   "date": "n.d.",
+   "link": "https://www.arizonaruins.com/articles/radiocarbon.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s33",
+   "title": "Holocene extinction",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/science/holocene-extinction/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s34",
+   "title": "Potassium-argon dating",
+   "publisher": "Fiveable (Intro to Archaeology)",
+   "date": "n.d.",
+   "link": "https://library.fiveable.me/key-terms/introduction-archaeology/potassium-argon-dating",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s35",
+   "title": "Radiocarbon Dating - an overview",
+   "publisher": "ScienceDirect Topics",
+   "date": "n.d.",
+   "link": "https://www.sciencedirect.com/topics/earth-and-planetary-sciences/radiocarbon-dating",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s36",
+   "title": "Homo naledi and Pleistocene hominin evolution in subequatorial Africa",
+   "publisher": "eLife",
+   "date": "2017-05-09",
+   "link": "https://elifesciences.org/articles/24234",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome. Today's big question: how can we know about people who never wrote a word? We'll learn what prehistory means, the main kinds of evidence, and why dates sometimes change."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "How we know: reading the deep past without writing"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's start with the word itself. Prehistory means the time before there were written records."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Prehistory = the time before written records"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What does 'prehistory' mean?",
+    "right": "The time before there were written records",
+    "wrong": [
+     "The time before the Earth formed",
+     "The time before humans could talk",
+     "The time before humans used fire"
+    ],
+    "why": "Pre means before. History, in this sense, is the time with written records. Prehistory is the time before them."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So there are no letters, no diaries, no names. For prehistory, the only sources are material and environmental: things people left behind, and the world around them."
+   },
+   "show": {
+    "kind": "list",
+    "text": "What prehistory has instead of writing:\n- things people made\n- things people left behind\n- the natural world around them"
+   },
+   "cite": [
+    "s4",
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Where does prehistory end? Not on one date. It ends where written records begin, and that happens at different times in different places."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Prehistory ends when writing begins, place by place"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Does prehistory end on the same date everywhere in the world?",
+    "right": "No. It ends when written records begin in each place.",
+    "wrong": [
+     "Yes, it ended on one date for the whole world",
+     "Yes, it ended when the Ice Age ended",
+     "No, it has never ended anywhere"
+    ],
+    "why": "Prehistory is defined by missing writing, and writing arrived at different times in different places."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It's a very long story. One source says the earliest technology began about 2.5 million years ago. The Old Stone Age covers roughly 99% of technological prehistory."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "about 2.5 million years since the earliest technology"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So what do we use instead of writing? Four main kinds of evidence: bones, tools, hearths and DNA. Then we need a way to date them. We'll take them one at a time."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Our evidence kit:\n1. Bones and teeth\n2. Tools\n3. Hearths (old fires)\n4. Ancient DNA\n+ Dating methods"
+   },
+   "cite": [
+    "s28"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, bones. A fossil is a bone, tooth or trace of ancient life that survived in the ground. Very old fossils are rare. Those over 3.5 million years old are extremely rare."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1,550 bone pieces from at least 15 individuals, found in one South African cave"
+   },
+   "cite": [
+    "s7",
+    "s12"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What is a fossil?",
+    "right": "A bone, tooth or trace of ancient life that has survived in the ground",
+    "wrong": [
+     "A written note from long ago",
+     "A tool made from stone",
+     "A painting on a cave wall"
+    ],
+    "why": "Fossils are the physical remains or traces of ancient living things. They are one of our main clues."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Second, tools. Stone tools are what mark the Old Stone Age. A shaped stone tells us that someone chose it, made it and used it."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A teardrop-shaped flint handaxe, chipped on both sides to make a sharp edge"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Third, hearths, which are the traces of old fires. At Gesher Benot Ya'aqov in Israel, scorched toolmaking debris lay near burned seeds and wood. Those mark early hearths."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Dark, scorched flint flakes lying beside charred seeds and burned wood in an excavation trench"
+   },
+   "cite": [
+    "s27"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Notice this site has two dates. One is when people used it, about 790,000 years ago. The other is when archaeologists found it, in 2004. We'll give both for every site."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Gesher Benot Ya'aqov, Israel\nUsed: about 790,000 years ago | Found: 2004"
+   },
+   "cite": [
+    "s27"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "When did archaeologists find Gesher Benot Ya'aqov?",
+    "right": "In 2004",
+    "wrong": [
+     "About 790,000 years ago",
+     "In the year 1790",
+     "Nobody has found it yet"
+    ],
+    "why": "790,000 years ago is when people used the site. 2004 is when archaeologists found it. They are two different events."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Fourth, ancient DNA. DNA is the instruction code inside living cells. In 2010, scientists recovered DNA from a finger bone found in Denisova Cave in Siberia. It showed a group of humans who were neither modern humans nor Neanderthals: the Denisovans."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A tiny fossil finger bone resting in a gloved hand under bright lab light"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What did the DNA from the Denisova Cave finger bone show?",
+    "right": "A previously unknown group of early humans, now called Denisovans",
+    "wrong": [
+     "That the bone belonged to a modern person",
+     "That the bone was a Neanderthal",
+     "That the bone was from a chimpanzee"
+    ],
+    "why": "The DNA matched neither modern humans nor Neanderthals. It was the first time a new human group was identified from ancient DNA."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "DNA can also show family links. Fossils from Sima de los Huesos in Spain are 430,000 years old. Their DNA showed they were early Neanderthals. Early DNA work did struggle with contamination, though."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "DNA: family links, and a contamination risk"
+   },
+   "cite": [
+    "s8",
+    "s29"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now: how old is any of this? Fossils often lie between two layers of volcanic ash. Date the layer above and the layer below, and the object sits in between."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A cliff face in stripes: a pale ash layer on top, a bone in the middle, another ash layer below"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Another way is radiocarbon dating. All living things take in carbon, including a rare radioactive kind called carbon-14. When a plant or animal dies, the carbon-14 slowly decays. Start with 8 dots of carbon-14."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "dot",
+    "count": 8,
+    "layout": "row",
+    "text": "Alive: 8 dots of carbon-14"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The time for half of it to decay is called a half-life. For carbon-14 that is about 5,730 years. After one half-life, half is left: 4 dots."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "dot",
+    "count": 4,
+    "layout": "row",
+    "text": "After about 5,730 years: 4 dots left"
+   },
+   "cite": [
+    "s2",
+    "s26"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "After two half-lives, a quarter is left: 2 dots. That means about 11,460 years. Scientists measure what is left and work back to the age."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "dot",
+    "count": 2,
+    "layout": "row",
+    "text": "After about 11,460 years: 2 dots left"
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "A piece of charcoal has a quarter of its original carbon-14. About how old is it?",
+    "right": "About 11,460 years",
+    "wrong": [
+     "About 5,730 years",
+     "About 22,920 years",
+     "About 50,000 years"
+    ],
+    "why": "A quarter left means two half-lives, and two times 5,730 is about 11,460 years."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Every method has limits. Limit one: radiocarbon only works on things that were once alive, like wood, bone, shell, charcoal and seeds. It cannot date a stone tool directly."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Can be dated: charcoal, bone, seeds, wood | Cannot be dated: stone tools, pottery"
+   },
+   "cite": [
+    "s26",
+    "s32"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Limit two: age. Radiocarbon effectively stops at about 50,000 years. After that, too little carbon-14 is left to measure. Some sources say 55,000 or 60,000, which we'll come back to."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "about 50,000 years: radiocarbon's limit"
+   },
+   "cite": [
+    "s2",
+    "s35"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Could radiocarbon dating be used on a bone that is one million years old?",
+    "right": "No. It is far too old, and too little carbon-14 would be left.",
+    "wrong": [
+     "Yes, radiocarbon works on any age",
+     "Yes, but only if the bone is very large",
+     "No, because bones were never alive"
+    ],
+    "why": "The limit is around 50,000 years. Bones were once alive, so material isn't the problem here. The age is."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Limit three: contamination. Say a 50,000-year-old sample picks up just 1% modern carbon from glue or soil. It would be dated to around 40,000 years. So samples are cleaned very carefully."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1% modern carbon can make 50,000 look like about 40,000"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One more step. Raw results are corrected using a calibration curve, built from things of known age such as tree rings. In 2008 that curve reached only 26,000 years. Now it tentatively reaches 50,000."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "2008: calibration reaches about 26,000 years\nNow: tentatively about 50,000 years"
+   },
+   "cite": [
+    "s2",
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here are some of our example finds by age. Radiocarbon stops near 50,000 years. Look at the bars and see which ones fall far beyond it."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Ages of example finds (years ago)",
+    "chart": "c1"
+   },
+   "cite": [
+    "s27",
+    "s8",
+    "s20",
+    "s10",
+    "s17",
+    "s14"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Which of these is too old for radiocarbon to date directly?",
+    "right": "The hearths at Gesher Benot Ya'aqov, about 790,000 years old",
+    "wrong": [
+     "Göbekli Tepe, about 11,500 years old",
+     "A seed that is 5,000 years old",
+     "A bone that is 30,000 years old"
+    ],
+    "why": "Radiocarbon reaches only about 50,000 years. The 790,000-year-old hearths are far beyond that. The other items are all within range."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "For older things, scientists use other clocks. Potassium-argon dating works on volcanic rock and ash, from about 100,000 years to billions. It dates the layers, so the fossil gets a date between them."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A scientist chipping a sample from a pale volcanic ash layer in a gorge wall, a fossil site just above it"
+   },
+   "cite": [
+    "s34",
+    "s9",
+    "s31"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A 1.8-million-year-old fossil lies between two volcanic ash layers. Which clock suits it?",
+    "right": "Potassium-argon (or argon-argon) dating of the ash layers",
+    "wrong": [
+     "Radiocarbon dating of the fossil",
+     "Counting tree rings",
+     "Reading a written record"
+    ],
+    "why": "Volcanic ash can be dated with potassium-argon methods, and the fossil sits between the dated layers. Radiocarbon is far too short-range here."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the next big idea: evidence is patchy. Very old fossils are extremely rare, and the people had no writing. One researcher put it simply: words do not fossilise."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "'words do not fossilise'"
+   },
+   "cite": [
+    "s17",
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Dates can be wrong, and then they get fixed. The KBS Tuff is an ash layer in East Africa. One early study gave about 2.6 million years. Other evidence disagreed, and several methods later supported about 1.87 million."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Early estimate: about 2.61 million years\nLater, several methods agree: about 1.87 million years"
+   },
+   "cite": [
+    "s31"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here's a famous puzzle. Homo naledi bones were found in a South African cave in 2013, and the species was named in 2015. At first nobody knew how old they were."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Homo naledi: found 2013, named 2015, age unknown"
+   },
+   "cite": [
+    "s12",
+    "s13",
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The bones looked primitive, so many experts guessed over 1.5 million years old. But the bones seemed barely fossilised. In 2017, dating of teeth and cave rock gave 236,000 to 335,000 years."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Dinaledi Chamber, South Africa\nBones laid down: 236,000 to 335,000 years ago | Found: 2013"
+   },
+   "cite": [
+    "s10",
+    "s11",
+    "s12",
+    "s36"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why was the age of Homo naledi such a surprise?",
+    "right": "Its bones looked very old and primitive, but dating showed it lived much more recently",
+    "wrong": [
+     "It turned out to be a modern human",
+     "The bones were found to be fake",
+     "Dating showed it was over two million years old"
+    ],
+    "why": "Looks alone suggested a very old species. Direct dating placed it between 236,000 and 335,000 years ago. Looks can mislead, so dating matters."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Better tools also change dates. A painting in Leang Karampuang cave in Sulawesi was first dated to at least 43,900 years. A new laser method pushed it to at least 51,200."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Leang Karampuang, Indonesia\nPainted: at least 51,200 years ago | Found: 2017"
+   },
+   "cite": [
+    "s19",
+    "s17",
+    "s18"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Sometimes the evidence stays the same and the reading changes. Göbekli Tepe in Turkey was built about 9,500 BCE. A 1960s survey saw worked stones and took them for a later cemetery."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Göbekli Tepe, Turkey\nBuilt: about 9500 BCE (roughly 11,500 years ago) | Rediscovered: 1994; digging began 1995"
+   },
+   "cite": [
+    "s14",
+    "s15"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why is 1994 called a 'rediscovery' of Göbekli Tepe?",
+    "right": "Archaeologists had noted the stones earlier, but only in 1994 did Klaus Schmidt recognise how important the site was",
+    "wrong": [
+     "The site was built in 1994",
+     "The site had been lost under the sea",
+     "The first survey found writing there"
+    ],
+    "why": "The site was recorded in the 1960s and misread. In 1994 Klaus Schmidt identified its T-shaped pillars, and excavation began in 1995."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So why do stories get revised? Three main reasons: new finds, better methods, and new readings of old evidence. One find showed our species is about 100,000 years older than first thought."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Why the story changes:\n- new finds\n- better dating methods\n- new readings of old evidence"
+   },
+   "cite": [
+    "s7",
+    "s19",
+    "s15"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which best explains why scientists revise dates and stories?",
+    "right": "New finds and better methods give new evidence, and the story is updated to fit it",
+    "wrong": [
+     "Scientists change their minds for fun",
+     "The old dates were just guesses with no science",
+     "Dates are decided by a vote"
+    ],
+    "why": "Revision is how science works. Evidence is tested, and when new finds or methods give better answers, the story is updated."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's see where our example sites are, from South Africa to Israel, Spain, England, Turkey and Indonesia. All of them are far apart and far apart in time."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A world map with six marked sites: Rising Star Cave (South Africa), Gesher Benot Ya'aqov (Israel), Sima de los Huesos (Spain), Barnham (England), Göbekli Tepe (Turkey), Leang Karampuang (Indonesia)"
+   },
+   "cite": [
+    "s27",
+    "s8",
+    "s20",
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here's the whole course in one line, oldest first. We'll fill in each part over the next nine classes. Some dates are firm, and some are still argued over."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "8-6 million years ago: human and chimpanzee lines split\nabout 2.5 million years ago: earliest stone technology (one source)\n2.6 million to 11,700 years ago: the Ice Age (Pleistocene)\n430,000 years ago: earliest Neanderthals, shown by DNA\nabout 400,000 years ago: deliberate fire-making at Barnham, England\nabout 300,000 years ago: earliest Homo sapiens remains\nabout 70,000 years ago: our ancestors spread from Africa\nat least 51,200 years ago: oldest narrative cave painting\nabout 11,500 years ago: Göbekli Tepe built\nabout 10,000 years ago: farming begins"
+   },
+   "cite": [
+    "s6",
+    "s25",
+    "s24",
+    "s8",
+    "s20",
+    "s7",
+    "s30",
+    "s17",
+    "s14",
+    "s33"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which of these is the OLDEST?",
+    "right": "The first stone tools, about 2.5 million years ago",
+    "wrong": [
+     "The earliest Homo sapiens remains, about 300,000 years ago",
+     "The Sulawesi narrative painting, at least 51,200 years ago",
+     "Göbekli Tepe, about 11,500 years ago"
+    ],
+    "why": "Stone tools go back about 2.5 million years in the source we used, far older than the other three."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's recap. Prehistory is the time before writing. We read it from bones, tools, hearths and DNA, and date them with clocks that each have limits. Dates change when new evidence arrives. Next class: walking upright."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Today you learned:\n- Prehistory = before written records\n- Evidence: bones, tools, hearths, DNA\n- Dating clocks, each with a limit\n- Patchy evidence and new finds change the story\nNext: Class 2, Walking upright"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Ages of example finds (years ago; oldest estimate or best figure)",
+   "rows": [
+    {
+     "label": "Gesher Benot Ya'aqov hearths",
+     "value": 790000,
+     "source": "s27"
+    },
+    {
+     "label": "Sima de los Huesos fossils",
+     "value": 430000,
+     "source": "s8"
+    },
+    {
+     "label": "Barnham fire-making",
+     "value": 400000,
+     "source": "s20"
+    },
+    {
+     "label": "Homo naledi (oldest estimate)",
+     "value": 335000,
+     "source": "s10"
+    },
+    {
+     "label": "Sulawesi painting (at least)",
+     "value": 51200,
+     "source": "s17"
+    },
+    {
+     "label": "Göbekli Tepe built (about)",
+     "value": 11500,
+     "source": "s14"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Prehistory",
+   "links": [
+    "[[Stone Age]]",
+    "[[Written records]]",
+    "[[Archaeology]]"
+   ]
+  },
+  {
+   "topic": "Radiocarbon dating",
+   "links": [
+    "[[Half-life]]",
+    "[[Calibration]]",
+    "[[Carbon-14]]"
+   ]
+  },
+  {
+   "topic": "Potassium-argon dating",
+   "links": [
+    "[[Volcanic ash layers]]",
+    "[[Radiocarbon dating]]"
+   ]
+  },
+  {
+   "topic": "Ancient DNA",
+   "links": [
+    "[[Denisovans]]",
+    "[[Neanderthals]]",
+    "[[Class 6: Our species, our cousins]]"
+   ]
+  },
+  {
+   "topic": "Gesher Benot Ya'aqov",
+   "links": [
+    "[[Hearths]]",
+    "[[Class 4: Fire and the changing body]]"
+   ]
+  },
+  {
+   "topic": "Homo naledi",
+   "links": [
+    "[[Fossils]]",
+    "[[Uranium-series dating]]"
+   ]
+  },
+  {
+   "topic": "Göbekli Tepe",
+   "links": [
+    "[[Class 10: The first farms and villages]]"
+   ]
+  },
+  {
+   "topic": "Sulawesi cave art",
+   "links": [
+    "[[Class 8: Art, symbols and the mind]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About 51,200 years ago (Sulawesi painting)",
+   "elsewhere": "Denisovans were living in Asia (the Denisova finger bone is 76,000 to 52,000 years old), and Neanderthals were making fire at a site in France around 50,000 years ago.",
+   "cite": [
+    "s7",
+    "s22"
+   ]
+  },
+  {
+   "when": "About 11,500 years ago (Göbekli Tepe built)",
+   "elsewhere": "The last Ice Age was ending about 11,700 years ago, and farming began about 10,000 years ago.",
+   "cite": [
+    "s14",
+    "s24",
+    "s33"
+   ]
+  },
+  {
+   "when": "About 400,000 years ago (Barnham fire-making)",
+   "elsewhere": "In Spain, early Neanderthals lived at Sima de los Huesos about 430,000 years ago, and by then Neanderthal and Denisovan lines had already split.",
+   "cite": [
+    "s20",
+    "s8"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "'Prehistory' is a useful label for the time before writing.",
+   "other_view": "The word came from an early view that without writing there is no history. Some scholars say ancient people should not be treated as a separate 'prehistoric' world, because learning about them matters to living communities today.",
+   "cite": [
+    "s5",
+    "s30"
+   ]
+  },
+  {
+   "claim": "Göbekli Tepe was mainly a temple or ritual site.",
+   "other_view": "Its first 20 years of study saw it as mainly ritual. Findings published in 2019 suggest a settlement with domestic structures, and specialists still debate whether 'temple' is the right word.",
+   "cite": [
+    "s14",
+    "s16",
+    "s15"
+   ]
+  },
+  {
+   "claim": "The oldest firm evidence of deliberate fire-making is about 400,000 years old (Barnham, England).",
+   "other_view": "Claims for the earliest use of fire run back as far as 2.0 million years. Some older sites, such as Koobi Fora in Kenya, cannot rule out wildfire. Fire-making and fire-using also follow different timelines.",
+   "cite": [
+    "s20",
+    "s21",
+    "s23"
+   ]
+  },
+  {
+   "claim": "The shape of a fossil is a good guide to its age.",
+   "other_view": "Many anthropologists judged from its anatomy that Homo naledi was over 1.5 million years old. Direct dating later placed it at 236,000 to 335,000 years.",
+   "cite": [
+    "s36",
+    "s10"
+   ]
+  },
+  {
+   "claim": "Radiocarbon reaches back about 50,000 years.",
+   "other_view": "Other sources give 55,000 or 60,000 years, and special preparation can sometimes handle older samples. Uncertainty grows with age, and calibration beyond about 50,000 years is still tentative.",
+   "cite": [
+    "s2",
+    "s35",
+    "s1"
+   ]
+  }
+ ]
+}

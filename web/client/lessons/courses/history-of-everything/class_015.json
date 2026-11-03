@@ -1,0 +1,973 @@
+{
+ "about": {
+  "title": "The First Cities and the Invention of Writing",
+  "course": "history-of-everything",
+  "class_n": 15,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes: 24 short beats and 7 check questions. The debate on how states formed gets three beats so that no single idea is rushed. The frame of reference (what else was happening elsewhere) takes four beats."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Uruk: The First City",
+   "publisher": "The Metropolitan Museum of Art",
+   "date": "n.d.",
+   "link": "https://www.metmuseum.org/essays/uruk-the-first-city",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "Seals and signs: tracing the origins of writing in ancient South-west Asia",
+   "publisher": "Antiquity (Cambridge University Press)",
+   "date": "n.d.",
+   "link": "https://www.cambridge.org/core/journals/antiquity/article/seals-and-signs-tracing-the-origins-of-writing-in-ancient-southwest-asia/B3C2D400F3F80A7A0162D9035C9C2804",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "Historic Overview of Early Mesopotamian Civilization",
+   "publisher": "University of New Mexico (course page, G. Bawden)",
+   "date": "n.d.",
+   "link": "https://www.unm.edu/~gbawden/328-sumhist/328-sumhist.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "Temple and Palace: corporate versus private authority as the dynamic of Sumerian political power formation",
+   "publisher": "University of New Mexico (course page, G. Bawden)",
+   "date": "n.d.",
+   "link": "https://www.unm.edu/~gbawden/328-tempal/328-tempal.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "Economy and Writing",
+   "publisher": "University of New Mexico (course page, G. Bawden)",
+   "date": "n.d.",
+   "link": "http://www.unm.edu/~gbawden/328-econ/328-econ.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "Sumerian civilization may have been jump-started by the rise and fall of tides",
+   "publisher": "Science (AAAS news)",
+   "date": "n.d.",
+   "link": "https://www.science.org/content/article/sumerian-civilization-may-have-been-jump-started-rise-and-fall-tides",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "Testing two theories of the origin of government",
+   "publisher": "American Economic Association (AEA Research Highlights)",
+   "date": "n.d.",
+   "link": "https://www.aeaweb.org/research/economic-origins-government-iraq",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "State and Empire in Early Mesopotamia",
+   "publisher": "Social Studies (sociostudies.org)",
+   "date": "n.d.",
+   "link": "https://www.sociostudies.org/journal/articles/2091093/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "Who was Egypt's first pharaoh?",
+   "publisher": "National Geographic",
+   "date": "n.d.",
+   "link": "https://www.nationalgeographic.com/history/history-magazine/article/who-was-egypts-first-pharaoh",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "How hieroglyphs became the sacred script of the ancient Egyptians",
+   "publisher": "National Geographic",
+   "date": "n.d.",
+   "link": "https://www.nationalgeographic.com/history/article/ancient-egypt-hieroglyphs",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "Visible Language (Part II): Inventions of writing in the ancient Middle East and beyond",
+   "publisher": "Google Arts & Culture, with the ISAC Museum (University of Chicago)",
+   "date": "n.d.",
+   "link": "https://artsandculture.google.com/story/visible-language-part-ii-isac-museum/4AXR09XM5lg0hw?hl=en",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "Ancient site stands the test of time (Liangzhu, UNESCO inscription)",
+   "publisher": "China Daily",
+   "date": "2019-07-08",
+   "link": "https://www.chinadaily.com.cn/global/2019-07/08/content_37489051.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "Building Stonehenge",
+   "publisher": "English Heritage",
+   "date": "n.d.",
+   "link": "https://www.english-heritage.org.uk/visit/places/stonehenge/history-and-stories/building-stonehenge/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "11.1: Early Indus Valley Civilizations",
+   "publisher": "Humanities LibreTexts (Boundless Art History)",
+   "date": "n.d.",
+   "link": "https://human.libretexts.org/Bookshelves/Art/Art_History_(Boundless)/11:_Art_of_South_and_Southeast_Asia_Before_1200_CE/11.01:_Early_Indus_Valley_Civilizations",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "Caral–Supe civilization",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Caral%E2%80%93Supe_civilization",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "Proto-cuneiform (Unicode proposal L2/17-157)",
+   "publisher": "Unicode Consortium",
+   "date": "2017",
+   "link": "https://www.unicode.org/L2/L2017/17157-n4797-proto-cuneiform.pdf",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "Uruk: The first mega-city of humanity",
+   "publisher": "Fabrizio Musacchio (personal science blog)",
+   "date": "2025-01-01",
+   "link": "https://www.fabriziomusacchio.com/weekend_stories/told/2025/2025-01-01-uruk/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "Centers of Progress, Pt. 2: Uruk (Writing)",
+   "publisher": "Human Progress (Cato Institute)",
+   "date": "n.d.",
+   "link": "https://humanprogress.org/centers-of-progress-pt-2-uruk-2/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "Mesopotamia: The Beginning of Beginnings",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/Mesopotamia/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "Theories of State Formation",
+   "publisher": "Fiveable (Intro to Archaeology study guide)",
+   "date": "n.d.",
+   "link": "https://fiveable.me/introduction-archaeology/unit-11/theories-state-formation/study-guide/TZMBO7rDfE3U6HEr",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "The Invention of Cuneiform",
+   "publisher": "AskHistoryAI",
+   "date": "n.d.",
+   "link": "https://askhistoryai.com/event/sv-cuneiform/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "Uruk proto-cuneiform",
+   "publisher": "Archania",
+   "date": "n.d.",
+   "link": "https://www.archania.org/wiki/The_Symbolic_World/Proto-writing/Uruk_proto-cuneiform",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "Egyptian hieroglyphs",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Egyptian_hieroglyphs",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "Sumerian Temple Architecture in Early Mesopotamia",
+   "publisher": "Brewminate",
+   "date": "n.d.",
+   "link": "https://brewminate.com/sumerian-temple-architecture-in-early-mesopotamia/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "Uruk Period - 3800-3200 BC",
+   "publisher": "GlobalSecurity.org",
+   "date": "n.d.",
+   "link": "https://www.globalsecurity.org/military/world/iraq/history-uruk.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "Sumerian religion",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Sumerian_religion",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "The Sumerians",
+   "publisher": "Lumen Learning (World Civilization course)",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/atd-herkimer-worldcivilization/chapter/the-sumerians/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "Mesopotamia: Overview and Summary Of An Ancient Civilization",
+   "publisher": "History on the Net",
+   "date": "n.d.",
+   "link": "https://www.historyonthenet.com/mesopotamia",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s29",
+   "title": "Early States in the Andes",
+   "publisher": "Popular Archaeology",
+   "date": "n.d.",
+   "link": "https://popular-archaeology.com/article/early-states-in-the-andes/",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 15. Today we find out where and when the first cities and the first writing appeared, and what people used them for."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The First Cities and the Invention of Writing"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In the last class, farming gave people extra food to store. Today's story is what happened when lots of people gathered around that stored food."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Where were the first cities?\n2. What was the first writing for?\n3. Who ruled, and how do we think states began?\n4. What else was happening elsewhere?"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, a word we need. In this class, a city means a big, crowded place with many kinds of workers, public buildings and leaders, not just farmers living side by side."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "City"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Our first city is Uruk. It stood in southern Mesopotamia, which is modern Iraq, on the flat land between the Tigris and Euphrates rivers. Today the Euphrates runs about 12 miles away, but it once flowed close by."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map: southern Iraq today. Two rivers, the Tigris and the Euphrates, run side by side. A marker sits beside the old Euphrates channel: URUK."
+   },
+   "cite": [
+    "s1",
+    "s25"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "By around 3200 BCE, Uruk was the largest settlement in southern Mesopotamia, and maybe in the whole world. It had huge mud-brick buildings with walls decorated in mosaics of painted clay cones."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A tall mud-brick temple wall covered in a zigzag pattern of red, black and cream clay cones pressed into the wall."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Around 3200 BCE, which place was the largest settlement in southern Mesopotamia, and perhaps the world?",
+    "right": "Uruk",
+    "wrong": [
+     "Stonehenge",
+     "Ur",
+     "Memphis"
+    ],
+    "why": "The Metropolitan Museum describes Uruk as the largest settlement in southern Mesopotamia by about 3200 BCE, if not the world."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "How big was it? Nobody knows exactly. Estimates run from about 10,000 people to as many as 80,000, depending on the date and the method. Look at how far apart they are."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Estimates of Uruk's population",
+    "chart": "c2"
+   },
+   "cite": [
+    "s18",
+    "s25",
+    "s17"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why there? The land and rivers were rich in food. But Mesopotamia had little metal or timber, so people had to trade to get them."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Rich soil and rivers\nFood from farming, fishing and animals\nMetal and timber had to come from far away, so there was trade"
+   },
+   "cite": [
+    "s1",
+    "s28"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the second big idea: writing. The earliest known writing appears at Uruk. Scholars call it proto-cuneiform, and it dates from about 3350 to 3000 BCE."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Proto-cuneiform: the earliest known writing"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It was made by pressing a stylus into soft clay. Over time the marks became the wedge shapes called cuneiform, a word that means wedge-shaped."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A small, palm-sized clay tablet with rows of tiny pressed marks and round dents, held in a hand."
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Writing did not appear from nothing. Before it, people kept track of goods with clay tokens, clay balls called bullae, and carved seals. Then came numbered tablets, and then the first signs."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Tokens and clay balls → seals → number tablets → first proto-cuneiform signs (about 3350–3200 BCE at Uruk)"
+   },
+   "cite": [
+    "s2",
+    "s16"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So what did the first writing say? Mostly bookkeeping. It listed grain, animals, rations and workers. Some early tablets are only rows of numbers."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 5,000 early tablets found, mostly lists of goods and work"
+   },
+   "cite": [
+    "s21",
+    "s22"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What were the very first written tablets mostly used for?",
+    "right": "Keeping records of goods, food and work",
+    "wrong": [
+     "Telling stories and poems",
+     "Writing letters to friends",
+     "Carving laws for kings to rule by"
+    ],
+    "why": "The earliest tablets from Uruk are overwhelmingly administrative: counts of grain, animals, labor and goods."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One tablet from Uruk records beer handed out from the storerooms of an institution. That is the earliest kind of writing we have: who got what."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "A tablet from Uruk (about 3200–3000 BCE) records beer distributions from an institution's storerooms."
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Stories and prayers came later. Religious writing only became common late in the Early Dynastic period. Cuneiform kept going for thousands of years and was used for many languages, until at least 100 BCE."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "About 3350 BCE: records only → late Early Dynastic period: hymns and spells → at least 100 BCE: still in use"
+   },
+   "cite": [
+    "s26",
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Who ran all that storing and counting? The temple. In Uruk it held worship, storerooms for farm surplus, and offices that handed food back out to the city and villages."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Temple: worship + storage + handing out food"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Besides worship, what did the temple of an early Sumerian city do?",
+    "right": "It stored surplus food and handed it out",
+    "wrong": [
+     "It trained soldiers for the army",
+     "It printed books for sale",
+     "It sold land to foreign kings"
+    ],
+    "why": "The temple combined worship with storerooms for farm surplus and offices that redistributed food."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the word state. A state is a society with rulers, officials and social classes. The big question is how small communities turned into states."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "State: rulers, officials, classes"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In Mesopotamia, the Early Dynastic period ran from about 2900 to 2350 BCE. Each city had its own city god, and the cities competed with one another."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Early Dynastic period: about 2900–2350 BCE\nIndependent city-states, such as Ur, Uruk, Lagash and Eridu\nEach city had a patron god"
+   },
+   "cite": [
+    "s3",
+    "s19"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Over time, the leader of the temple was joined by rulers called kings. Rulers could be titled ensi or lugal. These kings still described themselves as acting for the gods who owned the city."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Earlier: leaders based in the temple (an ensi)\nLater: palace and hereditary kings (a lugal), still serving the gods"
+   },
+   "cite": [
+    "s19",
+    "s3",
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "By the later Early Dynastic period, strong kings could collect taxes and write laws that suited them. Walls went up around cities as warfare grew."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Kings: taxes and laws\nCities: walls for defense"
+   },
+   "cite": [
+    "s4",
+    "s27"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So how did states first form? Experts disagree. One old idea says big irrigation projects needed a strong ruler. But many now say that does not fit the evidence."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Debate 1: Did irrigation create the state?"
+   },
+   "cite": [
+    "s8",
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A second idea says that fights over scarce resources, or trade between neighbors, pushed people into states. A critic points out that war cannot easily explain the very first state, because there was no earlier state to conquer."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "War and competition\nLong-distance trade"
+   },
+   "cite": [
+    "s8",
+    "s20"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A third idea is cooperation. One economics study found that states in ancient Iraq were more likely to form where small settlements had to work together on irrigation after a river shifted. And these ideas may not exclude one another."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Irrigation: helped, but probably not the only cause\nWar and trade: possible causes\nCooperation: another possible cause\nProbably several causes together"
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which statement fits what some experts say about irrigation and the first states?",
+    "right": "Irrigation played a part, but it was not the single prime mover",
+    "wrong": [
+     "Irrigation alone clearly caused every early state",
+     "Irrigation had nothing to do with early Mesopotamia",
+     "Irrigation was invented only after kings appeared"
+    ],
+    "why": "A specialist quoted in Science says irrigation plays a role but is not a prime mover. Other researchers find cooperation over water mattered."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now our frame of reference. Uruk was not alone in these centuries. Here are the dates of several places around the world, all within about 500 years."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Approximate start dates (BCE) of places and things in this class",
+    "chart": "c1"
+   },
+   "cite": [
+    "s2",
+    "s9",
+    "s12",
+    "s14",
+    "s13",
+    "s15"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In Egypt, the oldest known writing is on small labels from a tomb at Abydos, dated to between 3320 and 3150 BCE. Around 3100 BCE, a king called Narmer is traditionally said to have united the country."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A small bone label with tiny carved picture signs, found in a tomb at Abydos, Egypt."
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Around 3100 BCE, which king is traditionally linked to the unification of Egypt?",
+    "right": "Narmer",
+    "wrong": [
+     "Gilgamesh",
+     "Khufu",
+     "Etana"
+    ],
+    "why": "The Narmer Palette, from about 3100 BCE, shows him as the founder of Egypt's first dynasty."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In Pakistan and northwest India, the Early Harappan phase began about 3300 BCE; the great Indus cities came later. In China, the Liangzhu site in the Yangtze delta dates from about 3300 to 2300 BCE. UNESCO calls it an early regional state."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Indus valley: Early Harappan phase from about 3300 BCE\nChina: Liangzhu, about 3300–2300 BCE"
+   },
+   "cite": [
+    "s14",
+    "s12"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In Peru, a site called Huaricanga dates to around 3500 BCE, and the famous city of Caral was occupied from about 2627 to 2020 BCE. In England, about 3000 BCE, people dug the circular ditch and bank that began Stonehenge."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Peru: Huaricanga about 3500 BCE; Caral about 2627–2020 BCE\nEngland: Stonehenge ditch and bank, about 3000 BCE"
+   },
+   "cite": [
+    "s15",
+    "s13"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What was the first thing built at Stonehenge, about 3000 BCE?",
+    "right": "A circular ditch and bank",
+    "wrong": [
+     "A ring of giant standing stones",
+     "A walled stone city",
+     "A tall mud-brick temple"
+    ],
+    "why": "English Heritage says the first monument was a circular earthwork enclosure; the central stones came about 2500 BCE."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Mesopotamia also reached outward. Until about 3000 BCE, objects inspired by Mesopotamia turned up from central Iran to Egypt's Nile Delta. Then that wide influence faded."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map: arrows from Uruk toward central Iran in the east and the Egyptian Nile Delta in the west, with the label 'until about 3000 BCE'."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's put it together. Cities and writing both appeared in southern Mesopotamia around 3300 BCE. The earliest writing was for record-keeping, and other places began their own writing and cities around the same time."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Uruk: biggest city by about 3200 BCE\nProto-cuneiform: about 3350–3000 BCE, mostly records\nTemples ran storage; kings came later\nHow states formed: still debated"
+   },
+   "cite": [
+    "s1",
+    "s2",
+    "s3",
+    "s8"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which sentence is the best summary of today's class?",
+    "right": "Cities and writing appeared in southern Mesopotamia around 3300 BCE, and early writing was mostly bookkeeping",
+    "wrong": [
+     "Writing began with poems, and cities came 2,000 years later",
+     "The first cities were built in England around 3000 BCE",
+     "Kings invented writing to record their laws and wars"
+    ],
+    "why": "Uruk was the largest city by about 3200 BCE, and its earliest tablets were mostly lists of goods and work."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next time, in class 16, we go deeper into Egypt and the Indus Valley. See you then."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Egypt and the Indus Valley"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Approximate start dates (years BCE) of places and things in this class",
+   "rows": [
+    {
+     "label": "Huaricanga, Peru (earliest securely dated city date)",
+     "value": 3500,
+     "source": "s15"
+    },
+    {
+     "label": "Uruk: first proto-cuneiform tablets (Uruk IV)",
+     "value": 3350,
+     "source": "s2"
+    },
+    {
+     "label": "Egypt: Abydos tomb U-j writing labels",
+     "value": 3320,
+     "source": "s9"
+    },
+    {
+     "label": "Liangzhu, China",
+     "value": 3300,
+     "source": "s12"
+    },
+    {
+     "label": "Early Harappan phase, Indus valley",
+     "value": 3300,
+     "source": "s14"
+    },
+    {
+     "label": "Narmer Palette, Egypt",
+     "value": 3100,
+     "source": "s9"
+    },
+    {
+     "label": "Stonehenge ditch and bank, England",
+     "value": 3000,
+     "source": "s13"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Estimates of Uruk's population, from different sources",
+   "rows": [
+    {
+     "label": "Late 4th millennium BCE (Human Progress)",
+     "value": 10000,
+     "source": "s18"
+    },
+    {
+     "label": "End of the Uruk period (GlobalSecurity)",
+     "value": 45000,
+     "source": "s25"
+    },
+    {
+     "label": "About 3100 BCE, low end of range (Musacchio)",
+     "value": 40000,
+     "source": "s17"
+    },
+    {
+     "label": "About 3100 BCE, high end of range (Musacchio)",
+     "value": 80000,
+     "source": "s17"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Uruk",
+   "links": [
+    "[[Mesopotamia]]",
+    "[[Epic of Gilgamesh]]",
+    "[[Early Dynastic period]]"
+   ]
+  },
+  {
+   "topic": "Proto-cuneiform and cuneiform",
+   "links": [
+    "[[Clay tokens]]",
+    "[[Cylinder seals]]",
+    "[[Invention of writing]]"
+   ]
+  },
+  {
+   "topic": "Temple economy",
+   "links": [
+    "[[Sumerian city-states]]",
+    "[[Ensi and lugal]]"
+   ]
+  },
+  {
+   "topic": "Theories of state formation",
+   "links": [
+    "[[Hydraulic theory]]",
+    "[[Circumscription theory]]",
+    "[[Primary and secondary states]]"
+   ]
+  },
+  {
+   "topic": "Early Egypt",
+   "links": [
+    "[[Narmer]]",
+    "[[Abydos tomb U-j]]",
+    "[[Egypt and the Indus Valley]]"
+   ]
+  },
+  {
+   "topic": "Other early cities",
+   "links": [
+    "[[Liangzhu]]",
+    "[[Caral-Supe]]",
+    "[[Early Harappan phase]]",
+    "[[Stonehenge]]"
+   ]
+  },
+  {
+   "topic": "Previous class",
+   "links": [
+    "[[The Farming Revolution]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About 3500 BCE",
+   "elsewhere": "In Peru's Fortaleza valley, Huaricanga is the earliest date securely linked to a city in the Norte Chico region. Meanwhile, Uruk's state was forming in southern Mesopotamia, according to one source.",
+   "cite": [
+    "s15",
+    "s25"
+   ]
+  },
+  {
+   "when": "About 3350–3200 BCE",
+   "elsewhere": "The first proto-cuneiform tablets are made at Uruk. In Egypt, the writing labels from tomb U-j at Abydos date to between 3320 and 3150 BCE.",
+   "cite": [
+    "s2",
+    "s9"
+   ]
+  },
+  {
+   "when": "About 3300 BCE",
+   "elsewhere": "The Early Harappan phase begins in the Indus valley. Liangzhu, in the lower Yangtze region of China, begins and lasts until about 2300 BCE.",
+   "cite": [
+    "s14",
+    "s12"
+   ]
+  },
+  {
+   "when": "About 3100 BCE",
+   "elsewhere": "Narmer is traditionally said to have united Egypt. His palette is the earliest monumental image of a pharaoh found so far.",
+   "cite": [
+    "s9"
+   ]
+  },
+  {
+   "when": "About 3000 BCE",
+   "elsewhere": "People in England dig the circular ditch and bank that begin Stonehenge. They use simple antler tools.",
+   "cite": [
+    "s13"
+   ]
+  },
+  {
+   "when": "About 2900–2350 BCE",
+   "elsewhere": "Early Dynastic Mesopotamia: rival city-states, each with a patron god and its own ruler. This is the age of kings in Sumer.",
+   "cite": [
+    "s3"
+   ]
+  },
+  {
+   "when": "About 2600 BCE",
+   "elsewhere": "The Indus cities Harappa and Mohenjo-daro were large urban centres by this time. Caral in Peru was occupied from about 2627 BCE.",
+   "cite": [
+    "s14",
+    "s15"
+   ]
+  },
+  {
+   "when": "About 2589–2566 BCE",
+   "elsewhere": "The reign of Khufu in Egypt. The oldest surviving papyri come from this time.",
+   "cite": [
+    "s10"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The first cities needed big irrigation projects run by a powerful central ruler (the 'hydraulic' theory).",
+   "other_view": "Many specialists now doubt this. One archaeologist says early irrigation was small in scale and was not the prime mover. Another team argues that early farmers used tidal irrigation in the delta, long before big canals. A recent economics study instead finds that states formed where people needed to cooperate on irrigation after a river moved away. So water mattered, but experts disagree about how.",
+   "cite": [
+    "s8",
+    "s6",
+    "s7"
+   ]
+  },
+  {
+   "claim": "War and conflict over scarce resources created the first states.",
+   "other_view": "Critics say warfare helps explain how states grow, but not how the very first ones appeared, since there were no earlier states to conquer. Others argue that conflict, trade and cooperation are not mutually exclusive.",
+   "cite": [
+    "s20",
+    "s8"
+   ]
+  },
+  {
+   "claim": "Uruk was 'the first city'.",
+   "other_view": "The Met calls it the largest settlement in southern Mesopotamia 'if not the world', not simply the first. Population estimates range from about 10,000 to 80,000. Other regions had early large settlements too: Liangzhu in China, Huaricanga in Peru, and the Early Harappan communities in the Indus valley.",
+   "cite": [
+    "s1",
+    "s18",
+    "s17",
+    "s12",
+    "s15",
+    "s14"
+   ]
+  },
+  {
+   "claim": "Writing was invented first in Mesopotamia, and Egypt copied the idea.",
+   "other_view": "The Egyptian labels from Abydos tomb U-j pushed the date of Egyptian writing back by about a century, which led scholars to rethink that argument. Scholars still debate whether hieroglyphs were developed independently or derived from another script.",
+   "cite": [
+    "s11",
+    "s23"
+   ]
+  },
+  {
+   "claim": "Writing grew directly out of clay accounting tokens.",
+   "other_view": "The token theory (Denise Schmandt-Besserat) is widely known, but other scholars such as Jean-Jacques Glassner have challenged its details. A 2024 study suggests that some early signs may have come from motifs on cylinder seals. That writing began as record-keeping is broadly accepted.",
+   "cite": [
+    "s21",
+    "s2"
+   ]
+  },
+  {
+   "claim": "The temple ran everything in early Sumerian cities.",
+   "other_view": "Most scholars agree that temples were the main administrative centres, but one university overview stresses that private enterprise always existed alongside them. Powerful private landowners may have helped the palace rise over the temple system.",
+   "cite": [
+    "s24",
+    "s5"
+   ]
+  }
+ ]
+}

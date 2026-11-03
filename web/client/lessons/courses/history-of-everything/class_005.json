@@ -1,0 +1,1531 @@
+{
+ "about": {
+  "title": "Early Earth and the Moon",
+  "course": "history-of-everything",
+  "class_n": 5,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes at an unhurried pace. There are five topics, each taught in small steps with a check question. The plate tectonics debate is the longest part, so pause there if you need to."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Giant-impact hypothesis",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/science/giant-impact-hypothesis",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "The Solar System: structural overview, origins and evolution",
+   "publisher": "arXiv",
+   "date": "2024",
+   "link": "https://arxiv.org/pdf/2404.14982",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "How the Earth and moon formed, explained",
+   "publisher": "University of Chicago News",
+   "date": "n.d.",
+   "link": "https://news.uchicago.edu/explainer/formation-earth-and-moon-explained",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "Giant Impact Hypothesis: An evolving legacy of Apollo",
+   "publisher": "Astronomy magazine",
+   "date": "n.d.",
+   "link": "https://www.astronomy.com/science/giant-impact-hypothesis-an-evolving-legacy-of-apollo/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "Research Advances in the Giant Impact Hypothesis of Moon Formation",
+   "publisher": "Space: Science & Technology (Science Partner Journals)",
+   "date": "n.d.",
+   "link": "https://spj.science.org/doi/10.34133/space.0153",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "Theia (planet)",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/astronomy-and-astrophysics/theia-planet/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "First the Moon, Then Earth: New Theory Reverses Formation Story",
+   "publisher": "Space.com",
+   "date": "n.d.",
+   "link": "https://www.space.com/39841-moon-formed-from-synestia-earth-crash-theory.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "Hadean Eon",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/science/Hadean-Eon",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "10.1: Hadean Eon (Introduction to Historical Geology)",
+   "publisher": "Geosciences LibreTexts",
+   "date": "n.d.",
+   "link": "https://geo.libretexts.org/Bookshelves/Geology/Introduction_to_Historical_Geology_(Ruppert_Lacy_and_Haddad)/10:_Hadean_and_Archean/10.01:_Hadean_Eon",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "The Archean atmosphere",
+   "publisher": "Science Advances (AAAS)",
+   "date": "n.d.",
+   "link": "https://www.science.org/doi/10.1126/sciadv.aax1420",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "Oldest bit of crust firms up idea of a cool early Earth",
+   "publisher": "University of Wisconsin–Madison News",
+   "date": "2014",
+   "link": "https://news.wisc.edu/oldest-bit-of-crust-firms-up-idea-of-a-cool-early-earth/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "Jack Hills, Australia",
+   "publisher": "NASA",
+   "date": "n.d.",
+   "link": "https://www.nasa.gov/image-article/jack-hills-australia",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "Confirmed: Oldest Fragment of Early Earth is 4.4 Billion Years Old",
+   "publisher": "NBC News",
+   "date": "n.d.",
+   "link": "https://www.nbcnews.com/news/amp/wbna54491385",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "What is the significance of the Jack Hills zircons?",
+   "publisher": "SERC, Carleton College (NAGT Early Earth workshop)",
+   "date": "n.d.",
+   "link": "https://serc.carleton.edu/NAGTWorkshops/earlyearth/questions/zircons.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "4-Billion-Year-Old Crystals Offer Clues to the Origins of Life",
+   "publisher": "National Geographic",
+   "date": "n.d.",
+   "link": "https://www.nationalgeographic.com/science/article/news-earth-rocks-sediment-first-life-zircon",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "What is the Late Heavy Bombardment?",
+   "publisher": "NASA Science",
+   "date": "n.d.",
+   "link": "https://science.nasa.gov/moon/lunar-craters/what-is-the-late-heavy-bombardment/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "Researchers question Apollo-era evidence for the Late Heavy Bombardment",
+   "publisher": "Phys.org",
+   "date": "2016-10-04",
+   "link": "https://phys.org/news/2016-10-apollo-era-evidence-late-heavy-bombardment.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "Where do you find old iconic rock stars? In Canada, of course!",
+   "publisher": "Natural Resources Canada",
+   "date": "n.d.",
+   "link": "https://natural-resources.canada.ca/stories/simply-science/where-you-find-old-iconic-rock-stars-canada-course",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "10.2: Earth's Oldest Rocks (Introduction to Historical Geology)",
+   "publisher": "Geosciences LibreTexts",
+   "date": "n.d.",
+   "link": "https://geo.libretexts.org/Bookshelves/Geology/Introduction_to_Historical_Geology_(Ruppert_Lacy_and_Haddad)/10%3A_Hadean_and_Archean/10.02%3A_Earth's_Oldest_Rocks",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "When did plate tectonics begin?",
+   "publisher": "SERC, Carleton College (NAGT Early Earth workshop)",
+   "date": "n.d.",
+   "link": "https://serc.carleton.edu/NAGTWorkshops/earlyearth/questions/tectonics.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "GSA Penrose Conference Report: When Did Plate Tectonics Begin?",
+   "publisher": "Geological Society of America",
+   "date": "2006 (conference report)",
+   "link": "https://www.geosociety.org/documents/gsa/penconf/reports/06pcrpt2.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "When and how did plate tectonics begin on Earth?",
+   "publisher": "EARTH Magazine (American Geosciences Institute)",
+   "date": "n.d.",
+   "link": "https://www.earthmagazine.org/article/when-and-how-did-plate-tectonics-begin-earth/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "Archean eclogite-facies oceanic crust indicates modern-style plate tectonics",
+   "publisher": "Proceedings of the National Academy of Sciences (via PubMed Central)",
+   "date": "2022-04-04",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9169650/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "We don't know when plate tectonics began",
+   "publisher": "Journal of the Geological Society (Geological Society of London)",
+   "date": "n.d. (vol. 181, issue 4)",
+   "link": "https://pubs.geoscienceworld.org/gsl/jgs/article/181/4/jgs2023-212/638849/We-don-t-know-when-plate-tectonics-began",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "Powell Expedition—Geologic Time. Then and Now.",
+   "publisher": "U.S. Geological Survey",
+   "date": "n.d.",
+   "link": "https://www.usgs.gov/news/powell-expedition-geologic-time-then-and-now",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "When in Earth's history did Yellowstone's volcanism begin? Let's look at the calendar to find out.",
+   "publisher": "U.S. Geological Survey",
+   "date": "n.d.",
+   "link": "https://www.usgs.gov/observatories/yvo/news/when-earths-history-did-yellowstones-volcanism-begin-lets-look-calendar-find",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "Will Earth ever lose its moon?",
+   "publisher": "Live Science",
+   "date": "n.d.",
+   "link": "https://www.livescience.com/space/the-moon/will-earth-ever-lose-its-moon",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "Our moon has been drifting away from Earth for 2.5 billion years",
+   "publisher": "RocketSTEM",
+   "date": "2025-07-11",
+   "link": "https://www.rocketstem.org/2025/07/11/our-moon-has-been-drifting-away-from-earth-for-2-5-billion-years/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s29",
+   "title": "Archean Eonothem",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/science/Archean-Eonothem",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s30",
+   "title": "8.4: Archean Eon (An Introduction to Geology)",
+   "publisher": "Geosciences LibreTexts",
+   "date": "n.d.",
+   "link": "https://geo.libretexts.org/Bookshelves/Geology/Book:_An_Introduction_to_Geology_(Johnson_Affolter_Inkenbrandt_and_Mosher)/08:_Earth_History/8.04:_Archean_Eon",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s31",
+   "title": "Archean Eon summary",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/summary/Archean-Eon",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s32",
+   "title": "How Old Is The Earth?",
+   "publisher": "Universe Today",
+   "date": "n.d.",
+   "link": "https://www.universetoday.com/articles/how-old-is-the-earth",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s33",
+   "title": "How do scientists know the Earth is billions of years old? (reporting USGS findings)",
+   "publisher": "Yahoo News",
+   "date": "n.d.",
+   "link": "https://www.yahoo.com/news/science/articles/old-earth-really-science-religion-150939771.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s34",
+   "title": "Alpine-style nappes thrust over ancient North China continental margin demonstrate large Archean horizontal plate motions",
+   "publisher": "PubMed Central (NCBI)",
+   "date": "n.d.",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8548327/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s35",
+   "title": "When did plate tectonics begin?",
+   "publisher": "University of Texas at Dallas (R. J. Stern)",
+   "date": "n.d.",
+   "link": "https://personal.utdallas.edu/~rjstern/PlateTectonicsStart/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s36",
+   "title": "The Feeding Zones of Terrestrial Planets and Insights into Moon Formation",
+   "publisher": "arXiv",
+   "date": "n.d.",
+   "link": "https://arxiv.org/pdf/1501.03816",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s37",
+   "title": "The Detectability of Earth's Biosignatures Across Time",
+   "publisher": "arXiv",
+   "date": "n.d.",
+   "link": "https://arxiv.org/pdf/1802.09367",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back. Last time we built the Sun and the solar system. Today we land on one small rocky planet, and the big rock that circles it."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Early Earth and the Moon"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Five steps today, one at a time: Earth's first chapters, the Moon's birth, the oldest rocks and crystals, air and oceans, and a debate about moving plates."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Earth's first chapters\n2. Where the Moon came from\n3. The oldest rocks and crystals\n4. Air and oceans\n5. Moving plates: a debate"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, Earth's age. Earth is about 4.54 billion years old, give or take about 50 million. That comes from dating meteorites, which formed alongside Earth."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "4.54 billion years"
+   },
+   "cite": [
+    "s26",
+    "s25"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Geologists cut that huge span into big chapters called eons. The first eon is the Hadean, from about 4.6 to 4.0 billion years ago."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Hadean (4.6 to 4.0 billion years ago)"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Hadean comes from Hades, the Greek god of the underworld. Picture magma oceans, volcanoes everywhere, and rocks falling from space."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A glowing red world of molten rock under a smoky sky, with space rocks streaking down."
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why is the first eon called the Hadean?",
+    "right": "It is named after Hades, the Greek god of the underworld, because early Earth was so hostile.",
+    "wrong": [
+     "It is named after a scientist called Hadean.",
+     "It is named after a crystal found in Australia.",
+     "It is named after the Moon goddess."
+    ],
+    "why": "The name refers to Hades and to the 'hell on Earth' conditions: magma oceans, volcanoes and impacts."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why so hot? Giant collisions, while Earth was being assembled, melted its surface into magma oceans. Radioactive decay inside added even more heat."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Magma ocean"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What helped melt the young Earth's surface into magma oceans?",
+    "right": "Energy from huge space-rock collisions, plus heat from radioactive decay.",
+    "wrong": [
+     "Rain from the first clouds.",
+     "Ice building up at the poles.",
+     "Forest fires."
+    ],
+    "why": "Large impacts melted the surface, and radioactive decay inside the planet added heat."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next comes the Archean, from about 4.0 to 2.5 billion years ago. The word means 'beginning', and this is where the rock record really starts."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "4.6 to 4.0 billion years ago: Hadean | 4.0 to 2.5 billion years ago: Archean"
+   },
+   "cite": [
+    "s30",
+    "s29"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which eon is older, the Hadean or the Archean?",
+    "right": "The Hadean.",
+    "wrong": [
+     "The Archean.",
+     "They started at the same time.",
+     "Nobody can tell."
+    ],
+    "why": "The Hadean runs from about 4.6 to 4.0 billion years ago. The Archean follows it, from about 4.0 to 2.5."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "By the Archean, Earth had a solid crust, and the first simple microbes had appeared. We will meet them properly in the next classes."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Archean: crust and first microbes"
+   },
+   "cite": [
+    "s29",
+    "s31"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the Moon. Earth has one big Moon. Where did it come from? People have had several ideas, and one is now the leader."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "moon",
+    "count": 1,
+    "layout": "row",
+    "text": "One Moon"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The leader is the giant-impact hypothesis. A Mars-sized body, called Theia, hit the young Earth roughly 4.5 billion years ago. Some sources say 4.6."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Giant-impact hypothesis"
+   },
+   "cite": [
+    "s1",
+    "s6"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The crash threw a huge cloud of debris into orbit. It was mostly rock from the mantle of both bodies. Over time, the debris clumped into the Moon."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A small planet striking the young Earth at a slant, with a spray of glowing rock forming a ring that gathers into a ball."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A version of the idea goes back to 1946. It took shape in the mid-1970s. Theia was named later, after the Greek mother of the Moon."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1946: first proposed | mid-1970s: hypothesis takes shape | later: impactor named Theia"
+   },
+   "cite": [
+    "s5",
+    "s4"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "According to the giant-impact hypothesis, how did the Moon form?",
+    "right": "From debris thrown into orbit when a Mars-sized body hit the young Earth.",
+    "wrong": [
+     "It was a piece of the Sun that cooled.",
+     "It grew from comet ice.",
+     "It formed from nothing but gas, far away."
+    ],
+    "why": "The debris from the collision was mostly mantle rock from Earth and Theia, and it clumped into the Moon."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why do scientists favour this idea? The Moon has a low density and little iron. Its rock is also chemically close to Earth's mantle."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Low density\nLittle iron\nRock like Earth's mantle"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Think of Earth and Theia as layered, with iron cores inside. If the Moon came mainly from the outer layers, it would end up short of iron."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two cutaway planets, each with an iron core and a rocky outer layer. Arrows show only the outer layers being thrown out."
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why is the Moon low in iron, according to the impact idea?",
+    "right": "Its material came mostly from the outer layers of Earth and Theia, not their iron cores.",
+    "wrong": [
+     "The impact removed all the iron from the Moon's surface using magnets.",
+     "Iron cannot stick to a moon.",
+     "The Moon formed before iron existed."
+    ],
+    "why": "If the debris came from outer layers rather than the cores, an iron-poor Moon follows naturally."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Heat helps too. The Moon has little potassium, zinc and sodium. That fits an impact hot enough to drive those elements away."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Hot impact, missing potassium, zinc, sodium"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Before the impact idea, three other ideas were on the table. Each one tried to explain the Moon in a different way."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Fission\nCapture\nCo-formation"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Fission: the Moon broke away from Earth. Capture: it formed elsewhere and Earth's gravity caught it. Co-formation: Earth and Moon formed together from the same disk."
+   },
+   "show": {
+    "kind": "list",
+    "items": [
+     "Fission: the Moon broke away from Earth",
+     "Capture: it formed elsewhere and Earth's gravity caught it",
+     "Co-formation: Earth and Moon formed together from the same disk"
+    ]
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Britannica says these three older ideas did not explain the Moon's makeup well. That is why the giant-impact idea took over."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Older ideas fell short"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In the 'capture' idea, where did the Moon form?",
+    "right": "Somewhere else in the solar system, and Earth's gravity later caught it.",
+    "wrong": [
+     "Inside Earth, then it split off.",
+     "At the same time as Earth, from the same disk.",
+     "From the debris of a crash with Theia."
+    ],
+    "why": "Capture means the Moon formed elsewhere and was caught by Earth's gravity. Fission and co-formation are different ideas, and the crash story is the giant-impact idea."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "But there is an honest puzzle. Oxygen comes in slightly different versions called isotopes. Moon rocks and Earth rocks have almost the same mix."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Oxygen isotopes: Moon matches Earth"
+   },
+   "cite": [
+    "s36"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Simulations of the classic crash say much of the Moon should come from Theia, which likely had a different mix. Scientists call this the isotope crisis."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The isotope crisis"
+   },
+   "cite": [
+    "s5",
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is the 'isotope puzzle' about the Moon?",
+    "right": "Moon rocks match Earth's oxygen isotopes, yet simulations suggest much of the Moon should have come from Theia.",
+    "wrong": [
+     "The Moon has no oxygen at all.",
+     "Moon rocks are much older than Earth.",
+     "Theia was exactly the same size as Earth."
+    ],
+    "why": "If Theia had a different mix and supplied much of the Moon, the Moon should look different from Earth. It does not."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Several fixes have been proposed. One: after the crash, hot vapour mixed everything together and erased the differences between Earth and Theia."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Fix 1: mixing in hot vapour"
+   },
+   "cite": [
+    "s3",
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Others: a more energetic impact that blends both bodies. A synestia, a spinning doughnut of vaporised rock. Or many smaller impacts, not one big one."
+   },
+   "show": {
+    "kind": "list",
+    "text": "More energetic impact\nSynestia\nSeries of smaller impacts"
+   },
+   "cite": [
+    "s2",
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So the single giant impact is currently favoured, but there are plenty of alternate scenarios and uncertainties. The broad story is strong; the details are still argued over."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Leading, not settled"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which statement best fits where science stands on the Moon's origin?",
+    "right": "A giant impact is the leading idea, but scientists still debate the details.",
+    "wrong": [
+     "Every scientist agrees on every detail.",
+     "The giant-impact idea has been thrown out.",
+     "Nobody has any idea."
+    ],
+    "why": "Sources call the giant impact the leading model while noting alternate scenarios such as the synestia and multiple impacts."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Moon is still on the move. It drifts away from Earth about 3.8 centimetres a year, roughly how fast fingernails grow."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "3.8 cm per year"
+   },
+   "cite": [
+    "s27"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "We know this because Apollo astronauts left reflective panels on the Moon. Scientists fire lasers at them and time the returning light."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A laser beam travelling from a telescope to a small mirror panel on the grey Moon and back."
+   },
+   "cite": [
+    "s27"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So the Moon was closer long ago. Rock layers suggest it was about 60,000 kilometres closer 2.46 billion years ago, and a day lasted about 17 hours."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 17 hours: the day length 2.46 billion years ago"
+   },
+   "cite": [
+    "s28"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "About how long was a day on Earth 2.46 billion years ago?",
+    "right": "About 17 hours.",
+    "wrong": [
+     "About 24 hours, same as now.",
+     "About 48 hours.",
+     "About 100 hours."
+    ],
+    "why": "The Moon was closer then, and rock layers point to a day of roughly 17 hours."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now, how do we know anything about a time with so few rocks left? Almost no crust from the Hadean is known to survive."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Oldest rocks and crystals"
+   },
+   "cite": [
+    "s37",
+    "s10"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The clues come from tiny crystals of a mineral called zircon. Zircon is almost indestructible. Some grains are nearly 4.4 billion years old."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Zircon"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "These grains are small. Each one is about 100 microns across, roughly the width of a human hair."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A magnified, false-colour zircon crystal next to a human hair of similar width."
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "How does a crystal tell time? Zircon contains uranium, which slowly changes into lead. Scientists measure the lead isotopes to read the grain's age."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Uranium turns slowly into lead"
+   },
+   "cite": [
+    "s11",
+    "s33"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What do scientists measure in a zircon to find its age?",
+    "right": "The lead that has formed from uranium.",
+    "wrong": [
+     "Its colour.",
+     "Its weight on a kitchen scale.",
+     "How shiny it is."
+    ],
+    "why": "Uranium decays slowly into lead, so lead isotopes give the age."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The best-known zircons come from Jack Hills in Western Australia. One is about 4.4 billion years old, formed about 160 million years after the solar system."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Western Australia, with Jack Hills marked in the west of the continent."
+   },
+   "cite": [
+    "s12",
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A careful measurement gave 4.375 billion years, give or take 6 million. That is the oldest bit of Earth found so far."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "4.375 billion years"
+   },
+   "cite": [
+    "s13",
+    "s11"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a twist. These grains are older than the rock holding them. About 3 billion years ago they washed out of early crust into a riverbed."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "An old coin lying in newer river gravel, as a picture of an ancient grain in a younger rock."
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Is the Jack Hills rock itself 4.4 billion years old?",
+    "right": "No. The zircon grains are that old, but they sit in a rock that formed much later, around 3 billion years ago.",
+    "wrong": [
+     "Yes, the whole hill is 4.4 billion years old.",
+     "No, the grains are also young.",
+     "Yes, and it is the oldest rock on Earth."
+    ],
+    "why": "The grains eroded from very old crust and were later buried in a riverbed, so the grains are older than the rock around them."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A zircon is a grain, not a rock. The oldest intact rock found so far is the Acasta Gneiss in northwest Canada, at about 4.03 billion years."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Acasta Gneiss, about 4.03 billion years"
+   },
+   "cite": [
+    "s18",
+    "s19"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Another contender is in Quebec. Rock there has been dated as old as about 4.3 billion years, but that dating is controversial."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Nuvvuagittuq: disputed"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here they are side by side, with the ages in billions of years."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "How old are these? (billions of years)",
+    "chart": "c1"
+   },
+   "cite": [
+    "s26",
+    "s6",
+    "s12",
+    "s19",
+    "s18",
+    "s31",
+    "s29"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Which is older: the Jack Hills zircon grain or the Acasta Gneiss rock?",
+    "right": "The Jack Hills zircon grain, at about 4.4 billion years, versus about 4.03 for Acasta.",
+    "wrong": [
+     "The Acasta Gneiss.",
+     "They are exactly the same age.",
+     "Neither has been dated."
+    ],
+    "why": "The zircon is a mineral grain, older than the oldest intact rock, the Acasta Gneiss."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now air and oceans. The first atmosphere likely began as hydrogen and helium leaking away. Later, volcanic gases added ammonia, methane and more."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Air and oceans"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "By the end of the Hadean, one review says Earth likely had oceans, continents, and air with no free oxygen, rich in carbon dioxide and nitrogen."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Oceans\nContinents\nNo free oxygen\nCarbon dioxide and nitrogen"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Did the air at the end of the Hadean have lots of free oxygen, like ours?",
+    "right": "No. It likely had almost none, and was rich in carbon dioxide and nitrogen.",
+    "wrong": [
+     "Yes, exactly like today.",
+     "Yes, it was mostly oxygen.",
+     "There was no air at all."
+    ],
+    "why": "The review describes an anoxic atmosphere, meaning no free oxygen, likely rich in CO2 and N2."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "When did oceans appear? Many scientists said late in the Hadean. But the zircons from Australia point to oceans before 4.4 billion years ago."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Oceans: late Hadean, or earlier?"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Zircon oxygen suggests liquid water covered parts of Earth about 4.3 billion years ago. The zircon's melted source rock had touched surface water."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Liquid water by about 4.3 billion years ago"
+   },
+   "cite": [
+    "s15",
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So the Hadean may not have been all fire. One analysis suggests a cool surface near 0 degrees Celsius under a faint young Sun."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A 'cool early Earth'"
+   },
+   "cite": [
+    "s10",
+    "s11"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What do the zircons' oxygen clues suggest about the early Earth?",
+    "right": "That liquid water covered parts of Earth around 4.3 billion years ago.",
+    "wrong": [
+     "That there was no water anywhere until 3 billion years ago.",
+     "That the Moon was made of water.",
+     "That Earth had no crust."
+    ],
+    "why": "The oxygen in zircons shows their source rock had interacted with surface water."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Earth was also hit from space. Some scientists think there was a spike in impacts around 4.1 to 3.9 billion years ago, the Late Heavy Bombardment."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Late Heavy Bombardment?"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The evidence comes mostly from Apollo moon rocks, which come from a small part of the Moon. Critics say they may record one big impact. NASA says the jury is still out."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Debated: a spike, or a gradual decline?"
+   },
+   "cite": [
+    "s17",
+    "s16"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Where does most of the evidence for the Late Heavy Bombardment come from?",
+    "right": "Apollo-era moon samples.",
+    "wrong": [
+     "Jack Hills zircons.",
+     "Writings from ancient Greece.",
+     "Fossils of early animals."
+    ],
+    "why": "Much of the evidence comes from the Moon, specifically Apollo-era lunar samples, and that evidence is questioned."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last topic: Earth's moving surface. The hard outer shell is split into plates that move sideways. Old plate is recycled into the mantle, and new plate forms elsewhere."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Plate tectonics"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Where one plate sinks beneath another, that is called subduction. Earth is the only planet in our solar system known to have plate tectonics."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A cutaway: one ocean plate sliding down into the mantle under another plate."
+   },
+   "cite": [
+    "s20",
+    "s23"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does plate tectonics describe?",
+    "right": "Pieces of Earth's outer shell moving, with old plate recycled into the mantle.",
+    "wrong": [
+     "The Moon's orbit around Earth.",
+     "Layers of air around Earth.",
+     "The spin of the Sun."
+    ],
+    "why": "Plate tectonics involves horizontal plate motions, including where plates form and where they are recycled into the mantle."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So when did it start? Scientists really disagree. Most think it was not happening in Earth's very earliest stages."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A real debate"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Many think some form began in the Archean, about 3 billion years ago. At one conference, 45 of 65 scientists agreed on that."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Votes at a plate tectonics conference",
+    "chart": "c2"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "About a third disagreed. Some argued a form of plate tectonics began as early as 4.2 billion years ago. Others said about 1 billion years ago."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Earlier: as early as 4.2 billion years ago | Later: about 1 billion years ago"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "At that conference, about how many of the 65 scientists thought plate tectonics began around 3 billion years ago?",
+    "right": "45 of 65, about two-thirds.",
+    "wrong": [
+     "All 65.",
+     "About 5.",
+     "None of them."
+    ],
+    "why": "45 of 65 agreed on about 3 billion years ago. The rest argued for earlier or later."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The early camp points to zircons that hint at continental crust and subduction. They also point to Archean rocks in China that look like mountain belts built by moving plates."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Evidence for an early start"
+   },
+   "cite": [
+    "s14",
+    "s34"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The late camp points to rocks of deep subduction, like blueschists and ophiolites. They become common only after about 1 billion years ago."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Evidence for a later start"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A 2022 study found eclogite, a rock made by deep subduction, near the end of the Archean. Before that, none older than 2.1 billion years was known."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Eclogite near the end of the Archean"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One more view: modern-style plate tectonics may have grown out of an earlier, simpler 'proto' form. And one recent paper's conclusion is that we do not know when it started."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "'We do not know when plate tectonics initiated.' (paraphrase of the conclusion of a Journal of the Geological Society paper)"
+   },
+   "cite": [
+    "s20",
+    "s24"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which statement best sums up the plate tectonics debate?",
+    "right": "Many scientists say about 3 billion years ago, but others say much earlier or later, and some say we do not know.",
+    "wrong": [
+     "Everyone agrees it began the moment Earth formed.",
+     "Everyone agrees it began 1 billion years ago.",
+     "Plate tectonics never happened."
+    ],
+    "why": "The sources show a real disagreement: most favour the Archean, some say earlier or later, and one paper says it is unknown."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's pull it together. Earth is about 4.54 billion years old. The Hadean came first, then the Archean. The Moon most likely came from a giant impact."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Earth: about 4.54 billion years old\nHadean, then Archean\nMoon: giant impact, details debated"
+   },
+   "cite": [
+    "s26",
+    "s9",
+    "s30",
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Zircons, the oldest bits of Earth, hint at early water. The oldest intact rock is Acasta. When plate tectonics started is still debated. Next time: how life began."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Zircons: about 4.4 billion years old\nAcasta Gneiss: about 4.03 billion years old\nPlate tectonics start: debated\nNext: The Origin of Life"
+   },
+   "cite": [
+    "s11",
+    "s18",
+    "s22",
+    "s24"
+   ],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "How old are these? (billions of years)",
+   "rows": [
+    {
+     "label": "Earth forms",
+     "value": 4.54,
+     "source": "s26"
+    },
+    {
+     "label": "Moon-forming impact (about)",
+     "value": 4.5,
+     "source": "s6"
+    },
+    {
+     "label": "Jack Hills zircon (about)",
+     "value": 4.4,
+     "source": "s12"
+    },
+    {
+     "label": "Nuvvuagittuq rock (disputed)",
+     "value": 4.31,
+     "source": "s19"
+    },
+    {
+     "label": "Acasta Gneiss",
+     "value": 4.03,
+     "source": "s18"
+    },
+    {
+     "label": "Earliest accepted life (at least)",
+     "value": 3.5,
+     "source": "s31"
+    },
+    {
+     "label": "End of the Archean",
+     "value": 2.5,
+     "source": "s29"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "pie",
+   "title": "Votes at one plate tectonics conference: when did it start?",
+   "rows": [
+    {
+     "label": "About 3 billion years ago (Archean)",
+     "value": 45,
+     "source": "s22"
+    },
+    {
+     "label": "Earlier (as early as 4.2 billion) or later (about 1 billion)",
+     "value": 20,
+     "source": "s22"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Hadean and Archean Earth",
+   "links": [
+    "[[Our Sun and Solar System]]",
+    "[[The Origin of Life]]"
+   ]
+  },
+  {
+   "topic": "Giant-impact hypothesis and the Moon",
+   "links": [
+    "[[Our Sun and Solar System]]"
+   ]
+  },
+  {
+   "topic": "Zircons and dating old rocks",
+   "links": [
+    "[[How Do We Know? Reading the Evidence and Telling Time]]"
+   ]
+  },
+  {
+   "topic": "Oceans and atmosphere of early Earth",
+   "links": [
+    "[[The Origin of Life]]",
+    "[[Complex Cells, Oxygen and a Changing Planet]]"
+   ]
+  },
+  {
+   "topic": "Plate tectonics",
+   "links": [
+    "[[Complex Cells, Oxygen and a Changing Planet]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About 4.54 billion years ago",
+   "elsewhere": "Earth, the other planets and the Sun are all about the same age, because they formed together from one cloud of gas and dust.",
+   "cite": [
+    "s32",
+    "s26"
+   ]
+  },
+  {
+   "when": "About 4.5 billion years ago",
+   "elsewhere": "The Moon-forming impact happens. It is thought to be Earth's final giant impact.",
+   "cite": [
+    "s6",
+    "s2"
+   ]
+  },
+  {
+   "when": "About 4.4 billion years ago",
+   "elsewhere": "The Jack Hills zircon crystallises, about 160 million years after the solar system formed. The Moon already exists.",
+   "cite": [
+    "s11"
+   ]
+  },
+  {
+   "when": "About 4.1 to 3.9 billion years ago",
+   "elsewhere": "Possible Late Heavy Bombardment, a spike in space-rock impacts on the inner planets and the Moon (debated).",
+   "cite": [
+    "s17"
+   ]
+  },
+  {
+   "when": "About 4.03 billion years ago",
+   "elsewhere": "The Acasta Gneiss forms in what is now northwest Canada. The Archean eon begins at about this time.",
+   "cite": [
+    "s18",
+    "s30"
+   ]
+  },
+  {
+   "when": "More than 3.5 billion years ago",
+   "elsewhere": "Earliest accepted evidence of life: simple microbes in the Archean oceans.",
+   "cite": [
+    "s31"
+   ]
+  },
+  {
+   "when": "About 3 billion years ago",
+   "elsewhere": "Many scientists think some form of plate tectonics had begun. Jack Hills zircons wash into a riverbed.",
+   "cite": [
+    "s22",
+    "s13"
+   ]
+  },
+  {
+   "when": "2.46 billion years ago",
+   "elsewhere": "The Moon is about 60,000 km closer than today, and a day on Earth lasts about 17 hours. The Archean ends about 2.5 billion years ago.",
+   "cite": [
+    "s28",
+    "s29"
+   ]
+  },
+  {
+   "when": "1946, mid-1970s",
+   "elsewhere": "1946: the idea of a Moon-forming giant impact is first proposed. Mid-1970s: the giant-impact hypothesis takes shape.",
+   "cite": [
+    "s5",
+    "s4"
+   ]
+  },
+  {
+   "when": "1956",
+   "elsewhere": "Clair Patterson dates the Canyon Diablo meteorite at 4.55 billion years, close to today's accepted age of Earth.",
+   "cite": [
+    "s25"
+   ]
+  },
+  {
+   "when": "1969",
+   "elsewhere": "Apollo missions leave reflective panels on the Moon. They later show it is drifting away at about 3.8 cm a year.",
+   "cite": [
+    "s28"
+   ]
+  },
+  {
+   "when": "2014",
+   "elsewhere": "A study led by John Valley confirms the Jack Hills zircon at about 4.4 billion years, the oldest known material formed on Earth.",
+   "cite": [
+    "s11"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The Moon formed from one giant impact with a Mars-sized body, Theia.",
+   "other_view": "This is the leading model, but it has an unsolved puzzle: Moon rocks match Earth's oxygen isotopes, though simulations suggest much of the Moon should come from Theia. Some propose mixing in hot vapour or a more energetic impact. Others propose a synestia (a spinning doughnut of vaporised rock) or many smaller impacts. Older ideas (fission, capture, co-formation) are mostly judged to fall short.",
+   "cite": [
+    "s1",
+    "s2",
+    "s3",
+    "s5",
+    "s7",
+    "s36"
+   ]
+  },
+  {
+   "claim": "The Hadean was a molten, hellish world with no oceans until late in the eon.",
+   "other_view": "Zircon evidence has led many scientists to a 'cool early Earth' picture, with liquid water by about 4.3 to 4.4 billion years ago. Other analyses suggest a cool surface under a faint Sun. Textbooks still describe the Hadean as 'hell on Earth', and many scientists still place the oceans late in the eon.",
+   "cite": [
+    "s9",
+    "s8",
+    "s11",
+    "s15",
+    "s10"
+   ]
+  },
+  {
+   "claim": "Plate tectonics began in the Archean, about 3 billion years ago.",
+   "other_view": "At one conference about a third of scientists argued for an earlier start (as early as 4.2 billion years ago) or a later one (about 1 billion). One participant at another conference favoured about 1 billion years ago, and one recent paper argues we do not know. Others say modern-style plate tectonics grew out of an earlier 'proto' form.",
+   "cite": [
+    "s22",
+    "s21",
+    "s23",
+    "s24",
+    "s20"
+   ]
+  },
+  {
+   "claim": "There was a Late Heavy Bombardment, a spike in impacts around 3.9 billion years ago.",
+   "other_view": "The evidence comes mostly from Apollo samples from a small part of the Moon, and critics say they may record one big impact. Some scientists propose the bombardment was more gradual or in segments, or that no spike happened. NASA says the jury is still out.",
+   "cite": [
+    "s16",
+    "s17"
+   ]
+  },
+  {
+   "claim": "The Jack Hills zircons are about 4.4 billion years old.",
+   "other_view": "Lead atoms can move inside a crystal, which can throw off the age. This caused a decades-long controversy. Valley's team argues that in even a damaged grain the lead stayed in place.",
+   "cite": [
+    "s13"
+   ]
+  },
+  {
+   "claim": "The Acasta Gneiss is the oldest intact rock on Earth.",
+   "other_view": "Rock from the Nuvvuagittuq belt in Quebec has been dated to about 4.3 billion years. If accepted it would be older, but its dating is controversial.",
+   "cite": [
+    "s19",
+    "s18"
+   ]
+  }
+ ]
+}

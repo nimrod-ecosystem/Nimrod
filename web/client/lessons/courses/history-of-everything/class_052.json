@@ -1,0 +1,1463 @@
+{
+ "about": {
+  "title": "Revolution, Flu and the Roaring Twenties",
+  "course": "history-of-everything",
+  "class_n": 52,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. There are five stories of roughly five minutes each, plus an opening and a recap. The 17 check questions take some of that time, so the teacher can pause after any story and pick up in the next sitting."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Russian Civil War",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/event/Russian-Civil-War",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "Russian Revolution of 1917 summary",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/summary/Russian-Revolution",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "Russian Revolution, 1917",
+   "publisher": "United States Holocaust Memorial Museum (Holocaust Encyclopedia)",
+   "date": "n.d.",
+   "link": "https://encyclopedia.ushmm.org/content/en/article/the-russian-revolution-1917",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "Soviet Union - Lenin, Bolsheviks, Revolution",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/place/Soviet-Union/Lenin-and-the-Bolsheviks",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "Russian Civil War of 1918-1921",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/history/russian-civil-war-1918-1921/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "Russian Civil War: The Failed Fightback Against Bolshevism",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/Russian_Civil_War/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "1918 Pandemic (H1N1 virus)",
+   "publisher": "US Centers for Disease Control and Prevention (archive)",
+   "date": "n.d.",
+   "link": "https://archive.cdc.gov/www_cdc_gov/flu/pandemic-resources/1918-pandemic-h1n1.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "History of 1918 Flu Pandemic",
+   "publisher": "US Centers for Disease Control and Prevention (archive)",
+   "date": "n.d.",
+   "link": "https://archive.cdc.gov/www_cdc_gov/flu/pandemic-resources/1918-commemoration/1918-pandemic-history.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "1918 Influenza: the Mother of All Pandemics",
+   "publisher": "Emerging Infectious Diseases journal, CDC",
+   "date": "January 2006",
+   "link": "https://wwwnc.cdc.gov/eid/article/12/1/05-0979_article",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "As the 1918 Flu Emerged, Cover-Up and Denial Helped It Spread",
+   "publisher": "History.com",
+   "date": "n.d.",
+   "link": "https://www.history.com/articles/1918-pandemic-spanish-flu-censorship",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "Influenza Pandemic of 1918-19 Chart",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/story/influenza-pandemic-of-1918-1919-chart",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "Mortality Statistics and Public Memory of the 1918 Pandemic",
+   "publisher": "CDC Museum Digital Exhibits",
+   "date": "n.d.",
+   "link": "https://cdcmuseum.org/exhibits/show/influenza/1918-influenza-pandemic/mortality-stats-1918",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "1918 Pandemic Influenza Historic Timeline",
+   "publisher": "US Centers for Disease Control and Prevention (archive)",
+   "date": "n.d.",
+   "link": "https://archive.cdc.gov/www_cdc_gov/flu/pandemic-resources/1918-commemoration/pandemic-timeline-1918.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "100 years of women's suffrage in Germany",
+   "publisher": "Library of Congress, In Custodia Legis blog",
+   "date": "2018-11-30",
+   "link": "https://blogs.loc.gov/law/2018/11/100-years-of-womens-suffrage-in-germany/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "How Women Won the Right to Vote Around the World",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/video/history-woman-suffrage-world/-187145",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "Sisters of Suffrage: British and American Women Fight for the Vote",
+   "publisher": "Gilder Lehrman Institute of American History",
+   "date": "n.d.",
+   "link": "https://www.gilderlehrman.org/history-resources/essays/sisters-suffrage-british-and-american-women-fight-vote",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "Women's suffrage timeline: the countries which were first (and last) to give females the vote",
+   "publisher": "Verdict",
+   "date": "n.d.",
+   "link": "https://www.verdict.co.uk/womens-suffrage-across-world/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "A Timeline of Women's Voting Rights",
+   "publisher": "Women for Women International",
+   "date": "2020",
+   "link": "https://www.womenforwomen.org/blogs/timeline-womens-voting-rights",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "The Long End of the Ottoman Empire",
+   "publisher": "Origins, Ohio State University",
+   "date": "n.d.",
+   "link": "https://origins.osu.edu/read/long-end-ottoman-empire",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "The Treaty of Lausanne and the End of the Ottoman Empire",
+   "publisher": "Origins, Ohio State University",
+   "date": "n.d.",
+   "link": "https://origins.osu.edu/watch/treaty-lausanne-and-end-ottoman-empire",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "Abolition of the Ottoman sultanate",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Abolition_of_the_Ottoman_sultanate",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "A Systematic Review of the Political, Social, and Cultural Legacies of the 1923 Greek-Turkish Population Exchange",
+   "publisher": "MDPI (peer-reviewed journal)",
+   "date": "2025",
+   "link": "https://www.mdpi.com/2313-5778/10/2/41",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "Convention Concerning the Exchange of Greek and Turkish Populations (summary document)",
+   "publisher": "fransamaltingvongeusau.com (document collection)",
+   "date": "n.d.",
+   "link": "https://www.fransamaltingvongeusau.com//documents/njno/GL.%2013.%201.%20Convention%20Concerning%20the%20Exchange%20of%20Greek%20and%20Turkish%20Populations%201923.pdf",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "Roaring Twenties: Flappers, Prohibition & Jazz Age",
+   "publisher": "History.com",
+   "date": "n.d.",
+   "link": "https://www.history.com/articles/roaring-twenties-history",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "The Harlem Renaissance (lesson plan)",
+   "publisher": "Jazz in America, The Jazz Education Network / Jazz at Lincoln Center",
+   "date": "n.d.",
+   "link": "https://www.jazzinamerica.org/lessonplan/5/4/240",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "Culture Shock: The Devil's Music: 1920's Jazz",
+   "publisher": "PBS",
+   "date": "n.d.",
+   "link": "https://www.pbs.org/wgbh/cultureshock/beyond/jazz.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "The Jazz Singer Premieres as the First Talkie",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/history/jazz-singer-premieres-first-talkie/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "The Jazz Singer",
+   "publisher": "Engineering and Technology History Wiki (ETHW)",
+   "date": "n.d.",
+   "link": "https://ethw.org/The_Jazz_Singer",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s29",
+   "title": "Modernist literature",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Modernist-literature",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s30",
+   "title": "Modernism",
+   "publisher": "Encyclopedia.com",
+   "date": "n.d.",
+   "link": "https://www.encyclopedia.com/literature-and-arts/art-and-architecture/architecture/modernism",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s31",
+   "title": "1922: the year that made modernism",
+   "publisher": "New Statesman",
+   "date": "2022-01",
+   "link": "https://www.newstatesman.com/culture/2022/01/1922-the-year-that-made-modernism",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s32",
+   "title": "What Caused the Russian Revolution of 1917? (video transcript)",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/video/Russian-Revolution-explained-in-three-questions/-257671",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s33",
+   "title": "Eastern Front - 1917: The Russian Revolution",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/event/Eastern-Front-World-War-I-history/1917-The-Russian-Revolution",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s34",
+   "title": "Partition of the Ottoman Empire",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Partition_of_the_Ottoman_Empire",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s35",
+   "title": "The Greek-Turkish Population Exchange 1922/1923 - Conflicted Memories and Global Legacies",
+   "publisher": "Academia.edu (scholarly chapter abstract)",
+   "date": "n.d.",
+   "link": "https://www.academia.edu/110867555/The_Greek_Turkish_Population_Exchange_1922_1923_Conflicted_Memories_and_Global_Legacies",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s36",
+   "title": "Bolshevik",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Bolshevik",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome. The guns of the First World War went quiet in November 1918. But the world did not settle down. This class follows five stories from the years right after."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Revolution, Flu and the Roaring Twenties"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Our five stories are: revolution and civil war in Russia, a deadly flu, women winning the vote, new music, film and art, and the end of the Ottoman Empire. We will take them one at a time."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Russia: revolution and civil war\n2. The 1918 flu\n3. Women win the vote\n4. Jazz, radio, film and modernism\n5. The Ottoman Empire ends"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Story one: Russia. A revolution is when people overthrow a government and put a new one in its place. Russia had two revolutions in the same year, 1917."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Revolution: overthrowing a government"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The first came in February 1917. Riots over food shortages broke out in Petrograd, now called St. Petersburg. The tsar, Russia's emperor, Nicholas II, was forced to give up power."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map of western Russia with Petrograd marked in the north-west, where the food riots began in February 1917."
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A temporary government took over. It was called the Provisional Government. It tried to keep Russia fighting in the war."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Provisional Government = a temporary government"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What happened in the first revolution, in February 1917?",
+    "right": "The tsar lost power and a temporary government took over.",
+    "wrong": [
+     "Lenin's Bolsheviks took control of Russia.",
+     "Russia's civil war came to an end.",
+     "Russia made peace with Germany."
+    ],
+    "why": "The February Revolution forced the tsar out and brought in the Provisional Government. The Bolsheviks came later, in October."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The temporary government was weak. A group called the Bolsheviks, led by Vladimir Lenin, grew popular with hungry city workers and soldiers. Their slogan promised 'peace, land, and bread'."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Bolsheviks: peace, land and bread"
+   },
+   "cite": [
+    "s2",
+    "s32"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In October 1917 the Bolsheviks acted. They occupied government buildings in a nearly bloodless takeover. Russia then used an older calendar, so their October was November on ours."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Feb/Mar 1917: tsar falls -> Oct/Nov 1917: Bolsheviks take power -> 1918-1921: civil war"
+   },
+   "cite": [
+    "s2",
+    "s33"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next came a hard choice. In 1918 Lenin accepted Germany's harsh terms to get Russia out of the war. This was the Treaty of Brest-Litovsk, and Russia gave up territory."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Treaty of Brest-Litovsk, 1918"
+   },
+   "cite": [
+    "s1",
+    "s33"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Still, Russians did not agree on who should rule. A civil war is a war between groups inside one country. The Bolsheviks, called the Reds, fought the Whites."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Reds: the Bolsheviks | Whites: their opponents"
+   },
+   "cite": [
+    "s5",
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Whites were a mixed group of monarchists, army officers and others, and they did not share one plan. Japan, Britain, France and the United States also sent forces against the Bolsheviks."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Opponents of the Bolsheviks:\n- monarchists and army officers\n- peasant groups and anarchists\n- rival socialists\n- foreign powers"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Who were the 'Whites' in the Russian civil war?",
+    "right": "A mixed group of anti-Bolshevik forces who were not united.",
+    "wrong": [
+     "The Bolshevik army led by Trotsky.",
+     "The tsar's family.",
+     "The German army."
+    ],
+    "why": "The Whites were many different anti-Bolshevik groups. The Reds were the Bolsheviks."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One of the saddest moments came in July 1918. As an anti-Bolshevik force closed in, Lenin ordered the former tsar killed. Nicholas, his wife and their five children were shot."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "17 July 1918: the Romanov family is killed"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In the end the Reds won. Their army, led by Leon Trotsky, was better organised and held Russia's heartland. Decisive battles came in 1919, and by 1921 the Bolsheviks were in control."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1919: decisive battles -> Nov 1920: last Whites leave Crimea -> 1921: Bolsheviks in control"
+   },
+   "cite": [
+    "s1",
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The win came at a huge cost. By 1921 Russian industry made only about one fifth of what it did before the war. The new state was run by the Communist Party and lasted about seventy years."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1/5 of prewar industrial output, by 1921"
+   },
+   "cite": [
+    "s1",
+    "s5"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "How many people died? Most victims were civilians, killed by disease, hunger and violence. Counts differ: about 7 million, about 10 million, or up to 14 million in some historians' totals."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Estimated deaths in the Russian civil war, in millions",
+    "chart": "c1"
+   },
+   "cite": [
+    "s1",
+    "s5",
+    "s6"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Which statement best describes deaths in the Russian civil war?",
+    "right": "Estimates are in the millions, and most victims were civilians killed by disease, famine and violence.",
+    "wrong": [
+     "Fewer than a hundred thousand people died, nearly all soldiers.",
+     "About 50 million died, all in battle.",
+     "Nobody has ever tried to count the dead."
+    ],
+    "why": "Sources give figures from about 7 to 14 million, and most of the dead were civilians."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Historians also argue about October 1917. Britannica calls it a coup by a small group. But the Bolsheviks had won majorities in the Petrograd and Moscow soviets, which were workers' councils."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "A coup by a small group | Backed by the soviets, and called the Great October Socialist Revolution"
+   },
+   "cite": [
+    "s2",
+    "s4",
+    "s36",
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Hold on to one more detail from Russia: sickness. Hunger, typhus, cholera and flu all struck during the civil war. That brings us to story two, a disease that crossed the whole planet."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "War + disease"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Story two: the flu. In 1918 a new flu virus appeared. Scientists call it H1N1, with genes from birds. A pandemic is a disease that spreads around the world."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The 1918 influenza pandemic"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "It was enormous. About 500 million people caught it, roughly one in every three people on Earth. At least 50 million died."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "dot",
+    "count": 3,
+    "layout": "row",
+    "text": "Imagine 3 people. About 1 of every 3 people in the world caught the 1918 flu."
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "About what share of the world's people caught the 1918 flu?",
+    "right": "About one in three.",
+    "wrong": [
+     "About one in a hundred.",
+     "About one in twenty.",
+     "Almost everyone, nine in ten."
+    ],
+    "why": "The CDC estimates about 500 million infections, about one-third of the world's people."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why did it spread so well? The war. Crowded camps and troop movements around the world helped the virus travel."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Crowds + troop movements = faster spread"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "It also struck in an unusual way. Many victims were healthy adults aged 20 to 40. The CDC calls this a unique feature of that pandemic."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Ages 20-40: nearly half of flu deaths"
+   },
+   "cite": [
+    "s8",
+    "s9"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It came in waves. In the United States, the second wave peaked from September to November 1918. It was very deadly and caused most of the deaths."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Second wave: autumn 1918"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In the United States, which wave of the 1918 flu caused most of the deaths?",
+    "right": "The second wave, in autumn 1918.",
+    "wrong": [
+     "The first wave, in spring 1918.",
+     "A third wave in 1925.",
+     "There were no waves, only one short outbreak."
+    ],
+    "why": "The CDC timeline says the second wave, peaking from September to November, caused most of the deaths."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Doctors had little to offer. There was no flu vaccine and no antibiotics for the infections that followed. People relied on isolation, quarantine, hygiene and limits on crowds. These were applied unevenly."
+   },
+   "show": {
+    "kind": "list",
+    "text": "What people could do in 1918:\n- isolate the sick\n- quarantine\n- wash and disinfect\n- limit public gatherings"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "War made it worse. Warring governments hid bad news to keep morale up. Neutral Spain's newspapers reported freely, even when its king fell ill. So the world called it the 'Spanish flu'. The name was a mistake."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "'Spanish flu' is a misnomer (a wrong name)"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why was it called the 'Spanish flu'?",
+    "right": "Neutral Spain's newspapers reported it openly while warring countries censored the news.",
+    "wrong": [
+     "It was first discovered in a Spanish laboratory.",
+     "Spanish soldiers carried it to every continent.",
+     "The Spanish king invented the name."
+    ],
+    "why": "Spain was neutral and its press was free, so it seemed the flu was worst there. The virus did not clearly start in Spain."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Nobody knows the death toll exactly. Records were poor. Estimates run from about 25 million to 100 million, and 50 million is the figure most often quoted."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "1918 flu deaths: low, usual and high estimates, in millions",
+    "chart": "c2"
+   },
+   "cite": [
+    "s11",
+    "s7",
+    "s9"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Even the starting place is uncertain. The CDC says there is no universal agreement on where the virus began. In the United States it was first identified in soldiers in spring 1918."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Where it began: still debated"
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now story three: the vote. Suffrage means the right to vote. For most of history women could not vote in elections at all, going back to ancient Greece and Rome."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Women win the vote"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In the 1800s women began petitioning, speaking and rallying. New Zealand led the way in 1893. In Europe and North America some women were arrested and went on hunger strikes in jail."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1893: New Zealand, the first country to let women vote"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Then came 1918 to 1920. In 1918 women in the United Kingdom, Germany, Poland and Canada, among others, gained the vote. In 1920 women in the United States won theirs."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1918: UK, Germany, Poland, Canada -> 1920: United States"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Many of these votes came with limits. In Britain in 1918, only women over 30 could vote. Votes on equal terms with men came in 1928."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "1918: women over 30 | 1928: equal voting with men"
+   },
+   "cite": [
+    "s17",
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Germany went faster. The new government promised the vote on 12 November 1918. A law on 30 November let men and women over 20 vote. The first election with women voting was on 19 January 1919."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "12 Nov 1918: promise -> 30 Nov 1918: law -> 19 Jan 1919: first vote"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In Britain in 1918, which women could vote?",
+    "right": "Women over 30.",
+    "wrong": [
+     "All women over 21.",
+     "Only married women over 18.",
+     "No women at all until 1928."
+    ],
+    "why": "The 1918 law gave the vote to women over 30. Equal voting with men came in 1928."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A vote on paper was not always a vote in practice. In Canada, First Nations women and men waited over 40 more years. Aboriginal Australians waited about 60 more years. In the US in 1920, many Black and Indigenous women were still shut out."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Still excluded after the new laws:\n- First Nations people in Canada\n- Aboriginal people in Australia\n- many Black and Indigenous women in the US"
+   },
+   "cite": [
+    "s15",
+    "s18"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What does the phrase 'women won the vote in 1920' leave out for the United States?",
+    "right": "Many Black and Indigenous women were still denied the vote.",
+    "wrong": [
+     "Men lost the vote in return.",
+     "Women could vote only once a decade.",
+     "Only rich women were ever allowed to vote after 1920."
+    ],
+    "why": "The 1920 amendment is a real milestone, but many Black and Indigenous women were still denied the vote."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Story four: how people played and what they made. In the 1920s many Americans had extra money. They spent it on movies, fashion and especially radios. The decade is nicknamed the Roaring Twenties."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Roaring Twenties: radio, jazz, film and art"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Radio first. In 1920 Pittsburgh's KDKA became the first commercial radio station in the United States. By the end of the 1920s more than 12 million homes had a radio."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "12 million US homes with a radio by the end of the 1920s"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Radio carried jazz. Jazz grew out of Black American life. It blended African and European music, and grew from work songs, spirituals, blues, brass bands and ragtime."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Roots of jazz:\n- work songs\n- spirituals\n- blues\n- brass bands\n- ragtime"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Harlem, in New York, became a centre of Black art, writing and music. This was the Harlem Renaissance. Duke Ellington's orchestra was heard live on radio from the Cotton Club. In 1927 alone, 100 million phonograph records were sold."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A Harlem nightclub stage in the 1920s: a big band in front of a lit-up crowd, with a radio microphone beside them."
+   },
+   "cite": [
+    "s24",
+    "s25"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was the Harlem Renaissance?",
+    "right": "A flowering of African American art, writing and music centred in Harlem, New York.",
+    "wrong": [
+     "A new government set up in Harlem.",
+     "A company that sold radios.",
+     "A peace treaty signed in Harlem."
+    ],
+    "why": "The Harlem Renaissance was a cultural movement in the 1920s. Jazz was an important part of it."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Not everyone cheered. Some critics called jazz barbaric and immoral. PBS notes that racism lay behind much of that opposition."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Jazz was attacked by critics, often with racism behind it"
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now film. Until then movies were silent, with the words flashed on cards. On 6 October 1927, The Jazz Singer opened in New York. It is usually called the first feature-length 'talkie', a film with spoken words."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "6 October 1927: The Jazz Singer opens"
+   },
+   "cite": [
+    "s27",
+    "s28"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A small correction is needed. It was not the first film with synchronized sound. Don Juan, in 1926, had music and sound effects. But The Jazz Singer's success sent the industry rushing to sound. By the end of 1928 silent films had nearly vanished."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "1926: Don Juan, music and sound effects | 1927: The Jazz Singer, spoken words"
+   },
+   "cite": [
+    "s28",
+    "s27"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why do historians say 'first talkie' needs care when talking about The Jazz Singer?",
+    "right": "Earlier films, such as Don Juan in 1926, already had synchronized music and sound effects.",
+    "wrong": [
+     "It had no sound at all.",
+     "It came out before radio began.",
+     "It was made in 1950."
+    ],
+    "why": "The Jazz Singer was not the first film with synchronized sound. It is remembered for its success and for its spoken lines."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last in this story: art and writing. Modernism was a wave of artists and writers who broke from older forms and tried new ones. After the war's slaughter, many felt that faith in the foundations of Western society had been shaken."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Modernism: breaking with tradition"
+   },
+   "cite": [
+    "s29"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In Germany in 1919 the Bauhaus school was founded. It combined craft and fine art, with the aim of improving society on all fronts."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A plain, bright building with large glass windows and no decoration, in the Bauhaus style."
+   },
+   "cite": [
+    "s30"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Then 1922 brought two landmarks. James Joyce's novel Ulysses came out in Paris in February. T. S. Eliot's poem The Waste Land followed in October. Oddly, Eliot's poem was written after the war but does not mention it."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Feb 1922: Ulysses -> Oct 1922: The Waste Land"
+   },
+   "cite": [
+    "s31",
+    "s29"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What does 'modernism' mean in this lesson?",
+    "right": "Breaking from older traditions to try new forms in art, writing and design.",
+    "wrong": [
+     "Copying ancient Greek art exactly.",
+     "A style of music played only on the radio.",
+     "A political party in Russia."
+    ],
+    "why": "Modernists such as the Bauhaus designers, Joyce and Eliot tried new forms instead of following tradition."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Eliot's poem shook other writers. William Carlos Williams said it swept the old literary world away. His exact words are in the next picture."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "'It wiped out our world as if an atom bomb had been dropped upon it.' - William Carlos Williams, on The Waste Land"
+   },
+   "cite": [
+    "s29"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Story five: the Ottoman Empire. It had lasted for centuries. Between 1918 and 1922 the winning powers divided up its lands."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The end of the Ottoman Empire"
+   },
+   "cite": [
+    "s34"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In August 1920 the Treaty of Sèvres was imposed on the Ottomans. It would have split much of present-day Turkey among France, Britain, Greece and Italy. It turned Turkish hopes into fury."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Treaty of Sèvres, August 1920"
+   },
+   "cite": [
+    "s19",
+    "s34"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Turkish nationalists, led by Mustafa Kemal Atatürk, fought back and won. Their assembly abolished the sultanate on 1 November 1922, which ended the Ottoman Empire. Then in July 1923 the Treaty of Lausanne replaced Sèvres and recognized the Republic of Turkey."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Aug 1920: Sèvres -> 1 Nov 1922: sultanate abolished -> 24 Jul 1923: Lausanne -> 29 Oct 1923: Republic"
+   },
+   "cite": [
+    "s20",
+    "s21",
+    "s19"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which treaty recognized the Republic of Turkey in 1923?",
+    "right": "The Treaty of Lausanne.",
+    "wrong": [
+     "The Treaty of Sèvres.",
+     "The Treaty of Brest-Litovsk.",
+     "The 19th Amendment."
+    ],
+    "why": "Lausanne in July 1923 replaced Sèvres and recognized the new Turkey."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Lausanne was unusual. Of the treaties after the First World War, it was the only one negotiated rather than dictated. It is also the only one still in force today."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Lausanne: negotiated, and still in force"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Arab provinces were treated differently. The Sèvres clauses on them stayed unchanged. The partition created the modern Arab world and Turkey, with Britain and France dominant in the region."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map of the former Ottoman lands: a new Turkey in the north, and Arab regions to the south and east marked as under British or French influence."
+   },
+   "cite": [
+    "s19",
+    "s34"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A painful part of Lausanne was a population exchange, signed on 30 January 1923. Orthodox Christians in Turkey were sent to Greece, and Muslims in Greece were sent to Turkey. It was compulsory, and based on religion."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Orthodox Christians: Turkey to Greece | Muslims: Greece to Turkey"
+   },
+   "cite": [
+    "s22",
+    "s23"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Counts differ. One study says about 1.2 million Orthodox Christians and 350,000 Muslims. Another source says about 1.5 million and 500,000. Either way, it was one of the century's largest forced migrations."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "People moved in the 1923 exchange, in thousands: two sets of estimates",
+    "chart": "c3"
+   },
+   "cite": [
+    "s22",
+    "s23"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "By what rule were people moved in the 1923 Greek-Turkish exchange?",
+    "right": "By religion, and they had no choice: Orthodox Christians went to Greece and Muslims to Turkey.",
+    "wrong": [
+     "By each family's own choice.",
+     "By language, with speakers of Greek going to Greece.",
+     "By wealth, with the poorest moved first."
+    ],
+    "why": "The Lausanne convention compelled people to move on the basis of religion."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let us put the five stories on one line. Notice how closely they overlap in time. The same people lived through war, flu, new rights, new music and new borders."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1917-21 Russia -> 1918-20 flu -> 1918-20 votes for women -> 1919 Bauhaus -> 1920 KDKA -> 1922 Ulysses -> 1923 Lausanne -> 1927 The Jazz Singer"
+   },
+   "cite": [
+    "s2",
+    "s7",
+    "s15",
+    "s30",
+    "s24",
+    "s31",
+    "s20",
+    "s27"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One last check. Next class we move on to the Depression, dictators and the slide toward another war."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Next: Depression, Dictators and the Slide to War"
+   },
+   "cite": [
+    "s2",
+    "s14",
+    "s20",
+    "s27"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which list puts these events in the right order, earliest first?",
+    "right": "Bolsheviks take power (1917), German women vote (1919), Treaty of Lausanne (1923), The Jazz Singer (1927).",
+    "wrong": [
+     "The Jazz Singer (1927), Bolsheviks take power (1917), Treaty of Lausanne (1923), German women vote (1919).",
+     "Treaty of Lausanne (1923), The Jazz Singer (1927), German women vote (1919), Bolsheviks take power (1917).",
+     "German women vote (1919), The Jazz Singer (1927), Bolsheviks take power (1917), Treaty of Lausanne (1923)."
+    ],
+    "why": "The Bolsheviks took power in 1917. German women first voted in January 1919. Lausanne was signed in July 1923, and The Jazz Singer opened in October 1927."
+   }
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Estimated deaths in the Russian civil war (millions)",
+   "rows": [
+    {
+     "label": "EBSCO Research Starters: about 7",
+     "value": 7,
+     "source": "s5"
+    },
+    {
+     "label": "Britannica: about 10",
+     "value": 10,
+     "source": "s1"
+    },
+    {
+     "label": "World History Encyclopedia: as high as 14 in some counts",
+     "value": 14,
+     "source": "s6"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "1918 flu deaths worldwide: low, usual and high estimates (millions)",
+   "rows": [
+    {
+     "label": "Low end (Britannica range 25 to 50)",
+     "value": 25,
+     "source": "s11"
+    },
+    {
+     "label": "At least (CDC)",
+     "value": 50,
+     "source": "s7"
+    },
+    {
+     "label": "Arguably as high as (CDC journal)",
+     "value": 100,
+     "source": "s9"
+    }
+   ]
+  },
+  {
+   "id": "c3",
+   "kind": "bar",
+   "title": "People moved in the 1923 Greek-Turkish exchange (thousands), two estimates",
+   "rows": [
+    {
+     "label": "Orthodox Christians leaving Turkey (study estimate)",
+     "value": 1200,
+     "source": "s22"
+    },
+    {
+     "label": "Orthodox Christians leaving Turkey (convention summary)",
+     "value": 1500,
+     "source": "s23"
+    },
+    {
+     "label": "Muslims leaving Greece (study estimate)",
+     "value": 350,
+     "source": "s22"
+    },
+    {
+     "label": "Muslims leaving Greece (convention summary)",
+     "value": 500,
+     "source": "s23"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Russian Revolution and civil war",
+   "links": [
+    "[[World War I]]",
+    "[[The Road to World War I]]",
+    "[[Depression, Dictators and the Slide to War]]",
+    "[[The End of the Cold War]]"
+   ]
+  },
+  {
+   "topic": "1918 influenza pandemic",
+   "links": [
+    "[[World War I]]",
+    "[[Science and Ideas in the 1800s]]",
+    "[[20th-Century Science and Technology]]"
+   ]
+  },
+  {
+   "topic": "Women's suffrage",
+   "links": [
+    "[[The American and French Revolutions]]",
+    "[[Nations, Reform and Civil War in the 1800s]]",
+    "[[The 1950s and early 1960s: Space, Nuclear Fear and Civil Rights]]"
+   ]
+  },
+  {
+   "topic": "Jazz, radio, cinema and modernism",
+   "links": [
+    "[[The Atlantic Slave Trade]]",
+    "[[20th-Century Science and Technology]]",
+    "[[Depression, Dictators and the Slide to War]]"
+   ]
+  },
+  {
+   "topic": "Ottoman collapse and new states",
+   "links": [
+    "[[Ottomans, Ming China and the Age of Exploration]]",
+    "[[World War I]]",
+    "[[A New World Order: The UN, the Cold War and Decolonization]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "1917 (Feb to Dec)",
+   "elsewhere": "As Russian authority crumbled, Estonia declared independence on 28 November and Finland on 6 December.",
+   "cite": [
+    "s33"
+   ]
+  },
+  {
+   "when": "Autumn 1918",
+   "elsewhere": "The flu's second wave peaked in the United States from September to November. On 12 November Germany's new government promised women the vote.",
+   "cite": [
+    "s13",
+    "s14"
+   ]
+  },
+  {
+   "when": "1919",
+   "elsewhere": "The Bauhaus school was founded in Germany. On 19 January German women voted in a national election for the first time.",
+   "cite": [
+    "s30",
+    "s14"
+   ]
+  },
+  {
+   "when": "1920",
+   "elsewhere": "US women won the vote. The Treaty of Sèvres was imposed on the Ottomans in August. KDKA in Pittsburgh began as the first US commercial radio station.",
+   "cite": [
+    "s15",
+    "s19",
+    "s24"
+   ]
+  },
+  {
+   "when": "1922",
+   "elsewhere": "Joyce's Ulysses and Eliot's The Waste Land were published. The Ottoman sultanate was abolished on 1 November.",
+   "cite": [
+    "s31",
+    "s21"
+   ]
+  },
+  {
+   "when": "1923",
+   "elsewhere": "The Treaty of Lausanne was signed on 24 July. The Republic of Turkey was proclaimed on 29 October.",
+   "cite": [
+    "s19",
+    "s21"
+   ]
+  },
+  {
+   "when": "1927",
+   "elsewhere": "The Jazz Singer opened in New York on 6 October. About 100 million phonograph records were sold in the US that year.",
+   "cite": [
+    "s27",
+    "s24"
+   ]
+  },
+  {
+   "when": "1928",
+   "elsewhere": "Women in the United Kingdom won voting rights on equal terms with men.",
+   "cite": [
+    "s16"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The October 1917 Bolshevik takeover was a coup by a small group.",
+   "other_view": "Britannica describes it as a coup carried out by a small group of conspirators. The Bolsheviks also had real support. By September they held majorities in the Petrograd and Moscow soviets, and the Soviet name for the event was the Great October Socialist Revolution. Historians weigh the coup side and the mass-support side differently.",
+   "cite": [
+    "s4",
+    "s2",
+    "s3"
+   ]
+  },
+  {
+   "claim": "About 7 million people died in the Russian civil war.",
+   "other_view": "Britannica says about 10 million, and notes other estimates run as high as three times that. World History Encyclopedia says some historians reach 14 million once famine and epidemics are counted. The gap comes from what is counted: battle deaths, executions, famine or disease.",
+   "cite": [
+    "s5",
+    "s1",
+    "s6"
+   ]
+  },
+  {
+   "claim": "The 1918 flu killed about 50 million people.",
+   "other_view": "That is the most quoted figure, and the CDC says 'at least'. Other estimates run from about 25 million up to 100 million. The CDC Museum notes that the US statistics leave out some states with more than four million Black residents, so counts there were probably too low.",
+   "cite": [
+    "s7",
+    "s9",
+    "s11",
+    "s12"
+   ]
+  },
+  {
+   "claim": "The 1918 flu began in Spain.",
+   "other_view": "It did not. The name came from neutral Spain's open press while warring countries censored the news. Where it really began is still debated. The CDC says there is no universal consensus, and it was first identified in the US in soldiers in spring 1918.",
+   "cite": [
+    "s10",
+    "s7",
+    "s8"
+   ]
+  },
+  {
+   "claim": "Women won the vote in 1918 (UK) and in 1920 (US).",
+   "other_view": "These were real and important steps, but they were limited. British women had to be over 30 until 1928. Many Black and Indigenous women in the US were still denied the vote after 1920, and First Nations people in Canada and Aboriginal people in Australia waited decades longer.",
+   "cite": [
+    "s17",
+    "s16",
+    "s18",
+    "s15"
+   ]
+  },
+  {
+   "claim": "The Jazz Singer was the first talkie.",
+   "other_view": "It is usually remembered that way, but it was not the first film with synchronized sound. Don Juan in 1926 had music and sound effects. The Jazz Singer was the first big hit with spoken lines, and that success is what changed the industry.",
+   "cite": [
+    "s28",
+    "s27"
+   ]
+  },
+  {
+   "claim": "Modernism began in 1922, the year of Ulysses and The Waste Land.",
+   "other_view": "1922 was a watershed year. Even so, some of modernism's most important experiments were conceived before 1914, so the movement did not begin that year.",
+   "cite": [
+    "s31",
+    "s30"
+   ]
+  },
+  {
+   "claim": "The Ottoman Empire ended in 1922 when the sultanate was abolished.",
+   "other_view": "Abolishing the sultanate on 1 November 1922 formally ended the empire. But the collapse unfolded over years of war and upheaval, and the Treaty of Lausanne (July 1923) and the Republic of Turkey (October 1923) completed the change.",
+   "cite": [
+    "s21",
+    "s20",
+    "s19"
+   ]
+  },
+  {
+   "claim": "The 1923 Greek-Turkish exchange moved about 1.2 million Christians and 350,000 Muslims.",
+   "other_view": "Another source gives about 1.5 million and 500,000. Scholars also disagree about how to remember it. It was once held up as a 'success story' and cited to justify later resettlements. Others stress the hardship and the forced, religion-based removal.",
+   "cite": [
+    "s22",
+    "s23",
+    "s35"
+   ]
+  }
+ ]
+}

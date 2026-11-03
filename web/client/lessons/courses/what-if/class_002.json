@@ -1,0 +1,982 @@
+{
+ "about": {
+  "title": "The Younger Dryas: what happened at the end of the Ice Age?",
+  "course": "what-if",
+  "class_n": 2,
+  "audience": [
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. The class has one new idea per step and a check question after each main idea, so it needs the full half hour. It covers the accepted picture, the impact hypothesis, how it was tested, and a thought experiment."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Younger Dryas",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/science/Younger-Dryas-climate-interval",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Timing and structure of the Younger Dryas event and its underlying climate dynamics",
+   "publisher": "Proceedings of the National Academy of Sciences (via PubMed Central)",
+   "date": "2020",
+   "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7519346/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Meltwater routing and the Younger Dryas",
+   "publisher": "Proceedings of the National Academy of Sciences (Condron and Winsor)",
+   "date": "2012-12",
+   "link": "https://www.pnas.org/doi/10.1073/pnas.1207381109",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Into the Holocene, anatomy of the Younger Dryas cold reversal and preboreal oscillation",
+   "publisher": "Scientific Reports (Nature)",
+   "date": "2024",
+   "link": "https://www.nature.com/articles/s41598-024-53591-2",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Warm summers during the Younger Dryas cold reversal",
+   "publisher": "Nature Communications",
+   "date": "2018",
+   "link": "https://www.nature.com/articles/s41467-018-04071-5",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "An independent evaluation of the Younger Dryas extraterrestrial impact hypothesis",
+   "publisher": "Proceedings of the National Academy of Sciences",
+   "date": "2009",
+   "link": "https://www.pnas.org/doi/10.1073/pnas.0907857106",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "The Younger Dryas impact hypothesis: a critical review",
+   "publisher": "Quaternary Science Reviews (via ScienceDirect)",
+   "date": "2013",
+   "link": "https://www.sciencedirect.com/science/article/abs/pii/S0277379113004332",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "The Younger Dryas impact hypothesis: A cosmic catastrophe (Holliday, Surovell, Meltzer, Grayson, Boslough)",
+   "publisher": "Sandia National Laboratories publication record",
+   "date": "2014",
+   "link": "https://www.sandia.gov/research/publications/details/the-younger-dryas-impact-hypothesis-a-cosmic-catastrophe-2014-01-01/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Comprehensive refutation of the Younger Dryas Impact Hypothesis (YDIH)",
+   "publisher": "Earth-Science Reviews (via ResearchGate listing)",
+   "date": "2023",
+   "link": "https://www.researchgate.net/publication/372630407_Comprehensive_refutation_of_the_Younger_Dryas_Impact_Hypothesis_YDIH",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Large Pt anomaly in the Greenland ice core points to a cataclysm at the onset of Younger Dryas",
+   "publisher": "Proceedings of the National Academy of Sciences (Petaev et al.)",
+   "date": "2013",
+   "link": "https://www.pnas.org/doi/10.1073/pnas.1303924110",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Evidence of Cosmic Impact at Abu Hureyra, Syria at the Younger Dryas Onset (~12.8 ka): High-temperature melting at >2200 °C",
+   "publisher": "Scientific Reports (via PubMed Central)",
+   "date": "2020-03-06",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7060197/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Correction: Evidence of Cosmic Impact at Abu Hureyra, Syria at the Younger Dryas Onset",
+   "publisher": "Scientific Reports (via PubMed Central)",
+   "date": "2025-11-19",
+   "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12630835/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "A possible volcanic origin for the Greenland ice core Pt anomaly near the Bølling-Allerød/Younger Dryas boundary",
+   "publisher": "PLOS One (via PubMed Central)",
+   "date": "2025",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC12445550/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "A volcano or a meteorite? New evidence sheds light on puzzling discovery in Greenland's ice sheet",
+   "publisher": "Phys.org",
+   "date": "2025-09",
+   "link": "https://phys.org/news/2025-09-volcano-meteorite-evidence-puzzling-discovery.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Rejection of Holliday et al.'s alleged refutation of the Younger Dryas impact hypothesis (Sweatman, Powell, West)",
+   "publisher": "Earth-Science Reviews (via ScienceDirect)",
+   "date": "2024",
+   "link": "https://www.sciencedirect.com/science/article/pii/S0012825224002885",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "The Younger Dryas impact hypothesis: Review of the impact evidence (Sweatman)",
+   "publisher": "Earth-Science Reviews (via ScienceDirect)",
+   "date": "2021",
+   "link": "https://www.sciencedirect.com/science/article/abs/pii/S0012825221001781",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Why won't this debate about an ancient cold snap die?",
+   "publisher": "Science News",
+   "date": "2023",
+   "link": "https://www.sciencenews.org/article/younger-dryas-comet-impact-cold-snap",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Controversial comet theory struck by two new retractions",
+   "publisher": "Retraction Watch",
+   "date": "2026-03-04",
+   "link": "https://retractionwatch.com/2026/03/04/controversial-comet-theory-struck-by-two-new-retractions/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Arguments and Evidence against a Younger Dryas Impact Event (Boslough et al.)",
+   "publisher": "Royal Holloway Research Portal / AGU Geophysical Monograph Series",
+   "date": "2012",
+   "link": "https://pure.royalholloway.ac.uk/en/publications/arguments-and-evidence-against-a-younger-dryas-impact-event/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Widespread platinum anomaly documented at the Younger Dryas onset in North American sedimentary sequences",
+   "publisher": "Scientific Reports (via PubMed Central)",
+   "date": "2017-03-09",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5343653/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Correction: Widespread platinum anomaly documented at the Younger Dryas onset in North American sedimentary sequences",
+   "publisher": "Scientific Reports (via PubMed Central)",
+   "date": "2026",
+   "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC13149821/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Scientists solve 12,800-year-old climate mystery hidden in Greenland ice",
+   "publisher": "ScienceDaily",
+   "date": "2026-03-19",
+   "link": "https://www.sciencedaily.com/releases/2026/03/260319044714.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "The Younger Dryas Impact: A Failed Hypothesis",
+   "publisher": "Skeptical Inquirer",
+   "date": "2025-06",
+   "link": "https://skepticalinquirer.org/2025/06/the-younger-dryas-impact-a-failed-hypothesis/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "The Younger Dryas Climate Event",
+   "publisher": "ResearchGate (reference-work chapter listing)",
+   "date": "n.d.",
+   "link": "https://www.researchgate.net/publication/284868803_The_Younger_Dryas_Climate_Event",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Researchers find evidence of a cosmic impact that caused destruction of one of the world's earliest human settlements",
+   "publisher": "Phys.org",
+   "date": "2020-03",
+   "link": "https://phys.org/news/2020-03-evidence-cosmic-impact-destruction-world.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "The Younger Dryas impact hypothesis: review of the impact evidence (author's repository copy)",
+   "publisher": "Edinburgh Research Explorer, University of Edinburgh",
+   "date": "2021",
+   "link": "https://www.research.ed.ac.uk/files/209288439/The_Younger_Dryas_impact_hypothesis_MBS.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "Did a comet end the Ice Age and wipe out a civilization? Fact check",
+   "publisher": "Ancient Origins",
+   "date": "n.d.",
+   "link": "https://www.ancient-origins.net/news-history-archaeology/younger-dryas-comet-fact-check-00103277",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "First, where this idea stands. The Younger Dryas impact hypothesis is a minority scholarly view. Working scientists have published it, but most experts in the relevant fields don't accept it."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Where this idea stands: minority scholarly view"
+   },
+   "cite": [
+    "s7",
+    "s8",
+    "s23"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Quick reminder of the five tiers from class 1. This idea sits in the middle one."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Mainstream consensus | 2. Active research debate | 3. Minority scholarly view (the impact hypothesis is here) | 4. Popular speculation | 5. Fiction"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "I'll speak up for the other side, warmly. The supporters are working scientists. They say many researchers have backed the idea in many papers, and that deserves a fair hearing."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Most experts: the evidence doesn't hold up | Supporters: replicated by many researchers"
+   },
+   "cite": [
+    "s15",
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "And so nobody is confused, here is the accepted view. The Younger Dryas was a real cold snap. The leading explanation is meltwater changing an ocean current, not an impact. Let's build that picture first."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Accepted view: meltwater"
+   },
+   "cite": [
+    "s3",
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "What was the Younger Dryas? It was a cool period that interrupted the warming at the end of the last Ice Age, roughly 12,900 to 11,600 years ago."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Younger Dryas"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the timeline. Ice-core studies put the abrupt cooling at about 12,870 years ago and the abrupt end at about 11,700 years ago, give or take a few decades."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "~12,870 years ago: abrupt cooling begins | ~11,700 years ago: abrupt warming, the Holocene begins"
+   },
+   "cite": [
+    "s2",
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Sources round the dates slightly differently, so we say about 1,200 years. Look how close the three estimates are."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Length of the Younger Dryas, three sources",
+    "chart": "c1"
+   },
+   "cite": [
+    "s1",
+    "s2",
+    "s3"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "And it was cold. In Greenland, ice cores show temperatures falling to more than 15°C colder than today."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "15°C colder than today (Greenland)"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's check that the basics stuck before we go on.",
+    "who_note": "check"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Check: how long?"
+   },
+   "cite": [
+    "s1",
+    "s2",
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "About how long did the Younger Dryas cold period last?",
+    "right": "About 1,200 years",
+    "wrong": [
+     "About 12 years",
+     "About 120 years",
+     "About 12,000 years"
+    ],
+    "why": "Three sources give about 1,170 to 1,300 years, so about 1,200 years is a good summary."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Was it the whole planet? No. Large parts of the Northern Hemisphere cooled, while much of the Southern Hemisphere warmed."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A world map. The North Atlantic region and northern lands are shaded blue for cooling. Much of the Southern Hemisphere is shaded warm for warming."
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So what caused it? The leading explanation is a huge pulse of meltwater from melting ice sheets entering the North Atlantic. It weakened a major ocean circulation called the AMOC."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "AMOC: the Atlantic overturning circulation"
+   },
+   "cite": [
+    "s3",
+    "s4"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why would that matter? Models show that when the AMOC collapses, the Northern Hemisphere cools a lot. Less heat is carried north, which also fits the south warming."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Meltwater floods the North Atlantic | The AMOC weakens | Less heat moves north | The north cools, the south warms"
+   },
+   "cite": [
+    "s4",
+    "s24"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Quick check on what we've just built.",
+    "who_note": "check"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Check: the accepted cause"
+   },
+   "cite": [
+    "s3",
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is the most widely accepted explanation for the start of the Younger Dryas?",
+    "right": "A pulse of meltwater into the North Atlantic weakened an ocean circulation (the AMOC)",
+    "wrong": [
+     "A comet impact over North America is the settled explanation",
+     "The Sun dimmed for about 1,200 years",
+     "Nobody has any evidence at all about the cause"
+    ],
+    "why": "Many records point to meltwater weakening the AMOC. The comet idea is a minority view."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The mainstream picture isn't finished, though. Scientists still argue over the details: where the meltwater came from, and whether meltwater alone is enough. Volcanic eruptions are also being studied."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Which route did the meltwater take? | Is meltwater alone enough? | Did volcanoes play a part?"
+   },
+   "cite": [
+    "s3",
+    "s5",
+    "s13"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So the tiers can differ by detail. That a cold snap happened is solid. The meltwater cause is the leading view. The fine detail is active research debate."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Solid: a cold snap happened, about 1,200 years | Debated: exact routing, other contributors"
+   },
+   "cite": [
+    "s2",
+    "s4",
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the idea itself. In 2007, Richard Firestone and colleagues proposed that an extraterrestrial impact about 12,900 years ago contributed to the cooling and to the extinction of large animals."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Younger Dryas impact hypothesis (2007)"
+   },
+   "cite": [
+    "s6",
+    "s16"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A fair point for the supporters: they say the impact triggered the cooling and contributed to extinctions and culture change. They do not say it wiped everything out in an instant."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Claimed: triggered cooling, contributed to extinctions and culture change | Not claimed: everything destroyed in an instant"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The idea has also changed shape. It began with one or more low-density objects. Later versions describe a comet breaking up into multiple airbursts or impacts."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "2007: one or more low-density objects | Later: a fragmented comet, several airbursts"
+   },
+   "cite": [
+    "s26",
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What do supporters point to? Traces in a dated layer at the start of the Younger Dryas, called the boundary layer. Think of these as markers."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Tiny metallic and glassy spheres (microspherules) | Nanodiamonds | A platinum anomaly | Charcoal"
+   },
+   "cite": [
+    "s26",
+    "s11"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's check what a marker is.",
+    "who_note": "check"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Check: markers"
+   },
+   "cite": [
+    "s26",
+    "s11"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In this debate, what do supporters mean by a 'marker'?",
+    "right": "A trace in the ground or ice, in a layer dated to the start of the Younger Dryas, that they say points to an impact",
+    "wrong": [
+     "A diary entry written at the time",
+     "A computer forecast of next year's weather",
+     "A type of ancient pottery"
+    ],
+    "why": "Markers are physical traces, such as spheres, nanodiamonds or platinum. The argument is over what they prove."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Their best-known marker is in Greenland ice. In 2013, Petaev and colleagues found a large platinum spike at the start of the Younger Dryas, without a matching iridium spike. They called the extraterrestrial hint circumstantial."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A graph of an ice core. A sharp platinum spike sits right where the temperature record drops into the cold period."
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Later work reported platinum spikes near the Younger Dryas start in several North American sediment layers too. That is part of why supporters feel the case is growing."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Platinum, in ice and in sediment"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Another marker is Abu Hureyra, an early village in Syria. A 2020 paper reported melted glass and minerals in its 12,800-year-old layer, formed at very high temperatures. The authors argue a nearby airburst did it."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A map of Syria with the Abu Hureyra village site marked, and a close-up of a fragment of melted glass."
+   },
+   "cite": [
+    "s11",
+    "s25"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That's the case in brief. Science works by testing claims like these, so let's see how other researchers did it."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "How other researchers tested the claims"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One early test came in 2009. Researchers sampled seven sites that should show the evidence if the impact was real. They could not find high concentrations of magnetic particles and spherules at the 12.9-thousand-year level."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Replication test: seven sites"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A critical review in 2013 reached a similar view. It said the evidence was either not diagnostic of an impact or not reproducible by other groups. A 2023 review adds that nobody has shown the markers are unique to that moment."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Not diagnostic of an impact | Not reproducible by other groups | Uniqueness to that moment not shown"
+   },
+   "cite": [
+    "s7",
+    "s9"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Then the bigger picture. No crater of the right age is known. A review also found no sign of landscape catastrophe, and no population collapse in the archaeology around 12,900 years ago."
+   },
+   "show": {
+    "kind": "list",
+    "text": "No known crater | No clear catastrophe in landscapes or fire records | No clear population collapse in archaeology"
+   },
+   "cite": [
+    "s8",
+    "s17"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's check what the critics say is missing.",
+    "who_note": "check"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Check: what's missing?"
+   },
+   "cite": [
+    "s8",
+    "s17"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which of these do critics say has NOT been found?",
+    "right": "A known impact crater of the right size and age",
+    "wrong": [
+     "Any ice-core data from Greenland",
+     "Any scientists willing to study the idea",
+     "Any published claim of evidence at all"
+    ],
+    "why": "Ice-core data and published claims exist, and scientists have studied the idea. The crater is the missing piece."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The platinum spike has since been re-examined. A 2025 study suggests it could be volcanic, from an Icelandic eruption. It also puts the spike about 45 years after the cooling began, too late to have started it."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "~45 years after the cold began"
+   },
+   "cite": [
+    "s13",
+    "s14"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Even the 2017 platinum paper has a correction. It now says an extraterrestrial source remains one possible explanation, and that the study does not identify the source of the platinum."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "One possible explanation"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Critics also say there is no physics-based model of how such an event would work. They argue that some proposed versions don't conserve energy and momentum."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Physics test"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Fair is fair, so here is the supporters' reply. They say hundreds of researchers have corroborated the evidence, and that remaining differences are normal science. Only new evidence, they say, can falsify an idea."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Supporters: replicated many times, still an active hypothesis | Critics: not reproducible, no crater, other explanations"
+   },
+   "cite": [
+    "s15",
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Journals have also issued notices. PLOS One retracted two papers from supporters in March 2026, and one author said he'd have preferred a correction. The Abu Hureyra paper got a correction notice in 2025."
+   },
+   "show": {
+    "kind": "list",
+    "text": "March 2026: two PLOS One papers retracted | November 2025: correction notice, Abu Hureyra paper"
+   },
+   "cite": [
+    "s18",
+    "s12"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So let's place it. Cold snap: mainstream consensus. Meltwater cause: leading view with open details. Impact hypothesis: a minority scholarly view. Check that tier.",
+    "who_note": "check"
+   },
+   "show": {
+    "kind": "list",
+    "text": "Cold snap happened: mainstream consensus | Meltwater cause, details: active research debate | Impact hypothesis: minority scholarly view"
+   },
+   "cite": [
+    "s2",
+    "s4",
+    "s7",
+    "s8"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which tier best fits the Younger Dryas impact hypothesis?",
+    "right": "Minority scholarly view",
+    "wrong": [
+     "Mainstream consensus",
+     "Fiction",
+     "Popular speculation with no scientists involved"
+    ],
+    "why": "It is published by working scientists and tested by others, but most experts in the relevant fields don't accept it."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a thought experiment. Imagine something big and sudden shook the climate 12,900 years ago. What traces would it leave for scientists to find?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Thought experiment: what traces would a sudden event leave?"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Be a detective. A real sudden event should leave a scar, a layer, a fingerprint, knock-on effects, and no simpler explanation."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. A scar on the land | 2. A layer at the same moment everywhere | 3. A fingerprint that nothing else makes | 4. Knock-on effects that line up in time | 5. No simpler explanation fits"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the scorecard. A crater is not known. Supporters report a layer at many sites, but others couldn't reproduce it. Uniqueness is disputed. Critics see no catastrophe, and meltwater already explains the cooling."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Clue we'd expect: scar, layer, fingerprint, knock-on effects, no simpler cause | Status: no crater; layer disputed; uniqueness disputed; no clear catastrophe; meltwater already fits"
+   },
+   "cite": [
+    "s8",
+    "s6",
+    "s7",
+    "s9",
+    "s3",
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The key word is 'fingerprint'. If a marker also turns up at other times, it can't pinpoint one event.",
+    "who_note": "check"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Check: why 'unique' matters"
+   },
+   "cite": [
+    "s9",
+    "s18"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why does it matter whether a marker is unique to the boundary layer?",
+    "right": "If it also appears at other times, it can't pinpoint one particular event",
+    "wrong": [
+     "Unique markers are always more valuable to museums",
+     "A unique marker makes the Ice Age end sooner",
+     "It doesn't matter if markers are common"
+    ],
+    "why": "A fingerprint only identifies one event if it appears there and nowhere else."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To recap: the cold snap is solid, meltwater is the leading cause, and the impact idea is a minority scholarly view still being tested. Next time we ask whether civilizations existed before the Ice Age ended."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Cold snap: mainstream consensus | Cause details: active research debate | Impact hypothesis: minority scholarly view | Next: civilizations before the end of the Ice Age?"
+   },
+   "cite": [
+    "s2",
+    "s4",
+    "s7"
+   ],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Length of the Younger Dryas in years, as given or calculated from three sources",
+   "rows": [
+    {
+     "label": "Britannica (12,900 to 11,600 years ago)",
+     "value": 1300,
+     "source": "s1"
+    },
+    {
+     "label": "Ice-core timing study (about 12,870 to 11,700)",
+     "value": 1170,
+     "source": "s2"
+    },
+    {
+     "label": "Condron and Winsor (\"1,200-year-long\")",
+     "value": 1200,
+     "source": "s3"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Younger Dryas",
+   "links": [
+    "[[Atlantic overturning circulation]]",
+    "[[Greenland ice cores]]",
+    "[[End of the last Ice Age]]"
+   ]
+  },
+  {
+   "topic": "Younger Dryas impact hypothesis",
+   "links": [
+    "[[Credibility tiers]]",
+    "[[Evidence toolkit]]",
+    "[[Civilizations before the end of the Ice Age]]"
+   ]
+  },
+  {
+   "topic": "Thought experiment: traces of a sudden event",
+   "links": [
+    "[[Evidence toolkit]]",
+    "[[Replication]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About 12,900 to 11,700 years ago",
+   "elsewhere": "While much of the Northern Hemisphere cooled, much of the Southern Hemisphere warmed.",
+   "cite": [
+    "s24"
+   ]
+  },
+  {
+   "when": "About 12,800 years ago",
+   "elsewhere": "People lived at Abu Hureyra, one of the world's earliest settlements, in what is now Syria. Its 12,800-year-old layer is the one studied in the impact debate.",
+   "cite": [
+    "s11",
+    "s25"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The impact evidence has been replicated many times, so the hypothesis is well supported.",
+   "other_view": "Supporters say hundreds of researchers have corroborated the evidence. Critics say independent tests found no unique signal, that the evidence is not reproducible or diagnostic, and that no crater is known.",
+   "cite": [
+    "s15",
+    "s6",
+    "s7",
+    "s8"
+   ]
+  },
+  {
+   "claim": "The Greenland platinum spike points to an extraterrestrial source.",
+   "other_view": "The original authors called the evidence circumstantial. Later work suggests a volcanic origin and puts the spike about 45 years after the cooling began. A 2026 correction to a related paper says an extraterrestrial source is only one possible explanation.",
+   "cite": [
+    "s10",
+    "s13",
+    "s14",
+    "s21"
+   ]
+  },
+  {
+   "claim": "The melted glass at Abu Hureyra proves a cosmic event destroyed the village.",
+   "other_view": "The authors argue for a nearby airburst. A fact check calls this disputed because the measurements are published but critics reject the wider impact case. The paper received a correction notice in 2025, not a retraction.",
+   "cite": [
+    "s11",
+    "s12",
+    "s27"
+   ]
+  },
+  {
+   "claim": "Meltwater into the North Atlantic is the accepted cause of the Younger Dryas.",
+   "other_view": "Most researchers favor it, but some argue meltwater alone may not be enough, the route is still debated, and volcanism has also been proposed.",
+   "cite": [
+    "s4",
+    "s3",
+    "s5",
+    "s13"
+   ]
+  }
+ ]
+}

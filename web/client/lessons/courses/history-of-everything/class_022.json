@@ -1,0 +1,1051 @@
+{
+ "about": {
+  "title": "Alexander and the Hellenistic World",
+  "course": "history-of-everything",
+  "class_n": 22,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes: 40 short beats with 8 quick questions and pauses to think. The material fits a half-hour class as planned. The debate section is kept short on purpose, so the class does not rush the conquests or the successor kingdoms."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "6.3 The Hellenistic Era, World History Volume 1, to 1500",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/world-history-volume-1/pages/6-3-the-hellenistic-era",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "Ch. 6 Section Summary, World History Volume 1, to 1500",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/world-history-volume-1/pages/6-section-summary",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "Pergamon and the Hellenistic Kingdoms of the Ancient World: Three Centuries of Greek Art from Alexander the Great to Cleopatra",
+   "publisher": "The Metropolitan Museum of Art",
+   "date": "2016 exhibition",
+   "link": "https://www.metmuseum.org/perspectives/pergamon",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "Art of the Hellenistic Age and the Hellenistic Tradition",
+   "publisher": "The Metropolitan Museum of Art (Heilbrunn Timeline of Art History)",
+   "date": "n.d.",
+   "link": "https://www.metmuseum.org/essays/art-of-the-hellenistic-age-and-the-hellenistic-tradition",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "Pergamon exhibition: Exhibition Galleries",
+   "publisher": "The Metropolitan Museum of Art",
+   "date": "2016",
+   "link": "https://www.metmuseum.org/exhibitions/listings/2016/pergamon/exhibition-galleries",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "Pergamon and the Hellenistic Kingdoms of the Ancient World (press release)",
+   "publisher": "The Metropolitan Museum of Art",
+   "date": "2016",
+   "link": "https://www.metmuseum.org/press-releases/pergamon-2016-exhibitions",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "Intellectual Pursuits of the Hellenistic Age",
+   "publisher": "The Metropolitan Museum of Art (Heilbrunn Timeline of Art History)",
+   "date": "n.d.",
+   "link": "https://www.metmuseum.org/essays/intellectual-pursuits-of-the-hellenistic-age",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "Battle of the Hydaspes",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/event/Battle-of-the-Hydaspes",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "Library of Alexandria",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Library-of-Alexandria",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "Aristotle",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/biography/Aristotle",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "The Conquests of Alexander the Great (334 bce-323 bce)",
+   "publisher": "Encyclopedia.com",
+   "date": "n.d.",
+   "link": "https://www.encyclopedia.com/history/encyclopedias-almanacs-transcripts-and-maps/conquests-alexander-great-334-bce-323-bce",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "The Rise and Fall of Alexander the Great's Empire",
+   "publisher": "History Hit",
+   "date": "n.d.",
+   "link": "https://www.historyhit.com/the-rise-and-fall-of-alexander-the-greats-empire/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "Alexander's successors: the Diadochi",
+   "publisher": "Livius.org",
+   "date": "n.d.",
+   "link": "https://www.livius.org/articles/concept/diadochi/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "Diadochi Divide Alexander the Great's Empire",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/history/diadochi-divide-alexander-greats-empire/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "Scientist of the Day: Eratosthenes of Cyrene",
+   "publisher": "Linda Hall Library",
+   "date": "n.d.",
+   "link": "https://www.lindahall.org/about/news/scientist-of-the-day/eratosthenes-of-cyrene/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "Alexander the Great & the Burning of Persepolis",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/article/214/alexander-the-great--the-burning-of-persepolis/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "The Maurya Empire",
+   "publisher": "Lumen Learning (Boundless World History)",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/tc3-boundless-worldhistory/chapter/the-maurya-empire/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "What Was the Hellenistic World Like? Alexander the Great's Legacy",
+   "publisher": "TheCollector",
+   "date": "n.d.",
+   "link": "https://www.thecollector.com/hellenistic-world-alexander-the-great-legacy/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "Why Alexander wasn't so Great after all (review of Edmund Richardson's Alexander: God, King, Man)",
+   "publisher": "AOL (syndicated review)",
+   "date": "n.d.",
+   "link": "https://www.aol.com/articles/why-alexander-wasn-t-great-111500000.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "Was Alexander The Great A Good Ruler Or A Tyrant?",
+   "publisher": "WorldAtlas",
+   "date": "n.d.",
+   "link": "https://www.worldatlas.com/ancient-world/was-alexander-the-great-a-good-ruler-or-a-tyrant.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "Historical Libraries: The Library of Alexandria",
+   "publisher": "Mid-Continent Public Library",
+   "date": "n.d.",
+   "link": "https://www.mymcpl.org/blogs/historical-libraries-library-alexandria",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "Diadochi",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/history/diadochi/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "Aristotle",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/aristotle/",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 22. Last time we looked at Classical Greece. Today a young king from northern Greece conquers a huge empire. Then it breaks apart. Our goal is to describe his conquests and what lasted."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Alexander and the Hellenistic World"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First word: Macedon. It was a kingdom in northern Greece, ruled by kings. It was not one of the famous city-states like Athens."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Macedon: a kingdom in northern Greece"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "King Philip II ruled Macedon from 359 to 336 BCE. He built it into a strong kingdom. By 338 BCE it was the ruling power in Greece."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "338 BCE: Macedon rules Greece"
+   },
+   "cite": [
+    "s11",
+    "s2"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Philip planned a war of revenge on Persia, the huge empire next door. His son Alexander took up that plan. Persia was the superpower of its day."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A bearded king in armour looking east across a sea, with a young prince at his side"
+   },
+   "cite": [
+    "s2",
+    "s12"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Before Alexander, who built up Macedon and planned the war on Persia?",
+    "right": "His father, King Philip II",
+    "wrong": [
+     "The king of Persia",
+     "A Greek philosopher",
+     "One of Alexander's generals"
+    ],
+    "why": "Philip made Macedon the ruling power in Greece by 338 BCE. Alexander took over his father's plan."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Philip was assassinated in 336 BCE. His son Alexander took the throne at about twenty years old. As a boy, he had been taught by the philosopher Aristotle."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "336 BCE: Alexander becomes king"
+   },
+   "cite": [
+    "s12",
+    "s5",
+    "s23"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First he made sure Greece obeyed him. He destroyed the city-state of Thebes. Then, in 334 BCE, he crossed the Hellespont into Persian land. His first big win there came at the Granicus river."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Macedon and Greece in the west. An arrow crosses the Hellespont (Dardanelles) into Asia Minor, with the Granicus river marked."
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "By 331 BCE he held the western provinces of Persia. Then, on 1 October 331 BCE, he beat the Persian king Darius III at Gaugamela."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Gaugamela, 1 October 331 BCE"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "After that, the Persian capitals opened to him: Babylon, Susa, Persepolis and Ecbatana. In 330 BCE Darius was killed by his own officers. Alexander now held the Persian Empire."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Babylon, Susa, Persepolis, Ecbatana"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which battle in 331 BCE broke the power of the Persian king?",
+    "right": "Gaugamela",
+    "wrong": [
+     "The Granicus River, 334 BCE",
+     "The siege of Thebes",
+     "The burning of Persepolis"
+    ],
+    "why": "Alexander beat Darius III at Gaugamela, and the Persian capitals then fell to him one by one."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Along the way he took Egypt. There he founded a new city and gave it his own name: Alexandria. Remember it. We will come back to it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Alexandria, Egypt"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In 330 BCE his forces also sacked and later burned Persepolis, the jewel of the Persian Empire. Why they burned it is still argued. We will return to that."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Tall stone columns of a great palace, with smoke rising behind them"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Then he pushed east. In 326 BCE he beat King Porus at the Hydaspes river, in what is now Pakistan. Porus used war elephants, which were new to the Macedonians."
+   },
+   "show": {
+    "kind": "map",
+    "text": "An arrow runs from Persia east to the Hydaspes river in modern Pakistan."
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Beyond lay larger kingdoms, and his soldiers were worn out by years of war. At the Beas river they refused to go on. Alexander turned back."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The army says: no further"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why did Alexander turn back from India?",
+    "right": "His tired army refused to march farther east",
+    "wrong": [
+     "A Persian army defeated him",
+     "The Greek cities ordered him home",
+     "He had lost the battle at the Hydaspes"
+    ],
+    "why": "Faced with larger kingdoms and weary troops, his army mutinied and forced him to turn back."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Alexander died in Babylon in 323 BCE, in his early thirties. He had been king for about thirteen years."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "13 years as king"
+   },
+   "cite": [
+    "s8",
+    "s3",
+    "s5"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "He left no clear heir. One story says he was asked who should get his kingdom, and he answered, 'To the strongest.' That is a story passed down, not proof. But it fits what happened next."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "'To the strongest.' (reported words of the dying Alexander)"
+   },
+   "cite": [
+    "s3",
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next idea: the Diadochi. It is a Greek word for 'successors'. They were Alexander's generals, who divided his lands into kingdoms of their own."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Diadochi = successors"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "At first his half-brother Philip III and his baby son Alexander IV were named rulers. They had no real power. Ambitious generals soon had them murdered."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "An empty throne with generals standing around it, each looking at a different part of a large map"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The generals fought for decades. A key battle at Ipsus in 301 BCE helped settle things. By about 275 BCE the old empire had split into three major kingdoms."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "323 BCE Alexander dies, 301 BCE Ipsus, 275 BCE three kingdoms"
+   },
+   "cite": [
+    "s14",
+    "s13"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here are the three. The Ptolemies ruled Egypt. The Seleucids ruled Syria and the East. The Antigonids ruled Macedon."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Ptolemies: Egypt | Seleucids: Syria and the East | Antigonids: Macedon"
+   },
+   "cite": [
+    "s14",
+    "s5"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which dynasty ruled Egypt after Alexander?",
+    "right": "The Ptolemies",
+    "wrong": [
+     "The Seleucids",
+     "The Antigonids",
+     "The Persians"
+    ],
+    "why": "Ptolemy, one of Alexander's generals, took Egypt, and his family ruled from Alexandria."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In the east, an Indian leader, Chandragupta Maurya, founded the Mauryan Empire around 322 BCE. About 305 BCE he beat the Seleucid king Seleucus, who gave up lands. We meet the Mauryans properly in class 24."
+   },
+   "show": {
+    "kind": "map",
+    "text": "The Mauryan Empire in northern India, with the Seleucid lands to its west and a border at the Hindu Kush"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "These kingdoms lasted about three centuries. The Antigonids ruled until 168 BCE. The Seleucids, shrunk to Syria, were conquered by Rome's general Pompey in 64 BCE. Cleopatra's death in 30 BCE closed the era."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "168 BCE Antigonids end, 64 BCE Pompey takes Syria, 30 BCE Cleopatra dies"
+   },
+   "cite": [
+    "s22",
+    "s14",
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That stretch, from Alexander's death in 323 BCE to Cleopatra's death in 30 BCE, is called the Hellenistic period. In it, Greek culture spread from Greece to the Indus valley."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Hellenistic period: 323 to 30 BCE"
+   },
+   "cite": [
+    "s3",
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "How did that spread happen? Alexander and the kings after him founded Greek cities in the old Persian lands. They had Greek-style temples, theaters, marketplaces and gyms. Greek and local ways mixed."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A city with a theater, columns and a busy marketplace, with people in both Greek and eastern dress"
+   },
+   "cite": [
+    "s1",
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Keep one limit in mind. Greek culture was mostly a city story. Many people in the countryside kept their own languages and ways of life."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Cities: Greek language and culture | Countryside: local languages and customs"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does 'the Hellenistic period' mean?",
+    "right": "The centuries after Alexander's death when Greek culture spread across lands from Greece to the Indus",
+    "wrong": [
+     "The war between the Greeks and Persians",
+     "Alexander's own thirteen years as king",
+     "The age of the Roman kings"
+    ],
+    "why": "The period is usually dated from Alexander's death in 323 BCE. In it, Greek culture spread across his old lands."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now back to Alexandria. It was founded by Alexander himself about 331 BCE. It became the capital of the Ptolemies and the largest Hellenistic city."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Alexandria: capital of the Ptolemies"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Look at the sizes. Alexandria's population reached about a million. Antioch, the biggest Seleucid city, had about half a million."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Hellenistic city populations",
+    "chart": "c1"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Ptolemies founded the Museon, 'home of the Muses'. That is where our word 'museum' comes from. Think of a research institute, not a gallery of paintings."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Museon = home of the Muses"
+   },
+   "cite": [
+    "s1",
+    "s9"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In ancient Alexandria, what was the Museon?",
+    "right": "A 'home of the Muses': an institute where scholars studied",
+    "wrong": [
+     "A gallery of paintings and statues",
+     "A royal tomb",
+     "A marketplace"
+    ],
+    "why": "The Museon was a research institute, and the word 'museum' comes from it."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The kings also supported the Library of Alexandria. It was meant to be a universal library, gathering the books of the world. It held the largest collection in the ancient world."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Shelves of papyrus scrolls and scholars reading at long tables"
+   },
+   "cite": [
+    "s1",
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "How many scrolls? Nobody knows for sure. Reports range from forty thousand to four hundred thousand."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Reported range of scrolls in the Library",
+    "chart": "c2"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Great minds worked in this world. Euclid organised mathematical knowledge. Eratosthenes worked out the size of the Earth and became head librarian."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Euclid: mathematics | Eratosthenes: Earth's size"
+   },
+   "cite": [
+    "s9",
+    "s15"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "These scholars are called Hellenistic because they lived and worked after Alexander died. Archimedes is in that group too."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Euclid, Eratosthenes, Archimedes"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Who calculated the size of the Earth and became head librarian at Alexandria?",
+    "right": "Eratosthenes",
+    "wrong": [
+     "Euclid",
+     "Philip II",
+     "Chandragupta Maurya"
+    ],
+    "why": "Eratosthenes of Cyrene calculated Earth's circumference and became head librarian."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Library did not vanish in one day. In its long history of nearly a thousand years, it burned more than once. Almost nothing of it remains."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A harbour city at sunset, with a tall lighthouse and old library walls half in ruins"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the hard part: how should we judge Alexander? Historians really do disagree. So here are the two sides, side by side."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "How should we judge Alexander?"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One side stresses what he opened up: trade routes, cultural exchange, about twenty founded cities. The other stresses the cost: Thebes destroyed, extreme violence at Tyre and Gaza, and Persepolis burned."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Case for: trade routes, exchange of ideas, new cities | Case against: Thebes destroyed, violent sieges, Persepolis burned"
+   },
+   "cite": [
+    "s3",
+    "s12",
+    "s20"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Roman poet Lucan wrote about this darker side three hundred years later. He described Alexander's looting and killing in harsh words, which one modern reviewer quotes."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "'a nightmare which humanity was still struggling to wake from' (Lucan, as quoted in a modern review)"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Take Persepolis. Most ancient accounts blame a drunken party and an Athenian woman, Thaïs. Arrian, drawing on Ptolemy, says it was planned revenge for Persia burning Athens. Arrian also admitted we may never know."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Party and Thaïs (Diodorus, Curtius, Plutarch) | Planned revenge (Arrian)"
+   },
+   "cite": [
+    "s1",
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A third question: did Alexander mean to spread Greek culture? One reviewer says that was not something he cared about. The kings who followed him also founded Greek cities, so the story is shared."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Whose plan was the Hellenistic world?"
+   },
+   "cite": [
+    "s19",
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which is a fair summary of how historians judge Alexander?",
+    "right": "They disagree: some see a builder of a mixed, connected world, others a ruthless conqueror, and each side has evidence",
+    "wrong": [
+     "All historians agree he was a hero",
+     "All historians agree he was only a tyrant",
+     "There is no evidence, so no one can judge"
+    ],
+    "why": "Historians debate whether he oversaw a cosmopolitan empire or was a mass-murdering tyrant, and they point to different evidence."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "What else was happening? Aristotle was already 28 when Alexander was born. He died in 322 BCE, a year after Alexander. Around those same years, Chandragupta founded the Mauryan Empire in India."
+   },
+   "show": {
+    "kind": "list",
+    "text": "356 BCE: Alexander born | 322 BCE: Aristotle dies | c. 322 BCE: Mauryan Empire founded"
+   },
+   "cite": [
+    "s10",
+    "s5",
+    "s17"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In art, Alexander's court sculptor was Lysippos and his favoured painter was Apelles. Later, Archimedes lived from 287 to 212 BCE, and Eratosthenes was born around 278 BCE."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Lysippos: sculptor | Apelles: painter | Archimedes 287-212 BCE | Eratosthenes b. c. 278 BCE"
+   },
+   "cite": [
+    "s6",
+    "s3",
+    "s7",
+    "s15"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's put the whole class on one line, from Alexander's birth to the end of the Hellenistic age."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "356 BCE born | 336 king | 334 crosses to Asia | 331 Gaugamela | 326 Hydaspes | 323 dies | 301 Ipsus | 168 Antigonids end | 30 Cleopatra dies"
+   },
+   "cite": [
+    "s5",
+    "s12",
+    "s8",
+    "s14",
+    "s22",
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Three things to keep. Alexander conquered Persia in about a decade. His generals split the empire into kingdoms. And Greek culture spread widely, with Alexandria as its great centre of learning. Next class: the rise of Rome, which later swallowed these kingdoms."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Conquest of Persia | 2. Successor kingdoms | 3. Greek culture and Alexandria"
+   },
+   "cite": [
+    "s12",
+    "s14",
+    "s1"
+   ],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Population of two big Hellenistic cities (people)",
+   "rows": [
+    {
+     "label": "Alexandria (Ptolemaic Egypt), population reached",
+     "value": 1000000,
+     "source": "s1"
+    },
+    {
+     "label": "Antioch (Seleucid kingdom)",
+     "value": 500000,
+     "source": "s1"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Reported number of scrolls in the Library of Alexandria (the range is uncertain)",
+   "rows": [
+    {
+     "label": "Lowest reported estimate",
+     "value": 40000,
+     "source": "s21"
+    },
+    {
+     "label": "Highest reported estimate",
+     "value": 400000,
+     "source": "s21"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Philip II and the rise of Macedon",
+   "links": [
+    "[[Classical Greece]]"
+   ]
+  },
+  {
+   "topic": "Alexander's campaigns against Persia",
+   "links": [
+    "[[Iron Age Empires: Assyria, Babylon and Persia]]"
+   ]
+  },
+  {
+   "topic": "Diadochi and the successor kingdoms",
+   "links": [
+    "[[The Rise of Rome]]",
+    "[[The Roman Empire, the Silk Roads and Early Christianity]]"
+   ]
+  },
+  {
+   "topic": "Chandragupta and the Seleucid treaty",
+   "links": [
+    "[[Mauryan India, Qin and Han China]]"
+   ]
+  },
+  {
+   "topic": "Alexandria, the Museon and the Library",
+   "links": [
+    "[[The Roman Empire, the Silk Roads and Early Christianity]]",
+    "[[Thinkers and Teachers: Buddha, Confucius, the Greeks and the Prophets]]"
+   ]
+  },
+  {
+   "topic": "Judging Alexander",
+   "links": [
+    "[[Classical Greece]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "384 to 356 BCE",
+   "elsewhere": "The philosopher Aristotle was born in 384 BCE, so he was about 28 when Alexander was born in 356 BCE.",
+   "cite": [
+    "s10",
+    "s5"
+   ]
+  },
+  {
+   "when": "343 BCE",
+   "elsewhere": "Philip II summoned Aristotle to Macedon to tutor his young son Alexander.",
+   "cite": [
+    "s23"
+   ]
+  },
+  {
+   "when": "336 to 323 BCE (Alexander's reign)",
+   "elsewhere": "Alexander's court sculptor was Lysippos, and the painter Apelles was among his favoured artists.",
+   "cite": [
+    "s6",
+    "s3"
+   ]
+  },
+  {
+   "when": "322 BCE",
+   "elsewhere": "Aristotle died in 322 BCE, a year after fleeing Athens when anti-Macedonian feeling rose after Alexander's death. In India, Chandragupta Maurya founded the Mauryan Empire in about the same years (sources give 322 or 321 BCE).",
+   "cite": [
+    "s10",
+    "s17"
+   ]
+  },
+  {
+   "when": "about 305 BCE",
+   "elsewhere": "In India, Chandragupta Maurya beat the Seleucid king Seleucus, who gave up land in the east.",
+   "cite": [
+    "s17"
+   ]
+  },
+  {
+   "when": "about 300 to 275 BCE",
+   "elsewhere": "The Museon and Library of Alexandria took shape under the early Ptolemies. Eratosthenes was born around 278 BCE, and Archimedes lived from 287 to 212 BCE.",
+   "cite": [
+    "s9",
+    "s15",
+    "s7"
+   ]
+  },
+  {
+   "when": "30 BCE",
+   "elsewhere": "Cleopatra, the last Ptolemaic ruler of Egypt, died, which closed the Hellenistic period.",
+   "cite": [
+    "s3"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Alexander was a visionary who built a mixed, connected world.",
+   "other_view": "Some historians see a ruthless conqueror. WorldAtlas says historians debate whether he oversaw a cosmopolitan empire or was a mass-murdering tyrant. It points to the destruction of Thebes and the sieges of Tyre and Gaza. One reviewer of a recent biography says his legacy was not one of civilisation and that historians have been too kind to him. The Met's curators stress the opposite, that his conquests opened trade routes and cultural exchange. The evidence supports both pictures.",
+   "cite": [
+    "s20",
+    "s19",
+    "s3"
+   ]
+  },
+  {
+   "claim": "The burning of Persepolis was a drunken accident at the urging of Thaïs.",
+   "other_view": "Most later ancient writers (Diodorus, Curtius, Plutarch) tell it that way. Arrian, relying on Ptolemy and other contemporaries, never mentions Thaïs or a drinking night. He says the burning was deliberate revenge for the Persian destruction of Athens. Arrian also admitted that even eyewitness writers gave conflicting accounts, so we may never know.",
+   "cite": [
+    "s1",
+    "s16"
+   ]
+  },
+  {
+   "claim": "Alexander's conquests spread Greek culture across Asia.",
+   "other_view": "Greek culture did spread. But one reviewer argues that spreading it was not something Alexander cared about. The Hellenistic kings who followed him also founded Greek cities. The spread was strongest in the cities, and many people in the countryside kept their own languages and customs.",
+   "cite": [
+    "s19",
+    "s1",
+    "s18"
+   ]
+  },
+  {
+   "claim": "The Library of Alexandria was founded by Ptolemy I.",
+   "other_view": "Sources differ. Britannica credits Demetrius of Phaleron, an adviser to Ptolemy I, with founding the Library and Museum around 295 BCE. It also says the Museum was possibly built by Ptolemy I. The Linda Hall Library says the Museum, with its Library, was founded by Ptolemy II around 300 BCE. Ancient scrolls counts are also uncertain, which is why this class gives a range.",
+   "cite": [
+    "s9",
+    "s15",
+    "s21"
+   ]
+  },
+  {
+   "claim": "Alexandria was founded in 331 BCE.",
+   "other_view": "OpenStax gives 331 BCE. Britannica gives 332 BCE. Both put it early in Alexander's time in Egypt, so this class says 'about 331 BCE'. The Met says Alexander is thought to have founded some 20 cities from Egypt to India. Other counts of his foundations exist, and the number is uncertain.",
+   "cite": [
+    "s1",
+    "s9",
+    "s3"
+   ]
+  }
+ ]
+}

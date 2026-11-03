@@ -1,0 +1,1209 @@
+{
+ "about": {
+  "title": "The Farming Revolution",
+  "course": "history-of-everything",
+  "class_n": 14,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. The class has about 37 short beats and 14 questions. It covers five topics, and each one gets time to be explained and checked. The class can be paused after any question, and the Göbekli Tepe and 'why farming began' sections can be taken on separate days."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Last Glacial Period",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Last_Glacial_Period",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "Göbekli Tepe",
+   "publisher": "UNESCO World Heritage Centre (inscribed 2018)",
+   "date": "n.d.",
+   "link": "https://whc.unesco.org/en/list/1572",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "Göbekli Tepe",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/G%C3%B6bekli_Tepe",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "Cooperative Action of Hunter-Gatherers in the Early Neolithic Near East. A View from Göbekli Tepe",
+   "publisher": "German Archaeological Institute (DAI), Tepe Telegrams blog",
+   "date": "2017-06-01",
+   "link": "https://www.dainst.blog/the-tepe-telegrams/2017/06/01/cooperative-action-of-hunter-gatherers-in-the-early-neolithic-near-east-a-view-from-goebekli-tepe/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "Gobekli Tepe: The World's First Temple?",
+   "publisher": "Smithsonian Magazine",
+   "date": "n.d.",
+   "link": "https://www.smithsonianmag.com/history/gobekli-tepe-the-worlds-first-temple-83613665/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "Karahan Tepe",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Karahan_Tepe",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "Ancient Jericho/Tell es-Sultan",
+   "publisher": "UNESCO World Heritage Centre",
+   "date": "n.d.",
+   "link": "https://whc.unesco.org/en/list/1687",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "The Development of Agriculture",
+   "publisher": "National Geographic Society (Education)",
+   "date": "n.d.",
+   "link": "https://education.nationalgeographic.org/resource/development-agriculture/12th-grade/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "Old McHominid's Farm",
+   "publisher": "Smithsonian Magazine",
+   "date": "n.d.",
+   "link": "https://www.smithsonianmag.com/science-nature/old-mchominids-farm-117453476/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "Agriculture in the Fertile Crescent & Mesopotamia",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/article/9/agriculture-in-the-fertile-crescent--mesopotamia/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "First Agricultural Revolution",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/First_Agricultural_Revolution/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "Ancient History of Agriculture",
+   "publisher": "Northern Arizona University (BIO 301 course page)",
+   "date": "n.d.",
+   "link": "https://www2.nau.edu/~gaud/bio301/content/aghst.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "The Origins of Agriculture as a Natural Experiment in Cultural Evolution",
+   "publisher": "University of California, Davis (Richerson)",
+   "date": "n.d.",
+   "link": "http://www.des.ucdavis.edu/faculty/richerson/origins_ag_iv3.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "The Origins of Agriculture: New Data, New Ideas. An Introduction to Supplement 4",
+   "publisher": "Current Anthropology, University of Chicago Press, Vol. 52, Supplement 4",
+   "date": "n.d.",
+   "link": "https://www.journals.uchicago.edu/doi/full/10.1086/659964",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "Agricultural Revolution: Transition to Farming",
+   "publisher": "OER Project",
+   "date": "n.d.",
+   "link": "https://www.oerproject.com/OER-Materials/OER-Media/HTML-Articles/Origins/Unit2/The-Transition-to-Farming",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "How has world population growth changed over time?",
+   "publisher": "Our World in Data",
+   "date": "n.d.",
+   "link": "https://ourworldindata.org/population-growth-over-time",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "Neolithic",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Neolithic",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "Natufian culture",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Natufian_culture",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "An integrative skeletal and paleogenomic analysis of prehistoric stature variation suggests relatively reduced health for early European farmers (preprint)",
+   "publisher": "bioRxiv",
+   "date": "2021",
+   "link": "https://www.biorxiv.org/content/10.1101/2021.03.31.437881.full.pdf",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "Early Life Conditions and Physiological Stress Following the Transition to Farming in Central/Southeast Europe: Skeletal Growth Impairment and 6000 Years of Gradual Recovery",
+   "publisher": "ResearchGate (journal article listing)",
+   "date": "n.d.",
+   "link": "https://www.researchgate.net/publication/292983342_Early_Life_Conditions_and_Physiological_Stress_Following_the_Transition_to_Farming_in_CentralSoutheast_Europe_Skeletal_Growth_Impairment_and_6000_Years_of_Gradual_Recovery",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "Early Farmers Were Sicker and Shorter Than Their Forager Ancestors",
+   "publisher": "Discover Magazine",
+   "date": "n.d.",
+   "link": "https://www.discovermagazine.com/early-farmers-were-sicker-and-shorter-than-their-forager-ancestors-944",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "Estimates of historical world population",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Estimates_of_historical_world_population",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "Holocene extinction",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/science/holocene-extinction/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "History of the Animal Science Industry",
+   "publisher": "University of Missouri Extension",
+   "date": "n.d.",
+   "link": "https://extension.missouri.edu/media/wysiwyg/Extensiondata/CountyPages/Adair/Docs/HistoryoftheAnimalScienceIndustry.pdf",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "Agrarian society",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Agrarian_society",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "Eastern Agricultural Complex",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Eastern_Agricultural_Complex",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "History of agriculture",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/History_of_agriculture",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "Körtik Tepe",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/K%C3%B6rtik_Tepe",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s29",
+   "title": "History of the Domestication of Animals",
+   "publisher": "HistoryWorld",
+   "date": "n.d.",
+   "link": "https://www.historyworld.net/history/Domesticationofanimals/240",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s30",
+   "title": "World Population Timeline: Every Single Year, From 10,000 BCE to 2100",
+   "publisher": "World Population Clock (summarises HYDE and Our World in Data)",
+   "date": "n.d.",
+   "link": "https://worldpopulationclock.net/world-population-timeline/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s31",
+   "title": "The Holocene: from the Ice Age to the Age of Rice",
+   "publisher": "Metageologist (all-geo.org)",
+   "date": "2019-08",
+   "link": "https://all-geo.org/metageologist/2019/08/the-holocene-from-the-ice-age-to-the-age-of-rice/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s32",
+   "title": "Ester Boserup",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Ester_Boserup",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 14. Today we ask how people went from finding food to growing it, and what that changed."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Farming Revolution"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's start with the weather. The last glacial period, often called the last ice age, ran from about 115,000 to 11,700 years ago."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "115,000 years ago: last glacial period begins | 26,000 to 20,000 years ago: the coldest stretch | 11,700 years ago: it ends"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Near the end came one more cold snap, the Younger Dryas, from about 12,800 to 11,700 years ago. When it ended, a new epoch began: the Holocene."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Holocene"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is the name of the epoch we live in now, which began about 11,700 years ago?",
+    "right": "The Holocene",
+    "wrong": [
+     "The Younger Dryas",
+     "The Pleistocene",
+     "The Cambrian"
+    ],
+    "why": "The Pleistocene ended when the last glacial period ended. The Holocene is the epoch since then. The Younger Dryas was the last cold snap just before it."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Since then, the climate has been fairly stable, with limited ice. Keep that in mind, because it matters for one theory later."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A steadier climate"
+   },
+   "cite": [
+    "s31"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A quick word on dates. BCE counts backward from year 1. So 11,700 years ago is roughly 9700 BCE. Take away about 2,000 years."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "11,700 years ago = about 9700 BCE"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "About what BCE year is 11,000 years ago?",
+    "right": "About 9000 BCE",
+    "wrong": [
+     "About 13,000 BCE",
+     "About 2000 BCE",
+     "About 11,000 CE"
+    ],
+    "why": "Take away roughly 2,000 years, the time since year 1. 11,000 minus 2,000 is about 9,000, so about 9000 BCE."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a key word: foraging. Foragers, also called hunter-gatherers, live on wild food. They hunt animals and gather plants."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Foraging"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Farming is different. People grow plants and keep animals. Over many generations, they change them. That change is called domestication."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Foraging: find wild food | Farming: grow plants, keep animals, and change them over generations (domestication)"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "An animal is domesticated when people control its breeding and its survival depends on people. It also develops traits not found in the wild."
+   },
+   "show": {
+    "kind": "list",
+    "text": "People control breeding | Its survival depends on people | It develops traits not found in the wild | Kept for a purpose"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which is a sign that an animal is domesticated?",
+    "right": "People control its breeding and its survival depends on people",
+    "wrong": [
+     "It lives near a village",
+     "One wild animal was caught young and tamed",
+     "It is hunted for meat"
+    ],
+    "why": "Taming one animal is not enough. Domestication means whole lines of animals change over generations under human control."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Some foragers settled down before farming. The Natufians of the Levant, the eastern Mediterranean coast, lived from about 12,500 to 9,500 BCE."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map of the eastern Mediterranean coast (the Levant), with the Natufian region marked"
+   },
+   "cite": [
+    "s17",
+    "s18"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What was unusual about the Natufians?",
+    "right": "They lived settled or semi-settled lives before farming began",
+    "wrong": [
+     "They already grew every modern crop",
+     "They had invented writing",
+     "They lived only on boats"
+    ],
+    "why": "The Natufians supported a settled or semi-settled population before agriculture. They gathered wild cereals and hunted."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A lot of early farming happened in the Fertile Crescent. This is an arc of mild climate and farmable land, curving from the Persian Gulf toward the Mediterranean."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map of the Fertile Crescent arc"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why there? One answer is luck. The hills there had many wild plants and animals that suit domestication."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Many plants and animals to work with"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So what did they grow? Southwest Asia had eight 'founder crops': emmer and einkorn wheat, barley, peas, lentils, bitter vetch, chickpeas and flax."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "dot",
+    "count": 8,
+    "layout": "ten-frame",
+    "text": "Eight founder crops"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's check that list. Remember, these are crops of southwest Asia. Other regions had other crops."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Emmer and einkorn wheat | Hulled barley | Peas | Lentils | Bitter vetch | Chickpeas | Flax"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which of these was one of the eight founder crops of southwest Asia?",
+    "right": "Lentils",
+    "wrong": [
+     "Maize",
+     "Potatoes",
+     "Rice"
+    ],
+    "why": "Lentils are on the founder-crop list. Maize came from Central America, and rice came from China."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Animals came too. Sheep were among the first, about 11,000 years ago. Goats followed in southeastern Turkey, about 10,500 years ago."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Sheep: about 11,000 years ago | Goats: about 10,500 years ago (southeastern Turkey)"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Full pigs appear in the Fertile Crescent by about 9,000 years ago. Dogs are far older. The oldest known dog fossils are over 31,000 years old."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Pigs: about 9,000 years ago | Dogs: over 31,000 years ago (oldest known fossils)"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which of these animals has the oldest known domestic remains?",
+    "right": "The dog",
+    "wrong": [
+     "The sheep",
+     "The goat",
+     "The pig"
+    ],
+    "why": "Dog fossils go back over 31,000 years. Sheep, goats and pigs came roughly 9,000 to 11,000 years ago. Experts differ on exact dog dates, as the other-side notes explain."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here are some of those firsts on one chart, in years ago. The dates are rough, and sources differ."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Rough age of early evidence of farming (years ago)",
+    "chart": "c1"
+   },
+   "cite": [
+    "s8",
+    "s9",
+    "s11"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "On the chart, which item is the oldest?",
+    "right": "Fig trees planted in the Jordan Valley, about 11,300 years ago",
+    "wrong": [
+     "Maize in Mexico, about 9,000 years ago",
+     "Full pigs in the Fertile Crescent, about 9,000 years ago",
+     "Cereals in Syria, about 9,000 years ago"
+    ],
+    "why": "The longest bar is the fig trees, at about 11,300 years ago. The other three are all around 9,000 years ago."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Farming was not invented only once. People in several places started on their own. Experts count at least six such regions."
+   },
+   "show": {
+    "kind": "map",
+    "text": "World map with early farming regions marked: southwest Asia, China, Central America, New Guinea, West Africa and more"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What does 'independent' mean when we say farming began independently in several regions?",
+    "right": "Different groups started farming on their own, without copying each other",
+    "wrong": [
+     "Every group farmed the same crops",
+     "One group taught all the others",
+     "Farming started everywhere on the same day"
+    ],
+    "why": "The early crops in each region were distinctive. Early evidence does not show crops from one region turning up early in another."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Each region used its own plants. Central America: maize and beans. China: rice, millet and pigs. New Guinea: sugar cane and bananas. West Africa: millet, rice and sorghum."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Central America: maize, beans | China: rice, millet, pigs | New Guinea: sugar cane, bananas | West Africa: millet, rice, sorghum"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which crops were first domesticated in Central America?",
+    "right": "Maize and beans",
+    "wrong": [
+     "Wheat and peas",
+     "Rice and millet",
+     "Sugar cane and bananas"
+    ],
+    "why": "Wheat and peas belong to southwest Asia. Rice and millet belong to China. Sugar cane and bananas belong to New Guinea."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It was also slow. Farming spread unevenly, and researchers still debate when, where, how and why it happened."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Slow and uneven"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a twist, in southeastern Turkey. Between about 9600 and 8200 BCE, hunter-gatherers raised huge stone enclosures at Göbekli Tepe."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Circular stone enclosure with tall T-shaped pillars on a hilltop, Göbekli Tepe, Turkey"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The pillars are T-shaped. They are abstract human figures, and some carry carved animals."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A T-shaped pillar with a low-relief carving of animals and a belt"
+   },
+   "cite": [
+    "s4",
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What do the T-shaped pillars at Göbekli Tepe seem to show?",
+    "right": "Abstract human bodies",
+    "wrong": [
+     "Tall trees",
+     "Ships' masts",
+     "Farming tools"
+    ],
+    "why": "The T-shape is an abstract depiction of the human body seen from the side. Some pillars also carry carved animals and clothing."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "UNESCO calls the site this:"
+   },
+   "show": {
+    "kind": "quote",
+    "text": "\"one of the first manifestations of human-made monumental architecture\""
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why does that matter? People once assumed big buildings came after farming. Here, a monument stands from the time farming was still taking shape."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Monuments before full farming"
+   },
+   "cite": [
+    "s5",
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What went on there? Gazelle was the main meat. That points to big feasts at certain times of year."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Gazelle bones and a group sharing a meal near the stone circles (illustration)"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What do the gazelle bones at Göbekli Tepe suggest?",
+    "right": "Large feasts at certain times of the year",
+    "wrong": [
+     "Gazelle farming",
+     "A famine",
+     "That nobody ever visited"
+    ],
+    "why": "The animal bones point to large feasting events. Why the site was built is still debated, as the other-side notes explain."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It was not alone. Karahan Tepe, some 60 km away, may be the earliest known village. It dates to about 10,000 to 9,500 BCE."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map of southeastern Turkey: Göbekli Tepe and Karahan Tepe about 60 km apart"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Jericho shows settled life too. By about 9000 to 7000 BCE it was a sizeable permanent settlement, with a wall, a ditch and a tower."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Ancient stone tower and wall at Tell es-Sultan, Jericho"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the big question: why did people start farming? Researchers have offered many ideas. Examples are the oasis, natural-habitat, population-pressure, edge and social ideas."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Oasis | Natural habitat | Population pressure | Edge | Social"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Idea one: climate. Some think the Younger Dryas cold snap pushed people, like the Natufians, toward farming. Others say the steady Holocene climate made farming possible at all."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Climate pushed them: the Younger Dryas | Climate allowed it: the steady Holocene"
+   },
+   "cite": [
+    "s17",
+    "s13",
+    "s31"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is the climate idea about why farming began?",
+    "right": "A climate change either pushed or allowed people to start farming",
+    "wrong": [
+     "The first kings ordered it",
+     "People copied it from visiting traders",
+     "Animals taught people to farm"
+    ],
+    "why": "Climate theories say the end of the ice age, or the Younger Dryas cold snap, set the stage for farming. They differ on whether it pushed people or only made farming possible."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Idea two: population pressure. More people needed more food, so people turned to growing it. Two scholars linked to this idea are Mark Cohen and Ester Boserup."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Population pressure"
+   },
+   "cite": [
+    "s14",
+    "s13",
+    "s32"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Critics say there is very little evidence for it. It is also a chicken-and-egg puzzle: did more people lead to farming, or did farming lead to more people?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Chicken or egg?"
+   },
+   "cite": [
+    "s14",
+    "s15"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is the 'chicken-and-egg' problem with population pressure?",
+    "right": "We can't easily tell whether growing numbers led to farming, or farming led to growing numbers",
+    "wrong": [
+     "Nobody knows if chickens were farmed first",
+     "Eggs were the first crop",
+     "It is about which animals were domesticated first"
+    ],
+    "why": "The evidence does not show clearly which came first. It could have gone either way."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Idea three is about people and society: religion, status, feasting and competitive gift-giving. Göbekli Tepe's feasts fit this kind of thinking."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Social reasons"
+   },
+   "cite": [
+    "s14",
+    "s25",
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Many researchers think several causes mixed together, and the mix differed from place to place. There is no single agreed answer."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Climate | Storage | Competition | Inequality | Chance | A receptive social setting"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which statement best matches what researchers say about why farming began?",
+    "right": "Several factors likely combined, and the mix differed by region",
+    "wrong": [
+     "Everyone agrees climate was the only cause",
+     "Everyone agrees one inventor started it",
+     "Everyone agrees population pressure was the only cause"
+    ],
+    "why": "Researchers list many possible factors, from climate to chance. There is no single agreed explanation."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next: did farming make life better? Skeletons give clues. In early European farming communities, average height was lower than before and after."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Shorter early farmers"
+   },
+   "cite": [
+    "s19",
+    "s20"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What did skeletons from early European farming communities show about height?",
+    "right": "Average height was lower than in earlier and later periods",
+    "wrong": [
+     "Average height was higher than ever before",
+     "Height did not change at all",
+     "No skeletons have ever been measured"
+    ],
+    "why": "Reconstructed stature was lower during the first shift to farming. It was higher in earlier foraging periods and in later farming periods."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Teeth and bones tell a similar story: more cavities, more bone deformities and signs of poorer diet. One review found height dropped across many regions."
+   },
+   "show": {
+    "kind": "list",
+    "text": "More dental cavities | More bone deformities | Shorter stature | A diet built on fewer crops"
+   },
+   "cite": [
+    "s20",
+    "s21"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "But it was not the same everywhere. Depending on the region, stature stayed stable, dropped, or even rose."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "It varied by region"
+   },
+   "cite": [
+    "s20",
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So there is a puzzle. Farming made food more plentiful and predictable. Yet individuals could be less healthy."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Benefit: more food, more predictable | Cost: shorter stature, more dental disease"
+   },
+   "cite": [
+    "s19",
+    "s20"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "And the number of people grew. Around 10,000 BCE, the world had a few million people. A common estimate is about 4 million."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 4 million people, 10,000 BCE (estimates range 1 to 10 million)"
+   },
+   "cite": [
+    "s16",
+    "s22"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Farming allowed larger populations. By year 1, estimates run from 150 to 300 million. All of these numbers are rough."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "150 to 300 million people around year 1 (rough estimate)"
+   },
+   "cite": [
+    "s23",
+    "s30"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Which best describes estimates of world population around 10,000 BCE?",
+    "right": "A few million, with a lot of uncertainty",
+    "wrong": [
+     "About 400 million",
+     "About 8 billion",
+     "Exactly 4,000,000, counted in a census"
+    ],
+    "why": "No census existed. Estimates range from about 1 to 10 million, and many centre near 4 million."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "What else was happening back then? There were no kings or written records yet. But art and building were already underway."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "About 9800 BCE: Körtik Tepe decorated stone objects with dog motifs | 9600 to 8200 BCE: Göbekli Tepe | by 9000 to 7000 BCE: Jericho wall and tower | about 7000 BCE: wheat and barley farming at Mehrgarh, small-scale farming in Egypt, maize domestication in Mexico"
+   },
+   "cite": [
+    "s28",
+    "s2",
+    "s7",
+    "s12",
+    "s27"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Bigger populations, stored food and settled villages set the stage for what comes next: cities, rulers and writing. That is class 15."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Next: cities and writing"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To recap: the ice age ended and the Holocene began. People domesticated plants and animals in many places. Experts debate why, and whether early farming made life better."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Ice age ends, Holocene begins | Domestication in many regions | Göbekli Tepe: monuments by hunter-gatherers | Climate, population and social theories | Mixed health effects, more people"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Rough age of early evidence of farming (years ago)",
+   "rows": [
+    {
+     "label": "Fig trees planted, Jordan Valley",
+     "value": 11300,
+     "source": "s8"
+    },
+    {
+     "label": "Sheep",
+     "value": 11000,
+     "source": "s9"
+    },
+    {
+     "label": "Goats, southeastern Turkey",
+     "value": 10500,
+     "source": "s9"
+    },
+    {
+     "label": "Cereals grown, Syria",
+     "value": 9000,
+     "source": "s8"
+    },
+    {
+     "label": "Full pigs, Fertile Crescent",
+     "value": 9000,
+     "source": "s9"
+    },
+    {
+     "label": "Maize, Mexico",
+     "value": 9000,
+     "source": "s11"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Domestication",
+   "links": [
+    "[[Foraging and hunter-gatherers]]",
+    "[[Ice Age Minds: Fire, Tools, Language and Art]]",
+    "[[People Spread Across the Planet]]"
+   ]
+  },
+  {
+   "topic": "The Holocene and the Younger Dryas",
+   "links": [
+    "[[How Do We Know? Reading the Evidence and Telling Time]]",
+    "[[Looking Ahead: The Future of Earth and the Universe]]"
+   ]
+  },
+  {
+   "topic": "Göbekli Tepe and early monuments",
+   "links": [
+    "[[The First Cities and the Invention of Writing]]",
+    "[[Other Early Worlds: Africa, the Americas and the Pacific]]"
+   ]
+  },
+  {
+   "topic": "Health and population after farming",
+   "links": [
+    "[[The First Cities and the Invention of Writing]]",
+    "[[Egypt and the Indus Valley]]"
+   ]
+  },
+  {
+   "topic": "Telling dates: years ago and BCE",
+   "links": [
+    "[[How Do We Know? Reading the Evidence and Telling Time]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About 12,800 to 11,700 years ago",
+   "elsewhere": "The Younger Dryas cold snap, the last chill of the ice age, ends and the Holocene begins.",
+   "cite": [
+    "s1"
+   ]
+  },
+  {
+   "when": "About 9800 BCE",
+   "elsewhere": "At Körtik Tepe in Turkey, hunter-gatherers make decorated stone objects, some with a dog motif.",
+   "cite": [
+    "s28"
+   ]
+  },
+  {
+   "when": "About 9600 to 8200 BCE",
+   "elsewhere": "Hunter-gatherers build and use the stone enclosures of Göbekli Tepe. Karahan Tepe, about 60 km away, may be the earliest known village at about 10,000 to 9500 BCE.",
+   "cite": [
+    "s2",
+    "s6"
+   ]
+  },
+  {
+   "when": "By about 9000 to 7000 BCE",
+   "elsewhere": "Jericho is a sizeable permanent settlement with a wall, a ditch and a tower. There are no written records and no named people from this age.",
+   "cite": [
+    "s7"
+   ]
+  },
+  {
+   "when": "About 7000 BCE",
+   "elsewhere": "Wheat and barley are farmed at Mehrgarh in the Indian subcontinent, and small-scale farming reaches Egypt. Maize is being bred from teosinte in Mexico.",
+   "cite": [
+    "s12",
+    "s27"
+   ]
+  },
+  {
+   "when": "About 6000 BCE",
+   "elsewhere": "Rice and millet farming begin in China, by one dating.",
+   "cite": [
+    "s8"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Climate change started farming.",
+   "other_view": "One view says the Younger Dryas cold snap forced settled foragers to plant. Another says the steady Holocene climate only made farming possible. Some scholars argue climate gave the opportunity but was not the whole cause. Surveys of the field also stress cultural reasons, like social change and religion, over natural ones.",
+   "cite": [
+    "s17",
+    "s13",
+    "s14"
+   ]
+  },
+  {
+   "claim": "Population pressure caused farming.",
+   "other_view": "Mark Cohen and Ester Boserup are linked to the idea that growing populations needed more food. Critics say there is very little evidence for population pressure before farming. They also say it is unclear whether population growth caused farming or followed from it.",
+   "cite": [
+    "s13",
+    "s32",
+    "s14",
+    "s15"
+   ]
+  },
+  {
+   "claim": "Göbekli Tepe was a temple used by visiting hunter-gatherers.",
+   "other_view": "UNESCO says the monuments were probably used for rituals, most likely funerary. Feasting evidence supports the idea of big gatherings. Findings published in 2019 suggest a settlement with domestic structures, cereal processing and a water supply. No definitive purpose has been agreed.",
+   "cite": [
+    "s2",
+    "s4",
+    "s3"
+   ]
+  },
+  {
+   "claim": "Early farming was bad for health.",
+   "other_view": "Many studies of skeletons show shorter stature and more dental disease in early farmers. But stature trends varied by region and by sex. Some regions show stable or even rising stature, and some declines began before farming. That questions a simple 'farming made things worse' story.",
+   "cite": [
+    "s19",
+    "s20",
+    "s21"
+   ]
+  },
+  {
+   "claim": "Farming began in exactly six independent places.",
+   "other_view": "One source counts at least six independent centres, with others still controversial. Another says about 10 centres for plant domestication. A third says at least eleven regions of the Old and New World were involved. The count depends on how strict the evidence rules are.",
+   "cite": [
+    "s13",
+    "s26",
+    "s27"
+   ]
+  },
+  {
+   "claim": "Dogs were domesticated around the time farming began.",
+   "other_view": "The oldest known dog fossils are over 31,000 years old, far older than sheep or goats. A dog jawbone from Iraq has been dated to about 12,000 years ago. Dog dates therefore vary by source and by what counts as domestication.",
+   "cite": [
+    "s9",
+    "s29"
+   ]
+  },
+  {
+   "claim": "We know when rice was first domesticated in China.",
+   "other_view": "One source reports the oldest rice phytoliths along the Yangtze at about 13,900 years ago. Another puts the origins of rice and millet farming around 6000 BCE. Dates depend on what is counted as evidence of farming.",
+   "cite": [
+    "s11",
+    "s8"
+   ]
+  }
+ ]
+}

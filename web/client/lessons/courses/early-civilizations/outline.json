@@ -1,0 +1,204 @@
+{
+ "course_id": "early-civilizations",
+ "title": "Early Civilizations: Mesopotamia, Egypt, the Indus, China and the Americas",
+ "audience": [
+  "high school",
+  "adult"
+ ],
+ "length_note": "13 classes, each 30 to 40 minutes. Mesopotamia comes first, as Mike asked, and gets three classes. It is the longest-studied case and sets up the questions we ask of every other place: writing, cities, law, religion, trade and everyday life. Egypt gets three classes because its evidence is rich and its writing, religion and state need room. The Indus, China and the Americas each get two classes. The Indus and the Americas have fewer decoded texts, so the evidence is different. The last class compares them all and places them on one timeline. Each class is built from three or four short parts, so learners can take breaks, including adults relearning after a brain injury. Every class ends with a short 'what else was happening in the world' segment. No class is padding, and each of the six topics (writing, cities, law, religion, trade, everyday life) is covered for every region.",
+ "classes": [
+  {
+   "n": 1,
+   "title": "Mesopotamia I: Rivers, Farms and the First Cities",
+   "goal": "Explain in plain words what 'civilization' means, say why farming between the Tigris and Euphrates led to cities, and name early Sumerian cities on a map.",
+   "minutes": 40,
+   "topics": [
+    "What historians mean by 'civilization' and why the word is debated",
+    "How we know: archaeology, tablets, mounds (tells)",
+    "Geography: the Tigris, Euphrates, floods and irrigation",
+    "From villages to cities: Uruk and other Sumerian city-states",
+    "Temples, rulers and how a city was organised",
+    "Outside Mesopotamia at the same time: early farming villages elsewhere"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 2,
+   "title": "Mesopotamia II: Writing, Law and Religion",
+   "goal": "Describe how cuneiform began and what it was used for, give an example of Mesopotamian law, and explain how religion shaped city life.",
+   "minutes": 40,
+   "topics": [
+    "Cuneiform: from accounting tokens and tablets to literature",
+    "Scribes and schools",
+    "Early law codes, including Ur-Nammu and Hammurabi, and what they show about society",
+    "Gods, temples and priests",
+    "Myths and stories such as Gilgamesh",
+    "Outside Mesopotamia at the same time"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 3,
+   "title": "Mesopotamia III: Trade, Everyday Life and Empires",
+   "goal": "Describe a typical day for different kinds of people, say what Mesopotamians traded and with whom, and outline how city-states became empires.",
+   "minutes": 40,
+   "topics": [
+    "Food, houses, family, work and women's roles",
+    "Craft, markets and long-distance trade",
+    "Akkad, Babylon and Assyria in outline",
+    "Mathematics, the calendar and technology",
+    "Outside Mesopotamia at the same time"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 4,
+   "title": "Egypt I: The Nile, Unification and the Pharaoh",
+   "goal": "Explain how the Nile shaped Egyptian life, and describe how Egypt became one kingdom and how its cities and government worked.",
+   "minutes": 40,
+   "topics": [
+    "The Nile, the annual flood and farming",
+    "Upper and Lower Egypt and unification",
+    "Kingdoms in outline: Old, Middle and New",
+    "The pharaoh as ruler and as a sacred figure",
+    "Cities, towns and administration",
+    "Comparison with Mesopotamia: a river, but a different kind of state"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 5,
+   "title": "Egypt II: Hieroglyphs, Religion and Law",
+   "goal": "Describe Egyptian writing and its uses, explain beliefs about gods and the afterlife, and say how justice and order (ma'at) worked.",
+   "minutes": 40,
+   "topics": [
+    "Hieroglyphs, hieratic, papyrus and scribes",
+    "The Rosetta Stone and how hieroglyphs were deciphered",
+    "Gods, temples and priests",
+    "Burial, mummification and the afterlife",
+    "Pyramids and tombs: who built them and why",
+    "Law, courts and ma'at"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 6,
+   "title": "Egypt III: Trade, Everyday Life and Neighbours",
+   "goal": "Describe daily life for farmers, craftworkers and elites, name Egypt's main trading partners and goods, and say what was happening elsewhere at the time.",
+   "minutes": 35,
+   "topics": [
+    "Farming, food, housing, clothing and family life",
+    "Craft, labour and taxes",
+    "Trade by river and sea, including Nubia and the Levant",
+    "Contact with Mesopotamia",
+    "Outside Egypt at the same time: the Indus and early China"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 7,
+   "title": "The Indus Valley I: Planned Cities and Water",
+   "goal": "Describe what Indus cities such as Mohenjo-daro and Harappa were like and what their layout tells us.",
+   "minutes": 35,
+   "topics": [
+    "Geography: the Indus and neighbouring river systems",
+    "How the civilization was found and excavated",
+    "City planning, drains, wells and standard bricks",
+    "Weights, measures and crafts",
+    "Compared with Mesopotamia and Egypt: few obvious palaces or royal tombs"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 8,
+   "title": "The Indus Valley II: Script, Beliefs, Trade and Change",
+   "goal": "Explain why the Indus script is still undeciphered, say what we can and can't know about religion, law and rulers, and outline the main ideas about the civilization's decline.",
+   "minutes": 35,
+   "topics": [
+    "The Indus script and seals: what we know and don't",
+    "Possible religious practices, and the limits of the evidence",
+    "Trade with Mesopotamia and other regions",
+    "Everyday life: food, clothes, ornaments, toys",
+    "Debated causes of decline: climate and river changes",
+    "Outside the Indus at the same time"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 9,
+   "title": "Early China I: The Yellow River, Early Farming and the Shang",
+   "goal": "Describe how early communities grew along China's great rivers, and explain what oracle bones tell us about Shang writing, kingship and belief.",
+   "minutes": 40,
+   "topics": [
+    "Geography: the Yellow and Yangtze rivers",
+    "Early farming cultures: millet and rice",
+    "Erlitou and Shang cities",
+    "Oracle bones and early Chinese writing",
+    "Ancestor worship and divination",
+    "Bronze casting and its uses"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 10,
+   "title": "Early China II: Zhou Rule, Ritual, Trade and Daily Life",
+   "goal": "Explain the idea of the Mandate of Heaven, describe how rule, ritual and law worked in early China, and describe everyday life and trade.",
+   "minutes": 35,
+   "topics": [
+    "The Zhou and the Mandate of Heaven",
+    "Ritual, social order and early ideas about law",
+    "Farming, crafts, silk and village life",
+    "Trade and contact with neighbours",
+    "Outside China at the same time"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 11,
+   "title": "The Americas I: Caral, the Olmec and Early Cities",
+   "goal": "Explain that civilizations arose independently in the Americas, and describe early sites in the Andes and Mesoamerica.",
+   "minutes": 40,
+   "topics": [
+    "Why the Americas matter: independent origins",
+    "Crops: maize, potatoes, squash and beans",
+    "Norte Chico and Caral in Peru",
+    "The Olmec: San Lorenzo, La Venta and the colossal heads",
+    "Religion, ritual architecture and ball games",
+    "Trade networks and everyday life"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 12,
+   "title": "The Americas II: Maya Writing, Calendars and the Andes",
+   "goal": "Describe Maya writing and calendars, outline how Maya city-states were governed, and describe Andean ways of recording and organising without alphabetic writing.",
+   "minutes": 40,
+   "topics": [
+    "Early Mesoamerican writing and the Maya script",
+    "Maya calendars and astronomy",
+    "City-states, kings, law and warfare",
+    "Religion and sacrifice",
+    "The Andes: Chavín, textiles and khipu (knotted cords)",
+    "Trade and everyday life",
+    "Outside the Americas at the same time"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 13,
+   "title": "Putting It All Together: Compare, Connect and Place on One Timeline",
+   "goal": "Compare how writing, cities, law, religion, trade and daily life developed in all five regions, and place them on one shared timeline with what else was happening.",
+   "minutes": 40,
+   "topics": [
+    "One timeline for all regions",
+    "Side-by-side comparison table of the six themes",
+    "What they share and where they differ",
+    "Contact and independent invention",
+    "Why some civilizations declined or changed",
+    "Limits of the evidence: what we still don't know",
+    "Review and self-check"
+   ],
+   "needs_research": true
+  }
+ ]
+}

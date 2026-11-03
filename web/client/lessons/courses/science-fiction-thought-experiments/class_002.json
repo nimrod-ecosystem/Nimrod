@@ -1,0 +1,756 @@
+{
+ "about": {
+  "title": "Outbreak, Part 1: How an Infection Spreads",
+  "course": "science-fiction-thought-experiments",
+  "class_n": 2,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 40,
+  "length_note": "About 40 minutes. There are 28 short beats, 9 check questions and one hands-on activity. Each idea gets its own beat so nothing is rushed. Pause after any question. Give the activity extra time if you want to work it out on paper."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "16.3 Modes of Disease Transmission (Microbiology)",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/microbiology/pages/16-3-modes-of-disease-transmission",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "16.3: How Diseases Spread (OpenStax Microbiology text)",
+   "publisher": "Biology LibreTexts",
+   "date": "n.d.",
+   "link": "https://bio.libretexts.org/Bookshelves/Microbiology/Microbiology_(OpenStax)/16:_Disease_and_Epidemiology/16.03:_How_Diseases_Spread",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Complexity of the Basic Reproduction Number (R0)",
+   "publisher": "Emerging Infectious Diseases, CDC",
+   "date": "2019-01",
+   "link": "https://wwwnc.cdc.gov/eid/article/25/1/17-1901_article",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "R0: How Scientists Quantify the Intensity of an Outbreak Like Coronavirus and Its Pandemic Potential",
+   "publisher": "University of Michigan School of Public Health",
+   "date": "2020",
+   "link": "https://sph.umich.edu/pursuit/2020posts/how-scientists-quantify-outbreaks.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Early efforts in modeling the incubation period of infectious diseases with an acute course of illness",
+   "publisher": "PubMed Central (National Library of Medicine)",
+   "date": "n.d.",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1884151/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Microbial Primer: Understanding the exponential growth of epidemics",
+   "publisher": "PubMed Central (National Library of Medicine)",
+   "date": "2026",
+   "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC13245814/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "COVID-19: what is the R number?",
+   "publisher": "World Economic Forum",
+   "date": "n.d.",
+   "link": "https://www.weforum.org/stories/health-and-healthcare-systems/covid-19-what-is-the-r-number",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "How to stop a zombie apocalypse – with science",
+   "publisher": "The Conversation",
+   "date": "n.d.",
+   "link": "https://theconversation.com/how-to-stop-a-zombie-apocalypse-with-science-63976",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Epidemiology of the Living Dead: A social Force Model of a Zombie Outbreak",
+   "publisher": "arXiv (Robert Morris University, Science Department)",
+   "date": "2024",
+   "link": "https://arxiv.org/pdf/2412.05444",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Coronavirus: What does exponential growth mean?",
+   "publisher": "The Irish Times",
+   "date": "2020",
+   "link": "https://www.irishtimes.com/news/science/coronavirus-what-does-exponential-growth-mean-1.4218945",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "The challenges of modeling and forecasting the spread of COVID-19",
+   "publisher": "arXiv",
+   "date": "2020",
+   "link": "https://arxiv.org/pdf/2004.04741",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Modeling Epidemics With Compartmental Models (JAMA Guide to Statistics and Methods)",
+   "publisher": "JAMA Network",
+   "date": "2020",
+   "link": "https://jamanetwork.com/journals/jama/fullarticle/2766672",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "What Is R0? Gauging Contagious Infections",
+   "publisher": "Healthline",
+   "date": "n.d.",
+   "link": "https://www.healthline.com/health/r-naught-reproduction-number",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Just how contagious is COVID-19? This chart puts it in perspective.",
+   "publisher": "Popular Science",
+   "date": "2020",
+   "link": "https://www.popsci.com/story/health/how-diseases-spread/",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome. Today we learn how an infection moves through a crowd, and one number that lets us compare two outbreaks."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Outbreak, Part 1: How an Infection Spreads"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A promise first. Every time, we will tell you whether something is real science or invented story."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "REAL SCIENCE: how real infections spread | INVENTED STORY: made up for our thought experiment"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First idea: transmission. That just means the way a germ gets from one person to another. Each way is called a route."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Transmission route (real science)"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "There are four common routes. Touch between people. Droplets from a cough. Tiny particles floating in the air. And animal carriers, often insects."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Direct contact, person to person | 2. Droplets | 3. Airborne | 4. Vector: an animal carries the germ"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Droplets travel a short way, about one metre or less. Past one metre, we call it airborne."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A person coughs. Small droplets spread a short way in front of them. A ruler line marks one metre."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A cough sprays droplets onto someone half a metre away. Which route is that?",
+    "right": "Droplet transmission",
+    "wrong": [
+     "Vector transmission, an animal carrying the germ",
+     "Airborne transmission, over more than one metre",
+     "It cannot spread this way"
+    ],
+    "why": "Droplet transmission covers a distance of one metre or less. Airborne is further than that. A vector is an animal carrier."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Second idea: the incubation period. It is the time between catching a germ and first feeling ill."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Incubation period (real science)"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "This time can be very different from one disease to another. Food poisoning can show up in hours. Some diseases take years, even decades."
+   },
+   "show": {
+    "kind": "list",
+    "text": "A few hours: some food poisoning | Months to decades: some other diseases"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the catch. With some germs, a person can pass them on before they feel ill. So nobody knows to stay away."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Spread before symptoms"
+   },
+   "cite": [
+    "s1",
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Mia catches a germ on Monday and first feels ill on Thursday. What is her incubation period?",
+    "right": "About three days: from catching it to feeling ill",
+    "wrong": [
+     "Thursday, the day she felt ill",
+     "The days she was sick afterwards",
+     "The number of people she infected"
+    ],
+    "why": "The incubation period is the wait between catching the germ and the first symptoms. Monday to Thursday is three days."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Third idea, our big number. R0, said R-naught, is how many people one sick person infects on average, when nobody is immune yet."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "R0 (say: R-naught) (real science)"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Say R0 is 2. One person infects two. Those two infect four. Those four infect eight."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "dot",
+    "count": 8,
+    "layout": "group",
+    "text": "Round 3 when R0 is 2: eight people infected"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now try a bigger number. One sick person, and R0 is 3. How many people do they infect, on average?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "R0 = 3"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "If R0 is 3, how many people does one infected person infect on average?",
+    "right": "3",
+    "wrong": [
+     "1",
+     "9",
+     "30"
+    ],
+    "why": "R0 is the average number of people one infected person infects. So an R0 of 3 means 3. The 9 comes one round later."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "R0 above 1 means the outbreak grows. R0 at exactly 1 means it holds steady. R0 below 1 means it fades away."
+   },
+   "show": {
+    "kind": "list",
+    "text": "R0 above 1: grows | R0 equal to 1: steady | R0 below 1: fades and dies out"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is fading. With an R0 of 0.5, 100 people infect 50. Those 50 infect 25, and those infect about 13."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c3",
+    "text": "R0 of 0.5: starting with 100 people"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "An outbreak has an R0 of 0.8. What happens over time?",
+    "right": "It fades away",
+    "wrong": [
+     "It grows faster and faster",
+     "It stays exactly the same size",
+     "Each person infects 8 others"
+    ],
+    "why": "Below 1, each person passes it to fewer than one other person, so the outbreak shrinks and dies out."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "When each round is bigger than the last by the same multiple, we call it exponential growth. The time it takes to double stays the same."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Exponential growth (real science)"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Look at the line for R0 of 2. It looks calm at first. Then it climbs steeply."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1",
+    "text": "R0 of 2: new people infected in each round"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Keep doubling and the numbers get huge. Ten doublings from one is about a thousand. Twenty doublings is about a million."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "20 doublings from 1 is about 1,000,000"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Cases double every round, starting with 1. How many are there after 3 rounds?",
+    "right": "8",
+    "wrong": [
+     "3",
+     "6",
+     "16"
+    ],
+    "why": "1 doubles to 2, then 4, then 8. Sixteen would be a fourth round."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Real outbreaks cannot double forever. Early on, few people have recovered, so growth looks smooth. Later it has to slow down."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Nothing grows exponentially forever"
+   },
+   "cite": [
+    "s11",
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why do real germs differ? Look at real estimates of R0. Measles is far higher than flu or the virus behind COVID-19."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Measles: 12 to 18 | Seasonal flu: 0.9 to 2.1 | The COVID-19 virus: 1.5 to 3.5"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Three reasons. Some germs are simply very infectious. The route matters, since touch spreads less easily than air. And crowded places raise R0."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. How infectious the germ is | 2. The route: air spreads more easily than touch | 3. How crowded people are"
+   },
+   "cite": [
+    "s4",
+    "s8"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One warning. R0 tells you how easily a disease spreads, not how dangerous it is. It is also an estimate that changes from place to place."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "R0 is not the same as deadliness"
+   },
+   "cite": [
+    "s14",
+    "s3",
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Measles has an R0 of 12 to 18. Flu has 0.9 to 2.1. What does that tell us?",
+    "right": "On average, a person with measles infects many more people than a person with flu, if nobody is immune",
+    "wrong": [
+     "Measles is always more dangerous to the person who catches it",
+     "Flu can never cause an outbreak",
+     "The numbers are exact and never change"
+    ],
+    "why": "R0 compares how easily diseases spread. It does not measure danger. Flu can still cause outbreaks, and R0 estimates vary."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now, story time. From here on, this part is invented. Our town is Halden Reach, and the trouble is called Ember Fever."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A small hillside town at dusk. Lanterns glow along a quiet street. The sign reads: Halden Reach. INVENTED."
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "These are the story rules, all made up. Ember Fever spreads by touch. It takes two days to show. Each person who turns touches about three others, so the story R0 is 3."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "INVENTED: Ember Fever, touch only, 2-day wait, story R0 = 3 | REAL SCIENCE WE BORROW: transmission, incubation period, R0"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The people who turn, the Embers, are a story device. No real disease works this way. Real people who are ill or injured are never monsters."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Story device, not science"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Real diseases do not behave like movie monsters. Films often show near-total spread, with no recovery, immunity or treatment. Real diseases are rarely that powerful."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "MOVIE MONSTER: spreads to nearly everyone, no recovery, no cure | REAL DISEASE: people recover, build immunity, can be treated, outbreaks burn out"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which statement is true of real diseases?",
+    "right": "People can recover, become immune, or be treated",
+    "wrong": [
+     "They always make people hostile",
+     "They never fade out",
+     "Their R0 is always above 10"
+    ],
+    "why": "Real outbreaks are slowed by recovery, immunity and treatment. Movie infections usually ignore all three."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Activity time. Grab paper or a calculator. Start with 1 infected person. Each round, multiply by R0. Our story R0 is 3."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Round 0: 1 person | Each round: multiply by R0 | Story R0 = 3"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "With R0 = 3, how many new people are infected in round 2?",
+    "right": "9",
+    "wrong": [
+     "6",
+     "3",
+     "27"
+    ],
+    "why": "Round 1 has 3 people. Each of those 3 infects 3 more, so 3 times 3 is 9. Twenty-seven is round 3."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now change one number only: R0. Go from 3 to 2, then to 1. Watch round 5."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c2",
+    "text": "Round 5 results for three values of R0"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Changing R0 from 3 down to 2, what happens to round 5?",
+    "right": "It falls from 243 to 32, a far smaller outbreak",
+    "wrong": [
+     "Almost nothing, since 3 and 2 are close",
+     "It doubles",
+     "The outbreak ends"
+    ],
+    "why": "Small changes in R0 add up round after round. At R0 of 1 the outbreak stays at 1 and does not grow."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Our toy model is real science, but simple. It ignores people who recover. Scientists often use the SIR model: susceptible, infected, recovered."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "SIR model: Susceptible, Infected, Recovered"
+   },
+   "cite": [
+    "s12",
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To sum up: routes, the incubation period, R0, and exponential growth. Next class we ask how to push R0 below 1."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Routes: how germs travel | Incubation period: catch it to symptoms | R0: people infected by one person | Exponential growth: fixed doubling time | Next: get R0 below 1"
+   },
+   "cite": [
+    "s3",
+    "s5",
+    "s6",
+    "s4"
+   ],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "line",
+   "title": "R0 = 2: people newly infected in each round (one starting case)",
+   "rows": [
+    {
+     "label": "Round 0",
+     "value": 1,
+     "source": "s6"
+    },
+    {
+     "label": "Round 1",
+     "value": 2,
+     "source": "s6"
+    },
+    {
+     "label": "Round 2",
+     "value": 4,
+     "source": "s6"
+    },
+    {
+     "label": "Round 3",
+     "value": 8,
+     "source": "s6"
+    },
+    {
+     "label": "Round 4",
+     "value": 16,
+     "source": "s6"
+    },
+    {
+     "label": "Round 5",
+     "value": 32,
+     "source": "s6"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Round 5: people newly infected, from 1 starting case (worked out by multiplying by R0 each round)",
+   "rows": [
+    {
+     "label": "R0 = 1",
+     "value": 1,
+     "source": "s6"
+    },
+    {
+     "label": "R0 = 2",
+     "value": 32,
+     "source": "s6"
+    },
+    {
+     "label": "R0 = 3 (story value)",
+     "value": 243,
+     "source": "s6"
+    }
+   ]
+  },
+  {
+   "id": "c3",
+   "kind": "bar",
+   "title": "R0 = 0.5: people infected in each round, starting with 100",
+   "rows": [
+    {
+     "label": "Round 0",
+     "value": 100,
+     "source": "s7"
+    },
+    {
+     "label": "Round 1",
+     "value": 50,
+     "source": "s7"
+    },
+    {
+     "label": "Round 2",
+     "value": 25,
+     "source": "s7"
+    },
+    {
+     "label": "Round 3 (rounded)",
+     "value": 13,
+     "source": "s7"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "R0 (basic reproduction number)",
+   "links": [
+    "[[Exponential growth]]",
+    "[[Outbreak, Part 2: Slowing It Down]]"
+   ]
+  },
+  {
+   "topic": "Incubation period",
+   "links": [
+    "[[Transmission routes]]",
+    "[[Outbreak, Part 2: Slowing It Down]]"
+   ]
+  },
+  {
+   "topic": "Real vs invented",
+   "links": [
+    "[[What a Thought Experiment Is, and How to Tell Fact from Story]]",
+    "[[Ember Fever (invented)]]"
+   ]
+  },
+  {
+   "topic": "SIR model",
+   "links": [
+    "[[R0 (basic reproduction number)]]",
+    "[[Logistics: Keeping a Community Going]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Zombie-style outbreak stories are a useful way to teach how real infections spread.",
+   "other_view": "Some writers say these stories make infection dynamics and responses easy to discuss. Others point out that real diseases are rarely as powerful as film ones, and that no real disease works the way the stories do. So the story is a practice tool, not a prediction.",
+   "cite": [
+    "s8",
+    "s9"
+   ]
+  },
+  {
+   "claim": "R0 is a single number that sums up how contagious a disease is.",
+   "other_view": "CDC researchers say R0 must be estimated and used with great caution, because it is far from simple. The University of Michigan notes it varies with things like how crowded a place is. Effective reproduction numbers also change as immunity changes.",
+   "cite": [
+    "s3",
+    "s4"
+   ]
+  }
+ ]
+}

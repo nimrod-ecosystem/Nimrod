@@ -1,0 +1,987 @@
+{
+ "about": {
+  "title": "Outbreak, Part 2: Slowing It Down",
+  "course": "science-fiction-thought-experiments",
+  "class_n": 3,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 40,
+  "length_note": "About 40 minutes. There are seven real tools to learn, one at a time, plus a pause for the activity. Each tool is its own short step, so you can stop and restart between steps. Allow about 8 minutes for the activity, and a few minutes more if you want to talk it over."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Fact Sheet on Isolation and Quarantine (SARS)",
+   "publisher": "U.S. Centers for Disease Control and Prevention (archive)",
+   "date": "n.d.",
+   "link": "https://archive.cdc.gov/www_cdc_gov/sars/quarantine/fs-isolation.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Contact tracing: methods, strengths and challenges (journal article on PubMed Central)",
+   "publisher": "National Library of Medicine, PubMed Central",
+   "date": "n.d.",
+   "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7861591",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Framework for Evaluating Public Health Surveillance Systems for Early Detection of Outbreaks",
+   "publisher": "CDC, Morbidity and Mortality Weekly Report",
+   "date": "2004",
+   "link": "https://www.cdc.gov/mmwr/preview/mmwrhtml/rr5305a1.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Public Health Surveillance in the United States: Evolution and Challenges",
+   "publisher": "CDC, Morbidity and Mortality Weekly Report",
+   "date": "2012",
+   "link": "https://www.cdc.gov/mmwr/preview/mmwrhtml/su6103a2.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Rapid Influenza Diagnostic Tests (clinician guidance)",
+   "publisher": "CDC",
+   "date": "n.d.",
+   "link": "https://www.cdc.gov/flu/hcp/testing-methods/clinician_guidance_ridt.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "The basic reproduction number (R0) of measles: a systematic review",
+   "publisher": "The Lancet Infectious Diseases",
+   "date": "2017",
+   "link": "https://www.sciencedirect.com/science/article/abs/pii/S1473309917303079",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "18.5 Vaccines, in Microbiology",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/microbiology/pages/18-5-vaccines",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Herd immunity",
+   "publisher": "Current Biology (Cell Press)",
+   "date": "2021",
+   "link": "https://www.cell.com/current-biology/fulltext/S0960-9822(21)00039-7",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Quantifying indirect and direct vaccination effects arising in the SIR model",
+   "publisher": "arXiv (preprint)",
+   "date": "2024",
+   "link": "https://arxiv.org/pdf/2405.03707",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Handwashing Facts",
+   "publisher": "CDC",
+   "date": "n.d.",
+   "link": "https://www.cdc.gov/clean-hands/data-research/facts-stats/index.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Effective use of a Limited Antiviral Stockpile for Pandemic Influenza",
+   "publisher": "PubMed Central (journal article)",
+   "date": "n.d.",
+   "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7088917/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Novel modelling approaches to predict the role of antivirals in reducing influenza transmission",
+   "publisher": "PLOS Computational Biology",
+   "date": "2023",
+   "link": "https://journals.plos.org/ploscompbiol/article?id=10.1371%2Fjournal.pcbi.1010797",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Improving case fatality ratio estimates in ongoing pandemics through case-to-death time distribution analysis",
+   "publisher": "Scientific Reports (Nature)",
+   "date": "2025",
+   "link": "https://www.nature.com/articles/s41598-025-89441-y",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Archive: Still Confused About Masks? Here's the Science Behind How Face Masks Prevent Coronavirus",
+   "publisher": "University of California, San Francisco",
+   "date": "2020-06",
+   "link": "https://www.ucsf.edu/news/2020/06/417906/still-confused-about-masks-heres-science-behind-how-face-masks-prevent",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Trust as a catalyst: revealing the impact of government trust and professional trust on public health policy compliance during a pandemic",
+   "publisher": "BMC Public Health",
+   "date": "2024",
+   "link": "https://bmcpublichealth.biomedcentral.com/articles/10.1186/s12889-024-18449-2",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Why people were less compliant with public health regulations during the second wave of the Covid-19 outbreak",
+   "publisher": "Current Psychology, via PubMed Central",
+   "date": "2021",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8276685/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Guidance on Isolation and Quarantine for COVID-19 Contact Tracing",
+   "publisher": "California Department of Public Health",
+   "date": "2021-10-22",
+   "link": "https://www.cdph.ca.gov/Programs/CID/DCDC/Pages/COVID-19/Guidance-on-Isolation-and-Quarantine-for-COVID-19-Contact-Tracing-10-22-2021.aspx",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Isolation and Quarantine for Coronavirus Disease 2019 in the United States, 2020-2022",
+   "publisher": "Clinical Infectious Diseases (Oxford Academic)",
+   "date": "2023",
+   "link": "https://academic.oup.com/cid/article/77/2/212/7083735",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Rethinking Trust and Public Health Compliance: Introducing a Trust Continuum for Policy and Practice",
+   "publisher": "Taylor & Francis (Health Security / policy journal)",
+   "date": "2025",
+   "link": "https://www.tandfonline.com/doi/full/10.1080/23288604.2025.2457239",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Isolation and Quarantine for Coronavirus Disease 2019 (COVID-19) in the United States, 2020-2022 (CDC Stacks record)",
+   "publisher": "CDC Stacks",
+   "date": "2023-07-26",
+   "link": "https://stacks.cdc.gov/view/cdc/156902",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "COVID-19: interpreting scientific evidence - uncertainty, confusion and delays",
+   "publisher": "PubMed Central (journal article)",
+   "date": "n.d.",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7476768/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Use of Influenza Antivirals to Prevent Transmission",
+   "publisher": "The Journal of Infectious Diseases",
+   "date": "2025",
+   "link": "https://dx.doi.org/10.1093/infdis/jiaf116",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back. Last time, a sickness we called the Hush spread through Kestrel Ridge, a small made-up town. Today we ask how real communities slow an outbreak."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Outbreak, Part 2: Slowing It Down"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One rule first. The Hush and Kestrel Ridge are invented. The ways of slowing an outbreak that we name are real, and each one has a source."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Real or story?"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which part of today's lesson is invented?",
+    "right": "The Hush and the town of Kestrel Ridge",
+    "wrong": [
+     "Surveillance and testing",
+     "Isolation and quarantine",
+     "Vaccines and handwashing"
+    ],
+    "why": "The sickness and the town are our story. The tools for slowing outbreaks are real."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now one idea to carry all lesson. R is the average number of people one sick person goes on to infect. If R is 3, each sick person passes it to about three others."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "dot",
+    "count": 3,
+    "layout": "group",
+    "text": "One sick person infects 3 others: R = 3"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "If R stays above 1, the outbreak grows. If R drops below 1, each round of cases is smaller than the last, and the outbreak fades. Every tool today tries to push R down."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Above 1 grows. Below 1 fades."
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In Kestrel Ridge, R falls to 0.8. What happens to the outbreak?",
+    "right": "It shrinks",
+    "wrong": [
+     "It keeps growing",
+     "It stays exactly the same size",
+     "Nobody can say anything about it"
+    ],
+    "why": "A study of how epidemics grow finds that an epidemic needs R above 1. At 0.8, each case causes fewer than one new case."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "R depends on three things. The chance of passing the germ on in each contact. The number of contacts. And how many days a person is infectious."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Chance of passing it on each time; Number of contacts; Days infectious"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Everyone in Kestrel Ridge stays home more. Which of the three does that mostly change?",
+    "right": "The number of contacts",
+    "wrong": [
+     "The chance of passing it on in each contact",
+     "How many days someone is infectious",
+     "Nothing at all"
+    ],
+    "why": "Staying home means fewer meetings, and fewer meetings means fewer contacts."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Tool one: surveillance. It means collecting and checking health information all the time, then sharing it with the people who can act. It is how a town notices trouble."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Surveillance"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One job is spotting an outbreak, which is a rise in illness above the usual level. Say the Kestrel Ridge nurse usually sees one cough a day, then sees six. That jump is the signal. Surveillance doesn't lower R by itself. It buys time to act."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A nurse's notebook with a daily tally of coughs. Most days show one mark. Today shows six."
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which of these is surveillance?",
+    "right": "The nurse keeps a daily tally of coughs and compares it with a usual day",
+    "wrong": [
+     "Giving everyone soap",
+     "Sending the whole town home",
+     "Waiting until half the town is sick"
+    ],
+    "why": "Surveillance is the ongoing collecting and checking of health data, to spot a rise above the usual."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Tool two: testing. A test checks whether someone is infected. But tests are not perfect. A test can miss an infection, and this happens more when it is done very early in the illness."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Testing"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Real example: quick flu tests can miss cases. Health guidance says a negative quick test does not rule out flu in an outbreak. Samples work best when taken early in the illness."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "A negative result does not always mean no infection."
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "During the outbreak, a person with fever and cough gets a negative quick test. What is the careful way to read it?",
+    "right": "They may still be infected, so stay careful",
+    "wrong": [
+     "They are definitely not infected",
+     "Negative quick tests are always right",
+     "Tests are useless and should be ignored"
+    ],
+    "why": "Quick tests have limited sensitivity, so false negatives happen. A negative result does not rule out infection."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Tool three: keeping people apart. Isolation is for people known to be ill. Quarantine is for people who were exposed but may or may not become ill."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Isolation: known to be ill, kept apart. || Quarantine: exposed, not yet ill, kept apart in case."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Ruth feels fine, but she shared a room with a sick neighbour all day. Which applies to Ruth?",
+    "right": "Quarantine",
+    "wrong": [
+     "Isolation",
+     "Surveillance",
+     "Vaccination"
+    ],
+    "why": "Quarantine is for people who were exposed but may or may not become ill. Isolation is for people known to be ill."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Tool four: contact tracing. Public health workers use it to follow an outbreak. The tracer asks who a sick person met, then reaches those contacts so they can quarantine."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A sick person, Tam, at the centre. Lines run out to five neighbours Tam met. The nurse phones each one."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is contact tracing for?",
+    "right": "Finding people who were near a sick person, so they can be warned and quarantine",
+    "wrong": [
+     "Counting how many people live in town",
+     "Making a vaccine",
+     "Washing the contacts' hands"
+    ],
+    "why": "Contact tracing identifies close contacts. Quarantine is recommended for exposed contacts."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Tracing takes a lot of work. If cases rise too fast, a community can't reach everyone in time. Five calls is easy. Five hundred calls a day is not."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "5 calls: easy. 500 calls: overwhelmed."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Why can contact tracing fail in a fast outbreak?",
+    "right": "Cases rise faster than the tracers can reach contacts",
+    "wrong": [
+     "Contacts are never real people",
+     "Tracing makes the sickness stronger",
+     "Tracers are not allowed to phone anyone"
+    ],
+    "why": "Tracing is labour-intensive, and a rapid increase in cases can overwhelm a community's ability to do it in time."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Tool five: hygiene, mostly handwashing. Soap removes germs from hands. It matters most for germs that spread by hands, food or surfaces."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Handwashing"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In real studies, handwashing prevents about 30 percent of diarrhea-related sicknesses and about 20 percent of respiratory infections like colds."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1",
+    "text": "What handwashing prevents (CDC figures)"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Handwashing mostly lowers which of our three things?",
+    "right": "The chance of passing germs on in each contact",
+    "wrong": [
+     "The number of days someone is infectious",
+     "The number of people in town",
+     "Nothing, it only makes hands look clean"
+    ],
+    "why": "Clean hands carry fewer germs, so each contact is less likely to pass one on. That is the chance-per-contact part of R."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Tool six: treatment. Treatment helps the sick person. If it also shortens how long they are infectious, it lowers the spread too."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Treatment"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Real example: for flu, models find antivirals started within about two days of symptoms can cut onward spread. Fewer trials have tested this than have tested benefit to the patient, so scientists treat it with care."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Shorter illness, fewer days infectious"
+   },
+   "cite": [
+    "s12",
+    "s22"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "A treatment shortens the time a person is infectious. Which of our three things does it change?",
+    "right": "How many days they are infectious",
+    "wrong": [
+     "The number of contacts they have",
+     "The chance of passing it on in each contact",
+     "The size of the town"
+    ],
+    "why": "Shorter infectiousness means fewer days to pass it on. That is the days-infectious part of R."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Tool seven: vaccines. A vaccine gives protection before exposure, called artificial active immunity. Vaccination programs reduce the number of susceptible people. When few are susceptible, even they are protected. That is herd immunity."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Vaccines and herd immunity"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "How many must be protected depends on how catchy the germ is. The share is 1 minus 1 over R. If R is 4, that is 1 minus a quarter, so 75 percent."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Share needed = 1 - 1/R. For R = 4: 75%"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Using 1 minus 1 over R, what share must be immune to stop an outbreak when R is 4?",
+    "right": "75 percent",
+    "wrong": [
+     "25 percent",
+     "40 percent",
+     "100 percent"
+    ],
+    "why": "1 minus 1/4 is three quarters. At that level an epidemic cannot take off, even though 25 percent are still susceptible."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Look at the chart. R of 2.5 needs about 60 percent. Measles is one of the catchiest germs. One UK estimate needs about 93 percent. A catchier germ needs more people protected. In our story, no vaccine exists yet."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c2",
+    "text": "Share that must be immune, by how catchy the germ is"
+   },
+   "cite": [
+    "s9",
+    "s8"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's gather the tools. Each one changes a different part of R, or helps us see R. Keep this list in mind for the next steps."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Surveillance: spots a rise early; Testing: finds cases, but misses some; Isolation: fewer contacts for the known sick; Quarantine: fewer contacts for the exposed; Contact tracing: finds who to quarantine; Handwashing: lowers the chance per contact; Treatment: fewer days infectious; Vaccines: fewer people who can catch it"
+   },
+   "cite": [
+    "s1",
+    "s2",
+    "s4",
+    "s5",
+    "s6",
+    "s7",
+    "s10",
+    "s11"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which tool shrinks the share of people who can catch the germ?",
+    "right": "Vaccines",
+    "wrong": [
+     "Isolation",
+     "Surveillance",
+     "Handwashing"
+    ],
+    "why": "Vaccines make people immune, which reduces the number of susceptible people in a population."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the hard part. Early in an outbreak, the numbers are small and slow to arrive. We must decide before we are sure."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Deciding with incomplete information"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Real example: how deadly is a new illness? Early estimates can be very uncertain, and the uncertainty narrows as more cases are counted. Outcomes are not fully seen early on."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "More data, narrower uncertainty"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why are early estimates of how deadly a new illness is shaky?",
+    "right": "Few cases are counted so far, and not all outcomes have happened yet",
+    "wrong": [
+     "Germs change how deadly they are whenever someone counts",
+     "Scientists avoid numbers",
+     "Early cases are always the mildest ones"
+    ],
+    "why": "Early on, case numbers are small and the timing from case to outcome is not fully observed. Uncertainty shrinks as the outbreak and the data grow."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Watch advice change in our story. Day 1: stay home if you are sick. Day 6: someone caught the Hush from a person with no symptoms. Day 7: new advice. Contacts quarantine, and everyone wears cloth masks near others."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Day 1: stay home if sick. | Day 6: spread from someone with no symptoms. | Day 7: contacts quarantine, masks near others."
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "This happened for real in 2020. Health agencies first advised against public masks, then recommended them. A clearer picture of spread before symptoms, and with none, helped drive the change."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "New evidence, new advice"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In 2020, why did major health agencies change their advice on masks?",
+    "right": "Evidence grew that people can spread the virus before symptoms, or with none",
+    "wrong": [
+     "Masks were found to be harmful",
+     "Officials wanted to confuse the public",
+     "The virus became a different disease overnight"
+    ],
+    "why": "Experts pointed to rising disease levels and a clearer understanding that spread without symptoms is possible, even common."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Changing advice is not lying. It is the method working. But waiting for certainty has a cost too. A rapid rise in cases can overwhelm tracing and other tools."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Waiting has a cost"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which message is the most honest in an early outbreak?",
+    "right": "Here is what we know, what we don't know, and we will update in three days",
+    "wrong": [
+     "We are certain and nothing will change",
+     "We know nothing, so we will do nothing",
+     "We will ignore the data until it is perfect"
+    ],
+    "why": "Good advice states the uncertainty and plans to update. Doing nothing while waiting for perfect data lets cases grow."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Tools only work if people use them. Studies of COVID-19 linked trust in government and in health professionals to people following health rules."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Trust and cooperation"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Earlier outbreaks, like swine flu, showed a pattern. Trust in government can start high and fall over time, and cooperation falls with it. Keeping trust takes work."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Trust can fade"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Research on COVID-19 linked people following health rules to what?",
+    "right": "Trust in government and in health professionals",
+    "wrong": [
+     "How tall people were",
+     "Which language they spoke",
+     "Whether they lived near water"
+    ],
+    "why": "A study of the COVID-19 pandemic found that both government trust and professional trust affected whether people followed public health measures."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Staying home has a price. Isolation and quarantine can cause real hardship. Public health guidance says people should be treated with respect, fairness and compassion, with their privacy protected. Picture Ruth, who can't work for ten days."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Ruth at her kitchen window, with a calendar showing ten days crossed off."
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which plan treats Ruth fairly?",
+    "right": "Explain why, keep her name private, and ask what practical help she needs",
+    "wrong": [
+     "Announce her name at the market",
+     "Order her to stay in and say nothing more",
+     "Skip her quarantine so she won't lose pay"
+    ],
+    "why": "Guidance says quarantined people should be treated with respect and fairness, and that their dignity and privacy should be protected."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Your turn. You are the advisers for Kestrel Ridge. It is Day 4. Here is what we know, and what we don't. All of it is invented."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Activity: advise Kestrel Ridge"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Known: 400 people, 9 sick, 14 contacts named, one nurse, 10 quick tests that can miss early cases, no vaccine, no treatment. Not known: spread before symptoms, how deadly it is, how many cases are unseen, and whether neighbours trust the council."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "KNOWN: 400 people; 9 sick; 14 contacts; 1 nurse; 10 quick tests that can miss early cases; no vaccine; no treatment. || NOT KNOWN: spread before symptoms; how deadly; how many unseen cases; whether neighbours will cooperate."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Pause here and take about eight minutes. Choose three tools. For each, say which part of R it changes. Then name one thing you are unsure about, and one new fact that would change your advice."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Pick three tools. 2. Say which part of R each changes. 3. Name one thing you are unsure about. 4. Name a new fact that would change your advice."
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is one possible answer. Keep the nurse's daily cough tally. Isolate the nine sick at home and quarantine the fourteen contacts, with help for their needs. Wash hands, and read negative tests with care. Unsure: spread before symptoms. If it happens, widen quarantine."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Tally coughs daily; isolate the sick; quarantine contacts with support; wash hands; test, but treat negatives with care; review every three days."
+   },
+   "cite": [
+    "s1",
+    "s2",
+    "s4",
+    "s5",
+    "s10"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "In the model answer, why is the nurse's daily tally useful?",
+    "right": "It shows whether cases are rising or falling, so advice can be updated",
+    "wrong": [
+     "It guarantees there are no new cases",
+     "It replaces testing and isolation",
+     "It stops germs spreading by itself"
+    ],
+    "why": "Surveillance provides timely evidence for decisions. It doesn't lower R itself, but it shows when to change course."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's recap. Real ways to slow an outbreak: surveillance, testing, isolation and quarantine, contact tracing, handwashing, treatment and vaccines. Each changes a different part of R, or helps us see it."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Surveillance; Testing; Isolation and quarantine; Contact tracing; Handwashing; Treatment; Vaccines"
+   },
+   "cite": [
+    "s1",
+    "s2",
+    "s4",
+    "s5",
+    "s7",
+    "s10",
+    "s11"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Decisions are made with incomplete information, because early data is small and slow. Advice changes as evidence arrives. Trust and fairness decide whether people cooperate. Next class: Logistics, and how to keep a community going."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Logistics: Keeping a Community Going"
+   },
+   "cite": [
+    "s13",
+    "s14",
+    "s15",
+    "s17"
+   ],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "What handwashing with soap prevents (percent, CDC figures)",
+   "rows": [
+    {
+     "label": "Diarrhea-related sicknesses prevented (about)",
+     "value": 30,
+     "source": "s10"
+    },
+    {
+     "label": "Respiratory infections like colds prevented (about)",
+     "value": 20,
+     "source": "s10"
+    },
+    {
+     "label": "Diarrheal illness cut in people with weakened immune systems",
+     "value": 58,
+     "source": "s10"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Share of a population that must be immune to stop an outbreak (percent)",
+   "rows": [
+    {
+     "label": "R = 2.5",
+     "value": 60,
+     "source": "s9"
+    },
+    {
+     "label": "R = 4",
+     "value": 75,
+     "source": "s9"
+    },
+    {
+     "label": "Measles (R about 15, UK estimate)",
+     "value": 93,
+     "source": "s8"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Reproduction number (R)",
+   "links": [
+    "[[Outbreak, Part 1: How an Infection Spreads]]",
+    "[[Herd immunity]]"
+   ]
+  },
+  {
+   "topic": "Surveillance",
+   "links": [
+    "[[Testing and false negatives]]",
+    "[[Logistics: Keeping a Community Going]]"
+   ]
+  },
+  {
+   "topic": "Testing and false negatives",
+   "links": [
+    "[[Surveillance]]",
+    "[[Uncertainty in early data]]"
+   ]
+  },
+  {
+   "topic": "Isolation and quarantine",
+   "links": [
+    "[[Contact tracing]]",
+    "[[Trust and fairness in outbreaks]]"
+   ]
+  },
+  {
+   "topic": "Herd immunity",
+   "links": [
+    "[[Reproduction number (R)]]",
+    "[[Vaccines]]"
+   ]
+  },
+  {
+   "topic": "Uncertainty in early data",
+   "links": [
+    "[[Testing and false negatives]]",
+    "[[Capstone: Design Your Own Thought Experiment]]"
+   ]
+  },
+  {
+   "topic": "Trust and fairness in outbreaks",
+   "links": [
+    "[[Diplomacy: The Intergalactic Model UN]]",
+    "[[Economics: Scarcity, Trade and Fair Shares]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Contact tracing is a key tool for slowing outbreaks.",
+   "other_view": "Contact tracing is an established public health method. But a CDC-authored study of COVID-19 in the US found only small differences in staying home between people who completed tracing calls and those who did not, and found low participation. The authors questioned how well tracing works for fast-spreading germs. Other authors note it takes a great deal of work and can be overwhelmed when cases rise quickly.",
+   "cite": [
+    "s2",
+    "s18",
+    "s20"
+   ]
+  },
+  {
+   "claim": "Mask advice changed in 2020 because the evidence changed.",
+   "other_view": "Many experts say the change followed clearer evidence of spread without symptoms. One review argues that the evidence on masks themselves had not changed much in April to June 2020. In its view, what changed was how the evidence was presented and interpreted, along with how people saw the pandemic progressing.",
+   "cite": [
+    "s14",
+    "s21"
+   ]
+  },
+  {
+   "claim": "Trust in authorities makes people follow health rules.",
+   "other_view": "Many studies find that trust goes with compliance. But one review found the results varied depending on which institution people were asked about. Another study describes a \"support paradox\", where well-run local systems made people feel safe and so less willing to follow restrictions. Experts also ask whether trust is always deserved.",
+   "cite": [
+    "s15",
+    "s19"
+   ]
+  }
+ ]
+}

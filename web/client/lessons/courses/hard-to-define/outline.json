@@ -1,0 +1,102 @@
+{
+ "course_id": "hard-to-define",
+ "title": "Hard to Define: Consciousness, Energy, Time, Life and Information",
+ "audience": [
+  "high school",
+  "adult"
+ ],
+ "length_note": "Six classes. Each of the five words needs its own class, because each one breaks down in a different way. One short opening class comes first so learners have the basic tools for judging a definition. Without it, the later classes would keep stopping to explain them. Nothing is folded together and nothing is padded. The order runs from the best-defined word to the least-defined: energy, information, time, life, consciousness. Each class uses ideas from the ones before it. Lengths run from 20 to 35 minutes, and the longer ones go to the harder and more contested ideas. Every class splits into short, self-contained parts, so a learner can pause or return without losing the thread. The wording is plain and jargon is explained when it first appears.",
+ "classes": [
+  {
+   "n": 1,
+   "title": "What does it mean to define something?",
+   "goal": "Learners can explain why a word can be useful without having a perfect definition. They can tell a working definition from a full explanation.",
+   "minutes": 20,
+   "topics": [
+    "What a definition is for",
+    "Dictionary definitions versus scientific working definitions",
+    "Operational definitions: defining something by how you measure it",
+    "Words with fuzzy edges and family resemblance",
+    "Three tests for a definition: does it include too much, leave out too much, or go in a circle?",
+    "A simple checklist learners will reuse in every later class"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 2,
+   "title": "Energy: precise to calculate, slippery to explain",
+   "goal": "Learners can say what physicists mean by energy, name its main forms, and explain why 'energy is conserved' is a rule about bookkeeping rather than a description of a substance.",
+   "minutes": 25,
+   "topics": [
+    "Everyday meaning versus physics meaning",
+    "Energy as a quantity that is conserved, not a stuff",
+    "Forms of energy and moving energy between them",
+    "Why textbooks say energy is hard to define in one sentence",
+    "Where everyday use goes wrong, such as 'positive energy' and 'energy running out'",
+    "Open questions: dark energy and energy conservation on cosmic scales"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 3,
+   "title": "Information: from yes/no questions to meaning",
+   "goal": "Learners can tell Shannon's measure of information from everyday meaning. They can explain why the two differ and how information links to energy and entropy.",
+   "minutes": 25,
+   "topics": [
+    "Everyday information versus information in a technical sense",
+    "Shannon's idea: information as surprise or uncertainty, measured in bits",
+    "Why the technical measure ignores meaning",
+    "Information and entropy: the link to physics",
+    "Information stored in physical things, such as DNA and computer memory",
+    "Open questions: is information physical, and what is meaning?"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 4,
+   "title": "Time: the clock on the wall and the time we feel",
+   "goal": "Learners can describe how physics measures time and what the 'arrow of time' is. They can explain why felt time and clock time can differ.",
+   "minutes": 30,
+   "topics": [
+    "Measuring time: clocks and the second",
+    "Time in Newton's and Einstein's physics, and why time is relative",
+    "The arrow of time and entropy, building on the information class",
+    "Past, present and future: does 'now' exist in physics?",
+    "Time as we experience it, including how it can stretch or shrink for the brain",
+    "Open questions: is time fundamental, and why does it seem to flow?"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 5,
+   "title": "Life: a word for a pattern, not a clear line",
+   "goal": "Learners can give a common working definition of life and test it on borderline cases such as viruses. They can say why scientists still disagree about the definition.",
+   "minutes": 30,
+   "topics": [
+    "Common lists of what living things do, such as metabolism, growth, reproduction and response",
+    "Working definitions used in science, including evolution-based ones",
+    "Edge cases: viruses, prions, fire, mules, seeds and artificial cells",
+    "Life as energy use, information passing on, and change over time, linking back to classes 2 to 4",
+    "Why a definition from one example (life on Earth) is hard to extend",
+    "Open questions: the origin of life, life elsewhere, and synthetic life"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 6,
+   "title": "Consciousness: the hardest word of all",
+   "goal": "Learners can describe what researchers mean by consciousness and can separate the 'easy' problems from the 'hard problem'. They can name a few major theories and say what is still unknown.",
+   "minutes": 35,
+   "topics": [
+    "Different meanings: being awake, being aware, and having subjective experience",
+    "The 'hard problem' of consciousness and why some philosophers say it is separate from brain function",
+    "How scientists study it: measuring reports, brain activity and anaesthesia",
+    "A fair overview of major theories, such as global workspace, integrated information and higher-order views, without picking a winner",
+    "Tricky cases: animals, infants, brain injury and disorders of consciousness, and AI, handled with care and respect",
+    "What the whole course taught: which questions are about words and which are about the world",
+    "Open questions and how to talk about them honestly"
+   ],
+   "needs_research": true
+  }
+ ]
+}

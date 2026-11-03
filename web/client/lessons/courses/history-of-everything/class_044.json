@@ -1,0 +1,1180 @@
+{
+ "about": {
+  "title": "The American and French Revolutions",
+  "course": "history-of-everything",
+  "class_n": 44,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "Aimed at 30 minutes. The class covers two revolutions and a debate, so each step is short and ends with a question. The Terror and the debate are the heaviest parts. Pause after any question if you need more time."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "5.2 The Stamp Act and the Sons and Daughters of Liberty (U.S. History)",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/us-history/pages/5-2-the-stamp-act-and-the-sons-and-daughters-of-liberty",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "The causes of the American Revolution",
+   "publisher": "The National Archives (UK)",
+   "date": "n.d.",
+   "link": "https://www.nationalarchives.gov.uk/explore-the-collection/explore-by-topic/democracy-and-protest/causes-of-the-american-revolution/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "The Causes of the American Revolution (unit 1 lesson plan)",
+   "publisher": "Digital History, University of Houston",
+   "date": "n.d.",
+   "link": "https://www.digitalhistory.uh.edu/teachers/lesson_plans/pdfs/unit1.pdf",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "Why America Fought a Revolution",
+   "publisher": "Andersen Institute",
+   "date": "n.d.",
+   "link": "https://anderseninstitute.org/why-america-fought-a-revolution/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "Taxation Without Representation, American Revolution",
+   "publisher": "American History Central",
+   "date": "n.d.",
+   "link": "https://www.americanhistorycentral.com/entries/taxation-without-representation/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "Engrossed Declaration of Independence",
+   "publisher": "DocsTeach, National Archives Foundation",
+   "date": "n.d.",
+   "link": "https://docsteach.org/document/the-declaration-of-independence/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "Celebrate July 4th with the National Archives!",
+   "publisher": "U.S. National Archives (Archivist of the United States blog)",
+   "date": "n.d.",
+   "link": "https://aotus.blogs.archives.gov/tag/declaration-of-independence",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "Declaration of Independence (1776)",
+   "publisher": "U.S. National Archives",
+   "date": "n.d.",
+   "link": "https://www.archives.gov/milestone-documents/declaration-of-independence",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "Excerpt of the Declaration of Independence, July 4, 1776 (National Archives text)",
+   "publisher": "Utah Valley University",
+   "date": "n.d.",
+   "link": "https://www.uvu.edu/ccs/docs/declaration_of_independence_excerpt.pdf",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "Jefferson Condemns the Slave Trade in the Declaration of Independence",
+   "publisher": "American Battlefield Trust",
+   "date": "n.d.",
+   "link": "https://www.battlefields.org/learn/primary-sources/jefferson-condemns-slave-trade-declaration-independence",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "Draft of the Declaration of Independence",
+   "publisher": "Teaching American History (Ashbrook Center)",
+   "date": "n.d.",
+   "link": "https://teachingamericanhistory.org/document/rough-draft-of-the-declaration-of-independence/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "The Deleted Slavery Passage from the Declaration of Independence",
+   "publisher": "The Henry Ford",
+   "date": "n.d.",
+   "link": "https://www.thehenryford.org/collections/explore/articles/the-deleted-slavery-passage-from-the-declaration-of-independence",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "Jefferson's Anti-Slavery Declaration",
+   "publisher": "Civitas Institute",
+   "date": "n.d.",
+   "link": "https://www.civitasinstitute.org/civitas-collection/jeffersons-anti-slavery-declaration",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "French Revolution",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/French_Revolution/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "The Beginning of Revolution (World Civilization II)",
+   "publisher": "Lumen Learning",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/suny-fmcc-worldcivilization2/chapter/the-beginning-of-revolution/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "French Revolution: Estates-General, Bastille, Reforms (Events of 1789)",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/event/French-Revolution/Events-of-1789",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "History of France: The French Revolution and Napoleon, 1789–1815",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/history-of-France/The-French-Revolution-and-Napoleon-1789-1815",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "The French Revolution",
+   "publisher": "South African History Online",
+   "date": "n.d.",
+   "link": "https://sahistory.org.za/article/french-revolution",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "Robespierre and the Committee of Public Safety",
+   "publisher": "Lumen Learning (SUNY World History II)",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/suny-hccc-worldhistory2/chapter/robespierre-and-the-committee-of-public-safety/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "Reign of Terror (Research Starters)",
+   "publisher": "EBSCO",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/history/reign-terror/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "Reign of Terror",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Reign_of_Terror",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "Robespierre overthrown in France",
+   "publisher": "HISTORY",
+   "date": "n.d.",
+   "link": "https://www.history.com/this-day-in-history/july-27/robespierre-overthrown-in-france",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "Fall of Maximilien Robespierre",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/article/2119/fall-of-maximilien-robespierre/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "Maximilien Robespierre",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Maximilien_Robespierre",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "The Reign of Terror",
+   "publisher": "Alpha History",
+   "date": "n.d.",
+   "link": "https://alphahistory.com/frenchrevolution/reign-of-terror/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "Olympe de Gouges",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/biography/Olympe-de-Gouges",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "Gouges, Olympe de",
+   "publisher": "Internet Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://iep.utm.edu/gouges/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "Primary Source: Olympe de Gouge, Declaration of the Rights of Women, 1791",
+   "publisher": "Humanities LibreTexts (Lumen Learning)",
+   "date": "n.d.",
+   "link": "https://human.libretexts.org/Courses/Lumen_Learning/Book:_History_of_World_Civilization_II-2_(Lumen)/10:_8:_French_Revolution/10.6:_Primary_Source:_Olympe_de_Gouge:_Declaration_of_the_Rights_of_Women_1791",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s29",
+   "title": "History of Haiti",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/history-of-Haiti",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s30",
+   "title": "The Haitian Revolution",
+   "publisher": "English Heritage",
+   "date": "n.d.",
+   "link": "https://www.english-heritage.org.uk/visit/places/portchester-castle/history-and-stories/the-haitian-revolution/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s31",
+   "title": "The United States and the Haitian Revolution, 1791–1804",
+   "publisher": "Office of the Historian, U.S. Department of State",
+   "date": "n.d.",
+   "link": "https://history.state.gov/milestones/1784-1800/haitian-rev",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s32",
+   "title": "The American Revolution, Lecture 19: War and Society (Prof. Joanne Freeman)",
+   "publisher": "Open Yale Courses, Yale University",
+   "date": "n.d.",
+   "link": "https://oyc.yale.edu/node/1254",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s33",
+   "title": "The Historian Who Explained the True Meaning of the Revolution to Americans",
+   "publisher": "The UnPopulist",
+   "date": "n.d.",
+   "link": "https://www.theunpopulist.net/p/the-historian-who-explained-the-true",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s34",
+   "title": "Edward Jenner",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/biography/Edward-Jenner",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s35",
+   "title": "Historical context and the roots of Jenner's discovery",
+   "publisher": "Human Vaccines & Immunotherapeutics (Taylor & Francis)",
+   "date": "2016",
+   "link": "https://www.tandfonline.com/doi/full/10.1080/21645515.2016.1158369",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s36",
+   "title": "Explore the Rosetta Stone",
+   "publisher": "The British Museum",
+   "date": "n.d.",
+   "link": "https://www.britishmuseum.org/collection/egypt/explore-rosetta-stone",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s37",
+   "title": "1799 in science",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/1799_in_science",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s38",
+   "title": "The Rise & Fall of Maximilien Robespierre",
+   "publisher": "TheCollector",
+   "date": "n.d.",
+   "link": "https://www.thecollector.com/maximilien-robespiere-life-death-terror/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s39",
+   "title": "Toussaint Louverture",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/biography/Toussaint-Louverture",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s40",
+   "title": "Haitian Revolution (Britannica Kids)",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://kids.britannica.com/students/article/Haitian-Revolution/632767",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 44. Last time we met the Enlightenment and kings with huge power. Today we meet two revolutions that pushed back against that kind of rule."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The American and French Revolutions"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A revolution is a fast, deep change in who holds power. Our plan: why Americans rebelled, what they declared, what happened in France, how ideas spread, and who gained."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Revolution: a fast, deep change in who holds power"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, the colonies. For nearly 200 years, British colonists ran much of their own affairs. They had no members in Parliament in London, and they paid their taxes locally."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Thirteen colonies along the Atlantic coast of North America, with an arrow across the ocean to London"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Then, in 1765, Parliament passed the Stamp Act. It taxed everyday paper: legal documents, newspapers and more. The money went straight to the government in Britain."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A sheet of printed paper with a small round tax stamp in the corner"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Colonists had no elected members in the House of Commons, where tax bills began. So they said: no taxation without representation. Britain replied that colonists were 'virtually' represented. Colonists rejected that."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "No taxation without representation"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What did the slogan 'no taxation without representation' mean?",
+    "right": "Colonists felt Parliament should not tax them when they had no members in it.",
+    "wrong": [
+     "Colonists wanted to pay no taxes of any kind, ever.",
+     "Colonists wanted the king to pay for the stamps.",
+     "Colonists wanted Parliament shut down."
+    ],
+    "why": "Their complaint was about who decided the tax. They had no direct voice in the body that taxed them."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Protest spread. Delegates met in a Stamp Act Congress. Merchants refused British goods. Not one stamp was sold, and Parliament repealed the act in 1766. But new taxes came in 1767 and 1773."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1765 Stamp Act | 1766 Repealed | 1767 Townshend taxes | 1773 Tea Act"
+   },
+   "cite": [
+    "s1",
+    "s3",
+    "s4",
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Both sides dug in. Colonists said their rights were being undermined and British rule was tyrannical. Britain saw the colonies as part of a world economic empire, under Parliament and the crown. By 1775 there was armed rebellion."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Colonists: rights under attack, rule is tyranny | Britain: colonies belong under Parliament and the crown"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What did Britain believe about its colonies?",
+    "right": "They were part of an empire and should be under the will of Parliament and the crown.",
+    "wrong": [
+     "They should be fully independent.",
+     "They should each have equal seats in Parliament.",
+     "They were not worth governing."
+    ],
+    "why": "Britain saw the colonies as subordinate parts of a global economic empire."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Careful: historians weigh the causes differently. One source calls taxation the primary cause. Another says it was not taxes themselves but clashing ideas of what is fair."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Taxes were the main cause | The real clash was about fairness and rights"
+   },
+   "cite": [
+    "s4",
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Part two: the Declaration. In June 1776 Congress named a committee of five to draft it. Thomas Jefferson did the actual writing."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Part 2: The Declaration of Independence"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Congress voted for independence on July 2. On July 4 it adopted the Declaration. Delegates began signing on August 2."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "June 10 Committee of five | July 2 Vote for independence | July 4 Declaration adopted | August 2 Signing begins"
+   },
+   "cite": [
+    "s6",
+    "s7",
+    "s8"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "On what date did Congress adopt the Declaration of Independence, as the National Archives records it?",
+    "right": "July 4, 1776",
+    "wrong": [
+     "June 10, 1776",
+     "August 2, 1776",
+     "July 14, 1789"
+    ],
+    "why": "July 2 was the vote on independence. The Declaration itself was adopted on July 4, and signing began on August 2."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "What does it say? It lists complaints against the king and declares the colonies free. Its famous line says all men are created equal, with rights to life, liberty and the pursuit of happiness."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "all men are created equal"
+   },
+   "cite": [
+    "s6",
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "It adds a big idea: governments get their just powers from the consent of the governed. If a government destroys people's rights, the people may change it or abolish it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Consent of the governed"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "According to the Declaration, where do governments get their just powers?",
+    "right": "From the consent of the governed.",
+    "wrong": [
+     "From the king's birth.",
+     "From the strongest army.",
+     "From the oldest laws only."
+    ],
+    "why": "The Declaration says a government's just powers come from the people it governs."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a hard fact. Jefferson's draft blamed the king for the slave trade. Congress cut most of that passage. One account says it was to avoid offending delegates from Georgia and South Carolina."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The deleted passage"
+   },
+   "cite": [
+    "s10",
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Slavery existed in all thirteen colonies. At least a third of the delegates owned enslaved people themselves. So 'all men are created equal' was declared in a society that practised slavery."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "At least 1 in 3 delegates owned enslaved people"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What did Congress do with Jefferson's passage about the slave trade?",
+    "right": "It removed most of it.",
+    "wrong": [
+     "It kept it word for word.",
+     "It turned it into a separate law.",
+     "Jefferson deleted it himself before Congress saw it."
+    ],
+    "why": "Congress cut the passage from the final Declaration."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Thirteen years later, in 1789, a different crisis hit France. One encyclopedia lists money trouble from mounting state debt, deep social inequality, and a weak, ineffective monarchy."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Mounting state debt | Deep social inequality | A weak monarchy"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "French society had three estates: the clergy, the nobles and the common people. In May 1789 King Louis XVI called them together as the Estates-General to fix money problems. They had not met since 1614."
+   },
+   "show": {
+    "kind": "list",
+    "text": "First Estate: clergy | Second Estate: nobles | Third Estate: common people"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which group was the Third Estate?",
+    "right": "The common people.",
+    "wrong": [
+     "The clergy.",
+     "The nobles.",
+     "The king's family."
+    ],
+    "why": "The First Estate was the clergy, the Second the nobles, and the Third the common people."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "They argued over how to vote: by head, or by estate? Voting by head favoured the Third Estate. On June 17 the Third Estate declared itself the National Assembly."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "June 17, 1789: the National Assembly"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "On July 14, 1789, a Paris crowd stormed the Bastille, a symbol of royal tyranny. Peasants panicked in the Great Fear. On August 4 the Assembly abolished the feudal system and the church tithe."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "June 17 National Assembly | July 14 Bastille | July Great Fear | August 4 Feudalism abolished"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "On August 26 came the Declaration of the Rights of Man and of the Citizen. It proclaimed liberty, equality, property and the right to resist oppression. Its first article spoke of equal rights."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "men are born and remain free and equal in rights"
+   },
+   "cite": [
+    "s16",
+    "s17"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was the Declaration of the Rights of Man and of the Citizen?",
+    "right": "A statement of basic principles passed by the National Assembly in August 1789.",
+    "wrong": [
+     "A peace treaty ending a war.",
+     "A list of new taxes.",
+     "The order to storm the Bastille."
+    ],
+    "why": "It set out principles such as liberty, equality and the right to resist oppression."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "But whose rights? Britannica says the revolutionaries took civil equality seriously but defined political rights narrowly. Power moved to propertied citizens. Hold onto that for our debate."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Equal rights, but narrow political rights"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Events sped up. In April 1792 France declared war on Austria. In September 1792 the monarchy was abolished. On January 21, 1793, King Louis XVI was guillotined."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "April 1792 War on Austria | September 1792 Monarchy abolished | January 21, 1793 Louis XVI executed"
+   },
+   "cite": [
+    "s18",
+    "s38"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the Terror. It ran from September 1793 to July 1794. The government, led by the Committee of Public Safety, arrested and executed people it called enemies of the revolution."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The Terror: September 1793 to July 1794"
+   },
+   "cite": [
+    "s19",
+    "s20"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Trials became quick. A June 1794 law forced tribunals to either acquit or sentence to death. Mobs also beat some victims to death."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Justice speeds up"
+   },
+   "cite": [
+    "s25",
+    "s19"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "How many died? One source gives 16,594 official guillotine sentences and about 25,000 summary executions. Another counts about 10,000 who died after imprisonment. These come from different sources, so don't just add them."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Pieces of the Terror's death toll",
+    "chart": "c1"
+   },
+   "cite": [
+    "s19",
+    "s20"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Which statement fits what we know about deaths in the Terror?",
+    "right": "Estimates include official guillotine sentences plus deaths without proper trials or in prison.",
+    "wrong": [
+     "Every death followed a long, fair trial.",
+     "Nobody died outside Paris.",
+     "All historians agree on one exact number."
+    ],
+    "why": "The sources count different kinds of deaths and give different totals."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Totals vary. Some say about 17,000 official executions. Others put all deaths at 35,000 to 45,000, or 30,000 to 50,000. Historians even disagree on exactly when the Terror began."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 17,000 to 50,000, depending on what is counted"
+   },
+   "cite": [
+    "s20",
+    "s21",
+    "s38"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Terror ended when Robespierre fell. He was arrested July 27, 1794, and guillotined the next evening with 21 others. Earlier he had sent former allies Danton and Desmoulins to the guillotine."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The guillotine on a Paris square, crowd gathered, July 1794"
+   },
+   "cite": [
+    "s22",
+    "s23"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "How did the Terror end?",
+    "right": "Robespierre was overthrown and guillotined in July 1794.",
+    "wrong": [
+     "Louis XVI pardoned everyone.",
+     "Austria won the war and took Paris.",
+     "A new king was crowned in 1794."
+    ],
+    "why": "Robespierre was arrested on July 27 and guillotined the next day."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Part four: how ideas travelled. Saint-Domingue was a French colony built on slave labour. News of the French Revolution hit hard there. The white minority split, and mixed-race people campaigned for civil rights."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Part 4: Ideas on the move"
+   },
+   "cite": [
+    "s31",
+    "s40"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In August 1791, enslaved people in Saint-Domingue rose in revolt. On January 1, 1804, Haiti declared independence. It was the second country in the Americas, after the United States, to free itself from colonial rule."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "May 1791 Rights for some free men of colour | August 1791 Uprising | January 1, 1804 Haiti independent"
+   },
+   "cite": [
+    "s30",
+    "s29"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What happened in Saint-Domingue in August 1791?",
+    "right": "Enslaved people rose in a revolt that began the Haitian Revolution.",
+    "wrong": [
+     "A crowd stormed the Bastille there.",
+     "The colony voted to join the United States.",
+     "Britain bought the colony."
+    ],
+    "why": "The August 1791 uprising began the Haitian Revolution, which ended in independence in 1804."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In France too, people used the new language of rights. In 1791 Olympe de Gouges wrote a Declaration of the Rights of Woman, modelled on the 1789 text. She argued women deserve the same citizenship rights."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A pamphlet titled Declaration of the Rights of Woman and of the Female Citizen, 1791"
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "She wrote the line you see here in 1791. Two years later she was beheaded during the Terror."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Woman has the right to mount the scaffold; she must equally have the right to mount the rostrum"
+   },
+   "cite": [
+    "s27"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why did Olympe de Gouges write her declaration?",
+    "right": "She was answering the 1789 declaration, which gave women no equal rights.",
+    "wrong": [
+     "To praise Robespierre.",
+     "To plan the storming of the Bastille.",
+     "To end the monarchy."
+    ],
+    "why": "She modelled her text on the 1789 declaration to claim for women the rights it gave to men."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Part five: how revolutionary were they, and for whom? Historians disagree. Gordon Wood argued the American Revolution was radical, and that its makers neither intended nor controlled that radicalism."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "the most radical and far-reaching event in American history"
+   },
+   "cite": [
+    "s33"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Critics reply that it mostly helped white men. Professor Joanne Freeman of Yale says women, African Americans and Native Americans did not benefit in the same ways. Here are both sides."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Radical: Wood says it outran its makers; French text challenged the old order; Haiti was the first successful large-scale revolt by enslaved people | Limited: white men gained most; French political rights went to propertied citizens; the US did not recognise Haiti until 1862"
+   },
+   "cite": [
+    "s32",
+    "s33",
+    "s17",
+    "s30",
+    "s31"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What do critics of the 'radical' view point out?",
+    "right": "Women, enslaved people and Native Americans gained little compared with white men.",
+    "wrong": [
+     "That no one wrote any declarations.",
+     "That the revolutions had no effect on the world.",
+     "That Britain won both revolutions."
+    ],
+    "why": "Critics say the benefits were uneven, even though the ideals were announced for everyone."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "There may be no single right answer. A good habit is to ask three things: who gained, who did not, and who is telling the story?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Who gained? Who did not? Who is telling the story?"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Frame of reference: who was alive together? Olympe de Gouges was born in 1748, Edward Jenner in 1749. Robespierre was only 36 when he died in 1794."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1748 de Gouges born | 1749 Jenner born | 1794 Robespierre dies aged 36"
+   },
+   "cite": [
+    "s26",
+    "s34",
+    "s24"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In May 1796, England, country doctor Edward Jenner gave the first experimental cowpox vaccination to eight-year-old James Phipps, to protect against smallpox. That was the same decade as the Terror."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "1796: the first experimental smallpox vaccination"
+   },
+   "cite": [
+    "s35",
+    "s34"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which of these happened in 1796?",
+    "right": "Edward Jenner's first experimental vaccination.",
+    "wrong": [
+     "The Declaration of Independence was adopted.",
+     "The Bastille was stormed.",
+     "The Rosetta Stone was found."
+    ],
+    "why": "The Declaration was 1776, the Bastille 1789, and the Rosetta Stone 1799."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In July 1799, French soldiers in Napoleon's Egyptian campaign found the Rosetta Stone. It became the key to reading Egyptian hieroglyphs. That year a British Museum scientist also gave the first scientific description of the platypus."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A dark stone slab carved with three kinds of writing, broken at the top"
+   },
+   "cite": [
+    "s36",
+    "s37"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Recap: colonists protested taxes without representation. The Declaration of Independence spoke of equality and consent, yet Congress cut the passage on the slave trade. France saw the Rights of Man, then the Terror. Rights ideas spread to Haiti and to women like de Gouges."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Causes: taxes, representation, empire | 1776: Declaration | 1789: Rights of Man | 1793-94: the Terror | Ideas spread: Haiti, de Gouges | Debate: radical for whom?"
+   },
+   "cite": [
+    "s1",
+    "s2",
+    "s9",
+    "s10",
+    "s16",
+    "s19",
+    "s29",
+    "s26"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which came first?",
+    "right": "The Declaration of Independence (1776)",
+    "wrong": [
+     "The Declaration of the Rights of Man (1789)",
+     "The Terror (1793-94)",
+     "Haiti's declaration of independence (1804)"
+    ],
+    "why": "The order is 1776, 1789, 1793-94, then 1804."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next class we meet Napoleon, go deeper on Haiti, and follow independence across Latin America. You did well today."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Napoleon, Haiti and Latin American Independence"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Pieces of the Terror's death toll (different sources; do not add together)",
+   "rows": [
+    {
+     "label": "Official guillotine death sentences, France",
+     "value": 16594,
+     "source": "s19"
+    },
+    {
+     "label": "Summary executions (one estimate)",
+     "value": 25000,
+     "source": "s19"
+    },
+    {
+     "label": "Died after imprisonment (one estimate)",
+     "value": 10000,
+     "source": "s20"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Haitian Revolution: covered in more depth next class",
+   "links": [
+    "[[Napoleon, Haiti and Latin American Independence]]"
+   ]
+  },
+  {
+   "topic": "Slavery and the founding era",
+   "links": [
+    "[[The Atlantic Slave Trade]]"
+   ]
+  },
+  {
+   "topic": "Enlightenment ideas behind both revolutions",
+   "links": [
+    "[[Enlightenment and Absolute Monarchy]]"
+   ]
+  },
+  {
+   "topic": "Later fights over who counts as equal",
+   "links": [
+    "[[Nations, Reform and Civil War in the 1800s]]"
+   ]
+  },
+  {
+   "topic": "To add later: frame of reference for art, music, East Asia and Africa in 1776-1799 was not researched for this draft",
+   "links": []
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "1748 and 1749",
+   "elsewhere": "Olympe de Gouges (born 1748) and Edward Jenner (born 1749) were born a year apart, one in France and one in England.",
+   "cite": [
+    "s26",
+    "s34"
+   ]
+  },
+  {
+   "when": "1791",
+   "elsewhere": "Enslaved people in the French colony of Saint-Domingue rose in revolt in August, the start of the Haitian Revolution. The same year de Gouges published her Declaration of the Rights of Woman.",
+   "cite": [
+    "s30",
+    "s26"
+   ]
+  },
+  {
+   "when": "1794",
+   "elsewhere": "Robespierre was guillotined at age 36 in July.",
+   "cite": [
+    "s22",
+    "s24"
+   ]
+  },
+  {
+   "when": "May 1796",
+   "elsewhere": "Edward Jenner gave the first experimental cowpox vaccination, to eight-year-old James Phipps, in England.",
+   "cite": [
+    "s35",
+    "s34"
+   ]
+  },
+  {
+   "when": "July 1799",
+   "elsewhere": "French soldiers in Napoleon's Egyptian campaign found the Rosetta Stone near Rashid (Rosetta). The same year, a British Museum scientist published the first scientific description of the platypus.",
+   "cite": [
+    "s36",
+    "s37"
+   ]
+  },
+  {
+   "when": "1804",
+   "elsewhere": "Haiti declared independence on January 1, the second country in the Americas, after the United States, to free itself from colonial rule.",
+   "cite": [
+    "s29"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Taxation was the primary cause of the American Revolution.",
+   "other_view": "Another source argues taxation was not a primary cause. In its view, conflicting notions of fairness put Britain and America on a collision course.",
+   "cite": [
+    "s5",
+    "s4"
+   ]
+  },
+  {
+   "claim": "The American Revolution was the most radical event in American history (Gordon Wood).",
+   "other_view": "Critics, including Yale's Joanne Freeman, say white men improved their position but women, African Americans and Native Americans did not benefit in the same ways. They argue that this limits how radical the Revolution was.",
+   "cite": [
+    "s33",
+    "s32"
+   ]
+  },
+  {
+   "claim": "'All men are created equal' was meant to include everyone, as Jefferson's deleted anti-slavery passage shows.",
+   "other_view": "Others stress that at least a third of the delegates owned enslaved people and that Congress cut the passage. They conclude the words were announced in a society that practised slavery.",
+   "cite": [
+    "s13",
+    "s12"
+   ]
+  },
+  {
+   "claim": "The Terror killed about 17,000 people.",
+   "other_view": "That figure counts official executions. Other sources count summary killings and deaths in prison and put the total at 30,000 to 50,000. Historians also disagree on exactly when the Terror began.",
+   "cite": [
+    "s20",
+    "s21",
+    "s38"
+   ]
+  },
+  {
+   "claim": "The French Revolution began on May 5, 1789, with the Estates-General.",
+   "other_view": "That date is generally agreed. Some argue it began on other dates, such as the Day of Tiles in 1788 or the storming of the Bastille on July 14, 1789.",
+   "cite": [
+    "s14"
+   ]
+  }
+ ]
+}

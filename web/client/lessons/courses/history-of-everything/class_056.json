@@ -1,0 +1,1325 @@
+{
+ "about": {
+  "title": "A New World Order: The UN, the Cold War and Decolonization",
+  "course": "history-of-everything",
+  "class_n": 56,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. There are six topics plus a debate, so each gets a few short steps with a check question. Partition is taken slowly because of the human cost. The frame of reference covers science, politics and people only, because I did not research art or birthdays for this class."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Creation of the Bretton Woods System",
+   "publisher": "Federal Reserve History",
+   "date": "undated",
+   "link": "https://www.federalreservehistory.org/essays/bretton-woods-created",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "The Bretton Woods Conference, 1944",
+   "publisher": "U.S. Department of State, Office of the Historian",
+   "date": "undated",
+   "link": "https://2001-2009.state.gov/r/pa/ho/time/wwii/98681.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "1 Bretton Woods, in The IMF in a Changing World, 1945-85",
+   "publisher": "International Monetary Fund eLibrary",
+   "date": "undated",
+   "link": "https://www.elibrary.imf.org/display/book/9780939934652/ch001.xml",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "History of the United Nations",
+   "publisher": "United Nations",
+   "date": "undated",
+   "link": "https://www.un.org/en/about-us/history-of-the-un",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "United Nations founding members",
+   "publisher": "United Nations Dag Hammarskjöld Library",
+   "date": "undated",
+   "link": "https://research.un.org/en/unmembers/founders",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "The UN at 80: An overview of the United Nations",
+   "publisher": "House of Commons Library (UK Parliament)",
+   "date": "2025",
+   "link": "https://commonslibrary.parliament.uk/research-briefings/cbp-10380/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "History of the Declaration (Universal Declaration of Human Rights)",
+   "publisher": "United Nations",
+   "date": "undated",
+   "link": "https://www.un.org/en/about-us/udhr/history-of-the-declaration",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "Universal Declaration of Human Rights (Audiovisual Library of International Law)",
+   "publisher": "United Nations Office of Legal Affairs",
+   "date": "undated",
+   "link": "https://legal.un.org/avl////ha/udhr/udhr.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "Universal Declaration of Human Rights (1948)",
+   "publisher": "Oxford Public International Law",
+   "date": "undated",
+   "link": "https://opil.ouplaw.com/display/10.1093/law:epil/9780199231690/law-9780199231690-e887",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "United Nations - Headquarters, Flag & Definition",
+   "publisher": "HISTORY",
+   "date": "undated",
+   "link": "https://www.history.com/articles/united-nations",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "14.1 The Cold War Begins, World History Volume 2, from 1400",
+   "publisher": "OpenStax",
+   "date": "undated",
+   "link": "https://openstax.org/books/world-history-volume-2/pages/14-1-the-cold-war-begins",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "28.2 The Cold War, U.S. History",
+   "publisher": "OpenStax",
+   "date": "undated",
+   "link": "https://openstax.org/books/us-history/pages/28-2-the-cold-war",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "The Truman Doctrine and the Marshall Plan, Short History",
+   "publisher": "U.S. Department of State, Office of the Historian",
+   "date": "undated",
+   "link": "https://history.state.gov/departmenthistory/short-history/truman",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "Partition of India",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/event/Partition-of-India",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "The Partition of India and the World's Largest Forced Migration",
+   "publisher": "History Is Now Magazine",
+   "date": "2021",
+   "link": "https://www.historyisnowmagazine.com/blog/2021/9/12/the-partition-of-india-and-the-worlds-largest-forced-migration",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "The Story of the 1947 Partition as Told by the People Who Were There",
+   "publisher": "National Endowment for the Humanities",
+   "date": "undated",
+   "link": "https://www.neh.gov/article/story-1947-partition-told-people-who-were-there",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "India partition: the Red Cross response to the refugee crisis",
+   "publisher": "British Red Cross",
+   "date": "undated",
+   "link": "https://www.redcross.org.uk/stories/our-movement/our-history/india-partition-the-red-cross-response-to-the-refugee-crisis",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "Chinese Civil War",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/event/Chinese-Civil-War",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "Chinese Civil War - Nationalist Collapse, PRC, 1949",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/event/Chinese-Civil-War/Nationalist-collapse-and-the-establishment-of-the-Peoples-Republic-of-China-1949",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "Mao Zedong proclaims People's Republic of China",
+   "publisher": "HISTORY",
+   "date": "undated",
+   "link": "https://www.history.com/this-day-in-history/october-1/mao-zedong-proclaims-peoples-republic-of-china",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "Mao Zedong Proclaims a Communist People's Republic in China",
+   "publisher": "EBSCO Research Starters",
+   "date": "undated",
+   "link": "https://www.ebsco.com/research-starters/politics-and-government/mao-zedong-proclaims-communist-peoples-republic-china/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "Decolonization",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/topic/decolonization",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "Decolonization of Asia and Africa, 1945-1960 (Milestones in the History of U.S. Foreign Relations)",
+   "publisher": "U.S. Department of State, Office of the Historian",
+   "date": "undated",
+   "link": "https://history.state.gov/milestones/1945-1952/asia-and-africa",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "Decolonization of Asia and Africa, 1945-1960",
+   "publisher": "U.S. Department of State, Office of the Historian (archived)",
+   "date": "undated",
+   "link": "https://2001-2009.state.gov/r/pa/ho/time/cwr/98782.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "The Year of Africa (Reframing the Year of Africa: Independence as a Process), by Katherine Everett",
+   "publisher": "Origins, Ohio State University",
+   "date": "undated",
+   "link": "https://origins.osu.edu/article/year-of-africa-1960-rumba-pan-africanism-Kariba",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "The Year of Africa",
+   "publisher": "The New York Times Upfront (Scholastic)",
+   "date": "2025",
+   "link": "https://upfront.scholastic.com/issues/2025-26/101325/the-year-of-africa.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "Cold War historiography",
+   "publisher": "Alpha History",
+   "date": "undated",
+   "link": "https://alphahistory.com/coldwar/cold-war-historiography/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "A Guide to Primary Resources for US History (Origins of the Cold War essay)",
+   "publisher": "Virginia Center for Digital History, University of Virginia",
+   "date": "undated",
+   "link": "https://www.vcdh.virginia.edu/solguide/VUS12/essay12b.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s29",
+   "title": "Responsibility for the development of the Cold War",
+   "publisher": "Wikibooks (IB History)",
+   "date": "undated",
+   "link": "https://en.wikibooks.org/wiki/IB/Group_3/History/Route_2/The_Cold_War/Responsibility_for_the_development_of_the_Cold_War",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s30",
+   "title": "A Tale of Two Nations: The Evolution of Cold War Historiography",
+   "publisher": "Recipro exhibit, University of Ottawa",
+   "date": "undated",
+   "link": "https://omeka.uottawa.ca/recipro/exhibits/show/cuba-in-africa/cold-war-historiography",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s31",
+   "title": "A Year in History: 1948 Timeline",
+   "publisher": "Historic Newspapers",
+   "date": "undated",
+   "link": "https://www.historic-newspapers.com/blogs/timelines/a-year-in-history-1948-timeline",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s32",
+   "title": "Milestones: Invention of the First Transistor at Bell Telephone Laboratories, Inc., 1947",
+   "publisher": "Engineering and Technology History Wiki (ETHW)",
+   "date": "undated",
+   "link": "https://ethw.org/Milestones:Invention_of_the_First_Transistor_at_Bell_Telephone_Laboratories,_Inc.,_1947",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s33",
+   "title": "1948",
+   "publisher": "1948.ca",
+   "date": "undated",
+   "link": "http://www.1948.ca/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s34",
+   "title": "Partition of India",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Partition_of_India",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s35",
+   "title": "Creation of the Bretton Woods System (The 10 Best and 10 Worst U.S. Foreign Policy Decisions)",
+   "publisher": "Council on Foreign Relations",
+   "date": "undated",
+   "link": "https://www.cfr.org/ten-best-ten-worst-us-foreign-policy-decisions/creation-of-the-bretton-woods-system/",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 56. Today we meet the world that was built after 1945."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "A New World Order: The UN, the Cold War and Decolonization"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We will take it one step at a time: world money, the United Nations, the start of the Cold War, India's Partition, China's revolution, new nations, and a debate about blame."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. World money and the UN; 2. The start of the Cold War; 3. Partition of India and Pakistan; 4. The Chinese Revolution; 5. New nations in Asia, Africa and the Middle East; 6. Debate: who was responsible for the Cold War?"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, the mood. As World War II ended in 1945, nations were in ruins, and the world wanted peace."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "1945: ruins, and a wish for peace"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's start with money. In July 1944, with the war still on, delegates from 44 nations met at a hotel in Bretton Woods, New Hampshire. It opened only three weeks after the Normandy landings."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A large resort hotel in the New Hampshire mountains, with delegates from 44 nations gathered outside."
+   },
+   "cite": [
+    "s1",
+    "s2",
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why plan money in wartime? They had lived through the Great Depression, and they wanted a better system to rebuild after the war."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Lesson of the Great Depression"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "They created two institutions. The first is the International Monetary Fund, the IMF. It keeps watch on exchange rates and lends to countries struggling to pay for imports."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "IMF: watches exchange rates, short-term loans | World Bank: (coming next)"
+   },
+   "cite": [
+    "s1",
+    "s35"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The second is the World Bank. Its job was to help pay to rebuild war-ravaged countries, and to help poorer countries grow."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "IMF: watches exchange rates, short-term loans | World Bank: rebuilding after war, and development"
+   },
+   "cite": [
+    "s1",
+    "s35"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What was the World Bank's main job in the 1940s?",
+    "right": "Helping pay to rebuild countries wrecked by the war",
+    "wrong": [
+     "Sending soldiers to keep the peace",
+     "Choosing which countries could hold elections",
+     "Printing one world currency"
+    ],
+    "why": "The World Bank was set up to help finance rebuilding after the war and the development of poorer countries."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "An exchange rate is the price of one country's money in another country's money. Bretton Woods fixed those rates, with the US dollar and gold at the center. That system lasted until 1971."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Fixed exchange rates: the dollar and gold"
+   },
+   "cite": [
+    "s2",
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was at the center of the Bretton Woods system of fixed exchange rates?",
+    "right": "The US dollar and gold",
+    "wrong": [
+     "The British pound and silver",
+     "A single coin used by every country",
+     "The Soviet ruble and oil"
+    ],
+    "why": "The IMF was charged with keeping a system of fixed exchange rates centered on the US dollar and gold."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "From money to peace. The United Nations, or UN, is an organization of countries that was hoped to prevent another world war."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "United Nations"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Representatives of 50 countries met in San Francisco from 25 April to 26 June 1945. They drafted the UN Charter and signed it. The UN officially began on 24 October 1945."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "25 Apr 1945: San Francisco conference opens | 26 Jun 1945: Charter signed | 24 Oct 1945: UN begins"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "There were 51 founding members. Newly independent nations kept joining. Membership reached 127 by 1970, and it is 193 today."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Number of UN member states",
+    "chart": "c1"
+   },
+   "cite": [
+    "s5",
+    "s24",
+    "s10"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The most powerful UN body is the Security Council. It has five permanent members: China, France, the Soviet Union, the United Kingdom and the United States."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "star",
+    "count": 5,
+    "layout": "five-frame",
+    "text": "Five permanent members of the Security Council"
+   },
+   "cite": [
+    "s4",
+    "s6"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Each of the five has a veto. That means one permanent member's 'no' can block a major decision. The leaders agreed this at Yalta in early 1945."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Veto: one 'no' can block a major decision"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does a veto on the Security Council mean?",
+    "right": "A permanent member's 'no' can block a major decision",
+    "wrong": [
+     "A vote to admit a new country",
+     "A fine paid by a country that breaks the Charter",
+     "A promise to send soldiers"
+    ],
+    "why": "At Yalta, each permanent member was given a veto over substantive decisions of the Security Council."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The UN also wrote down people's rights. On 10 December 1948, in Paris, the General Assembly adopted the Universal Declaration of Human Rights. Eleanor Roosevelt was its driving force."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Eleanor Roosevelt holding a copy of the Universal Declaration of Human Rights."
+   },
+   "cite": [
+    "s8",
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The vote was 48 in favour and none against. Eight members abstained, including the Soviet Union and South Africa. Two were absent."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "How members voted on the Universal Declaration, 10 December 1948",
+    "chart": "c3"
+   },
+   "cite": [
+    "s8",
+    "s9"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Did any country vote against the Universal Declaration of Human Rights?",
+    "right": "No. Forty-eight voted for it, eight abstained and two were absent",
+    "wrong": [
+     "Yes, the Soviet Union voted against it",
+     "Yes, eight countries voted against it",
+     "Yes, it passed by a single vote"
+    ],
+    "why": "The vote was 48 to none, with eight abstentions, including the Soviet Union, and two members absent."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the Cold War. It was a division of the world into a US-allied half and a Soviet-allied half. They competed for ideological, economic, technological and military supremacy, until the Soviet Union collapsed in 1991."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Cold War: US-allied vs Soviet-allied, 1940s to 1991"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Tension grew in 1947. President Truman asked Congress for 400 million dollars in emergency aid for Greece and Turkey."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "$400 million for Greece and Turkey, March 1947"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "His pledge to help free peoples resist communist expansion became known as the Truman Doctrine. It shaped US foreign policy throughout the Cold War."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The Truman Doctrine"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What did the Truman Doctrine promise?",
+    "right": "US help for free peoples resisting communist expansion",
+    "wrong": [
+     "That the US would give up all its colonies",
+     "A new world money system",
+     "That the US would never get involved abroad again"
+    ],
+    "why": "The pledge to help free peoples resist communist expansion became known as the Truman Doctrine."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next came the Marshall Plan. In June 1947, Secretary of State George Marshall proposed big economic help for Europe's devastated nations."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Not directed 'against any country or doctrine but against hunger, poverty, desperation, and chaos.' (George C. Marshall, June 1947)"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Congress approved it as the European Recovery Program. The plan was open to the Soviet Union and its neighbors, but it stressed free markets."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Marshall Plan = European Recovery Program"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Soviet Union refused the aid. It also forbade the communist states of Eastern Europe to accept it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Soviet Union said no"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was the Marshall Plan?",
+    "right": "US economic aid to help rebuild Europe",
+    "wrong": [
+     "A treaty that created the United Nations",
+     "A Soviet plan to rebuild Eastern Europe",
+     "A system of fixed exchange rates"
+    ],
+    "why": "Congress authorized the European Recovery Program, called the Marshall Plan, to rebuild Europe's economies."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "By 1948 the split was sharp. Communists took power in Czechoslovakia. The Soviets sealed off land routes to Berlin, and the West flew in supplies."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1948: Czechoslovakia taken over by communists | 1948: Berlin land routes sealed; Western airlift"
+   },
+   "cite": [
+    "s33"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now to South Asia. After the war Britain was weakened and short of money. It left India in 1947."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Britain leaves India, 1947"
+   },
+   "cite": [
+    "s22",
+    "s16"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Partition was the division of British India into two independent countries, India and Pakistan. The Indian Independence Act, passed on 18 July 1947, set it up."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Partition: India and Pakistan"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The two countries came into being in August 1947. Pakistan had two parts, and East Pakistan later became Bangladesh."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A map of South Asia in 1947 showing India in the middle, West Pakistan to the northwest and East Pakistan to the east, with the lines through Punjab and Bengal."
+   },
+   "cite": [
+    "s34",
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The border was drawn in about five weeks by a man named Radcliffe, using outdated maps and census data. It cut through the provinces of Punjab and Bengal."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A border drawn in five weeks"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "About 15 million Hindus, Muslims and Sikhs had to cross the new borders. It was one of the largest human displacements in history."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 15 million people on the move"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "There was terrible violence. Estimates of deaths range from 200,000 to 2 million. We remember these as real families who lost their homes."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "200,000 to 2 million deaths (estimates)"
+   },
+   "cite": [
+    "s14",
+    "s17"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was the Partition of India?",
+    "right": "The 1947 division of British India into India and Pakistan",
+    "wrong": [
+     "The split of China into two countries",
+     "The division of Germany into four zones",
+     "The founding of the United Nations"
+    ],
+    "why": "The Indian Independence Act divided British India into the independent countries of India and Pakistan."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Mahatma Gandhi, a leader of India's independence movement, was assassinated in New Delhi on 30 January 1948. Many mourned him."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A crowd in New Delhi mourning Mahatma Gandhi, January 1948."
+   },
+   "cite": [
+    "s31",
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now China. From 1945 to 1949 the Nationalists under Chiang Kai-shek fought the Communists under Mao Zedong in a civil war."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Nationalists (Kuomintang): Chiang Kai-shek | Communists: Mao Zedong"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Communists won through military victories and a popular revolution. On 1 October 1949, Mao proclaimed the People's Republic of China, with its capital at Beijing."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1945-49: Chinese Civil War | 1 Oct 1949: People's Republic of China proclaimed"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Soviet Union recognized the new government within days. The Nationalists kept a government on Taiwan, and the US withheld recognition of Beijing."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Beijing: recognized by the Soviet Union | Taiwan: kept by the Nationalists, backed by the US"
+   },
+   "cite": [
+    "s19",
+    "s20"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "After the Soviet Union, China became the second great communist power of the 1900s."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Second great communist power"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "When was the People's Republic of China proclaimed?",
+    "right": "1 October 1949",
+    "wrong": [
+     "26 June 1945",
+     "14 May 1948",
+     "10 December 1948"
+    ],
+    "why": "Mao Zedong proclaimed the People's Republic of China on 1 October 1949."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a big theme. Decolonization is the process by which colonies become independent of the country that ruled them."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Decolonization"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why then? European countries lacked the wealth and political support to put down faraway revolts. The US and the Soviet Union both opposed colonialism."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Europe: poorer and weaker | US and USSR: against colonialism | Nationalist movements: campaigning for independence"
+   },
+   "cite": [
+    "s22",
+    "s23"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here are some examples. Korea was freed in 1945 and the Philippines became independent in 1946. Britain left India in 1947. Indonesia won independence in 1949 after a struggle with the Dutch, and the French left Vietnam in 1954."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1945: Korea freed | 1946: Philippines | 1947: India | 1950: Indonesia | 1954: French leave Vietnam"
+   },
+   "cite": [
+    "s22",
+    "s23"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "There was no single path. Some independence was peaceful and orderly. In many places it came only after a long, hard struggle."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Peaceful and orderly | After a protracted revolution"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which was NOT a reason empires gave up colonies after 1945?",
+    "right": "European empires were richer than ever",
+    "wrong": [
+     "European countries lacked wealth and political support",
+     "Nationalist movements campaigned for independence",
+     "The US and Soviet Union opposed colonialism"
+    ],
+    "why": "After the war Europe was weakened and short of wealth, which is why many colonies became independent."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In the Middle East, Britain left Palestine in 1948. On 14 May 1948, David Ben-Gurion declared the State of Israel. The next day five Arab nations invaded, and the first Arab-Israeli War began."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "14 May 1948: Israel declared | 15 May 1948: five Arab nations invade"
+   },
+   "cite": [
+    "s22",
+    "s31"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now Africa. At the end of 1950, only four African countries were independent: Egypt, Ethiopia, Liberia and South Africa, which was ruled by a white minority."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "star",
+    "count": 4,
+    "layout": "row",
+    "text": "Independent African countries, end of 1950"
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "How many African countries were independent at the end of 1950?",
+    "right": "Four",
+    "wrong": [
+     "Seventeen",
+     "Twenty-seven",
+     "Forty-eight"
+    ],
+    "why": "At the end of 1950 only Egypt, Ethiopia, Liberia and South Africa were independent."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "By the end of 1960 there were 27. Seventeen countries gained independence in 1960 alone, so it is called the Year of Africa. The Congo's independence day was 30 June 1960."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Independent nations in Africa",
+    "chart": "c2"
+   },
+   "cite": [
+    "s26",
+    "s25"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Many of the new nations tried not to be drawn into the Cold War. After the Bandung conference in 1955 they formed the nonaligned movement. Their growing UN membership was the rise in our UN chart."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Nonaligned movement (after Bandung, 1955)"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is a frame of reference. In the weeks of the Marshall Plan and Partition, scientists at Bell Labs were building the first working transistor. It was demonstrated in December 1947."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "17 Nov to 23 Dec 1947: first working transistor built at Bell Labs | 1947: Marshall Plan proposed; Partition of India"
+   },
+   "cite": [
+    "s32",
+    "s13",
+    "s14"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last, the debate: who was responsible for the Cold War? Historians have argued about this since it began. There are three broad views."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Orthodox | Revisionist | Post-revisionist"
+   },
+   "cite": [
+    "s28"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The orthodox view blames the Soviet Union. It says Stalin broke wartime agreements like Yalta and Potsdam to spread communism. It was the leading explanation until the 1960s."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Orthodox: the Soviet Union"
+   },
+   "cite": [
+    "s27",
+    "s28"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Revisionists blame the US more. They say US policy was needlessly harsh and wanted a Europe open to American trade. Some pointed to a push for an 'Open Door' empire."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Revisionist: more blame on the US"
+   },
+   "cite": [
+    "s27",
+    "s28"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Post-revisionists say neither side alone was to blame. John Lewis Gaddis wrote the first major account in 1972. Even so, they do not all agree on how to split the blame."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Post-revisionist: neither side alone"
+   },
+   "cite": [
+    "s29",
+    "s27",
+    "s28"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What do post-revisionist historians say about the start of the Cold War?",
+    "right": "Neither the US nor the Soviet Union alone was responsible",
+    "wrong": [
+     "Only the Soviet Union was responsible",
+     "Only the US was responsible",
+     "Only Britain was responsible"
+    ],
+    "why": "Post-revisionists stress that neither the US nor the USSR can be held solely responsible."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "After the Cold War ended, new archives opened. Gaddis then put more weight on Stalin's role. Newer historians look beyond the Washington-Moscow axis to the whole world. So there is no settled answer, and you are free to weigh the evidence."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "No settled answer"
+   },
+   "cite": [
+    "s29",
+    "s30"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To sum up, after 1945 the UN and Bretton Woods institutions set new rules. The Cold War split the world, Partition and China's revolution reshaped Asia, and many colonies became new nations. Next time: the 1950s and early 1960s."
+   },
+   "show": {
+    "kind": "list",
+    "text": "UN and Bretton Woods, 1944-45 | Truman Doctrine and Marshall Plan, 1947 | Partition, 1947 | People's Republic of China, 1949 | Year of Africa, 1960"
+   },
+   "cite": [
+    "s1",
+    "s4",
+    "s13",
+    "s14",
+    "s18",
+    "s26"
+   ],
+   "move": "slide-in-left"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Number of UN member states",
+   "rows": [
+    {
+     "label": "1945 (founding members)",
+     "value": 51,
+     "source": "s5"
+    },
+    {
+     "label": "1970",
+     "value": 127,
+     "source": "s24"
+    },
+    {
+     "label": "Today",
+     "value": 193,
+     "source": "s10"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Independent nations in Africa",
+   "rows": [
+    {
+     "label": "End of 1950",
+     "value": 4,
+     "source": "s26"
+    },
+    {
+     "label": "End of 1960",
+     "value": 27,
+     "source": "s26"
+    }
+   ]
+  },
+  {
+   "id": "c3",
+   "kind": "pie",
+   "title": "How UN members voted on the Universal Declaration of Human Rights, 10 December 1948",
+   "rows": [
+    {
+     "label": "In favour",
+     "value": 48,
+     "source": "s8"
+    },
+    {
+     "label": "Abstained",
+     "value": 8,
+     "source": "s9"
+    },
+    {
+     "label": "Absent",
+     "value": 2,
+     "source": "s9"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Bretton Woods and the IMF and World Bank",
+   "links": [
+    "[[Depression, Dictators and the Slide to War]]",
+    "[[World War II]]"
+   ]
+  },
+  {
+   "topic": "The United Nations and human rights",
+   "links": [
+    "[[World War II]]",
+    "[[The Holocaust and the Memory of Genocide]]"
+   ]
+  },
+  {
+   "topic": "Start of the Cold War",
+   "links": [
+    "[[The 1950s and early 1960s: Space, Nuclear Fear and Civil Rights]]",
+    "[[The End of the Cold War]]"
+   ]
+  },
+  {
+   "topic": "Partition of India and Pakistan",
+   "links": [
+    "[[Imperialism: Africa, India, China and Japan]]"
+   ]
+  },
+  {
+   "topic": "Chinese Revolution of 1949",
+   "links": [
+    "[[Imperialism: Africa, India, China and Japan]]",
+    "[[The Late 1960s and 1970s: Protest, War and Oil]]"
+   ]
+  },
+  {
+   "topic": "Decolonization in Asia, Africa and the Middle East",
+   "links": [
+    "[[Imperialism: Africa, India, China and Japan]]",
+    "[[The Atlantic Slave Trade]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "July 1944",
+   "elsewhere": "The Bretton Woods Conference opened only three weeks after the Allied landings in Normandy, while the war was still being fought.",
+   "cite": [
+    "s3"
+   ]
+  },
+  {
+   "when": "1945",
+   "elsewhere": "The UN Charter was signed on 26 June and the UN began on 24 October. Korea was freed by Japan's defeat, and local nationalist movements across Asia campaigned for independence rather than a return to European rule.",
+   "cite": [
+    "s4",
+    "s22",
+    "s23"
+   ]
+  },
+  {
+   "when": "1946",
+   "elsewhere": "The United States granted independence to the Philippines.",
+   "cite": [
+    "s24"
+   ]
+  },
+  {
+   "when": "1947",
+   "elsewhere": "Truman asked Congress for aid to Greece and Turkey, and Marshall proposed European recovery aid. British India was partitioned. Bell Labs scientists Bardeen, Brattain and Shockley built the first working transistor, which was demonstrated in December.",
+   "cite": [
+    "s13",
+    "s14",
+    "s32"
+   ]
+  },
+  {
+   "when": "1948",
+   "elsewhere": "Gandhi was assassinated on 30 January. Israel declared independence on 14 May. Communists took power in Czechoslovakia, the Berlin land routes were sealed and the West started an airlift. The Universal Declaration of Human Rights was adopted on 10 December.",
+   "cite": [
+    "s31",
+    "s33",
+    "s8"
+   ]
+  },
+  {
+   "when": "1949",
+   "elsewhere": "The People's Republic of China was proclaimed on 1 October. Indonesia won independence from the Dutch after armed conflict.",
+   "cite": [
+    "s18",
+    "s23"
+   ]
+  },
+  {
+   "when": "1960",
+   "elsewhere": "Seventeen African countries became independent, and by the end of the year 27 African nations were independent.",
+   "cite": [
+    "s26"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The Soviet Union was mainly responsible for the Cold War (orthodox view).",
+   "other_view": "Revisionist historians put more responsibility on the United States, arguing that its policy was needlessly belligerent and aimed at an Europe open to American trade. Post-revisionists say neither side alone was to blame. Later archival work led some historians, such as Gaddis, to focus more on Stalin, and newer historians question whether the story should centre on Washington and Moscow at all.",
+   "cite": [
+    "s27",
+    "s28",
+    "s29",
+    "s30"
+   ]
+  },
+  {
+   "claim": "Bretton Woods created a fair and shared system for world trade and money.",
+   "other_view": "The system placed the US dollar at the center. One historian described it as the start of an 'American economic empire'. The CFR collection, which lists it among the best US foreign policy decisions, links to that view.",
+   "cite": [
+    "s2",
+    "s35"
+   ]
+  },
+  {
+   "claim": "The Partition death toll was about a million.",
+   "other_view": "Estimates are disputed. Britannica gives 200,000 to 2 million deaths and about 15 million displaced. Another source estimates up to about 3 million deaths from violence, hunger, suicide and disease, and 14 million uprooted. Historians also disagree about the number displaced and about whether Partition could have been avoided, since some prominent figures opposed it while others favoured separation.",
+   "cite": [
+    "s14",
+    "s16",
+    "s17",
+    "s34"
+   ]
+  },
+  {
+   "claim": "The United States 'lost China' in 1949.",
+   "other_view": "Republicans charged that the Truman administration mishandled China. Britannica instead attributes the Communist victory to military triumphs and a profound, popularly based revolution.",
+   "cite": [
+    "s20",
+    "s18"
+   ]
+  },
+  {
+   "claim": "1960 was the single moment Africa became free.",
+   "other_view": "Historian Katherine Everett argues liberation was more than one moment and should be seen as a process. Counts of 1960 independence also differ slightly (17 in most sources, 16 in one teaching note).",
+   "cite": [
+    "s25",
+    "s26"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,701 @@
+{
+ "about": {
+  "title": "Energy: precise to calculate, slippery to explain",
+  "course": "hard-to-define",
+  "class_n": 2,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 25,
+  "length_note": "About 25 minutes. The class has 27 short beats and 8 check questions, and each beat teaches one small step. Anyone who wants more time can pause after each question. Anyone who wants less can skip the Noether beats (17-18) and come back to them later."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Ch. 7 Introduction to Work, Energy, and Energy Resources - College Physics 2e",
+   "publisher": "OpenStax",
+   "date": "n.d. (2nd edition)",
+   "link": "https://openstax.org/books/college-physics-2e/pages/7-introduction-to-work-energy-and-energy-resources",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "The Feynman Lectures on Physics Vol. I Ch. 4: Conservation of Energy",
+   "publisher": "Caltech / The Feynman Lectures Website",
+   "date": "n.d. (online edition)",
+   "link": "https://www.feynmanlectures.caltech.edu/I_04.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "On the Concept of Energy (chapter in Adapting Historical Knowledge Production to the Classroom)",
+   "publisher": "Springer",
+   "date": "n.d.",
+   "link": "https://link.springer.com/chapter/10.1007/978-94-6091-349-5_6",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Is energy conserved or running out?",
+   "publisher": "Victoria State Government (Australia), Department of Education",
+   "date": "n.d.",
+   "link": "https://www.education.vic.gov.au/school/teachers/teachingresources/discipline/science/continuum/Pages/energyconserv.aspx",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "How Noether's Theorem Revolutionized Physics",
+   "publisher": "Quanta Magazine",
+   "date": "2025-02-07",
+   "link": "https://www.quantamagazine.org/how-noethers-theorem-revolutionized-physics-20250207/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "What is Dark Energy? Inside Our Accelerating, Expanding Universe",
+   "publisher": "NASA Science",
+   "date": "n.d.",
+   "link": "https://science.nasa.gov/dark-energy/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Building Blocks (The Universe's Building Blocks)",
+   "publisher": "NASA Science",
+   "date": "n.d.",
+   "link": "https://science.nasa.gov/universe/overview/building-blocks/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Encyclopedia of Astrophysics: The Expanding Universe (section: Conservation of energy in the expanding Universe)",
+   "publisher": "arXiv (arXiv:2509.09954)",
+   "date": "2025 (preprint)",
+   "link": "https://arxiv.org/pdf/2509.09954",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Energy Is Not Conserved",
+   "publisher": "Sean Carroll, Preposterous Universe blog",
+   "date": "2010-02-22",
+   "link": "https://preposterousuniverse.com/blog/2010/02/22/energy-is-not-conserved/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Negative Energy: Why Interdisciplinary Physics Requires Multiple Ontologies",
+   "publisher": "arXiv (arXiv:1307.5106)",
+   "date": "2013 (preprint)",
+   "link": "https://arxiv.org/pdf/1307.5106",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Forms of energy",
+   "publisher": "U.S. Energy Information Administration (EIA)",
+   "date": "n.d.",
+   "link": "https://www.eia.gov/energyexplained/what-is-energy/forms-of-energy.php",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "1.4.2: Forms of Energy (Physical Science for Educators, Vol. 2)",
+   "publisher": "Physics LibreTexts, Coalinga College",
+   "date": "n.d.",
+   "link": "https://phys.libretexts.org/Courses/Coalinga_College/Physical_Science_for_Educators_Volume_2/01:_Energy_Physics_and_Chemistry/1.04:_Work_and_Energy/1.4.02:_Forms_of_Energy",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "9.1 Work, Power, and the Work-Energy Theorem - Physics",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/physics/pages/9-1-work-power-and-the-work-energy-theorem",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Cosmology from conservation of global energy",
+   "publisher": "arXiv (arXiv:1703.06013)",
+   "date": "2017 (preprint)",
+   "link": "https://arxiv.org/pdf/1703.06013",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Note on the Conservation of Quasi-Local Energy in an Expanding Universe",
+   "publisher": "arXiv (arXiv:2006.12162)",
+   "date": "2020 (preprint)",
+   "link": "https://arxiv.org/pdf/2006.12162",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Energy: Quotations and Comments",
+   "publisher": "Rutgers University (react.rutgers.edu)",
+   "date": "n.d.",
+   "link": "http://react.rutgers.edu/~huskey/energy_quotes.html",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class two. Last time we asked what it means to define something. Today we try that on a word everybody uses: energy."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Energy: precise to calculate, slippery to explain"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "By the end, you can say what physicists mean by energy and name its main forms. You can also explain why 'energy is conserved' is a rule about bookkeeping, not about a substance."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. What physicists mean by energy\n2. The main forms, and how energy moves between them\n3. Why 'conserved' is bookkeeping\n4. Where everyday talk goes wrong\n5. Open questions"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In daily life, energy is a feeling, a bill, or a fizzy drink. 'I have no energy today.' Physics took the word and gave it a narrower job."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "energy (everyday): liveliness, power, get-up-and-go"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To reach the physics meaning we need one more word: work. In physics, work means a force moving something over a distance."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Work = a force moves something over a distance"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Lifting a book onto a shelf is work. Doing work on an object changes its energy, and the book now has more stored energy than before."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A hand lifting a book from a table up onto a high shelf."
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which of these is work in the physics sense?",
+    "right": "Pushing a box across the floor",
+    "wrong": [
+     "Holding a heavy bag still in the air",
+     "Thinking hard about a problem",
+     "Watching a ball sit on a table"
+    ],
+    "why": "Physics work needs a force that moves something over a distance. Holding a bag still involves no movement, so it is not physics work, even though your muscles get tired."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So many textbooks say energy is the ability to do work. But OpenStax calls that a loose definition, because some energy can't be used to do work."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "There is no simple, yet accurate, scientific definition for energy."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Other authors say the same. Halliday and colleagues call a simple definition very difficult. Çengel and Boles say we all have a feeling for it, but a precise definition is hard."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Halliday et al.: very difficult to give a simple definition\nÇengel and Boles: everyone has a feeling for it; a precise definition is hard\nBergmann and Schaefer: nobody knows what energy really is"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Richard Feynman said it most sharply. He did not mean physicists can't use energy, because they use it all the time. He meant we have no picture of what it is made of, such as little blobs of fixed size."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "It is important to realize that in physics today we have no knowledge of what energy is."
+   },
+   "cite": [
+    "s3",
+    "s16"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So what do physicists have instead of a one-line definition? They have a rule. A certain number, which we call energy, stays the same through all the changes nature makes, as long as nothing enters or leaves."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Energy: a number that stays the same (conserved)"
+   },
+   "cite": [
+    "s1",
+    "s16"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Feynman made this clear with a story. A child has 28 blocks that can't be broken or destroyed. Each evening his mother counts them and finds 28."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Illustration: 28 indestructible blocks"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One day there are only 26. Another day there are 30. The 30 turns out to be Bruce's blocks, left behind after a visit. The count only stays at 28 if you check that nothing came in or went out."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Day 1: 28 blocks\nA later day: 26 blocks\nAnother day: 30 blocks (some of Bruce's were left behind)\nThe rule: nothing in, nothing out, same total"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the key point. In Feynman's story about energy, there are no blocks. Energy has no tiny pieces to count. It is a number we work out, and the number stays put."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "There are no blocks: energy is a calculated number"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "In Feynman's story, what does the number 28 stand for?",
+    "right": "The total energy: a number we calculate, not a count of tiny pieces",
+    "wrong": [
+     "How many tiny packets of energy are in the room",
+     "How many forms of energy there are",
+     "How many days the mother counted"
+    ],
+    "why": "Feynman said the remarkable thing about the picture is that there are no blocks. Energy is an abstract quantity we calculate. It is not a pile of little things."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That is why we call it bookkeeping. Think of a sealed bank account: money moves between pockets, but the total doesn't change. And this rule isn't just a guess, because it is based on experiment."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Substance picture (not how physics treats energy): a stuff that fills things up and flows like water.\nBookkeeping picture: a number we calculate for a system, which stays the same when nothing enters or leaves."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the forms. Feynman listed nine: gravitational, kinetic, heat, elastic, electrical, chemical, radiant, nuclear, and mass energy. Each form is a different way the same total shows up."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Gravitational\nKinetic (motion)\nHeat\nElastic\nElectrical\nChemical\nRadiant (light)\nNuclear\nMass"
+   },
+   "cite": [
+    "s2",
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Most forms fall into two families. Potential energy is stored energy, like chemical energy held in the bonds of a battery or a fuel. Kinetic energy is the energy of movement, and heat is the jostling of atoms."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Potential (stored): chemical energy in food, fuel and batteries; the energy of position.\nKinetic (movement): a moving car; heat, which comes from atoms and molecules moving."
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Energy keeps changing form. Coal's chemical energy becomes heat as it burns, and the heat boils water. In a leaf, light becomes chemical energy. The form changes, but the total doesn't."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Coal: chemical → thermal (heat) → steam\nLeaf: light (radiant) → chemical\nFood in your body: chemical → thermal, and movement"
+   },
+   "cite": [
+    "s12",
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "A plant uses sunlight to make sugar. Which change of form is that?",
+    "right": "Light (radiant) energy into chemical energy",
+    "wrong": [
+     "Chemical energy into light",
+     "Kinetic energy into heat",
+     "Heat into electrical energy"
+    ],
+    "why": "In photosynthesis, light energy is converted into chemical energy stored in the plant."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why is energy conserved at all? In 1918 the mathematician Emmy Noether showed it is linked to a symmetry. Run an experiment today or next week and the laws of physics give the same results, because they don't change as time passes."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "The laws of physics don't change over time (time-translation symmetry)\n↔ The total energy of a system is conserved"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That also tells us the rule's limits. A system that breaks time symmetry can break energy conservation along with it. Keep that in mind, because we'll meet it at the end."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "No time symmetry → no guaranteed energy conservation"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "According to Noether's result, energy conservation is linked to which fact?",
+    "right": "The laws of physics not changing as time passes",
+    "wrong": [
+     "Energy being a fluid that flows around",
+     "Machines being 100% efficient",
+     "Temperature staying the same"
+    ],
+    "why": "Noether showed that time-translation symmetry, meaning the laws don't change over time, corresponds to conservation of total energy."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now where everyday talk goes wrong. First: 'energy is running out.' The total amount of energy never changes. But in every change, some of it ends up as low-grade heat that we can't easily use again, so we say it was 'used up.'"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Not 'used up': changed into forms we can't easily use"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A torch battery goes flat. Which is the best physics description?",
+    "right": "The energy was changed into other forms, mostly heat, that are hard to use again",
+    "wrong": [
+     "The energy was destroyed",
+     "The energy left the universe",
+     "The battery made the energy into brand-new energy"
+    ],
+    "why": "The total amount of energy never changes. In practice, much of it ends up as low-grade heat that can't easily do more work, which is why people say it was 'used up'."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Second: the word 'conserve' has two meanings. In physics, conserved means the total stays constant. In daily life, conserving energy means saving the usable kinds, so we use less fuel and electricity."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Physics: the total is conserved, so it never changes.\nEveryday: 'conserve' means using less of the usable forms."
+   },
+   "cite": [
+    "s1",
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Third: 'positive energy.' In physics, positive and negative are signs in a calculation. Atoms held together, for example, have negative energy, equal to what you'd have to put in to pull them apart."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Physics: positive or negative = the sign of a calculated number"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "In physics, what does 'negative energy' mean for two things held together?",
+    "right": "You would have to put energy in to pull them apart",
+    "wrong": [
+     "They are made of antimatter",
+     "They have lost their energy for good",
+     "They are in a bad mood"
+    ],
+    "why": "For bound things, the negative energy equals the energy you must supply to separate them. It is a sign in a calculation. The wellness phrase 'positive energy' is a different use of the word, and it is not this quantity."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the open questions. In the late 1990s astronomers found that the universe's expansion is speeding up. Whatever causes this is called dark energy, and NASA estimates it is about 68 percent of the universe."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "68%"
+   },
+   "cite": [
+    "s7",
+    "s6"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the full picture. NASA's split is 5 percent ordinary matter, 27 percent dark matter and 68 percent dark energy. Scientists know even less about dark energy than about dark matter."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "What the universe is made of (NASA estimate)",
+    "chart": "c1"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One idea is that dark energy is vacuum energy, a background energy of empty space. It could equal the cosmological constant, a term in Einstein's equations. New telescopes are now testing these ideas."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Dark energy: vacuum energy? Still unknown."
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the puzzle that links back to Noether. Her rule needs time symmetry, but an expanding universe is different from one moment to the next. Many cosmologists conclude there is no single total energy for the whole universe that stays constant."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Everyday lab: the laws and set-up don't change with time, so energy is conserved.\nExpanding universe: space itself changes with time, so a total energy that stays constant isn't defined."
+   },
+   "cite": [
+    "s8",
+    "s9"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why do many cosmologists say there is no conserved total energy for the whole expanding universe?",
+    "right": "The rule depends on time symmetry, and an expanding universe changes from moment to moment",
+    "wrong": [
+     "Dark energy is stealing the energy",
+     "Noether's theorem was proven wrong",
+     "Energy is a fluid that leaks out of space"
+    ],
+    "why": "Energy conservation follows from time-translation symmetry. Expansion breaks that symmetry, so no total energy exists that is guaranteed to stay constant. The rule isn't broken, because its condition isn't met."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Careful: this does not mean energy vanishes in everyday life. Locally, at each point and in each interaction, energy is still conserved. When light is stretched by expansion, its energy doesn't go anywhere. It is measured by observers who are moving away."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Locally: energy conserved at every point and in every interaction\nWhole expanding universe: no unambiguous total to conserve\nStretched light: energy goes nowhere; it is measured from a receding point of view"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's gather it up. Energy is easy to calculate and hard to explain in one sentence. It is a number that stays the same when nothing enters or leaves. It shows up in many forms, and it is conserved because the laws don't change with time."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Energy = a conserved number, not a stuff\nMany forms, one total\nConserved because of time symmetry (Noether)\nOpen: dark energy, and energy on cosmic scales"
+   },
+   "cite": [
+    "s1",
+    "s2",
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which sentence best sums up 'energy is conserved'?",
+    "right": "A calculated total stays the same in a closed system, even as it changes form",
+    "wrong": [
+     "Energy is a fluid that can never be used up",
+     "Energy can be reused again and again forever",
+     "Energy is conserved everywhere, at every scale, with no open questions"
+    ],
+    "why": "Conservation is bookkeeping: a number we calculate stays constant when nothing enters or leaves. Usable energy can still be lost to heat, and on cosmic scales the rule is an open question. Next class: information."
+   }
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "pie",
+   "title": "What the universe is made of (NASA estimate, %)",
+   "rows": [
+    {
+     "label": "Dark energy",
+     "value": 68,
+     "source": "s7"
+    },
+    {
+     "label": "Dark matter",
+     "value": 27,
+     "source": "s7"
+    },
+    {
+     "label": "Ordinary matter",
+     "value": 5,
+     "source": "s7"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Energy",
+   "links": [
+    "[[work]]",
+    "[[conservation law]]",
+    "[[forms of energy]]",
+    "[[what it means to define something]]"
+   ]
+  },
+  {
+   "topic": "Conservation of energy as bookkeeping",
+   "links": [
+    "[[Noether's theorem]]",
+    "[[symmetry]]",
+    "[[energy transformation]]"
+   ]
+  },
+  {
+   "topic": "Usable energy versus total energy",
+   "links": [
+    "[[entropy]]",
+    "[[heat]]",
+    "[[efficiency]]"
+   ]
+  },
+  {
+   "topic": "Dark energy and cosmic energy conservation",
+   "links": [
+    "[[expanding universe]]",
+    "[[cosmological constant]]",
+    "[[time]]"
+   ]
+  },
+  {
+   "topic": "Next class",
+   "links": [
+    "[[information]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Energy is a bookkeeping number, not a stuff.",
+   "other_view": "Physicists and teachers often talk about energy as if it were a substance that flows or is stored, or as a height in a 'well'. One research paper argues that experts mix both pictures. It says an exclusive substance picture is untenable once negative energies appear. The bookkeeping view is the careful one, but the substance picture is a useful shorthand and is widely used.",
+   "cite": [
+    "s10",
+    "s2"
+   ]
+  },
+  {
+   "claim": "Total energy is not conserved in the expanding universe.",
+   "other_view": "This is contested. One paper says the question is controversial, and that in some universe models (such as de Sitter) a global energy can be conserved. Another says the answer depends on what we mean by energy and by 'conserved', which is hard to settle in general relativity. Many cosmologists still treat it as settled, because expansion breaks time symmetry.",
+   "cite": [
+    "s14",
+    "s15",
+    "s8",
+    "s9"
+   ]
+  },
+  {
+   "claim": "Energy is the ability to do work.",
+   "other_view": "OpenStax uses this as a loose definition and admits that not all energy is available to do work. The Victorian Department of Education argues that it ignores low-grade heat, which can't be used to do work. This is one reason many authors prefer 'a conserved quantity' as the core idea.",
+   "cite": [
+    "s1",
+    "s4"
+   ]
+  }
+ ]
+}

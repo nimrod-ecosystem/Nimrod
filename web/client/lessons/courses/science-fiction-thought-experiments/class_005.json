@@ -1,0 +1,984 @@
+{
+ "about": {
+  "title": "Diplomacy: The Intergalactic Model UN",
+  "course": "science-fiction-thought-experiments",
+  "class_n": 5,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 40,
+  "length_note": "About 40 minutes: roughly 20 for the ideas and questions, and 20 for the simulated session. You can pause after any beat. The solo version takes about the same time. If you need longer, stop after the 'Interests and positions' beats and do the session in the next sitting."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Functions and powers of the General Assembly",
+   "publisher": "United Nations",
+   "date": "n.d.",
+   "link": "https://www.un.org/en/ga/about/background.shtml",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Chapter IV: The General Assembly (Articles 9-22), United Nations Charter",
+   "publisher": "United Nations",
+   "date": "n.d.",
+   "link": "https://www.un.org/en/about-us/un-charter/chapter-4",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Principled Negotiation: Focus on Interests to Create Value",
+   "publisher": "Program on Negotiation, Harvard Law School",
+   "date": "n.d.",
+   "link": "https://www.pon.harvard.edu/daily/negotiation-skills-daily/principled-negotiation-focus-interests-create-value/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Six Guidelines for \"Getting to Yes\"",
+   "publisher": "Program on Negotiation, Harvard Law School",
+   "date": "n.d.",
+   "link": "https://www.pon.harvard.edu/daily/negotiation-skills-daily/six-guidelines-for-getting-to-yes/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Using Principled Negotiation to Resolve Disagreements",
+   "publisher": "Program on Negotiation, Harvard Law School",
+   "date": "n.d.",
+   "link": "https://www.pon.harvard.edu/daily/dispute-resolution/principled-negotiation-resolve-disagreements/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Groups of Member States",
+   "publisher": "United Nations (Model UN pages)",
+   "date": "n.d.",
+   "link": "https://www.un.org/en/model-united-nations/groups-member-states",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Coalition Building in Multilateral Negotiation",
+   "publisher": "Model Diplomat",
+   "date": "n.d.",
+   "link": "https://modeldiplomat.com/learn/lessons/coalition-building",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Groupings in International Relations",
+   "publisher": "Model Diplomat",
+   "date": "n.d.",
+   "link": "https://modeldiplomat.com/learn/glossary/groupings",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "What Is Model UN? A Complete Beginner's Explanation",
+   "publisher": "Gavelling",
+   "date": "n.d.",
+   "link": "https://gavelling.com/blog/what-is-model-un",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Auburn Model UN - Conference Rules of Procedure",
+   "publisher": "Auburn Model UN",
+   "date": "n.d.",
+   "link": "https://www.auburnmun.org/high-school-conference/conference-rules-of-procedure",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Flow of Debate (Model UN guide)",
+   "publisher": "Our Own Indian School, Dubai (GEMS)",
+   "date": "n.d.",
+   "link": "https://www.gemsoo-alquoz.com/-/media/Project/GEMS/OIS_GEMS_Our_Own_Indian_School_Dubai/_Files-and-Documents/unsc/unsc_rules1131186.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Model UN Rules of Procedure, Explained",
+   "publisher": "Delegate Academy",
+   "date": "n.d.",
+   "link": "https://delegateacademy.com/blog/mun-rules-of-procedure",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "UN General Assembly",
+   "publisher": "Refworld (UNHCR)",
+   "date": "n.d.",
+   "link": "https://www.refworld.org/document-sources/un-general-assembly",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "How has my country voted at the UN?",
+   "publisher": "Al Jazeera",
+   "date": "2019",
+   "link": "https://interactive.aljazeera.com/aje/2019/how-has-my-country-voted-at-unga/index.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "G77: Coalition of Developing Countries",
+   "publisher": "Model Diplomat",
+   "date": "n.d.",
+   "link": "https://modeldiplomat.com/learn/glossary/g77",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "MUN Rules of Procedure (ROP): Points, Motions and Voting",
+   "publisher": "MyMUN",
+   "date": "n.d.",
+   "link": "https://mymun.com/learn/mun-rules-of-procedure",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Highlights from Harvard Program on Negotiation workshop (Interest-Based Bargaining)",
+   "publisher": "CPR Institute blog",
+   "date": "2021",
+   "link": "https://blog.cpradr.org/tag/harvard-program-on-negotiation/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Principled Negotiation (handout on the Harvard approach)",
+   "publisher": "Event handout, 2017",
+   "date": "2017",
+   "link": "https://na.eventscloud.com/file_uploads/fd90f7b5575b6d9229dfb17bf132b299_ER2017_CollaboratingwithSchools_SandyMislow_Handout-PrincipledNegotiation.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Group of 77 and China",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/environmental-sciences/group-77-and-china/",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back. In class 4, a community had a shared resource problem: a limited supply that many groups need."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Class 5: Diplomacy, the Intergalactic Model UN"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Today several groups must agree on what to do about it. By the end, you will speak for one of them and draft a short resolution."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Today: 1. How meetings run. 2. Interests and positions. 3. Coalitions. 4. Your session."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One promise first. We will label everything. REAL means true in our world. INVENTED means we made it up for the story."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "REAL: true in our world | INVENTED: made up for this story"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "REAL first. Model UN is a simulation. Each student is given a country and acts as its representative."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "REAL: What Model UN is"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In the real UN General Assembly, every member has one vote. There are 193 members."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "193 members, 1 vote each"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A small country's vote counts the same as a big country's. The Charter also lets each member send no more than five representatives."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Delegation: the team that speaks for one member"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "How many votes does a delegation of five people get in the General Assembly?",
+    "right": "One. The whole delegation shares its member's single vote.",
+    "wrong": [
+     "Five, one for each person",
+     "Two",
+     "As many as its population in millions"
+    ],
+    "why": "Each member has one vote, and a member may send up to five representatives."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Every meeting has a chair. The chair keeps time, calls on speakers and rules on the rules."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Chair: runs the meeting"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The meeting starts with roll call. The chair reads each country's name and records who is in the room."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Roll call: who is here?"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next is the speakers list. It sets who talks, and in what order. You ask to be added, then you speak in turn."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Speakers list: the order of speeches"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A warning. In most Model UN rooms, when the list runs out, debate closes and the room goes straight to a vote. Rules vary a little between conferences. We will use the common version."
+   },
+   "show": {
+    "kind": "list",
+    "text": "List runs out → debate closes → voting"
+   },
+   "cite": [
+    "s12",
+    "s16"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In most Model UN rooms, what happens when the speakers list runs out?",
+    "right": "Debate closes and the room moves to voting.",
+    "wrong": [
+     "The chair picks a new topic",
+     "The meeting ends with no vote",
+     "Everyone gets a second speech"
+    ],
+    "why": "An exhausted speakers list closes debate and moves the room to voting. That is why experienced delegates keep a name on the list."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Between speeches there are caucuses. In a moderated caucus, the chair calls on you one at a time to talk about one narrow question."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Moderated caucus: chair picks speakers, narrow question | Unmoderated caucus: rules pause, talk freely"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In an unmoderated caucus, the formal rules pause for a set time, often 10 to 20 minutes. Everyone moves around and talks freely."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Moderated caucus: chair picks speakers, narrow question | Unmoderated caucus: rules pause, talk freely"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "You need to find friends and start writing a paper together. Which part of the meeting fits best?",
+    "right": "An unmoderated caucus",
+    "wrong": [
+     "A moderated caucus",
+     "Roll call",
+     "The speakers list"
+    ],
+    "why": "In an unmoderated caucus delegates move and talk freely. That is the time to find allies and start writing."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "What do you write? A resolution is a written proposal the group votes on. It starts as a working paper. With enough signatures and the chair's approval, it becomes a draft resolution."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Working paper → signatures + chair → draft resolution"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The writers are called sponsors. An operative clause is the part that says what will be done about the problem."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Operative clause: what we will DO"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "For our class we will use a simple shape. Start with 'Noting that...' lines for background. Then add 'Decides to...' lines for the actions."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Noting that... (background) | Decides to... (action: who, what, how long)"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which line is an operative clause, one that says what will be done?",
+    "right": "Decides that each world will share the Reserve by a fair count of people.",
+    "wrong": [
+     "Noting that winter is long.",
+     "Noting that the Reserve is low.",
+     "Noting that every world is worried."
+    ],
+    "why": "An operative clause says how the problem will be addressed. The 'Noting' lines only give background."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last comes the vote. Each delegation votes yes, no or abstain. A draft resolution needs a majority of delegates present to pass."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Yes | No | Abstain (decline to vote either way)"
+   },
+   "cite": [
+    "s10",
+    "s14"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "How big is a majority? In the real General Assembly, most questions need a simple majority. 'Important questions' need two-thirds."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1",
+    "text": "Votes needed if all 193 members vote yes or no"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The bars are our own arithmetic. If all 193 vote yes or no, a simple majority is 97. Two-thirds is 129."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1",
+    "text": "Votes needed if all 193 members vote yes or no"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "If all 193 members vote yes or no, how many yes votes give a simple majority?",
+    "right": "97",
+    "wrong": [
+     "129",
+     "193",
+     "65"
+    ],
+    "why": "A simple majority is more than half of 193, which is 97. Two-thirds, 129, applies to important questions."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a real surprise. Most Assembly resolutions are adopted without any vote. Members negotiate first, until nobody objects."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Consensus: agreement without a vote"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So the talking behind the scenes matters as much as the voting. That brings us to why groups disagree, and how they find a deal."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "REAL: Interests and positions"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A position is a fixed demand, like 'We need a 10 percent raise.' An interest is the need or worry underneath the demand."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Position: what you say you want | Interest: why you want it"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Small example. Someone says, 'I must have the window seat.' That is a position. The interest might be that car rides make them feel sick."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Positions are surface-level statements.",
+    "cite_note": "Program on Negotiation, Harvard Law School"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A neighbour says, 'Your fence must come down.' Which is the interest behind that?",
+    "right": "They want more sunlight in their garden.",
+    "wrong": [
+     "The fence must come down.",
+     "Take it down by Friday.",
+     "I will not talk about it."
+    ],
+    "why": "The first three are demands, which are positions. An interest is the need underneath, such as wanting sunlight."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why does this matter? Positions tend to lock people into corners. Naming interests opens doors."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Positions lock people in. Interests open options."
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Several different offers can meet the same interest. So negotiators brainstorm options that could satisfy both sides."
+   },
+   "show": {
+    "kind": "list",
+    "text": "One interest, many possible offers"
+   },
+   "cite": [
+    "s3",
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That is how compromise often works. Groups care about different things, so each trades something it values less for something it values more."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Trade-off: give a little here, gain a little there"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One more real idea. A coalition is a group of delegations that agree to act together. Smaller members gain a louder voice, and they share the drafting work."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Coalition: delegations acting together"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A real example is the Group of 77. It began in 1964 with 77 developing countries and now has 134 members. It was set up to promote its members' shared economic interests."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1961: Non-Aligned Movement founded in Belgrade | 1964: Group of 77 formed | Today: 134 members"
+   },
+   "cite": [
+    "s8",
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Most states belong to several groupings and choose by the issue. Coalitions are flexible, not permanent teams."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Many memberships, chosen by issue"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why do smaller countries form coalitions?",
+    "right": "To amplify their voice and share the drafting work.",
+    "wrong": [
+     "Because a coalition gets extra votes",
+     "Because the rules forbid speaking alone",
+     "To avoid having any interests"
+    ],
+    "why": "Coalitions help smaller members be heard and share the work. Each member still has just one vote."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the story. From here on, everything is INVENTED. Five worlds belong to the Concord of Worlds, a council formed after a long age of quarrelling over supplies."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "star",
+    "count": 5,
+    "layout": "five-frame",
+    "text": "INVENTED: the five delegations of the Concord of Worlds"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We copied its rules from the real ones. One world, one vote. Simple majority for ordinary questions. Two-thirds for important ones, like changing who holds the Reserve."
+   },
+   "show": {
+    "kind": "list",
+    "text": "INVENTED Concord rules: 1 world = 1 vote | 3 of 5 passes | 4 of 5 for important questions"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Meet two delegations. Marrowgate Reach is the oldest member and once ran the supply routes. It holds the biggest stockpile."
+   },
+   "show": {
+    "kind": "list",
+    "text": "INVENTED. Marrowgate Reach. Position: share by what each world contributed. Interest: never run out; keep its standing."
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Lumen Shoals is an ocean world and the youngest member. Its population is growing fast."
+   },
+   "show": {
+    "kind": "list",
+    "text": "INVENTED. Lumen Shoals. Position: share by number of people. Interest: feed a growing population; be taken seriously."
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Orrin Drift is a fleet with no home world. Its ships carry goods for everyone, and it wants to keep moving."
+   },
+   "show": {
+    "kind": "list",
+    "text": "INVENTED. Orrin Drift. Position: guaranteed ports and fuel before any sharing. Interest: keep the fleet moving; belong somewhere."
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Vael Commons is a league of small farm worlds. It fears being overruled by bigger neighbours."
+   },
+   "show": {
+    "kind": "list",
+    "text": "INVENTED. Vael Commons. Position: equal shares for every world. Interest: steady harvest planning; not be overruled."
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Ember Station is a small workshop station. It repairs and recycles for the whole Concord."
+   },
+   "show": {
+    "kind": "list",
+    "text": "INVENTED. Ember Station. Position: pay for repairs with a share. Interest: raw materials for its workshops; be needed."
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Orrin Drift demands guaranteed ports and fuel. What interest might lie beneath that demand?",
+    "right": "It needs to keep its ships moving.",
+    "wrong": [
+     "It wants the largest stockpile",
+     "It wants every world to have equal shares",
+     "It wants to leave the Concord"
+    ],
+    "why": "'Guaranteed ports and fuel' is the position. The need beneath it is to keep the fleet moving."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now count the votes. There are five. A simple majority is three. Important questions need two-thirds of five, which rounds up to four."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "star",
+    "count": 5,
+    "layout": "five-frame",
+    "text": "INVENTED Concord: 3 of 5 passes an ordinary resolution; 4 of 5 for important ones"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "In the Concord, how many yes votes pass an ordinary resolution if all five vote yes or no?",
+    "right": "Three",
+    "wrong": [
+     "Two",
+     "Four",
+     "Five"
+    ],
+    "why": "A simple majority of five is three. Four of five is needed only for important questions."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Look for overlaps. Marrowgate and Orrin both want stability. Lumen and Vael both want fair treatment for people and small worlds. Ember can help anyone."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Possible coalitions: stability (Marrowgate + Orrin) | fairness (Lumen + Vael) | Ember: broker"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Your turn. Take one delegation. Your task is to speak, find friends, and draft a short resolution on the shared resource problem from class 4: one limited supply that every community needs."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Your session: represent one delegation"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The session follows the real order: roll call, opening speeches, a moderated caucus, an unmoderated caucus, then the vote. You may pass on a turn to speak at any time."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1 Roll call | 2 Opening speech (about 30 seconds) | 3 Moderated caucus, 5 min | 4 Unmoderated caucus, 8 min | 5 Introduce draft, speak for and against | 6 Vote"
+   },
+   "cite": [
+    "s9",
+    "s11"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Optional support one: role cards. Each card gives your history, your interest and your position. It also names one thing you could give up and one thing you must keep."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Role card: history | interest | position | can give up | must keep"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Optional support two: sentence starters. They help you speak up when your mind goes blank."
+   },
+   "show": {
+    "kind": "list",
+    "text": "'Our interest is...' | 'Could we meet both needs if...?' | 'We can support this if...' | 'Would you accept...?' | 'We abstain because...'"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Optional support three: the solo version. You play one delegation. The other four are scripted, and each votes yes only if the draft protects the 'must keep' on its card."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Solo: you + 4 scripted delegations. A scripted delegation votes yes if your draft protects its must-keep."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Draft in two parts. Add one or two 'Noting that' lines, then two or three 'Decides to' lines. Each action should say who does what, and for how long."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Title | Sponsors | Noting that... | Decides to... (who, what, how long)"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Before you call for the vote, run a check. Does your draft protect at least one must-keep for each delegation you need? You need three votes."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Check: whose interest does each clause meet? Do you have 3 votes?"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "After the vote, look back, whether you won or not. Which interest did you discover? Which coalition surprised you?"
+   },
+   "show": {
+    "kind": "list",
+    "text": "Reflect: one interest you found | one trade you made | one thing you'd try next time"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A last check on today's labels. Next class is Economics: scarcity, trade and fair shares."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Class 6, Economics"
+   },
+   "cite": [],
+   "move": "title-rise",
+   "ask": {
+    "q": "Which of these is REAL, not invented?",
+    "right": "In the UN General Assembly, each member has one vote.",
+    "wrong": [
+     "Marrowgate Reach holds the biggest stockpile.",
+     "The Concord of Worlds has five delegations.",
+     "Ember Station repairs things for the Concord."
+    ],
+    "why": "One member, one vote is how the real General Assembly works. The Concord and its five delegations are invented for this story."
+   }
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "REAL: votes needed in the UN General Assembly if all 193 members vote yes or no (our arithmetic)",
+   "rows": [
+    {
+     "label": "All members",
+     "value": 193,
+     "source": "s1"
+    },
+    {
+     "label": "Two-thirds (important questions)",
+     "value": 129,
+     "source": "s1"
+    },
+    {
+     "label": "Simple majority (other questions)",
+     "value": 97,
+     "source": "s1"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Model UN procedure: chair, roll call, speakers list, caucuses, draft resolutions, voting",
+   "links": [
+    "[[Logistics: Keeping a Community Going]]"
+   ]
+  },
+  {
+   "topic": "Interests versus positions",
+   "links": [
+    "[[Economics: Scarcity, Trade and Fair Shares]]",
+    "[[First Contact, Part 2: Building Shared Meaning]]"
+   ]
+  },
+  {
+   "topic": "Coalitions and compromise",
+   "links": [
+    "[[Economics: Scarcity, Trade and Fair Shares]]",
+    "[[Capstone: Design Your Own Thought Experiment]]"
+   ]
+  },
+  {
+   "topic": "The Concord of Worlds (invented)",
+   "links": [
+    "[[What a Thought Experiment Is, and How to Tell Fact from Story]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "1961 to 1964",
+   "elsewhere": "In the Cold War years, rivalry between two big blocs put pressure on smaller countries. Smaller countries responded by forming their own groupings: the Non-Aligned Movement in 1961 and the Group of 77 in 1964.",
+   "cite": [
+    "s8",
+    "s19"
+   ]
+  },
+  {
+   "when": "1980s",
+   "elsewhere": "Roger Fisher and William Ury developed interest-based bargaining through the Harvard Negotiation Project. It later spread through negotiation and mediation training.",
+   "cite": [
+    "s17"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Looking at interests instead of positions often produces agreements that work for everyone.",
+   "other_view": "The Harvard sources say this 'often' happens, not always. Even their own guidance says that when interests are directly opposed, parties need objective criteria to settle things. Some deals are hard even when everyone is skilled and goodwill is present.",
+   "cite": [
+    "s3",
+    "s18"
+   ]
+  },
+  {
+   "claim": "Model UN shows how the real UN works.",
+   "other_view": "It is a simplified copy. Model UN rules differ between conferences, and in the real General Assembly most resolutions pass by consensus without a vote. Its resolutions are generally not legally binding on governments, though they carry the weight of world opinion. Security Council resolutions are generally considered binding.",
+   "cite": [
+    "s16",
+    "s1",
+    "s13",
+    "s14"
+   ]
+  },
+  {
+   "claim": "Coalitions give smaller members real power.",
+   "other_view": "They often do, but a coalition only holds together while its members share interests. The Group of 77 is described as effective where developed and developing countries are divided, and less so on issues that split its own members. A coalition that is too exclusive can also be dismissed as a narrow interest group.",
+   "cite": [
+    "s15",
+    "s7"
+   ]
+  }
+ ]
+}

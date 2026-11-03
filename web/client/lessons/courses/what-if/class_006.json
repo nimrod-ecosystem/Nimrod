@@ -1,0 +1,1073 @@
+{
+ "about": {
+  "title": "Challenges evolution absorbed: when outsiders improved the science",
+  "course": "what-if",
+  "class_n": 6,
+  "audience": [
+   "adult"
+  ],
+  "minutes": 35,
+  "length_note": "About 35 minutes, which suits the material. It has four worked examples, one thought experiment and a wrap-up, with pauses for the questions. Each beat stands alone, so a learner can stop after any beat and pick up again later."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Chapter 11 Summary, Concepts of Biology",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/concepts-biology/pages/11-chapter-summary",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "18.1 Understanding Evolution, Biology 2e",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/biology-2e/pages/18-1-understanding-evolution",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "11.1 Discovering How Populations Change, Concepts of Biology",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/concepts-biology/pages/11-1-discovering-how-populations-change",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Lynn Margulis (1938-2011)",
+   "publisher": "Science (AAAS)",
+   "date": "n.d.",
+   "link": "https://www.science.org/doi/10.1126/science.1218027",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Lynn Margulis, 1938-2011",
+   "publisher": "Proceedings of the National Academy of Sciences (PNAS)",
+   "date": "n.d.",
+   "link": "https://www.pnas.org/doi/10.1073/pnas.1120472109",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "The Philosophical Approach: An Interview with Ford Doolittle",
+   "publisher": "PLOS Genetics (via PubMed Central)",
+   "date": "n.d.",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4423879/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "On the origin of mitosing cells: A historical appraisal of Lynn Margulis endosymbiotic theory",
+   "publisher": "ScienceDirect (journal article abstract)",
+   "date": "n.d.",
+   "link": "https://www.sciencedirect.com/science/article/abs/pii/S0022519317303223",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Evolution: Library: Punctuated Equilibrium",
+   "publisher": "PBS (WGBH Evolution project)",
+   "date": "n.d.",
+   "link": "https://www.pbs.org/wgbh/evolution/library/03/5/l_035_01.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "4. Punctuated equilibrium and stasis",
+   "publisher": "Digital Atlas of Ancient Life (Paleontological Research Institution)",
+   "date": "n.d.",
+   "link": "https://www.digitalatlasofancientlife.org/learn/evolution/punctuated-equilibrium-and-stasis/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Punctuated equilibrium and continuous evolution",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/biology/punctuated-equilibrium-and-continuous-evolution/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "The Neutral Theory of Molecular Evolution (book description)",
+   "publisher": "Cambridge University Press",
+   "date": "n.d.",
+   "link": "https://www.cambridge.org/core/books/neutral-theory-of-molecular-evolution/0FF60E9F47915B17FFA2620C49400632",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Population genetics: an introduction for physicists",
+   "publisher": "arXiv",
+   "date": "2024",
+   "link": "https://arxiv.org/pdf/2408.02650",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Theorists Debate How 'Neutral' Evolution Really Is",
+   "publisher": "Quanta Magazine",
+   "date": "2018-11-08",
+   "link": "https://www.quantamagazine.org/neutral-theory-of-evolution-challenged-by-evidence-for-dna-selection-20181108/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Putting the Extended Evolutionary Synthesis to the Test",
+   "publisher": "John Templeton Foundation",
+   "date": "n.d.",
+   "link": "https://www.templeton.org/grant/putting-the-extended-evolutionary-synthesis-to-the-test",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Does evolutionary theory need a rethink? (blog post quoting the Nature debate)",
+   "publisher": "Self Aware Patterns",
+   "date": "2014-10-09",
+   "link": "https://selfawarepatterns.com/2014/10/09/does-evolutionary-theory-need-a-rethink/comment-page-1/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Does evolutionary theory need a rethink? (Nature 514:161-164, listing)",
+   "publisher": "ResearchGate",
+   "date": "2014-10-09",
+   "link": "https://www.researchgate.net/publication/266680722_Does_evolutionary_theory_need_a_rethink",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Science works with testable ideas",
+   "publisher": "Understanding Science, University of California Museum of Paleontology",
+   "date": "n.d.",
+   "link": "https://undsci.berkeley.edu/understanding-science-101/what-is-science/science-works-with-testable-ideas/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "The core of science: Relating evidence and ideas",
+   "publisher": "Understanding Science, University of California Museum of Paleontology",
+   "date": "n.d.",
+   "link": "https://undsci.berkeley.edu/understanding-science-101/the-core-of-science-relating-evidence-and-ideas/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Science relies on evidence",
+   "publisher": "Understanding Science, University of California Museum of Paleontology",
+   "date": "n.d.",
+   "link": "https://undsci.berkeley.edu/understanding-science-101/what-is-science/science-relies-on-evidence/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "What would disprove evolution?",
+   "publisher": "Why Evolution Is True (blog)",
+   "date": "2012-07-09",
+   "link": "https://whyevolutionistrue.com/2012/07/09/what-would-disprove-evolution/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Evolution and Testability",
+   "publisher": "National Center for Science Education",
+   "date": "n.d.",
+   "link": "https://ncse.ngo/evolution-and-testability",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Misconceptions about evolution",
+   "publisher": "Understanding Evolution, University of California Museum of Paleontology",
+   "date": "n.d.",
+   "link": "https://evolution.berkeley.edu/teach-evolution/misconceptions-about-evolution/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Symbiogenesis",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Symbiogenesis",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "Lynn Margulis",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Lynn_Margulis",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Punctuated Equilibrium",
+   "publisher": "Encyclopedia.com",
+   "date": "n.d.",
+   "link": "https://www.encyclopedia.com/earth-and-environment/ecology-and-environmentalism/environmental-studies/punctuated-equilibrium",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Neutral Theory of Molecular Evolution: an overview",
+   "publisher": "ScienceDirect Topics",
+   "date": "n.d.",
+   "link": "https://www.sciencedirect.com/topics/agricultural-and-biological-sciences/neutral-theory-of-molecular-evolution",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "Biological Evolution and Statistical Physics",
+   "publisher": "arXiv",
+   "date": "n.d.",
+   "link": "https://arxiv.org/pdf/cond-mat/0101409",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "Cells within cells: An extraordinary claim with extraordinary evidence",
+   "publisher": "Understanding Science, University of California Museum of Paleontology",
+   "date": "n.d.",
+   "link": "https://undsci.berkeley.edu/lessons/pdfs/endosymbiosis.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "Understanding Science 101: An overview",
+   "publisher": "Understanding Science, University of California Museum of Paleontology",
+   "date": "n.d.",
+   "link": "https://undsci.berkeley.edu/understanding-science-101/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "18.1 Understanding Evolution, Biology for AP Courses",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/biology-ap-courses/pages/18-1-understanding-evolution",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome. I'm the contrary voice, and I love an outsider's idea. Today is a story where outsiders were heard, and the science really changed."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Challenges evolution absorbed"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "And I'm the devil's advocate. I'll push back as we go. By the end you should know what evolution says, which challenges changed it, and how that was decided."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. What evolution says\n2. Which challenges changed it\n3. How science decided"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, where these ideas stand. Four challenges, one tier each. Endosymbiosis and the neutral theory: mainstream consensus. Punctuated equilibrium and the extended synthesis: active research debate."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Left: Endosymbiosis | Neutral theory | Punctuated equilibrium | Extended synthesis\nRight: Mainstream consensus | Mainstream consensus (modern form) | Active research debate | Active research debate"
+   },
+   "cite": [
+    "s4",
+    "s12",
+    "s13",
+    "s8",
+    "s10",
+    "s14"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The neutral theory is mainstream? I thought it was a challenge."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Where this idea stands: the tier tells us how widely accepted an idea is"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In a trimmed form, yes. Drift matters a lot. How much DNA change is neutral is still argued. None of these ideas gets mocked here. Each began as a good question."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Mainstream consensus, with a debated size."
+   },
+   "cite": [
+    "s12",
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the accepted view, so we know what was being challenged. It has three parts: variation, inheritance and selection. We'll take them one at a time."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Variation\nInheritance\nSelection"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Part one: variation. Members of a species differ. Some finches have wide, deep bills; others have thinner ones. New variation starts with mutation, a change in DNA."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Variation"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Part two: inheritance. Only differences with a genetic basis can be passed on. Being taller because of better food does not get passed on that way."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Inheritance"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Two bean plants in a garden differ in height. One is taller because it got more water. Can natural selection act on that difference?",
+    "right": "No. The difference comes from water, not genes, so it is not passed on.",
+    "wrong": [
+     "Yes. Taller plants always win.",
+     "Yes. Any difference at all can be selected.",
+     "Only if the plants are the same age."
+    ],
+    "why": "Selection changes the next generation only if the difference has a genetic basis. A difference caused by nutrition or water does not."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Part three: selection. Organisms have more offspring than resources can support. Those with helpful inherited variations tend to survive and have more offspring. Over generations, the population changes."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Selection"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Put together: variation, inheritance, selection. Darwin called the result 'descent with modification'. That is the accepted core."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Individuals vary\nSome variation is inherited\nMore offspring than resources support\nResult: descent with modification"
+   },
+   "cite": [
+    "s1",
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which list names the three conditions behind natural selection?",
+    "right": "Individuals vary; some variation is inherited; there are more offspring than resources can support.",
+    "wrong": [
+     "Individuals are identical; all traits are learned; resources are unlimited.",
+     "Species never change; mutations are always helpful; the strongest always wins.",
+     "Fossils are common; genes are unnecessary; offspring are rare."
+    ],
+    "why": "A standard textbook summary lists exactly these: individuals vary, some variations are heritable, and there are more offspring than resources can support."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That seems tidy. So what is left to challenge?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "What is left to challenge?"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Plenty. A standard textbook lists four things that change a population's genes: mutation, natural selection, genetic drift and migration. The challenges ask how big each role is, and how fast it works."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Mutation\nNatural selection\nGenetic drift\nMigration"
+   },
+   "cite": [
+    "s1",
+    "s30"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Example one: endosymbiosis. Some parts inside our cells began as bacteria that moved into another cell and stayed. Think of mitochondria, which power cells, and plant chloroplasts."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Endosymbiosis"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The idea had earlier roots. In 1967 Lynn Margulis restated it with modern cell biology. She recalled fifteen journals rejecting the paper. By the early 1980s it was widely accepted."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1905-1910: a Russian botanist proposes chloroplasts began as separate cells | 1967: Margulis publishes her paper | Early 1980s: widely accepted"
+   },
+   "cite": [
+    "s23",
+    "s4",
+    "s24"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why did it win? It could be tested. If these parts were once bacteria, they might keep their own DNA and wrapping. Cell biologists found both. Family trees later placed mitochondria inside a bacterial group."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Own set of membranes\nOwn DNA\nMitochondria sit inside a bacterial family tree"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why did the field come to accept endosymbiosis?",
+    "right": "It made testable predictions, such as DNA inside the organelles, and the tests supported it.",
+    "wrong": [
+     "Because Margulis was already famous.",
+     "Because enough journals voted for it.",
+     "Because it matched what scientists already believed."
+    ],
+    "why": "Margulis put the idea in a form that could be tested. Cell biologists then found DNA and membranes in the organelles, and later work placed mitochondria within the bacteria."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So the outsider was right about everything?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Right about everything?"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "No. Her colleague Ford Doolittle says there never was evidence for her idea that cells' swimming tails came from spirochete bacteria. One review calls some proposals incomplete or mistaken. The field kept what was tested."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Left: Kept after testing: mitochondria and chloroplasts began as bacteria\nRight: Not supported: swimming tails from spirochetes"
+   },
+   "cite": [
+    "s6",
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So what changed? Evolution does not only move by single small mutations. A cell can also gain whole packets of genes at once, by merging. Science calls this idea a cornerstone of mainstream biology."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A real change to the picture"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Example two: punctuated equilibrium. A common picture was slow, steady change. In 1972 paleontologists Niles Eldredge and Stephen Jay Gould asked whether fossils really show that. Fossils are preserved remains of ancient life."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Punctuated equilibrium"
+   },
+   "cite": [
+    "s9",
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Their answer: many species look stable for long stretches. Then a new species appears in a burst, which is short on the geological clock. The stable part is called stasis."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A staircase graph. Long flat steps are labelled 'stasis'. Short, quick rises between them are labelled 'bursts of change'."
+   },
+   "cite": [
+    "s8",
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why would bursts leave few fossils? They proposed that new species form in small groups at the edge of a population, cut off from the main body. A small group over a short time leaves little behind."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A big circle of animals with a small group splitting off at the edge, separated by a river."
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Is that a rival to evolution?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "A rival to evolution?"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "No. Eldredge and Gould used no process that biologists did not already accept. It is about tempo: the speed and pattern of change. Berkeley's evolution site lists 'only slow and gradual' as a misconception."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Tempo, not a new mechanism"
+   },
+   "cite": [
+    "s9",
+    "s22"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What did punctuated equilibrium challenge?",
+    "right": "The assumption that fossils should show slow, steady change of one species into the next.",
+    "wrong": [
+     "That evolution happens at all.",
+     "That species share common ancestors.",
+     "That genes exist."
+    ],
+    "why": "Eldredge and Gould questioned the expected slow, steady pattern in the fossil record. They used processes biologists already accepted."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Where it stands: a useful model for one kind of change, not the only kind. Studies support it for many multicellular organisms, with exceptions. How common it is still gets argued."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Tier: active research debate"
+   },
+   "cite": [
+    "s8",
+    "s10",
+    "s25"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Example three starts with a word: drift. Sometimes a gene variant spreads through a population by chance alone, like a coin toss. It does not have to help."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Genetic drift"
+   },
+   "cite": [
+    "s11",
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 1968 Motoo Kimura noted that new lab methods found more molecular change and variation than expected. His proposal: most molecular changes are neutral, neither helping nor harming, and spread by drift."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Neutral theory, 1968"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Neutral does not mean pointless, and it is not anti-Darwin. Both can be true: drift for neutral changes, selection for changes that affect survival."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Left: Neutral changes: drift (chance)\nRight: Changes that matter to survival: natural selection"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In Kimura's neutral theory, why does a neutral change spread?",
+    "right": "By chance, through random drift, not because it gives an advantage.",
+    "wrong": [
+     "Because it gives the organism an advantage.",
+     "Because the environment demands it.",
+     "Because selection removes all the alternatives."
+    ],
+    "why": "The theory says most molecular changes come from random drift of neutral mutants, not from selection."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Did people just accept it?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Did people just accept it?"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "No. The neutralist versus selectionist argument has run since the late 1960s. The theory has led for half a century, yet it still faces challenges. So: mainstream, with the neutral share still debated."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Tier: mainstream consensus, size debated"
+   },
+   "cite": [
+    "s26",
+    "s13",
+    "s27"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Still debated. In October 2014, Nature ran 'Does evolutionary theory need a rethink?' Biologists led by Kevin Laland and Tobias Uller said yes."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The extended synthesis"
+   },
+   "cite": [
+    "s14",
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Their case: evolution is not only about genes. Organisms reshape their surroundings, called niche construction, and that can give them an advantage. They want this woven into the theory."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Niche construction"
+   },
+   "cite": [
+    "s14",
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "And the other side?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The other side"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A second group, including Gregory Wray, answered no. They said these topics already get their due in current theory, so a new name is not merited."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Left: Laland and colleagues: add these processes to the core\nRight: Wray and colleagues: current theory already covers them"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "How do they settle it? By testing. Laland, Uller and colleagues completed 22 studies on whether non-genetic factors change how organisms evolve. The debate turns on readings of the same findings."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "22 studies"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What is the extended synthesis debate mostly about?",
+    "right": "Whether non-genetic factors deserve a bigger place in the core theory. Both sides accept evolution.",
+    "wrong": [
+     "Whether evolution happens at all.",
+     "Whether species share common ancestors.",
+     "Whether genes exist."
+    ],
+    "why": "The extended synthesis keeps the fundamentals of evolutionary theory. The argument is about emphasis and which processes count as central."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Look at how old these challenges are. The older ones have had decades of testing. The extended synthesis is newer, so a verdict on it takes more time."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1",
+    "text": "Years since each key publication, counted to 2026"
+   },
+   "cite": [
+    "s4",
+    "s11",
+    "s8",
+    "s14"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Thought experiment: what would count as evidence against a theory? Imagine you hold an idea. Ask: what could I see that would make me drop it? If nothing could, the idea is not testable."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "What would count against a theory?"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Try it on evolution. One biologist's list includes most species having no genetic variation, or an adaptation that could not arise by small, useful steps. Either would count against it."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Most species with no genetic variation\nAn adaptation that could not arise step by step"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Have those been found?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Have those been found?"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That is not the point here. The point is that they could be. A theory that can lose is a theory that can be tested."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A theory that can lose can be tested"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which is a good way to test a theory?",
+    "right": "Name an observation that would count against it.",
+    "wrong": [
+     "Decide it is true and explain away every result.",
+     "Count how many people believe it.",
+     "Wait for a famous scientist to approve it."
+    ],
+    "why": "A theory is testable when some possible evidence could count against it. Acceptance rests on evidence, not on dogma, popular opinion or tradition."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "If one test fails, is the theory gone?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "One failed test: is the theory gone?"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Not automatically. Science neither proves nor disproves. It accepts or rejects ideas on the evidence, and it may revise those conclusions when new evidence arrives."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Accept or reject on the evidence. Revise when needed."
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So how does science answer a challenge? Three moves. Test: work out what the idea predicts, then look. Argue: many people check, with many lines of evidence. Revise: keep what survives."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Test\nArgue\nRevise"
+   },
+   "cite": [
+    "s29",
+    "s19"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "See it in our examples. Endosymbiosis was tested and accepted, with one part set aside. Punctuated equilibrium became one pattern among several. Neutral theory became drift with a debated size."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Endosymbiosis: accepted, part set aside\nPunctuated equilibrium: one pattern among several\nNeutral theory: drift, size debated\nExtended synthesis: under test"
+   },
+   "cite": [
+    "s5",
+    "s6",
+    "s8",
+    "s10",
+    "s13",
+    "s14"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which tier fits endosymbiosis today?",
+    "right": "Mainstream consensus.",
+    "wrong": [
+     "Active research debate.",
+     "Minority scholarly view.",
+     "Popular speculation."
+    ],
+    "why": "The endosymbiotic origin of mitochondria and chloroplasts is described as a cornerstone of mainstream evolutionary biology."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One last check. What mainly decided which challenges held up?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "What decided which challenges held up?"
+   },
+   "cite": [],
+   "move": "title-rise",
+   "ask": {
+    "q": "What mainly decided which challenges held up?",
+    "right": "Evidence from tests, argued over in public by many people.",
+    "wrong": [
+     "How famous the person was.",
+     "How many people liked the idea.",
+     "How old the existing theory was."
+    ],
+    "why": "Acceptance depends on the evidence, preferably many lines of evidence checked by many people. It does not depend on dogma, popular opinion or tradition."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Well done. The accepted core stands: variation, inheritance, selection. Outsiders improved it where they brought evidence. Next class: gaps, 'missing links' and irreducible complexity, which are challenges evolution answered."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: challenges evolution answered"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Years since each challenge's key publication (2026 minus year published)",
+   "rows": [
+    {
+     "label": "Endosymbiosis (1967)",
+     "value": 59,
+     "source": "s4"
+    },
+    {
+     "label": "Neutral theory (1968)",
+     "value": 58,
+     "source": "s11"
+    },
+    {
+     "label": "Punctuated equilibrium (1972)",
+     "value": 54,
+     "source": "s8"
+    },
+    {
+     "label": "Extended synthesis call (2014)",
+     "value": 12,
+     "source": "s14"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "The accepted core of evolution",
+   "links": [
+    "[[How to play 'What if?': the five tiers and the evidence toolkit]]",
+    "[[Challenges evolution answered: gaps, 'missing links' and irreducible complexity]]"
+   ]
+  },
+  {
+   "topic": "Credibility tiers for ideas",
+   "links": [
+    "[[How to play 'What if?': the five tiers and the evidence toolkit]]",
+    "[[Real conspiracies and unproven ones: how people weigh evidence]]"
+   ]
+  },
+  {
+   "topic": "What would count as evidence against a theory",
+   "links": [
+    "[[Your own 'What if?': putting the tools to work]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Margulis was shut out by a closed establishment before the evidence caught up.",
+   "other_view": "She recalled fifteen journal rejections. Critics at the time read the evidence differently, and a Berkeley science-education account says it took about sixteen years for the evidence to become too strong to ignore. Skepticism and slow acceptance can both be true. How much of the delay was bias is still discussed.",
+   "cite": [
+    "s4",
+    "s28"
+   ]
+  },
+  {
+   "claim": "Punctuated equilibrium reshaped how we read the fossil record.",
+   "other_view": "It is called a useful model for one kind of change. Encyclopedia.com says it started a controversy that has smoldered ever since. Some data were too weak to test it, and there are exceptions, so how common it is remains debated.",
+   "cite": [
+    "s8",
+    "s10",
+    "s25"
+   ]
+  },
+  {
+   "claim": "Most molecular change is neutral, as Kimura proposed.",
+   "other_view": "The neutralist versus selectionist debate has run since the late 1960s. Some researchers argue the neutral theory does not fit amino-acid changes in proteins. Others hold that drift and selection both act, so the open question is how big the neutral share is.",
+   "cite": [
+    "s26",
+    "s27",
+    "s12"
+   ]
+  },
+  {
+   "claim": "Evolutionary theory needs an extended synthesis.",
+   "other_view": "A second group of biologists answered no, saying the topics already get their due in current theory. Both sides accept evolution. They differ on emphasis, and on which view leads to better experiments.",
+   "cite": [
+    "s14",
+    "s15",
+    "s16"
+   ]
+  }
+ ]
+}

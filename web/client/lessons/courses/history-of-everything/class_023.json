@@ -1,0 +1,1468 @@
+{
+ "about": {
+  "title": "The Rise of Rome",
+  "course": "history-of-everything",
+  "class_n": 23,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 35,
+  "length_note": "This class runs about 35 minutes, a little over the usual half hour. It covers five topics, and the closing debate about why the Republic fell needs time so each side is heard. The early legends of Rome are kept short."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Punic Wars",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/event/Punic-Wars",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "Second Punic War",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/event/Second-Punic-War",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "Battle of Zama",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/event/Battle-of-Zama-Roman-Carthaginian-history",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "Conflict of the Orders",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Conflict-of-the-Orders",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "Roman Republic (Research Starters)",
+   "publisher": "EBSCO",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/history/roman-republic",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "The Establishment of the Roman Republic",
+   "publisher": "Lumen Learning (Western Civilization course)",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/atd-herkimer-westerncivilization/chapter/the-establishment-of-the-roman-republic/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "Julius Caesar",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/biography/Julius-Caesar-Roman-ruler",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "Julius Caesar (World History course)",
+   "publisher": "Lumen Learning (SUNY)",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/suny-worldhistory/chapter/julius-caesar/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "Tiberius Sempronius Gracchus",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/biography/Tiberius-Sempronius-Gracchus",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "Gracchi brothers",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Gracchi_brothers",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "Marian reforms",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Marian_reforms",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "Gaius Marius Creates a Private Army (Research Starters)",
+   "publisher": "EBSCO",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/military-history-and-science/gaius-marius-creates-private-army/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "Journal article on wealth, generals and the fall of the Roman Republic (DOI 10.1007/s10602-021-09330-0)",
+   "publisher": "Springer",
+   "date": "n.d.",
+   "link": "https://link.springer.com/article/10.1007/s10602-021-09330-0",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "Roman Republic: The rise and fall of ancient Rome's government",
+   "publisher": "Live Science",
+   "date": "n.d.",
+   "link": "https://www.livescience.com/roman-republic",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "The End of the Roman Republic 146 to 44 BC: Conquest and Crisis",
+   "publisher": "JSTOR (book page)",
+   "date": "n.d.",
+   "link": "https://www.jstor.org/stable/10.3366/j.ctt1g0b243",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "Punic Wars: Definition, Scipio & Carthage",
+   "publisher": "History.com",
+   "date": "n.d.",
+   "link": "https://www.history.com/articles/punic-wars",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "Third Punic War",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Third_Punic_War",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "Sulla's civil war",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Sulla's_civil_war",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "Timeline of Roman history",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Timeline_of_Roman_history",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "Sima Qian",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/Sima_Qian/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "Ptolemaic dynasty",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Ptolemaic-dynasty",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "Cleopatra",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Cleopatra",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "Roman Republic: A Detailed Summary",
+   "publisher": "History Crunch",
+   "date": "n.d.",
+   "link": "https://historycrunch.com/roman-republic/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "The Ides of March",
+   "publisher": "History.com",
+   "date": "n.d.",
+   "link": "https://www.history.com/this-day-in-history/march-15/the-ides-of-march",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "Gaius Marius and the Reinvention of the Roman Legion, 107-86 B.C.",
+   "publisher": "Men of Pompeii",
+   "date": "n.d.",
+   "link": "https://www.menofpompeii.com/gaius-marius-and-the-reinvention-of-the-roman-legion-107-86-b-c/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "Punic Wars",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Punic_Wars",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "Publius Sulpicius Rufus",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Publius_Sulpicius_Rufus",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "Gaius Gracchus",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Gaius_Gracchus",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s29",
+   "title": "Third Punic War",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/Third_Punic_War/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s30",
+   "title": "Sima Qian",
+   "publisher": "History Atlas",
+   "date": "n.d.",
+   "link": "https://www.historyatlas.com/people/sima-qian/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s31",
+   "title": "Timeline of Italian history",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Timeline_of_Italian_history",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s32",
+   "title": "The Battle of Zama - The Beginning of Roman Conquest",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/article/292/the-battle-of-zama---the-beginning-of-roman-conque/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s33",
+   "title": "Julius Caesar",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Julius_Caesar",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s34",
+   "title": "The Marian Reforms and the Fall of the Roman Republic",
+   "publisher": "The 1440 Review",
+   "date": "2023-11-05",
+   "link": "https://1440review.com/2023/11/05/the-marian-reforms-fall-of-the-roman-republic/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s35",
+   "title": "Roman Senate",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Roman_Senate",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back. Last class we followed Alexander's world. Today a small city in Italy grows into the power that rules the Mediterranean."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Rise of Rome"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We'll take five steps: early Rome, the wars with Carthage, trouble at home, Julius Caesar, and then a debate about why the Republic fell."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Early Rome and the Republic\n2. The Punic Wars and Carthage\n3. Trouble at home\n4. Julius Caesar\n5. Debate: why did the Republic fall?"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, one word: republic. It is a state whose leaders are chosen, not born into the job like kings."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Republic"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Rome's Republic began around 509 BCE, after Rome's Etruscan kings were overthrown. It lasted more than 450 years. Remember, BCE years count down toward zero."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "509 BCE"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Rome's own stories say the city was founded in 753 BCE by Romulus, its first king."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "753 BCE: legend of Romulus founding Rome  →  509 BCE: the Republic begins"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Careful, though. Accounts of the kings, and even of the early Republic, are considered legendary to varying degrees. So the firm ground starts later."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Early Rome: part history, part legend"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "By tradition, around 509 BCE the last king, Tarquinius Superbus, was thrown out. Rome did not pick a new king."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Before: one king\nAfter: two consuls, each serving one year"
+   },
+   "cite": [
+    "s6",
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Instead it chose two consuls. They were elected each year. Each could veto the other's actions, and the Senate advised them."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "chair",
+    "count": 2,
+    "layout": "row",
+    "text": "Two consuls"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "How many consuls did Rome have, and for how long did each serve?",
+    "right": "Two consuls, each for one year",
+    "wrong": [
+     "One consul, for life",
+     "Two consuls, for life",
+     "Three consuls, for five years each"
+    ],
+    "why": "Two leaders who each served only one year made it hard for any one person to hold power for long."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Senate was a council of leading men. In the early Republic it was fairly weak. By the middle Republic it was at the height of its power."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Senate"
+   },
+   "cite": [
+    "s35"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One more word to remember: dictator. In the Republic, a dictator was a magistrate given absolute power for a national emergency. The Senate first authorised one around 501 BCE."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Dictator = absolute power, for an emergency"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now, trouble inside Rome. Patricians were the wealthy noble families. Plebeians were the common citizens."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Patricians: wealthy noble families\nPlebeians: common citizens"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "At first the patricians held the top offices, including the consulship and the Senate. Marriage between the two groups was even forbidden. Historians call this struggle the Conflict of the Orders."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Conflict of the Orders (about 494–287 BCE)"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The plebeians' tool was to walk out. They refused to work or to serve in the army. This is called a secession."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Secession: walking out until demands are met"
+   },
+   "cite": [
+    "s4",
+    "s23"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In 494 BCE, the first secession won them tribunes. Tribunes were elected officials who could veto actions by patrician magistrates."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "494 BCE: first secession → tribunes created"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is a secession, in the Roman story?",
+    "right": "Plebeians withdrawing from work and the army to force a deal",
+    "wrong": [
+     "A king being thrown out of Rome",
+     "A battle between two Roman armies",
+     "A vote inside the Senate"
+    ],
+    "why": "The plebeians pressed for change by refusing to work or fight, which gave them power without a war."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The office grew. Tribunes started as two, and by 459 BCE the Senate raised the number to ten."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "dot",
+    "count": 10,
+    "layout": "ten-frame",
+    "text": "Ten tribunes by 459 BCE"
+   },
+   "cite": [
+    "s31"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Plebeians also won written laws, the Twelve Tables. In 287 BCE the Lex Hortensia made plebeian assembly decisions binding on all Romans. That is usually seen as the end of the conflict."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "494 BCE tribunes → Twelve Tables → 287 BCE Lex Hortensia"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What did the Lex Hortensia of 287 BCE do?",
+    "right": "It made decisions of the plebeian assembly binding on all Romans",
+    "wrong": [
+     "It ended the consulship",
+     "It crowned a new king",
+     "It closed the Senate"
+    ],
+    "why": "After this, plebeian votes carried the force of law for everyone, which gave them legal equality."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "While it argued at home, Rome kept winning wars. In 338 BCE it defeated the Latin League, its neighbours."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Central Italy: Rome and the Latin League's lands, 338 BCE"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "By 264 BCE, Rome was the leading power across the Italian peninsula. Across the sea was a rival: Carthage."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Italy, Sicily, and Carthage on the coast of North Africa (modern Tunisia)"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Carthage was a rich city-state in North Africa, and the leading sea power. Rome had a strong army but no navy at the start."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Carthage: maritime empire, strong navy\nRome: strong army, no navy"
+   },
+   "cite": [
+    "s16",
+    "s26"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Their clashes are the Punic Wars. There were three, between 264 and 146 BCE."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "First: 264–241 BCE\nSecond: 218–201 BCE\nThird: 149–146 BCE"
+   },
+   "cite": [
+    "s1",
+    "s17"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The First Punic War began over Sicily. Rome did not want a strong power like Carthage controlling the island so near Italy."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The island of Sicily, close to the toe of Italy"
+   },
+   "cite": [
+    "s1",
+    "s26"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "When it ended, Sicily became Rome's first overseas province."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Province: land ruled by Rome from outside Italy"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was the First Punic War mainly about at the start?",
+    "right": "Who would control Sicily",
+    "wrong": [
+     "Who would rule Egypt",
+     "Who would have the biggest navy in China",
+     "Who would be king of Rome"
+    ],
+    "why": "Rome and Carthage clashed over Sicily, and Rome became the ruler of it."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Second Punic War ran from 218 to 201 BCE. Carthage had built a base in Spain, and its general Hannibal attacked the city of Saguntum there."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Second Punic War: Hannibal"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Rome treated that as an act of war. Hannibal then made a stunning invasion of Italy."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Hannibal's route from Spain to Italy"
+   },
+   "cite": [
+    "s2",
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Rome's answer was to threaten Carthage itself. The Roman general Scipio invaded North Africa in 205 BCE, and Hannibal was called home to defend his city."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Scipio's army crosses to North Africa; Hannibal sails home"
+   },
+   "cite": [
+    "s32"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "They met at Zama in 202 BCE. Scipio won a decisive victory, which ended the war."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "202 BCE: Zama"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Carthage had to give up Spain and its warships. It also had to pay Rome money for 50 years. Rome now controlled the western Mediterranean."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Carthage after Zama:\n- gave up Spain\n- surrendered its warships\n- paid money to Rome for 50 years"
+   },
+   "cite": [
+    "s3",
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What happened to Carthage after its defeat at Zama?",
+    "right": "It gave up Spain and its warships and paid Rome money",
+    "wrong": [
+     "It took over Rome and kept its fleet",
+     "It won Sicily back",
+     "It made Hannibal king of Italy"
+    ],
+    "why": "The peace terms stripped Carthage of its power to fight Rome again."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A third war came, 149 to 146 BCE. A Roman senator, Cato, is remembered for saying Carthage must be destroyed. This part is hard to hear."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "\"Carthage must be destroyed\" (Cato, as remembered)"
+   },
+   "cite": [
+    "s29",
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 146 BCE the Romans destroyed the city and killed its people. On the last day they took about 50,000 prisoners and sold them into slavery."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "146 BCE: Carthage destroyed"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is how long each war lasted. The Third was the shortest by far."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Length of each Punic War, in years",
+    "chart": "c1"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Which Punic War lasted the longest?",
+    "right": "The First, at 23 years",
+    "wrong": [
+     "The Second, at 17 years",
+     "The Third, at 3 years",
+     "They all lasted the same time"
+    ],
+    "why": "The First Punic War ran 264 to 241 BCE, which is 23 years. The Second ran 17 years and the Third about 3."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In that same year, 146 BCE, Rome also sacked the Greek city of Corinth. After that, Greece was in effect run by Rome."
+   },
+   "show": {
+    "kind": "map",
+    "text": "146 BCE: Carthage in the west and Corinth in the east, both destroyed"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So by 146 BCE Rome was supreme in Italy, the Balkans, Greece, Macedonia, Sicily and North Africa. A city had become a Mediterranean power."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Rome's lands around 146 BCE"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Historians disagree about why Rome fought. One view says Rome was protecting Italy and keeping Sicily out of strong hands. Another says Rome's growth into a conquering power set it against Carthage."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Defending Italy and Sicily\nRome's expansion"
+   },
+   "cite": [
+    "s1",
+    "s26"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a look at the wider world. In 146 BCE, far away in China, Emperor Wu of Han was on the throne from 141 to 87 BCE. His historian, Sima Qian, finished the Records of the Grand Historian around 94 BCE."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Same era elsewhere:\n- China: Emperor Wu of Han, reign 141–87 BCE\n- China: Sima Qian writes the Records of the Grand Historian"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now, trouble at home. One view is that the huge wealth that flowed to Rome from its empire strained its institutions, especially its generals."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Trouble at home"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One problem was land. In 133 BCE, a tribune named Tiberius Gracchus pushed for land reform to bring back small independent farmers."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Land reform: giving land to poorer citizens"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "He also wanted to settle landless citizens on public land to rebuild Rome's pool of soldiers. His senatorial opponents sparked a riot, and Tiberius was killed."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "133 BCE: Tiberius Gracchus, tribune → killed in a riot"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "His brother Gaius was tribune in 123 and 122 BCE. He pushed land reform, new colonies and cheaper grain. Gaius was killed too."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "123–122 BCE: Gaius Gracchus\nthen: Gaius killed"
+   },
+   "cite": [
+    "s28",
+    "s10"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why does this matter? The violent response to the two brothers set a dangerous precedent. It made violence seem acceptable against political enemies."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Precedent: violence against rivals"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why were the killings of the Gracchi so important?",
+    "right": "They set a precedent that violence was acceptable against political enemies",
+    "wrong": [
+     "They made Rome an empire the next day",
+     "They ended the Punic Wars",
+     "They created the Senate"
+    ],
+    "why": "Once political killings were tolerated, later rivals found it easier to use force."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Another problem was soldiers. In 107 BCE the general Marius took volunteers with no property requirement, including the urban poor."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "107 BCE: Marius opens the army to the landless poor"
+   },
+   "cite": [
+    "s12",
+    "s34"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "For these men, service was a way to earn a living. Soldiers began to identify with their commanders more than with the state."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Loyalty shifts: state → general"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why? The Republic had no pension system and no state land for veterans. Every time the Senate refused land to a general's veterans, the soldier-to-general bond grew stronger."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Soldier needs: pay, land after service\nState offered: no pension, no land scheme"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why did soldiers grow loyal to their generals?",
+    "right": "Generals were the ones who fought to win them pay and land",
+    "wrong": [
+     "The Senate paid every soldier a pension",
+     "Soldiers were forced to swear to a king",
+     "Generals were chosen by the soldiers' families"
+    ],
+    "why": "The state had no regular way to reward veterans, so soldiers relied on their commander to get them land."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now two rivals. In 88 BCE, the general Sulla marched his army on Rome itself. Later, civil war broke out between Sulla and the followers of Marius, in 83 to 82 BCE."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "88 BCE: Sulla marches on Rome\n83–82 BCE: Sulla's civil war"
+   },
+   "cite": [
+    "s27",
+    "s18"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A civil war is a war between people of the same state. Sulla won. He then cut the tribunes' powers: they could no longer propose laws or veto the Senate."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Civil war: a war within one state"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now to Julius Caesar, born in 100 BCE. He conquered Gaul between 58 and 50 BCE."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Julius Caesar (born 100 BCE)"
+   },
+   "cite": [
+    "s33",
+    "s7"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Senate told Caesar to give up his army, and he refused. In January 49 BCE he led his army across the Rubicon river into Italy."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Crossing the Rubicon: a point of no return"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why was crossing the Rubicon such a big deal?",
+    "right": "Caesar led an army into Italy against the Senate's orders, starting a civil war",
+    "wrong": [
+     "He moved the capital to Egypt",
+     "He invaded Carthage",
+     "He was crowned king on the riverbank"
+    ],
+    "why": "Entering Italy with his army, after being told to disband it, was a direct challenge to the Republic and began a war."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Caesar won the war. His rival Pompey lost at Pharsalus in 48 BCE. Caesar was dictator from 46 to 44 BCE and became dictator in perpetuity, which means for life, in early 44 BCE."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "49 BCE Rubicon → 48 BCE Pharsalus → early 44 BCE dictator for life"
+   },
+   "cite": [
+    "s7",
+    "s22",
+    "s33"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Remember what a dictator was meant to be: temporary power for an emergency. Caesar's was for life. As dictator he also created the Julian calendar."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Republic's dictator: emergency\nCaesar: for life"
+   },
+   "cite": [
+    "s19",
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "On the Ides of March, March 15, 44 BCE, a group of nobles led by Brutus and Cassius killed Caesar in the Senate House. Reports say about 60 men were involved."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "15 March 44 BCE"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "They feared his power and that he might make himself king. They hoped to save the Republic."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Their aim: save the Republic"
+   },
+   "cite": [
+    "s33",
+    "s7"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why did the senators kill Caesar?",
+    "right": "They feared his power and that he would make himself king",
+    "wrong": [
+     "He had lost the war to Pompey",
+     "He wanted to give land to Carthage",
+     "He refused the Julian calendar"
+    ],
+    "why": "The conspirators said Caesar's growing power threatened the Republic."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Republic was not restored. Fresh civil wars followed. Caesar's adopted heir Octavian won the last of them at Actium in 31 BCE."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "44 BCE: Caesar killed → civil wars → 31 BCE: Actium"
+   },
+   "cite": [
+    "s24",
+    "s8",
+    "s21"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Egypt came under Roman control, and Cleopatra died in 30 BCE. In 27 BCE the Senate gave Octavian the name Augustus. The Roman Empire begins, which is where next time's story goes."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "30 BCE: Egypt under Rome\n27 BCE: Octavian becomes Augustus"
+   },
+   "cite": [
+    "s21",
+    "s14"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Same era elsewhere: Cleopatra was in Rome when Caesar was killed. Her death in 30 BCE ended the Hellenistic age that began with Alexander's death in 323 BCE."
+   },
+   "show": {
+    "kind": "list",
+    "text": "- 44 BCE: Cleopatra is in Rome\n- 30 BCE: Cleopatra dies; Ptolemaic rule ends\n- The Hellenistic age (from 323 BCE) ends"
+   },
+   "cite": [
+    "s7",
+    "s21",
+    "s22"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the debate. Why did the Republic fall? Historians point to several causes, and they argue about which mattered most."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Debate: Why Did the Republic Fall?"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Cause one: wealth. The Roman writer Sallust thought money from conquered lands helped bring on strongmen. A modern study agrees, pointing to the empire's wealth and its effect on generals."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Causes people suggest:\n1. Wealth from empire\n2. Land and inequality\n3. Armies loyal to generals\n4. Normal political violence\n5. One man's ambition"
+   },
+   "cite": [
+    "s14",
+    "s13"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Causes three and four: armies loyal to generals, and violence. On three occasions senators killed tribunes who pushed land reform or free food for the poor."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Violence became a tool"
+   },
+   "cite": [
+    "s12",
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the other side. The idea of one big army reform by Marius comes from 1840s German scholarship, and scholars today doubt it. There is little evidence later armies were mostly volunteers."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Older view: Marius redesigned the army\nDoubters: no single reform; evidence is thin"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Others say Marius was only the spark. The real causes were the land crisis, no veteran benefits and a Senate that could not fix them."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Marius as designer\nMarius as the spark"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "What about Caesar? Britannica says it is improbable he sought to be a monarch before the Rubicon. Yet enough power to impose his will turned out to mean monarchical power."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Did Caesar plan to be king?"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Even the word democracy is argued over. Cicero saw a vibrant democracy under attack, while most modern historians see elites competing for power and money."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Cicero: a democracy under attack\nMost modern historians: elites competing for power and money"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To close, here is the whole story in order. Carthage was destroyed in 146 BCE. Then came the Gracchi, Marius, Sulla, the Rubicon, the Ides of March and Actium."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "146 BCE Carthage → 133 BCE Tiberius → 107 BCE Marius → 49 BCE Rubicon → 44 BCE Ides of March → 31 BCE Actium"
+   },
+   "cite": [
+    "s17",
+    "s9",
+    "s34",
+    "s24",
+    "s7",
+    "s21"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which of these happened first?",
+    "right": "The destruction of Carthage in 146 BCE",
+    "wrong": [
+     "Caesar crossing the Rubicon in 49 BCE",
+     "Caesar's death on the Ides of March in 44 BCE",
+     "The Battle of Actium in 31 BCE"
+    ],
+    "why": "BCE years count down, so the biggest number comes first: 146 BCE came before 49, 44 and 31 BCE."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That's Rome's rise, and the end of its Republic. Next class we go east to India and China, to the Mauryan, Qin and Han empires."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Mauryan India, Qin and Han China"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "How long each Punic War lasted (years)",
+   "rows": [
+    {
+     "label": "First (264–241 BCE)",
+     "value": 23,
+     "source": "s17"
+    },
+    {
+     "label": "Second (218–201 BCE)",
+     "value": 17,
+     "source": "s17"
+    },
+    {
+     "label": "Third (149–146 BCE)",
+     "value": 3,
+     "source": "s17"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Roman Republic: consuls, Senate and dictators",
+   "links": [
+    "[[Alexander and the Hellenistic World]]",
+    "[[Mauryan India, Qin and Han China]]"
+   ]
+  },
+  {
+   "topic": "Conflict of the Orders: patricians, plebeians and tribunes",
+   "links": [
+    "[[The Rise of Rome]]",
+    "[[Classical Greece]]"
+   ]
+  },
+  {
+   "topic": "Punic Wars: Rome, Carthage and Hannibal",
+   "links": [
+    "[[Alexander and the Hellenistic World]]",
+    "[[The Roman Empire, the Silk Roads and Early Christianity]]"
+   ]
+  },
+  {
+   "topic": "Why the Roman Republic fell",
+   "links": [
+    "[[The Roman Empire, the Silk Roads and Early Christianity]]",
+    "[[Enlightenment and Absolute Monarchy]]"
+   ]
+  },
+  {
+   "topic": "Julius Caesar and the Rubicon",
+   "links": [
+    "[[The Roman Empire, the Silk Roads and Early Christianity]]",
+    "[[Mauryan India, Qin and Han China]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "323 BCE – 30 BCE",
+   "elsewhere": "The Hellenistic age began with Alexander's death in 323 BCE and ended when Cleopatra's Egypt became a Roman province.",
+   "cite": [
+    "s22",
+    "s21"
+   ]
+  },
+  {
+   "when": "About 206 BCE (during the Second Punic War, 218–201 BCE)",
+   "elsewhere": "In China a new dynasty, the Han, began.",
+   "cite": [
+    "s30",
+    "s2"
+   ]
+  },
+  {
+   "when": "146 BCE",
+   "elsewhere": "Rome destroyed Carthage and sacked Corinth in the same year, which left Rome supreme around the Mediterranean.",
+   "cite": [
+    "s15"
+   ]
+  },
+  {
+   "when": "141–87 BCE",
+   "elsewhere": "Emperor Wu ruled Han China for 54 years. His court historian Sima Qian completed the Records of the Grand Historian around 94 BCE.",
+   "cite": [
+    "s20"
+   ]
+  },
+  {
+   "when": "100 BCE",
+   "elsewhere": "Julius Caesar was born, 12 or 13 July. Emperor Wu of Han died when Caesar was about 13.",
+   "cite": [
+    "s33",
+    "s20"
+   ]
+  },
+  {
+   "when": "44 BCE",
+   "elsewhere": "Caesar was killed at the Senate. Cleopatra, queen of Egypt, was in Rome at the time.",
+   "cite": [
+    "s7"
+   ]
+  },
+  {
+   "when": "30 BCE",
+   "elsewhere": "Cleopatra died and the Ptolemaic dynasty of Egypt ended, with Egypt falling under Roman rule.",
+   "cite": [
+    "s21"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Rome fought the Punic Wars to protect itself.",
+   "other_view": "Britannica says Rome felt obliged to protect Italy and to keep Sicily from a strong power such as Carthage. Wikipedia's article on the Punic Wars says the First war came from Rome's expansionary policy colliding with Carthage's hold on Sicily. So whether Rome was defending itself or expanding is a matter of emphasis, and likely both played a part.",
+   "cite": [
+    "s1",
+    "s26"
+   ]
+  },
+  {
+   "claim": "Marius reformed the Roman army in a single big way that made soldiers loyal to generals.",
+   "other_view": "This picture comes from 1840s German scholarship, and Wikipedia's account says modern scholars largely reject it. The same article says there is little evidence that later armies were mostly volunteers. Another view says the unintended results came from deeper problems the Republic could not fix, such as the land crisis and the lack of veteran benefits.",
+   "cite": [
+    "s11",
+    "s25"
+   ]
+  },
+  {
+   "claim": "Wealth from empire was the ultimate cause of the Republic's fall.",
+   "other_view": "Sallust and one modern study stress wealth and its effect on Rome's institutions and generals. Other accounts stress other causes: land and inequality, armies loyal to generals, normalised violence, or one man's ambition. Many scholars see several causes working together.",
+   "cite": [
+    "s14",
+    "s13",
+    "s10"
+   ]
+  },
+  {
+   "claim": "Caesar set out to make himself king.",
+   "other_view": "The conspirators said so. Britannica's view is that it is improbable he deliberately sought monarchical power until after he crossed the Rubicon.",
+   "cite": [
+    "s7"
+   ]
+  },
+  {
+   "claim": "The Roman Republic was a democracy.",
+   "other_view": "Cicero saw a vibrant democracy under attack, but most modern historians see elites competing for power and money. One scholar says he cannot resolve the dispute.",
+   "cite": [
+    "s13"
+   ]
+  },
+  {
+   "claim": "The early history of Rome, with kings and Romulus, is reliable.",
+   "other_view": "Accounts of the Kingdom, and to some degree of the early Republic, are considered legendary to varying degrees, so dates like 753 BCE and 509 BCE are traditional.",
+   "cite": [
+    "s19"
+   ]
+  }
+ ]
+}

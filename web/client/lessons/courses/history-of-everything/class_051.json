@@ -1,0 +1,1247 @@
+{
+ "about": {
+  "title": "World War I: Course, Cost and Consequences",
+  "course": "history-of-everything",
+  "class_n": 51,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes: 37 short beats, each read in one or two breaths, with a question after most ideas. The class covers six topics, so it is dense. The pause points after each topic make it easy to split into two sittings. Art, science and birth-year details for the frame of reference are not yet researched (see notes)."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "World War I - Casualties, Armistice, Legacy (Killed, wounded and missing)",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/event/World-War-I/Killed-wounded-and-missing",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "World War I casualties",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/World_War_I_casualties",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "The Paris Peace Conference and the Treaty of Versailles (Milestones)",
+   "publisher": "U.S. Department of State, Office of the Historian",
+   "date": "n.d.",
+   "link": "https://history.state.gov/milestones/1914-1920/paris-peace",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "The Official Responsibility: The Treaty of Versailles, Article 231 (June 28, 1919)",
+   "publisher": "German History in Documents and Images",
+   "date": "n.d.",
+   "link": "https://germanhistorydocs.org/en/wilhelmine-germany-and-the-first-world-war-1890-1918/the-official-responsibility-the-treaty-of-versailles-article-231-june-28-1919",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "Versailles Treaty: Reparations (June 28, 1919)",
+   "publisher": "German History in Documents and Images",
+   "date": "n.d.",
+   "link": "https://germanhistorydocs.org/en/weimar-germany-1918-1933/versailles-treaty-reparations-june-28-1919",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "The Western Front in the First World War",
+   "publisher": "Imperial War Museums",
+   "date": "n.d.",
+   "link": "https://www.iwm.org.uk/history/first-world-war/western-front",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "Key Battles (World War I)",
+   "publisher": "Pritzker Military Museum & Library",
+   "date": "n.d.",
+   "link": "https://www.pritzkermilitary.org/explore/wwi/key-battles",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "Eastern Front (World War I)",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/event/Eastern-Front-World-War-I-history",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "World War I - Eastern Front, 1914, Trench Warfare",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/event/World-War-I/The-war-in-the-east-1914",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "World War I",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/World_War_I",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "The Commonwealth and the First World War",
+   "publisher": "National Army Museum (UK)",
+   "date": "n.d.",
+   "link": "https://www.nam.ac.uk/explore/commonwealth-and-first-world-war",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "Trench Conditions - Rats, Lice, and Exhaustion",
+   "publisher": "Canadian War Museum",
+   "date": "n.d.",
+   "link": "https://www.warmuseum.ca/firstworldwar/history/life-at-the-front/trench-conditions/rats-lice-and-exhaustion/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "Rationing and Food Shortages During the First World War",
+   "publisher": "Imperial War Museums",
+   "date": "n.d.",
+   "link": "https://www.iwm.org.uk/history/first-world-war/home-front/rationing-and-food-shortages",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "11.5: War on the Homefront (World History II, from 1400, OpenStax)",
+   "publisher": "Humanities LibreTexts (OpenStax content)",
+   "date": "n.d.",
+   "link": "https://human.libretexts.org/Bookshelves/History/World_History/World_History_II:_From_1400_(OpenStax)/03:_The_Modern_World_1914Present/11:_The_War_to_End_All_Wars/11.05:_War_on_the_Homefront",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "Women in World War I",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Women_in_World_War_I",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "Forgotten Fronts: Colonial Soldiers in World War I (Experiences of Colonial Troops during World War I)",
+   "publisher": "Brewminate",
+   "date": "n.d.",
+   "link": "https://brewminate.com/experiences-of-colonial-troops-during-world-war-i/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "Colonial Troops in the First World War",
+   "publisher": "University of Basel, Europa",
+   "date": "n.d.",
+   "link": "https://europa.unibas.ch/en/news/details-373/colonial-troops-in-the-first-world-war/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "Historiography of the Treaty of Versailles",
+   "publisher": "johndclare.net (history teaching resource)",
+   "date": "n.d.",
+   "link": "https://w.johndclare.net/peace_treaties9.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "The Treaty of Versailles wasn't too harsh. It wasn't harsh enough.",
+   "publisher": "The Boston Globe (opinion)",
+   "date": "2025-11-11",
+   "link": "https://www.bostonglobe.com/2025/11/11/opinion/treaty-versaille-harsh/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "Treaty of Versailles",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Treaty_of_Versailles",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "Article 231 of the Treaty of Versailles",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Article_231_of_the_Treaty_of_Versailles",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "The Eastern Front",
+   "publisher": "Alpha History",
+   "date": "n.d.",
+   "link": "https://alphahistory.com/worldwar1/eastern-front/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "Eastern Front (World War I)",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Eastern_Front_(World_War_I)",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "Weapons of World War I: A Detailed Summary",
+   "publisher": "History Crunch",
+   "date": "n.d.",
+   "link": "https://historycrunch.com/weapons-of-world-war-i/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "Technology during World War I",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Technology_during_World_War_I",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "Western Front (World War I)",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Western_Front_(World_War_I)",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "Middle Eastern theatre of World War I",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Middle_Eastern_theatre_of_World_War_I",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "Teachers' Notes: Empire and Commonwealth: Sinai & Palestine Campaign, 1918",
+   "publisher": "National Army Museum (UK)",
+   "date": "n.d.",
+   "link": "https://ww1.nam.ac.uk/wp-content/uploads/2015/04/TeachersNotes-Palestine.pdf",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s29",
+   "title": "Treaty of Versailles: Definition, Terms, Dates & WWI",
+   "publisher": "HISTORY",
+   "date": "n.d.",
+   "link": "https://www.history.com/articles/treaty-of-versailles",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s30",
+   "title": "How the Treaty of Versailles and German Guilt Led to World War II",
+   "publisher": "HISTORY",
+   "date": "n.d.",
+   "link": "https://www.history.com/articles/treaty-of-versailles-world-war-ii-german-guilt-effects",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s31",
+   "title": "Battle of Verdun: The Longest Battle of World War I",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/article/2878/battle-of-verdun/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s32",
+   "title": "Conclusion · New Technologies of World War I",
+   "publisher": "Kennesaw State University, Digital Histories",
+   "date": "n.d.",
+   "link": "https://digitalhistories.kennesaw.edu/exhibits/show/new-technologies-from-the-grea/conclusion",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s33",
+   "title": "The terrible reality of living in a WWI trench",
+   "publisher": "History Skills",
+   "date": "n.d.",
+   "link": "https://www.historyskills.com/classroom/year-9/yr-9-trenches-reading",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s34",
+   "title": "Life in the Trenches",
+   "publisher": "World War I Centennial Commission",
+   "date": "n.d.",
+   "link": "https://www.worldwar1centennial.org/index.php/edu-home/edu-topics/582-trench-warfare/5050-life-in-the-trenches.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s35",
+   "title": "Statewide Dual Credit World History, Chapter 12: World War I in the West, East, and Colonies",
+   "publisher": "OER Commons",
+   "date": "n.d.",
+   "link": "https://oercommons.org/courseware/lesson/87960/student-old/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s36",
+   "title": "World War I casualties (Wikiwand mirror of the Wikipedia article)",
+   "publisher": "Wikiwand",
+   "date": "n.d.",
+   "link": "https://www.wikiwand.com/en/World_War_I_casualties",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 51. Today we look at World War I: how it was fought, what it cost, and what it left behind."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "World War I: Course, Cost and Consequences"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The war began on 28 July 1914. It ended with an armistice on 11 November 1918. An armistice is an agreement to stop fighting."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "28 July 1914 → 11 November 1918 (about 4 years and 3 months)"
+   },
+   "cite": [
+    "s10",
+    "s23"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Our first word is 'front'. A front is the line where two armies face each other. A big war can have several fronts."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Front: the line where two armies face each other"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "What is a front in a war?",
+    "right": "The line where two opposing armies face each other",
+    "wrong": [
+     "A building where soldiers sleep",
+     "The person who leads an army",
+     "A type of weapon"
+    ],
+    "why": "A front is where the armies meet. Today we visit several of them."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We start with the Western Front, in France and Belgium. Germany attacked there in 1914. Its advance was halted in September."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map of western Europe: Germany, Belgium, Luxembourg and France, with the front line running across northern France and Belgium"
+   },
+   "cite": [
+    "s10",
+    "s26"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "After that, both armies dug trenches. A trench is a long ditch where soldiers shelter. They grew into huge networks, over 250 miles (402 km) long."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A cross-section of a trench: deep ditch, wooden walkway, sandbags and barbed wire in front"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why did soldiers dig trenches?",
+    "right": "To protect themselves from shrapnel and bullets",
+    "wrong": [
+     "To hide gold",
+     "To grow food",
+     "To block rivers"
+    ],
+    "why": "Trenches gave relative protection against increasingly deadly weapons."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Both sides tried to break through. They used huge attacks, long shell barrages, poison gas and tanks. Hundreds of thousands died, yet the front lines hardly moved."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Hundreds of thousands lost. Front lines barely moved."
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Verdun began on 21 February 1916 and ran for 303 days. German planners hoped to make France lose so many men that it would ask for peace."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "303 days: the Battle of Verdun"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Somme came next, from 1 July to 18 November 1916. Britain and France wanted to wear down the German army. After Verdun, the British took the main role."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1916: Verdun (Feb–Dec) and the Somme (Jul–Nov)"
+   },
+   "cite": [
+    "s7",
+    "s31"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A casualty is a soldier killed, wounded, missing or captured. Here are the combined casualties for three huge battles."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Combined casualties in three Western Front battles",
+    "chart": "c2"
+   },
+   "cite": [
+    "s1",
+    "s26"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Which of these three battles had the most casualties?",
+    "right": "The Somme, with over a million",
+    "wrong": [
+     "Verdun",
+     "Passchendaele",
+     "They were all the same"
+    ],
+    "why": "The chart shows the Somme above Verdun at 700,000 and Passchendaele at 487,000."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the Eastern Front. It ran across what is now Poland, Ukraine and nearby lands. It was more fluid than the west, so the armies moved more."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map of eastern Europe: Germany, Austria-Hungary and Russia, with the front line running north to south"
+   },
+   "cite": [
+    "s10",
+    "s35"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In August 1914 Russia invaded East Prussia. At Tannenberg, from 26 to 30 August, German forces surrounded and captured most of one Russian army."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Tannenberg, 26–30 August 1914: a German victory"
+   },
+   "cite": [
+    "s8",
+    "s9"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Who won the Battle of Tannenberg?",
+    "right": "Germany",
+    "wrong": [
+     "Russia",
+     "France",
+     "Britain"
+    ],
+    "why": "German forces surrounded most of a Russian army there."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Russia hit back in June 1916 with the Brusilov Offensive. It cost Austria-Hungary over a million casualties and pulled German divisions away from the Western Front."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Brusilov Offensive, June 1916|Over 1 million Austro-Hungarian casualties|German divisions moved from the west"
+   },
+   "cite": [
+    "s35",
+    "s23"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Russia paid dearly. The failed June offensive weakened the tsar's government, and it was overthrown in February 1917. Communist revolutionaries took over in October 1917."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Feb 1917: tsar overthrown | Oct 1917: Bolsheviks take power"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The new rulers made peace. The Treaty of Brest-Litovsk was signed on 3 March 1918. It gave Germany control of large areas, including Poland, the Baltic States and Ukraine."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Brest-Litovsk, 3 March 1918: the Eastern Front ends"
+   },
+   "cite": [
+    "s8",
+    "s22"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What ended the fighting on the Eastern Front?",
+    "right": "The Treaty of Brest-Litovsk, signed in March 1918",
+    "wrong": [
+     "The Battle of Verdun",
+     "The Treaty of Versailles",
+     "The Battle of Tannenberg"
+    ],
+    "why": "Soviet Russia and the Central Powers signed it on 3 March 1918, after Russia's revolutions."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "There were more fronts. The Ottoman Empire joined Germany's side in November 1914. The Allies then tried to attack at Gallipoli in 1915, and the Ottomans beat them back."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map of the Ottoman lands: Gallipoli, Mesopotamia, Sinai and Palestine"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Middle East had four main campaigns: Gallipoli, Mesopotamia, Sinai and Palestine, and the Caucasus. In 1918 the Battle of Megiddo ended the war in the Middle East."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Gallipoli|Mesopotamia|Sinai and Palestine|Caucasus"
+   },
+   "cite": [
+    "s27",
+    "s28"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Italy declared war on Austria-Hungary on 23 May 1915. Fighting also reached Africa, where African troops were key in East and West Africa."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Italy joins the Allies, May 1915|Fighting in Africa|Fighting in the Pacific and at sea"
+   },
+   "cite": [
+    "s10",
+    "s11"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why do we call it a world war?",
+    "right": "It was fought across many regions and seas, not only in Europe",
+    "wrong": [
+     "It started in every country on the same day",
+     "Only two countries took part",
+     "It was fought only at sea"
+    ],
+    "why": "Fighting spread across Europe, the Middle East, Africa, the Pacific and the Atlantic."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let us pause on one word: stalemate. A stalemate is when neither side can win. In the trenches, defence was strong and attacking was deadly."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Stalemate: neither side can win"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The machine gun was a big reason. It made defended positions almost impossible to overrun without huge casualties."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Machine gun: strong defence, deadly attacks"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "How did machine guns help cause the stalemate?",
+    "right": "They made attacking a defended position extremely costly",
+    "wrong": [
+     "They made trenches unnecessary",
+     "They could only be used at sea",
+     "They were too heavy to use"
+    ],
+    "why": "Defenders with machine guns could stop attackers at great cost to them, so lines rarely moved."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Poison gas came next. Germany used chlorine, the first lethal gas used in battle, at the Second Battle of Ypres in April 1915. Gas could cause death or lasting damage to eyes, lungs and skin."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Chlorine gas, April 1915"
+   },
+   "cite": [
+    "s24",
+    "s32"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which country first used lethal chlorine gas in 1915?",
+    "right": "Germany",
+    "wrong": [
+     "Britain",
+     "Russia",
+     "Italy"
+    ],
+    "why": "Germany used chlorine at Ypres in April 1915."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Tanks were also built to answer the stalemate. At first they changed little. Only in 1918, with new tactics and fresh American troops, did the trench system give way."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Tank: built to break the stalemate"
+   },
+   "cite": [
+    "s24",
+    "s6",
+    "s31"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Aircraft began mainly as scouts. Later they carried machine guns and bombs. Submarines also mattered: in 1917 Germany resumed unrestricted submarine warfare against Atlantic shipping."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Aircraft: scouting, then guns and bombs|Submarines: attacks on Atlantic shipping|Tanks, gas and machine guns"
+   },
+   "cite": [
+    "s32",
+    "s10",
+    "s25"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now daily life in the trenches. It was months of boredom broken by moments of terror. Men stayed low by day and worked above ground at night."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Soldiers in a muddy trench at dusk, writing letters"
+   },
+   "cite": [
+    "s34"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Rats and lice were everywhere. Lice carried trench fever. Constant damp caused trench foot, a frostbite-like infection that could lead to amputation."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Rats|Lice and trench fever|Trench foot"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What caused trench foot?",
+    "right": "Cold, constant dampness",
+    "wrong": [
+     "Eating too much food",
+     "Poison gas",
+     "Too much sunshine"
+    ],
+    "why": "The cold, persistent damp of the trenches caused it."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Some of this part may be hard to hear. Take a break any time. Many soldiers developed what was then called shell shock, from constant fear and the stress of bombardment."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Shell shock: stress from constant danger"
+   },
+   "cite": [
+    "s33",
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the home fronts. The home front means civilians at home. This war pulled whole societies in: factories, farms and families."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Home front: civilians supporting the war"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Women took many jobs left by men who had gone to war. They worked in factories and as nurses. In February 1918 the UK passed a major women's suffrage law, linked to women's war work."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Women in factories|Women as nurses|UK suffrage law, February 1918"
+   },
+   "cite": [
+    "s14",
+    "s15"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Hunger stalked civilians in all the warring nations. Blockades cut food imports. Britain's blockade of Germany ran from 1914 to the war's end."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Women and children queuing for food in a city street"
+   },
+   "cite": [
+    "s13",
+    "s14"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "How did blockades make food shortages worse?",
+    "right": "They cut the food coming in from abroad",
+    "wrong": [
+     "They stopped farmers planting",
+     "They made food cheaper",
+     "They only affected soldiers"
+    ],
+    "why": "Naval blockades reduced food imports, so shortages grew."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Soldiers also came from the empires' colonies. Over 3 million soldiers and labourers from across the British Empire served alongside the British Army."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Over 3 million from the Empire and Commonwealth"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "From India, 140,000 men fought on the Western Front. In total 1.27 million Indians served as fighters and labourers."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Western Front: 140,000 Indian soldiers | All theatres: 1.27 million Indians"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "France recruited nearly 500,000 colonial troops. Over 2 million Africans served as soldiers or labourers, and about 10 percent of them died."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "France: nearly 500,000 colonial troops | Africa: over 2 million soldiers and labourers"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Many Africans served in the war as what?",
+    "right": "Soldiers and labourers or carriers",
+    "wrong": [
+     "Only as generals",
+     "Only as pilots",
+     "They did not take part"
+    ],
+    "why": "Most Africans served as labourers or carriers in Africa, alongside the soldiers."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Scholars say this changed the relationship between colonies and their European rulers. The brutal war shook the claim that Europe was more civilised than the rest."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A changed relationship between empires and colonies"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the end. In August 1918 the Allies' Hundred Days Offensive collapsed the German line. The armistice came on 11 November 1918. The United States had joined the Allies in April 1917."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Apr 1917: US joins | Aug 1918: German line collapses | 11 Nov 1918: armistice"
+   },
+   "cite": [
+    "s10",
+    "s23"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Peace talks opened in Paris on 18 January 1919. Germany was not allowed to join the negotiations. The treaty was signed at Versailles on 28 June 1919."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "18 Jan 1919: Paris Peace Conference opens | 28 June 1919: Treaty of Versailles signed"
+   },
+   "cite": [
+    "s21",
+    "s20"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Germany lost about 10 percent of its prewar European territory and all its overseas colonies. Its army and navy were limited in size. The treaty also allowed trials of the Kaiser and other officials."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Lost about 10% of prewar territory|Lost all overseas possessions|Army and navy limited|Trial of the Kaiser allowed"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "About how much of its prewar European territory did Germany lose?",
+    "right": "About 10 percent",
+    "wrong": [
+     "About 1 percent",
+     "About half",
+     "None"
+    ],
+    "why": "The Office of the Historian says about 10 percent, plus all its colonies."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Article 231 is the famous clause. In it, Germany accepted responsibility for the loss and damage caused by the war. That made Germany liable to pay reparations, which are payments for war damage. The treaty left the total open; it was set later, in 1921."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Article 231 and reparations"
+   },
+   "cite": [
+    "s4",
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Did the 1919 treaty itself fix the total amount of reparations?",
+    "right": "No, the amount was decided later, in 1921",
+    "wrong": [
+     "Yes, in the treaty itself",
+     "No, Germany never paid anything",
+     "Yes, it was a very small amount"
+    ],
+    "why": "A commission set the figure in 1921. The treaty did not name a sum."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Most Germans were furious. They saw the treaty as a 'diktat', meaning a dictated peace, and resented being blamed alone."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Diktat: a dictated peace"
+   },
+   "cite": [
+    "s29"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The British economist John Maynard Keynes called the treaty a 'Carthaginian peace'. Carthage was destroyed by Rome. He meant it was too harsh. But French Marshal Foch thought it was too lenient."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Too harsh: Keynes | Too lenient: Foch"
+   },
+   "cite": [
+    "s20",
+    "s18"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What did Keynes mean by a 'Carthaginian peace'?",
+    "right": "A peace so harsh it aimed to cripple the loser",
+    "wrong": [
+     "A peace that was too soft",
+     "A peace made at sea",
+     "A peace with no terms"
+    ],
+    "why": "The name comes from Rome crushing Carthage. Keynes used it to say the treaty was too harsh."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Many later historians disagree with Keynes. Some say the treaty's main flaw was weak enforcement, not harshness. The debate goes on."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Still debated"
+   },
+   "cite": [
+    "s19",
+    "s20"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Finally, the cost. Britannica estimates about 8.5 million military deaths and about 13 million civilian deaths. Both numbers are uncertain."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Estimated deaths in World War I (Britannica)",
+    "chart": "c1"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why so uncertain? No agencies recorded civilian deaths. Famine, disease and displacement of peoples, plus the 1918 flu, made counting harder. Experts compare deaths to prewar levels to find 'excess deaths'."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Estimates of total deaths vary widely (millions)",
+    "chart": "c3"
+   },
+   "cite": [
+    "s1",
+    "s2",
+    "s36"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Why are civilian death totals so uncertain?",
+    "right": "No agencies recorded them, and famine, disease and displacement blurred the counts",
+    "wrong": [
+     "Everyone agreed on one exact figure",
+     "Civilians took no part in the war",
+     "All records were kept perfectly"
+    ],
+    "why": "Britannica says no agencies recorded these deaths, and the movement of peoples and the flu made counts harder."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To sum up: the trenches, new weapons and blockades brought mass death. The war toppled Russia's government and ended Ottoman power in the Middle East. It ended with a treaty still argued over today."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1914 war begins | 1916 Verdun and Somme | 1917 Russia's revolutions | 1918 armistice | 1919 Versailles"
+   },
+   "cite": [
+    "s22",
+    "s28",
+    "s3"
+   ],
+   "move": "slide-in-left"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "pie",
+   "title": "Estimated deaths in World War I (about)",
+   "rows": [
+    {
+     "label": "Military deaths (about)",
+     "value": 8500000,
+     "source": "s1"
+    },
+    {
+     "label": "Civilian deaths (about)",
+     "value": 13000000,
+     "source": "s1"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Combined casualties in three Western Front battles",
+   "rows": [
+    {
+     "label": "Verdun (1916)",
+     "value": 700000,
+     "source": "s26"
+    },
+    {
+     "label": "Somme (1916, over 1 million)",
+     "value": 1000000,
+     "source": "s26"
+    },
+    {
+     "label": "Passchendaele (1917)",
+     "value": 487000,
+     "source": "s26"
+    }
+   ]
+  },
+  {
+   "id": "c3",
+   "kind": "bar",
+   "title": "Estimates of total World War I deaths (millions)",
+   "rows": [
+    {
+     "label": "Low end of one quoted range",
+     "value": 9,
+     "source": "s2"
+    },
+    {
+     "label": "Low end of the 15–22 million range",
+     "value": 15,
+     "source": "s2"
+    },
+    {
+     "label": "High end of the 15–22 million range",
+     "value": 22,
+     "source": "s2"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "World War I",
+   "links": [
+    "[[The Road to World War I]]",
+    "[[Revolution, Flu and the Roaring Twenties]]",
+    "[[Depression, Dictators and the Slide to War]]",
+    "[[World War II]]"
+   ]
+  },
+  {
+   "topic": "Colonial soldiers",
+   "links": [
+    "[[Imperialism: Africa, India, China and Japan]]",
+    "[[A New World Order: The UN, the Cold War and Decolonization]]"
+   ]
+  },
+  {
+   "topic": "To add: frame of reference for art, science and notable people born 1914–1919 (not yet researched; only sourced political and social events are listed below)",
+   "links": [
+    "[[Science and Ideas in the 1800s]]",
+    "[[20th-Century Science and Technology]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "May 1915",
+   "elsewhere": "Italy declared war on Austria-Hungary and joined the Allies.",
+   "cite": [
+    "s10"
+   ]
+  },
+  {
+   "when": "February 1917",
+   "elsewhere": "In Russia, the tsarist government was overthrown.",
+   "cite": [
+    "s22"
+   ]
+  },
+  {
+   "when": "April 1917",
+   "elsewhere": "The United States joined the Allies after Germany resumed unrestricted submarine warfare.",
+   "cite": [
+    "s10"
+   ]
+  },
+  {
+   "when": "October 1917",
+   "elsewhere": "Communist revolutionaries took over Russia and began peace talks with Germany.",
+   "cite": [
+    "s22"
+   ]
+  },
+  {
+   "when": "February 1918",
+   "elsewhere": "The United Kingdom passed a major women's suffrage law, linked to women's war work.",
+   "cite": [
+    "s15"
+   ]
+  },
+  {
+   "when": "1918",
+   "elsewhere": "The most destructive influenza outbreak in history spread across the world as the war ended.",
+   "cite": [
+    "s1"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The Treaty of Versailles was too harsh on Germany.",
+   "other_view": "Keynes called it a 'Carthaginian peace', and many Germans saw it as a dictated peace. Others, such as Marshal Foch, thought it too lenient. Many later historians say it was less harsh than its reputation, and that weak enforcement was the real problem. Some link it to World War II, but others say it did not by itself cause the Depression, Hitler or the war.",
+   "cite": [
+    "s20",
+    "s18",
+    "s19",
+    "s29",
+    "s30"
+   ]
+  },
+  {
+   "claim": "Article 231 is a 'war guilt clause'.",
+   "other_view": "The article does not use the word 'guilt'. It was the legal basis for reparations, and the historical consensus is that it did not assign guilt for starting the war. Germans nevertheless read it as blame, and it caused lasting anger.",
+   "cite": [
+    "s21",
+    "s4"
+   ]
+  },
+  {
+   "claim": "The size of the reparations bill.",
+   "other_view": "The treaty set no sum. One source says a 1921 commission fixed 226 billion gold marks, to be paid over 42 years. Another says the total eventually reached 132 billion gold Reichsmarks. These sources give different figures, and this class does not settle which counting method explains the gap.",
+   "cite": [
+    "s5",
+    "s3",
+    "s29"
+   ]
+  },
+  {
+   "claim": "World War I killed about 21 million people (8.5 million military plus 13 million civilian).",
+   "other_view": "Estimates vary widely. Wikipedia gives total deaths as 15 to 22 million, but also notes that estimates range from 9 million to over 15 million. Britannica says the civilian figure is uncertain.",
+   "cite": [
+    "s1",
+    "s2"
+   ]
+  },
+  {
+   "claim": "How many Indian soldiers served the British Empire.",
+   "other_view": "The National Army Museum says 1.27 million Indians served voluntarily as fighters and labourers. Another source says about 1.5 million were recruited up to December 1919. The sources count different groups over different periods.",
+   "cite": [
+    "s11",
+    "s16"
+   ]
+  }
+ ]
+}

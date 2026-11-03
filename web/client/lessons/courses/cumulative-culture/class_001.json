@@ -1,0 +1,916 @@
+{
+ "about": {
+  "title": "The Ratchet: What Cumulative Culture Is",
+  "course": "cumulative-culture",
+  "class_n": 1,
+  "audience": [
+   "high school",
+   "adult",
+   "Mike",
+   "anyone"
+  ],
+  "minutes": 35,
+  "length_note": "About 35 minutes. This class teaches one idea at a time, with a pause for a question after each. That is eight questions and about thirty short beats. Nothing was cut or stretched. You can pause or replay at any point."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "A short introduction to cumulative cultural evolution (CCE)",
+   "publisher": "Cultural Evolution Society (lecture slides)",
+   "date": "undated",
+   "link": "https://learn.culturalevolutionsociety.org/animal_cultures_module/slidepdfs/ces_lecture_09_cultural_evolution_claidiere.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Tomasello, Annual Review of Anthropology 28:509-29",
+   "publisher": "Annual Reviews (copy hosted by Cognition and Culture)",
+   "date": "1999",
+   "link": "https://www.cognitionandculture.net/wp-content/uploads/Tomasello1999.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Shared intentionality, reason-giving and the evolution of human culture",
+   "publisher": "Philosophical Transactions of the Royal Society B",
+   "date": "2022",
+   "link": "https://royalsocietypublishing.org/rstb/article/377/1843/20200320/108778/Shared-intentionality-reason-giving-and-the",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "The Toaster Project (Thomas Thwaites), collection record",
+   "publisher": "Victoria and Albert Museum",
+   "date": "undated",
+   "link": "https://collections.vam.ac.uk/item/O1269559/the-toaster-project-installation-thomas-thwaites/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "The Toaster Project by Thomas Thwaites",
+   "publisher": "Dezeen",
+   "date": "2009-06-27",
+   "link": "https://www.dezeen.com/2009/06/27/the-toaster-project-by-thomas-thwaites/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "One Man's Nearly Impossible Quest to Make a Toaster From Scratch",
+   "publisher": "Gizmodo",
+   "date": "undated",
+   "link": "https://gizmodo.com/one-mans-nearly-impossible-quest-to-make-a-toaster-from-5794368",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "The man who made his own toaster",
+   "publisher": "Boing Boing",
+   "date": "2012-06-25",
+   "link": "https://boingboing.net/2012/06/25/the-man-who-made-his-own-toast.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "I, Pencil (Leonard E. Read)",
+   "publisher": "Foundation for Economic Education (FEE)",
+   "date": "1958 (essay); web edition undated",
+   "link": "https://fee.org/ebooks/i-pencil/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "I, Pencil (summary of Leonard E. Read's essay)",
+   "publisher": "The Key Point",
+   "date": "2019-01-01",
+   "link": "https://thekeypoint.org/2019/01/01/i-pencil/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Ordinary minerals give smartphones extraordinary capabilities",
+   "publisher": "U.S. Geological Survey",
+   "date": "undated",
+   "link": "https://www.usgs.gov/news/featured-story/ordinary-minerals-give-smartphones-extraordinary-capabilities",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Cell Phone Chemistry",
+   "publisher": "Scholastic Science World",
+   "date": "2019",
+   "link": "https://scienceworld.scholastic.com/issues/2019-20/092319/cell-phone-chemistry.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "The SocialAI School: Insights from Developmental Psychology Towards Artificial Socio-Cultural Agents",
+   "publisher": "arXiv (preprint)",
+   "date": "2023",
+   "link": "https://arxiv.org/pdf/2307.07871",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "6.2 Collective Learning",
+   "publisher": "OER Project, Big History",
+   "date": "undated",
+   "link": "https://www.oerproject.com/Big-History/Unit-6/6-2-Collective-Learning",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "An Introduction to Big History: Thresholds of Increasing Complexity or Four Movements?",
+   "publisher": "OER Project",
+   "date": "undated",
+   "link": "https://www.oerproject.com/en/oer-materials/oer-media/html-articles/origins/unit1/an-introduction-to-big-history",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Human Evolution Timeline",
+   "publisher": "Human History Timeline",
+   "date": "undated",
+   "link": "https://humanhistorytimeline.com/human-evolution-timeline/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Human History Timeline (chart at a glance)",
+   "publisher": "Human History Timeline",
+   "date": "undated",
+   "link": "https://humanhistorytimeline.com/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Human Prehistory: 300,000 - 3500 B.C.E.",
+   "publisher": "University of Hawaii (open textbook)",
+   "date": "undated",
+   "link": "https://pressbooks-dev.oer.hawaii.edu/honcchist151/chapter/human-prehistory-300000-3500-b-c-e/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Population size does not explain past changes in cultural complexity",
+   "publisher": "Proceedings of the National Academy of Sciences (PNAS)",
+   "date": "2016",
+   "link": "https://www.pnas.org/doi/10.1073/pnas.1520288113",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Cumulative Cultural Evolution and Demography (Vaesen)",
+   "publisher": "PLOS ONE",
+   "date": "2012",
+   "link": "https://journals.plos.org/plosone/article?id=10.1371%2Fjournal.pone.0040989",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Where Does Cumulative Culture Begin? A Plea for a Sociologically Informed Perspective",
+   "publisher": "Springer",
+   "date": "2020",
+   "link": "https://link.springer.com/article/10.1007/s13752-020-00351-w",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "What is the rationale for the periodization of Threshold 6 Collective Learning?",
+   "publisher": "OER Project Teacher Community",
+   "date": "undated",
+   "link": "https://community.oerproject.com/f/big-history/17177/what-is-the-rationale-for-the-periodization-of-threshold-6-collective-learning",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Events in Prehistory: Dates and Event Cards (Key 8.1.2 e)",
+   "publisher": "Manitoba Education",
+   "date": "undated",
+   "link": "https://www.edu.gov.mb.ca/k12/cur/socstud/foundation_gr8/blms/8-1-2e.pdf",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome. Today we look at one big idea: how each generation can start where the last one stopped. Go at your own pace. You can pause and replay any part."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Ratchet: What Cumulative Culture Is"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is one ordinary pencil. Keep it in mind. By the end, you'll see why it is more remarkable than it looks."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "pencil",
+    "count": 1,
+    "layout": "row",
+    "text": "One pencil"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First word: culture. Here it means things you learn from other people instead of being born knowing. A language. A song. A family recipe."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Culture = learned from other people"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Nobody is born knowing how to make a particular soup. Someone showed you, and you copied. That is culture. Let's check it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Culture: what we learn from others"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which of these is an example of culture?",
+    "right": "A family's way of making soup, learned by watching a relative",
+    "wrong": [
+     "Blinking when dust flies toward your eye",
+     "Your height as an adult",
+     "Your heartbeat"
+    ],
+    "why": "Culture is what we learn from other people. Blinking, height and heartbeat come from our bodies, not from being taught."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a bigger idea. Cumulative means piling up. In cumulative culture, each generation adds to what the last one passed on."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Cumulative culture = knowledge that builds up, generation after generation"
+   },
+   "cite": [
+    "s1",
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Researchers describe it as the gradual build-up of changes to what people know and do. Better versions are kept, and worse ones are left behind."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Better versions are kept"
+   },
+   "cite": [
+    "s1",
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Picture a ratchet wrench. It turns one way, click, click, click. Pull back, and it holds its place. It does not slip."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A ratchet wrench. Its small toothed wheel and catch are shown, with an arrow showing it turns one way only and holds each click."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The researcher Michael Tomasello used that picture for culture. In 1993 he called it the ratchet effect: improvements get locked in, so we don't slip back."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The ratchet effect: gains get locked in"
+   },
+   "cite": [
+    "s1",
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "An imagined example. One group ties a sharp stone to a stick, and their children copy it. Then the next generation improves it."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Generation 1: a stone tied to a stick | Generation 2: a better binding | Generation 3: a better shape | Nobody starts again from a bare stick"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Notice that each step starts where the one before stopped. Let's check that you've got the ratchet."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Start where the last generation stopped"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "In plain words, what does the cultural ratchet do?",
+    "right": "It lets each generation keep what the last one learned and add to it",
+    "wrong": [
+     "It makes everyone in a group think the same thoughts",
+     "It makes people forget old skills so they can learn new ones",
+     "It makes inventions happen by pure luck"
+    ],
+    "why": "The ratchet is about holding on to gains. What the last generation learned is kept, so the next one can build on it."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Many animals have traditions too, things the young learn from the group. Scientists have found very few signs that those traditions pile up the way ours do."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Ordinary traditions: learned from the group, but they rarely build up over generations | Cumulative culture: tools, words, rules and machines that keep growing"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Tomasello argued that this build-up is the mark of human culture. Researchers still argue about where the edges are. We'll hear that other side at the end of the lesson notes."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Human traditions accumulate"
+   },
+   "cite": [
+    "s2",
+    "s20"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So is it that humans are individually brilliant? That helps, but it isn't the main point. The ratchet is about what a group passes on."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Not just cleverness"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Over time, what is passed on can go beyond what any single person could invent alone. That is the heart of the idea."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Beyond what one person could invent alone"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which statement best fits cumulative culture?",
+    "right": "A group's shared knowledge can grow beyond what any one clever person could invent alone",
+    "wrong": [
+     "It only happens when a lone genius works in secret",
+     "It means every person ends up knowing everything the group knows",
+     "It means each generation's brains are bigger than the last"
+    ],
+    "why": "Cumulative culture is about knowledge being passed on and added to. It does not need a lone genius, and nobody has to know it all."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now back to the pencil. In 1958 Leonard Read wrote an essay in the voice of a pencil. It opens with a bold claim."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Not a single person on the face of this earth knows how to make me."
+   },
+   "cite": [
+    "s8",
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "He meant that millions of people have had a hand in a pencil. Even the head of the pencil company adds only a tiny bit of know-how."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "pencil",
+    "count": 1,
+    "layout": "row",
+    "text": "One pencil, millions of hands"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A smartphone is more tangled still. The U.S. Geological Survey notes that today's phones contain many of the elements of the periodic table."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Chip: made from silicon | Screen: small amounts of rare earth elements | Speaker magnets: neodymium"
+   },
+   "cite": [
+    "s10",
+    "s11"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Every one of those materials needs people who know how to find it, refine it and shape it. So one person alone can't just reinvent a phone."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Every part has its own long history of know-how"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Someone actually tried a small version of this. In 2008 a design student, Thomas Thwaites, bought a toaster for £3.94. Then he tried to build one from raw materials."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "One person tries to build a toaster from scratch"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "It took him a nine-month trip around Great Britain. Look at what it cost."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1"
+   },
+   "cite": [
+    "s4",
+    "s5"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The shop toaster was £3.94. His version cost £1,187.54 in direct spending alone, and he called the result only a partial success."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "£3.94 vs £1,187.54"
+   },
+   "cite": [
+    "s4",
+    "s6"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Notice what he leaned on. For a furnace plan he used a metallurgy book from the 1500s. That is the ratchet at work."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A furnace plan from a book of the 1500s"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "He visited a closed iron mine and had to make many compromises. Finding every material would have turned the project into a lifetime's work."
+   },
+   "show": {
+    "kind": "list",
+    "text": "He used a closed iron mine | He made compromises | Doing everything himself would have taken a lifetime"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One writer summed up his point this way: we rely on other people and on centuries of advance. Let's test that."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "We rely on others and on centuries of advance"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why was it so hard for Thwaites to build a toaster alone?",
+    "right": "A toaster rests on knowledge and materials built up by many people over a long time, and he had to rebuild them himself in months",
+    "wrong": [
+     "Toasters are secret and nobody may copy them",
+     "He was not clever enough to understand a toaster",
+     "Nobody had ever written down how metal is made"
+    ],
+    "why": "The difficulty wasn't a lack of cleverness. A toaster depends on a very long chain of earlier knowledge, and one person can't quickly rebuild all of it."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So here is your example: a pencil. By the same reasoning, a smartphone is more tangled still. Many people's know-how went into each."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Example: the pencil"
+   },
+   "cite": [
+    "s8",
+    "s9"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which is the best example of an invention that no single person could have made alone?",
+    "right": "A pencil, which has millions of people's know-how behind it",
+    "wrong": [
+     "A stone you pick up from the ground",
+     "A footprint in the mud",
+     "None. With enough cleverness anyone could make any invention alone"
+    ],
+    "why": "The pencil is the classic example. Read argued that nobody knows how to make one alone, and Thwaites's toaster showed the same thing."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next question: what makes the ratchet click and hold? Two things do. One is copying, and the other is teaching."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Copying: a learner watches and does it the same way | Teaching: a person shows or explains to a learner"
+   },
+   "cite": [
+    "s1",
+    "s12"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Once an improvement can be passed on, it can be passed on faithfully. Researchers say that faithful passing-on is what stops improvements from being lost."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Faithful passing-on prevents loss"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Picture a weaver who shows her daughter a new pattern. The daughter later shows her own children. That is a click on the ratchet."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Weaver invents a pattern | Daughter copies it | Daughter teaches her children | The pattern is locked in"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which of these is a 'click' that locks an improvement in?",
+    "right": "An apprentice watches a new method, copies it, and later teaches it to someone else",
+    "wrong": [
+     "Someone invents a trick and tells no one",
+     "A person forgets what they learned last year",
+     "A tool breaks and nobody makes another"
+    ],
+    "why": "A click happens when knowledge is passed on by copying or teaching. If no one passes it on, the ratchet can slip."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the road ahead. Nine classes, in four themes: handing knowledge down, learning to learn better, losing knowledge, and tools as part of how we think."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1 The Ratchet | 2 Built to Learn From Others | 3 Speech | 4 Writing | 5 Printing and Schools | 6 Science | 7 The Internet and AI | 8 How Knowledge Gets Lost | 9 The Extended Mind"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Classes 3, 4, 5 and 7 follow how knowledge is handed down. Class 6 asks how methods of learning improve learning itself."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Learning to learn: the methods improve too"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Class 2 asks how our bodies and brains came to suit learning from others. Class 8 is about loss, and Class 9 is about tools as part of how we think."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Class 2: our biology and culture shape each other | Class 8: loss | Class 9: the extended mind"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which class looks at how knowledge gets lost?",
+    "right": "Class 8",
+    "wrong": [
+     "Class 3",
+     "Class 6",
+     "Class 9"
+    ],
+    "why": "Class 8 is called 'How Knowledge Gets Lost'. Class 3 is speech, Class 6 is science, and Class 9 is the extended mind."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Big History has its own name for our idea: collective learning. It is the human ability to share and keep knowledge so we can build on ideas over time."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Collective learning (Big History's word for the ratchet)"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Big History tells a story of eight big steps up in complexity. Collective learning is the sixth, after the Big Bang, stars, elements, Earth and life."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1 Big Bang | 2 Stars | 3 Elements | 4 Earth | 5 Life | 6 Collective learning | 7 Agriculture | 8 Modern age"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now let's place our course on a timeline. Our species is very new. Fossils put it at about 300,000 years ago."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "About 300,000 years ago: Homo sapiens in Africa | About 10,000 years ago: farming begins | About 3300 BC: early writing and cities (Class 4) | 1500-1800: printing and scientific change (Classes 5-6) | Today: the internet and AI (Class 7)"
+   },
+   "cite": [
+    "s15",
+    "s16",
+    "s17"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Hold on to that big number. Our species is about 300,000 years old, and farming is only the last 10,000 or so. That's roughly one thirtieth."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "300,000 years of Homo sapiens; farming only the last 10,000"
+   },
+   "cite": [
+    "s15",
+    "s17"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "How early the ratchet began to turn is still debated. We'll watch it speed up as we go through the course. First, a check on the timeline."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "When the ratchet began is debated"
+   },
+   "cite": [
+    "s20",
+    "s21"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "About how long ago do the earliest known fossils place our species, Homo sapiens?",
+    "right": "About 300,000 years ago",
+    "wrong": [
+     "About 3,000 years ago",
+     "About 10,000 years ago",
+     "About 2 million years ago"
+    ],
+    "why": "Fossils from Jebel Irhoud in Morocco date to about 315,000 years ago. Our species is usually given as about 300,000 years old, and farming came much later."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Three things to keep. One: knowledge builds up when each generation starts where the last stopped. Two: copying and teaching are the clicks that hold it."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1 Each generation starts where the last one stopped | 2 Copying and teaching are the clicks | 3 No one person could make a pencil alone"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Three: no one person could make that pencil alone. Next time, in Class 2, we ask how our bodies and brains came to be built to learn from others. Well done today."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Built to Learn From Others"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "A toaster: shop price versus cost of building one from scratch (British pounds)",
+   "rows": [
+    {
+     "label": "Shop toaster (bought in 2008)",
+     "value": 3.94,
+     "source": "s4"
+    },
+    {
+     "label": "Toaster built from scratch (his direct spending)",
+     "value": 1187.54,
+     "source": "s4"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "cultural ratchet",
+   "links": [
+    "[[cumulative culture]]",
+    "[[teaching and copying]]",
+    "[[collective learning]]"
+   ]
+  },
+  {
+   "topic": "cumulative culture",
+   "links": [
+    "[[cultural ratchet]]",
+    "[[gene-culture coevolution]]",
+    "[[how knowledge gets lost]]"
+   ]
+  },
+  {
+   "topic": "teaching and copying",
+   "links": [
+    "[[speech]]",
+    "[[writing]]",
+    "[[printing and schools]]"
+   ]
+  },
+  {
+   "topic": "I, Pencil and the toaster project",
+   "links": [
+    "[[cumulative culture]]",
+    "[[extended mind]]"
+   ]
+  },
+  {
+   "topic": "history-of-everything timeline",
+   "links": [
+    "[[collective learning]]",
+    "[[Homo sapiens]]",
+    "[[agriculture]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About 300,000 years ago (Homo sapiens appears in Africa)",
+   "elsewhere": "Other human species were alive then too. Neanderthals lived in Europe and western Asia and lasted until about 40,000 years ago.",
+   "cite": [
+    "s15"
+   ]
+  },
+  {
+   "when": "About 10,000 years ago (farming begins)",
+   "elsewhere": "The last Ice Age had ended or was ending. Glaciers were receding and the climate was warming, which gave people more plants to use for food.",
+   "cite": [
+    "s17",
+    "s22"
+   ]
+  },
+  {
+   "when": "1500-1800 (printing and scientific change)",
+   "elsewhere": "The same period saw global exploration, expanding states, colonial empires and exchange across the oceans.",
+   "cite": [
+    "s16"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Only humans have cumulative culture.",
+   "other_view": "Researchers agree on what cumulative culture is, but they disagree about where it begins. Some argue the true realm of culture is much smaller than people assume. Others argue that culture is cumulative from the start. Reviews find only a few suggestions of cumulative culture in animals, and they are not where you might expect.",
+   "cite": [
+    "s1",
+    "s20"
+   ]
+  },
+  {
+   "claim": "Once knowledge is gained, the ratchet keeps it from slipping back.",
+   "other_view": "Models by Joseph Henrich suggest that when a population shrinks below a critical size, skills can be lost. He used Tasmania as an example. Other researchers say the evidence does not support a loss of cultural complexity in Tasmania. The debate is ongoing, and Class 8 returns to it.",
+   "cite": [
+    "s19",
+    "s18"
+   ]
+  },
+  {
+   "claim": "The pencil shows that no one person can make a pencil.",
+   "other_view": "Read wrote the essay in 1958 to argue for free markets and against central planning. People disagree about that politics. This class uses only the narrow point that no one person holds all the know-how.",
+   "cite": [
+    "s9"
+   ]
+  },
+  {
+   "claim": "Collective learning began with our species, about 300,000 years ago.",
+   "other_view": "The Big History course moved its start date much earlier. It now counts other Homo species, whose early signs of collective learning include improving tools and shelter. So the starting point is revised as new research comes in.",
+   "cite": [
+    "s21"
+   ]
+  }
+ ]
+}

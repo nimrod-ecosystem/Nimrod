@@ -1,0 +1,775 @@
+{
+ "about": {
+  "title": "Looking for consciousness in the brain",
+  "course": "consciousness",
+  "class_n": 3,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 25,
+  "length_note": "About 25 minutes. There are six topics. Each gets one idea at a time and a quick check question, so the class is neither rushed nor padded."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "The Neuroscience of Consciousness",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "undated",
+   "link": "https://plato.stanford.edu/entries/consciousness-neuroscience/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "The No-Report Paradigm: A Revolution in Consciousness Research?",
+   "publisher": "Frontiers in Human Neuroscience (via PubMed Central)",
+   "date": "2022",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9130851/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Can No-Report Paradigms Extract True Correlates of Consciousness?",
+   "publisher": "Trends in Cognitive Sciences (Cell Press)",
+   "date": "2016",
+   "link": "https://www.cell.com/trends/cognitive-sciences/abstract/S1364-6613(16)00022-X",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "A methodological dilemma for investigating consciousness empirically",
+   "publisher": "ScienceDirect (Elsevier)",
+   "date": "undated",
+   "link": "https://www.sciencedirect.com/science/article/abs/pii/S105381001730332X",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Neural correlates of consciousness",
+   "publisher": "Scholarpedia",
+   "date": "undated",
+   "link": "http://www.scholarpedia.org/article/Neural_correlates_of_consciousness",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Binocular Rivalry: Frontal Activity Relates to Introspection and Action But Not to Perception",
+   "publisher": "The Journal of Neuroscience",
+   "date": "2014",
+   "link": "https://www.jneurosci.org/content/34/5/1738",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Neural correlates of binocular rivalry in the human lateral geniculate nucleus",
+   "publisher": "Nature Neuroscience",
+   "date": "undated",
+   "link": "https://www.nature.com/articles/nn1554",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Development and Evolution of Cerebral and Cerebellar Cortex",
+   "publisher": "PubMed Central (US National Library of Medicine)",
+   "date": "undated",
+   "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6097530/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "The quest for consciousness: Marcello Massimini",
+   "publisher": "Human Brain Project",
+   "date": "undated",
+   "link": "https://www.humanbrainproject.eu/en/follow-hbp/news/the-quest-for-consciousness/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "New index for objective determination of consciousness",
+   "publisher": "Nature Reviews Neurology",
+   "date": "2013",
+   "link": "https://www.nature.com/articles/nrneurol.2013.185",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "A theoretically based index of consciousness independent of sensory processing and behavior (Casali et al.)",
+   "publisher": "PhilPapers (abstract of Science Translational Medicine paper)",
+   "date": "2013",
+   "link": "https://philpapers.org/rec/CASATB-3",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "General Anesthesia Disrupts Complex Cortical Dynamics in Response to Intracranial Electrical Stimulation in Rats",
+   "publisher": "eNeuro",
+   "date": "2021",
+   "link": "https://www.eneuro.org/content/8/4/ENEURO.0343-20.2021",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Adversarial testing of global neuronal workspace and integrated information theories of consciousness",
+   "publisher": "Nature (Cogitate Consortium)",
+   "date": "2025",
+   "link": "https://www.nature.com/articles/s41586-025-08888-1",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Landmark collaboration probes the foundations of consciousness",
+   "publisher": "McGill University Health e-News",
+   "date": "2025-05-01",
+   "link": "https://healthenews.mcgill.ca/landmark-collaboration-probes-the-foundations-of-consciousness/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Rethinking Consciousness: When Science Puts Itself to the Test",
+   "publisher": "Max Planck Neuroscience",
+   "date": "2025",
+   "link": "https://maxplanckneuroscience.org/rethinking-consciousness-when-science-puts-itself-to-the-test/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Study turns up new clues, new questions in the search for the roots of consciousness",
+   "publisher": "GeekWire",
+   "date": "2025",
+   "link": "https://www.geekwire.com/2025/new-clues-roots-consciousness/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Where does consciousness come from? Two neuroscience theories go head-to-head",
+   "publisher": "Scientific American",
+   "date": "undated",
+   "link": "https://www.scientificamerican.com/article/where-does-consciousness-come-from-two-neuroscience-theories-go-head-to-head/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "A Comparative Perspective on the Cerebello-Cerebral System and Its Link to Cognition",
+   "publisher": "The Cerebellum (Springer)",
+   "date": "2022",
+   "link": "https://link.springer.com/article/10.1007/s12311-022-01495-0",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 3. Last time we met the hard problem. This time we ask a smaller question: what can scientists actually measure?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Looking for consciousness in the brain"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We will go one idea at a time. First idea: the neural correlate of consciousness."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Neural correlate"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A correlate is something that goes along with something else. Umbrellas go along with rain. Umbrellas do not make the rain."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Rain → umbrellas open | Umbrellas open ↛ rain made"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A neural correlate of consciousness is brain activity that goes along with an experience. Researchers define it as the smallest set of brain processes that is enough for one particular percept."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "The minimal set of brain processes sufficient for a particular percept."
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which of these is a neural correlate of consciousness?",
+    "right": "Brain activity that reliably goes along with a particular experience",
+    "wrong": [
+     "A feeling that causes the brain to switch on",
+     "The weather outside during an experiment",
+     "Any brain activity at all, whether or not an experience is going on"
+    ],
+    "why": "A correlate is activity that goes along with an experience. The definition covers only the smallest set of brain processes that is enough for one percept."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "How do researchers look at brain activity? Mostly with scanners and sensors: fMRI, EEG and MEG. In animals they can also record from single cells."
+   },
+   "show": {
+    "kind": "list",
+    "text": "fMRI | EEG | MEG | recording from cells in animals"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the hard part. A brain is busy all the time. How do you pick out the activity that belongs to the experience itself?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Contrast method"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The trick is to keep the outside world the same and change only the experience. Then compare the brain in the two cases."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Same picture, seen | Same picture, not seen → compare the brain"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First way to do it: seen versus unseen images. Researchers use techniques like masking, which can make a picture go unnoticed. Sometimes you see it and sometimes you don't."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A face flashed very briefly on a screen, then covered by a pattern of lines. A person looks on, unsure if they saw it."
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In a seen-versus-unseen test, what do scientists compare?",
+    "right": "Brain activity when the picture was seen and when it was not seen",
+    "wrong": [
+     "Brain activity in two different people who saw different pictures",
+     "How clever each person is",
+     "How loud the room is"
+    ],
+    "why": "The contrast method keeps the picture the same and changes only whether it is experienced. Any difference in the brain is then a candidate correlate."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Second way: binocular rivalry. Show a different picture to each eye, and the eyes compete. You see one picture at a time, and the other is pushed out of sight."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A face shown to the left eye and a sunburst shown to the right eye. The person sees the face, then the sunburst, then the face again."
+   },
+   "cite": [
+    "s7",
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "This is a favourite tool because the pictures never change. Only your experience flips. So changes in the brain are not just changes in the input."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Same input, changing experience"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why is binocular rivalry useful for studying consciousness?",
+    "right": "The pictures stay the same while the person's experience keeps changing",
+    "wrong": [
+     "It switches consciousness off completely",
+     "It only works on animals, never on people",
+     "It removes the need to measure the brain"
+    ],
+    "why": "Because the input is constant and the experience flips, researchers can look for brain changes that follow the experience."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So where in the brain does the flip show up? The answer is not simple. Correlates have been found at several stages of visual processing."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Early visual cortex | Later visual areas | Even a deep relay station called the LGN"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Some of the earliest monkey recordings pointed to later stages of processing. Other work found changes earlier on. Researchers still argue over which of these matter."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Many correlates, no single answer yet"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a new worry. In most experiments people report what they saw. They press a button or say a word. Report means telling the experimenter what you experienced."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Report"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The worry is that reporting brings extras with it: thinking about your experience, deciding, pressing the button. The scanner might pick up those extras and mistake them for the experience."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Noticing | Deciding | Pressing a button | …all mixed in with the experience"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The fix is to drop the report. These are no-report experiments. They track what someone experiences in other ways, such as where the eyes move."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Report: \"I see the face\" | No-report: the eyes follow the image"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is an example. Monkeys were never trained to report. They just followed a dot with their eyes. Scientists could then link brain activity to what the animals saw, and not to reporting."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A monkey watching a screen, eyes following a moving dot, with no button to press."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A 2014 human study used the same idea with fMRI and rivalry. It asked what happens when you take away active report. Its title gives the finding: frontal activity relates to introspection and action, not to perception."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Frontal activity relates to introspection and action but not to perception (J Neurosci, 2014)"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why do some researchers use no-report experiments?",
+    "right": "To avoid mixing brain activity from reporting with the activity of the experience itself",
+    "wrong": [
+     "Because people cannot see anything in those experiments",
+     "Because brain scanners cannot work when people speak",
+     "To prove that animals are not conscious"
+    ],
+    "why": "Reporting adds its own mental steps. Dropping the report is meant to leave the activity that belongs to the experience."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "But no-report experiments are not perfect either. Critics say they can still include activity from just before or just after the experience. The debate is open."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "No method is clean yet"
+   },
+   "cite": [
+    "s3",
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next clue: brain injury. Some patients cannot speak or move. How do doctors tell whether they are conscious? Judging this at the bedside is very hard."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Clues from brain injury"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One idea is the perturbational complexity index, or PCI. A magnetic pulse is applied to the head. Then the electrical echo is recorded and its complexity is calculated."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A magnetic coil held over the head and an EEG cap. The brain's echo appears as a wave on a screen."
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It does not depend on movement or on what the person senses. In a 2013 study it told apart wakefulness, sleep and anesthesia in individuals. It also sorted patients who had emerged from coma into a minimal level of consciousness."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Awake | Asleep | Under anesthesia | Recovering from coma"
+   },
+   "cite": [
+    "s10",
+    "s11"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Anaesthesia is a clue too. A rich, long-lasting echo shows up when people are conscious. That includes REM sleep and ketamine anesthesia, when dreams or hallucinations occur."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Rich echo ≈ some experience"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "PCI is about the level of consciousness. That means whether someone is conscious at all. It is not about the content, meaning what they are conscious of."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Level: how conscious, if at all | Content: what you are conscious of"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What does PCI look at?",
+    "right": "How complex the brain's electrical echo is after a magnetic pulse",
+    "wrong": [
+     "How fast a person can press a button",
+     "What picture a person is looking at",
+     "How many neurons a person has"
+    ],
+    "why": "PCI is a measure of the complexity of the brain's response to a magnetic pulse. It does not need the person to move or speak."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last clue: the cerebellum, the 'little brain' at the back of the head. It holds about 80 percent of the brain's neurons, in only about 10 percent of its mass."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Where the brain's neurons live",
+    "chart": "c1"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the puzzle. Marcello Massimini says people can lose their cerebellum and stay fully conscious. They have trouble with movement, but they are still fully there."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Massimini: the cerebellum \"does not contribute\" much to consciousness, though it has most of the neurons."
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What makes the cerebellum such a puzzle for consciousness research?",
+    "right": "It has most of the brain's neurons, yet losing it does not seem to end consciousness",
+    "wrong": [
+     "It has very few neurons, so nobody expected it to matter",
+     "Removing it always ends consciousness",
+     "Scientists have proved it is where experience is produced"
+    ],
+    "why": "Neuron count alone cannot explain consciousness. The cerebellum has the most neurons but does not seem to be needed for experience, according to Massimini."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why not the cerebellum? Massimini guesses it may work like a feed-forward machine, which can do a great deal without being conscious. Notice that this is a guess from a theory, not something the data prove."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A guess from a theory"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That brings us to the main lesson. A correlate tells us where and when something happens in the brain. It does not tell us why it feels like anything."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "A correlate says: where and when | An explanation says: why"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Scientists find that activity X always happens when people see a face. What can they safely say?",
+    "right": "X is a correlate of seeing a face, but that alone does not explain why it is experienced",
+    "wrong": [
+     "X is the cause of the experience, and the puzzle is solved",
+     "X is not related to seeing faces",
+     "Consciousness is the same thing as X"
+    ],
+    "why": "The finding shows a link. It does not say whether X is the experience itself, a cause, or something that merely comes with it."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So the tests need theories to interpret them. The same results can be read in different ways. One researcher says the data show the experience. Another says they show only the preparation or the report."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Data need a theory"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Researchers once did something bold. They had rival theorists agree on predictions in advance, then tested two leading theories together. The theories are global workspace and integrated information, and we will meet them in classes 4 and 6."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two teams on opposite sides of a table, signing a sealed list of predictions before any data are collected."
+   },
+   "cite": [
+    "s13",
+    "s14"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The results came out in Nature in 2025. They matched some predictions but challenged key points of both theories."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Results \"align with some predictions\" but substantially challenge key tenets of both theories. (Cogitate Consortium, 2025)"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What did that 2025 test of two theories find?",
+    "right": "Some predictions held, but key claims of both theories were challenged",
+    "wrong": [
+     "One theory won and the other was thrown out",
+     "Both theories were proved completely right",
+     "The study could not collect any brain data"
+    ],
+    "why": "The consortium reported mixed results. Both theories were challenged, and neither won outright."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's gather it up. Neural correlates are brain activity that goes along with experience. Contrast methods and no-report designs help find them."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Correlates = activity that goes with experience | Contrast: seen vs unseen, rivalry | Report vs no-report | Injury, anaesthesia, cerebellum"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Correlation is not yet explanation. To turn clues into answers, we need theories that can be tested. Next class: global workspace theory."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Global workspace theory"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "pie",
+   "title": "Where the brain's neurons live (approximate share, rounded)",
+   "rows": [
+    {
+     "label": "Cerebellum",
+     "value": 80,
+     "source": "s8"
+    },
+    {
+     "label": "Cerebral cortex",
+     "value": 20,
+     "source": "s8"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Neural correlates of consciousness",
+   "links": [
+    "[[The hard problem]]",
+    "[[Global workspace theory]]",
+    "[[Integrated information theory]]"
+   ]
+  },
+  {
+   "topic": "Contrast methods and binocular rivalry",
+   "links": [
+    "[[Predictive processing and the controlled hallucination]]",
+    "[[Looking for consciousness in the brain]]"
+   ]
+  },
+  {
+   "topic": "Report versus no-report",
+   "links": [
+    "[[Higher-order theories]]",
+    "[[What do we mean by 'consciousness'?]]"
+   ]
+  },
+  {
+   "topic": "Perturbational complexity index and anaesthesia",
+   "links": [
+    "[[Integrated information theory]]",
+    "[[Machine minds]]"
+   ]
+  },
+  {
+   "topic": "The cerebellum puzzle",
+   "links": [
+    "[[Integrated information theory]]",
+    "[[Animal minds]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "No-report experiments give a cleaner view of the neural correlates of consciousness.",
+   "other_view": "Critics such as Overgaard and Fazekas argue that no-report designs have confounds of their own. They may include activity from just before or just after the experience, or from hidden internal reporting. Philosophers also note that seeing and not seeing have different later effects on thinking, and those effects are not matched. Defenders point to careful no-report studies. One 2022 study still decoded conscious stimuli from prefrontal cortex.",
+   "cite": [
+    "s3",
+    "s1",
+    "s2"
+   ]
+  },
+  {
+   "claim": "The cerebellum shows that sheer neuron numbers do not make consciousness.",
+   "other_view": "Massimini treats the cerebellum as a puzzle to be explained, and his own explanation is a guess. Other researchers say the cerebellum has been overlooked for its role in thinking. That is a claim about cognition, not about consciousness. Which view is right is still not settled.",
+   "cite": [
+    "s9",
+    "s18"
+   ]
+  },
+  {
+   "claim": "The 2025 adversarial test showed which theory of consciousness is better.",
+   "other_view": "The consortium said the results challenge key tenets of both theories. One outside summary called the outcome effectively a draw. One of the study's authors, Christof Koch, has not given up on integrated information theory.",
+   "cite": [
+    "s13",
+    "s17",
+    "s16"
+   ]
+  },
+  {
+   "claim": "With enough careful measurement, finding correlates will eventually explain consciousness.",
+   "other_view": "Some philosophers doubt that the right kind of correlations can ever be obtained. Their reason is that earlier choices about what counts as consciousness, attention and report decide how any data are interpreted.",
+   "cite": [
+    "s4"
+   ]
+  }
+ ]
+}

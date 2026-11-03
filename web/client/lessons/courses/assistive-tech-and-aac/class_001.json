@@ -1,0 +1,760 @@
+{
+ "about": {
+  "title": "What assistive technology and AAC are, and who uses them",
+  "course": "assistive-tech-and-aac",
+  "class_n": 1,
+  "audience": [
+   "adult"
+  ],
+  "minutes": 22,
+  "length_note": "The goal is about 20 minutes. This class runs a little longer, about 22, because it has two common worries (speech not coming back, and having to be 'ready') and a check question after each new idea. Cutting either would leave out what families ask about most."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Assistive technology (fact sheet)",
+   "publisher": "World Health Organization",
+   "date": "undated",
+   "link": "https://www.who.int/news-room/fact-sheets/detail/assistive-technology",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Augmentative and Alternative Communication (AAC), Practice Portal",
+   "publisher": "American Speech-Language-Hearing Association (ASHA)",
+   "date": "undated",
+   "link": "https://www.asha.org/practice-portal/professional-issues/augmentative-and-alternative-communication/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Augmentative and Alternative Communication in Early Intervention",
+   "publisher": "American Speech-Language-Hearing Association (ASHA)",
+   "date": "undated",
+   "link": "https://www.asha.org/practice/early-intervention-provider-support/augmentative-and-alternative-communication-in-early-intervention/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Beyond Spoken Words: Augmentative and Alternative Communication (AAC) for Kids",
+   "publisher": "HealthyChildren.org",
+   "date": "undated",
+   "link": "https://at.asha.org/9a",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "The Impact of Augmentative and Alternative Communication Intervention on the Speech Production of Individuals With Developmental Disabilities: A Research Review (ASHA Evidence Map summary)",
+   "publisher": "American Speech-Language-Hearing Association (ASHA) Evidence Maps",
+   "date": "undated",
+   "link": "https://apps.asha.org/EvidenceMaps/Articles/ArticleSummary/48f75b29-1b15-4e0b-8e36-f65092d0d145",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Early Intervention and AAC: What a Difference 30 Years Makes (ASHA Evidence Map summary)",
+   "publisher": "American Speech-Language-Hearing Association (ASHA) Evidence Maps",
+   "date": "undated",
+   "link": "https://apps.asha.org/EvidenceMaps/Articles/ArticleSummary/45a6e778-e91d-4a2a-a2c6-0b572d8d3e1e",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "The Disability Technology report - Chapter 1: Digital assistive technologies (digital AT)",
+   "publisher": "The Royal Society",
+   "date": "undated",
+   "link": "https://royalsociety.org/news-resources/projects/disability-data-assistive-technology/chapter-1/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Do we need AAC?",
+   "publisher": "AssistiveWare (AAC software company, learning pages)",
+   "date": "undated",
+   "link": "https://www.assistiveware.com/learn-aac/do-we-need-augmentative-alternative-communication-strategies",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Augmentative and Alternative Communication (AAC)",
+   "publisher": "University of Rochester Medical Center",
+   "date": "undated",
+   "link": "https://www.urmc.rochester.edu/conditions-and-treatments/augmentative-and-alternative-communication",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "AAC for Adults with Acquired Communication Impairments",
+   "publisher": "NWACS (North West AAC Service)",
+   "date": "undated",
+   "link": "https://nwacs.info/aac/across-the-lifespan/adults-with-acquired-communication-impairments/aac-for-adults-acquired/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Presume Competence: What the Research Says",
+   "publisher": "AbleNet (AAC and assistive technology company, support pages)",
+   "date": "undated",
+   "link": "https://support.ablenetinc.com/aac-education-and-resources/ableteams/presume-competence/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Role of Alternative and Augmentative Communication in Three Cases of Severe Acquired Brain Injury: A Neurorehabilitative Approach",
+   "publisher": "PubMed Central (National Library of Medicine)",
+   "date": "undated",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11275067/",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to Nimrod. In this first class we'll learn what assistive technology and AAC are, who uses them, and why AAC is a real way to communicate."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Class 1: What assistive technology and AAC are, and who uses them"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's start wide. Assistive technology, or AT, is any tool, product or service that helps a person do something that might otherwise be hard."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Assistive technology (AT)"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "You already know many examples. Glasses, wheelchairs, hearing aids and white canes are AT. So are captions and speech recognition software."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Glasses | Wheelchair | Hearing aid | White cane | Captions | Speech recognition software"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "AT is ordinary, not rare. The World Health Organization estimates that 2.5 billion people need at least one assistive product."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "2.5 billion people need one or more assistive products"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Which sentence best describes assistive technology?",
+    "right": "Any tool, product or service that helps a person do something that might otherwise be hard.",
+    "wrong": [
+     "Only expensive computers.",
+     "Only equipment used by doctors in hospitals.",
+     "Only devices that speak out loud."
+    ],
+    "why": "The WHO describes AT as a wide umbrella. It runs from glasses and wheelchairs to captioning and speech recognition."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "AT helps with many parts of life. The WHO lists thinking, communication, hearing, moving around, self-care and seeing. Communication is one of them."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Thinking | Communication | Hearing | Mobility | Self-care | Seeing"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The part of AT that supports communication has its own name: AAC. It stands for augmentative and alternative communication."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "AAC: augmentative and alternative communication"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Those two long words have simple meanings. Augmentative means adding to someone's speech. Alternative means used instead of speech."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Augmentative: adds to speech | Alternative: used instead of speech"
+   },
+   "cite": [
+    "s4",
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is one way to picture it. AT is a big umbrella. Under it sit glasses, wheelchairs and hearing aids. AAC is one part under that umbrella, the part for communication."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A large umbrella labelled 'Assistive technology (AT)'. Underneath it are small pictures of glasses, a wheelchair and a hearing aid. One more shape is labelled 'AAC: tools for communication'."
+   },
+   "cite": [
+    "s1",
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "How are AT and AAC related?",
+    "right": "AT is the wide umbrella, and AAC is the part of AT that supports communication.",
+    "wrong": [
+     "They mean exactly the same thing.",
+     "AAC is the wide umbrella, and AT is one small part of it.",
+     "AT is only for walking and AAC is only for hearing."
+    ],
+    "why": "AAC is a type of AT that focuses on communication. AT covers many other jobs too."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "What counts as AAC? Any way of communicating that isn't speech and that supports or replaces speech. Gestures and signs count. So do picture boards, letter boards and devices that speak."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Gestures and signs | Picture boards | Letter boards | Speech-generating devices"
+   },
+   "cite": [
+    "s3",
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "People often sort AAC by how much technology it uses. Non-electronic tools like a picture board are low-tech. Electronic ones, like a speech-generating device, are high-tech."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Low-tech: not electronic, e.g. a picture board | High-tech: electronic, e.g. a speech-generating device"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which of these is an example of AAC?",
+    "right": "A picture board that someone points to in order to say what they want.",
+    "wrong": [
+     "A hearing aid.",
+     "A wheelchair.",
+     "A pair of reading glasses."
+    ],
+    "why": "A hearing aid, a wheelchair and glasses are all AT, but they don't help a person communicate by replacing or adding to speech. A picture board does."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now we know what AAC is. Next, who uses it? The short answer is many people, of every age."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Who uses AAC?"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One group is children whose conditions make their speech hard for others to understand. Cerebral palsy and autism are two examples."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Children: for example cerebral palsy and autism"
+   },
+   "cite": [
+    "s4",
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In a Swedish study, 44.4% of children with cerebral palsy used some form of AAC, either alone or to support speech. In Australia, an estimate says 25 to 30% of autistic children have limited speech and would benefit."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "44.4% of Swedish children with cerebral palsy used AAC"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Adults use AAC too. A stroke or a brain injury can change how someone speaks or understands words, sometimes suddenly."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Adults after a stroke or brain injury"
+   },
+   "cite": [
+    "s2",
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One common change is aphasia. It is trouble with language after damage to the brain, and stroke is the usual cause. It can affect both listening and speaking."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Aphasia: trouble with language after brain damage"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Some conditions change over time. In ALS, speech may be enough early on. Later, a person may rely on partner-assisted scanning, a way of choosing with a helper. We'll meet it in class 5."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "ALS: needs change as the condition progresses"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a UK estimate reported by ASHA. It lists the five largest groups who could benefit from AAC. Parkinson's disease is on it, near the top."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Largest groups who could benefit from AAC (UK estimate)",
+    "chart": "c1"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The bars show that no single group is 'the' AAC user. Dementia, Parkinson's, autism, learning disabilities and stroke all appear. Treat the numbers as an estimate, not an exact count.",
+    "text2": ""
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Same chart: five groups, many ages",
+    "chart": "c1"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does the chart tell us about who uses or could benefit from AAC?",
+    "right": "Many different groups, including both children and adults.",
+    "wrong": [
+     "Only children with autism.",
+     "Only people who cannot understand speech.",
+     "Only people who have had a stroke."
+    ],
+    "why": "The list includes dementia, Parkinson's disease, autism, learning disabilities and stroke. That covers people of many ages and many conditions."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "There are others too. Some people can't speak for a while, for example because of a breathing tube, a tracheostomy, or throat surgery."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Others: people who can't speak for a time"
+   },
+   "cite": [
+    "s9",
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That brings us to time. AAC can be temporary, or it can be a long-term support. A person who needs a ventilator for a short time has different needs from someone with a progressive disease like ALS."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Temporary: e.g. a short stay on a ventilator | Long-term: e.g. a progressive condition like ALS"
+   },
+   "cite": [
+    "s3",
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Even when someone starts AAC, they may not use it forever or all the time. Some people use it only in some situations."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "AAC use can change over time"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which statement about how long people use AAC is true?",
+    "right": "Some use it for a short time, some for life, and some only in certain situations.",
+    "wrong": [
+     "Everyone who starts AAC must use it for life.",
+     "AAC is always short-term.",
+     "Everyone who starts must keep the same device forever."
+    ],
+    "why": "AAC can be temporary or long-term. People may also use it only some of the time."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now two worries that families and survivors often have. The first: will using AAC stop speech from coming back, or from developing?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Worry 1: Will AAC stop speech?"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is what a research review found. For people aged 2 to 60 with developmental disabilities, no study reported speech going down after AAC. Speech stayed the same or increased."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "No study found speech decreased"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Another review looked at the very beginning stages of language. Its authors wrote that the evidence strongly indicates AAC does not hinder speech development at that stage."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Early language: AAC does not hinder speech"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "For adults, AAC is not meant to replace speech work. It can help a person communicate independently while they work on speaking in therapy. After a brain injury, it can sit alongside other rehabilitation. The reviewers still call the evidence modest, and say more research is needed."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "AAC and speech work can happen together"
+   },
+   "cite": [
+    "s9",
+    "s12"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What does the research reviewed here say about AAC and speech?",
+    "right": "AAC did not stop speech. Speech stayed the same or grew, though the authors call the evidence modest.",
+    "wrong": [
+     "Research proves AAC always brings speech back.",
+     "Research shows AAC stops speech coming back.",
+     "Nobody has ever studied the question."
+    ],
+    "why": "The review found no study with a drop in speech. The authors still call the evidence modest and say more research is needed. So AAC doesn't promise speech will return, but it isn't a threat to it."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The second worry: does a person have to be 'ready' first? Many people picture a list of skills to tick off before AAC begins."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Worry 2: Must a person be 'ready'?"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Guidance in the field says no. There are no age limits. Nobody has to prove themselves before being offered AAC. Anyone who can't meet their needs through speech may benefit from some form of it."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Old idea: prove you are ready first | Current guidance: no prerequisite skills, start where the person is"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That doesn't mean every person gets the same tool. If you are unsure about readiness, the advice is to ask a speech-language pathologist before delaying access."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ask a speech-language pathologist (SLP)"
+   },
+   "cite": [
+    "s11",
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A family asks whether their relative must prove they are ready before trying AAC. What does the guidance say?",
+    "right": "No. There are no prerequisite skills, and a speech-language pathologist can help choose the right kind of support.",
+    "wrong": [
+     "Yes, they must first point to pictures correctly.",
+     "Yes, but only after they reach a certain age.",
+     "Yes, they must first stop trying to speak."
+    ],
+    "why": "Current guidance says people don't have to prove readiness. Choosing the right tool is where an SLP's individual advice helps."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "This leads to the big idea of today. AAC is a way to communicate, not a last resort."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "\"AAC should not be seen as a last resort, but rather as an early tool to support communication.\""
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "For children, AAC can begin as soon as speech is hard to develop. For adults, it can start early too, while other work on speaking carries on."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Start when a need appears | Can sit alongside speech work | One way to communicate among several"
+   },
+   "cite": [
+    "s3",
+    "s9",
+    "s12"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which statement best fits the idea that AAC is not a last resort?",
+    "right": "AAC can start early and run alongside other speech work, as one way among several to communicate.",
+    "wrong": [
+     "AAC is only tried after everything else has failed.",
+     "AAC means a person has given up on speaking.",
+     "Once AAC starts, all speech work must stop."
+    ],
+    "why": "The sources describe AAC as an early, supportive tool. It does not replace speech work, and it isn't a sign of giving up."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more thing about this course. It is general learning. It is not clinical advice, and it can't tell you what any one person needs."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "This course is general learning, not clinical advice"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "For individual advice, see a speech-language pathologist, often called an SLP. SLPs are trained to identify communication needs, try out AAC strategies and support the start of using them."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Individual advice: a speech-language pathologist"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To recap: AT is the wide umbrella, and AAC is the part for communication. Many people of all ages use AAC, for a short time or for life. And it's a way to communicate, not a last resort. Next class: the AAC toolbox."
+   },
+   "show": {
+    "kind": "list",
+    "text": "AT = wide umbrella | AAC = the part for communication | Many users, all ages | Temporary or lifelong | A way to communicate, not a last resort"
+   },
+   "cite": [
+    "s1",
+    "s3",
+    "s2"
+   ],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Largest groups who could benefit from AAC, by diagnosis (UK estimate reported by ASHA, % of those who could benefit)",
+   "rows": [
+    {
+     "label": "Alzheimer's/dementia",
+     "value": 23,
+     "source": "s2"
+    },
+    {
+     "label": "Parkinson's disease",
+     "value": 22,
+     "source": "s2"
+    },
+    {
+     "label": "Autism spectrum disorder",
+     "value": 19,
+     "source": "s2"
+    },
+    {
+     "label": "Learning disabilities",
+     "value": 13,
+     "source": "s2"
+    },
+    {
+     "label": "Stroke",
+     "value": 11,
+     "source": "s2"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "AT and AAC: umbrella and part",
+   "links": [
+    "[[the AAC toolbox]]",
+    "[[eye gaze and other ways to access a device]]"
+   ]
+  },
+  {
+   "topic": "Who uses AAC",
+   "links": [
+    "[[switches and scanning]]",
+    "[[how to support a communicator]]"
+   ]
+  },
+  {
+   "topic": "Temporary and lifelong use",
+   "links": [
+    "[[a short history of AAC]]",
+    "[[getting professional help]]"
+   ]
+  },
+  {
+   "topic": "Common worries: speech and readiness",
+   "links": [
+    "[[how to support a communicator]]",
+    "[[getting professional help]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "AT is the wide umbrella and AAC is the part of it that supports communication.",
+   "other_view": "There is no single agreed definition of assistive technology. The WHO uses 'assistive technology' for products plus their related systems and services. Other bodies, and everyday speech, often use it just to mean products.",
+   "cite": [
+    "s1",
+    "s7"
+   ]
+  },
+  {
+   "claim": "AAC does not stop speech, and speech often stays the same or grows.",
+   "other_view": "The authors of the research review say the evidence is modest, and gains in speech are not guaranteed. More research is needed on how different kinds of AAC affect speech. So AAC should not be promised as a way to bring speech back.",
+   "cite": [
+    "s5"
+   ]
+  },
+  {
+   "claim": "There are no prerequisite skills for AAC, and people don't have to prove they are ready.",
+   "other_view": "Not having to prove readiness doesn't remove the need for individual assessment. Sources still advise working with an experienced professional, such as an SLP, to find out what will work for a person. Which tool suits whom is a separate question from whether to offer AAC.",
+   "cite": [
+    "s8",
+    "s11"
+   ]
+  },
+  {
+   "claim": "AAC is a good support for adults after a stroke or brain injury.",
+   "other_view": "Many people with aphasia want to improve their spoken communication. For them AAC is one tool next to speech work, not a replacement for it, and each person's goals should lead.",
+   "cite": [
+    "s10",
+    "s9"
+   ]
+  }
+ ]
+}

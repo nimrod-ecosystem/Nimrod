@@ -1,0 +1,178 @@
+{
+ "course_id": "consciousness",
+ "title": "What is consciousness? Science and philosophy",
+ "audience": [
+  "high school",
+  "adult"
+ ],
+ "length_note": "Twelve classes, because the notes name four scientific theories, the hard problem, strange loops, idealism and panpsychism, animal minds and machine minds. Each theory needs its own class so it can get its best case and its critics without being rushed. Two further classes were added for what the notes take for granted: one to define the word and one on how scientists look for consciousness in the brain. A final class compares the views. Classes run 20 to 30 minutes, with the heaviest ideas (the theories, idealism and panpsychism, machines) at 30. Short classes suit learners who tire easily, including adults relearning after a brain injury, and each one stands alone with a clear recap. Nothing is repeated, and no topic from the notes is dropped. No facts or sources are cited in this plan. Each class marked needs_research must be researched, with sources, before it is written.",
+ "classes": [
+  {
+   "n": 1,
+   "title": "What do we mean by 'consciousness'?",
+   "goal": "Explain in plain words the difference between being awake, being aware of something, and having an inner experience. Say why the question is hard.",
+   "minutes": 25,
+   "topics": [
+    "Everyday meanings: awake, aware, self-aware",
+    "Subjective experience: 'what it is like'",
+    "How we tell if someone is conscious: reports, behaviour, brain signs",
+    "Sleep, anaesthesia and disorders of consciousness as real-life cases",
+    "A map of the course"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 2,
+   "title": "The hard problem",
+   "goal": "State the hard problem and the 'easy problems' of consciousness. Describe two thought experiments and one main reply to each.",
+   "minutes": 30,
+   "topics": [
+    "Easy problems and the hard problem (Chalmers)",
+    "What is it like to be a bat? (Nagel)",
+    "Mary's room and philosophical zombies",
+    "The explanatory gap",
+    "Best case: why physical explanation seems to leave something out",
+    "Critics: physicalists, Dennett and illusionism, the view that the problem will dissolve with progress"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 3,
+   "title": "Looking for consciousness in the brain",
+   "goal": "Describe how scientists test consciousness, including 'neural correlates', and why correlation is not yet explanation.",
+   "minutes": 25,
+   "topics": [
+    "Neural correlates of consciousness",
+    "Contrast methods: seen versus unseen images, binocular rivalry",
+    "Report versus no-report experiments",
+    "Clues from brain injury, anaesthesia and the cerebellum",
+    "Why these tests need theories to interpret them"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 4,
+   "title": "Global workspace theory",
+   "goal": "Explain the 'broadcast' idea and the best evidence for it. Name two criticisms.",
+   "minutes": 30,
+   "topics": [
+    "The theatre and workspace metaphor (Baars)",
+    "The neuronal version (Dehaene) and 'ignition'",
+    "Best case: evidence from experiments and links to attention and memory",
+    "Critics: does it explain experience or only access? Where is the workspace in the brain? Does it risk being too broad or too narrow?"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 5,
+   "title": "Higher-order theories",
+   "goal": "Explain the idea that a mental state is conscious when the mind represents it. Compare it with global workspace.",
+   "minutes": 25,
+   "topics": [
+    "Thoughts about thoughts",
+    "Main versions: higher-order thought and perceptual models",
+    "Best case: explains how we can be wrong about our own experience",
+    "Critics: do animals and babies have such thoughts? What about misrepresentation? Is it really about experience?"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 6,
+   "title": "Integrated information theory",
+   "goal": "Describe IIT's starting claims and its surprising consequences. Explain why it is both admired and disputed.",
+   "minutes": 30,
+   "topics": [
+    "Starting from experience: the axioms and postulates",
+    "Integration, phi and the physical substrate",
+    "Best case: a bold, mathematical theory that tackles the hard problem head-on",
+    "Critics: untestable claims, odd consequences for simple systems, the open debate and the test experiments comparing it with other theories"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 7,
+   "title": "Predictive processing and the controlled hallucination",
+   "goal": "Explain how the brain as a prediction machine may account for perception, emotion and the sense of self. Name two criticisms.",
+   "minutes": 30,
+   "topics": [
+    "The brain predicts and corrects errors",
+    "Perception as 'controlled hallucination'",
+    "Emotion, body and the self (Seth's 'beast machine')",
+    "Best case: ties together illusions, mental illness and the sense of self",
+    "Critics: too broad to test? Does prediction explain experience, or only the 'easy' problems?"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 8,
+   "title": "Strange loops and the self",
+   "goal": "Explain Hofstadter's 'strange loop' and how it treats the self as a pattern. Say where it meets, and where it differs from, the other views.",
+   "minutes": 25,
+   "topics": [
+    "Self-reference and loops (Hofstadter)",
+    "The 'I' as a pattern the brain builds",
+    "Links to illusionism and to higher-order and predictive ideas",
+    "Best case: explains why the self feels real and unified",
+    "Critics: does a loop explain feeling? Is the idea clear enough to test?"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 9,
+   "title": "Idealism and panpsychism",
+   "goal": "Explain idealism and panpsychism and what each tries to solve. Describe the main objections.",
+   "minutes": 30,
+   "topics": [
+    "Reversing the question: mind as basic",
+    "Idealism: the best case and the critics",
+    "Panpsychism: the best case, including the link to IIT",
+    "The combination problem and other objections",
+    "Related options: dualism and neutral monism, briefly"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 10,
+   "title": "Animal minds",
+   "goal": "Say what evidence points to consciousness in animals. Explain why we can't be sure, and why it matters.",
+   "minutes": 30,
+   "topics": [
+    "Why we can't ask animals",
+    "Signs of experience: behaviour, brain structure, pain responses",
+    "Mammals, birds, fish, octopuses and insects",
+    "Declarations of scientific opinion",
+    "Each theory's view on animals",
+    "Ethics and uncertainty"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 11,
+   "title": "Machine minds",
+   "goal": "Explain what the main theories imply about AI. Weigh the best case for and against machine consciousness.",
+   "minutes": 30,
+   "topics": [
+    "The Turing test and the Chinese room",
+    "Acting conscious versus being conscious",
+    "What today's AI systems can and cannot show",
+    "Using the theories as checklists of 'indicators'",
+    "Functionalism versus the view that biology matters",
+    "Ethics: if we are unsure, what should we do?"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 12,
+   "title": "Putting it together: where do we stand?",
+   "goal": "Compare the views, say what would count as evidence for or against each, and explain their own current thinking and why it might change.",
+   "minutes": 20,
+   "topics": [
+    "Side-by-side recap of every view's best case and criticism",
+    "What the theories agree on and where they clash",
+    "What is still unknown",
+    "How to hold a view when the science is unsettled"
+   ],
+   "needs_research": false
+  }
+ ]
+}

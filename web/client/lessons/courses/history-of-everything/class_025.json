@@ -1,0 +1,1457 @@
+{
+ "about": {
+  "title": "The Roman Empire, the Silk Roads and Early Christianity",
+  "course": "history-of-everything",
+  "class_n": 25,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "Aimed at the half-hour target. There are about 50 short beats and 9 questions, one idea at a time. Christianity's later growth is left for the next classes, so this class stays at about 30 minutes."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Beginning of the Silk Road",
+   "publisher": "China and Rome (chinaandrome.org)",
+   "date": "n.d.",
+   "link": "http://www.chinaandrome.org/English/silkroad/beginning.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "Pax Romana (research starter)",
+   "publisher": "EBSCO",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/history/pax-romana",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "The Pax Romana",
+   "publisher": "Lumen Learning (Western Civilization)",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/atd-herkimer-westerncivilization/chapter/the-pax-romana/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "Augustus",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/biography/Augustus-Roman-emperor",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "Pax Romana",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/event/Pax-Romana",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "Pax Romana",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/Pax_Romana/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "Parthia (Empire)",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/Parthia_(Empire)/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "Battle of Carrhae",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/event/Battle-of-Carrhae",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "Arsacids ii. The Arsacid dynasty",
+   "publisher": "Encyclopaedia Iranica",
+   "date": "n.d.",
+   "link": "https://www.iranicaonline.org/articles/arsacids-ii/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "Silk Road (research starter)",
+   "publisher": "EBSCO",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/diplomacy-and-international-relations/silk-road/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "How the Silk Road Changed Global History",
+   "publisher": "WorldAtlas",
+   "date": "n.d.",
+   "link": "https://www.worldatlas.com/ancient-world/how-the-silk-road-changed-global-history.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "Gan Ying",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Gan_Ying",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "The 4 Powerful Empires of the Silk Road",
+   "publisher": "TheCollector",
+   "date": "n.d.",
+   "link": "https://www.thecollector.com/four-empires-silk-road/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "Periplus of the Erythraean Sea",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/Periplus_of_the_Erythraean_Sea/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "Roman Trade Missions to India: 1st to 3rd Century",
+   "publisher": "History Is Now Magazine",
+   "date": "2025-11-11",
+   "link": "https://www.historyisnowmagazine.com/blog/2025/11/11/roman-trade-missions-to-india-1st-to-3rd-century",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "Periplus of the Erythraean Sea (tag page, Roman trade missions to India)",
+   "publisher": "History Is Now Magazine",
+   "date": "n.d.",
+   "link": "http://www.historyisnowmagazine.com/blog/tag/Periplus+of+the+Erythraean+Sea",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "'Periplus of the Erythraean Sea': An Ancient Egyptian Travelogue",
+   "publisher": "Brewminate",
+   "date": "n.d.",
+   "link": "https://brewminate.com/periplus-of-the-erythraean-sea-an-ancient-egyptian-travelogue/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "Hippalus",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Hippalus",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "Han Dynasty",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/Han_Dynasty/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "Wang Mang",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/biography/Wang-Mang",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "0s (decade)",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/0s",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "Kushan King Kanishka",
+   "publisher": "Encyclopedia.com",
+   "date": "n.d.",
+   "link": "https://www.encyclopedia.com/people/history/south-asian-history-biographies/kushan-king-kanishka",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "Kushan Empire",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Kushan_Empire",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "Vima Kadphises",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Vima_Kadphises",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "Silk Road transmission of Buddhism",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Silk_Road_transmission_of_Buddhism",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "Christianity, Jesus, and the Roman Empire",
+   "publisher": "OER Project",
+   "date": "n.d.",
+   "link": "https://www.oerproject.com/OER-Materials/OER-Media/HTML-Articles/Origins/Unit4/Christianity",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "Christianity (930L reading level)",
+   "publisher": "OER Project",
+   "date": "n.d.",
+   "link": "https://www.oerproject.com/OER-Materials/OER-Media/HTML-Articles/Origins/Unit4/Christianity/930L",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "History of Christianity",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/History_of_Christianity",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s29",
+   "title": "Christianity",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Christianity",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s30",
+   "title": "Sources for the historicity of Jesus",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Sources_for_the_historicity_of_Jesus",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s31",
+   "title": "Augustus, Res Gestae",
+   "publisher": "Livius.org",
+   "date": "n.d.",
+   "link": "https://www.livius.org/sources/content/augustus-res-gestae/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s32",
+   "title": "Res Gestae Divi Augusti, chapter 8",
+   "publisher": "Judaism and Rome (judaism-and-rome.org)",
+   "date": "n.d.",
+   "link": "https://www.judaism-and-rome.org/res-gestae-divi-augusti-chapter-8",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s33",
+   "title": "Res Gestae Divi Augusti (Loeb Classical Library, 1924, with translator's notes)",
+   "publisher": "Loeb Classical Library",
+   "date": "1924",
+   "link": "https://www.loebclassics.com/view/augustus-res_gestae/1924/pb_LCL152.357.xml?print=&result=1&rskey=ZrGsLz",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s34",
+   "title": "Recruitment and the Size of the Roman Population (chapter 3, Debating Roman Demography)",
+   "publisher": "Brill",
+   "date": "n.d.",
+   "link": "https://brill.com/previewpdf/book/edcoll/9789004351097/B9789004351097-s004.xml",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s35",
+   "title": "Debating Roman Demography, Mnemosyne Supplement 211 (review)",
+   "publisher": "Bryn Mawr Classical Review",
+   "date": "2002",
+   "link": "https://bmcr.brynmawr.edu/2002/2002.01.11/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s36",
+   "title": "The demography of Roman state formation and culture change in Italy",
+   "publisher": "Walter Scheidel, Stanford University",
+   "date": "n.d.",
+   "link": "https://web.stanford.edu/~scheidel/Dresden.pdf",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s37",
+   "title": "Classical demography",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Classical_demography",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s38",
+   "title": "Demography of the Roman Empire",
+   "publisher": "Wikiwand (mirror of Wikipedia)",
+   "date": "n.d.",
+   "link": "https://www.wikiwand.com/en/articles/Demography_of_the_Roman_Empire",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s39",
+   "title": "How Many People Lived in the Roman Empire?",
+   "publisher": "Ancient History Sites",
+   "date": "n.d.",
+   "link": "https://www.ancient-history-sites.com/roman/context/demography/population/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s40",
+   "title": "Population of Roman Empire",
+   "publisher": "Imperium Romanum",
+   "date": "n.d.",
+   "link": "https://imperiumromanum.pl/en/roman-society/population-of-roman-empire/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s41",
+   "title": "AD 14",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/AD_14",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s42",
+   "title": "Res Gestae Divi Augusti",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Res_Gestae_Divi_Augusti",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back. Last class we met the Mauryans, the Qin and the Han. Today we zoom out to around the year 1 CE and ask: who was connected to whom?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The connected world around 1 CE"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a quick reminder. CE counts years forward from year 1. BCE counts backward towards it, so 20 BCE comes before 10 BCE."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "BCE counts down to year 1; CE counts up from it"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Four big powers filled this world: Rome, Parthia, the Kushans and Han China. The Kushans mostly belong just after year 1, but they matter to our story."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "star",
+    "count": 4,
+    "layout": "row",
+    "text": "Four powers: Rome, Parthia, Kushan, Han"
+   },
+   "cite": [
+    "s1",
+    "s22"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's start in Rome with Augustus. He began as Octavian. After Julius Caesar died, he took power, and in 31 BCE he beat Mark Antony at the Battle of Actium."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Augustus (born Octavian)"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 27 BCE he nominally restored the republic. In practice he founded the empire. He called himself 'First Citizen', not king."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "princeps = First Citizen"
+   },
+   "cite": [
+    "s4",
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "His rule began the Pax Romana. That is Latin for 'Roman Peace'. It names a long stretch of comparative calm that lasted over 200 years."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Pax Romana = Roman Peace"
+   },
+   "cite": [
+    "s5",
+    "s6"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "How did Augustus keep order? He had the resources of the provinces counted so taxes could be assessed. He also put the treasury under central control in Rome."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Count the provinces' resources|Set up a way to assess taxes|Keep the treasury in Rome"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Provinces could keep their own laws. But they had to accept Roman taxes and Roman military control."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Provinces kept: their own laws|Provinces accepted: Roman taxes and army control"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Augustus also used art as advertising. The Ara Pacis, an altar of Peace, showed Roman gods and a rich, calm Rome."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A carved marble altar showing gods and a prosperous city personified: the Ara Pacis"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's check that. Pax Romana is a Latin phrase."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Pax Romana"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does 'Pax Romana' mean?",
+    "right": "Roman Peace",
+    "wrong": [
+     "Roman Law",
+     "Roman Roads",
+     "Roman Games"
+    ],
+    "why": "Pax is Latin for peace. The Pax Romana was a long period of comparative calm under Roman rule."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Notice the word 'comparative'. After Actium, fighting went on in Hispania and the Alps. Augustus's reign also included the Battle of the Teutoburg Forest."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Comparative peace, not no war"
+   },
+   "cite": [
+    "s3",
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Did the Pax Romana mean there was no fighting at all?",
+    "right": "No. It was a comparatively calm time, and wars were still fought, including on the borders.",
+    "wrong": [
+     "Yes, there was never any fighting anywhere.",
+     "Yes, but only inside the city of Rome.",
+     "No, because there was a civil war every year."
+    ],
+    "why": "Fighting continued in places like Hispania and the Alps, and Rome defended or even expanded its borders by force."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Rome's big neighbour to the east was Parthia. It was an Iranian empire that lasted from about 247 BCE to 224 CE."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Parthia (c. 247 BCE to 224 CE)"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Encyclopaedia Iranica ranks Parthia, alongside Rome, as the most significant power of the ancient East. Rome learned that the hard way at Carrhae."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "53 BCE"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "At Carrhae, Parthian horse archers and armoured cavalry beat the Roman general Crassus. About 20,000 Romans died and 10,000 were captured, out of 43,000."
+   },
+   "show": {
+    "kind": "list",
+    "text": "43,000 Romans marched in|about 20,000 killed|about 10,000 captured"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Parthians also took Roman battle standards. That was a huge blow to Roman pride."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Lost Roman standards"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Augustus wanted them back. In 20 BCE Rome sent an army towards Armenia, and the Parthian king agreed to return the standards and captives. Rome marked it with an arch in 19 BCE."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "53 BCE standards lost | 20 BCE standards returned | 19 BCE Arch of Augustus"
+   },
+   "cite": [
+    "s9",
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here's a question about what we just heard."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Getting the standards back"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "How did Augustus get the lost standards back?",
+    "right": "He put military pressure on Parthia's border region and the Parthian king agreed to return them.",
+    "wrong": [
+     "He destroyed the Parthian empire at Carrhae.",
+     "Han China bought them back for him.",
+     "They were never returned."
+    ],
+    "why": "Rome sent an army towards Armenia in 20 BCE, and the Parthian king agreed to return the standards and captives."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now let's look at trade. The Silk Road was not one road. It was a network of routes over 7,000 miles long. It began around 138 BCE, when the Han sent Zhang Qian to Central Asia."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Silk Road = a network of routes"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Almost nobody travelled the whole way. Goods passed from trader to trader like a relay, with middlemen such as Parthians and northern Indians."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Routes from Han China across Central Asia, through Parthia to Syria and the Roman market, with traders handing goods on along the way"
+   },
+   "cite": [
+    "s10",
+    "s11",
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What moved along it? Silk travelled west. Horses, wool, silver and gold travelled to China."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Going west: silk|Going east to China: horses, wool, silver, gold"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Parthians sat in the middle and profited. The Romans reportedly met silk in 53 BCE, when Parthians waved silk banners in battle. That is the year of Carrhae."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Parthians: the middlemen"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Who usually carried goods along the whole Silk Road?",
+    "right": "Nobody. Goods were passed along by many middlemen.",
+    "wrong": [
+     "One Chinese merchant travelled all the way to Rome.",
+     "The Roman army carried them.",
+     "The Han emperor's own messengers."
+    ],
+    "why": "People rarely travelled the whole distance. Trade was usually conducted by middlemen, including Parthians and northern Indians."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "There was a second route, by sea. After Augustus took Egypt in 30 BCE, Roman trade through Red Sea ports grew dramatically."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Egypt, 30 BCE: a door to the Red Sea"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The key was the monsoon, a seasonal wind that changes direction. Ships rode the southwest monsoon out, crossed the Arabian Sea in weeks, then came home on the northeast monsoon."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Outbound: southwest monsoon from the Red Sea|Homeward: northeast monsoon back"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's test the key idea."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Monsoon"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why were monsoon winds so useful to sailors crossing to India?",
+    "right": "The winds blew one way in one season and the other way later, so ships could cross and return.",
+    "wrong": [
+     "They kept the sea perfectly calm all year.",
+     "They only blew towards Africa.",
+     "They carried silk to Rome without any ships."
+    ],
+    "why": "Ships used one monsoon to cross the Arabian Sea in weeks and the returning monsoon to sail home."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Greek geographer Strabo said that in his day 120 ships sailed regularly from Egypt to India. Before, very few did. A trip to India and back took about a year."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "120 ships a year to India"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We know the details from the Periplus of the Erythraean Sea. It is a merchant's handbook in Greek, written in the mid-first century CE. It names Muziris, in Kerala, as a major spice port."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Periplus: a merchant's guidebook"
+   },
+   "cite": [
+    "s15",
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "On the African route, Egyptian linen, glass, wine and metal went out. Ivory, tortoiseshell, myrrh and frankincense came back."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Out of Egypt: linen, glass, wine, metal|Back to Egypt: ivory, tortoiseshell, myrrh, frankincense"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Some Romans worried about the cost. Pliny the Elder recorded that Rome lost nearly 100 million sesterces a year to India, China and Arabia."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "about 100 million sesterces a year"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the far end of the Silk Road: Han China. At year 1 it was the Western Han, ruled from Chang'an. A census in 2 CE counted nearly 60 million people."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "about 60 million people counted in China, 2 CE"
+   },
+   "cite": [
+    "s21",
+    "s19"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That count was in about 12 million households. It is considered one of the most accurate surveys in Chinese history. Remember it, because Rome's numbers are much harder."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "China, 2 CE: a careful census"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 9 CE the regent Wang Mang declared a new dynasty, the Xin. That is why historians split the Han into Western and Eastern halves."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "202 BCE Han begins | 9 CE Wang Mang's Xin | 23 CE Wang Mang killed | later: Han restored (Eastern Han)"
+   },
+   "cite": [
+    "s20",
+    "s19"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Between Parthia and China sat the Kushans. Their empire flourished in the first and second centuries CE. At its height it bordered both China and Parthia."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Kushan Empire: the go-between"
+   },
+   "cite": [
+    "s22",
+    "s13"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Their lands included Afghanistan, northern India and parts of Central Asia. They taxed traders passing through. They also had diplomatic contacts with Rome, Parthia and Han China."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Lands: Afghanistan, northern India, Central Asia|Charged fees on trade|Contacts with Rome, Parthia, Han China"
+   },
+   "cite": [
+    "s22",
+    "s23"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Money and ideas moved too. Most Kushan gold seems to have come from trade with Rome. In Gandhara, Greek and Buddhist styles mixed in art."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A Buddha figure carved in a Greek-influenced style, from Gandhara"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Buddhism travelled the Silk Road too. Mahayana Buddhism reached Han China from the 1st or 2nd century CE. Its first translators included Parthians and Kushans."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Buddhism reaches China along the Silk Road"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was the Kushan Empire's main role in this connected world?",
+    "right": "It sat between China, India, Parthia and Rome, taxing trade and passing on goods and ideas like Buddhism.",
+    "wrong": [
+     "It ruled the whole Mediterranean Sea.",
+     "It was a Roman province in Egypt.",
+     "It cut off all trade between Asia and Rome."
+    ],
+    "why": "The Kushans sat at the centre of Silk Road trade. They had contacts with Rome, Parthia and China, and Buddhism spread under their patronage."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One more thread, inside the Roman Empire. Judaea was a Roman province. Many Jews under Roman rule hoped for a Messiah, a savior who would free them."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Judaea: a Roman province"
+   },
+   "cite": [
+    "s27"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Into that setting came Jesus of Nazareth, a Jewish preacher and teacher from Galilee. One source dates his life to about 3 BCE to 29 CE. So he was born around our 'year 1'."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Jesus of Nazareth, Jewish teacher in Galilee"
+   },
+   "cite": [
+    "s28",
+    "s27"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Historians generally agree he was a real person. Sources about him begin in the first century, including writings by the Jewish historian Josephus."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Evidence: sources from the 1st century"
+   },
+   "cite": [
+    "s30"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "His teachings were passed on by speaking first. From the late first century they were written down in the gospels. The Roman official Pontius Pilate had him executed to keep order."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "first: spoken teaching | late 1st century: gospels written | Pilate orders his execution"
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Paul of Tarsus was a well-educated Jew at home in the Roman world. He travelled the empire and wrote letters that were widely copied and read."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Paul of Tarsus: traveller and letter-writer"
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In Antioch, followers were first called 'Christians'. Christianity began as a Jewish movement in Roman Judaea. It separated slowly from Judaism in the 2nd century."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "First called 'Christians' in Antioch"
+   },
+   "cite": [
+    "s29"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's check why it could spread. Think about Paul's travels."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Why it spread"
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What helped early Christianity spread across the Roman Empire?",
+    "right": "Roads, sea routes and a mixing of cultures made it easy to travel and share ideas.",
+    "wrong": [
+     "The Roman army forced everyone to join it.",
+     "The Silk Road caravans carried the church to Rome.",
+     "Printing presses copied the gospels."
+    ],
+    "why": "Christianity appeared in a time and place with a great mixing of cultures, and it was fairly easy to move around on roads and sea routes."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last puzzle: how many people lived in the Roman Empire? Nobody counted everyone. But Augustus left a first-person record of his deeds, the Res Gestae, which includes census counts."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Res Gestae: Augustus's own record"
+   },
+   "cite": [
+    "s42"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The census before Augustus, in 70 to 69 BCE, registered about 910,000 male citizens. Augustus reports 4,063,000 in 28 BCE, 4,233,000 in 8 BCE and 4,937,000 in 14 CE."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Roman citizens counted in censuses",
+    "chart": "c2"
+   },
+   "cite": [
+    "s32",
+    "s31"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Did the number of Romans really quadruple in forty years? Scholars read the numbers differently. One reading says the new figure includes women and children."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Reading 1: now includes women and children"
+   },
+   "cite": [
+    "s32"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Another reading says it still means adult men only. A third says the jump is mostly from counting citizens across the whole empire, not just in Italy."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Reading 2: still adult men only|Reading 3: citizens counted across the whole empire"
+   },
+   "cite": [
+    "s34",
+    "s33"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's test that. Think about why 4,063,000 is not simply the number of Romans."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "4,063,000"
+   },
+   "cite": [
+    "s32",
+    "s34"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why can't we just read 4,063,000 as the number of people in Rome's world?",
+    "right": "Historians disagree about who was counted, for example whether women and children were included.",
+    "wrong": [
+     "Augustus never held a census.",
+     "The number is written in a language nobody can read.",
+     "The census counted only slaves."
+    ],
+    "why": "The figure counts Roman citizens, and scholars disagree about whether it includes women and children or only adult men."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "From clues like these, modern historians estimate the whole empire in Augustus's time at about 46 to 60 million people."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Estimates of the Roman Empire's population, Augustus's time (millions)",
+    "chart": "c1"
+   },
+   "cite": [
+    "s37",
+    "s39",
+    "s38"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Estimates for the empire across its history run from 45 to 120 million. The most accepted range is 59 to 76 million. About 15 percent of people may have been slaves."
+   },
+   "show": {
+    "kind": "list",
+    "text": "All estimates: 45 to 120 million|Most accepted: 59 to 76 million|Slaves: about 15 percent"
+   },
+   "cite": [
+    "s37",
+    "s38"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The city of Rome is a puzzle too. Many say about a million people, but estimates run from 600,000 to 1,800,000."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "600,000 to 1,800,000 in the city of Rome"
+   },
+   "cite": [
+    "s40",
+    "s38"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The world total at year 1 is also a guess, from 170 to 300 million. On our rough sum, Rome held between a sixth and a third of everyone alive. That is a wide range because the numbers are so uncertain."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "World in year 1: 170 to 300 million (a guess)"
+   },
+   "cite": [
+    "s21",
+    "s37",
+    "s39"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's put it together with a timeline. It shows the same few decades in Rome, Parthia and China."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "53 BCE Carrhae | 31 BCE Actium | 27 BCE Augustus | 20 BCE standards returned | 2 CE China census | 9 CE Wang Mang's Xin | 14 CE Augustus dies"
+   },
+   "cite": [
+    "s8",
+    "s3",
+    "s4",
+    "s9",
+    "s21",
+    "s20",
+    "s41"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Roman standards were returned in 20 BCE. Wang Mang took the Chinese throne in 9 CE. Which came first?",
+    "right": "The standards, in 20 BCE.",
+    "wrong": [
+     "Wang Mang, in 9 CE.",
+     "They happened in the same year.",
+     "We cannot tell which came first."
+    ],
+    "why": "BCE years count down towards year 1, so 20 BCE was 20 years before year 1. 9 CE came after year 1."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's recap. Augustus built a comparative peace. Parthia was Rome's rival and the Silk Road's middleman. Ships rode the monsoon. The Kushans linked East and West."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Augustus and a comparative peace|Parthia: rival and middleman|Ships and the monsoon|Kushans linking East and West|Christianity begins in Roman Judaea|Population: estimates, not a headcount"
+   },
+   "cite": [
+    "s5",
+    "s7",
+    "s10",
+    "s16",
+    "s23",
+    "s27",
+    "s39"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next class we follow these empires as they change, in Late Antiquity. Thanks for joining us."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Late Antiquity: Changing Empires"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Estimates of the Roman Empire's population in Augustus's time (millions of people)",
+   "rows": [
+    {
+     "label": "Frier (Augustan era)",
+     "value": 46,
+     "source": "s39"
+    },
+    {
+     "label": "Russell 1958 (1 CE)",
+     "value": 46.9,
+     "source": "s37"
+    },
+    {
+     "label": "Beloch 1886 (Augustus's reign)",
+     "value": 54,
+     "source": "s37"
+    },
+    {
+     "label": "Harper (Augustus's time)",
+     "value": 60,
+     "source": "s38"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Roman citizens counted in censuses (70/69 BCE is adult male citizens only)",
+   "rows": [
+    {
+     "label": "70/69 BCE (male citizens)",
+     "value": 910000,
+     "source": "s32"
+    },
+    {
+     "label": "28 BCE (Augustus)",
+     "value": 4063000,
+     "source": "s31"
+    },
+    {
+     "label": "8 BCE (Augustus)",
+     "value": 4233000,
+     "source": "s31"
+    },
+    {
+     "label": "14 CE (Augustus)",
+     "value": 4937000,
+     "source": "s31"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Augustus and the Roman peace",
+   "links": [
+    "[[The Rise of Rome]]",
+    "[[Late Antiquity: Changing Empires]]"
+   ]
+  },
+  {
+   "topic": "Silk Road and Indian Ocean trade",
+   "links": [
+    "[[Mauryan India, Qin and Han China]]",
+    "[[Tang and Song China and the Islamic Golden Age]]",
+    "[[Medieval Africa: Ghana, Mali, Great Zimbabwe and the Swahili Coast]]"
+   ]
+  },
+  {
+   "topic": "Parthia and the Kushans",
+   "links": [
+    "[[Iron Age Empires: Assyria, Babylon and Persia]]",
+    "[[Late Antiquity: Changing Empires]]"
+   ]
+  },
+  {
+   "topic": "Origins of Christianity",
+   "links": [
+    "[[Thinkers and Teachers: Buddha, Confucius, the Greeks and the Prophets]]",
+    "[[Late Antiquity: Changing Empires]]"
+   ]
+  },
+  {
+   "topic": "Counting ancient populations",
+   "links": [
+    "[[How Do We Know? Reading the Evidence and Telling Time]]",
+    "[[The Farming Revolution]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "53 BCE",
+   "elsewhere": "Rome's army loses at Carrhae to Parthia. The Romans reportedly first meet silk, when Parthians wave silk banners in the battle.",
+   "cite": [
+    "s8",
+    "s10"
+   ]
+  },
+  {
+   "when": "31 to 27 BCE",
+   "elsewhere": "Octavian beats Mark Antony at Actium (31 BCE). Egypt comes under Roman control (30 BCE). Octavian takes the name Augustus (27 BCE).",
+   "cite": [
+    "s3",
+    "s14",
+    "s4"
+   ]
+  },
+  {
+   "when": "20 to 19 BCE",
+   "elsewhere": "Parthia returns the captured Roman standards, and Rome builds an arch to Augustus. The Ara Pacis, the altar of Peace, shows Augustus's message of peace and prosperity.",
+   "cite": [
+    "s9",
+    "s7",
+    "s3"
+   ]
+  },
+  {
+   "when": "About 3 BCE to 2 CE",
+   "elsewhere": "One source dates Jesus's birth to about 3 BCE. In China a census in 2 CE counts nearly 60 million people, and the capital Chang'an has nearly 250,000 people.",
+   "cite": [
+    "s27",
+    "s21",
+    "s19"
+   ]
+  },
+  {
+   "when": "9 CE",
+   "elsewhere": "In China, Wang Mang ends the Western Han and founds the short-lived Xin dynasty.",
+   "cite": [
+    "s20"
+   ]
+  },
+  {
+   "when": "14 CE",
+   "elsewhere": "Augustus dies and Tiberius succeeds him. Augustus's last census reports nearly five million citizens.",
+   "cite": [
+    "s41",
+    "s31"
+   ]
+  },
+  {
+   "when": "About 30 to 33 CE",
+   "elsewhere": "Jesus is crucified in Jerusalem, according to one common dating.",
+   "cite": [
+    "s28"
+   ]
+  },
+  {
+   "when": "Mid-1st century CE",
+   "elsewhere": "An unknown Greek-speaking merchant writes the Periplus of the Erythraean Sea. Followers of Jesus are first called Christians in Antioch.",
+   "cite": [
+    "s15",
+    "s29"
+   ]
+  },
+  {
+   "when": "1st to 2nd centuries CE",
+   "elsewhere": "The Kushan Empire flourishes. Mahayana Buddhism begins to reach Han China along the Silk Road.",
+   "cite": [
+    "s22",
+    "s25"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The Pax Romana was a long period of peace.",
+   "other_view": "Many historians stress the word 'comparative'. Fighting continued in Hispania and the Alps after Actium. Augustus and his successors sometimes defended or expanded the borders by conquest to keep order, and riots and rebellions were common in the provinces.",
+   "cite": [
+    "s3",
+    "s6",
+    "s5"
+   ]
+  },
+  {
+   "claim": "Augustus's census figure of 4,063,000 counts all Roman citizens, including women and children.",
+   "other_view": "One reading holds that it includes women and children. Another, from Frank in 1924, holds that like the earlier counts it covers adult males only. A translator's note in the Loeb edition says the big increase is probably due to counting citizens across the whole empire.",
+   "cite": [
+    "s32",
+    "s34",
+    "s33"
+   ]
+  },
+  {
+   "claim": "The Roman Empire had roughly 46 to 60 million people under Augustus.",
+   "other_view": "'Low-count' scholars such as Beloch and Brunt read the census figures as implying smaller populations. A 'high-count' view, revived by Lo Cascio, argues for more. One reviewer argues that Republican census figures were much too low, so Italy's population was higher than the Beloch consensus. Wider estimates run from 45 to 120 million.",
+   "cite": [
+    "s36",
+    "s35",
+    "s37"
+   ]
+  },
+  {
+   "claim": "The Greek captain Hippalus discovered the monsoon route to India.",
+   "other_view": "The Periplus credits Hippalus with finding the direct route. Pliny the Elder says he found the wind. Other sources say the wind was already known in Hellenistic times and had been used by Himyarite and Indian sailors.",
+   "cite": [
+    "s18",
+    "s15"
+   ]
+  },
+  {
+   "claim": "Jesus lived from about 3 BCE to 29 CE.",
+   "other_view": "Other accounts date his crucifixion to about 30 to 33 CE. Sources differ on exact dates, but historians generally agree he was a real person who lived in first-century Roman Judaea.",
+   "cite": [
+    "s27",
+    "s28",
+    "s30"
+   ]
+  },
+  {
+   "claim": "Parthia blocked Rome from reaching China directly.",
+   "other_view": "A Chinese report says Parthia blocked the Romans in order to control the silk trade. Other accounts say Rome got around Parthia by sea. Some goods went by the Indus to Indian ports where Roman ships waited, and Rome focused on Indian Ocean trade.",
+   "cite": [
+    "s12",
+    "s1",
+    "s13"
+   ]
+  }
+ ]
+}

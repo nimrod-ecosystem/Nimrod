@@ -1,0 +1,1165 @@
+{
+ "about": {
+  "title": "Sikhism",
+  "course": "religions-of-the-world",
+  "class_n": 5,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 25,
+  "length_note": "About 25 minutes. The class covers seven topics, including the ten Gurus. Each idea gets one short step and, usually, a check question. Pause after any check question if you want more time."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Sikhism",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Sikhism",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Khalsa",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Khalsa",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "History, Teachings & List of 10 Sikh Gurus",
+   "publisher": "Golden Temple, Amritsar (official site)",
+   "date": "n.d.",
+   "link": "https://www.goldentempleamritsar.org/sikh-gurus/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "4.5 Sikhism, in Understanding Religion",
+   "publisher": "Cleveland State University Library (Pressbooks)",
+   "date": "n.d.",
+   "link": "https://pressbooks.ulib.csuohio.edu/understandingreligion/chapter/sihkism/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Gurdwara",
+   "publisher": "Sikh Coalition",
+   "date": "n.d.",
+   "link": "https://www.sikhcoalition.org/about-sikhs/gurdwara/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Gurdwara FAQs",
+   "publisher": "World Sikh Organization of Canada",
+   "date": "n.d.",
+   "link": "https://www.worldsikh.org/gurdwara_lqzhx0md6bd_piyu3cyh_ryxweu",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Visiting the Gurdwara (Sikh Gurdwara exhibit)",
+   "publisher": "Religions in Minnesota, Carleton College",
+   "date": "n.d.",
+   "link": "https://religionsmn.carleton.edu/exhibits/show/sikhgurdwara/sikhsocietymn/sikhvisiting",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "The World's Religious Groups: How Their Sizes Changed from 2010 to 2020",
+   "publisher": "Pew Research Center",
+   "date": "2025-06-09",
+   "link": "https://www.pewresearch.org/religion/2025/06/09/how-the-global-religious-landscape-changed-from-2010-to-2020/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Countries with the most people from other religions and global change in this population, 2010-2020",
+   "publisher": "Pew Research Center",
+   "date": "2025-06-09",
+   "link": "https://www.pewresearch.org/religion/2025/06/09/other-religions-population-change/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Sikhism by Country 2026",
+   "publisher": "World Population Review",
+   "date": "2026",
+   "link": "https://worldpopulationreview.com/country-rankings/sikhism-by-country",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Langar (Sikhism)",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Langar_(Sikhism)",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Khalsa",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Khalsa",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Five Ks",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Five_Ks",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "The Sikh Gurus",
+   "publisher": "Sikh Dharma International",
+   "date": "n.d.",
+   "link": "https://www.sikhdharma.org/the-sikh-gurus/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "The Langar tradition: Feeding one and all",
+   "publisher": "SikhNet",
+   "date": "n.d.",
+   "link": "https://sikhnet.com/news/langar-tradition-feeding-one-and-all?form=YE2022",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Sikhism: The Birth of Khalsa",
+   "publisher": "Tysons Interfaith",
+   "date": "n.d.",
+   "link": "https://tysonsinterfaith.org/sikhism-the-birth-of-khalsa/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Sikh Philosophy",
+   "publisher": "Guru Nanak Darbar Gurdwara",
+   "date": "n.d.",
+   "link": "https://www.gurunanakdarbar.org/sikh-philosophy",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Waheguru",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Waheguru",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Sikhism in India",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Sikhism_in_India",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Sikhism in the United States",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Sikhism_in_the_United_States",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "The Global Religious Landscape",
+   "publisher": "Pew Research Center",
+   "date": "2012-12-18",
+   "link": "https://www.pewresearch.org/religion/2012/12/18/global-religious-landscape-exec/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Guru Arjan",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/biography/Guru-Arjan",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Guru Tegh Bahadur",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/biography/Guru-Tegh-Bahadur",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "10 Sikh Gurus",
+   "publisher": "Study.com",
+   "date": "n.d.",
+   "link": "https://study.com/learn/lesson/10-sikh-gurus-names-teachings-timeline.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Babur",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/biography/Babur",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Christopher Columbus",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/biography/Christopher-Columbus",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "Protestantism",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Protestantism",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "Ten Sikh Gurus",
+   "publisher": "SikhiWiki",
+   "date": "n.d.",
+   "link": "https://www.sikhiwiki.org/index.php/Ten_Sikh_Gurus",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "Langar",
+   "publisher": "SikhiWiki",
+   "date": "n.d.",
+   "link": "https://www.sikhiwiki.org/index.php/Langar",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "Sikhism - Worldwide distribution",
+   "publisher": "worlddata.info",
+   "date": "n.d.",
+   "link": "https://www.worlddata.info/religions/sikhism.php",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s31",
+   "title": "Sikhism",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Sikhism",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class five. Today we learn about Sikhism, a faith that began in the Punjab region of South Asia over five hundred years ago."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Sikhism"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We will meet the Gurus, the core beliefs, the holy book, the gurdwara and its free kitchen, the Khalsa, a festival, and where Sikhs live. We describe it as Sikhs describe it."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. The Gurus\n2. Core beliefs\n3. The Guru Granth Sahib\n4. The gurdwara and langar\n5. The Khalsa and the Five Ks\n6. Vaisakhi\n7. Where Sikhs live"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, a key word. Sikhs explain the word Guru as meaning remover of darkness."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Guru = remover of darkness"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The first Guru was Guru Nanak. He was born in 1469 in Talvandi, now called Nankana Sahib, in present-day Pakistan."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A 19th-century mural painting of Guru Nanak, from a gurdwara in Punjab"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Sikh sources say that at about age thirty, Guru Nanak had a profound mystical revelation. Sikhs honour him as the founder of their faith."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Founder: Guru Nanak (1469-1539)"
+   },
+   "cite": [
+    "s14",
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Who founded Sikhism?",
+    "right": "Guru Nanak",
+    "wrong": [
+     "Guru Gobind Singh",
+     "Guru Arjan",
+     "Guru Angad"
+    ],
+    "why": "Sikhism was established by Guru Nanak (1469-1539) and then led by nine other Gurus."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "After Guru Nanak came nine more Gurus. In all there were ten human Gurus, from 1469 to 1708."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "star",
+    "count": 10,
+    "layout": "row",
+    "text": "Ten human Gurus"
+   },
+   "cite": [
+    "s14",
+    "s1"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Sikhs believe all ten Gurus carried the same spirit. Their styles differed because their times differed."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "One spirit, ten Gurus"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "How many human Gurus did Sikhism have?",
+    "right": "Ten",
+    "wrong": [
+     "Five",
+     "Seven",
+     "Twelve"
+    ],
+    "why": "There were ten human Gurus, from Guru Nanak to Guru Gobind Singh."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here they are in order. You do not need to memorise them. Just notice the first, Nanak, and the last, Gobind Singh."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1 Nanak\n2 Angad\n3 Amar Das\n4 Ram Das\n5 Arjan\n6 Hargobind\n7 Har Rai\n8 Har Krishan\n9 Tegh Bahadur\n10 Gobind Singh"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Guru Arjan, the fifth Guru, finished the Golden Temple at Amritsar. He built it with a door on each of its four sides."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "door",
+    "count": 4,
+    "layout": "group",
+    "text": "Four doors: a welcome for all"
+   },
+   "cite": [
+    "s3",
+    "s22"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The doors stand for a welcome to people of every faith and background. That idea of welcome will come back when we reach the kitchen."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The Golden Temple (Sri Harmandir Sahib) in Amritsar, with its pool and gold-covered shrine"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Sikh history also includes hard times. Guru Arjan is remembered as the first Sikh martyr. He was executed by the Mughal ruler Jahangir after refusing to remove parts of the Adi Granth."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Guru Arjan: first Sikh martyr (died 1606)"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The ninth Guru, Tegh Bahadur, is remembered as the second Sikh martyr. He was executed in 1675 for defending Hindu Brahmins from forced conversion."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Guru Tegh Bahadur: second Sikh martyr (died 1675)"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which Guru is remembered as the first Sikh martyr?",
+    "right": "Guru Arjan",
+    "wrong": [
+     "Guru Nanak",
+     "Guru Angad",
+     "Guru Hargobind"
+    ],
+    "why": "Guru Arjan, the fifth Guru, is considered the first Sikh martyr."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the beliefs. The first is that there is one God. The Sikh scripture opens with the words Ik Onkar, which mean One God."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ik Onkar: there is one God"
+   },
+   "cite": [
+    "s18",
+    "s1"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Sikhs often call God Waheguru, meaning wonderful God. They say the one God is the Lord of all religions, and Sikhs do not claim exclusive rights to God."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Waheguru = 'wonderful God'"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does Ik Onkar express?",
+    "right": "That there is one God",
+    "wrong": [
+     "That there are ten Gurus",
+     "That God has many forms",
+     "That the world began in 1469"
+    ],
+    "why": "Ik Onkar opens the Sikh scripture and speaks of God's oneness."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The second belief is equality. Sikh teaching holds that all people are equal before God. The Gurus also stressed the full equality of women."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Equality of all people"
+   },
+   "cite": [
+    "s14",
+    "s17"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is a line attributed to Guru Nanak. It links belief to daily life."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "\"Truth is the highest virtue, but higher still is truthful living.\" (Guru Nanak, as quoted)"
+   },
+   "cite": [
+    "s31"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The third idea is service. Guru Nanak gave Sikhs three guidelines, often called the three pillars. Each one tells you what to do."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Naam Japna: remember God\nKirat Karni: earn an honest living\nVand Chakna: share with others"
+   },
+   "cite": [
+    "s17",
+    "s15"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Naam japna means meditating on God, by reciting, chanting or singing. Kirat karni means honest work. Vand chakna means sharing what you have with the community."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Inside: remember God (naam japna)\nOutside: honest work (kirat karni) and sharing (vand chakna)"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which pillar means earning an honest living?",
+    "right": "Kirat karni",
+    "wrong": [
+     "Naam japna",
+     "Vand chakna",
+     "Ik Onkar"
+    ],
+    "why": "Kirat karni is honest living. Naam japna is remembering God, and vand chakna is sharing."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next, the holy book. The Guru Granth Sahib is also called the Adi Granth. Sikhs treat it as their living, eternal Guru."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "book",
+    "count": 1,
+    "layout": "group",
+    "text": "One book, treated as a living Guru"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Guru Gobind Singh, the tenth Guru, declared that the scripture would be the Guru after him. That ended the line of human Gurus."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Guru Gobind Singh: the Granth is the eternal Guru (1708)"
+   },
+   "cite": [
+    "s3",
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Who declared the Guru Granth Sahib the eternal Guru?",
+    "right": "Guru Gobind Singh",
+    "wrong": [
+     "Guru Nanak",
+     "Guru Arjan",
+     "Guru Tegh Bahadur"
+    ],
+    "why": "The tenth Guru declared that the scripture would be the eternal Guru. Guru Arjan compiled the first edition, the Adi Granth."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "What is inside? Compositions by six of the Gurus, and hymns by saints from other traditions. It runs to about 1430 pages."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Writings of six Gurus\nHymns of saints from other traditions\nAbout 1430 pages"
+   },
+   "cite": [
+    "s4",
+    "s14",
+    "s28"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The whole book is written as poetry and music. So most of a Sikh worship service is sung."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Scripture as poetry and song"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Because it is the Guru, the book is treated like royalty. It sits on a raised platform under a canopy, and a whisk called a chaur is waved over it."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The Guru Granth Sahib on a raised platform under a canopy, with a chaur whisk waved above it"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That brings us to the gurdwara, the Sikh place of learning and worship. The Guru Granth Sahib sits at its centre."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Gurdwara: place of learning and worship"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Sikhism has no ordained clergy. Any woman or man from the congregation may lead worship."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "No ordained clergy"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Visitors take off their shoes and cover their heads as signs of respect. Everyone sits on the floor together. Visitors do not have to bow."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Shoes off\nHead covered\nSit on the floor, all together\nBowing is not required of visitors"
+   },
+   "cite": [
+    "s6",
+    "s5",
+    "s7"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What do visitors do on entering a gurdwara?",
+    "right": "Remove their shoes and cover their heads",
+    "wrong": [
+     "Pay an entry fee",
+     "Wear a special uniform",
+     "Stay silent for the whole service"
+    ],
+    "why": "Shoes off and heads covered are signs of respect. There is no fee, and worship is mostly sung."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the langar, the gurdwara's community kitchen. It serves meals free to all, whatever their religion, caste, gender, wealth or ethnicity."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Langar: the free community kitchen"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "People sit on the floor and eat together as equals. The meals are vegetarian, so that no one is shut out of the table."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Rows of people of all ages sitting on the floor in a langar hall, sharing a simple meal"
+   },
+   "cite": [
+    "s11",
+    "s29"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Volunteers run the kitchen. This is called seva, selfless service. Sikhs say langar is not charity but a spiritual practice and a way to build community."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Seva = selfless service"
+   },
+   "cite": [
+    "s11",
+    "s15"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Sikh tradition says Guru Nanak started the practice, and Guru Angad is remembered for making it standard in every gurdwara. At big gurdwaras, teams cook for thousands of guests each day."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Guru Nanak: begins the community kitchen\nGuru Angad: makes it a standard part of every gurdwara\nToday: nearly every gurdwara has a langar"
+   },
+   "cite": [
+    "s3",
+    "s11",
+    "s29"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Who is welcome to eat at a langar?",
+    "right": "Everyone, whatever their religion, caste, gender or wealth",
+    "wrong": [
+     "Only baptised Sikhs",
+     "Only men",
+     "Only people who donate money"
+    ],
+    "why": "Langar serves meals free of charge to all, with no distinction of religion, caste, gender or wealth."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the Khalsa. In 1699, at Anandpur, Guru Gobind Singh asked for volunteers willing to give their lives for the faith. Five stepped forward."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "star",
+    "count": 5,
+    "layout": "five-frame",
+    "text": "The five volunteers"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "They were initiated first and called the Panj Pyare, the Five Beloved Ones. They formed the core of the Khalsa, the community of initiated Sikhs."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Panj Pyare = the Five Beloved Ones"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Khalsa Sikhs wear five articles of faith, called the Five Ks because each name begins with the same K sound in Punjabi. Here they are."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Kesh: uncut hair\nKara: steel bracelet\nKangha: comb\nKirpan: sword\nKachchera: undergarment"
+   },
+   "cite": [
+    "s2",
+    "s23"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Not every Sikh has taken initiation. A Sikh who follows the Guru Granth Sahib but has not been initiated is called a Sahajdhari Sikh."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Amritdhari (Khalsa): initiated, keeps the Five Ks\nSahajdhari: follows the Guru Granth Sahib, not initiated"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which of the Five Ks is the steel bracelet?",
+    "right": "Kara",
+    "wrong": [
+     "Kangha",
+     "Kirpan",
+     "Kesh"
+    ],
+    "why": "Kara is the steel bracelet. Kangha is the comb, kirpan the sword, and kesh uncut hair."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Khalsa was founded on Vaisakhi. This is a major Sikh festival, and also a harvest festival in Punjab."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Vaisakhi: birth of the Khalsa, and a Punjab harvest festival"
+   },
+   "cite": [
+    "s16",
+    "s2"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Khalsa Sikhs celebrate the order's birth on April 13 or 14 each year. Sikhs also keep gurpurabs, festivals for the Gurus. Guru Nanak's birthday falls on the November full moon."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Vaisakhi: April 13 or 14\nGuru Nanak's birthday: November full moon\nGurpurabs often include a 48-hour reading of the whole Guru Granth Sahib"
+   },
+   "cite": [
+    "s2",
+    "s4"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What does Vaisakhi commemorate for Sikhs?",
+    "right": "The founding of the Khalsa in 1699",
+    "wrong": [
+     "Guru Nanak's birthday",
+     "The death of Guru Gobind Singh",
+     "The writing of the Guru Granth Sahib"
+    ],
+    "why": "Vaisakhi marks the day in 1699 when Guru Gobind Singh established the Khalsa. Guru Nanak's birthday is a separate festival."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last topic: where Sikhs live today. Sikhism began in Punjab, and most Sikhs still live in India."
+   },
+   "show": {
+    "kind": "map",
+    "text": "South Asia, with Punjab marked, then dots for Canada, the UK, the US, Australia, Italy and Malaysia"
+   },
+   "cite": [
+    "s1",
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The 2011 Indian census counted about 20.8 million Sikhs, or 1.7 percent of India's people. Estimates for the world run from about 25 to 30 million."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "25-30 million Sikhs worldwide (estimate)"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Pew counts Sikhs inside a group called other religions. That whole group is about two percent of the world's people."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Pew's 'other religions': about 2.2% of the world"
+   },
+   "cite": [
+    "s8",
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "This pie shows one estimate. India holds nearly nine in ten Sikhs. Different counts give somewhat different shares."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Share of the world's Sikhs",
+    "chart": "c1"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Outside India, the biggest Sikh communities are in Canada, the United Kingdom, the United States, Australia, Italy and Malaysia. In Canada, Sikhs are about 2 percent of the population."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Sikh population outside India (census or estimate years differ)",
+    "chart": "c2"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Which country has the most Sikhs?",
+    "right": "India",
+    "wrong": [
+     "Canada",
+     "The United Kingdom",
+     "The United States"
+    ],
+    "why": "India has by far the most, about 20.8 million in the 2011 census and an estimated 23.8 million by 2023."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Sikhs have lived in the United States for more than 130 years. Many Sikh communities around the world are made of families who moved from Punjab."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A worldwide community"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's put it together. One God. Equality. Service. Ten Gurus. A living Guru in a book. A kitchen open to all."
+   },
+   "show": {
+    "kind": "list",
+    "text": "One God (Ik Onkar)\nEquality and service\nTen human Gurus, then the Guru Granth Sahib\nGurdwara and langar\nKhalsa, Five Ks and Vaisakhi\nMostly in India, with communities worldwide"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which sentence is true?",
+    "right": "Sikhs treat the Guru Granth Sahib as their living, eternal Guru.",
+    "wrong": [
+     "Sikhism has no scripture.",
+     "Langar is only for Sikh men.",
+     "Sikhs have had only one Guru."
+    ],
+    "why": "After the ten human Gurus, Sikhs regard the Guru Granth Sahib as the eternal Guru. Langar is for everyone."
+   }
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "pie",
+   "title": "Share of the world's Sikhs (one estimate, percent)",
+   "rows": [
+    {
+     "label": "India",
+     "value": 89.75,
+     "source": "s10"
+    },
+    {
+     "label": "Everywhere else (100 minus India's share)",
+     "value": 10.25,
+     "source": "s10"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Sikh population outside India (people; years vary)",
+   "rows": [
+    {
+     "label": "Canada (2021)",
+     "value": 771790,
+     "source": "s10"
+    },
+    {
+     "label": "United Kingdom (2021)",
+     "value": 524529,
+     "source": "s10"
+    },
+    {
+     "label": "United States (2021 est.)",
+     "value": 280000,
+     "source": "s10"
+    },
+    {
+     "label": "Australia (2021)",
+     "value": 210400,
+     "source": "s10"
+    },
+    {
+     "label": "Italy (2022)",
+     "value": 210000,
+     "source": "s10"
+    },
+    {
+     "label": "Malaysia (2016)",
+     "value": 100000,
+     "source": "s10"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Guru Nanak and the first Sikh community",
+   "links": [
+    "[[Ten Gurus]]",
+    "[[Guru Granth Sahib]]",
+    "[[Hinduism]]",
+    "[[Islam]]"
+   ]
+  },
+  {
+   "topic": "Langar and seva",
+   "links": [
+    "[[Gurdwara]]",
+    "[[Community and sharing across religions]]"
+   ]
+  },
+  {
+   "topic": "The Khalsa and the Five Ks",
+   "links": [
+    "[[Vaisakhi]]",
+    "[[Religious dress and symbols]]"
+   ]
+  },
+  {
+   "topic": "Where Sikhs live",
+   "links": [
+    "[[Putting It Together: Calendars, Sacred Places and Living Side by Side]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "1469-1539 (Guru Nanak's life); in 1492",
+   "elsewhere": "Christopher Columbus crossed the Atlantic in 1492, a voyage that opened the way for European colonization of the Americas.",
+   "cite": [
+    "s26"
+   ]
+  },
+  {
+   "when": "1469-1539 (Guru Nanak's life); in 1517",
+   "elsewhere": "Martin Luther posted his Ninety-Five Theses in Wittenberg, Germany, which is often seen as the start of the Protestant Reformation.",
+   "cite": [
+    "s27"
+   ]
+  },
+  {
+   "when": "1469-1539 (Guru Nanak's life); in 1526",
+   "elsewhere": "Babur defeated Ibrahim Lodi at the First Battle of Panipat in northern India, founding the Mughal dynasty. Later Gurus lived under Mughal rule.",
+   "cite": [
+    "s25"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Guru Nanak received a revelation and founded a new religion.",
+   "other_view": "Sikh sources describe a profound revelation to Guru Nanak and a distinct faith. Some outside summaries describe Sikhism as combining aspects of Hinduism and Islam, and note that Nanak grew up in a Hindu family in a village of both Hindus and Muslims. Sikhs generally do not describe their faith as a blend.",
+   "cite": [
+    "s14",
+    "s30",
+    "s24"
+   ]
+  },
+  {
+   "claim": "Guru Nanak started the langar.",
+   "other_view": "Sikh sources credit Guru Nanak with establishing the community kitchen. Others credit Guru Angad, the second Guru, with systematising it in gurdwaras, and one source names him as its creator. Both views agree it began with the early Gurus.",
+   "cite": [
+    "s3",
+    "s11",
+    "s24"
+   ]
+  },
+  {
+   "claim": "The Khalsa was founded on Vaisakhi in 1699, and the date is settled.",
+   "other_view": "Britannica gives March 30, 1699, according to some records, while Khalsa Sikhs celebrate it on April 13 or 14. Scholars also note that the word Khalsa was used before 1699, so how the order took shape is discussed in detail.",
+   "cite": [
+    "s2",
+    "s12"
+   ]
+  },
+  {
+   "claim": "About 90 percent of the world's Sikhs live in India, and there are about 25-30 million Sikhs.",
+   "other_view": "Counts differ. One estimate gives India 89.75% of Sikhs, while another gives 83-84%. For the United States, Pew estimated about 200,000 Sikhs in 2012, while Sikh organisations cite figures up to 1,000,000 without sources. Many national censuses do not ask about religion.",
+   "cite": [
+    "s10",
+    "s19",
+    "s20",
+    "s21"
+   ]
+  }
+ ]
+}

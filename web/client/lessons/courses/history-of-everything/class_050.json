@@ -1,0 +1,1233 @@
+{
+ "about": {
+  "title": "The Road to World War I",
+  "course": "history-of-everything",
+  "class_n": 50,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 32,
+  "length_note": "This is a little over 30 minutes. The July 1914 crisis has many steps, and each one gets its own short beat and check question so nothing is rushed."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "11.1 Alliances, Expansion, and Conflict - World History Volume 2, from 1400",
+   "publisher": "OpenStax (Rice University)",
+   "date": "2025",
+   "link": "https://openstax.org/books/world-history-volume-2/pages/11-1-alliances-expansion-and-conflict",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "The Naval Race between Britain and Germany before the First World War",
+   "publisher": "Imperial War Museums",
+   "date": "n.d.",
+   "link": "https://www.iwm.org.uk/history/first-world-war/outbreak/naval-arms-race",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "The Anglo-German Arms Race: Riding the Waves to WWI",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/article/2812/the-anglo-german-arms-race/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "1914: War or Peace?",
+   "publisher": "Facing History and Ourselves",
+   "date": "2016-08-02",
+   "link": "https://www.facinghistory.org/resource-library/1914-war-or-peace",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "Bosnian crisis of 1908",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/event/Bosnian-crisis-of-1908",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "Balkan Wars",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Balkan-Wars",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "The July Crisis: A chronology",
+   "publisher": "The Open University (OpenLearn)",
+   "date": "n.d.",
+   "link": "https://www.open.edu/openlearn/history-the-arts/history/world-history/the-july-crisis-chronology",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "Sarajevo 1914",
+   "publisher": "Cambridge University Library",
+   "date": "n.d.",
+   "link": "https://www.lib.cam.ac.uk/collections/departments/germanic-collections/about-collections/spotlight-archive/sarajevo-1914",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "June 28, 1914 in Sarajevo: Two gunshots, one World War",
+   "publisher": "FRANCE 24 (with the Museum of Sarajevo)",
+   "date": "n.d.",
+   "link": "https://graphics.france24.com/assassination-sarajevo-1914-archduke-princip-photos/index.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "Austria's Archduke Ferdinand assassinated",
+   "publisher": "HISTORY",
+   "date": "n.d.",
+   "link": "https://www.history.com/this-day-in-history/june-28/archduke-ferdinand-assassinated",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "Alliances as a cause of World War I",
+   "publisher": "Alpha History",
+   "date": "n.d.",
+   "link": "https://alphahistory.com/worldwar1/alliances/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "Triple Entente",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Triple_Entente",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "Events of World War I (alliances section)",
+   "publisher": "Lumen Learning, SUNY World History",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/suny-worldhistory/chapter/events-of-world-war-i/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "Events of World War I (Schlieffen Plan section)",
+   "publisher": "Lumen Learning, History of Europe",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/muw-historyofeurope/chapter/events-of-world-war-i/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "Historians' dispute: bestseller's thesis one of shared guilt",
+   "publisher": "The Irish Times",
+   "date": "n.d.",
+   "link": "https://www.irishtimes.com/culture/heritage/historians-dispute-bestseller-s-thesis-one-of-shared-guilt-1.1786636",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "Guilt or Responsibility? The Hundred-Year Debate on the Origins of World War I",
+   "publisher": "Central European History, Cambridge University Press",
+   "date": "n.d.",
+   "link": "https://www.cambridge.org/core/journals/central-european-history/article/guilt-or-responsibility-the-hundredyear-debate-on-the-origins-of-world-war-i/35B5E58FD27F872B9B2AF3D5DB552661",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "The burden of guilt and German politics in Europe",
+   "publisher": "OUP Blog (English Historical Review)",
+   "date": "2014-08",
+   "link": "https://blog.oup.com/2014/08/first-world-war-guilt-german-politics-europe/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "The Sleepwalkers: How Europe Went to War in 1914",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/The_Sleepwalkers:_How_Europe_Went_to_War_in_1914",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "The Sleepwalkers: How Europe Went to War in 1914 / July 1914: Countdown to War (review)",
+   "publisher": "The RUSI Journal, Taylor & Francis",
+   "date": "2014",
+   "link": "https://www.tandfonline.com/doi/full/10.1080/03071847.2014.895270",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "The Causes of World War One: Historiographical Debates",
+   "publisher": "Explaining History",
+   "date": "n.d.",
+   "link": "https://explaininghistory.org/historiography/causes-of-ww1/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "Scramble for Africa",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/history/scramble-africa/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "Colonial Disputes: Fueling the Flames of World War I",
+   "publisher": "PolSci Institute",
+   "date": "n.d.",
+   "link": "https://polsci.institute/international-relations-world-history/colonial-disputes-world-war-i/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "Boxer Rebellion",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Boxer_Rebellion",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "1911",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/1911",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "History of the World - By Date (1900 to 1950)",
+   "publisher": "Luke Mastin, The Timetable of History",
+   "date": "n.d.",
+   "link": "http://www.lukemastin.com/history/by_date_7.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "Belgium, U.S. involvement in World War I",
+   "publisher": "U.S. Army (army.mil)",
+   "date": "n.d.",
+   "link": "https://www.army.mil/article/200760/belgium_u_s_involvement_in_world_war_i",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "Serbia before World War I",
+   "publisher": "Alpha History",
+   "date": "n.d.",
+   "link": "https://alphahistory.com/worldwar1/serbia/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "Assassination of Archduke Franz Ferdinand (concept summary)",
+   "publisher": "EPFL GraphSearch",
+   "date": "n.d.",
+   "link": "https://graphsearch.epfl.ch/en/concept/8961317",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s29",
+   "title": "Europe 1914: Assassination of Franz Ferdinand",
+   "publisher": "OmniAtlas",
+   "date": "n.d.",
+   "link": "https://omniatlas.com/maps/europe/19140628/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s30",
+   "title": "Rape of Belgium",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Rape_of_Belgium",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s31",
+   "title": "German Policy following the Sarajevo Assassination",
+   "publisher": "Google Arts & Culture, German Federal Archives",
+   "date": "n.d.",
+   "link": "https://artsandculture.google.com/story/german-policy-following-the-sarajevo-assassination/8AWRQIK0cRkA8A",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s32",
+   "title": "AP World History Review: Causes of World War I",
+   "publisher": "Albert.io",
+   "date": "n.d.",
+   "link": "https://www.albert.io/blog/ap-world-history-causes-world-war-i/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s33",
+   "title": "MAIN Causes of World War I",
+   "publisher": "OER Commons",
+   "date": "n.d.",
+   "link": "https://oercommons.org/courseware/lesson/64967/overview",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s34",
+   "title": "Statewide Dual Credit World History: Nationalism and Militarism",
+   "publisher": "OER Commons",
+   "date": "n.d.",
+   "link": "https://oercommons.org/courseware/lesson/87934/student-old/?task=3",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s35",
+   "title": "Britain's Declaration of War on Germany",
+   "publisher": "Study.com",
+   "date": "n.d.",
+   "link": "https://study.com/academy/lesson/britains-declaration-of-war-on-germany.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s36",
+   "title": "The Anglo-German naval arms race, 1906-1916 / Timeline of the 20th century (not used)",
+   "publisher": "n/a",
+   "date": "n.d.",
+   "link": "https://msaag.aag.org/wp-content/uploads/2014/10/10-Norris-MSG4584-892012.pdf",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s37",
+   "title": "Year summaries including 1905 and 1912 (concept page)",
+   "publisher": "EPFL GraphSearch",
+   "date": "n.d.",
+   "link": "https://graphsearch.epfl.ch/en/concept/15802/concepts?page=2",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome. Today's big question: how did two gunshots in one Balkan city turn into a war that pulled in much of the world? We will go one step at a time."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Road to World War I"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Two useful phrases first. A long-term cause is a pressure that builds for years. A short-term cause is the spark that sets things off. Think of a dry forest and a match."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Long-term cause: builds for years (the dry forest) | Short-term cause: the spark (the match)"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In the forest picture, which one is the long-term cause?",
+    "right": "The dry forest",
+    "wrong": [
+     "The match",
+     "The flames",
+     "The firefighters"
+    ],
+    "why": "The dry forest is the condition that built up over time. The match is the short-term spark."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is our plan. Four long-term pressures: alliances, an arms race, nationalism, and rival empires. Then trouble in the Balkans. Then the spark in Sarajevo, five tense weeks, and the debate over blame."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1 Alliances | 2 Arms race | 3 Nationalism | 4 Rival empires | 5 The Balkans | 6 Sarajevo and July 1914 | 7 Who was responsible?"
+   },
+   "cite": [
+    "s33"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Pressure one: alliances. An alliance is a promise between countries to help each other. In the later 1800s, Germany's leader Bismarck built a web of alliances to keep France and Russia in check."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Alliance = a promise to help each other"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 1882 Italy joined Germany and Austria-Hungary in the Triple Alliance. France felt isolated, so in 1894 it allied with Russia. Italy would later change sides during the war."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1882 Triple Alliance: Germany, Austria-Hungary, Italy | 1894 France and Russia ally"
+   },
+   "cite": [
+    "s13",
+    "s11",
+    "s33"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Then Britain stepped in. In 1904 Britain and France ended a century of hostility with the Entente Cordiale, a 'friendly agreement'. In 1907 Britain and Russia settled their own disagreements. Together these made the Triple Entente."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Triple Alliance: Germany, Austria-Hungary, Italy | Triple Entente: Britain, France, Russia"
+   },
+   "cite": [
+    "s11",
+    "s12"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which three countries made up the Triple Entente?",
+    "right": "Britain, France and Russia",
+    "wrong": [
+     "Germany, Austria-Hungary and Italy",
+     "Britain, Germany and Russia",
+     "France, Italy and Austria-Hungary"
+    ],
+    "why": "Britain, France and Russia were the Entente. Germany, Austria-Hungary and Italy were the Triple Alliance. Note that the Entente was not a formal pledge to defend each other."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why does this matter? Promises like these meant a small quarrel could drag in big countries. Kaiser Wilhelm II also feared being surrounded: France to the west, Russia to the east."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A map of Europe with Germany in the middle. Arrows from France in the west and Russia in the east point at it."
+   },
+   "cite": [
+    "s34",
+    "s1",
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why was Germany worried about a war in Europe?",
+    "right": "It might have to fight enemies on two sides at once, France in the west and Russia in the east",
+    "wrong": [
+     "It had no army at all",
+     "It had no allies",
+     "It was far from every other country"
+    ],
+    "why": "Germany had rivals on both sides, so planners feared a war on two fronts. It did have allies, and a large army."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Pressure two: the arms race. Militarism is the belief that a nation needs a strong military to reach its goals. Young men did military service, then went home as reserves, ready to be called back."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1,000,000+ soldiers in each great power's forces by 1914"
+   },
+   "cite": [
+    "s4",
+    "s34"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What does 'militarism' mean?",
+    "right": "The belief that a nation needs a strong military to reach its goals",
+    "wrong": [
+     "A love of music and marching bands",
+     "A rule that soldiers cannot vote",
+     "A peace treaty between armies"
+    ],
+    "why": "Militarism is the belief that national strength depends on military strength."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Look at the sea. In 1906 Britain launched HMS Dreadnought, a new heavily armed battleship. Germany answered by building more, and the public in both countries demanded more ships."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A huge grey steam-turbine battleship with big guns on its deck, at sea"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What was HMS Dreadnought?",
+    "right": "A powerful new British battleship, launched in 1906, that started a naval race",
+    "wrong": [
+     "A German submarine",
+     "An Austrian cannon",
+     "A French airship"
+    ],
+    "why": "Dreadnought was so advanced that it set off a naval race between Britain and Germany."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here are the numbers for 1914. Britain had 29 dreadnoughts. Germany had 17. Germany hoped to outbuild Britain one day, but its fleet never matched the British one."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Dreadnought battleships, 1914",
+    "chart": "c1"
+   },
+   "cite": [
+    "s2",
+    "s1"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "By the chart, how many more dreadnoughts did Britain have than Germany in 1914?",
+    "right": "12",
+    "wrong": [
+     "2",
+     "17",
+     "29"
+    ],
+    "why": "29 minus 17 is 12."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The race was not only ships. In 1912 the Kaiser announced more spending on navy and army. But look at the share of each economy spent on arms in 1914: Britain and Russia were ahead of Germany."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Arms spending as a share of national income (GDP), 1914",
+    "chart": "c2"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Generals also drew up plans for the next war. Germany's plan was a quick strike on France through neutral Belgium, then a turn east against Russia. Once a crisis began, plans like this could take over from talking."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Western Europe. A thick arrow from Germany goes through Belgium toward Paris. A second arrow turns east toward Russia."
+   },
+   "cite": [
+    "s1",
+    "s14",
+    "s35",
+    "s26",
+    "s32"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which small neutral country did Germany's war plan go through?",
+    "right": "Belgium",
+    "wrong": [
+     "Switzerland",
+     "Spain",
+     "Denmark"
+    ],
+    "why": "Germany planned to reach France by crossing Belgium. That choice mattered a great deal, as we will see."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Pressure three: nationalism. That means strong loyalty to your own nation or people. It could mean pride and rivalry between great powers. It could also mean a people without their own state wanting one."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Nationalism = strong loyalty to your own nation or people"
+   },
+   "cite": [
+    "s34",
+    "s27"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is an example. Austria-Hungary was an empire of many peoples, including a large Slavic population. Pan-Slavism called for freeing Slavs from Austrian rule. Serbia became a home for that idea, and Vienna felt threatened."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A patchwork map of Austria-Hungary, with several peoples shown in different colours"
+   },
+   "cite": [
+    "s27",
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why did nationalism threaten Austria-Hungary?",
+    "right": "Many peoples inside the empire might want their own states or to join neighbours",
+    "wrong": [
+     "It had no people living in it",
+     "It wanted to give up its army",
+     "Its neighbours were all peaceful"
+    ],
+    "why": "An empire of many peoples could be pulled apart if those peoples wanted independence or union with neighbours."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Pressure four: rival empires. Between about 1880 and 1914, European powers took over almost all of Africa. By 1914 only Ethiopia and Liberia were free of European control."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Africa in 1914, almost entirely coloured by Britain, France, Germany, Belgium, Portugal, Italy and Spain; Ethiopia and Liberia left uncoloured"
+   },
+   "cite": [
+    "s21",
+    "s22"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The powers met at the Berlin Conference in 1884 and 1885 to set rules and avoid fighting each other over Africa. No African representatives were there. Britain held the most colonies in Africa, France next, then Germany."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Colonies in Africa by 1914: Britain 14, France 7, Germany 4"
+   },
+   "cite": [
+    "s22",
+    "s21"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What was the Berlin Conference of 1884 to 1885 for?",
+    "right": "To set rules for how European powers could claim land in Africa without fighting each other",
+    "wrong": [
+     "To end slavery in Europe",
+     "To plan the assassination in Sarajevo",
+     "To give Africans a vote"
+    ],
+    "why": "The powers hoped to claim land without war among themselves. Rivalry still continued, for example the 1905 clash over Morocco."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Empires were not only a European story. In 1900 the Boxer uprising in China fought foreign influence. Russia fought Japan from 1904. Mexico's revolution began in 1910. In 1911 a revolution in China ended over two thousand years of imperial rule."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1900 Boxer uprising, China | 1904 Russo-Japanese War | 1910 Mexican Revolution | 1911 Chinese Revolution"
+   },
+   "cite": [
+    "s23",
+    "s25",
+    "s24"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What did the 1911 revolution in China end?",
+    "right": "Over two thousand years of imperial rule",
+    "wrong": [
+     "The Boxer uprising",
+     "The Berlin Conference",
+     "The Russo-Japanese War"
+    ],
+    "why": "The 1911 revolution overthrew the Qing dynasty and ended imperial rule in China."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the Balkans, where the pressures met. The Ottoman Empire was weakening. Austria-Hungary had run Bosnia and Herzegovina since 1878. In October 1908 it formally annexed them, which means it claimed them as its own."
+   },
+   "show": {
+    "kind": "map",
+    "text": "The Balkans in 1908. Bosnia and Herzegovina is highlighted. Serbia is next to it and Austria-Hungary is to the north."
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Serbia was outraged. Russia first backed Serbia, then in 1909 gave in because it could not risk a war with Austria-Hungary and Germany. Serbian nationalists did not forget."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "1908: Austria-Hungary annexes Bosnia and Herzegovina"
+   },
+   "cite": [
+    "s5",
+    "s27"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What did Austria-Hungary do in October 1908?",
+    "right": "It formally annexed Bosnia and Herzegovina",
+    "wrong": [
+     "It declared war on Russia",
+     "It gave Bosnia to Serbia",
+     "It joined the Triple Entente"
+    ],
+    "why": "The annexation angered Serbia and Russia and raised tension in the Balkans."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Then came two Balkan wars in 1912 and 1913. The Ottoman Empire lost nearly all its European land. Serbia grew, and that worried Austria-Hungary, which had a significant Serb minority of its own."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1912-1913 Balkan Wars | Ottomans lose almost all their European land | Serbia expands"
+   },
+   "cite": [
+    "s6",
+    "s29"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why did a bigger, stronger Serbia worry Austria-Hungary?",
+    "right": "Austria-Hungary had many Slavs and Serbs living inside it who might look to Serbia",
+    "wrong": [
+     "Serbia had no army",
+     "Serbia was Austria's ally",
+     "Serbia sat far away across the sea"
+    ],
+    "why": "A stronger Serbia could attract Slav and Serb people living inside Austria-Hungary."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let us pause and gather the dry forest: alliances, an arms race, nationalism, rival empires, and a Balkan region full of tension. Now for the match."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Alliances | Arms race | Nationalism | Rival empires | Balkan tension"
+   },
+   "cite": [
+    "s33"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Sunday, 28 June 1914. Archduke Franz Ferdinand, heir to the Austro-Hungarian throne, came to Sarajevo to inspect the armed forces in Bosnia. For Serbs, 28 June was also the anniversary of the Battle of Kosovo in 1389."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "28 June 1914: Sarajevo"
+   },
+   "cite": [
+    "s10",
+    "s9",
+    "s8"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "Why was Franz Ferdinand in Sarajevo?",
+    "right": "On an official visit to inspect the armed forces in Bosnia",
+    "wrong": [
+     "To sign a peace treaty with Serbia",
+     "To meet the German Kaiser",
+     "To attend a sports event"
+    ],
+    "why": "He was visiting Bosnia to inspect the imperial armed forces, and Serbian nationalists saw the date and visit as an insult."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Early that morning a bomb was thrown at his car and missed. Later he changed his plans to visit the wounded. Gavrilo Princip, a 19-year-old Bosnian Serb nationalist, shot the Archduke and his wife Sophie, and both died."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A quiet street corner in Sarajevo in 1914, with an open car stopped at the kerb and a crowd"
+   },
+   "cite": [
+    "s9",
+    "s8",
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Who was behind it? The plot was helped by the Black Hand, a Serbian nationalist secret group, and by a Serbian military intelligence chief. Yet all the assassins were Austro-Hungarian citizens, none from Serbia. Vienna blamed the Serbian government."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Black Hand: Serbian nationalist secret society"
+   },
+   "cite": [
+    "s8",
+    "s28",
+    "s10"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Who did Austria-Hungary immediately blame for the killings?",
+    "right": "The Serbian government",
+    "wrong": [
+     "Germany",
+     "Russia",
+     "Britain"
+    ],
+    "why": "Austria-Hungary immediately blamed the Serbian government. The five weeks that followed are called the July Crisis."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The July Crisis, step one. On 5 and 6 July Germany gave Austria-Hungary a 'blank cheque': a promise of unconditional support, whatever Austria decided to do about Serbia."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Blank cheque = unconditional support"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was the 'blank cheque'?",
+    "right": "Germany's promise of full support to Austria-Hungary",
+    "wrong": [
+     "A payment from Serbia to Austria",
+     "A British loan to Russia",
+     "A peace plan from France"
+    ],
+    "why": "Germany promised Austria-Hungary unconditional backing, which encouraged Vienna to act against Serbia."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step two. On 23 July Austria-Hungary sent Serbia an ultimatum: a final demand with a deadline. Serbia had 48 hours to reply. Austria's leaders had decided the demands should be hard to accept."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "48 hours"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Serbia replied on 25 July and, surprisingly, accepted almost all the demands. Austria-Hungary broke off relations anyway, and on 28 July it declared war on Serbia."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "23 July: ultimatum | 25 July: Serbia replies | 28 July: Austria-Hungary declares war on Serbia"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "How did Serbia answer the ultimatum?",
+    "right": "It agreed to almost all of the demands",
+    "wrong": [
+     "It ignored it completely",
+     "It declared war on Austria-Hungary",
+     "It asked Germany to decide"
+    ],
+    "why": "Serbia accepted nearly all the demands, but Austria-Hungary still broke off relations and declared war."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step three: Russia backed Serbia. To mobilise means to call up soldiers and get an army ready for war. Russia began partial mobilisation on 26 July. On 30 July the Tsar ordered general mobilisation."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Mobilise = call up soldiers and get the army ready"
+   },
+   "cite": [
+    "s7",
+    "s10",
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does 'mobilise' mean?",
+    "right": "To call up soldiers and get an army ready for war",
+    "wrong": [
+     "To sign a peace treaty",
+     "To move a capital city",
+     "To count the votes in a parliament"
+    ],
+    "why": "Mobilising means getting an army ready. It was a big step because other powers saw it as a threat."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The dominoes then fell fast. Germany declared war on Russia on 1 August, and on France on 3 August. Germany's war plan led through Belgium, so on 4 August its troops crossed the Belgian border."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "30 July: Russia mobilises | 1 Aug: Germany declares war on Russia | 3 Aug: Germany declares war on France | 4 Aug: Germany invades Belgium"
+   },
+   "cite": [
+    "s7",
+    "s32",
+    "s14",
+    "s26"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why did that bring in Britain? A treaty of 1839 had guaranteed Belgium's neutrality, and Britain was one of the guarantors. Germany's Chancellor called it a 'scrap of paper'. Britain declared war on 4 August."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "The German Chancellor called the treaty a mere 'scrap of paper'."
+   },
+   "cite": [
+    "s26",
+    "s30",
+    "s14"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why did Britain declare war on Germany on 4 August 1914?",
+    "right": "Germany invaded neutral Belgium, whose neutrality Britain had promised to protect",
+    "wrong": [
+     "Germany invaded Britain",
+     "Britain wanted to help Serbia directly",
+     "Austria-Hungary attacked the Royal Navy"
+    ],
+    "why": "Germany's invasion of Belgium broke the 1839 treaty that Britain had signed, so Britain joined the war."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the big debate: who or what was responsible? In the 1960s the German historian Fritz Fischer argued Germany's leaders bore the largest responsibility. He argued they had planned for war from December 1912."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Who was responsible? View 1: Fischer (1961)"
+   },
+   "cite": [
+    "s17",
+    "s19"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In 2012 the historian Christopher Clark, in The Sleepwalkers, argued that no single country was to blame. In his account, leaders in several capitals stumbled into war. All risked a general war, but none sought one."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Fischer: Germany bore the main responsibility | Clark: shared responsibility, a chain of decisions"
+   },
+   "cite": [
+    "s18",
+    "s17"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which statement is closest to Christopher Clark's view in The Sleepwalkers?",
+    "right": "Several powers shared responsibility and none sought a general war",
+    "wrong": [
+     "Germany alone planned the war from the start",
+     "Serbia alone caused the war",
+     "Britain secretly started the war"
+    ],
+    "why": "Clark argues that many leaders made decisions that were not inevitable, and he does not single out one guilty country. Other historians disagree, as the 'other side' notes explain."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Not everyone agrees with Clark. Critics such as Gerd Krumeich and John Röhl think he plays down Germany's role. Many German historians argue Germany and Austria did not want a big war but chose to risk it anyway."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A live debate, not a settled answer"
+   },
+   "cite": [
+    "s17",
+    "s15",
+    "s16"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What else was happening in these years? The Wright brothers flew in 1903. Einstein published special relativity in 1905. The Titanic sank in 1912. The Panama Canal opened in 1914. The world was changing fast."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1903 first controlled flight | 1905 special relativity | 1911 Amundsen reaches the South Pole | 1912 Titanic sinks | 1914 Panama Canal opens"
+   },
+   "cite": [
+    "s25",
+    "s37"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let us put the story in order. The long-term pressures built for years. Then came the spark in Sarajevo, and five weeks of choices in July. By early August 1914, Europe's great powers were at war."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Pressures build | 28 June: Sarajevo | 5-6 July: blank cheque | 23 July: ultimatum | 28 July: war on Serbia | 4 August: Britain joins"
+   },
+   "cite": [
+    "s7",
+    "s14"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which of these happened first?",
+    "right": "Germany's 'blank cheque' to Austria-Hungary",
+    "wrong": [
+     "Austria-Hungary declared war on Serbia",
+     "Britain declared war on Germany",
+     "Russia ordered general mobilisation"
+    ],
+    "why": "The blank cheque came on 5 and 6 July, before the ultimatum of 23 July and the declaration of war on 28 July."
+   }
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Dreadnought battleships, 1914 (Imperial War Museums count; other counts vary with what is included)",
+   "rows": [
+    {
+     "label": "Britain",
+     "value": 29,
+     "source": "s2"
+    },
+    {
+     "label": "Germany",
+     "value": 17,
+     "source": "s2"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Arms spending as a percentage of GDP, 1914",
+   "rows": [
+    {
+     "label": "Britain",
+     "value": 4.9,
+     "source": "s3"
+    },
+    {
+     "label": "Russia",
+     "value": 4.6,
+     "source": "s3"
+    },
+    {
+     "label": "France",
+     "value": 3.9,
+     "source": "s3"
+    },
+    {
+     "label": "Germany",
+     "value": 3.5,
+     "source": "s3"
+    },
+    {
+     "label": "Austria-Hungary",
+     "value": 1.9,
+     "source": "s3"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Alliance system before 1914 (Triple Alliance and Triple Entente)",
+   "links": [
+    "[[World War I]]",
+    "[[Imperialism: Africa, India, China and Japan]]"
+   ]
+  },
+  {
+   "topic": "Anglo-German naval race and the dreadnought",
+   "links": [
+    "[[World War I]]",
+    "[[The Industrial Revolution]]"
+   ]
+  },
+  {
+   "topic": "Nationalism, pan-Slavism and Austria-Hungary",
+   "links": [
+    "[[Nations, Reform and Civil War in the 1800s]]",
+    "[[World War I]]"
+   ]
+  },
+  {
+   "topic": "Scramble for Africa and the Berlin Conference",
+   "links": [
+    "[[Imperialism: Africa, India, China and Japan]]"
+   ]
+  },
+  {
+   "topic": "Bosnian crisis 1908 and the Balkan Wars 1912-13",
+   "links": [
+    "[[World War I]]"
+   ]
+  },
+  {
+   "topic": "Schlieffen Plan and Belgian neutrality",
+   "links": [
+    "[[World War I]]"
+   ]
+  },
+  {
+   "topic": "The war-guilt debate (Fischer and Clark)",
+   "links": [
+    "[[World War I]]",
+    "[[Revolution, Flu and the Roaring Twenties]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "1900-1901",
+   "elsewhere": "The Boxer uprising in China fought foreign influence, and an eight-nation force of foreign troops was sent in.",
+   "cite": [
+    "s23"
+   ]
+  },
+  {
+   "when": "1903",
+   "elsewhere": "The Wright brothers made the first controlled aeroplane flight, and Henry Ford designed the first mass-produced cars.",
+   "cite": [
+    "s25"
+   ]
+  },
+  {
+   "when": "1904-1905",
+   "elsewhere": "Russia and Japan fought a war. In 1905 a massacre of protesters in St Petersburg ('Bloody Sunday') shook Russia. That year Einstein also set out his special theory of relativity.",
+   "cite": [
+    "s25"
+   ]
+  },
+  {
+   "when": "1910",
+   "elsewhere": "The Mexican Revolution began, and Portugal's monarchy was replaced by a republic.",
+   "cite": [
+    "s25"
+   ]
+  },
+  {
+   "when": "1911",
+   "elsewhere": "A revolution in China ended over two thousand years of imperial rule. Roald Amundsen's team became the first to reach the South Pole.",
+   "cite": [
+    "s24",
+    "s25"
+   ]
+  },
+  {
+   "when": "1912",
+   "elsewhere": "The Titanic sank on 15 April. The African National Congress was formed in South Africa.",
+   "cite": [
+    "s37",
+    "s25"
+   ]
+  },
+  {
+   "when": "1914",
+   "elsewhere": "The Panama Canal opened, and Charlie Chaplin made his first films, in the same year the war began.",
+   "cite": [
+    "s25"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Germany bore the main responsibility for starting the war (the Fischer thesis, 1961).",
+   "other_view": "Christopher Clark (2012) says no single country is to blame. He describes a chain of decisions by several powers, with more weight on Russia and Serbia than earlier historians gave them. Critics such as Gerd Krumeich and John Röhl think he goes too easy on Germany. Earlier, Gerhard Ritter and others argued Germany acted from real security fears, and that blaming Germany alone repeats the logic of Versailles. The field has moved from a post-Fischer consensus to a more split view with some common ground.",
+   "cite": [
+    "s17",
+    "s18",
+    "s19",
+    "s20",
+    "s16",
+    "s15"
+   ]
+  },
+  {
+   "claim": "The naval arms race was a major cause of the war.",
+   "other_view": "The World History Encyclopedia calls the arms race one of many causes but not the main one. Another source says many historians see the damage to Anglo-German relations as one of the main causes. Clark argues that British admirals were less alarmed by German naval building than is often supposed. Spending numbers also complicate the picture: in 1914 Britain and Russia spent a larger share of their economies on arms than Germany did.",
+   "cite": [
+    "s3",
+    "s19",
+    "s1"
+   ]
+  },
+  {
+   "claim": "The alliance system dragged every country into war automatically.",
+   "other_view": "The Triple Entente was not a mutual-defence alliance, unlike the Triple Alliance or the Franco-Russian alliance. Britain's entry into the war came after Germany invaded Belgium, which Britain had guaranteed under the 1839 treaty. So choices and plans mattered, not only treaties.",
+   "cite": [
+    "s12",
+    "s14",
+    "s26"
+   ]
+  },
+  {
+   "claim": "Germany went to war because it felt cornered and threatened.",
+   "other_view": "German records show that some leaders saw the summer of 1914 as the 'least unsuitable moment' for a war with Russia, because Russia's strength was growing. The Fischer school reads this as aggressive planning. Others read it as fear of encirclement. The two readings fit the same evidence differently, which is why the debate continues.",
+   "cite": [
+    "s31",
+    "s20",
+    "s17"
+   ]
+  }
+ ]
+}

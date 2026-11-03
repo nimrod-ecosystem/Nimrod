@@ -1,0 +1,1154 @@
+{
+ "about": {
+  "title": "Napoleon, Haiti and Latin American Independence",
+  "course": "history-of-everything",
+  "class_n": 45,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "Four linked topics (Napoleon, Haiti, Latin American independence, the Congress of Vienna) each get a few short steps and a check question. That fits a half-hour class with pauses, so no change to length."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Napoleon I",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d. (online, recently updated)",
+   "link": "https://www.britannica.com/biography/Napoleon-I",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "The Napoleonic Experience (Liberty, Equality, Fraternity: Exploring the French Revolution)",
+   "publisher": "Center for History and New Media, George Mason University",
+   "date": "n.d.",
+   "link": "https://revolution.chnm.org/exhibits/show/liberty--equality--fraternity/napoleonic-experience",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "Napoleon's Defeat at Waterloo",
+   "publisher": "Lumen Learning (SUNY HCCC World History 2)",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/suny-hccc-worldhistory2/chapter/napoleons-defeat-at-waterloo/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "Chapter 9 - Napoleon Bonaparte and the Birth of Nationalism (Contested Visions: The History of Western Civilization from 1648)",
+   "publisher": "OpenALG",
+   "date": "n.d.",
+   "link": "https://alg.manifoldapp.org/read/contested-visions-the-history-of-western-civilization-from-1648/section/c8a867aa-837d-4b2a-b3c0-237b91f23c01",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "1810s",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/1810s",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "Napoleon",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Napoleon",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "Haitian Revolution",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d. (online)",
+   "link": "https://www.britannica.com/topic/Haitian-Revolution",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "Haitian Revolution (1791-1804)",
+   "publisher": "BlackPast.org",
+   "date": "n.d.",
+   "link": "https://blackpast.org/global-african-history/haitian-revolution-1791-1804/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "Haitian Independence",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/history/haitian-independence/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "The Louisiana Purchase",
+   "publisher": "Council on Foreign Relations",
+   "date": "n.d.",
+   "link": "https://www.cfr.org/articles/the-louisiana-purchase",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "Napoleon, Jefferson, and the Louisiana Purchase",
+   "publisher": "The International History Review, vol. 39, no. 2 (Taylor & Francis)",
+   "date": "2017",
+   "link": "https://www.tandfonline.com/doi/abs/10.1080/07075332.2016.1196383",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "History of Latin America: The independence of Latin America",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d. (online)",
+   "link": "https://www.britannica.com/place/Latin-America/The-independence-of-Latin-America",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "Spanish American wars of independence",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Spanish_American_wars_of_independence",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "José de San Martín",
+   "publisher": "Lumen Learning (SUNY World History)",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/suny-worldhistory/chapter/26-1-4-jose-de-san-martin/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "Simón Bolívar Becomes Peruvian Leader",
+   "publisher": "Gale blog",
+   "date": "2024-02",
+   "link": "https://blog.gale.com/simon-bolivar-becomes-peruvian-leader/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "Battle of Ayacucho",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d. (online)",
+   "link": "https://www.britannica.com/event/Battle-of-Ayacucho",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "South American Wars of Independence",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/history/south-american-wars-independence/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "Congress of Vienna",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d. (online)",
+   "link": "https://www.britannica.com/event/Congress-of-Vienna",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "Congress of Vienna: Decisions of the congress",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d. (online)",
+   "link": "https://www.britannica.com/event/Congress-of-Vienna/Decisions-of-the-congress",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "Congress of Vienna",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Congress_of_Vienna",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "Haiti, 1825: from independence to debt",
+   "publisher": "Collège de France",
+   "date": "n.d. (symposium listing)",
+   "link": "https://www.college-de-france.fr/en/agenda/symposium/haiti-1825-from-independence-to-debt",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "The Double Debt (Island Luminous), Jean-François Brière",
+   "publisher": "Florida International University",
+   "date": "n.d.",
+   "link": "https://islandluminous.fiu.edu/part04-slide06.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "France's Overdue Debt to Haiti",
+   "publisher": "NYU Journal of International Law and Politics",
+   "date": "n.d.",
+   "link": "https://nyujilp.org/frances-overdue-debt-to-haiti/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "'The Greatest Heist In History': How Haiti Was Forced To Pay Reparations For Freedom",
+   "publisher": "NPR Planet Money",
+   "date": "2021-10-05",
+   "link": "https://www.npr.org/sections/money/2021/10/05/1042518732/-the-greatest-heist-in-history-how-haiti-was-forced-to-pay-reparations-for-freed",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "Dickinson Timeline 1801-1850",
+   "publisher": "Dickinson College Chronicles",
+   "date": "n.d.",
+   "link": "http://chronicles.dickinson.edu/timeline/1801_1850.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "Mexican War of Independence",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Mexican_War_of_Independence",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "Legacy of Napoleon",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Legacy_of_Napoleon",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "200 years after his death, Napoleon leads a divided France into battle again",
+   "publisher": "NBC News",
+   "date": "2021-05",
+   "link": "https://www.nbcnews.com/news/world/200-years-after-his-death-napoleon-leads-divided-france-battle-n1266497",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s29",
+   "title": "Latin American Independence and Europe",
+   "publisher": "EU-LAC Foundation",
+   "date": "n.d.",
+   "link": "https://eulacfoundation.org/en/latin-american-independence-and-europe",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s30",
+   "title": "The Congress of Vienna: AP European History Review",
+   "publisher": "Albert.io",
+   "date": "n.d.",
+   "link": "https://www.albert.io/blog/the-congress-of-vienna-ap-european-history-review/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s31",
+   "title": "Protectorate of San Martín",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Protectorate_of_San_Mart%C3%ADn",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s32",
+   "title": "History of Spain (1808–1874)",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/History_of_Spain_(1808%E2%80%931874)",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s33",
+   "title": "Independence and Turmoil (book chapter)",
+   "publisher": "University of California Press",
+   "date": "n.d.",
+   "link": "https://content.ucpress.edu/chapters/13096.ch01.pdf",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s34",
+   "title": "Jean-Jacques Dessalines",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d. (online)",
+   "link": "https://www.britannica.com/biography/Jean-Jacques-Dessalines",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s35",
+   "title": "1825–2025: France, Haiti, & the Question of Indebtedness Symposium",
+   "publisher": "Louisiana State University",
+   "date": "2025",
+   "link": "https://www.lsu.edu/cffs/france-haiti-indebtedness.php",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s36",
+   "title": "Timeline of the Napoleonic Era",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d. (online)",
+   "link": "https://www.britannica.com/biography/Timeline-of-the-Napoleonic-Era-2236094",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 45. Last time we looked at the American and French Revolutions. Today we follow what came next, and how revolutions and wars remade the lands around the Atlantic Ocean."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Napoleon, Haiti and Latin American Independence"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We will make four stops, one at a time: Napoleon, Haiti, the Spanish and Portuguese colonies in the Americas, and a big peace meeting in Vienna. Watch how each stop pulls on the others."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Napoleon: rise and fall\n2. Haiti: a revolution that won\n3. Bolívar, San Martín and independence in Latin America\n4. The Congress of Vienna"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Stop one is Napoleon. First, a word: coup. A coup is a sudden grab for power outside the normal rules. In November 1799, Napoleon helped overthrow France's government, the Directory."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Coup: a sudden seizure of power"
+   },
+   "cite": [
+    "s1",
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is a coup?",
+    "right": "A sudden seizure of power outside the normal rules",
+    "wrong": [
+     "A long election campaign",
+     "A peace treaty between two countries",
+     "A law that makes everyone equal"
+    ],
+    "why": "A coup is a sudden takeover. Napoleon took part in one in November 1799."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "After the coup, Napoleon led France as First Consul. In 1802 he became First Consul for life. In December 1804 he crowned himself Emperor, with the pope watching."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1799: coup, First Consul | 1802: First Consul for life | 2 Dec 1804: crowns himself Emperor"
+   },
+   "cite": [
+    "s2",
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In which year did Napoleon crown himself Emperor?",
+    "right": "1804",
+    "wrong": [
+     "1789",
+     "1799",
+     "1815"
+    ],
+    "why": "1799 was the coup. The crowning came in December 1804. 1815 was his final defeat."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Napoleon also gave France a new set of laws, the Napoleonic Code. It made the law clear and the same everywhere. It later became a model for other countries' civil laws. But there was a cost."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "What the Code did: made laws uniform, promised equality under the law, and became a model for later codes | What it cost: husbands and fathers gained nearly complete control over wives and children"
+   },
+   "cite": [
+    "s2",
+    "s36"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which statement about the Napoleonic Code is true?",
+    "right": "It promised equality under the law, but gave husbands great control over wives and children",
+    "wrong": [
+     "It gave women the vote",
+     "It closed all the courts in France",
+     "It was never copied outside France"
+    ],
+    "why": "The Code kept some gains of the Revolution, like equality under the law. It also set up a more paternalistic system for families."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next, his wars. Napoleon's armies fought across Europe in the Napoleonic Wars. At its height, his empire spread across nearly the whole width of Europe, with allied and controlled states around it."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map of Europe around 1812: France at the centre, with the Swiss Confederation, the Confederation of the Rhine, the Duchy of Warsaw and the Kingdom of Italy shaded as lands he controlled."
+   },
+   "cite": [
+    "s36",
+    "s5",
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Then his luck turned. He invaded Russia in 1812, and the campaign went badly. By 1814 the Allies had occupied Paris. Napoleon had to give up the throne and was sent to the island of Elba."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1812: invasion of Russia | 1814: Allies take Paris, Napoleon abdicates, exile to Elba"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "But he escaped Elba. On March 20, 1815, he entered Paris unopposed, starting the Hundred Days. On June 18, a British and Prussian army beat him at Waterloo, in what is now Belgium."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "20 March 1815: back in Paris (Hundred Days begin) | 18 June 1815: Battle of Waterloo"
+   },
+   "cite": [
+    "s4",
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Where was Napoleon's final defeat, in June 1815?",
+    "right": "Waterloo",
+    "wrong": [
+     "Elba",
+     "Paris",
+     "Saint Helena"
+    ],
+    "why": "Waterloo was his last battle. Elba was his first exile. Saint Helena is where he was sent afterwards."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "After Waterloo, Napoleon was exiled to Saint Helena, a remote island, where he died on 5 May 1821. A story says that there he thought about his battles, and what history would remember."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "\"My true glory is not that I have gained forty battles.\" (reported as said on Saint Helena)"
+   },
+   "cite": [
+    "s4",
+    "s6",
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Stop two is Haiti, and we go back to 1791. Across the ocean, in the French colony of Saint-Domingue, enslaved people made up most of the population. By one account they outnumbered their rulers about ten to one."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 10 to 1: enslaved people compared with colonial officials and planters, in one account"
+   },
+   "cite": [
+    "s8",
+    "s10"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In late August 1791 the enslaved people of Saint-Domingue rose up. The French Revolution had inspired the idea of rights for all. Sources give the day as August 21 or 22."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "August 1791: the uprising begins"
+   },
+   "cite": [
+    "s8",
+    "s9"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "What began in Saint-Domingue in August 1791?",
+    "right": "A revolt by enslaved people against slavery and French rule",
+    "wrong": [
+     "A war between Britain and Spain",
+     "A vote by planters to join the United States",
+     "Napoleon's coup"
+    ],
+    "why": "The uprising began in August 1791. It grew into the Haitian Revolution."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A leader emerged: Toussaint Louverture, an educated man who had been enslaved. His forces held a third of the island by 1792. They later beat the British, who left in 1798."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Portrait-style picture of Toussaint Louverture in a general's coat, with Caribbean hills behind him."
+   },
+   "cite": [
+    "s9",
+    "s8"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Who became the leader of the revolutionary forces in Saint-Domingue?",
+    "right": "Toussaint Louverture",
+    "wrong": [
+     "Napoleon Bonaparte",
+     "A British general",
+     "The King of France"
+    ],
+    "why": "Toussaint Louverture, a formerly enslaved man, led the black forces and defeated the British."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Then Napoleon got involved. Now ruling France, he sent his brother-in-law, General Leclerc, with about 43,000 troops. Their aim was to restore French rule and slavery. Toussaint was captured and died in a French prison in 1803."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1802: Leclerc's army lands | 1802: Toussaint captured, sent to France | 1803: Toussaint dies in prison"
+   },
+   "cite": [
+    "s8",
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Resistance did not stop. Jean-Jacques Dessalines, one of Toussaint's generals, beat the French at Vertières on November 18, 1803. On January 1, 1804, he declared independence and used the name Haiti."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1791: uprising | 1802: French army arrives | 18 Nov 1803: Vertières | 1 Jan 1804: Haiti independent"
+   },
+   "cite": [
+    "s8",
+    "s34",
+    "s7"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What happened on January 1, 1804?",
+    "right": "Haiti's independence was declared",
+    "wrong": [
+     "Toussaint Louverture surrendered",
+     "Napoleon crowned himself Emperor",
+     "Haiti returned to French rule"
+    ],
+    "why": "Dessalines declared independence that day. Haiti became the first country founded by former slaves."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Haiti's fight also changed North America. Napoleon had dreamed of a French empire there. Haiti's resistance helped end that dream. In April 1803, France sold the Louisiana Territory to the United States for $15 million."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Napoleon's plan: an empire in North America\nHaiti's revolt: costly and unwinnable\nApril 30, 1803: Louisiana sold for $15 million"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What did Napoleon do with Louisiana in 1803?",
+    "right": "He sold it to the United States for $15 million",
+    "wrong": [
+     "He kept it and made it a French state",
+     "He gave it to Haiti",
+     "He gave it to Britain"
+    ],
+    "why": "Napoleon gave up his North American plans and sold the territory. Historians still debate how much Haiti mattered, which we cover in the other-side notes."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Freedom had a price. An indemnity is a payment to make up for a loss. In 1825 France sent warships and said it would recognize Haiti only if Haiti paid 150 million francs to former colonists."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Haiti's 1825 demand compared with the Louisiana price",
+    "chart": "c2"
+   },
+   "cite": [
+    "s24",
+    "s21"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Why did Haiti pay France 150 million francs in 1825?",
+    "right": "In exchange for France recognizing its independence, to compensate former colonists",
+    "wrong": [
+     "To buy the Louisiana Territory",
+     "To repay Napoleon's war loans",
+     "As a prize for winning at Waterloo"
+    ],
+    "why": "France demanded the money for the loss of its colonists' property, which included enslaved people. Payments, later reduced, took decades."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Stop three is Latin America. For three centuries Spain and Portugal ruled most of it. Then, between 1808 and 1826, nearly all of it broke free. Only Cuba and Puerto Rico stayed Spanish."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1808-1826: most of Latin America becomes independent"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The trigger was Napoleon. In 1807 he invaded Portugal, and its royal family fled to Brazil. In 1808 he turned on Spain, forced its king to give up the throne, and put his own brother Joseph in his place."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1807: Napoleon invades Portugal; royal family flees to Brazil | 1808: Napoleon takes Spain's throne for his brother Joseph"
+   },
+   "cite": [
+    "s13",
+    "s26"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "With no rightful king, who ruled? Many Spaniards and colonists set up juntas: emergency councils ruling in the absent king's name. In 1810 a parliament, the Cortes, met in Cádiz for Spain and the Americas."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Junta: an emergency council ruling in the absent king's name"
+   },
+   "cite": [
+    "s12",
+    "s13"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is a junta in this story?",
+    "right": "An emergency council ruling in the name of the absent king",
+    "wrong": [
+     "A type of ship",
+     "Napoleon's army",
+     "A peace treaty"
+    ],
+    "why": "Juntas filled the gap when the king was gone. In many places they became the first step toward self-rule."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Spain's crisis reached Mexico. Fighting began in 1810, and Mexico declared independence in September 1821. Spain's crisis had opened the door, but the war was not a sure thing."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1810: Mexican independence war begins | Sept 1821: independence declared"
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In the south, José de San Martín, an Argentine general who had served in Spain's army, led a daring march over the Andes. His victory at Chacabuco helped free Chile, which became independent in 1818."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Soldiers and mules in a long line crossing a snowy pass in the Andes."
+   },
+   "cite": [
+    "s13",
+    "s17",
+    "s15"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which mountains did San Martín's army cross?",
+    "right": "The Andes",
+    "wrong": [
+     "The Alps",
+     "The Rocky Mountains",
+     "The Himalayas"
+    ],
+    "why": "San Martín crossed the Andes to reach Chile and then Peru."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next, San Martín moved north toward Peru. On July 28, 1821 he proclaimed Peru's independence. But Spanish forces still held much of the country, so the war was not over."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1818: Chile independent | 28 July 1821: San Martín proclaims Peru's independence"
+   },
+   "cite": [
+    "s15",
+    "s31",
+    "s14"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In the north, Simón Bolívar fought a different war. His army was a quick mix of plains guerrillas, exiles and British volunteers. Victories at Boyacá, Carabobo and Pichincha secured Colombia, Venezuela and Ecuador."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map of South America: one arrow from the south (San Martín) and one from the north (Bolívar), both closing on Peru."
+   },
+   "cite": [
+    "s13",
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In July 1822 Bolívar and San Martín met in Ecuador. San Martín wanted a monarchy led by a ruler from a European royal family. Bolívar argued for a republic, with himself as leader."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "San Martín: a monarchy | Bolívar: a republic"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What did Bolívar and San Martín disagree about in 1822?",
+    "right": "What kind of government South America should have",
+    "wrong": [
+     "Whether to join Napoleon's empire",
+     "Whether to hand Peru back to Spain",
+     "Which language to speak"
+    ],
+    "why": "San Martín favoured a monarchy and Bolívar a republic."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "San Martín soon stepped back from command, and Bolívar led the final push. A boxed note: one source says San Martín felt a fight with Bolívar would hurt Peru's freedom."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "San Martín felt a fight with Bolívar over Peru would hurt independence. (paraphrase of EBSCO)"
+   },
+   "cite": [
+    "s15",
+    "s17",
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The last big battle was Ayacucho, in Peru, on December 9, 1824. General Sucre led about 6,000 men against about 9,000 Spanish troops. The royalist army was beaten and its viceroy captured."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Armies at Ayacucho, 1824 (about)",
+    "chart": "c1"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "At Ayacucho, which side had more soldiers?",
+    "right": "The Spanish royalists, with about 9,000 against about 6,000",
+    "wrong": [
+     "The independence side, with about 9,000",
+     "Both sides had exactly the same number",
+     "Nobody counted"
+    ],
+    "why": "The independence side was smaller, but still won."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Brazil took a different road. In 1821 Portugal's king went home to Lisbon, leaving his son Pedro in Brazil. In 1822 Pedro declared Brazil independent and became its first emperor."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1807: Portuguese court flees to Brazil | 1821: king returns to Lisbon | 1822: Pedro declares independence, becomes emperor"
+   },
+   "cite": [
+    "s29",
+    "s33"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Who ruled Brazil after independence in 1822?",
+    "right": "Pedro, as its first emperor",
+    "wrong": [
+     "Simón Bolívar, as president",
+     "Napoleon's brother Joseph, as king",
+     "José de San Martín, as emperor"
+    ],
+    "why": "Brazil became a constitutional monarchy under Pedro."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Stop four takes us back to Europe. After Napoleon fell, leaders met in Vienna, Austria, from September 1814 to June 1815. Austria's Metternich chaired the meeting. Their job was to redraw Europe's map."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Congress of Vienna, 1814-1815"
+   },
+   "cite": [
+    "s18",
+    "s20"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Their guiding idea was a balance of power: no single country should be strong enough to dominate Europe again. Many leaders also wanted to restore the kings Napoleon had pushed aside."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Balance of power: no one country dominates Europe"
+   },
+   "cite": [
+    "s18",
+    "s30"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does 'balance of power' mean at Vienna?",
+    "right": "No single country should be strong enough to dominate Europe",
+    "wrong": [
+     "Every country must have the same size army",
+     "France must be broken up",
+     "The pope must rule Europe"
+    ],
+    "why": "The leaders wanted to prevent another Napoleon."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "They drew new lines. For example, Prussia was given lands along the Rhine to guard against France, and Austria received Lombardy and Venice. The aim was to contain France, not to ruin it."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Prussia: Rhine lands as a guard against France\nAustria: Lombardy, Venice and most of Tirol\nGermany: a loose confederation"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Final Act was signed on June 9, 1815, nine days before Waterloo. The borders it set held for more than 40 years. But it paid little attention to what ordinary people in those lands wanted."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "40+ years: how long Vienna's borders mostly held"
+   },
+   "cite": [
+    "s20",
+    "s19",
+    "s18"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "About how long did the borders set at Vienna mostly last?",
+    "right": "More than 40 years",
+    "wrong": [
+     "About 4 years",
+     "About 400 years",
+     "Less than one year"
+    ],
+    "why": "The settlement was fairly stable for over four decades, with one or two changes."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's pull it together. Napoleon's wars shook Europe and broke the Spanish and Portuguese hold on the Americas. Haiti showed that an enslaved people could win freedom. Vienna tried to put the old order back."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Europe: kings restored, balance of power\nHaiti: first country founded by former slaves\nLatin America: new republics, plus a Brazilian empire"
+   },
+   "cite": [
+    "s18",
+    "s7",
+    "s12"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What event in Europe set off the independence movements in Spanish America?",
+    "right": "Napoleon's invasion of Spain in 1808",
+    "wrong": [
+     "The Congress of Vienna",
+     "The Battle of Waterloo",
+     "Haiti's independence"
+    ],
+    "why": "Napoleon's invasion of Spain created a crisis over who ruled, which opened the way for the colonies to act. Vienna and Waterloo came later."
+   }
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Armies at the Battle of Ayacucho, 1824 (about)",
+   "rows": [
+    {
+     "label": "Independence army (about)",
+     "value": 6000,
+     "source": "s16"
+    },
+    {
+     "label": "Spanish royalist army (about)",
+     "value": 9000,
+     "source": "s16"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Haiti's 1825 demand compared with the Louisiana Purchase price (price = 1; a reported comparison across currencies)",
+   "rows": [
+    {
+     "label": "Louisiana Purchase price (set as 1)",
+     "value": 1,
+     "source": "s24"
+    },
+    {
+     "label": "France's 1825 demand on Haiti (about 10 times)",
+     "value": 10,
+     "source": "s24"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Napoleon and the Napoleonic Code",
+   "links": [
+    "[[The American and French Revolutions]]",
+    "[[Nations, Reform and Civil War in the 1800s]]"
+   ]
+  },
+  {
+   "topic": "Haitian Revolution and the Louisiana Purchase",
+   "links": [
+    "[[The Atlantic Slave Trade]]",
+    "[[The American and French Revolutions]]"
+   ]
+  },
+  {
+   "topic": "Bolívar, San Martín and Latin American independence",
+   "links": [
+    "[[Contact and the Columbian Exchange]]",
+    "[[Imperialism: Africa, India, China and Japan]]"
+   ]
+  },
+  {
+   "topic": "Congress of Vienna and the balance of power",
+   "links": [
+    "[[The Road to World War I]]",
+    "[[Nations, Reform and Civil War in the 1800s]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "1758 to 1783: birth years",
+   "elsewhere": "Dessalines was born around 1758, Napoleon in 1769, San Martín in 1778 and Bolívar in 1783. All four lived through the same age of revolutions.",
+   "cite": [
+    "s34",
+    "s6",
+    "s17"
+   ]
+  },
+  {
+   "when": "1791 to 1804",
+   "elsewhere": "The Haitian Revolution ran alongside the French Revolution, which had inspired it, and outlasted it.",
+   "cite": [
+    "s8"
+   ]
+  },
+  {
+   "when": "1803",
+   "elsewhere": "The Louisiana Purchase was signed April 30, 1803. Late that year Haitian forces won at Vertières.",
+   "cite": [
+    "s10",
+    "s8"
+   ]
+  },
+  {
+   "when": "1804",
+   "elsewhere": "Haiti declared independence on January 1. Napoleon crowned himself Emperor on 2 December.",
+   "cite": [
+    "s8",
+    "s2"
+   ]
+  },
+  {
+   "when": "1808 to 1810",
+   "elsewhere": "Napoleon took Spain's throne for his brother. Juntas rose across Spain and its colonies. Mexico's independence war began in 1810.",
+   "cite": [
+    "s12",
+    "s26"
+   ]
+  },
+  {
+   "when": "February 12, 1809",
+   "elsewhere": "Abraham Lincoln and Charles Darwin were born on the same day. Louis Braille was born in France the same year.",
+   "cite": [
+    "s25"
+   ]
+  },
+  {
+   "when": "1812",
+   "elsewhere": "Napoleon invaded Russia. The War of 1812 reached America. The Cortes of Cádiz adopted Spain's first liberal constitution.",
+   "cite": [
+    "s5",
+    "s32"
+   ]
+  },
+  {
+   "when": "1814 to 1815",
+   "elsewhere": "Allies occupied Paris and exiled Napoleon to Elba. The Congress of Vienna met, and Waterloo ended his rule on June 18, 1815.",
+   "cite": [
+    "s5",
+    "s20",
+    "s3"
+   ]
+  },
+  {
+   "when": "1818 to 1822",
+   "elsewhere": "Chile became independent in 1818. Peru was proclaimed independent in 1821. Brazil declared independence in 1822.",
+   "cite": [
+    "s15",
+    "s31",
+    "s29"
+   ]
+  },
+  {
+   "when": "1821",
+   "elsewhere": "Napoleon died on 5 May on Saint Helena. Mexico declared independence in September.",
+   "cite": [
+    "s6",
+    "s26"
+   ]
+  },
+  {
+   "when": "1824 to 1825",
+   "elsewhere": "The Battle of Ayacucho was fought on December 9, 1824. Britain recognized the new Spanish American states in 1825. That year France demanded 150 million francs from Haiti.",
+   "cite": [
+    "s16",
+    "s13",
+    "s21"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Napoleon was a reformer who modernized France and Europe.",
+   "other_view": "Critics see a tyrant who ended freedoms won in the Revolution, silenced the press and fought wars that cost many lives. Some historians stress his new laws and his talent as a general, while others stress plunder of conquered lands. Debate about his legacy continues, including on slavery, as seen in France's 2021 commemorations.",
+   "cite": [
+    "s27",
+    "s28",
+    "s2"
+   ]
+  },
+  {
+   "claim": "Napoleon's disaster in Russia in 1812 came mainly from his own mistakes.",
+   "other_view": "Many historians blame his poor planning. Some Russian scholars instead stress how well Russia responded, noting that winter was just as hard on the defenders.",
+   "cite": [
+    "s27"
+   ]
+  },
+  {
+   "claim": "Haiti's revolt was a main reason Napoleon sold Louisiana.",
+   "other_view": "Napoleon left few written records of this decision, so historians disagree. Some stress Jefferson's diplomacy, some the coming war with Britain, and some the Haitian resistance. One historian argues that Jefferson had no role and that Haiti mattered a great deal.",
+   "cite": [
+    "s11",
+    "s10"
+   ]
+  },
+  {
+   "claim": "France forced the 1825 indemnity on Haiti.",
+   "other_view": "Most scholarship describes it as imposed under threat of a naval attack. One source notes that Haiti's president Pétion had earlier suggested paying former plantation owners in 1814, hoping this would stop France from invading.",
+   "cite": [
+    "s21",
+    "s24",
+    "s23",
+    "s22"
+   ]
+  },
+  {
+   "claim": "The Congress of Vienna was a success because it kept the peace.",
+   "other_view": "Britannica says the leaders worked out a balance of power and the borders held for over 40 years. It also says the settlement largely ignored growing nationalist feeling, and had little regard for the wishes of people in the lands it moved between states.",
+   "cite": [
+    "s19",
+    "s18"
+   ]
+  }
+ ]
+}

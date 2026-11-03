@@ -1,0 +1,1305 @@
+{
+ "about": {
+  "title": "The Reformation and the Wars of Religion",
+  "course": "history-of-everything",
+  "class_n": 39,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. There are 38 short beats of roughly 45 seconds each. The Thirty Years' War and the debate over its causes get the most time. The Reformation touches many places, so each reformer gets one idea only. You can pause between beats."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "5.1 The Protestant Reformation, World History Volume 2",
+   "publisher": "OpenStax",
+   "date": "undated",
+   "link": "https://openstax.org/books/world-history-volume-2/pages/5-1-the-protestant-reformation",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "Ninety-Five Theses (catalogue record of the 1517 Nuremberg printing)",
+   "publisher": "Library of Congress",
+   "date": "1517 (original); online record undated",
+   "link": "https://www.loc.gov/item/2021667736",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "Ninety-five Theses",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/event/Ninety-five-Theses",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "Ninety-five Theses summary",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/summary/Ninety-five-Theses",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "Protestant Reformation",
+   "publisher": "World History Encyclopedia",
+   "date": "undated",
+   "link": "https://www.worldhistory.org/Protestant_Reformation/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "Protestantism: the continental Reformation (Ninety-five Theses)",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/topic/Protestantism/Ninety-five-Theses",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "Martin Luther: 95 Theses - Summary, Dates, Origins",
+   "publisher": "HISTORY",
+   "date": "undated",
+   "link": "https://www.history.com/articles/martin-luther-and-the-95-theses",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "Diet of Worms",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/event/Diet-of-Worms-Germany-1521",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "Martin Luther: Diet of Worms and the Peasants' War",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/biography/Martin-Luther/Diet-of-Worms",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "5.2: The Protestant Reformation (OpenStax World History II text)",
+   "publisher": "Humanities LibreTexts",
+   "date": "undated",
+   "link": "https://human.libretexts.org/Bookshelves/History/World_History/World_History_II:_From_1400_(OpenStax)/01:_Connections_Across_Continents_15001800/05:_Foundations_of_the_Atlantic_World/5.02:_The_Protestant_Reformation",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "Protestantism timeline",
+   "publisher": "protestantism.co.uk",
+   "date": "undated",
+   "link": "http://protestantism.co.uk/timelineprint",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "Christian History Timeline: Zwingli",
+   "publisher": "Christian History Institute",
+   "date": "undated",
+   "link": "https://christianhistoryinstitute.org/magazine/article/zwingli-timeline",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "Counter-Reformation (Students)",
+   "publisher": "Britannica Kids",
+   "date": "undated",
+   "link": "https://kids.britannica.com/students/article/Counter-Reformation/273832",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "Counter-Reformation summary",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/summary/Counter-Reformation",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "Counter-Reformation: Outcomes (Jesuits, Inquisition)",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/event/Counter-Reformation/Inquisition",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "The Counter Reformation",
+   "publisher": "EBSCO Research Starters",
+   "date": "undated",
+   "link": "https://www.ebsco.com/research-starters/history/counter-reformation",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "1545 The Council of Trent Begins",
+   "publisher": "Christian History Institute",
+   "date": "undated",
+   "link": "https://christianhistoryinstitute.org/magazine/article/council-of-trent-begins",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "Peace of Augsburg",
+   "publisher": "Encyclopedia.com",
+   "date": "undated",
+   "link": "https://www.encyclopedia.com/history/modern-europe/german-history/peace-augsburg",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "The Imperial Diet Proclaims the Religious Peace of Augsburg: September 25, 1555",
+   "publisher": "Catholic Textbook Project",
+   "date": "undated",
+   "link": "https://www.catholictextbookproject.com/post/the-imperial-diet-proclaims-the-religious-peace-of-augsburg-september-25-1555",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "Catholic League (German)",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Catholic_League_(German)",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "Defenestration of Prague",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/event/Defenestration-of-Prague-1618",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "The 'Long Seventeenth Century', 1598-1715 (timeline)",
+   "publisher": "University of Pennsylvania (School of Arts and Sciences)",
+   "date": "undated",
+   "link": "https://www.sas.upenn.edu/~mercerb/17th.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "Statewide Dual Credit World History, Chapter 5: Europe, The Thirty Years' War",
+   "publisher": "OER Commons",
+   "date": "undated",
+   "link": "https://oercommons.org/courseware/lesson/87871/student-old/?task=5",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "The Thirty Years' War in 5 minutes",
+   "publisher": "Musée protestant",
+   "date": "undated",
+   "link": "https://museeprotestant.org/en/notice/the-thirty-years-war-in-5-minutes/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "Peace of Westphalia",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Peace_of_Westphalia",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "The Thirty Years' War: 1618-1648",
+   "publisher": "The Past",
+   "date": "undated",
+   "link": "https://the-past.com/feature/the-thirty-years-war-1618-1648/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "Thirty Years' War Facts & Worksheets",
+   "publisher": "Schoolhistory.co.uk",
+   "date": "undated",
+   "link": "https://schoolhistory.co.uk/early-modern/thirty-years-war/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "Peace of Westphalia",
+   "publisher": "World History Encyclopedia",
+   "date": "undated",
+   "link": "https://www.worldhistory.org/Peace_of_Westphalia/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s29",
+   "title": "The Causes of the Thirty Years War 1618-48 (abstract)",
+   "publisher": "English Historical Review, Oxford University Press",
+   "date": "2008 (vol. CXXIII, no. 502)",
+   "link": "https://academic.oup.com/ehr/article-abstract/CXXIII/502/554/413775",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s30",
+   "title": "A Multi-Causal Approach to the Thirty Years' War (abstract)",
+   "publisher": "Grand Valley Journal of History, Grand Valley State University",
+   "date": "undated (vol. 7, issue 1)",
+   "link": "https://scholarworks.gvsu.edu/gvjh/vol7/iss1/6/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s31",
+   "title": "Thesis: the Thirty Years' War and Corpus Christianum (abstract)",
+   "publisher": "CORE (core.ac.uk)",
+   "date": "undated",
+   "link": "https://core.ac.uk/works/28352433",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s32",
+   "title": "Transformations in Eurasian Belief Systems, 1450-1750",
+   "publisher": "OER Project",
+   "date": "undated",
+   "link": "https://www.oerproject.com/OER-Materials/OER-Media/HTML-Articles/AP-World-History/Unit3/Transformations-in-Eurasian-Belief-Systems-1450-1750",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s33",
+   "title": "Syncretic Religions: Sikhism, Akbar, and Topic 3.3",
+   "publisher": "Fiveable (AP World History study guide)",
+   "date": "undated",
+   "link": "https://fiveable.me/ap-world/key-terms/syncretic-religions",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s34",
+   "title": "Sikh-Muslim Relations during the Mughal Era (1526-1801)",
+   "publisher": "Global Regional Review journal",
+   "date": "undated",
+   "link": "https://www.grrjournal.com/article/sikhmuslim-relations-during-the-mughal-era-15261801",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s35",
+   "title": "French Wars of Religion",
+   "publisher": "World History Encyclopedia",
+   "date": "undated",
+   "link": "https://www.worldhistory.org/French_Wars_of_Religion/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s36",
+   "title": "The French Wars of Religion",
+   "publisher": "Lumen Learning (Western Civilization)",
+   "date": "undated",
+   "link": "https://courses.lumenlearning.com/atd-herkimer-westerncivilization/chapter/the-french-wars-of-religion/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s37",
+   "title": "French Wars of Religion",
+   "publisher": "EBSCO Research Starters",
+   "date": "undated",
+   "link": "https://www.ebsco.com/research-starters/religion-and-philosophy/french-wars-religion/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s38",
+   "title": "French Wars of Religion",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/French_Wars_of_Religion",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s39",
+   "title": "Huguenots - Definition & French Huguenots",
+   "publisher": "HISTORY",
+   "date": "undated",
+   "link": "https://www.history.com/articles/huguenots",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s40",
+   "title": "French Wars of Religion",
+   "publisher": "World History Edu",
+   "date": "undated",
+   "link": "https://worldhistoryedu.com/french-wars-of-religion/",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 39. Last time, whole worlds met across the oceans. Today we look at a split much closer to home: how Western Christianity broke apart, and what came next."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Reformation and the Wars of Religion"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Around 1500, the Catholic Church, led by the pope in Rome, counted all of Western Europe's Christians as its own. That shared home was about to break."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "One church"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A kind warning: today includes religious violence. We will tell it plainly and without gory detail. Pause whenever you need to."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Today: Luther and other reformers | The Catholic response | The Thirty Years' War | A debate: religion or politics? | Beyond Europe"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, one word: indulgence. It was a payment to the church, meant to cancel the earthly punishment for sins."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Indulgence"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Money from indulgences helped pay for rebuilding St. Peter's Basilica in Rome. Some people began to ask whether faith was being sold."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A huge church under construction in Rome, with scaffolding, stonemasons and a tax collector's table nearby."
+   },
+   "cite": [
+    "s4",
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was an indulgence?",
+    "right": "A payment to the church meant to cancel the earthly punishment for sins",
+    "wrong": [
+     "A holiday when markets were closed",
+     "A law made by the emperor",
+     "A new translation of the Bible"
+    ],
+    "why": "The Library of Congress describes indulgences as payments for remission of earthly punishment of sins."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Martin Luther lived from 1483 to 1546. He was a German priest and a professor of theology at Wittenberg."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A monk-professor in a plain robe at a desk with a quill, in a small study in Wittenberg."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In 1517 Luther wrote 95 statements about indulgences, for scholars to debate. He wanted a conversation, not a split."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "95 statements, 1517"
+   },
+   "cite": [
+    "s3",
+    "s6",
+    "s1"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A famous story says he nailed them to the church door in Wittenberg on 31 October 1517. Careful: modern historians question that story."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Tradition: nailed to the church door | Modern scholarship: this claim is challenged"
+   },
+   "cite": [
+    "s5",
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Whatever happened at the door, the ideas spread fast. Printing meant thousands of copies of Luther's writings circulated across Europe."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The printing press"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What helped Luther's ideas spread so quickly?",
+    "right": "The printing press",
+    "wrong": [
+     "Radio broadcasts",
+     "Railways",
+     "A new emperor's order"
+    ],
+    "why": "The printing press with movable type helped spread Luther's message through thousands of printed copies."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Luther's central ideas were simple to state. The Bible alone is the source of belief. And faith alone, not good deeds, leads to salvation."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Scripture alone | Faith alone"
+   },
+   "cite": [
+    "s1",
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The church excommunicated him in January 1521. He was summoned to the emperor's assembly at Worms, where he refused to take back his works unless shown wrong by Scripture or reason."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "3 Jan 1521: excommunicated | 17-18 Apr 1521: hearing at Worms | May 1521: Edict of Worms"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Edict of Worms banned his writings and called him a heretic. But it was never enforced. Luther hid for nine months in Wartburg castle."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Edict of Worms"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "At Worms in 1521, what did Luther do?",
+    "right": "He refused to take back his writings unless shown wrong by Scripture or reason",
+    "wrong": [
+     "He took back everything he had written",
+     "He fled to Rome to ask the pope's forgiveness",
+     "He joined the emperor's court"
+    ],
+    "why": "Britannica records that Luther refused to repudiate his works unless convinced of error by Scripture or reason."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Soon the fight was legal and political, not only about belief. Peasants rose up in 1524 and 1525, partly inspired by Luther, and partly angry about money and power."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Inspired by Luther's ideas | Also old economic grievances | Also old political grievances"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Other reformers followed their own paths. In Zurich, Huldrych Zwingli called for religious images to be removed from churches and for priests to be allowed to marry."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A plain whitewashed church interior in Zurich, with bare walls where statues and paintings used to be."
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In 1529 Luther and Zwingli met and could not agree about communion. Luther held that Christ's body and blood are present with the bread and wine. Zwingli saw it as symbolic."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Luther: body and blood present with the bread and wine | Zwingli: symbolic"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Did Luther and Zwingli agree about communion at their 1529 meeting?",
+    "right": "No, they could not agree",
+    "wrong": [
+     "Yes, they agreed completely",
+     "They never met",
+     "They agreed, then founded one church together"
+    ],
+    "why": "The protestantism.co.uk timeline says they could not agree: Luther held to a sacramental union, Zwingli to a symbolic view."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "John Calvin, raised Catholic in France, led the church in Geneva. He taught predestination: the idea that God had already decided who would be saved."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Predestination"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does predestination mean in Calvin's teaching?",
+    "right": "God has already decided which souls will be saved",
+    "wrong": [
+     "People earn salvation by paying the church",
+     "Only priests can be saved",
+     "Salvation depends on a pilgrimage"
+    ],
+    "why": "OpenStax describes it as the doctrine that God predetermined which souls would be granted salvation."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Calvin's ideas travelled. They shaped the Dutch Reformed Church in the Netherlands, the Presbyterian Church in Scotland, and the Huguenots in France."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A map of Western Europe with three places marked: the Netherlands, Scotland and France, each labelled with its Calvinist church."
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "England's break came from the top. Henry VIII wanted his marriage annulled, and the pope refused. In 1534 Parliament made the English monarch head of the English church."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Act of Supremacy, 1534"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "After 1534, who was head of the Church of England?",
+    "right": "The English monarch",
+    "wrong": [
+     "The pope",
+     "The archbishop of Paris",
+     "Martin Luther"
+    ],
+    "why": "The Act of Supremacy established the Church of England with the monarch as its head."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So Western Christianity was no longer one church. There was Rome, Lutherans, Calvinist churches, and the Church of England."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Catholic | Lutheran | Calvinist (Reformed) | Church of England"
+   },
+   "cite": [
+    "s1",
+    "s10"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In Germany, fighting paused with the Peace of Augsburg in 1555. Each prince chose Catholicism or Lutheranism for his own lands."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Whose realm, his religion"
+   },
+   "cite": [
+    "s18",
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Subjects who disagreed could sell their property and leave. Calvinists were not covered; they gained legal recognition only in 1648."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Ruler chooses: Catholic or Lutheran | Others may sell up and move | Calvinists not included"
+   },
+   "cite": [
+    "s19",
+    "s27"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Under the Peace of Augsburg, who decided a state's religion?",
+    "right": "The prince who ruled it",
+    "wrong": [
+     "The pope alone",
+     "Each family in the state",
+     "A vote of all the people"
+    ],
+    "why": "The treaty let each prince decide whether Catholicism or Lutheranism would prevail in his lands."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Catholic Church answered with reforms of its own. The Council of Trent met from 1545 to 1563 to restate Catholic teaching and improve the training of priests."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1542: Roman Inquisition | 1545-1563: Council of Trent"
+   },
+   "cite": [
+    "s14",
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The church also set up the Roman Inquisition in 1542, a church court to control beliefs it called heresy."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Inquisition"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A new order, the Jesuits, won the pope's approval in 1540. They ran schools and colleges, and they sent missionaries abroad."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Jesuit colleges grew fast",
+    "chart": "c1"
+   },
+   "cite": [
+    "s13",
+    "s15"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "What were two main works of the Jesuits?",
+    "right": "Education and missionary work",
+    "wrong": [
+     "Building warships and trading spices",
+     "Collecting taxes and printing money",
+     "Making maps and charting stars"
+    ],
+    "why": "Britannica says the Jesuits became very active in education, and they were a leading force in missions outside Europe."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Meanwhile France was torn apart. Catholics and Huguenots fought eight civil wars between 1562 and 1598."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "8 civil wars, 1562 to 1598"
+   },
+   "cite": [
+    "s37"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In August 1572 came the St. Bartholomew's Day Massacre, when Catholic mobs killed Protestants in Paris and elsewhere. Estimates range from thousands to tens of thousands. Each number is people."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Counts differ"
+   },
+   "cite": [
+    "s35",
+    "s38",
+    "s39"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In 1598 King Henry IV issued the Edict of Nantes, giving Huguenots limited religious rights. In 1685 King Louis XIV took those rights away."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1593: Henry IV becomes Catholic | 1598: Edict of Nantes | 1685: Edict revoked"
+   },
+   "cite": [
+    "s35",
+    "s40"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What did the Edict of Nantes do?",
+    "right": "It gave French Protestants limited religious rights and ended the wars",
+    "wrong": [
+     "It banned Catholic worship in France",
+     "It made Calvinism the state religion",
+     "It started the Thirty Years' War"
+    ],
+    "why": "The Edict of 1598 granted Huguenots limited toleration and formally ended the French Wars of Religion."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now to the biggest war. Inside the Holy Roman Empire, Protestant princes formed the Protestant Union in 1608. Catholic princes formed the Catholic League in 1609."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Protestant Union, 1608 | Catholic League, 1609"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The spark came in Prague on 23 May 1618. Catholic officials had closed Protestant chapels. Angry Protestant leaders threw two royal officials out of a castle window."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A tall castle window in Prague with a crowd of angry men inside, and a drop to a moat below."
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Nobody was seriously hurt, but it signalled a revolt against the Habsburg emperor. That revolt grew into a war across Europe."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1618: Defenestration of Prague | 1630: Sweden invades Germany | 1632: Gustavus Adolphus killed at Lutzen | 1635: France declares war on Spain | 1648: Peace of Westphalia"
+   },
+   "cite": [
+    "s21",
+    "s22",
+    "s28"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is a surprise. Catholic France backed the Protestant side. Cardinal Richelieu thought Habsburg power on France's borders was too great."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Catholic France, Protestant allies"
+   },
+   "cite": [
+    "s23",
+    "s24"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why did Catholic France join the Protestant side?",
+    "right": "It feared the power of the Habsburgs more than it feared Protestants",
+    "wrong": [
+     "It had become Protestant",
+     "The pope ordered it",
+     "It wanted to defend Luther"
+    ],
+    "why": "France's motives were not mainly religious: Richelieu felt threatened by Habsburg power."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The cost was terrible. Between 4.5 and 8 million people died from battle, hunger and disease. Civilians were often on the front line."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "4.5 to 8 million dead"
+   },
+   "cite": [
+    "s25",
+    "s27",
+    "s26"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In the German lands, some estimates say the population fell from about 20 million to about 12 million. Estimates differ, but the damage was huge."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "German population, one estimate",
+    "chart": "c2"
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Peace came on 24 October 1648 with the Peace of Westphalia, which was two treaties. It kept the terms of Augsburg and added legal recognition for Calvinists."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Peace of Westphalia, 1648"
+   },
+   "cite": [
+    "s28",
+    "s27"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which group gained legal recognition in 1648?",
+    "right": "Calvinists",
+    "wrong": [
+     "Jesuits",
+     "Huguenots in England",
+     "Anabaptists in Spain"
+    ],
+    "why": "The peace confirmed Augsburg and extended legal recognition to Calvinists."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So was the Thirty Years' War about religion, or about power and politics? Historians disagree, and each side has evidence."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Religious: Reformation conflict over the shape of Christendom | Political: Habsburg power, state-building, France's choice in 1635"
+   },
+   "cite": [
+    "s31",
+    "s29",
+    "s24"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Many recent historians combine the views. They say religious, political and social causes all mattered, and that the war was not inevitable."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Religious tension | Political rivalry | Social and economic strain | Not inevitable"
+   },
+   "cite": [
+    "s30",
+    "s29"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which statement best matches what many historians say today?",
+    "right": "Religious, political and social causes all played a part",
+    "wrong": [
+     "It was purely a religious war",
+     "It was purely a political war",
+     "Historians have never studied its causes"
+    ],
+    "why": "A recent study of the historians' positions concludes that political, religious and socio-economic factors all contributed."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Religious change was happening far beyond Europe too. In 1501 Ismail founded the Safavid Empire on the eastern edge of Ottoman lands. He claimed descent from Ali, whom Shi'a Muslims honour."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A map of Southwest Asia with the Ottoman lands in the west and the new Safavid Empire to the east."
+   },
+   "cite": [
+    "s32"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The split between Sunni and Shi'a Islam grew more important in the early 1500s. So religion shaped politics in the Islamic world as well as in Europe."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sunni and Shi'a"
+   },
+   "cite": [
+    "s32"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In Punjab, Guru Nanak lived from 1469 to 1539. He taught devotion to one God and rejected caste hierarchy. In the 1520s he set up a Sikh community."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sikhism"
+   },
+   "cite": [
+    "s33",
+    "s32"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Mughal emperor Akbar, who ruled 1556 to 1605, ended a tax on non-Muslims. He also hosted scholars of many faiths at his court."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Muslim scholars | Hindu scholars | Jain scholars | Zoroastrian scholars | Christian scholars"
+   },
+   "cite": [
+    "s33"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Who founded Sikhism?",
+    "right": "Guru Nanak",
+    "wrong": [
+     "Emperor Akbar",
+     "Martin Luther",
+     "Shah Ismail"
+    ],
+    "why": "Guru Nanak (1469 to 1539) founded Sikhism in the Punjab."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Catholic missions reached further. The Jesuits became leading missionaries, setting up churches in India, Japan and China, so the European split spread around the world."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A world map with lines from Europe to India, Japan and China, showing Jesuit missions."
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is our frame of reference. Luther and Guru Nanak lived at the same time. Calvin was publishing in Geneva as Henry VIII closed English monasteries. Akbar ruled while France fought its wars of religion."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1469: Nanak born | 1483: Luther born | 1501: Safavid Empire | 1517: Ninety-five Theses | 1534: Act of Supremacy | 1556: Akbar begins to rule | 1618-1648: Thirty Years' War"
+   },
+   "cite": [
+    "s2",
+    "s33",
+    "s32",
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To recap: Luther sparked a split. Others, like Zwingli, Calvin and Henry VIII, took their own paths. Rome reformed and pushed back. Then religion and power mixed in terrible wars."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1517: Luther | 1555: Augsburg | 1545-63: Trent | 1618-48: Thirty Years' War | 1648: Westphalia"
+   },
+   "cite": [
+    "s2",
+    "s18",
+    "s14",
+    "s28"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which of these happened last?",
+    "right": "The Peace of Westphalia, 1648",
+    "wrong": [
+     "The Ninety-five Theses, 1517",
+     "The Peace of Augsburg, 1555",
+     "The end of the Council of Trent, 1563"
+    ],
+    "why": "1517, 1555 and 1563 all came before 1648, when the Peace of Westphalia ended the Thirty Years' War."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next time, we turn to a different kind of revolution: the Scientific Revolution, when people began to question how nature itself works."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: The Scientific Revolution"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Number of Jesuit colleges",
+   "rows": [
+    {
+     "label": "By 1615",
+     "value": 372,
+     "source": "s15"
+    },
+    {
+     "label": "By 1755",
+     "value": 728,
+     "source": "s15"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "German population in millions, according to some estimates",
+   "rows": [
+    {
+     "label": "Before the war (1618)",
+     "value": 20,
+     "source": "s26"
+    },
+    {
+     "label": "After the war (1648)",
+     "value": 12,
+     "source": "s26"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Printing and the spread of ideas",
+   "links": [
+    "[[The Renaissance]]"
+   ]
+  },
+  {
+   "topic": "Missions and empires",
+   "links": [
+    "[[Contact and the Columbian Exchange]]",
+    "[[Ottomans, Ming China and the Age of Exploration]]"
+   ]
+  },
+  {
+   "topic": "Sikhism, the Mughals and Safavids",
+   "links": [
+    "[[Mughal, Safavid, Qing and Tokugawa: Early Modern Asia]]"
+   ]
+  },
+  {
+   "topic": "After Westphalia: states and ideas",
+   "links": [
+    "[[The Scientific Revolution]]",
+    "[[Enlightenment and Absolute Monarchy]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "1469 to 1546",
+   "elsewhere": "Guru Nanak (1469-1539) and Martin Luther (1483-1546) lived at the same time, on opposite sides of Eurasia. Each is remembered as starting a religious movement.",
+   "cite": [
+    "s33",
+    "s2"
+   ]
+  },
+  {
+   "when": "1501",
+   "elsewhere": "Ismail founded the Safavid Empire on the eastern edge of Ottoman lands, as the Sunni-Shi'a division was growing more important.",
+   "cite": [
+    "s32"
+   ]
+  },
+  {
+   "when": "1520s",
+   "elsewhere": "Guru Nanak returned to the Punjab and formally set up a new religious community while Luther's reforms were spreading in Germany.",
+   "cite": [
+    "s32"
+   ]
+  },
+  {
+   "when": "1534 to 1540",
+   "elsewhere": "Henry VIII became head of the English church in 1534. Some sources date the Jesuits' founding to 1534 and others to 1540.",
+   "cite": [
+    "s12",
+    "s13"
+   ]
+  },
+  {
+   "when": "1536 to 1540",
+   "elsewhere": "Calvin published his Institutes in 1536, the year Henry VIII began closing the monasteries of England, Wales and Ireland.",
+   "cite": [
+    "s11"
+   ]
+  },
+  {
+   "when": "1556 to 1605",
+   "elsewhere": "Akbar ruled the Mughal Empire and ended the tax on non-Muslims. His reign overlapped the French Wars of Religion, including the 1572 massacre.",
+   "cite": [
+    "s33",
+    "s35"
+   ]
+  },
+  {
+   "when": "c. 1568 to 1648",
+   "elsewhere": "The Eighty Years' War for Dutch independence from Spain overlapped the Thirty Years' War. A separate Dutch-Spanish treaty ended it in January 1648.",
+   "cite": [
+    "s25"
+   ]
+  },
+  {
+   "when": "1635",
+   "elsewhere": "The year France declared war on Spain and joined the Thirty Years' War, it also granted letters patent to the French Academy.",
+   "cite": [
+    "s22"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Luther nailed the Ninety-five Theses to the Wittenberg church door on 31 October 1517.",
+   "other_view": "This is the traditional story. Britannica says it comes from legend, and the World History Encyclopedia notes that modern scholarship has challenged it. The date and the document are well attested, but the door scene is uncertain.",
+   "cite": [
+    "s4",
+    "s5"
+   ]
+  },
+  {
+   "claim": "The Catholic changes after Luther are best called the Counter-Reformation, a reaction to Protestants.",
+   "other_view": "Many historians prefer Catholic Reformation. They point out that reformers such as Cardinal Cisneros were renewing monasteries and schools in Spain before or alongside Luther. They also stress that the reforms answered the church's own problems, not only Protestant challenges.",
+   "cite": [
+    "s13",
+    "s16"
+   ]
+  },
+  {
+   "claim": "The Thirty Years' War was a religious war.",
+   "other_view": "Some historians argue its origins were religious, as the last struggle over the shape of Christendom after the Reformation. Others stress politics: Catholic France entered on the Protestant side in 1635 to weaken the Habsburgs. A 2008 article in the English Historical Review says it was a struggle over the political and religious order in the Empire, and was not inevitable. Many recent historians now say religious, political and social causes combined.",
+   "cite": [
+    "s31",
+    "s24",
+    "s29",
+    "s30"
+   ]
+  },
+  {
+   "claim": "The war killed 4.5 to 8 million people and cut the German population sharply.",
+   "other_view": "Nobody counted exactly. Sources give a range of 4.5 to 8 million deaths. Population losses are estimates, such as a fall from about 20 million to 12 million, or as much as 40% in some accounts.",
+   "cite": [
+    "s25",
+    "s26",
+    "s27"
+   ]
+  },
+  {
+   "claim": "The French Wars of Religion ended with the Edict of Nantes in 1598, as a grant of toleration.",
+   "other_view": "Historians disagree about the end date: some argue the Peace of Alais in 1629 is the real conclusion. The scale of the St. Bartholomew's Day killings is also uncertain, with estimates from about 5,000 to 30,000, and one source saying up to 70,000. One historian questions whether the Edict was designed to offer real toleration.",
+   "cite": [
+    "s36",
+    "s38",
+    "s39",
+    "s37"
+   ]
+  },
+  {
+   "claim": "Guru Nanak founded a new religion.",
+   "other_view": "Sikhs regard Nanak as the founder of a new religion. Many Muslims have regarded him as a Muslim Sufi, and Hindus have held different views of his identity.",
+   "cite": [
+    "s34"
+   ]
+  },
+  {
+   "claim": "The Peace of Westphalia was the start of modern state sovereignty.",
+   "other_view": "The Peace gave rise to the idea of Westphalian sovereignty. Whether it was a true turning point is debated, though the stories told about it have strongly shaped later thinking about international law and politics.",
+   "cite": [
+    "s28",
+    "s25"
+   ]
+  }
+ ]
+}

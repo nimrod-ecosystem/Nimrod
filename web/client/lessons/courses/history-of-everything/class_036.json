@@ -1,0 +1,1011 @@
+{
+ "about": {
+  "title": "The Renaissance",
+  "course": "history-of-everything",
+  "class_n": 36,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes: 36 short beats of roughly 50 seconds each, with 10 check questions. That fits the five topics without rushing. Some dates come from encyclopedias and teaching sites, not museum or textbook pages. The Africa side of 'outside Europe' is left to classes 31 and 41 because I did not read a strong source for it."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Florence and Central Italy, 1400–1600 A.D.",
+   "publisher": "The Metropolitan Museum of Art (Heilbrunn Timeline of Art History)",
+   "date": "undated",
+   "link": "https://www.metmuseum.org/toah/ht/08/eustc",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "Renaissance",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated (updated online)",
+   "link": "https://www.britannica.com/event/Renaissance",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "Linear perspective",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated (updated online)",
+   "link": "https://www.britannica.com/art/linear-perspective",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "Johannes Gutenberg",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated (updated online)",
+   "link": "https://www.britannica.com/biography/Johannes-Gutenberg",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "By 1500 Printing Presses are Established in 282 Cities",
+   "publisher": "Jeremy Norman's HistoryofInformation.com",
+   "date": "undated",
+   "link": "https://www.historyofinformation.com/detail.php?id=27",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "Jikji",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Jikji",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "Italian Renaissance",
+   "publisher": "History.com",
+   "date": "undated (updated online)",
+   "link": "https://www.history.com/articles/italian-renaissance",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "Italian Renaissance Learning Resources: Introduction (Unit 8)",
+   "publisher": "National Gallery of Art",
+   "date": "undated",
+   "link": "https://www.italianrenaissanceresources.com/units/unit-8/essays/introduction/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "Chapter 16: The Renaissance (Western Civilization)",
+   "publisher": "LOUIS Pressbooks",
+   "date": "undated",
+   "link": "https://louis.pressbooks.pub/westernciv/chapter/chapter16/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "The Ming Voyages",
+   "publisher": "Columbia University, Asia for Educators",
+   "date": "undated",
+   "link": "https://afe.easia.columbia.edu/special/china_1000ce_mingvoyages.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "Zheng He",
+   "publisher": "EBSCO Research Starters",
+   "date": "undated",
+   "link": "https://www.ebsco.com/research-starters/biography/zheng-he/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "Aztec Empire",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Aztec_Empire",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "Pachacuti Inca Yupanqui: Founder of the Inca Empire",
+   "publisher": "World History Encyclopedia",
+   "date": "undated",
+   "link": "https://www.worldhistory.org/timeline/Pachacuti_Inca_Yupanqui/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "Medieval renaissances",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Medieval_renaissances",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "Jacob Burckhardt Invented the Renaissance in 1860 — and Reshaped History",
+   "publisher": "History Collection",
+   "date": "undated",
+   "link": "https://historycollection.com/the-civilization-of-the-renaissance-in-italy/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "Jacob Burckhardt: The Civilization of the Renaissance in Italy",
+   "publisher": "Age of the Sage",
+   "date": "undated",
+   "link": "https://www.age-of-the-sage.org/history/historian/Jacob_Burckhardt.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "About – Renaissance",
+   "publisher": "renaissancearea.wordpress.com",
+   "date": "undated",
+   "link": "https://renaissancearea.wordpress.com/about/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "What Was the Renaissance? Meaning, Timeline, Humanism and Art",
+   "publisher": "Passion for History",
+   "date": "undated (updated online)",
+   "link": "https://passionforhistory.com/early-modern-history/renaissance/what-was-the-renaissance/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "The Renaissance (Western Civilization)",
+   "publisher": "Pressbooks, Western Civilization",
+   "date": "undated",
+   "link": "https://pressbooks.whccd.edu/westerncivilization/chapter/55/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "Tensions in Renaissance Cities",
+   "publisher": "University of Chicago Library",
+   "date": "undated",
+   "link": "https://www.lib.uchicago.edu/media/documents/Renaissance_Tensions_Text.pdf",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "Italian Renaissance Culture",
+   "publisher": "Encyclopedia.com (Renaissance and Reformation Reference Library)",
+   "date": "undated",
+   "link": "https://www.encyclopedia.com/history/encyclopedias-almanacs-transcripts-and-maps/italian-renaissance-culture",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "One Point Perspective: The Works of Masaccio and Leonardo da Vinci",
+   "publisher": "PBS LearningMedia",
+   "date": "undated",
+   "link": "https://www.pbslearningmedia.org/resource/one-point-perspective-video-gallery/masaccio-leonardo-da-vinci-rebuilding-the-renaissance/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "Timeline of the Ming treasure voyages",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Timeline_of_the_Ming_treasure_voyages",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "Filippo Brunelleschi",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Filippo_Brunelleschi",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "Incunabula",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/topic/incunabula",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 36: the Renaissance. We'll look at three kinds of change in Europe, from the 1300s to the 1500s: art, ideas and technology."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Renaissance: art, ideas, technology (1300s–1500s)"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last class was the Black Death, which wiped out about a third of Europe's people. It struck in 1347–1351. That's where today starts."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1347–1351: the Black Death"
+   },
+   "cite": [
+    "s18",
+    "s19"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Renaissance was a cultural movement that began in Italian cities. It renewed the study of ancient Greek and Roman learning."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Renaissance"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, the place. Italy then was a patchwork of states, not one country. It was not unified until the 1800s."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map of 15th-century Italy: many separate states, including Florence, Milan, Venice, Rome and Naples"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In the 1400s, was Italy one unified country?",
+    "right": "No. It was a mosaic of separate states.",
+    "wrong": [
+     "Yes, the Medici family ruled all of it.",
+     "Yes, the Pope ruled it as one kingdom.",
+     "Yes, the Ottoman sultan ruled all of it."
+    ],
+    "why": "The National Gallery of Art describes Renaissance Italy as a shifting mosaic of states that did not unify until the nineteenth century."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Take Florence. It was an independent republic and a banking capital. Only London and Constantinople were bigger in Europe."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Florence: 3rd-largest city in Europe"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Rich Florentines showed off by becoming patrons. A patron is a supporter who pays artists and thinkers to do their work."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "patron = someone who pays for art and learning"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The most famous patrons were the Medici, a family of merchants and bankers. By 1434 the real power in Florence was in their hands."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1434: the Medici take control of Florence's government"
+   },
+   "cite": [
+    "s1",
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "An example: the great dome of Florence's cathedral, by Brunelleschi, finished in 1436. The Medici helped pay, and the Met calls it unprecedented."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The red ribbed dome of Florence Cathedral rising above the city's rooftops"
+   },
+   "cite": [
+    "s1",
+    "s9"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is a patron?",
+    "right": "Someone who pays for artists' and scholars' work.",
+    "wrong": [
+     "An artist's apprentice who mixes the paint.",
+     "A ruler who bans art.",
+     "A person who sells paint in a shop."
+    ],
+    "why": "Wealthy Florentines became patrons, supporters of artists and thinkers, to show off their money and power."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Florence wasn't alone. Courts like Milan, Urbino, Mantua and Ferrara also paid for art. Culture let small courts compete with bigger, stronger states."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Milan (Sforza) • Urbino (Montefeltro) • Mantua (Gonzaga) • Ferrara (Este) • Naples (Aragonese)"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That brings us to ideas. Humanism was a new kind of learning, built on close study of ancient Greek and Latin writings."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "humanism"
+   },
+   "cite": [
+    "s7",
+    "s18"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Example: Petrarch, a poet who lived from 1304 to 1374. He is often called one of the founders of Renaissance humanism."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Portrait of Petrarch in a laurel wreath, holding a closed book"
+   },
+   "cite": [
+    "s18",
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What did humanist scholars mainly study?",
+    "right": "The writings of ancient Greece and Rome.",
+    "wrong": [
+     "Only brand-new machines.",
+     "Only maps of lands no one had visited.",
+     "Only the laws of their own city."
+    ],
+    "why": "Renaissance humanism was based on close study of classical Greek and Latin literature."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A boost came in 1453, when Constantinople fell. Some Greek scholars fled to Italy with manuscripts. But some had arrived earlier, so it didn't start the movement."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1453: Constantinople falls; Greek scholars and books reach Italy"
+   },
+   "cite": [
+    "s2",
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Humanists also linked learning to public life. In this view, being a good person meant serving your city. This education spread across Europe by the late 1400s."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "civic humanism"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Note: this wasn't anti-religion. Popes were big patrons. Pope Julius II drew top artists to Rome, and many famous works are religious."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Old idea: 'Renaissance = against religion' | Evidence: Pope Julius II (reigned 1503–13) paid leading artists; Masaccio's Holy Trinity is a crucifixion scene"
+   },
+   "cite": [
+    "s21",
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now art. A big change was linear perspective: a way to create the illusion of depth on a flat surface."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "linear perspective"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "How it works: all the parallel lines in a picture run toward one spot on the horizon. That spot is the vanishing point."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A drawn road with its two edges meeting at a single dot on the horizon line"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Brunelleschi is thought to have devised it around 1415. Alberti wrote it down in 1435. Britannica says the practice was lost after antiquity."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "c. 1415: Brunelleschi • 1435: Alberti's Della Pittura"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Example: Masaccio's Holy Trinity, painted in Florence in 1427. Later, Leonardo's Last Supper (Milan, 1495) used the same method."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Masaccio's Holy Trinity fresco: a crucifixion framed by painted arches that seem to recede into the wall"
+   },
+   "cite": [
+    "s22",
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In linear perspective, what happens to the parallel lines?",
+    "right": "They converge at a single vanishing point.",
+    "wrong": [
+     "They stay perfectly parallel on the page.",
+     "They spread wider and wider apart.",
+     "They are left out of the picture."
+    ],
+    "why": "Britannica explains that parallel lines converge in a single vanishing point on the horizon line."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Artists became stars. Success brought fame, and the High Renaissance of Leonardo and others is dated about 1495 to 1520."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Early Renaissance 1420–95 • High Renaissance 1495–1520 • Mannerism 1520s–1600"
+   },
+   "cite": [
+    "s7",
+    "s21"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which artist painted The Last Supper in Milan in 1495?",
+    "right": "Leonardo da Vinci",
+    "wrong": [
+     "Masaccio",
+     "Filippo Brunelleschi",
+     "Johannes Gutenberg"
+    ],
+    "why": "The PBS LearningMedia resource names Leonardo's Last Supper, painted in 1495 in Milan."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now technology. Before the 1450s, European books were handwritten. Then Johannes Gutenberg built the first known mechanized printing press in Europe."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "printing press"
+   },
+   "cite": [
+    "s25",
+    "s4"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "His system had three parts: a durable type-metal alloy, an oil-based ink that stuck to metal, and a press that pressed evenly."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Durable metal type • 2. Oil-based ink • 3. A press for even pressure"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In 1455 he printed the Gutenberg Bible. For the first time in Europe, large numbers of books could be made fairly cheaply."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1455: the Gutenberg Bible"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What did Gutenberg's press make possible in Europe?",
+    "right": "Making large numbers of books for relatively little cost.",
+    "wrong": [
+     "Making books that never needed words.",
+     "Making each book by hand, one at a time.",
+     "Making books only for kings."
+    ],
+    "why": "Britannica says his press made it possible, for the first time in Europe, to manufacture many books cheaply."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "But Gutenberg did not invent movable type. Britannica says that began in Korea in the 1300s."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Korea first: 1300s"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Proof: the Jikji, a Korean Buddhist book printed in 1377. UNESCO confirmed in 2001 that it's the oldest surviving book printed with movable metal type."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1377: Jikji printed in Korea • 1455: Gutenberg Bible"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which is the oldest surviving book printed with movable metal type?",
+    "right": "The Jikji, printed in Korea in 1377.",
+    "wrong": [
+     "The Gutenberg Bible, printed in 1455.",
+     "The Last Supper, painted in 1495.",
+     "The Mona Lisa, painted in the 1500s."
+    ],
+    "why": "UNESCO confirmed the Jikji (1377) as the oldest book printed with movable metal type."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Printing spread fast. By the year 1500, presses were running in 282 cities."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "282 cities with presses by 1500"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The British Library's database lists 27,460 editions before 1501. Only about one in ten, just over 3,000, had any pictures."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Early printed editions before 1501",
+    "chart": "c1"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Remember print. Classes 39 and 40, the Reformation and the Scientific Revolution, will show ideas travelling faster because of it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Print helped ideas travel"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a big question: was the Renaissance a clean break from the Middle Ages? In 1860, Jacob Burckhardt said yes."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Burckhardt: Renaissance art was a break with the past (paraphrase)"
+   },
+   "cite": [
+    "s15",
+    "s16"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Renaissance people said so too. Some believed they lived in a new era, and Petrarch had already described a long age of darkness."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Break: Burckhardt (1860), Renaissance writers themselves | Continuity: critics"
+   },
+   "cite": [
+    "s17",
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Critics answered. Medievalists like Charles Homer Haskins said Burckhardt made the Middle Ages too dark. Others pointed to earlier 'renaissances', like Charlemagne's era."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Carolingian • Ottonian • 12th-century renaissances"
+   },
+   "cite": [
+    "s15",
+    "s14"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What did critics like Haskins say about Burckhardt?",
+    "right": "He painted the Middle Ages as too dark so the Renaissance would shine.",
+    "wrong": [
+     "He invented the printing press.",
+     "He said the Renaissance never happened at all.",
+     "He said Italy was one country."
+    ],
+    "why": "The History Collection summary says twentieth-century medievalists argued Burckhardt invented an excessively dark Middle Ages."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Others asked: a rebirth for whom? Feminist historians from the 1970s noted that Burckhardt's 'Renaissance man' was male. Joan Kelly argued women lost agency."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Whose rebirth?"
+   },
+   "cite": [
+    "s15",
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So: real new things, with deep medieval roots. Many historians now prefer the name 'early modern' for this transitional era."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "'Early modern' = a more neutral name"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the wider world. In China, the Ming emperor sent Zheng He on seven ocean expeditions, from 1405 to 1433."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Zheng He's routes: Nanjing, South China Sea, India, Arabian Peninsula, east coast of Africa"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The last three voyages reached East Africa. Many accounts say the aim was prestige and diplomacy more than profit. China banned building seagoing ships in 1436."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1405–1433: voyages • 1436: ban on building seagoing ships"
+   },
+   "cite": [
+    "s10",
+    "s11",
+    "s23"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 1453 the Ottoman army took Constantinople, as we said. And the sultan, Mehmed II, backed humanism too, gathering Italian scholars and artists at his court."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1453: Ottomans conquer Constantinople"
+   },
+   "cite": [
+    "s18",
+    "s20"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What happened to Constantinople in 1453?",
+    "right": "The Ottoman Empire took it.",
+    "wrong": [
+     "Florence conquered it.",
+     "It was destroyed by a flood.",
+     "Gutenberg moved his press there."
+    ],
+    "why": "The Passion for History timeline lists 1453 as the year Constantinople fell to the Ottoman Empire."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In the Americas, three cities formed the Aztec Triple Alliance in 1428. In 1438 Pachacuti began the Inca Empire's expansion."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1428: Triple Alliance • 1438: Pachacuti begins Inca expansion"
+   },
+   "cite": [
+    "s12",
+    "s13"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Putting it together: art got perspective, ideas got humanism, and technology got the press, with Korean roots. Class 38 will meet the Americas again."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Art: perspective • Ideas: humanism • Technology: printing"
+   },
+   "cite": [
+    "s3",
+    "s18",
+    "s4"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which of these was mainly a change in IDEAS?",
+    "right": "Humanism: studying classical writings and human achievement.",
+    "wrong": [
+     "Linear perspective in painting.",
+     "Gutenberg's printing press.",
+     "Brunelleschi's cathedral dome."
+    ],
+    "why": "Humanism was an intellectual movement based on classical Greek and Latin texts, while the others are art, technology and architecture."
+   }
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Early printed editions recorded before 1501",
+   "rows": [
+    {
+     "label": "All true incunabula editions recorded (British Library ISTC, 2008)",
+     "value": 27460,
+     "source": "s5"
+    },
+    {
+     "label": "Editions with any illustrations (just over)",
+     "value": 3000,
+     "source": "s5"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Italian city-states and patrons",
+   "links": [
+    "[[The Black Death and the Crisis of the 1300s]]",
+    "[[High Medieval Europe: Crusades, Castles and Universities]]"
+   ]
+  },
+  {
+   "topic": "Art and artists",
+   "links": [
+    "[[The Scientific Revolution]]"
+   ]
+  },
+  {
+   "topic": "Printing press",
+   "links": [
+    "[[The Reformation and the Wars of Religion]]",
+    "[[The Scientific Revolution]]",
+    "[[Tang and Song China and the Islamic Golden Age]]"
+   ]
+  },
+  {
+   "topic": "Was the Renaissance a break with the Middle Ages?",
+   "links": [
+    "[[High Medieval Europe: Crusades, Castles and Universities]]"
+   ]
+  },
+  {
+   "topic": "Developments outside Europe",
+   "links": [
+    "[[Ottomans, Ming China and the Age of Exploration]]",
+    "[[The Americas and Pacific Before 1492]]",
+    "[[Medieval Africa: Ghana, Mali, Great Zimbabwe and the Swahili Coast]]",
+    "[[Contact and the Columbian Exchange]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "1347–1351",
+   "elsewhere": "The Black Death devastated Europe. Petrarch (1304–1374) was alive and writing, and Dante had died in 1321.",
+   "cite": [
+    "s18",
+    "s19"
+   ]
+  },
+  {
+   "when": "1377",
+   "elsewhere": "Monks in Korea printed the Jikji with movable metal type. In the same year Filippo Brunelleschi, the future designer of Florence's dome, was born in Florence.",
+   "cite": [
+    "s6",
+    "s24"
+   ]
+  },
+  {
+   "when": "1405–1433",
+   "elsewhere": "Zheng He's seven voyages sailed from Ming China. Brunelleschi's dome was finished in 1436, three years after the last voyage ended.",
+   "cite": [
+    "s10",
+    "s1"
+   ]
+  },
+  {
+   "when": "1425–1438",
+   "elsewhere": "Masaccio painted the Holy Trinity (1425–27). The Aztec Triple Alliance formed in 1428, and Pachacuti began Inca expansion in 1438.",
+   "cite": [
+    "s3",
+    "s12",
+    "s13"
+   ]
+  },
+  {
+   "when": "1453–1455",
+   "elsewhere": "Ottoman forces took Constantinople in 1453. Two years later Gutenberg's Bible appeared.",
+   "cite": [
+    "s18",
+    "s4"
+   ]
+  },
+  {
+   "when": "1495–1498",
+   "elsewhere": "Leonardo's Last Supper was painted in Milan in 1495. Savonarola was executed in Florence in 1498.",
+   "cite": [
+    "s22",
+    "s18"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The Renaissance was a clean break from the Middle Ages.",
+   "other_view": "Burckhardt (1860) and many Renaissance writers saw a new era. Critics such as Haskins said Burckhardt made the Middle Ages too dark. Others note earlier 'renaissances', like Charlemagne's. Many scholars now see change mixed with continuity.",
+   "cite": [
+    "s16",
+    "s17",
+    "s15",
+    "s14"
+   ]
+  },
+  {
+   "claim": "Gutenberg invented printing with movable type.",
+   "other_view": "Britannica says Gutenberg did not invent movable type, which began in Korea in the 1300s. The Jikji (1377) is the oldest surviving metal-type book. His contribution was a new European system: alloy type, oil-based ink and a press.",
+   "cite": [
+    "s4",
+    "s6"
+   ]
+  },
+  {
+   "claim": "The fall of Constantinople in 1453 started the Renaissance.",
+   "other_view": "Britannica says the fall gave humanism a major boost as Greek scholars fled to Italy. But Greek scholars and manuscripts had reached Italy before 1453, and humanism had been developing for generations.",
+   "cite": [
+    "s2",
+    "s18"
+   ]
+  },
+  {
+   "claim": "The Renaissance was a 'rebirth' that benefited everyone.",
+   "other_view": "Feminist historians from the 1970s said the 'Renaissance man' was male. Joan Kelly argued women lost agency. Huizinga argued it was a decline from the High Middle Ages.",
+   "cite": [
+    "s15",
+    "s17"
+   ]
+  },
+  {
+   "claim": "Zheng He's voyages were mainly about trade.",
+   "other_view": "EBSCO says they aimed mainly at prestige and diplomacy. Columbia says they were meant to impress Ming power on the world, though trade contacts continued afterward.",
+   "cite": [
+    "s11",
+    "s10"
+   ]
+  },
+  {
+   "claim": "'Renaissance' is the best name for this period.",
+   "other_view": "Some historians say the word implies a rebirth after a primitive 'dark' age. Most now prefer 'early modern', a more neutral term for a transitional era.",
+   "cite": [
+    "s17"
+   ]
+  }
+ ]
+}

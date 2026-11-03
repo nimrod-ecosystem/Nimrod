@@ -1,0 +1,1366 @@
+{
+ "about": {
+  "title": "Byzantium, Early Medieval Europe and the Vikings",
+  "course": "history-of-everything",
+  "class_n": 28,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. This is a rough estimate from the number of short beats and questions, and I have not timed it with a reader. The class covers five topics. The Dark Ages debate and the Viking voyages get a little extra time because each needs both sides explained before the check question. For the same reason the frame-of-reference list is limited to events I could source, and it leans on the Viking and Frankish worlds."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "The Byzantine State under Justinian I (Justinian the Great)",
+   "publisher": "The Metropolitan Museum of Art, Heilbrunn Timeline of Art History",
+   "date": "n.d.",
+   "link": "https://www.metmuseum.org/essays/the-byzantine-state-under-justinian-i-justinian-the-great",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "Justinian I: The Byzantine Emperor who tried to restore Rome",
+   "publisher": "Byzantine World",
+   "date": "n.d.",
+   "link": "https://byzantine-world.com/historical-figures/emperors/justinian/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "Meet Justinian - Builder of Hagia Sophia and the Great Plague (excerpt from The Cambridge History of the Byzantine Empire c. 500-1492)",
+   "publisher": "Pallas web (Hagia Sophia History)",
+   "date": "n.d.",
+   "link": "https://www.pallasweb.com/deesis/meet-justinian-builder-of-hagia-sophia.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "Justinian and Theodora",
+   "publisher": "Lumen Learning, Western Civilization",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/atd-herkimer-westerncivilization/chapter/justinian-and-theodora/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "Nika riots",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Nika_riots",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "Chariot-Racing Hooliganism? The Nika Riots of Constantinople",
+   "publisher": "Antigone Journal",
+   "date": "2021-09",
+   "link": "https://antigonejournal.com/2021/09/nika-riots/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "Byzantine Empire",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/place/Byzantine-Empire",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "Byzantine Empire",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Byzantine_Empire",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "Isidore of Miletus",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Isidore_of_Miletus",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "Francia",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Francia",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "Charlemagne",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Charlemagne",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "Carolingian Empire",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Carolingian_Empire",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "Charlemagne (Research Starters)",
+   "publisher": "EBSCO",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/biography/charlemagne/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "Carolingian Art",
+   "publisher": "The Metropolitan Museum of Art, Heilbrunn Timeline of Art History",
+   "date": "n.d.",
+   "link": "https://www.metmuseum.org/essays/carolingian-art",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "Carolingian Minuscule (palaeography course page)",
+   "publisher": "Lancaster University",
+   "date": "n.d.",
+   "link": "https://www.lancaster.ac.uk/users/yorkdoom/palweb/week10/palwk10.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "Carolingian Renaissance",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Carolingian_Renaissance",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "Carolingian art, an introduction",
+   "publisher": "Khan Academy",
+   "date": "n.d.",
+   "link": "https://www.khanacademy.org/humanities/medieval-world/carolingian-ottonian/carolingian1/a/carolingian-art-an-introduction",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "Rule of St Benedict (manuscript catalogue record, with administrative history)",
+   "publisher": "UCL Special Collections",
+   "date": "n.d.",
+   "link": "https://archives.ucl.ac.uk/CalmView/record/catalog/MS%20GERM/12",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "Monastic Libraries and Illuminated Manuscripts",
+   "publisher": "My Holy Host",
+   "date": "n.d.",
+   "link": "https://myholyhost.com/catholic-life/monastic-life/monastic-libraries-and-illuminated-manuscripts/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "Scriptorium",
+   "publisher": "Wikipedia text mirrored on Fandom (Penny's Poetry wiki)",
+   "date": "n.d.",
+   "link": "https://pennyspoetry.fandom.com/wiki/Scriptorium",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "Lindisfarne raid",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/event/Lindisfarne-Raid",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "Sack of Lindisfarne",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Sack_of_Lindisfarne",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "The history of the Viking Age",
+   "publisher": "History (history.co.uk)",
+   "date": "n.d.",
+   "link": "https://www.history.co.uk/shows/vikings/articles/the-history-of-the-viking-age",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "The Viking Age: 793-1066 CE",
+   "publisher": "Othravar Encyclopedia",
+   "date": "n.d.",
+   "link": "https://othravar.com/encyclopedia/viking-age",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "Interactive Viking Map, 793-1066 AD",
+   "publisher": "Vikings Brand",
+   "date": "n.d.",
+   "link": "https://vikingsbrand.co/pages/viking-world-map",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "Viking Traders: How Exactly Did They Trade?",
+   "publisher": "History on the Net",
+   "date": "n.d.",
+   "link": "https://www.historyonthenet.com/vikings-as-traders",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "Trade and exploration in the Viking Age",
+   "publisher": "History Skills",
+   "date": "n.d.",
+   "link": "https://www.historyskills.com/classroom/ancient-history/medieval-history/viking-trade-and-exploration/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "Vinland sagas",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Vinland_sagas",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s29",
+   "title": "Evidence for European presence in the Americas in ad 1021",
+   "publisher": "Nature (vol. 601, pp. 388-391)",
+   "date": "2021-10-20",
+   "link": "https://www.nature.com/articles/s41586-021-03972-8",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s30",
+   "title": "New Dating Method Shows Vikings Occupied Newfoundland in 1021 C.E.",
+   "publisher": "Smithsonian Magazine",
+   "date": "2021-10-20",
+   "link": "https://www.smithsonianmag.com/science-nature/new-dating-method-shows-vikings-occupied-newfoundland-in-1021-ce-180978903/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s31",
+   "title": "Vikings lived in North America by at least the year 1021",
+   "publisher": "Science News",
+   "date": "2021-10-20",
+   "link": "https://www.sciencenews.org/article/vikings-north-america-date-newfoundland",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s32",
+   "title": "Archaeologists used tree rings and astrophysics to prove Vikings were in Canada in 1021",
+   "publisher": "The Week",
+   "date": "2021-10",
+   "link": "https://theweek.com/health-and-science/1006268/archaeologists-used-tree-rings-and-astrophysics-to-prove-vikings-were-in",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s33",
+   "title": "The 'Dark Ages' Debate",
+   "publisher": "OER Project",
+   "date": "n.d.",
+   "link": "https://www.oerproject.com/OER-Materials/OER-Media/HTML-Articles/Origins/Unit5/The-Dark-Ages-Debate",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s34",
+   "title": "Just How Dark Were the Dark Ages?",
+   "publisher": "Discover Magazine",
+   "date": "2020-12-25",
+   "link": "https://www.discovermagazine.com/just-how-dark-were-the-dark-ages-42119",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s35",
+   "title": "Why Were They Called the 'Dark Ages'?",
+   "publisher": "HistoryFacts.com",
+   "date": "n.d.",
+   "link": "https://historyfacts.com/world-history/article/why-were-they-called-the-dark-ages/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s36",
+   "title": "Were the Dark Ages Really Dark? What Historians Now Say",
+   "publisher": "AskHistory",
+   "date": "n.d.",
+   "link": "https://askhistoryai.com/guides/were-the-dark-ages-really-dark",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s37",
+   "title": "The Fall of Rome and the End of Civilization by Bryan Ward-Perkins (book page and description)",
+   "publisher": "Goodreads",
+   "date": "n.d.",
+   "link": "https://www.goodreads.com/book/show/68540.The_Fall_of_Rome_and_the_End_of_Civilization",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s38",
+   "title": "07.10.12, Review Article: Rome's Fall and Europe's Rise",
+   "publisher": "The Medieval Review, Indiana University",
+   "date": "n.d.",
+   "link": "https://scholarworks.iu.edu/journals/index.php/tmr/article/view/16453",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s39",
+   "title": "Miyake event",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Miyake_event",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s40",
+   "title": "The Lindisfarne Raid That Began the Viking Age",
+   "publisher": "Life in Norway",
+   "date": "n.d.",
+   "link": "https://www.lifeinnorway.net/lindisfarne-viking-raid/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s41",
+   "title": "Alcuin",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Alcuin",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s47",
+   "title": "Viking Settlements: Map of Where the Vikings Settled (750-1100)",
+   "publisher": "The World Through Time",
+   "date": "n.d.",
+   "link": "https://theworldthroughtime.com/glossary/northern-eurasia/viking-settlements",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s48",
+   "title": "The Carolingian Dynasty",
+   "publisher": "Lumen Learning, Boundless World History",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/suny-fmcc-boundless-worldhistory/chapter/the-carolingian-dynasty/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s49",
+   "title": "Byzantine Empire",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/Byzantine_Empire/",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 28. Last time we followed the rise of Islam. Today we look at two places that had both been part of Rome, and at the Vikings who sailed into the story."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Byzantium, Early Medieval Europe and the Vikings"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "By the end you should be able to describe how the Roman East and the Roman West went different ways. We will make five stops, one idea at a time."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Byzantium and Justinian | 2. The Franks and Charlemagne | 3. Monasteries and learning | 4. Viking voyages | 5. A debate: were the 'Dark Ages' really dark?"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, a picture to hold in your head. The western half of the Roman Empire crumbled into separate kingdoms. The eastern half, with its capital Constantinople, carried on for another thousand years."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "WEST: crumbled into separate kingdoms | EAST: carried on from Constantinople until 1453"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which half of the Roman Empire lasted until 1453?",
+    "right": "The eastern half, with its capital at Constantinople",
+    "wrong": [
+     "The western half",
+     "Both halves, together",
+     "Neither. All of it ended when the West did"
+    ],
+    "why": "The eastern half survived for about a thousand years after the western half broke up, and fell to the Ottoman Turks in 1453."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "You may know the eastern half as the Byzantine Empire. That name was only made up later. The people who lived there called themselves Romans."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Romaioi = 'Romans'"
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What did the people of the 'Byzantine Empire' call themselves?",
+    "right": "Romans",
+    "wrong": [
+     "Byzantines",
+     "Franks",
+     "Vikings"
+    ],
+    "why": "'Byzantine' is a modern label. The empire's own people called themselves Romans (Romaioi)."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The East's most famous early ruler was Justinian, emperor from 527 to 565. He is remembered for three things: winning back lost land, collecting Roman law into one code, and building Hagia Sophia."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Justinian, emperor 527-565 | 1. Reconquest | 2. The law code | 3. Hagia Sophia"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, the land. His armies took back parts of North Africa, Italy and Spain that had once been Roman. By his death in 565 the empire touched nearly the whole Mediterranean. It never again reached that size."
+   },
+   "show": {
+    "kind": "map",
+    "text": "The Mediterranean Sea, with the empire's territory around much of its coast by 565"
+   },
+   "cite": [
+    "s3",
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was Justinian trying to do in the West?",
+    "right": "Win back lands that had once been Roman",
+    "wrong": [
+     "Give the western lands their independence",
+     "Move the capital from Constantinople to Rome",
+     "Make peace by handing the land to the Franks"
+    ],
+    "why": "Justinian reconquered parts of North Africa, Italy and Spain, which were former Roman territory."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Second, the law. Roman laws had piled up for centuries. Justinian set up a commission of lawyers to gather them into a single code, with each law listed by subject so it could be found easily."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "One code, listed by subject"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "It was fast work. An earlier code had taken nine years, and Justinian's took thirteen months. Its ideas still shape the civil-law tradition of Europe."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "13 months"
+   },
+   "cite": [
+    "s5",
+    "s2",
+    "s4"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Why was one code, with laws listed by subject, useful?",
+    "right": "People could find a law quickly instead of searching through a pile",
+    "wrong": [
+     "It made every law much shorter",
+     "It let the emperor skip the courts",
+     "It was written in a brand-new language"
+    ],
+    "why": "Justinian's lawyers listed each law by subject so that it could be easily looked up."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Third, the building. But it begins with a disaster. In January 532, riots broke out in Constantinople's Hippodrome, the chariot-racing stadium. The crowd chanted 'Nika', meaning 'win' or 'conquer'."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Nika! = 'Win!'"
+   },
+   "cite": [
+    "s1",
+    "s6"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The week of unrest burned the cathedral, Hagia Sophia, and other grand buildings. Justinian came close to losing his throne. Byzantine historian Procopius says his wife Theodora talked him into staying to fight."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A burning city: smoke over the Hippodrome and the great church"
+   },
+   "cite": [
+    "s1",
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why did people riot? One story blames angry racing fans. Historians say there was more behind it: heavy taxes and anger at the emperor."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "The simple story: racing fans angry about arrested charioteers | The wider view: taxes, resentment and mismanagement"
+   },
+   "cite": [
+    "s4",
+    "s1",
+    "s6"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which is part of the fuller explanation of the Nika riots?",
+    "right": "Anger over taxes and the emperor's policies, as well as the racing factions",
+    "wrong": [
+     "A foreign army besieging the city",
+     "A plague that had emptied Constantinople",
+     "An argument over the calendar"
+    ],
+    "why": "Sources point to the racing factions and to anger over taxes and policy. One historian notes there was no major outside threat at the time."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "After the riots, Justinian rebuilt on a grand scale. The new Hagia Sophia was built in about five years and dedicated in 537. It stayed the largest enclosed space in the world for nearly a thousand years."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A vast church under a huge central dome, lit by tall windows, with coloured marbles gathered from across the empire"
+   },
+   "cite": [
+    "s2",
+    "s9",
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "In what year was the new Hagia Sophia dedicated?",
+    "right": "537",
+    "wrong": [
+     "476",
+     "800",
+     "1066"
+    ],
+    "why": "Hagia Sophia was rebuilt after the Nika fire and dedicated in 537."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So in the East we have law, ambition and giant buildings. Now we travel west to a very different world. There the empire had split into kingdoms, and one of the strongest belonged to the Franks, a Germanic people."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "481 Clovis unites the Franks | 751 Carolingian family rules the Franks | 768 Charlemagne becomes king | 800 Charlemagne crowned emperor"
+   },
+   "cite": [
+    "s10",
+    "s12",
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A family called the Carolingians ruled the Franks from 751. Their greatest king was Charles the Great, known as Charlemagne."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Charlemagne = 'Charles the Great'"
+   },
+   "cite": [
+    "s12",
+    "s11"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which people did Charlemagne rule as king?",
+    "right": "The Franks",
+    "wrong": [
+     "The Byzantines",
+     "The Vikings",
+     "The Persians"
+    ],
+    "why": "Charlemagne was king of the Franks from 768."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "He became king of the Franks in 768 and king of the Lombards in Italy in 774. His lands covered most of Western Europe."
+   },
+   "show": {
+    "kind": "list",
+    "text": "768: king of the Franks | 774: king of the Lombards | 800: emperor"
+   },
+   "cite": [
+    "s11",
+    "s12"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "On Christmas Day, 800, in Rome, Pope Leo III crowned him emperor. He was the first emperor in western Europe in about three centuries."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "25 December 800"
+   },
+   "cite": [
+    "s11",
+    "s48"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Who crowned Charlemagne emperor, and where?",
+    "right": "Pope Leo III, in Rome",
+    "wrong": [
+     "Emperor Justinian, in Constantinople",
+     "Alcuin of York, in Aachen",
+     "A Viking chief, in Paris"
+    ],
+    "why": "Pope Leo III crowned Charlemagne in Rome on 25 December 800."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The pope did this in return for political protection, and he ignored Byzantium's claim to be the one Roman Empire. In 813, Byzantium's Emperor Michael I accepted Charlemagne's title."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "West: a new 'emperor of the Romans' | East: 'we are the Romans'"
+   },
+   "cite": [
+    "s12",
+    "s13",
+    "s8"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why was a second emperor in the West a problem for Byzantium?",
+    "right": "The Byzantines saw themselves as the Roman Empire, so a rival Roman emperor challenged them",
+    "wrong": [
+     "Byzantium had no emperor at that time",
+     "Charlemagne had banned the Greek language",
+     "The pope was Byzantium's ally and objected"
+    ],
+    "why": "Byzantines called themselves Romans, so a western emperor claiming the Roman title challenged them. After 800, western Europe began calling them 'Greeks'."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Charlemagne also cared about learning. He gathered scholars at his court, like Alcuin of York from England. Charlemagne learned to read late and never mastered writing."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A king in a palace listening to scholars with books"
+   },
+   "cite": [
+    "s14",
+    "s41",
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One famous fix was handwriting. Carolingian minuscule was a clear script based on Roman letter forms. Later scholars borrowed it, and it is the basis of our modern typefaces."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Carolingian minuscule: clear, readable writing"
+   },
+   "cite": [
+    "s14",
+    "s15",
+    "s16"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "What was Carolingian minuscule?",
+    "right": "A clear, readable script based on Roman letter forms",
+    "wrong": [
+     "A small Frankish coin",
+     "A law code for the Franks",
+     "A type of castle"
+    ],
+    "why": "It was a handwriting reform to make texts accurate and legible, built on Roman letters."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Much of that writing happened in monasteries. A monastery is a community of monks who live by a rule. The most influential Rule was written by Benedict of Nursia, around 535 to 540."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Monastery: a community of monks living by a Rule"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Benedict's Rule asked monks to set aside time each day for reading. Reading needs books, and books had to be copied by hand."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Daily reading needs books"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What did Benedict's Rule ask of monks that made books needed?",
+    "right": "Time set aside each day for reading",
+    "wrong": [
+     "A vow never to read anything but scripture",
+     "A ban on writing",
+     "Travel to a new monastery every year"
+    ],
+    "why": "The Rule's daily reading requirement meant monasteries needed books, so they made copies."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The place for copying was the scriptorium, which means 'a place for writing'. Charlemagne even had his own scriptorium at Aachen."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Scriptorium = a place for writing"
+   },
+   "cite": [
+    "s20",
+    "s17"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "What is a scriptorium?",
+    "right": "A place where scribes copied manuscripts by hand",
+    "wrong": [
+     "A monastery's kitchen",
+     "A school for knights",
+     "A tower for watching the coast"
+    ],
+    "why": "The word means 'a place for writing'. It was the room or workshop where monks copied manuscripts."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Before universities and printing, the monastery library was the main place written knowledge survived in Western Europe. A Lancaster University guide says most of our knowledge of classical literature comes from copies made at Charlemagne's court."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Monastery libraries held Western Europe's written knowledge."
+   },
+   "cite": [
+    "s19",
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "But monasteries were also rich targets. Lindisfarne, in Northumbria, was founded in 635 and was a centre of learning. On 8 June 793, seaborne raiders attacked it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Lindisfarne, 793"
+   },
+   "cite": [
+    "s22",
+    "s21"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The attack shocked Christian Europe, and the date is usually used to mark the start of the Viking Age."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "793"
+   },
+   "cite": [
+    "s21",
+    "s22"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Which date is usually given for the start of the Viking Age?",
+    "right": "793, the raid on Lindisfarne",
+    "wrong": [
+     "537, the dedication of Hagia Sophia",
+     "800, Charlemagne's coronation",
+     "1066, the end of the Viking Age"
+    ],
+    "why": "The raid on Lindisfarne in 793 is the usual starting point of the Viking Age."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Who were the Vikings? Norse people from Denmark, Norway and Sweden. After Lindisfarne, raids were soon recorded in Scotland, Ireland and western France."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Scandinavia, with arrows to the British Isles and western France"
+   },
+   "cite": [
+    "s24",
+    "s23"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "At first they sailed home with their loot. Before long they were conquering and settling. In 865, 72 years after Lindisfarne, a large army arrived in England to conquer."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "793 raid on Lindisfarne | 865 large army arrives to conquer England"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What changed in the Viking Age after the first raids?",
+    "right": "Vikings began conquering and settling as well as raiding",
+    "wrong": [
+     "Vikings stopped sailing altogether",
+     "Vikings joined Charlemagne's army",
+     "Vikings went home and never returned"
+    ],
+    "why": "At first the raiders returned home, but they soon began conquering lands and making settlements."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Vikings were traders too. Swedes went east along rivers, the Dnieper and the Volga, and set up towns such as Novgorod and Kyiv. Some Vikings served the Byzantine emperor as the Varangian Guard."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Eastern Europe: the Dnieper flowing to the Black Sea, the Volga to the Caspian, with Novgorod and Kyiv marked"
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which rivers carried Viking traders east and south?",
+    "right": "The Dnieper and the Volga",
+    "wrong": [
+     "The Thames and the Seine",
+     "The Nile and the Tigris",
+     "The Rhine and the Danube"
+    ],
+    "why": "The two main eastern routes were the Dnieper down to the Black Sea and the Volga to the Caspian Sea."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Some even reached Baghdad. They came home with silks, spices and silver. So the people who raided monasteries were also linking Europe with the Islamic world."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Trade: Dublin to Baghdad"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In the west and the north they settled. Dublin was a Viking base by 841. Settlers reached Iceland around 874. Normandy was granted to the Norse leader Rollo in 911. The chart counts the years after Lindisfarne."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Years after the Lindisfarne raid (793)",
+    "chart": "c1"
+   },
+   "cite": [
+    "s27",
+    "s25",
+    "s29",
+    "s23"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Which of these came soonest after the raid on Lindisfarne?",
+    "right": "The great army arriving in England (865)",
+    "wrong": [
+     "Settlement of Iceland (about 874)",
+     "Normandy granted to Rollo (911)",
+     "Norse wood-cutting in Newfoundland (1021)"
+    ],
+    "why": "On the chart, 865 is 72 years after 793, the shortest bar."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The farthest voyage went west. Norse settlers reached Greenland around 985. Icelandic sagas, written down in the 1200s, tell of a land called Vinland. Sagas are stories, and they are not always accurate."
+   },
+   "show": {
+    "kind": "map",
+    "text": "The North Atlantic: Norway to Iceland, Greenland, then Newfoundland"
+   },
+   "cite": [
+    "s25",
+    "s28"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In the 1960s, Helge Ingstad and Anne Stine Ingstad found a Norse site at L'Anse aux Meadows in Newfoundland. It looks like a winter base used for boat repairs and for getting timber and grapes."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Low turf-roofed longhouse foundations on a windswept northern coast"
+   },
+   "cite": [
+    "s28"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 2021, scientists found its exact date. A huge burst of cosmic rays in 993 left a spike in tree rings. Find that ring, count the rings after it, and you know the year. Wood from the site was cut 28 rings later, in 1021."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1021"
+   },
+   "cite": [
+    "s29",
+    "s30",
+    "s31"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "How did scientists get an exact year, 1021, for the wood?",
+    "right": "They found the 993 spike in the tree rings and counted rings out to the bark",
+    "wrong": [
+     "Ordinary radiocarbon dating alone gave the exact year",
+     "A saga named the year",
+     "A runestone carried the date"
+    ],
+    "why": "Earlier dating gave ranges covering the whole Viking Age. The 993 spike let researchers count rings from a known year."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That is 471 years before Columbus. The Vikings were the first Europeans to cross the Atlantic. But people already lived in the Americas. We meet them in class 32."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "471 years before Columbus"
+   },
+   "cite": [
+    "s32",
+    "s29"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the debate. 'Dark Ages' is a nickname for Europe after Rome fell. For about five hundred years historians have argued over whether there was a dark age, and how long it lasted."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Were the 'Dark Ages' really dark?"
+   },
+   "cite": [
+    "s33"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Side one: 'dark' means hard to see. The era looks dark partly because so few records survive. One historian, Alban Gautier, would keep the word only in that narrow sense."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "'Dark' as in unlit and backward | 'Dark' as in few records survive"
+   },
+   "cite": [
+    "s34",
+    "s33"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Side two: there was plenty of light. We have seen Hagia Sophia, Justinian's law, Charlemagne's scholars, monastery libraries and Viking trade. Most modern historians reject the label and say 'Early Middle Ages' instead."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Early Middle Ages"
+   },
+   "cite": [
+    "s35"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "But some historians say the West really did suffer. Bryan Ward-Perkins, who studies archaeology, points to pottery, coins and building: material life got poorer. He argued against historians, like Peter Brown, who stressed change and continuity in 'Late Antiquity'."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Ward-Perkins: a real material collapse in the West | Brown's 'Late Antiquity': change and continuity"
+   },
+   "cite": [
+    "s37",
+    "s36",
+    "s38"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Even these two sides reject the cartoon version, a Europe that was uniformly ignorant and stuck in place. That is the point to take away."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Real hardship, but not a cartoon"
+   },
+   "cite": [
+    "s36"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which best matches what most historians think today?",
+    "right": "The West had real hardship, but 'Dark Ages' is too simple a label",
+    "wrong": [
+     "Nothing at all changed after Rome fell",
+     "Everyone in Europe was ignorant for a thousand years",
+     "Historians all agree on exactly how bad it was"
+    ],
+    "why": "Historians still argue about how severe the decline was, but both sides reject the picture of a uniformly ignorant, unchanging Europe."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let us gather it up. In the East, Byzantium kept the Roman name and, under Justinian, its law and its great buildings. In the West, the Franks built an empire, and monks copied books."
+   },
+   "show": {
+    "kind": "list",
+    "text": "East: Byzantium, Justinian, Hagia Sophia | West: Franks, Charlemagne, Carolingian minuscule | Monasteries: reading, copying, libraries | Vikings: raiders, traders, settlers, voyagers | 'Dark Ages': a debate, not a settled fact"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next time we cross to Asia, to Tang and Song China and the Islamic Golden Age. Thank you for staying with us, and take a break if you need one."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Tang and Song China and the Islamic Golden Age"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Years after the Lindisfarne raid (793)",
+   "rows": [
+    {
+     "label": "Large army arrives in England (865)",
+     "value": 72,
+     "source": "s23"
+    },
+    {
+     "label": "Settlement of Iceland begins (about 874)",
+     "value": 81,
+     "source": "s25"
+    },
+    {
+     "label": "Normandy granted to Rollo (911)",
+     "value": 118,
+     "source": "s25"
+    },
+    {
+     "label": "Norse wood-cutting in Newfoundland (1021)",
+     "value": 228,
+     "source": "s29"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Byzantium, the Eastern Roman Empire",
+   "links": [
+    "[[The Roman Empire, the Silk Roads and Early Christianity]]",
+    "[[Late Antiquity: Changing Empires]]",
+    "[[Ottomans, Ming China and the Age of Exploration]]"
+   ]
+  },
+  {
+   "topic": "Justinian's law code",
+   "links": [
+    "[[The Rise of Rome]]",
+    "[[Enlightenment and Absolute Monarchy]]"
+   ]
+  },
+  {
+   "topic": "Charlemagne and the Carolingian Renaissance",
+   "links": [
+    "[[High Medieval Europe: Crusades, Castles and Universities]]",
+    "[[The Renaissance]]"
+   ]
+  },
+  {
+   "topic": "Monasteries and manuscripts",
+   "links": [
+    "[[High Medieval Europe: Crusades, Castles and Universities]]"
+   ]
+  },
+  {
+   "topic": "Viking voyages and settlements",
+   "links": [
+    "[[The Americas and Pacific Before 1492]]",
+    "[[Contact and the Columbian Exchange]]"
+   ]
+  },
+  {
+   "topic": "The wider world at this time",
+   "links": [
+    "[[The Rise of Islam and the Caliphates]]",
+    "[[Tang and Song China and the Islamic Golden Age]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "527-565 (Justinian's reign)",
+   "elsewhere": "In Italy, Benedict founded Monte Cassino in 529 and wrote his Rule around 535-540. In Justinian's empire, the Platonic Academy in Athens was closed and a church council met at Constantinople in 553.",
+   "cite": [
+    "s2",
+    "s20",
+    "s18",
+    "s3"
+   ]
+  },
+  {
+   "when": "about 774",
+   "elsewhere": "Charlemagne became king of the Lombards in 774. Around the same time, a huge burst of cosmic rays left a spike in tree rings in Japan and Germany.",
+   "cite": [
+    "s11",
+    "s39"
+   ]
+  },
+  {
+   "when": "780s-790s",
+   "elsewhere": "The English scholar Alcuin was at Charlemagne's court during these decades, the same years as the Lindisfarne raid in 793.",
+   "cite": [
+    "s41",
+    "s21",
+    "s40"
+   ]
+  },
+  {
+   "when": "800",
+   "elsewhere": "Charlemagne was crowned emperor in Rome, seven years after the Lindisfarne raid. In Constantinople, the Byzantines still called their own empire the Roman Empire.",
+   "cite": [
+    "s11",
+    "s21",
+    "s8"
+   ]
+  },
+  {
+   "when": "800s-900s",
+   "elsewhere": "Viking traders carried silks, spices and silver from Baghdad to northern Europe, while Dublin was a Viking base by 841.",
+   "cite": [
+    "s23",
+    "s27"
+   ]
+  },
+  {
+   "when": "865-911",
+   "elsewhere": "A large Viking army came to England in 865. Iceland's settlement began around 874. Kyiv became the seat of the Rus' princes in 882, according to the chronicle tradition. Normandy was granted to Rollo in 911.",
+   "cite": [
+    "s23",
+    "s25"
+   ]
+  },
+  {
+   "when": "988",
+   "elsewhere": "Vladimir of Kyiv was baptised, and the Varangian Guard was formed in Byzantium.",
+   "cite": [
+    "s47"
+   ]
+  },
+  {
+   "when": "993-1021",
+   "elsewhere": "A cosmic-ray burst in 993 left a spike in tree rings. Counting rings from that spike dates Norse wood-cutting at L'Anse aux Meadows to 1021.",
+   "cite": [
+    "s29",
+    "s30"
+   ]
+  },
+  {
+   "when": "1453",
+   "elsewhere": "Constantinople fell to the Ottoman Turks and the Byzantine Empire came to an end.",
+   "cite": [
+    "s7"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The Nika riots were mainly chariot-racing fans' hooliganism.",
+   "other_view": "Several sources say the racing factions were only the spark. They point to heavy taxes and popular anger at Justinian's policies. One article argues the riots were a sudden social implosion fuelled by mismanagement.",
+   "cite": [
+    "s4",
+    "s1",
+    "s6"
+   ]
+  },
+  {
+   "claim": "The 'Byzantine Empire' began with Constantine's new capital in 330.",
+   "other_view": "The name 'Byzantine' was coined later, and historians disagree on when the Roman East became 'Byzantine'. Dates given range from 330 to the 565 death of Justinian to about 650. Most agree it ended in 1453.",
+   "cite": [
+    "s49",
+    "s7",
+    "s8"
+   ]
+  },
+  {
+   "claim": "Charlemagne's coronation in 800 created a legitimate new Roman emperor.",
+   "other_view": "From Byzantium's view, there already was a Roman emperor, and its people saw themselves as the Romans. Charlemagne's title was not accepted by Byzantium until 813, and after 800 the West began calling the Byzantines 'Greeks'.",
+   "cite": [
+    "s12",
+    "s13",
+    "s8"
+   ]
+  },
+  {
+   "claim": "Monks deliberately saved classical learning.",
+   "other_view": "One source says copying classical authors was not a planned rescue. It was a side effect of the Rule's reading requirement, since books were needed and monks copied what was available and useful. Other sources stress how much classical literature survives through Carolingian copies.",
+   "cite": [
+    "s19",
+    "s15"
+   ]
+  },
+  {
+   "claim": "The Viking Age began with the raid on Lindisfarne in 793.",
+   "other_view": "793 is the conventional date. One source says it was almost certainly not the first Norse raid on Britain, just the first recorded in detail by horrified monastic chroniclers. Another notes that Scandinavian trading towns like Ribe were already active decades earlier.",
+   "cite": [
+    "s24",
+    "s25"
+   ]
+  },
+  {
+   "claim": "L'Anse aux Meadows is the Vinland of the sagas.",
+   "other_view": "The sagas were written down in the 1200s, contain contradictory details, and cannot be taken as fully accurate. The 1021 date does not settle when Vikings first reached the Americas. Some argue the site was a base camp for repairs and timber, and whether it was truly Vinland is still debated.",
+   "cite": [
+    "s28",
+    "s31"
+   ]
+  },
+  {
+   "claim": "The 'Dark Ages' label is useful, or it is wrong.",
+   "other_view": "Most modern historians reject the label and prefer 'Early Middle Ages'. Some, like Alban Gautier, would keep it only for the few centuries that are hard to see in the records. Ward-Perkins argues that the material collapse in the West was real, while the Late Antiquity school stresses continuity. Both sides reject the cartoon of a uniformly ignorant Europe.",
+   "cite": [
+    "s33",
+    "s34",
+    "s35",
+    "s36",
+    "s37",
+    "s38"
+   ]
+  }
+ ]
+}

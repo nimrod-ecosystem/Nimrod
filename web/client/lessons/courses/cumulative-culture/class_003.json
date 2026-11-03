@@ -1,0 +1,795 @@
+{
+ "about": {
+  "title": "Speech: The First Great Handing-Down",
+  "course": "cumulative-culture",
+  "class_n": 3,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 35,
+  "length_note": "About 35 minutes. There are 27 short beats and 9 check questions, at roughly 1 to 1.5 minutes each. Each idea gets its own beat, so the length matches the six topics and needs no change."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "No Last Word on Language Origins",
+   "publisher": "Science (AAAS)",
+   "date": "1998",
+   "link": "https://www.science.org/doi/10.1126/science.282.5393.1455",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "When did human language emerge?",
+   "publisher": "MIT News",
+   "date": "2025-03-14",
+   "link": "https://news.mit.edu/2025/when-did-human-language-emerge-0314",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Our species arose at least 300,000 years ago",
+   "publisher": "Smithsonian Human Origins Program (National Museum of Natural History)",
+   "date": "n.d.",
+   "link": "https://humanorigins.si.edu/research/whats-hot-human-origins/our-species-arose-least-300000-years-ago",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Experimental evidence for the co-evolution of hominin tool-making teaching and language (Morgan et al.)",
+   "publisher": "Nature Communications",
+   "date": "2015-01-13",
+   "link": "https://www.nature.com/articles/ncomms7029",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Identification of the Social and Cognitive Processes Underlying Human Cumulative Culture (Dean et al.)",
+   "publisher": "PubMed Central (US National Library of Medicine)",
+   "date": "n.d.",
+   "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4676561/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Effects of verbal instruction vs. modelling on imitation and overimitation",
+   "publisher": "Humanities and Social Sciences Communications (Nature Portfolio)",
+   "date": "2021",
+   "link": "https://www.nature.com/articles/s41599-021-00925-4",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "The Oldest True Stories in the World",
+   "publisher": "SAPIENS (anthropology magazine)",
+   "date": "n.d.",
+   "link": "https://www.sapiens.org/language/oral-tradition/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Songlines and Navigation in Wardaman and other Australian Aboriginal Cultures (Norris)",
+   "publisher": "Journal of Astronomical History and Heritage, via arXiv",
+   "date": "2014",
+   "link": "https://arxiv.org/pdf/1404.2361",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Australian Aboriginal techniques for memorization",
+   "publisher": "PLOS ONE",
+   "date": "2021",
+   "link": "https://journals.plos.org/plosone/article/file?type=printable&id=10.1371/journal.pone.0251710",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Ancient Aboriginal stories preserve history of a rise in sea level (Reid and Nunn)",
+   "publisher": "The Conversation",
+   "date": "2015",
+   "link": "https://theconversation.com/ancient-aboriginal-stories-preserve-history-of-a-rise-in-sea-level-36010",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Handed-down tales tell of ancient sea level rise",
+   "publisher": "Science News",
+   "date": "n.d.",
+   "link": "https://www.sciencenews.org/article/handed-down-tales-tell-ancient-sea-level-rise",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Reconstructive Memory & Schema Theory (on Bartlett's War of the Ghosts study)",
+   "publisher": "McGraw Hill Canada",
+   "date": "n.d.",
+   "link": "https://www.mheducation.ca/blog/series-classic-learning-science-reconstructive-memory-schema-theory/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Bartlett's War of the Ghosts Study (AQA GCSE Psychology revision note)",
+   "publisher": "Save My Exams",
+   "date": "n.d.",
+   "link": "https://www.savemyexams.com/gcse/psychology/aqa/19/revision-notes/memory/memory-as-an-active-process/bartletts-war-of-the-ghosts-study/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Cumulative Cultural Evolution within Evolving Population Structures (Derex and Mesoudi)",
+   "publisher": "Trends in Cognitive Sciences",
+   "date": "2020",
+   "link": "https://www.alexmesoudi.com/publication/derex-cumulative-2020/Derex_Mesoudi_TICS_2020.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Population size does not explain past changes in cultural complexity (Vaesen et al.)",
+   "publisher": "Proceedings of the National Academy of Sciences (PNAS)",
+   "date": "2016",
+   "link": "https://www.pnas.org/doi/10.1073/pnas.1520288113",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Homo sapiens",
+   "publisher": "Smithsonian Human Origins Program (National Museum of Natural History)",
+   "date": "n.d.",
+   "link": "https://humanorigins.si.edu/evidence/human-fossils/species/homo-sapiens",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Ancient fossils from Morocco mess up modern human origins",
+   "publisher": "PBS NewsHour (reprinting Scientific American)",
+   "date": "n.d.",
+   "link": "https://www.pbs.org/newshour/science/ancient-fossils-morocco-mess-modern-human-origins",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 3 of 9. Last time we saw that people are built to learn from each other. Today we look at the first tool for that: the spoken word."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Speech: The First Great Handing-Down"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "By the end, you will be able to explain how speech and stories pass knowledge between generations. You will also name one strength and one weakness of keeping knowledge only in memory."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. How speech passes on what we know\n2. How stories and songs help memory\n3. One strength and one weakness\n4. Where speech sits on the big timeline"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One word to start: oral. It simply means spoken. An oral tradition is knowledge passed on by voice, with no writing."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "oral tradition = knowledge passed on by voice"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why does speech matter so much? Watching shows what someone does. Words can also tell you why, and what happened long ago."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Watching: what the hands do | Telling: why a step matters, what happened, what to avoid"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Scientists call a step 'opaque' when you can't tell why it matters just by watching. Imagine a tool-maker taps a stone at an odd angle. A spoken tip, 'this angle stops it cracking', explains it."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A tool-maker taps a stone at an angle while an apprentice watches; a speech bubble explains why the angle matters."
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which job is speech especially good at, compared with watching alone?",
+    "right": "Passing on why a step matters, including steps you can't see the point of",
+    "wrong": [
+     "Making a stone harder to break",
+     "Replacing the need to practise",
+     "Fixing the exact date of every event"
+    ],
+    "why": "Researchers say language supports teaching and helps pass on 'opaque' traits faithfully. You still have to practise."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Researchers tested this with stone tool-making. In one experiment, 184 adults passed a toolmaking skill down chains of people. They used five different ways of passing it on."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "184 adults, 5 ways of passing on a skill"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The result: passing the skill on improved with teaching, and especially with language. It did not improve with simply copying by eye."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Copying by eye (imitation, emulation): no gain\nTeaching: gain\nTeaching with language: the most gain"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In the stone-tool experiment, what made the skill pass on better?",
+    "right": "Teaching, especially teaching with language",
+    "wrong": [
+     "Only watching and copying",
+     "Using bigger stones",
+     "Passing it on faster"
+    ],
+    "why": "Across six measures, transmission improved with teaching and particularly language, but not with imitation or emulation."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A fair caution: this is one experiment, and experts still argue about how essential language is. A study of an earlier design found verbal teaching was not essential for cumulative improvement."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Language: very helpful. Essential? Still debated."
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now apprenticeship. It means learning by watching and doing beside an expert, who talks while you work. Think of cooking next to a grandparent."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "An older person and a young person chopping vegetables side by side. The older one points and speaks."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Does talking alone work? A 2021 experiment found that verbal instruction alone generally copied less faithfully than showing the action. Another study found children given verbal instruction did better than children who weren't."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Telling alone: less faithful copy | Showing, and telling as well: strongest teaching"
+   },
+   "cite": [
+    "s6",
+    "s5"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which statement fits these findings about apprenticeship?",
+    "right": "Showing and telling together works better than telling alone",
+    "wrong": [
+     "Telling alone always beats showing",
+     "Watching never needs any words",
+     "Only adults can learn from words"
+    ],
+    "why": "Verbal instruction alone generally reduced fidelity compared with demonstration, but children given verbal instruction outperformed those who got none."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Speech fades the moment it is said. So oral cultures use memory aids: song, rhythm, story, and place."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Song\nRhythm\nStory\nPlace"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A famous example is the songline. For Aboriginal Australians, songlines are remembered routes across the land. Landforms prompt the memories. They have been passed on orally for hundreds of generations."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A winding route across Australia, with landmarks along it, each marked with a verse of a song."
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One researcher describes songlines as oral maps. The knowledge for finding your way is memorised in song, in a culture with no written language."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A singer walking a route, naming each landmark in turn."
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why does this work? The story weaves in plants, animals and places, with numbers and timing built in. It is rehearsed often, so recall is quick and accurate."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Facts tied into a story\nStory tied to places\nRehearsed often"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why do songlines help people remember?",
+    "right": "They tie facts to a story, a song and places in the landscape, and are rehearsed often",
+    "wrong": [
+     "They are written down on stone",
+     "They are short and have no detail",
+     "Each person invents their own version"
+    ],
+    "why": "The story builds in details of plants, animals and place, and frequent rehearsal gives rapid, accurate recall."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Do such stories really carry old facts? Two researchers, Reid and Nunn, looked at 18 stories from around Australia's coast. All of them tell of coastal flooding."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "18 coastal stories, all about flooding"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Scientists know the sea rose to its present level between about 18,000 and 7,000 years ago. Reid and Nunn argue the stories recall that flooding, at least 6,000 to 7,000 years ago. A critic says this can neither be proved nor disproved."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "18,000 years ago: sea starts to rise. 7,000 years ago: sea reaches today's level. Stories: said to remember this."
+   },
+   "cite": [
+    "s11",
+    "s10"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What do Reid and Nunn argue the flood stories show?",
+    "right": "That careful retelling may have carried real events for thousands of years",
+    "wrong": [
+     "That stories are always repeated word for word",
+     "That writing began in Australia 7,000 years ago",
+     "That the sea level fell in that time"
+    ],
+    "why": "They argue the stories recall coastal flooding as seas reached present levels, though a critic says the claim cannot be verified."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So here is our strength. With good memory aids, spoken knowledge can be kept without writing, and one person can hold a huge store of it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Strength: knowledge kept and passed on with no writing"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a weakness. Passing a story from person to person changes it. This is called drift: small changes pile up. In 1932 the psychologist Frederic Bartlett had people pass a story along, like the game Chinese whispers."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "drift = small changes that pile up with each retelling"
+   },
+   "cite": [
+    "s12",
+    "s13"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "What happened? Stories got shorter, some parts were dropped, and the tale bent toward a shape that people expected."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Shorter\nParts dropped\nBent toward the familiar"
+   },
+   "cite": [
+    "s12",
+    "s13"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "In Bartlett's retelling experiments, what usually happened to a story?",
+    "right": "It got shorter, lost parts, and shifted toward what tellers expected",
+    "wrong": [
+     "It stayed exactly the same",
+     "It grew longer with every new fact",
+     "Only the names changed"
+    ],
+    "why": "The retellings were shortened, parts were omitted, and the story was adapted to fit familiar forms."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Songlines push back against drift. Their stories are rehearsed, tied to places, and guarded by Elders, and they show little variation over long periods. Ordinary chat has no such guards."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Songlines: rehearsed, tied to place, guarded by Elders | Everyday retelling: no guards, so it drifts"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A second weakness is who holds the knowledge. Speech passes only from person to person. If few people know a hard skill, losing them can mean losing it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Knowledge in memory lives only as long as its holders"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Tasmania is an example. It was cut off from mainland Australia about 10,000 to 12,000 years ago, and it apparently lost tools such as bone tools and warm clothing. Models say that how many people can learn from each other, and how connected they are, helps protect skills."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "An island cut off from a mainland by rising water, with few people left to teach each other."
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "According to these models, what helps protect a hard skill from being lost?",
+    "right": "A larger, well-connected pool of people to learn from",
+    "wrong": [
+     "Keeping the skill secret from everyone",
+     "Having fewer people who know it",
+     "Never teaching it to children"
+    ],
+    "why": "Effective population size depends on both population size and interconnectedness, and a larger one can buffer the risk of cultural loss."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "But this is debated. A 2016 team argued the evidence does not support a loss of cultural complexity in Tasmania. So treat Tasmania as a model under test, not a settled fact."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Tasmania: a debated example"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's put the two sides together."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Strength: can carry knowledge a very long way, with no writing | Weakness: drift, and loss when too few people hold the knowledge"
+   },
+   "cite": [
+    "s9",
+    "s12",
+    "s14"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the big timeline. Our species, Homo sapiens, is about 300,000 years old, going by the oldest fossils. Genetic work suggests the capacity for language was present at least 135,000 years ago."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Years ago: key points in the story of speech",
+    "chart": "c1"
+   },
+   "cite": [
+    "s3",
+    "s2",
+    "s1"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "When did language begin? Nobody knows exactly. Words leave no fossils, so the evidence is indirect. A genetic survey suggests the capacity existed at least 135,000 years ago and was perhaps in social use around 100,000 years ago. By 40,000 years ago, one archaeologist says everyone would accept language is everywhere."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "there is only one species on the planet who has language"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which is the best summary of what we know about when language began?",
+    "right": "The evidence is indirect: the capacity was probably there by at least 135,000 years ago, but the exact start is unknown",
+    "wrong": [
+     "It began exactly 6,000 years ago with writing",
+     "Fossils of words give us the exact date",
+     "Scientists agree it began 40,000 years ago"
+    ],
+    "why": "Evidence is indirect; a genetic survey says at least 135,000 years ago, and clear signs are everywhere by about 40,000 years ago."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Writing appears only about 6,000 years ago. Our species is about 300,000 years old. So for roughly 98 out of every 100 of those years, voice and memory were the only way to hand knowledge down."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "about 98 in 100 years: voice and memory only"
+   },
+   "cite": [
+    "s1",
+    "s3"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To finish, one more check. Next class we meet writing: memory outside the head."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Writing, memory outside the head"
+   },
+   "cite": [],
+   "move": "title-rise",
+   "ask": {
+    "q": "Which is a weakness of passing knowledge only by memory?",
+    "right": "Details can drift or be lost as they pass from person to person",
+    "wrong": [
+     "It needs expensive equipment",
+     "It only works in big cities",
+     "Spoken words cannot carry ideas"
+    ],
+    "why": "Retellings drift, and knowledge can be lost if too few people hold it. The strength is that it needs no writing."
+   }
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Years ago: key points in the story of speech",
+   "rows": [
+    {
+     "label": "Oldest Homo sapiens fossils (about)",
+     "value": 300000,
+     "source": "s3"
+    },
+    {
+     "label": "Language capacity present by (genetic estimate, at least)",
+     "value": 135000,
+     "source": "s2"
+    },
+    {
+     "label": "Language perhaps in social use (about)",
+     "value": 100000,
+     "source": "s2"
+    },
+    {
+     "label": "Language everywhere (widely accepted by)",
+     "value": 40000,
+     "source": "s1"
+    },
+    {
+     "label": "Writing appears (about)",
+     "value": 6000,
+     "source": "s1"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "oral tradition",
+   "links": [
+    "[[songlines]]",
+    "[[memory aids]]",
+    "[[Writing: Memory Outside the Head]]"
+   ]
+  },
+  {
+   "topic": "apprenticeship",
+   "links": [
+    "[[teaching]]",
+    "[[opaque steps]]",
+    "[[The Ratchet: What Cumulative Culture Is]]"
+   ]
+  },
+  {
+   "topic": "drift",
+   "links": [
+    "[[how knowledge gets lost]]",
+    "[[Printing and Schools: Copying at Scale]]"
+   ]
+  },
+  {
+   "topic": "origin of language",
+   "links": [
+    "[[Built to Learn From Others: Gene-Culture Coevolution]]",
+    "[[history-of-everything timeline]]"
+   ]
+  },
+  {
+   "topic": "group size and skill loss",
+   "links": [
+    "[[Tasmania debate]]",
+    "[[How Knowledge Gets Lost]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About 300,000 years ago",
+   "elsewhere": "The oldest known Homo sapiens fossils date from here. Other human species lived then too, such as Homo naledi in South Africa (dated to between 335,000 and 236,000 years ago).",
+   "cite": [
+    "s3",
+    "s17"
+   ]
+  },
+  {
+   "when": "About 164,000 and 90,000 years ago",
+   "elsewhere": "By 164,000 years ago modern humans were collecting and cooking shellfish. By 90,000 years ago they had begun making special fishing tools.",
+   "cite": [
+    "s16"
+   ]
+  },
+  {
+   "when": "About 135,000 to 100,000 years ago",
+   "elsewhere": "Genetic evidence puts the language capacity at least 135,000 years back. Around 100,000 years ago there was a widespread appearance of symbolic activity, such as markings on objects and the use of ochre.",
+   "cite": [
+    "s2"
+   ]
+  },
+  {
+   "when": "About 60,000 years ago",
+   "elsewhere": "Some archaeologists think stone-tool sites in Northern Australia show people were doing complex things by this date.",
+   "cite": [
+    "s1"
+   ]
+  },
+  {
+   "when": "About 40,000 years ago",
+   "elsewhere": "One archaeologist says everyone would accept language is everywhere by now. Africa's Middle Stone Age, which began around 300,000 years ago, ended about this time.",
+   "cite": [
+    "s1",
+    "s17"
+   ]
+  },
+  {
+   "when": "About 18,000 to 7,000 years ago",
+   "elsewhere": "The sea rose to its present level around Australia. Within the past 12,000 years, our species made the shift to producing food and changing its surroundings.",
+   "cite": [
+    "s11",
+    "s16"
+   ]
+  },
+  {
+   "when": "About 6,000 years ago",
+   "elsewhere": "Writing appears, ending the long era when voice and memory were the only way to hand knowledge down.",
+   "cite": [
+    "s1"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The capacity for language existed at least 135,000 years ago, and was perhaps in social use around 100,000 years ago.",
+   "other_view": "Others argue there is no unequivocal evidence of modern human behaviour before about 50,000 years ago. Another scientist notes that only one species has language, so it is hard to know what language is necessary for. The date of the start of language is still unsettled.",
+   "cite": [
+    "s1",
+    "s2"
+   ]
+  },
+  {
+   "claim": "Aboriginal oral traditions may preserve real events, such as coastal flooding, for more than 7,000 years.",
+   "other_view": "A critic, Henige, says such claims can neither be verified nor falsified. Other researchers point to oral traditions elsewhere that match verified events from 3,000 to 5,000 years ago, such as specific volcanic eruptions.",
+   "cite": [
+    "s10",
+    "s11"
+   ]
+  },
+  {
+   "claim": "Small or cut-off groups can lose hard skills, because fewer people are available to learn from, as in the Tasmanian case.",
+   "other_view": "A 2016 team argues that the evidence does not support a loss of cultural complexity in Tasmania, and that population size does not explain past changes in cultural complexity. The models remain influential.",
+   "cite": [
+    "s14",
+    "s15"
+   ]
+  },
+  {
+   "claim": "Language makes cultural transmission more faithful.",
+   "other_view": "Experiments show language and teaching help, but a study using a similar design found verbal teaching was not essential for cumulative improvement. Verbal instruction without showing the action generally copied less faithfully than demonstration.",
+   "cite": [
+    "s4",
+    "s6"
+   ]
+  }
+ ]
+}

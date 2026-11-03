@@ -1,0 +1,150 @@
+{
+ "course_id": "cumulative-culture",
+ "title": "How Humans Build on Each Other: Cumulative Culture and Recursive Self-Improvement",
+ "audience": [
+  "high school",
+  "adult"
+ ],
+ "length_note": "Nine classes are needed. Class 1 introduces the core idea (the ratchet). Class 2 explains why humans are built to learn from each other. Classes 3 to 7 follow the transmission technologies in the order they appeared: speech, writing, printing and schools, science, then the internet and AI. Class 8 covers how knowledge is lost, which only makes sense once the learner knows how it is kept. Class 9 covers the extended mind and pulls the course together. Seven topics would leave out printing/schools or the loss of knowledge, and more than nine would repeat material. Each class is 30 to 45 minutes. The shorter ones suit tired learners, including adults relearning after a brain injury. The longer ones are the classes with the most to cover (science, internet and AI, and the extended mind). Every class has a recap, one main idea at a time, and a short 'try it' activity, so learners can stop at any break and still have something whole. Each class also ties to the history-of-everything timeline with one 'where are we on the timeline?' step.",
+ "classes": [
+  {
+   "n": 1,
+   "title": "The Ratchet: What Cumulative Culture Is",
+   "goal": "Explain in plain words how each generation can start where the last one stopped, and give one example of an invention that no single person could have made alone.",
+   "minutes": 35,
+   "topics": [
+    "The cultural ratchet: gaining knowledge and not slipping back",
+    "Cumulative culture versus ordinary culture and individual cleverness",
+    "Why one person alone cannot reinvent a smartphone, or even a pencil",
+    "Teaching and copying as the 'clicks' of the ratchet",
+    "Course overview: transmission, learning to learn, loss, extended mind",
+    "Timeline: placing the course on the history-of-everything timeline, from early humans to now"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 2,
+   "title": "Built to Learn From Others: Gene-Culture Coevolution",
+   "goal": "Describe how culture and genes shaped each other, using at least two examples, and say why this made humans such strong social learners.",
+   "minutes": 40,
+   "topics": [
+    "Gene-culture coevolution defined simply",
+    "Examples: fire and cooking, milk digestion in some populations, others to be verified",
+    "Why humans copy so faithfully, including over-imitation and teaching",
+    "Social learning compared with other animals, with care about what is and isn't settled",
+    "Where the evidence is strong and where scientists still disagree",
+    "Timeline: control of fire, the growth of the human brain, the spread of farming and herding"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 3,
+   "title": "Speech: The First Great Handing-Down",
+   "goal": "Explain how spoken language and storytelling let knowledge pass between generations, and name one strength and one weakness of memory-only transmission.",
+   "minutes": 35,
+   "topics": [
+    "Language as a way to share what you know, not only what you see",
+    "Oral traditions, songs, rhythm and story as memory aids",
+    "Apprenticeship: learning by watching and doing alongside speaking",
+    "The limits of memory: drift, forgetting, group size",
+    "What scientists do and don't know about when language began",
+    "Timeline: the origin of language and early modern humans"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 4,
+   "title": "Writing: Memory Outside the Head",
+   "goal": "Say how writing changed what could be stored and shared, and describe one thing it made easier and one thing it made harder.",
+   "minutes": 35,
+   "topics": [
+    "From tallies and tokens to writing systems",
+    "Records, laws, accounts, letters and libraries",
+    "Knowledge that can travel across distance and wait across time",
+    "Who could read and write, and who was left out",
+    "Trade-offs: memory skills versus stored records, kept balanced and evidence-based",
+    "Timeline: the first writing systems and early cities"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 5,
+   "title": "Printing and Schools: Copying at Scale",
+   "goal": "Explain how printing and organised schooling made knowledge cheaper and more widely shared, and connect this to the idea of the ratchet.",
+   "minutes": 40,
+   "topics": [
+    "Hand copying versus printing: speed, cost and errors",
+    "Woodblock and movable-type printing, and the spread of the press",
+    "The printing house as a workplace: craft, trade and knowledge, with link to the earlier Blake class to be checked",
+    "Schools, universities and literacy as ways of passing on learning",
+    "Standard texts, shared references and the spread of ideas, both good and bad",
+    "Timeline: early printing in East Asia, the press in Europe, the rise of mass schooling"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 6,
+   "title": "Science: A Method That Improves the Methods",
+   "goal": "Explain how science checks and corrects knowledge, and describe how better tools and better methods of learning have sped up learning itself.",
+   "minutes": 45,
+   "topics": [
+    "Learning how to learn: methods that improve how we learn",
+    "Science as organised testing, sharing, checking and correcting",
+    "Peer review, replication, journals and citation as a shared memory",
+    "Tools that made new tools: telescopes, microscopes, instruments, computers",
+    "Feedback loops: what 'recursive' means in everyday terms, using the improvement of improvement",
+    "Study methods people can use, such as spacing, practice and teaching others, kept evidence-based",
+    "Timeline: the scientific revolution, the Industrial Revolution and modern research"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 7,
+   "title": "The Internet and AI: Fast Copying, New Learners",
+   "goal": "Describe how the internet and AI change the sharing of knowledge, and say clearly what is known and what is only speculation about AI improving itself.",
+   "minutes": 45,
+   "topics": [
+    "The internet: near-instant sharing, search, open knowledge, and the problem of misinformation",
+    "How to check a source in a few simple steps",
+    "What AI systems are, in plain words, and how they are trained on human-made text, images and code",
+    "AI as a tool for learning, and its limits and errors",
+    "What 'recursive self-improvement' means in AI discussions, and the difference between present facts and predictions",
+    "Who gets to take part: access, language, cost and disability",
+    "Timeline: the personal computer, the web, and recent AI, with dates verified"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 8,
+   "title": "How Knowledge Gets Lost",
+   "goal": "Give three ways knowledge can be lost, and name one practical step that helps keep knowledge alive.",
+   "minutes": 40,
+   "topics": [
+    "Loss through broken chains: fewer teachers, small groups, war, disaster",
+    "Loss through format change: unreadable scripts, old files, dead media",
+    "Loss through neglect or suppression",
+    "Famous stories checked for accuracy, sorting well-supported cases from myths and debated claims",
+    "Fragility of digital records and the work of archives and preservation",
+    "Forgetting in one person's life, and how notes, routines and other people help",
+    "Timeline: lost and rediscovered knowledge across the eras covered so far"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 9,
+   "title": "The Extended Mind: Tools as Part of How We Think",
+   "goal": "Explain the extended mind idea in plain words, give an example from daily life, and sum up how all the classes fit together.",
+   "minutes": 45,
+   "topics": [
+    "The extended mind idea: notebooks, phones, maps and calendars as part of thinking, and the debate around it",
+    "Everyday tools that support memory and attention, including assistive technology",
+    "Dependence and independence: choosing tools wisely and keeping skills that matter to you",
+    "Culture as a shared extended mind that reaches across generations",
+    "Putting it together: the ratchet, the transmission tools, learning to learn, loss, and the extended mind",
+    "A personal project: one thing I know, who taught me, and how I could pass it on",
+    "Timeline: a final walk through the whole course, from fire to AI"
+   ],
+   "needs_research": true
+  }
+ ]
+}

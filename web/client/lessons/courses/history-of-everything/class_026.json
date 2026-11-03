@@ -1,0 +1,1607 @@
+{
+ "about": {
+  "title": "Late Antiquity: Changing Empires",
+  "course": "history-of-everything",
+  "class_n": 26,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 35,
+  "length_note": "This runs a little over 30 minutes. It has about 2,300 words of narration, which is roughly 18 minutes read aloud, and 12 check questions. Seven topics are packed in. The material is easy to split, so you can pause after the Gupta section if a learner needs a break. I estimated the length from word counts and have not timed a reading."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "The Third-Century Crisis, and Late Antiquity",
+   "publisher": "Utah Education Network (UEN) Pressbooks, World History 1",
+   "date": "undated",
+   "link": "https://uen.pressbooks.pub/worldhistory1/chapter/the-third-century-crisis-and-late-antiquity/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "Crisis of the Third Century",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Crisis_of_the_Third_Century",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "The Crisis of the Third Century: A Pivotal Era of Ancient Rome",
+   "publisher": "World History Encyclopedia",
+   "date": "undated",
+   "link": "https://www.worldhistory.org/Crisis_of_the_Third_Century/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "Christianity and the Late Roman Empire",
+   "publisher": "Lumen Learning (SUNY Finger Lakes, Boundless World History)",
+   "date": "undated",
+   "link": "https://courses.lumenlearning.com/suny-fmcc-boundless-worldhistory/chapter/christianity-and-the-late-roman-empire/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "Diocletian",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Diocletian",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "Fall of the Western Roman Empire",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Fall_of_the_Western_Roman_Empire",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "Historiography of the fall of the Western Roman Empire",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Historiography_of_the_fall_of_the_Western_Roman_Empire",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "Fall of Rome",
+   "publisher": "New World Encyclopedia",
+   "date": "undated",
+   "link": "https://www.newworldencyclopedia.org/entry/Fall_of_Rome",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "Fall of the Western Roman Empire",
+   "publisher": "World History Encyclopedia",
+   "date": "undated",
+   "link": "https://www.worldhistory.org/article/835/fall-of-the-western-roman-empire/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "07.10.12, Review Article: Rome's Fall and Europe's Rise",
+   "publisher": "The Medieval Review, Indiana University",
+   "date": "2007",
+   "link": "https://scholarworks.iu.edu/journals/index.php/tmr/article/view/16453/22571",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "The Fall of the Western Roman Empire: Causes, Crisis and Transformation",
+   "publisher": "IISTJ (journal article)",
+   "date": "undated",
+   "link": "https://www.iistj.org/article.php?paperid=121643",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "The Fall of Rome: Debating Causality and the Collapse of the Western Empire",
+   "publisher": "Dig: A History Podcast",
+   "date": "2023-05-14",
+   "link": "https://digpodcast.org/2023/05/14/fall-of-rome/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "Crisis of the Third Century",
+   "publisher": "UNRV Roman History",
+   "date": "undated",
+   "link": "https://www.unrv.com/empire/crisis-of-the-third-century.php",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "The Gupta Empire: Golden Age of Classical India",
+   "publisher": "Regents Exam Prep",
+   "date": "undated",
+   "link": "https://www.regentsprep.org/gupta-empire-golden-ages/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "Gupta Empire 319-550 CE: The Golden Age of Ancient India",
+   "publisher": "Curious Indian",
+   "date": "undated",
+   "link": "https://curiousindian.in/gupta-empire/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "Aryabhata (476 - 550) - Biography",
+   "publisher": "MacTutor History of Mathematics, University of St Andrews",
+   "date": "undated",
+   "link": "https://mathshistory.st-andrews.ac.uk/Biographies/Aryabhata_I/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "Aryabhata",
+   "publisher": "The Schools' Observatory",
+   "date": "undated",
+   "link": "https://www.schoolsobservatory.org/learn/history/biographies/aryabhata",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "Illuminating India: starring the oldest recorded origins of 'zero', the Bakhshali manuscript",
+   "publisher": "Science Museum Group blog",
+   "date": "2017",
+   "link": "https://blog.sciencemuseum.org.uk/illuminating-india-starring-oldest-recorded-origins-zero-bakhshali-manuscript/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "The Bakhshali Manuscript: A Response to the Bodleian Library's Radiocarbon Dating (abstract)",
+   "publisher": "History of Science in South Asia, via DOAJ",
+   "date": "2017-10",
+   "link": "https://doaj.org/article/362904e31c7c466e910bb18389a6dcf6",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "Bakhshali manuscript",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Bakhshali_manuscript",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "Sasanian Empire",
+   "publisher": "World History Encyclopedia",
+   "date": "undated",
+   "link": "https://www.worldhistory.org/Sasanian_Empire/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "Ardashir I",
+   "publisher": "World History Encyclopedia",
+   "date": "undated",
+   "link": "https://www.worldhistory.org/Ardashir_I/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "Ardashir I",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/biography/Ardashir-I",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "Ardashir I",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Ardashir_I",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "Shapur I",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Shapur_I",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "African Christianity in Ethiopia",
+   "publisher": "The Metropolitan Museum of Art",
+   "date": "undated",
+   "link": "https://www.metmuseum.org/essays/african-christianity-in-ethiopia",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "Kingdom of Aksum",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Kingdom_of_Aksum",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "9.6: Aksum and Ethiopia (World History: Cultures, States and Societies to 1500)",
+   "publisher": "Humanities LibreTexts",
+   "date": "undated",
+   "link": "https://human.libretexts.org/Bookshelves/History/World_History/Book:_World_History_-_Cultures_States_and_Societies_to_1500_(Berger_et_al.)/09:_African_History_to_1500/9.06:_Aksum_and_Ethiopia",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s29",
+   "title": "Ezana of Aksum",
+   "publisher": "EBSCO Research Starters",
+   "date": "undated",
+   "link": "https://www.ebsco.com/research-starters/religion-and-philosophy/ezana-aksum/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s30",
+   "title": "Pre-Hispanic City of Teotihuacan",
+   "publisher": "UNESCO World Heritage Centre",
+   "date": "undated",
+   "link": "https://whc.unesco.org/en/list/414/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s31",
+   "title": "Teotihuacan",
+   "publisher": "World Monuments Fund",
+   "date": "undated",
+   "link": "https://www.wmf.org/projects/teotihuacan",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s32",
+   "title": "Who built the great city of Teotihuacan?",
+   "publisher": "National Geographic",
+   "date": "undated",
+   "link": "https://www.nationalgeographic.com/history/article/teotihuacan",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s33",
+   "title": "Teotihuacan: Ancient city of pyramids",
+   "publisher": "Live Science",
+   "date": "undated",
+   "link": "https://www.livescience.com/22545-teotihuacan.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s34",
+   "title": "Teotihuacan",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Teotihuacan",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s35",
+   "title": "History of the Maya civilization",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/History_of_the_Maya_civilization",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s36",
+   "title": "Mayan Civilization: Calendar, Pyramids & Ruins",
+   "publisher": "HISTORY",
+   "date": "undated",
+   "link": "https://www.history.com/articles/maya",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s37",
+   "title": "Preclassic Maya",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Preclassic_Maya",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s38",
+   "title": "The Justinianic Plague: An inconsequential pandemic?",
+   "publisher": "Proceedings of the National Academy of Sciences (PNAS)",
+   "date": "2019",
+   "link": "https://www.pnas.org/doi/10.1073/pnas.1903797116",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s39",
+   "title": "Justinian's Plague (541-542 CE)",
+   "publisher": "World History Encyclopedia",
+   "date": "undated",
+   "link": "https://www.worldhistory.org/article/782/justinians-plague-541-542-ce/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s40",
+   "title": "The Plague of Justinian may not have been that devastating, researchers suggest",
+   "publisher": "Medievalists.net",
+   "date": "2019-11",
+   "link": "https://www.medievalists.net/2019/11/the-plague-of-justinian-may-not-have-that-devastating-researchers-suggest/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s41",
+   "title": "Plague of Justinian",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Plague_of_Justinian",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s42",
+   "title": "5.6: The Third-Century Crisis, and Late Antiquity",
+   "publisher": "Social Sci LibreTexts (Mizzou Academy World History)",
+   "date": "undated",
+   "link": "https://socialsci.libretexts.org/Courses/Mizzou_Academy/World_History_A_B/05:_The_Roman_World/5.06:_The_Third-Century_Crisis_and_Late_Antiquity",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s43",
+   "title": "Found: The Oldest Example of the Symbol for 'Zero'",
+   "publisher": "Atlas Obscura",
+   "date": "undated",
+   "link": "https://assets.atlasobscura.com/articles/oldest-example-zero-symbol-indian-manuscript",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s44",
+   "title": "Ezana ('Ezana)",
+   "publisher": "Dictionary of African Christian Biography",
+   "date": "undated",
+   "link": "https://dacb.org/stories/ethiopia/ezana3/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s45",
+   "title": "Maya Civilization",
+   "publisher": "EBSCO Research Starters",
+   "date": "undated",
+   "link": "https://www.ebsco.com/research-starters/architecture/maya-civilization/",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome. This class covers about five hundred years, from the 200s CE to around 750. Empires changed shape, new powers rose, and a deadly plague spread. We will take one idea at a time."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Late Antiquity: Changing Empires"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the plan. First, Rome's crisis and Constantine. Second, a big argument: did Rome fall, or change? Then we visit India, Persia, Africa and the Americas. We finish with a plague."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Rome's crisis and Constantine\n2. Did Rome fall, or change?\n3. India, Persia, Aksum, Teotihuacan, the Maya\n4. The Plague of Justinian"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, one word. An empire is a large state that rules many peoples and lands under one government. Rome was an empire. So were the others we meet today."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Empire: a large state ruling many peoples and lands"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Historians call about fifty years of Roman trouble the Crisis of the Third Century. It ran from 235 to 284 CE. It began when the emperor Severus Alexander was assassinated, and the empire nearly collapsed."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Crisis of the Third Century (235-284 CE)"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Three pressures hit at once: invasions from outside, civil wars inside, and a collapsing economy. Army generals kept taking the title of emperor for themselves."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Invasions\nCivil wars\nEconomic collapse"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "How many rivals? At least twenty-six people claimed to be emperor during the crisis. Most were army generals. Let's check that number."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "26 claimants to the title of emperor (at least)"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "About how many people claimed to be Roman emperor during the Crisis of the Third Century?",
+    "right": "At least 26",
+    "wrong": [
+     "Just one",
+     "Exactly four",
+     "More than a thousand"
+    ],
+    "why": "Sources count at least 26 claimants, mostly generals, over about fifty years."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "At the worst point, around 268, the empire had split into three states. There was a Gallic Empire in the west, a Palmyrene Empire in the east, and Rome's own state in the middle."
+   },
+   "show": {
+    "kind": "objects",
+    "text": "Three competing states",
+    "object": "dot",
+    "count": 3,
+    "layout": "group"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The man who ended the crisis was Diocletian. His troops proclaimed him emperor in 284. He saw the problem: one emperor ruling everything was a 'sitting duck'. One assassination could start another civil war."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Diocletian, emperor from 284"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "His answer was the Tetrarchy, which means rule of four. Four rulers shared the empire, each with a region and a capital. Picture four chairs instead of one throne."
+   },
+   "show": {
+    "kind": "objects",
+    "text": "The Tetrarchy: four rulers",
+    "object": "chair",
+    "count": 4,
+    "layout": "row"
+   },
+   "cite": [
+    "s1",
+    "s42"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What does the word 'tetrarchy' mean?",
+    "right": "Rule of four",
+    "wrong": [
+     "Rule of one",
+     "Rule by priests",
+     "Rule by the people"
+    ],
+    "why": "Diocletian's new system divided the empire among four rulers."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "He also tried to fix the money. Prices were rising fast, which is called inflation. He reformed the nearly wrecked coinage and issued the Edict of Maximum Prices."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Inflation: prices keep rising over time"
+   },
+   "cite": [
+    "s13",
+    "s42"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In 305, Diocletian retired. He was the first Roman emperor to give up the job on his own. But his system broke down, because Maxentius and Constantine, sons of two of the rulers, each claimed power."
+   },
+   "show": {
+    "kind": "list",
+    "text": "305: Diocletian steps down\nSuccession fight: Maxentius vs Constantine"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Constantine won. In 324 he reunited the whole empire under his rule. He made his capital on the site of the Greek city Byzantium and renamed it Constantinople."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Rome in Italy, far to the west. Constantinople on the narrow strait between Europe and Asia, where Byzantium stood."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So Rome, the city, stopped being the empire's capital. Religion changed too. From 302 to 311 the Great Persecution was the last and most severe attack on Christians in the empire."
+   },
+   "show": {
+    "kind": "list",
+    "text": "324: Constantinople becomes the capital\n302-311: the Great Persecution of Christians"
+   },
+   "cite": [
+    "s1",
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "After 324, the picture flipped. Christianity became the empire's preferred religion. Let's check that."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "After 324: Christianity is the empire's preferred religion"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "After 324, what was Christianity's position in the empire?",
+    "right": "It became the empire's preferred religion",
+    "wrong": [
+     "It was made illegal again",
+     "It was ignored by the emperor",
+     "It was limited to Egypt"
+    ],
+    "why": "After 324 Christianity became the preferred religion under Constantine, after the earlier persecution."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Notice what came out of the crisis. It was not the old Rome put back. It was a basic change in how the empire was run. Here are the dates in order."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "235: crisis begins\n284: Diocletian\n305: Diocletian retires\n324: Constantine reunites the empire"
+   },
+   "cite": [
+    "s3",
+    "s1",
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the big argument. The western half of the empire lost its emperors in the 400s. Historians agree that the political unity and military control were lost. They argue about what to call it."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Did Rome Fall, or Change?"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The traditional date is 476. That year the last western emperor, Romulus Augustulus, was removed by Odoacer. Many historians question how much that one date matters."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "476"
+   },
+   "cite": [
+    "s8",
+    "s11"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One thing to keep clear: only the West ended. The eastern half, ruled from Constantinople, lasted nearly a thousand years longer."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "West: ends in 476 | East: continues for almost a thousand years more"
+   },
+   "cite": [
+    "s9",
+    "s13"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First side: the 'fall' view. Bryan Ward-Perkins and Peter Heather argue the collapse was destructive and a real break in history. Ward-Perkins says the archaeology shows disaster in many regions."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The 'fall' view: a real and damaging break"
+   },
+   "cite": [
+    "s10",
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Other side: the 'transformation' view. Scholars of Late Antiquity, a field Peter Brown pioneered, see slow change over centuries. They stress what continued from the Roman world into the medieval one."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The 'transformation' view: slow change and continuity"
+   },
+   "cite": [
+    "s8",
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Side by side. The fall view stresses violence and loss. The transformation view stresses that Roman law, culture and traditions survived in new forms. Let's check which is which."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "FALL: violent, a break, much lost | TRANSFORMATION: gradual, continuity, Roman traditions survive in new forms"
+   },
+   "cite": [
+    "s10",
+    "s11"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which view says the change was gradual and kept many Roman things alive?",
+    "right": "The transformation view",
+    "wrong": [
+     "The fall view",
+     "Neither view",
+     "Both views say it was sudden"
+    ],
+    "why": "The transformation view, from Late Antiquity scholars, stresses gradual change and continuity."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "What caused the change in the West? People have offered many reasons. Don't try to memorize them. Just notice how long the list is."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Political instability\nMilitary pressure\nMigration of peoples\nMoney and tax problems\nEast-West split\nChristianity\nClimate change\nDisease"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Two examples. Some people blame Christianity, yet the historian Edward Gibbon did not argue it was the only cause. And McNeill, in 1976, argued disease played a big part."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Christianity: not the sole cause, even for Gibbon | Disease: McNeill, 1976"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Most historians today say there was no single cause. A mix of inside and outside factors worked together. Let's check that."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "No single cause: many factors working together"
+   },
+   "cite": [
+    "s7",
+    "s11",
+    "s9"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What do most historians say about why the Western Empire ended?",
+    "right": "A combination of several factors",
+    "wrong": [
+     "One cause only: invasions",
+     "One cause only: Christianity",
+     "Nobody has any ideas"
+    ],
+    "why": "Most historians point to a mix of internal and external factors, not one decisive cause."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why does the label matter? 'Fall' says there was a break. 'Transformation' says there was continuity. One reviewer argues Late Antiquity must still deal with the fall itself as an event."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "'Fall' = a break in the story | 'Transformation' = a continuing story"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now to India. Around 320 CE, Chandragupta I founded the Gupta dynasty. It ruled much of northern and central India until about 550. Its capital, Pataliputra, was near today's Patna."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "India: The Gupta Empire (c. 320-550 CE)"
+   },
+   "cite": [
+    "s14",
+    "s16"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "People call this India's golden age, meaning a time of great achievement. Examples include math, astronomy, literature, sculpture and architecture. Famous names include the poet Kalidasa and the astronomer Aryabhata."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Mathematics\nAstronomy (Aryabhata)\nLiterature (Kalidasa)\nSculpture and architecture"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Meet Aryabhata. He was born in 476, the same year as the traditional end of the western empire. In 499, aged 23, he wrote the Aryabhatiya, a book of math and astronomy in verse. Where he was born is uncertain."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "476: Aryabhata is born"
+   },
+   "cite": [
+    "s16",
+    "s17"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Aryabhata was born in the same year as the traditional date for which event?",
+    "right": "The end of the Western Roman Empire (476)",
+    "wrong": [
+     "Diocletian's retirement (305)",
+     "Constantine reuniting the empire (324)",
+     "The plague reaching Constantinople (542)"
+    ],
+    "why": "Aryabhata was born in 476, the traditional date when Romulus Augustulus was removed."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now zero. In Indian numbers, a dot marked an empty place, so 1 and 10 could be told apart. That dot later grew into our 0. Zero as a true number came later; Brahmagupta wrote about it in 628."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Zero: first a dot marking an empty place"
+   },
+   "cite": [
+    "s20",
+    "s43"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Can we say the Guptas invented zero? Not safely. In 2017, carbon dating put some Bakhshali manuscript leaves in the 3rd or 4th century. Specialists disputed that. In 2024 Oxford revised its dating to 799-1102."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "2017: leaves dated 3rd-4th century, then disputed | 2024: Oxford revises dating to 799-1102 CE"
+   },
+   "cite": [
+    "s18",
+    "s19",
+    "s20"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why can't we simply say 'the Guptas invented zero'?",
+    "right": "The dating of the oldest Indian zero manuscript is disputed, and zero developed over centuries",
+    "wrong": [
+     "Zero was invented in Rome",
+     "Zero was invented in 2017",
+     "Historians proved the Guptas had no mathematics"
+    ],
+    "why": "The Bakhshali manuscript's date was disputed and later revised, and zero as a number came later."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Gupta Empire weakened after invasions by the Huna, also called Hephthalites, which drained its treasury. It ended around 550."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Gupta decline: Huna invasions, about 550"
+   },
+   "cite": [
+    "s15",
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Back in the 200s, as Rome struggled, a new power rose next door. In 224 Ardashir I defeated and killed a Parthian king in battle. He founded the Sasanian Empire, which lasted until 651."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Persia: The Sasanian Empire (224-651 CE)"
+   },
+   "cite": [
+    "s24",
+    "s21"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Rome and Persia were rivals. Ardashir's son Shapur I seized the Roman cities of Nisibis and Carrhae and pushed into Roman Syria. In 387, the two powers agreed to divide Armenia between them."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Rome in the west, Persia in the east, and Armenia between them, later split between the two."
+   },
+   "cite": [
+    "s25",
+    "s21"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Ardashir claimed to continue the ancient Achaemenid Persian empire. That made his rule look legitimate. Today the belief is that early Sasanians knew little about the Achaemenids. He also made Zoroastrianism the state religion."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "His claim: heir to the Achaemenids | Today's view: early Sasanians knew little about them"
+   },
+   "cite": [
+    "s24",
+    "s22"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What did Ardashir I claim, to make his rule look legitimate?",
+    "right": "That he continued the ancient Achaemenid Persian empire",
+    "wrong": [
+     "That he was a Roman emperor",
+     "That he was a Gupta king",
+     "That he founded the Parthian Empire"
+    ],
+    "why": "He presented himself as continuing the Achaemenids, though early Sasanians may have known little of them."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "By about 620 the empire was near its greatest size. Then the Byzantine emperor Heraclius pushed back. Arab conquests ended Sasanian rule in 651. We return to that in the class on Islam."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "224: founded\nabout 620: near greatest size\n628: peace after Khosrow's overthrow\n651: Arab conquests end Sasanian rule"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now Africa. Aksum lay in what is now northern Ethiopia. It sat on Red Sea trade routes between India and the Roman Empire."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Aksum: A Trading Kingdom"
+   },
+   "cite": [
+    "s29",
+    "s26"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Aksum's rulers minted coins with Greek writing to make trade easier. Merchants came for ivory, gold, tortoise shells, hides and spices."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Ivory\nGold\nTortoise shells\nHides\nSpices"
+   },
+   "cite": [
+    "s44"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In the 300s, King Ezana took up Christianity. Early church writers tell of a shipwrecked youth, Frumentius, who met Christian Roman merchants and became first bishop. The Met says trade with Rome most likely shaped Ezana's choice."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "The story: Frumentius, the shipwrecked youth | The likely motive: trade with Rome"
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Coins give us evidence. Early in Ezana's reign they show the disc and crescent of older rulers. Later coins show a Christian cross."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Early coins: disc and crescent | Later coins: a cross"
+   },
+   "cite": [
+    "s28"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What on Aksum's coins shows that King Ezana changed his religion?",
+    "right": "A cross replaced the disc and crescent",
+    "wrong": [
+     "A Roman emperor's face appeared",
+     "A ship appeared",
+     "A lion replaced the cross"
+    ],
+    "why": "Early coins show the disc and crescent, and later coins show a Christian cross."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Sources disagree on the date. One gives 325 or 328, another about 333. So we say sometime in the 320s to 330s."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Source 1: 325 or 328\nSource 2: about 333"
+   },
+   "cite": [
+    "s27",
+    "s29"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Aksum was tied to Rome's fortunes. When Rome's power declined, a major trade partner was lost, and Aksum suffered. Later Persian and Muslim control of Red Sea trade shrank it further. The kingdom collapsed around 960."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "300s: Ezana\n600s: coin minting stops\nlate 500s on: Persian and Muslim control of Red Sea trade\nabout 960: collapse"
+   },
+   "cite": [
+    "s27",
+    "s28"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now across the ocean. Near today's Mexico City stood Teotihuacan, one of the first great cities of the Western Hemisphere. It reached its height between about 100 BCE and 650 CE. We do not know what its people called it. The name comes from the Aztecs."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The Pyramid of the Sun and the long Avenue of the Dead at Teotihuacan."
+   },
+   "cite": [
+    "s32",
+    "s33",
+    "s31"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The city was laid out on a grid. Many families lived in apartment compounds, and archaeologists have mapped about 2,200 of them. Its influence reached across central Mexico and as far south as Guatemala."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 2,200 apartment compounds mapped"
+   },
+   "cite": [
+    "s33"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "How big was it? Scholars disagree. UNESCO says at least 25,000 people. National Geographic gives about 100,000. The World Monuments Fund says close to 200,000."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Teotihuacan: estimated population at its peak",
+    "chart": "c1"
+   },
+   "cite": [
+    "s30",
+    "s32",
+    "s31"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "What can we say about Teotihuacan's peak population?",
+    "right": "Estimates range widely, from at least 25,000 to about 200,000",
+    "wrong": [
+     "It is known to be exactly 100,000",
+     "It was under 1,000",
+     "Everyone agrees on 200,000"
+    ],
+    "why": "UNESCO, National Geographic and the World Monuments Fund give different figures."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Teotihuacan's power reached the Maya. In the Early Classic period, Maya cities were influenced by this far-off metropolis. Keep that link in mind."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Teotihuacan influence on Early Classic Maya cities"
+   },
+   "cite": [
+    "s35"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "What ended it? Nobody knows for sure. One theory is that poorer people rose up against the elite. Its major monuments were sacked and burned around 550."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "One theory: uprising against the elite | Evidence: monuments burned around 550"
+   },
+   "cite": [
+    "s32",
+    "s34"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the early Maya. Historians split Maya history into Preclassic, Classic and Postclassic periods. The Preclassic ends and the Classic begins around AD 250."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Early Maya"
+   },
+   "cite": [
+    "s35",
+    "s36"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In the Preclassic, Maya farmers grew maize, beans and squash. By about 400 BCE, early rulers raised carved stone pillars called stelae. These celebrated their achievements."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Maize\nBeans\nSquash\nStelae: carved stone pillars"
+   },
+   "cite": [
+    "s36",
+    "s35"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "El Mirador, in the northern Petén, was one of the greatest cities of the Americas of its time. It was bigger than Classic Tikal. So the Maya built great cities long before AD 250."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "El Mirador: a Preclassic giant"
+   },
+   "cite": [
+    "s36"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Around 100 CE, El Mirador and other big Preclassic cities declined. In the Classic period, about forty cities grew, including Tikal, Calakmul and Palenque. Each held between 5,000 and 50,000 people."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 40 Classic Maya cities"
+   },
+   "cite": [
+    "s37",
+    "s36"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Classic period was marked by competition and conflict between cities. The famous Maya collapse comes much later, so we leave it for a later class."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Classic Maya: rival city-states"
+   },
+   "cite": [
+    "s45"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last topic: a plague. A pandemic is a disease outbreak that spreads across many regions. Around 541 it reached the empire of Justinian I. It arrived in Constantinople in 542, almost a year after hitting the outer provinces."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Plague of Justinian (about 541-750)"
+   },
+   "cite": [
+    "s40",
+    "s39"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What was it? DNA from skeletons in graves identified Yersinia pestis, the bacterium that also caused the Black Death. For most scholars, this settled an old debate."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Yersinia pestis, identified from ancient DNA"
+   },
+   "cite": [
+    "s39",
+    "s40",
+    "s38"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What did scientists use to identify the cause of the Plague of Justinian?",
+    "right": "Ancient DNA from skeletons in graves",
+    "wrong": [
+     "Only written descriptions",
+     "Modern hospital records",
+     "Weather charts"
+    ],
+    "why": "DNA from the bones of victims showed the bacterium Yersinia pestis."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It did not end quickly. Waves of plague returned for over two hundred years, from about 541 to 750."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "541: plague begins\n542: reaches Constantinople\nabout 750: waves end"
+   },
+   "cite": [
+    "s38",
+    "s39"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the death toll, with care. Procopius, who wrote at the time, said nearly 10,000 people died daily in Constantinople. Modern historians suggest about 5,000."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Deaths per day in Constantinople",
+    "chart": "c2"
+   },
+   "cite": [
+    "s39"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Overall estimates run as high as 25 to 50 million. Yet researchers Lee Mordechai and Merle Eisenberg say the archaeology is underwhelming. At two German burial sites with nearly 2,000 graves, only eleven cases were confirmed."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "High estimates: 25-50 million deaths | Doubters: thin physical evidence for high mortality"
+   },
+   "cite": [
+    "s39",
+    "s40"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why are historians cautious about the plague's death toll?",
+    "right": "The main written account may exaggerate, and the physical evidence is thin",
+    "wrong": [
+     "The plague left no written record",
+     "DNA proved it was not plague",
+     "Everyone agrees on one exact number"
+    ],
+    "why": "Procopius's numbers are questioned, and two German burial sites show few confirmed plague cases."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Notice the link to our debate. Disease was one of the proposed causes of Rome's change. Whether this plague mattered that much is still debated."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Disease: a proposed cause, still debated"
+   },
+   "cite": [
+    "s41",
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is your frame of reference. While Aryabhata lived in India, the plague hit Constantinople, and Teotihuacan's monuments burned around 550. All of it fits inside one lifetime. Last check."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "224: Sasanian Empire founded\n235: Rome's crisis begins\nabout 320: Gupta Empire begins\n324: Constantine reunites Rome\n476: traditional end of the West; Aryabhata born\n541: plague\nabout 550: Teotihuacan monuments burned"
+   },
+   "cite": [
+    "s24",
+    "s3",
+    "s14",
+    "s1",
+    "s8",
+    "s16",
+    "s39",
+    "s34"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which city had its major monuments sacked and burned around 550?",
+    "right": "Teotihuacan",
+    "wrong": [
+     "Constantinople",
+     "Pataliputra",
+     "Aksum"
+    ],
+    "why": "Teotihuacan's major monuments were sacked and burned around 550."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To sum up: Rome nearly collapsed, was rebuilt, and then changed; historians argue whether to call that a fall. Meanwhile India, Persia, Aksum, Teotihuacan and the Maya each had their own turning points. Next, the rise of Islam."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Rome: crisis, Constantine, fall or transformation?\nIndia: Gupta golden age\nPersia: Sasanian rival to Rome\nAksum: trade and Christianity\nTeotihuacan and the Maya\nThe Plague of Justinian"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Teotihuacan: estimated population at its peak (people)",
+   "rows": [
+    {
+     "label": "UNESCO (at least)",
+     "value": 25000,
+     "source": "s30"
+    },
+    {
+     "label": "National Geographic (George Cowgill)",
+     "value": 100000,
+     "source": "s32"
+    },
+    {
+     "label": "World Monuments Fund (close to)",
+     "value": 200000,
+     "source": "s31"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Plague deaths per day in Constantinople: two accounts",
+   "rows": [
+    {
+     "label": "Procopius (writing at the time)",
+     "value": 10000,
+     "source": "s39"
+    },
+    {
+     "label": "Modern historians' estimate",
+     "value": 5000,
+     "source": "s39"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Late Antiquity (the period and the idea)",
+   "links": [
+    "[[The Roman Empire, the Silk Roads and Early Christianity]]",
+    "[[Byzantium, Early Medieval Europe and the Vikings]]"
+   ]
+  },
+  {
+   "topic": "Constantine and Constantinople",
+   "links": [
+    "[[Byzantium, Early Medieval Europe and the Vikings]]"
+   ]
+  },
+  {
+   "topic": "Sasanian Persia and its end in 651",
+   "links": [
+    "[[Iron Age Empires: Assyria, Babylon and Persia]]",
+    "[[The Rise of Islam and the Caliphates]]"
+   ]
+  },
+  {
+   "topic": "Gupta India, Aryabhata and the history of zero",
+   "links": [
+    "[[Japan, Korea, Southeast Asia and Medieval India]]",
+    "[[Tang and Song China and the Islamic Golden Age]]"
+   ]
+  },
+  {
+   "topic": "Aksum and Red Sea trade",
+   "links": [
+    "[[Medieval Africa: Ghana, Mali, Great Zimbabwe and the Swahili Coast]]"
+   ]
+  },
+  {
+   "topic": "Teotihuacan and the Maya",
+   "links": [
+    "[[Other Early Worlds: Africa, the Americas and the Pacific]]",
+    "[[The Americas and Pacific Before 1492]]"
+   ]
+  },
+  {
+   "topic": "Plague pandemics",
+   "links": [
+    "[[The Black Death and the Crisis of the 1300s]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "224-235 CE",
+   "elsewhere": "Ardashir I founds the Sasanian Empire in 224. The Roman Crisis of the Third Century begins in 235.",
+   "cite": [
+    "s24",
+    "s3"
+   ]
+  },
+  {
+   "when": "About 250 CE",
+   "elsewhere": "The Classic Maya period begins, while Teotihuacan is flourishing in central Mexico.",
+   "cite": [
+    "s36",
+    "s32"
+   ]
+  },
+  {
+   "when": "284-305 CE",
+   "elsewhere": "Diocletian rules Rome, creates the Tetrarchy, and in 305 becomes the first emperor to retire voluntarily.",
+   "cite": [
+    "s1",
+    "s5"
+   ]
+  },
+  {
+   "when": "About 320-330 CE",
+   "elsewhere": "The Gupta dynasty begins in India around 320. Constantine reunites Rome in 324. Ezana of Aksum, who reigned about 325-350, takes up Christianity.",
+   "cite": [
+    "s14",
+    "s1",
+    "s28"
+   ]
+  },
+  {
+   "when": "476 CE",
+   "elsewhere": "The traditional date for the end of the Western Roman Empire. The Indian astronomer and mathematician Aryabhata was born the same year.",
+   "cite": [
+    "s8",
+    "s16"
+   ]
+  },
+  {
+   "when": "499 CE",
+   "elsewhere": "Aryabhata, aged 23, writes the Aryabhatiya.",
+   "cite": [
+    "s17"
+   ]
+  },
+  {
+   "when": "541-550 CE",
+   "elsewhere": "The Plague of Justinian reaches the Byzantine world. Aryabhata dies around 550. The Gupta Empire ends around then. Teotihuacan's major monuments are burned around 550.",
+   "cite": [
+    "s39",
+    "s16",
+    "s14",
+    "s34"
+   ]
+  },
+  {
+   "when": "651 CE",
+   "elsewhere": "Arab conquests end Sasanian rule, the subject of the next class.",
+   "cite": [
+    "s21"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Rome fell in 476.",
+   "other_view": "Some modern historians question how much the events of 476 matter. They see a slower change, and the Eastern Empire continued for almost a thousand years.",
+   "cite": [
+    "s8",
+    "s7",
+    "s13"
+   ]
+  },
+  {
+   "claim": "The end of the Western Empire was a catastrophe and a real break in history.",
+   "other_view": "Historians of Late Antiquity, a field pioneered by Peter Brown, see a gradual transformation with continuity, not a collapse. Ward-Perkins and Heather answer that the collapse was calamitous. Both sides accept that political unity and military control were lost.",
+   "cite": [
+    "s10",
+    "s8",
+    "s6"
+   ]
+  },
+  {
+   "claim": "One cause explains Rome's end in the West.",
+   "other_view": "Most historians point to several factors working together. Christianity and disease have each been proposed, but neither is generally accepted as the sole cause.",
+   "cite": [
+    "s7",
+    "s11",
+    "s12"
+   ]
+  },
+  {
+   "claim": "The Gupta Empire invented zero.",
+   "other_view": "Oxford carbon dating in 2017 put some Bakhshali manuscript leaves in the 3rd-4th century. Specialists disputed that, and in 2024 Oxford revised its dating to 799-1102 CE. Zero also began as a placeholder dot, and zero as a number is dated later, to Brahmagupta in 628.",
+   "cite": [
+    "s18",
+    "s19",
+    "s20",
+    "s43"
+   ]
+  },
+  {
+   "claim": "Ardashir I was reviving the ancient Achaemenid empire.",
+   "other_view": "He claimed this to look legitimate. The current belief is that the early Sasanians did not know much about the Achaemenids.",
+   "cite": [
+    "s24"
+   ]
+  },
+  {
+   "claim": "Ezana became Christian in a single year, for religious reasons.",
+   "other_view": "Sources give 325, 328 or about 333. The Met says his choice was most likely about trade with Rome, and Christianity could help unify Aksum's many peoples.",
+   "cite": [
+    "s27",
+    "s29",
+    "s26"
+   ]
+  },
+  {
+   "claim": "Teotihuacan had one clear population and one clear cause of decline.",
+   "other_view": "Estimates of its peak population range from at least 25,000 to close to 200,000. Its fall is unclear: one theory is an uprising by poorer people against the elite.",
+   "cite": [
+    "s30",
+    "s32",
+    "s31"
+   ]
+  },
+  {
+   "claim": "The Plague of Justinian killed tens of millions and crippled the empire.",
+   "other_view": "Some estimates reach 25-50 million. But Mordechai and Eisenberg say the archaeology gives an underwhelming case for high mortality, and Procopius's daily death counts are questioned.",
+   "cite": [
+    "s39",
+    "s40",
+    "s41"
+   ]
+  }
+ ]
+}

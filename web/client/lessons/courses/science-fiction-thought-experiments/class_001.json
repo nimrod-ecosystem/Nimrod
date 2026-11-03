@@ -1,0 +1,547 @@
+{
+ "about": {
+  "title": "What a Thought Experiment Is, and How to Tell Fact from Story",
+  "course": "science-fiction-thought-experiments",
+  "class_n": 1,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 25,
+  "length_note": "About 25 minutes: 22 short steps, with a few quick questions. It runs longer if you pause or replay a step. That is fine, because there is no timer. This class teaches two tools used in every later class, so it is not rushed."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Thought Experiments",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "undated (current online edition)",
+   "link": "https://plato.stanford.edu/entries/thought-experiment/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Thought Experiments (Fall 2012 Edition)",
+   "publisher": "Stanford Encyclopedia of Philosophy (archive)",
+   "date": "2012",
+   "link": "https://plato.stanford.edu/archives/fall2012/entries/thought-experiment/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Thought Experiments (Fall 2011 Edition)",
+   "publisher": "Stanford Encyclopedia of Philosophy (archive)",
+   "date": "2011",
+   "link": "https://plato.stanford.edu/archIves/fall2011/entries/thought-experiment/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "A logical examination of Aristotle and Galileo's \"two iron balls\" problem",
+   "publisher": "Humanities and Social Sciences Communications (Nature Portfolio)",
+   "date": "2026",
+   "link": "https://www.nature.com/articles/s41599-026-07764-1",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Galileo, Ignoramus: Mathematics versus Philosophy in the Scientific Revolution",
+   "publisher": "arXiv",
+   "date": "2021",
+   "link": "https://arxiv.org/pdf/2102.06595",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Einstein's elevator and the principle of equivalence",
+   "publisher": "arXiv",
+   "date": "2025",
+   "link": "https://arxiv.org/pdf/2504.01675",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Einstein's Pathway to the Equivalence Principle 1905-1907",
+   "publisher": "arXiv",
+   "date": "2012",
+   "link": "https://arxiv.org/pdf/1208.5137",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Galileo, Discorsi e dimostrazioni matematiche, Leiden, 1638",
+   "publisher": "Sotheby's (The Cottesloe Military Library sale)",
+   "date": "2019",
+   "link": "https://www.sothebys.com/en/buy/auction/2019/the-cottesloe-military-library/galileo-discorsi-e-dimostrazioni-matematiche",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Shimabara Rebellion",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated (online edition)",
+   "link": "https://www.britannica.com/event/Shimabara-Rebellion",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Galileo's Falling Bodies Thought Experiment Explained",
+   "publisher": "Guided Physics",
+   "date": "undated",
+   "link": "https://guidedphysics.com/thought-experiments/galileos-falling-bodies",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome. Today we learn one big idea, then meet a small made-up town. Pause or replay any step whenever you like."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Class 1: Real, Invented or Unknown?"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A quick note first. Classes 2 and 3 use an invented infection, with no gore. You can skip any scene and still follow the course."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Invented infection only | No gore | Skip any scene | Pause and replay any time"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A thought experiment is a tool of the imagination. You picture a situation and follow it step by step to see what must happen."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Thought experiment"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "They are often told as short stories. Sometimes the real version can't be done, but that is not what makes something a thought experiment."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Real experiment: you do it with real things | Thought experiment: you work it through in your mind"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which of these is a thought experiment?",
+    "right": "Imagining a situation and following it step by step to see what must follow",
+    "wrong": [
+     "Measuring a table with a ruler",
+     "Copying a number from a textbook",
+     "Guessing without following any steps"
+    ],
+    "why": "A thought experiment is run in the imagination, one step after another. The other choices are measuring, copying and guessing."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a famous one. Aristotle taught that heavier things fall faster. Galileo imagined a heavy stone and a light stone."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two stones side by side: a large one labelled fast, and a small one labelled slower. Plain background."
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now tie them together. The slow stone should drag the fast one, so the pair falls slower. But the pair is heavier, so it should fall faster. That cannot both be true."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Tied pair is dragged by the slow stone, so it falls slower | Tied pair is heavier than either stone, so it falls faster"
+   },
+   "cite": [
+    "s4",
+    "s7"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What did Galileo's story show?",
+    "right": "Assuming heavier things fall faster leads to a contradiction",
+    "wrong": [
+     "Stones are the best things to drop",
+     "The heavy stone won a real race",
+     "String is stronger than stone"
+    ],
+    "why": "He started from Aristotle's idea and followed it step by step. It ended in two answers that cannot both be true, so the idea was in trouble."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Another one. Einstein imagined a closed elevator. Inside, you could not tell whether objects fall because Earth pulls them or because the elevator is speeding up in empty space."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A plain closed box with a person inside holding a ball. Two small panels show the box resting on a planet and the box speeding up in empty space. They look identical inside."
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was the puzzle in Einstein's elevator story?",
+    "right": "A person inside could not tell gravity from steady speeding-up",
+    "wrong": [
+     "How to build a taller elevator",
+     "Why elevators have buttons",
+     "How to stop an elevator falling"
+    ],
+    "why": "The point was that the two situations look the same from inside a closed box, and that idea helped Einstein think about gravity."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Scientists use thought experiments in physics, and also in economics, history, mathematics and philosophy. They let you test an idea's logic before you build anything."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Physics | Economics | History | Mathematics | Philosophy"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Writers use them too. A story can ask 'what if?' and follow it honestly. Some scholars now study fiction as a kind of thought experiment."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Story as a 'what if'"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "But a story is not proof. Thinkers still debate how thinking alone can teach us about the world, and real-world checking still matters."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "The big question: how can we learn about reality just by thinking? (Stanford Encyclopedia of Philosophy, 2012 edition, paraphrased)"
+   },
+   "cite": [
+    "s2",
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Does a well-told story prove its idea is true in the real world?",
+    "right": "No. It can raise good questions or expose a contradiction, but real-world checking still matters",
+    "wrong": [
+     "Yes, if it is well told",
+     "Yes, if a famous scientist wrote it",
+     "Only if it has a happy ending"
+    ],
+    "why": "A story is a way to think. Good ideas from stories still have to be checked against the real world."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So this course uses invented stories as thought experiments. To use them well, we must always know which parts are real science and which we made up."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Real science vs. made-up story"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Every class happens in one invented place. Meet Wren Landing, a small frontier community of 212 people in a river valley on a planet the settlers call Hollin. None of it is real."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A simple hand-drawn map: a curving river through a green valley, with a small cluster of buildings on the east bank and low hills on both sides. Labelled 'Wren Landing (invented)'."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Four people you will meet again. Ines Okafor keeps the water. Tomas Varga runs the store. Priya Anand teaches the school. Bram Lindqvist works the radio."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Ines Okafor, water-keeper | Tomas Varga, storekeeper | Priya Anand, teacher | Bram Lindqvist, radio operator (all invented)"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "And four places. The Well House, the Long Barn for the store and meetings, the Ferry Dock on the river, and the Radio Hut on the hill."
+   },
+   "show": {
+    "kind": "map",
+    "text": "The same valley map with four labels: Well House near the centre, Long Barn beside it, Ferry Dock at the river's edge, Radio Hut on the western hill."
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Wren Landing has three rules. A Council of five decides things each week. Anyone may ask 'how do we know?' before a choice. No one is turned away from the common table."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "chair",
+    "count": 5,
+    "layout": "row",
+    "text": "Five council chairs"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "At the end of every class we keep a ledger, like a shopkeeper's book. It has three columns: Real, Invented and Unknown."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Real | Invented | Unknown"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Real means true in our world, and you could check it in a reliable source. Example: Galileo's tied-stones story is a real thought experiment that scholars write about."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Real"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In the ledger, what does 'Real' mean?",
+    "right": "True in our world, and checkable in a reliable source",
+    "wrong": [
+     "Believable inside the story",
+     "Said by a character in the story",
+     "Exciting to read"
+    ],
+    "why": "Real is about our world. A sentence can sound believable or exciting and still be made up."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Invented means we made it up for the story, and the story tells you so. It is true only inside the story. Wren Landing's 212 people are Invented."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Invented"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "In the ledger, what does 'Invented' mean?",
+    "right": "Made up for the story, and true only inside it",
+    "wrong": [
+     "A mistake in the lesson",
+     "Bad science",
+     "Something that is useless"
+    ],
+    "why": "Invented is not a bad word. Made-up places and people are how a thought experiment gets told."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Unknown means we cannot sort it yet. The story never said, or we have not checked. Is the river safe to drink? Nobody has told us, so it is Unknown."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Unknown"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "'The river at Wren Landing is safe to drink.' Where does it go?",
+    "right": "Unknown, because the story has not said",
+    "wrong": [
+     "Real, because water is real",
+     "Invented, because the whole town is invented",
+     "Whichever word feels best"
+    ],
+    "why": "Invented means the story states it. This story has not stated anything about the river's safety. Unknown is an honest answer, not a failure."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Some sentences mix. Take this one: 'Ines told the school about Galileo's tied stones.' We split it in two."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Invented: Ines, the school, the telling | Real: Galileo's tied-stones thought experiment"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "How do we sort 'Ines told the school about Galileo's tied stones'?",
+    "right": "Split it: Ines and the school are Invented, and Galileo's stones are Real",
+    "wrong": [
+     "All of it is Real",
+     "All of it is Invented",
+     "All of it is Unknown"
+    ],
+    "why": "One sentence can hold more than one kind of claim. Sort each part on its own."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more try, on your own. The story has not mentioned moons. 'Hollin has two moons.' Real, Invented or Unknown?"
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A night sky over the valley with no moon drawn, and a question mark where a moon might be."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "'Hollin has two moons.' Where does it go?",
+    "right": "Unknown, because the story has not said",
+    "wrong": [
+     "Real",
+     "Invented",
+     "Whichever word feels best"
+    ],
+    "why": "It is not Real, because Hollin is not a real planet. It is not Invented yet, because nobody has stated it. So it waits in Unknown until a story decides."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That is today's ledger. Next class we use Wren Landing for Outbreak, Part 1, and we keep this ledger going."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Real: Galileo's tied-stones thought experiment; Einstein's elevator thought experiment | Invented: Wren Landing, its 212 people, its places and rules | Unknown: whether the river is safe; whether Hollin has moons"
+   },
+   "cite": [
+    "s4",
+    "s6"
+   ],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Thought experiment",
+   "links": [
+    "[[Galileo's tied stones]]",
+    "[[Einstein's elevator]]",
+    "[[Real / Invented / Unknown ledger]]"
+   ]
+  },
+  {
+   "topic": "Galileo's tied stones",
+   "links": [
+    "[[Thought experiment]]",
+    "[[Contradiction as a test of an idea]]"
+   ]
+  },
+  {
+   "topic": "Einstein's elevator",
+   "links": [
+    "[[Thought experiment]]",
+    "[[Terraforming, Part 1: What Makes a World Livable]]"
+   ]
+  },
+  {
+   "topic": "Wren Landing (invented setting)",
+   "links": [
+    "[[Real / Invented / Unknown ledger]]",
+    "[[Outbreak, Part 1: How an Infection Spreads]]",
+    "[[Logistics: Keeping a Community Going]]"
+   ]
+  },
+  {
+   "topic": "Real / Invented / Unknown ledger",
+   "links": [
+    "[[Wren Landing (invented setting)]]",
+    "[[Capstone: Design Your Own Thought Experiment]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "1638, when Galileo's book containing the tied-stones argument was printed in Leiden",
+   "elsewhere": "The same years saw the Shimabara Rebellion in Japan (1637 to 1638), an uprising that deepened the Japanese government's wish to limit foreign influence.",
+   "cite": [
+    "s8",
+    "s9"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Galileo's tied-stones story shows that heavy and light stones fall alike.",
+   "other_view": "One scholar argues the argument needs an extra assumption about how joined bodies behave, and that this assumption comes from experience, not logic alone. The same scholar still finds Galileo's conclusion holds up better than Aristotle's. Another source adds that a feather and a cannonball differ in everyday life because of air resistance.",
+   "cite": [
+    "s5",
+    "s10"
+   ]
+  },
+  {
+   "claim": "A thought experiment can teach us something new about reality just by thinking.",
+   "other_view": "Philosophers still debate how this could work. They ask whether it gives new knowledge without new data, and how to tell good thought experiments from bad ones.",
+   "cite": [
+    "s2"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,155 @@
+{
+ "course_id": "assistive-tech-and-aac",
+ "title": "Assistive technology and AAC: tools that give people a voice",
+ "audience": [
+  "adult"
+ ],
+ "length_note": "Nine classes, 205 minutes in total. The subject has three layers, and each needs its own class or classes. The first layer is what AT and AAC are and what the tools look like (classes 1 and 2). The second is how the tools work: vocabulary, symbols, switches and scanning, and eye gaze (classes 3 to 6). The third is context and practice: the history, how to support a communicator, and where to find professional help (classes 7 to 9). Concept-heavy classes such as core and fringe vocabulary and supporting a communicator run 25 to 30 minutes so the learner can think through examples. Narrower classes such as eye gaze and getting help run 15 to 20 minutes. Nothing is padded, and nothing in the brief is skipped. The course is general education and is never clinical advice. Every class points families to a speech-language pathologist (SLP) for advice about an individual person.",
+ "classes": [
+  {
+   "n": 1,
+   "title": "What assistive technology and AAC are, and who uses them",
+   "goal": "Explain in plain words what AT and AAC are and how they differ, name several groups of people who use AAC, and say why AAC is a way to communicate, not a last resort.",
+   "minutes": 20,
+   "topics": [
+    "AT as the wider umbrella: any tool that helps a person do something",
+    "AAC as the part of AT that supports communication",
+    "Who uses AAC: children with cerebral palsy or autism, adults after stroke or brain injury, people with ALS or Parkinson's, and others",
+    "Temporary and lifelong use",
+    "Common worries: that AAC stops speech coming back, or that a person must be 'ready'",
+    "Why this course is general learning and not clinical advice"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 2,
+   "title": "The AAC toolbox: from gestures to speech-generating devices",
+   "goal": "Tell unaided from aided AAC, and low-tech from high-tech, and give an everyday example of each.",
+   "minutes": 25,
+   "topics": [
+    "Unaided AAC: gesture, facial expression, sign, vocalising",
+    "Aided AAC: picture boards, communication books, alphabet boards, partner-assisted tools",
+    "Low-tech and high-tech options",
+    "Speech-generating devices and tablet apps",
+    "Text-to-speech, voice banking and message banking",
+    "Why most people use several methods together (multimodal communication)",
+    "Why no single tool suits everyone"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 3,
+   "title": "Core and fringe vocabulary",
+   "goal": "Describe core and fringe words, give examples of each, and see why a good AAC system needs both.",
+   "minutes": 25,
+   "topics": [
+    "Core words: the small set of common words that make up most of what we say (for example 'go', 'more', 'stop', 'it')",
+    "Fringe words: specific, personal words such as names, places, favourite things and topics",
+    "Why core words are flexible and why fringe words are personal",
+    "Why a board of only nouns or requests limits a person",
+    "How a person's fringe vocabulary changes over time",
+    "Questions to ask when you see a vocabulary set"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 4,
+   "title": "Symbol sets and how pages are laid out",
+   "goal": "Recognise the main kinds of symbols, from photos and line drawings to written words, and explain how layout and motor planning affect how easy a page is to use.",
+   "minutes": 25,
+   "topics": [
+    "What a symbol is: photos, line drawings, icons, written words",
+    "Well-known symbol sets and what makes them differ, including style, licensing and cost",
+    "Transparent and abstract symbols",
+    "Grid layouts and visual scenes",
+    "Consistent word positions and motor planning",
+    "Spelling and word prediction for people who read and write",
+    "Personalising symbols, and choosing what suits the person"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 5,
+   "title": "Switches and scanning",
+   "goal": "Explain how a person who cannot point or touch a screen can still choose items using a switch and scanning, and describe the basic ways scanning works.",
+   "minutes": 25,
+   "topics": [
+    "What a switch is and the body movements that can operate one",
+    "Switch types: button, lever, pillow, sip-and-puff, and others",
+    "How scanning works: items highlighted one at a time until the person selects one",
+    "Scan patterns: step, automatic, row-column and group-item",
+    "Timing, fatigue and the effort of scanning",
+    "Mounting and positioning so the person can reach the switch reliably",
+    "Why a professional should assess the best switch site"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 6,
+   "title": "Eye gaze and other ways to access a device",
+   "goal": "Describe how eye gaze systems work, list other access methods such as touch, head tracking and voice, and name what affects whether a method works for a person.",
+   "minutes": 20,
+   "topics": [
+    "How eye gaze technology tracks where a person looks",
+    "Calibration, dwell time and blink selection",
+    "Practical factors: positioning, lighting, glasses, eye conditions, fatigue",
+    "Other access: direct touch, head pointers and head tracking, mouth-operated devices, voice control",
+    "How access methods relate to scanning",
+    "Why a trial before choosing matters",
+    "Setbacks and how people cope"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 7,
+   "title": "A short history of AAC",
+   "goal": "Place AAC on a timeline from early communication boards to modern devices, and describe how the field's attitudes have changed.",
+   "minutes": 20,
+   "topics": [
+    "Early communication boards and manual systems",
+    "Developments in the 1960s to 1980s: early electronic aids and the beginning of the field as a discipline",
+    "The rise of speech synthesis and dedicated devices",
+    "Tablets and apps making AAC more widely available",
+    "Changing attitudes: from 'prerequisite' ideas to a right to communicate",
+    "Voices of AAC users and the disability rights movement",
+    "Well-known AAC users and their influence"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 8,
+   "title": "How to support a communicator",
+   "goal": "Use at least five practical habits to support someone who uses AAC, and avoid common habits that get in the way.",
+   "minutes": 30,
+   "topics": [
+    "Presume competence and speak to the person, not about them",
+    "Give time and wait; resist finishing sentences",
+    "Model the language yourself on the person's system (aided language input)",
+    "Keep the device or board available at all times, and never withhold it as a reward or punishment",
+    "Accept all communication, including gestures, sounds and looks",
+    "Offer real choices and a chance to say no",
+    "Support partners and family: patience, consistency and sharing the vocabulary",
+    "Look after the equipment: charging, battery life and having a backup",
+    "Look after yourself as a carer",
+    "Scenarios to talk through: mealtimes, appointments, family gatherings, play and friendships"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 9,
+   "title": "Getting professional help and what to do next",
+   "goal": "Say who can assess and advise on AAC, what an assessment usually involves, and take a first step with confidence.",
+   "minutes": 15,
+   "topics": [
+    "The role of the speech-language pathologist, and other team members such as occupational therapists, physiotherapists and assistive technology specialists",
+    "What an AAC assessment and trial can look like",
+    "Questions to bring to an appointment",
+    "Funding and access routes, and how they differ by country and service",
+    "Where to find AAC user communities and trusted organisations",
+    "A reminder: this course is general learning and not clinical advice",
+    "A final checklist for families and caregivers"
+   ],
+   "needs_research": true
+  }
+ ]
+}

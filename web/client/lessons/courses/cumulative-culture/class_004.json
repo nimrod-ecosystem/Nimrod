@@ -1,0 +1,1048 @@
+{
+ "about": {
+  "title": "Writing: Memory Outside the Head",
+  "course": "cumulative-culture",
+  "class_n": 4,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 35,
+  "length_note": "About 35 minutes. The class has 36 short steps, each with one idea, and 12 quick checks. I kept all six topics from Mike's notes, so nothing was cut. You can pause after any step; the class works well split into two sittings at the 'Who could read and write' step."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "The Evolution of Writing",
+   "publisher": "University of Texas at Austin (Denise Schmandt-Besserat)",
+   "date": "n.d.",
+   "link": "https://sites.utexas.edu/dsb/tokens/the-evolution-of-writing/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "From Accounting to Writing",
+   "publisher": "University of Texas at Austin (Denise Schmandt-Besserat)",
+   "date": "n.d.",
+   "link": "https://sites.utexas.edu/dsb/tokens/from-accounting-to-writing/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "The Invention of Tokens",
+   "publisher": "University of Texas at Austin (Denise Schmandt-Besserat)",
+   "date": "n.d.",
+   "link": "https://sites.utexas.edu/dsb/tokens/the-invention-of-tokens/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Proto-cuneiform (Unicode proposal document L2/16-267)",
+   "publisher": "Unicode Consortium",
+   "date": "2016",
+   "link": "https://unicode.org/L2/L2016/16267-n4760-proto-cuneiform.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Mesopotamia: Civilization Begins",
+   "publisher": "J. Paul Getty Museum",
+   "date": "n.d.",
+   "link": "https://www.getty.edu/art/exhibitions/mesopotamia/explore.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "The Birth of Writing",
+   "publisher": "Biblical Archaeology Society",
+   "date": "n.d.",
+   "link": "https://www.biblicalarchaeology.org/daily/ancient-cultures/ancient-near-eastern-world/birth-of-writing/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Urbanization in the Uruk Period, c. 3800–3100 BCE",
+   "publisher": "W. W. Norton (art history textbook, online edition)",
+   "date": "n.d.",
+   "link": "https://nerd.wwnorton.com/ebooks/epub/histartglobal/EPUB/content/1.3.0.2-chapter03.xhtml",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Uruk: The First City",
+   "publisher": "The Metropolitan Museum of Art",
+   "date": "n.d.",
+   "link": "https://www.metmuseum.org/essays/uruk-the-first-city",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Egyptian Hieroglyphs",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/Egyptian_Hieroglyphs/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Oracle-Bone Inscriptions of the Late Shang Dynasty: On Warfare",
+   "publisher": "Columbia University, Asia for Educators",
+   "date": "n.d.",
+   "link": "https://afe.easia.columbia.edu/main_pop/ps/ps_china-oracle-bone-warfare.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "The Code of Hammurabi",
+   "publisher": "Musée du Louvre",
+   "date": "n.d.",
+   "link": "https://www.louvre.fr/en/the-code-of-hammurabi",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Code of Hammurabi: Babylon, Laws & Legacy",
+   "publisher": "HISTORY",
+   "date": "n.d.",
+   "link": "https://www.history.com/articles/hammurabi",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "What was Ashurbanipal's Library?",
+   "publisher": "The British Museum",
+   "date": "n.d.",
+   "link": "https://www.britishmuseum.org/research/projects/what-was-ashurbanipals-library",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Ashurbanipal Library Project: What is the Library?",
+   "publisher": "The British Museum / University of Pennsylvania (Oracc)",
+   "date": "n.d.",
+   "link": "https://oracc.museum.upenn.edu/asbp/whatisthelibrary/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Scribes in Ancient Mesopotamia: The Beginning of History",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/article/249/scribes-in-ancient-mesopotamia/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Mesopotamian Education: Creating the First Written Works in History",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/article/2203/mesopotamian-education/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Reading and writing, a matter for men... and women in Mesopotamia",
+   "publisher": "Centre for the Study of Manuscript Cultures, Universität Hamburg",
+   "date": "2022-10-29",
+   "link": "https://www.csmc.uni-hamburg.de/publications/mesopotamia/2022-10-29.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "History of education",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/History_of_education",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Plato's Critique of Writing in the Phaedrus (translated passage)",
+   "publisher": "woodybelangia.com",
+   "date": "2014-02-25",
+   "link": "https://woodybelangia.com/2014/02/25/platos-critique-of-writing-in-the-phaedrus/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "The Myth of Thamus and Theuth",
+   "publisher": "conversational-leadership.net",
+   "date": "n.d.",
+   "link": "https://conversational-leadership.net/myth-of-thamus-and-theuth/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Phaedrus Discussion of Writing: 274b-277a Summary and Analysis",
+   "publisher": "GradeSaver",
+   "date": "n.d.",
+   "link": "https://www.gradesaver.com/phaedrus/study-guide/summary-discussion-of-writing-274b-277a",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "The Paradox of Writing in Plato's Phaedrus",
+   "publisher": "platointelligence.com",
+   "date": "n.d.",
+   "link": "https://platointelligence.com/the-paradox-of-writing-in-platos-phaedrus/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Google Effects on Memory: Cognitive Consequences of Having Information at Our Fingertips",
+   "publisher": "Science (Sparrow, Liu and Wegner)",
+   "date": "2011-08-05",
+   "link": "https://science.sciencemag.org/content/333/6043/776",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "The 'Google' Effect: Is Google Making You Stupid?",
+   "publisher": "Science ABC",
+   "date": "n.d.",
+   "link": "https://www.scienceabc.com/eyeopeners/what-is-the-google-effect",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Denise Schmandt-Besserat",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Denise_Schmandt-Besserat",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "The Ancient Middle East (A Brief History, chapter 25)",
+   "publisher": "Pressbooks",
+   "date": "n.d.",
+   "link": "https://pressbooks.pub/abriefhistory1/chapter/ancient-mesopotamia/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "Google Effects on Memory (paper abstract page)",
+   "publisher": "Semantic Scholar",
+   "date": "n.d.",
+   "link": "https://www.semanticscholar.org/paper/Google-Effects-on-Memory:-Cognitive-Consequences-of-Sparrow-Liu/52efd857b500531e040a9366b3eb5bb0ea543979",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Last class was speech: knowledge passing from one mouth to the next ear. Today we ask what changes when knowledge can sit outside anyone's head."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Writing: Memory Outside the Head"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In this class, writing means lasting marks that stand for things or words, so someone else can read them later, far away or long after."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Writing = lasting marks that someone else can read later"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the plan. We go one step at a time, and each step has a quick check."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Before writing: tallies and tokens\n2. The first writing, in the first cities\n3. What writing did: accounts, laws, letters, libraries\n4. Who could read and write\n5. One thing easier, one thing harder"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Start before writing. A tally is one mark for each thing counted. Here are five marks for five things."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "tally-mark",
+    "count": 5,
+    "layout": "five-frame",
+    "text": "Five tally marks"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A tally is quick, but it never says what was counted. Sheep? Jars? Someone had to remember."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A tally shows how many, not what"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Five tally marks are scratched on a bone. What can the marks NOT tell you?",
+    "right": "What was being counted",
+    "wrong": [
+     "How many things there were",
+     "That the count is more than zero",
+     "That the marks were made one at a time"
+    ],
+    "why": "The marks show a number, but nothing in them says whether it was sheep, jars or days. The person who made them had to remember that."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Farming villages in the ancient Near East solved this with tokens: small clay shapes. Each shape stood for an amount of one good, like grain or livestock."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "rock",
+    "count": 5,
+    "layout": "five-frame",
+    "text": "Five stones standing in for five clay tokens"
+   },
+   "cite": [
+    "s2",
+    "s1"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Tokens lasted a very long time. They were used steadily for about 5,000 years, from Syria to Afghanistan."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "5,000 years of clay tokens"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What did a clay token stand for?",
+    "right": "A set amount of one kind of good, such as grain or livestock",
+    "wrong": [
+     "A spoken word",
+     "A person's name",
+     "A day of the week"
+    ],
+    "why": "Tokens were counting tools. Each shape stood for a quantity of a particular good."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Debts caused a problem. Tokens for what someone owed were sealed inside a hollow clay ball, an envelope. But the ball hid the tokens."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A hollow clay ball, broken open, with small clay shapes inside"
+   },
+   "cite": [
+    "s2",
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The fix: press the token shapes onto the outside. Soon the marks alone were enough, and flat clay tablets replaced the token-filled balls, about 3200 BCE."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A hollow clay ball with pressed marks, next to a flat clay tablet with the same kinds of marks"
+   },
+   "cite": [
+    "s1",
+    "s3",
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why were token shapes pressed onto the outside of the clay ball?",
+    "right": "So you could see what was inside without breaking it open",
+    "wrong": [
+     "To make the ball heavier",
+     "To tell the gods what was inside",
+     "To stop anyone from counting"
+    ],
+    "why": "The ball hid its tokens. Marks on the outside showed what it held, and in time the marks alone were enough."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Think about what changed. A solid object became a flat sign. Signs are cheap to make, and clay was the cheapest material around."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Token (an object) becomes sign (a mark)"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now place it on the timeline. Tokens begin about 8000 BCE, with early farming. The first clay tablets come about 3300 BCE. Sources differ by a century or two."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "c. 8000 BCE: clay tokens, farming villages\nc. 3350–3200 BCE: earliest tablets at Uruk\nc. 3200 BCE: tablets replace token-filled balls\n(Sources date the first writing from about 3400 to 3000 BCE)"
+   },
+   "cite": [
+    "s1",
+    "s4",
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Those first tablets come from Uruk, in southern Mesopotamia, now Iraq. By about 3200 BCE it was a true city, maybe the largest settlement in the world."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Southern Mesopotamia between the Tigris and Euphrates rivers, with Uruk marked in what is now southern Iraq"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Estimates of Uruk's people run from about 50,000 to about 100,000. It had officials overseeing farming, trade and religion. The earliest known writing appears there, at the same time."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "First cities and first writing, same place and time"
+   },
+   "cite": [
+    "s26",
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So what did the first writing say? Mostly amounts of goods. It was not yet a full writing system, and it carried only a narrow range of information."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "First writing = amounts of goods"
+   },
+   "cite": [
+    "s6",
+    "s7"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was the earliest writing mostly used for?",
+    "right": "Recording amounts of goods",
+    "wrong": [
+     "Poems and love songs",
+     "Long histories of kings",
+     "Private diaries"
+    ],
+    "why": "The earliest tablets from Uruk were mostly records of quantities of goods. Roughly six thousand were found in one temple area."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A big step came with sound signs. When signs were used to write individual names, writing began to follow speech, so it could carry any subject."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sound signs: writing starts to follow speech"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What did sound signs let writing do?",
+    "right": "Follow speech, so it could record any subject",
+    "wrong": [
+     "Count goods faster and nothing else",
+     "Be read only by priests",
+     "Replace the spoken word entirely"
+    ],
+    "why": "Once signs stood for sounds, such as the sounds of a name, writing was no longer limited to counting. It could carry anything people could say."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Writing started more than once. In Egypt, around 3100 BCE, labels in a tomb at Abydos were tied to goods, probably for taxes and accounts."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Small wooden and ivory labels, each with a hole in one corner so it can be tied to a jar or a bundle"
+   },
+   "cite": [
+    "s9",
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In China, the earliest writing we have is on oracle bones: animal bones and turtle shells, heated until they cracked, to ask ancestors for guidance. Shang dynasty, over 3,000 years ago."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A turtle shell with small carved characters and thin heat cracks"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which early writing began as a way to ask ancestors for guidance?",
+    "right": "Chinese oracle bones",
+    "wrong": [
+     "The Uruk tablets",
+     "The Egyptian jar labels",
+     "Clay tokens"
+    ],
+    "why": "The Uruk tablets and Egyptian labels were mostly accounts. Oracle bones were a different start, a ritual one."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Once writing existed, it took on jobs. Four big ones are keeping accounts, fixing laws, carrying letters and filling libraries. We have seen accounts. Next, laws."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Accounts (done)\nLaws\nLetters\nLibraries"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "About 1750 BCE, Hammurabi, king of Babylon, had 282 legal judgments carved on a black stone slab over two metres tall. It now stands in the Louvre."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A tall black stone slab. At the top, a carved king faces a seated god. Below, columns of wedge-shaped writing."
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The laws follow an if-then pattern: if this happens, then this is the result. Written down, they stay the same from day to day. But fixed does not mean fair."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "What writing gave the law: a fixed, public text\nWhat it did not fix: different standards for three social classes"
+   },
+   "cite": [
+    "s11",
+    "s12"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does Hammurabi's stone show about written law?",
+    "right": "A law can be fixed and public yet still treat social classes differently",
+    "wrong": [
+     "Written laws are always fair",
+     "It was the very first law ever spoken",
+     "Nobody could break a written law"
+    ],
+    "why": "The code was written down for all to see, but it set different standards for the propertied class, freedmen and slaves."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Letters. Writing can travel when the writer cannot. A Sumerian story says King Enmerkar pressed a message into clay. It is a legend, but the idea is clear: a message without its sender."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Writing travels without the writer"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Writing can also wait. Scribes copied documents from the past, so older writing stayed readable. This is the ratchet from class one: a stronger catch holding what was gained."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Copying keeps the past readable"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Libraries. King Ashurbanipal of Assyria ruled 668 to 631 BCE. More than 30,000 clay tablets were found in the ruins of his capital, Nineveh."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Tablets: Uruk temple area compared with Nineveh",
+    "chart": "c2"
+   },
+   "cite": [
+    "s13",
+    "s7"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It was the largest, broadest library in 3,500 years of cuneiform culture. When Nineveh fell in 612 BCE, the burning of the library helped it survive."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Nineveh, 612 BCE: fire helped the clay survive"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What helped Ashurbanipal's clay tablets survive to today?",
+    "right": "The burning of the library when Nineveh fell",
+    "wrong": [
+     "Kings hid them in a mountain",
+     "They were all copied onto paper",
+     "They were never buried"
+    ],
+    "why": "The fall of Assyria and the burning of the library ensured the clay tablets survived. Class 8 returns to how knowledge gets lost."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "See how long this took to build up. From the first tablets to Hammurabi's stone is about 1,550 years. To Ashurbanipal, about 2,600. To Plato, about 2,900."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Years after the first tablets (about 3300 BCE)",
+    "chart": "c1"
+   },
+   "cite": [
+    "s4",
+    "s11",
+    "s13",
+    "s20"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the other side. Cuneiform took years to learn. Scribe students started around age eight, worked from sunrise to sunset, and graduated in their early twenties."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Years of training to read and write"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "At first, scribe students were mostly male, unless a wealthy family wanted a daughter trained. Yet some women clearly could read and write, often where few men were around."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Mostly male scribes, with real exceptions"
+   },
+   "cite": [
+    "s15",
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So how many people could read? We do not know well. In Egypt, reading centred on scribes, but scholars warn that older estimates may be too low."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A trained few, but no reliable percentage"
+   },
+   "cite": [
+    "s18",
+    "s10"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is the fair thing to say about ancient literacy?",
+    "right": "Reading was centred on trained scribes and elites, but exact numbers are uncertain",
+    "wrong": [
+     "Almost everybody could read",
+     "Only kings could read, and that is certain",
+     "The exact share who could read is well known"
+    ],
+    "why": "Scholars say literacy in ancient Egypt is hard to pin down, and old low estimates may undercount town dwellers. Oracle-bone records also reflect mainly the elite."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One way to see it: if you cannot read, you depend on someone who can to tell you what the stone says. Writing spread knowledge, and it also gave weight to those who held the skill."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Who holds the skill holds the key"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the memory question. Around 370 BCE, Plato wrote a dialogue in which Socrates tells a story of an Egyptian god, Theuth, who invented letters."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Plato, Phaedrus, about 370 BCE"
+   },
+   "cite": [
+    "s20",
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Theuth says letters will make people wiser and improve their memories. The king, Thamus, disagrees. People will stop practising memory."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "this invention will produce forgetfulness in the minds of those who learn to use it",
+    "source": "Plato, Phaedrus, 275a"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was Thamus's worry about letters?",
+    "right": "People would stop practising their own memory",
+    "wrong": [
+     "Letters were too hard to learn",
+     "Clay would run out",
+     "Kings would ban them"
+    ],
+    "why": "Thamus said people would trust marks from outside and stop practising memory inside."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Was he right? That was an argument in a story, not a test. And notice: Plato wrote it down, so the dialogue itself used the thing it questioned."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "An argument, not a measurement"
+   },
+   "cite": [
+    "s22",
+    "s21"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A modern echo. In a 2011 study, people who expected to look information up later recalled less of it, but remembered better where to find it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Remember where, not what"
+   },
+   "cite": [
+    "s23",
+    "s27"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Later attempts to repeat parts of that study did not all work. A 2024 review suggests the effect is real but smaller than first claimed. So hold it loosely."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Real but smaller than first claimed"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What did the 2011 study suggest about people who expect to look things up later?",
+    "right": "They remembered where to find it better than the information itself",
+    "wrong": [
+     "They remembered everything better",
+     "They stopped being able to read",
+     "They remembered nothing at all"
+    ],
+    "why": "The study found lower recall of the information itself and better recall of where to find it. Later work found the effect smaller than first claimed."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the balance. Writing made it easier to keep and send knowledge across distance and time. It also changed how much we practise remembering, and it left out people who could not read."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "EASIER: keeping and sending knowledge across distance and time\nHARDER: practising memory (Plato's worry, still debated); access for people who could not read"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One last check. Pick the pair that names one thing writing made easier and one thing it made harder."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Easier: ?\nHarder: ?"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which pair names one thing writing made easier and one thing it made harder?",
+    "right": "Easier: sharing and keeping knowledge across distance and time. Harder: practising memory, and access for people who could not read.",
+    "wrong": [
+     "Easier: forgetting things. Harder: counting goods.",
+     "Easier: reading for everyone. Harder: sending messages.",
+     "Easier: speaking aloud. Harder: keeping laws."
+    ],
+    "why": "Written records could travel and wait, which is the gain. The cost was less memory practice, argued by Plato, and unequal access for people who never learned to read."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next class: what happens when copying becomes cheap and fast. Printing, and schools. Writing put memory outside the head; next, copying at scale."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Printing and Schools: Copying at Scale"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Years after the first tablets (about 3300 BCE), worked out from the dates given",
+   "rows": [
+    {
+     "label": "Hammurabi's stone (c. 1750 BCE)",
+     "value": 1550,
+     "source": "s11"
+    },
+    {
+     "label": "Ashurbanipal's library (reign from 668 BCE)",
+     "value": 2630,
+     "source": "s13"
+    },
+    {
+     "label": "Plato's Phaedrus (c. 370 BCE)",
+     "value": 2930,
+     "source": "s20"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Clay tablets found: Uruk temple area compared with Nineveh",
+   "rows": [
+    {
+     "label": "Eanna temple area, Uruk (about)",
+     "value": 6000,
+     "source": "s7"
+    },
+    {
+     "label": "Nineveh library (over)",
+     "value": 30000,
+     "source": "s13"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Clay tokens and counting",
+   "links": [
+    "[[the cultural ratchet]]",
+    "[[early farming]]"
+   ]
+  },
+  {
+   "topic": "Cuneiform and the first cities",
+   "links": [
+    "[[Uruk]]",
+    "[[history of everything timeline]]"
+   ]
+  },
+  {
+   "topic": "Written law and who it served",
+   "links": [
+    "[[Hammurabi]]",
+    "[[who could read and write]]"
+   ]
+  },
+  {
+   "topic": "Libraries and how knowledge gets lost",
+   "links": [
+    "[[Ashurbanipal's library]]",
+    "[[how knowledge gets lost]]"
+   ]
+  },
+  {
+   "topic": "Memory versus stored records",
+   "links": [
+    "[[the extended mind]]",
+    "[[the internet and AI]]",
+    "[[speech: the first great handing-down]]"
+   ]
+  },
+  {
+   "topic": "Next class: copying at scale",
+   "links": [
+    "[[printing and schools]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "c. 8000–3500 BCE",
+   "elsewhere": "Farming villages across the Near East, from Syria to Afghanistan, kept count of grain and livestock with clay tokens.",
+   "cite": [
+    "s1",
+    "s2"
+   ]
+  },
+  {
+   "when": "c. 3300–3000 BCE",
+   "elsewhere": "Uruk grows into a true city, and writing also appears in Egypt, at Abydos, around 3100 BCE. Mesopotamian-style objects reached from central Iran to the Egyptian Nile Delta until about 3000 BCE.",
+   "cite": [
+    "s8",
+    "s9",
+    "s5"
+   ]
+  },
+  {
+   "when": "c. 1750 BCE",
+   "elsewhere": "Hammurabi (reigned 1792–1750 BCE) expands Babylon along the Euphrates and has his laws carved in stone.",
+   "cite": [
+    "s12",
+    "s11"
+   ]
+  },
+  {
+   "when": "c. 1554–1045 BCE",
+   "elsewhere": "In China, the Shang dynasty practises oracle-bone divination, leaving China's earliest written records.",
+   "cite": [
+    "s10"
+   ]
+  },
+  {
+   "when": "668–612 BCE",
+   "elsewhere": "Ashurbanipal reigns in Assyria and collects tablets at Nineveh. The city falls in 612 BCE.",
+   "cite": [
+    "s13",
+    "s14"
+   ]
+  },
+  {
+   "when": "c. 370 BCE",
+   "elsewhere": "Plato writes the Phaedrus, with its story of Theuth and Thamus.",
+   "cite": [
+    "s20"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Writing began as bookkeeping that grew out of clay tokens.",
+   "other_view": "Schmandt-Besserat's token theory is influential, but critics say her token collection may be a skewed sample and that many of the objects she called tokens may never have been used for counting. Also, the very first tablets are sometimes called proto-writing rather than full writing, because they carried only a narrow range of information.",
+   "cite": [
+    "s25",
+    "s6"
+   ]
+  },
+  {
+   "claim": "Mesopotamia invented writing first.",
+   "other_view": "Egypt's tomb labels at Abydos are close in date, and one reference work says they gave evidence of writing as early as 3250–3200 BCE. Dates in all these sources vary by a century or two. Another view is that writing arose nearly at the same time in both places.",
+   "cite": [
+    "s6",
+    "s9"
+   ]
+  },
+  {
+   "claim": "Writing weakens memory, as Plato's Thamus warned.",
+   "other_view": "The same story gives Theuth's opposite view, that letters help memory and wisdom. The Greek word used for writing can mean both remedy and poison. A modern test of a similar idea (the 'Google effect') found a smaller, less certain effect than first claimed.",
+   "cite": [
+    "s21",
+    "s19",
+    "s24"
+   ]
+  },
+  {
+   "claim": "Only a small elite could read and write in the ancient world.",
+   "other_view": "Reading and writing were centred on trained scribes. But some women could read and write, and scholars warn that low estimates of literacy in ancient towns may be too low.",
+   "cite": [
+    "s18",
+    "s17"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,1371 @@
+{
+ "about": {
+  "title": "The Americas and Pacific Before 1492",
+  "course": "history-of-everything",
+  "class_n": 32,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. Six societies plus the population debate is a lot, so each society gets one main idea, a few short beats and one check question. The Spanish arrival is left for class 38, and the later fate of these peoples for classes 38 and 41."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Time Beyond Kings (Expedition Magazine)",
+   "publisher": "Penn Museum",
+   "date": "n.d.",
+   "link": "https://www.penn.museum/sites/expedition/time-beyond-kings/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Classic Period",
+   "publisher": "UC Santa Barbara, Mesoamerican Research Center",
+   "date": "n.d.",
+   "link": "https://www.marc.ucsb.edu/research/maya/ancient-maya-civilization/classic-period",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Classic Maya collapse",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Classic_Maya_collapse",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "New research challenges the idea that the Maya civilization collapsed",
+   "publisher": "National Geographic",
+   "date": "n.d.",
+   "link": "https://www.nationalgeographic.com/history/article/maya-civilization-rural-collapse-controversy",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Aztec Civilization",
+   "publisher": "National Geographic Education",
+   "date": "n.d.",
+   "link": "https://education.nationalgeographic.org/resource/aztec-civilization/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "History of Mexico City",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/History_of_Mexico_City",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Who were the Aztec, really? It's complicated.",
+   "publisher": "National Geographic",
+   "date": "n.d.",
+   "link": "https://www.nationalgeographic.com/history/history-magazine/article/who-were-the-aztec",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Qhapaq Ñan, Andean Road System",
+   "publisher": "UNESCO World Heritage Centre",
+   "date": "n.d.",
+   "link": "https://whc.unesco.org/en/list/1459/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Inca: Empire, Religion & Civilization",
+   "publisher": "History.com",
+   "date": "n.d.",
+   "link": "https://www.history.com/articles/inca",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "The phenomenal Inca road network which connected an empire",
+   "publisher": "History Skills",
+   "date": "n.d.",
+   "link": "https://www.historyskills.com/classroom/year-8/inca-roads/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Inca Empire",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Inca_Empire",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Cahokia Mounds State Historic Site",
+   "publisher": "UNESCO World Heritage Centre",
+   "date": "n.d.",
+   "link": "https://whc.unesco.org/en/list/198/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Cahokia Mounds",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/place/Cahokia-Mounds",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Cahokia Mounds State Historic Site",
+   "publisher": "SAH Archipedia (Society of Architectural Historians)",
+   "date": "n.d.",
+   "link": "https://sah-archipedia.org/buildings/IL-01-163-0015",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Ancestral Puebloans of the Four Corners Region",
+   "publisher": "Colorado Encyclopedia",
+   "date": "n.d.",
+   "link": "https://coloradoencyclopedia.org/article/ancestral-puebloans-four-corners-region",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Ancestral Pueblo",
+   "publisher": "UC Berkeley, ORIAS",
+   "date": "n.d.",
+   "link": "https://orias.berkeley.edu/resources-teachers/societies-americas/ancestral-pueblo",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "The Abandonment of Chaco Canyon, the Mesa Verde Migrations, and the Reorganization of the Pueblo World",
+   "publisher": "Journal of Anthropological Archaeology (ScienceDirect abstract)",
+   "date": "n.d.",
+   "link": "https://www.sciencedirect.com/science/article/abs/pii/S0278416585710100",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "When was New Zealand first settled?",
+   "publisher": "Te Ara, the Encyclopedia of New Zealand (NZ Government)",
+   "date": "n.d.",
+   "link": "https://teara.govt.nz/en/when-was-new-zealand-first-settled/print",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "When did people first arrive in Aotearoa, and how do we know that?",
+   "publisher": "The Past Before Us (Dr Isaac McIvor)",
+   "date": "2023-11-07",
+   "link": "https://thepastbeforeus.com/2023/11/07/when-did-people-first-arrive-in-aotearoa-and-how-do-we-know-that/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Stars and Swells Guide a Polynesian Canoe Around the World",
+   "publisher": "Eos (American Geophysical Union)",
+   "date": "n.d.",
+   "link": "https://eos.org/articles/stars-and-swells-guide-a-polynesian-canoe-around-the-world",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Wayfinding and Navigation",
+   "publisher": "University of Hawaiʻi at Mānoa, Exploring Our Fluid Earth",
+   "date": "n.d.",
+   "link": "https://manoa.hawaii.edu/exploringourfluidearth/physical/navigation-and-transportation/wayfinding-and-navigation",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Wayfinding revival",
+   "publisher": "Science Learning Hub (University of Waikato, NZ)",
+   "date": "n.d.",
+   "link": "https://www.sciencelearn.org.nz/resources/631-wayfinding-revival",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "The Native Population of the Americas in 1492 (book page)",
+   "publisher": "Project MUSE",
+   "date": "n.d.",
+   "link": "https://muse.jhu.edu/book/8750",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "Henry F. Dobyns",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Henry_F._Dobyns",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Researchers are finally starting to pin down how many Indigenous people were living in the Americas when Columbus arrived",
+   "publisher": "Live Science",
+   "date": "n.d.",
+   "link": "https://www.livescience.com/archaeology/americas/it-could-have-been-a-very-different-history-researchers-are-finally-starting-to-pin-down-how-many-indigenous-people-were-living-in-the-americas-when-columbus-arrived",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Population history of the Indigenous peoples of the Americas",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Population_history_of_the_Indigenous_peoples_of_the_Americas",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "Secrets of the Maya: Deciphering Tikal",
+   "publisher": "Smithsonian Magazine",
+   "date": "n.d.",
+   "link": "https://www.smithsonianmag.com/history/secrets-of-the-maya-deciphering-tikal-2289808/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "The Classic Maya Calendar and Day Numbering System",
+   "publisher": "NTP.org reference library",
+   "date": "n.d.",
+   "link": "https://www.ntp.org/reflib/maya/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "Fall of Constantinople",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Fall_of_Constantinople",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "Two epochs ended in the summer of 1453",
+   "publisher": "Panchronia",
+   "date": "n.d.",
+   "link": "https://panchronia.com/en/fact/two-epochs-end-1453/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s31",
+   "title": "Pachacuti",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Pachacuti",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s32",
+   "title": "Gutenberg",
+   "publisher": "University of Maine (lecture illustrations)",
+   "date": "n.d.",
+   "link": "http://gyre.umeoce.maine.edu/physicalocean/Tomczak/science+society/lectures/illustrations/lecture17/gutenberg.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s33",
+   "title": "History of the Maya civilization",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/History_of_the_Maya_civilization",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s34",
+   "title": "Cahokia Mounds",
+   "publisher": "Encyclopedia.com",
+   "date": "n.d.",
+   "link": "https://www.encyclopedia.com/places/united-states-and-canada/miscellaneous-us-geography/cahokia-mounds",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s35",
+   "title": "Mayan Civilization: History, Culture and Society",
+   "publisher": "TimeMaps",
+   "date": "n.d.",
+   "link": "https://timemaps.com/civilizations/mayan-civilization/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s36",
+   "title": "The Decline of the Maya",
+   "publisher": "Lumen Learning (World Civilization course)",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/atd-herkimer-worldcivilization/chapter/the-decline-of-the-maya/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s37",
+   "title": "The Aztec",
+   "publisher": "Utah Education Network, World History (open textbook)",
+   "date": "n.d.",
+   "link": "https://uen.pressbooks.pub/worldhistory1/chapter/the-aztec/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s38",
+   "title": "Navigating with the Stars: Polynesian Wayfinding and Its Relevance Today",
+   "publisher": "Island Hopper Guides",
+   "date": "n.d.",
+   "link": "https://islandhopperguides.com/hawaii/hawaiian-culture/navigating-with-the-stars-polynesian-wayfinding-and-its-relevance-today/",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 32. Last time we crossed medieval Africa. Today we cross the oceans to the Americas and the Pacific, up to the year 1492."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Americas and Pacific Before 1492"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We will meet six peoples: the Maya, the Aztec, the Inca, the Mississippians, the Pueblo peoples, and the Polynesian voyagers. Then we will ask how many people lived in the Americas."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Maya  2. Aztec (Mexica)  3. Inca  4. Mississippians  5. Pueblo peoples  6. Polynesian voyagers"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One tip first. These are living peoples' histories. Pueblo oral traditions and Māori whakapapa, which are family lines, are part of the evidence."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Whakapapa = family lines passed down"
+   },
+   "cite": [
+    "s15",
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "These peoples lived at different times, so here is one timeline to keep in mind. We will take them one region at a time."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "250–900 Classic Maya | c.1050–1150 Cahokia at its peak | 1250–1300 Polynesians reach Aotearoa | 1325 Tenochtitlan founded | 1428 Triple Alliance forms | 1438 Inca expansion begins"
+   },
+   "cite": [
+    "s2",
+    "s12",
+    "s18",
+    "s5",
+    "s10"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, the Maya, in southern Mexico, Guatemala and Belize. Their Classic period ran from about 250 to 900 CE."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Maya"
+   },
+   "cite": [
+    "s2",
+    "s28"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Classic Maya were not one empire. They were many city-states with their own kings. Tikal was one of the biggest, with at least 60,000 people by about the year 750."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Stone temple-pyramids rising above rainforest at Tikal"
+   },
+   "cite": [
+    "s33",
+    "s27"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Maya kings carved dates on stone pillars called stelae. The dates use the Long Count, which counts days from a starting point in 3114 BCE."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Stela = carved stone pillar with a date"
+   },
+   "cite": [
+    "s27",
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What did most Maya stelae record?",
+    "right": "The date they were made, written in the Long Count",
+    "wrong": [
+     "A map of trade routes",
+     "A list of crops grown that year",
+     "A weather forecast"
+    ],
+    "why": "Most stelae include their own creation date in the Long Count. That is why archaeologists use dated monuments to define the Classic period."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "They counted in twenties, not tens, and they had a zero. A shell shape meant zero, a dot meant one, and a bar meant five."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Shell = 0  |  Dot = 1  |  Bar = 5"
+   },
+   "cite": [
+    "s28"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Then, in the 800s and 900s, the great southern cities emptied. Tikal was deserted in the ninth century."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The Classic collapse"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why? Nobody knows for sure. Over 80 theories have been counted, and most Mayanists doubt that invasion was the main cause."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "80+ theories"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What do most Mayanists think about invasion as the main cause of the collapse?",
+    "right": "They doubt it; the collapse was slow and complicated",
+    "wrong": [
+     "They agree it was the one main cause",
+     "They say there is only one theory",
+     "They say it all happened in a single year"
+    ],
+    "why": "Most Mayanists argue that no single military defeat can explain such a long, complex process."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Maya did not disappear. Power shifted north to Yucatán. Chichén Itzá rose, and after it came Mayapán."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map of the Maya world: southern lowland cities (Tikal) fading, northern Yucatán cities (Chichén Itzá, Mayapán) rising"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Where did Maya political power move after the southern collapse?",
+    "right": "North, to Yucatán and the highlands",
+    "wrong": [
+     "Across the ocean to Europe",
+     "South to the Andes",
+     "North to the Mississippi River"
+    ],
+    "why": "The Postclassic was a time of rising states in the northern lowlands and southern highlands."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Mayapán controlled coastal salt and the clay used for Maya Blue paint. It fell in 1441. Out in the countryside, farm families carried on through these shifts."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Mayapán: salt, Maya Blue, fell 1441"
+   },
+   "cite": [
+    "s1",
+    "s35",
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now central Mexico. The people we call Aztec called themselves Mexica. About 1325 they founded Tenochtitlan on islands in a lake."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Aztec (Mexica)"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "At first they were one small city-state among many. In 1428 they teamed up with two other cities, Texcoco and Tlacopan. That pact is the Triple Alliance."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "house",
+    "count": 3,
+    "layout": "row",
+    "text": "Three cities: Tenochtitlan, Texcoco, Tlacopan"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "How many cities were in the Triple Alliance?",
+    "right": "Three",
+    "wrong": [
+     "Two",
+     "Five",
+     "Twelve"
+    ],
+    "why": "Tenochtitlan, Texcoco and Tlacopan made up the alliance."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The alliance won control of the region and collected tribute from conquered states. Tribute means required payments of goods."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Tribute = required payments of goods"
+   },
+   "cite": [
+    "s5",
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Tribute helped feed a huge city. Estimates for Tenochtitlan's people run from about 100,000 to 300,000. Food came from nearby, and luxuries like cacao and feathers came from far away."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "about 100,000–300,000 people"
+   },
+   "cite": [
+    "s6",
+    "s7"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The city fed itself by farming with the lake: wetland gardens and raised causeways."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Wetland garden plots and a raised causeway across a lake"
+   },
+   "cite": [
+    "s5",
+    "s37"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the Andes in South America. The Inca called their empire Tawantinsuyu, the Land of the Four Quarters."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "block",
+    "count": 4,
+    "layout": "group",
+    "text": "Four quarters of Tawantinsuyu"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It grew from the valley around Cusco. Under Pachacuti, after 1438, expansion took off."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Inca"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "At its peak it stretched about 2,500 miles, from northern Ecuador to central Chile. It held roughly 12 million people from over 100 ethnic groups."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "about 12 million people"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Roads held it together. The Qhapaq Ñan covered more than 30,000 kilometres, with four main routes starting from Cusco's central square."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "30,000+ km of road"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Along the roads stood relay stations called tambos. Runners called chasqui waited there to pass on messages."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Tambo = relay station"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What were tambos?",
+    "right": "Relay stations along the roads",
+    "wrong": [
+     "Knotted record strings",
+     "The four quarters of the empire",
+     "Stone pillars with dates"
+    ],
+    "why": "Tambos lined the roads. A fresh chasqui runner waited in each one to carry the message on."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Inca kept records on quipu, which are knotted strings. The empire worked largely without money and without markets."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Quipu = knotted-string records"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Inca did not build every road from scratch. Earlier Andean communities built parts over centuries. The Inca joined them into one system."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Built by Andean communities over several centuries, reaching its largest in the 15th century (UNESCO, paraphrased)"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now North America's river country. Mississippian people grew corn, beans and squash. That food let many people live together in towns."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Mississippian culture and Cahokia"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Their biggest city was Cahokia, in today's Illinois. It was mostly occupied from 800 to 1400 and had about 120 mounds."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map of the Mississippi River valley with Cahokia marked in Illinois"
+   },
+   "cite": [
+    "s34",
+    "s12"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Its centrepiece is Monks Mound, about 30 metres tall. It is the largest prehistoric earthwork in the Americas. It is named after Trappist monks who farmed there in the early 1800s, long after it was built."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A huge flat-topped earthen mound with terraces, rising above a wide plaza"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why is it called Monks Mound?",
+    "right": "Trappist monks farmed there in the early 1800s, long after it was built",
+    "wrong": [
+     "Mississippian priests were called monks",
+     "Monks built it around the year 1100",
+     "It looks like a monk's hat"
+    ],
+    "why": "Trappist monks lived and farmed there from 1809 to 1813. The name came from them, not from the builders."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "At its peak, around 1050 to 1150, Cahokia may have held 10,000 to 20,000 people. That is about the size of many European cities then."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Rough peak sizes of three places",
+    "chart": "c2"
+   },
+   "cite": [
+    "s12",
+    "s13",
+    "s27",
+    "s6"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "By about 1350 Cahokia was empty. Why that happened is debated, and you can see both sides in the notes."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Abandoned by about 1350"
+   },
+   "cite": [
+    "s34"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the dry Southwest. The Ancestral Pueblo people farmed corn, beans and squash. These three crops were first domesticated in Mesoamerica, the land of the Maya and Aztec."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Ancestral Pueblo peoples"
+   },
+   "cite": [
+    "s15",
+    "s16"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In the 900s and 1000s they built the great houses of Chaco Canyon. Chaco stopped being the central place about 1150."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Curved stone great-house ruins in Chaco Canyon"
+   },
+   "cite": [
+    "s15",
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Around 1200 people at Mesa Verde moved into cliff houses. By the late 1200s they had left the region."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "c.1150 Chaco's central role ends | c.1200 Mesa Verde cliff houses | 1280 last people leave Mesa Verde region"
+   },
+   "cite": [
+    "s17",
+    "s16",
+    "s15"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "They moved to places like the Rio Grande and the Little Colorado. The historically known pueblos are there. Modern Pueblo peoples remember this history in their oral traditions."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map of the US Southwest: Four Corners sites, with arrows toward the Rio Grande and Little Colorado"
+   },
+   "cite": [
+    "s15",
+    "s17"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Did the Ancestral Pueblo people simply vanish?",
+    "right": "No. They moved, and modern Pueblo peoples remember this history",
+    "wrong": [
+     "Yes, nobody knows where they went",
+     "Yes, they all moved to Cahokia",
+     "Yes, one battle ended them"
+    ],
+    "why": "Many moved to the Rio Grande and Little Colorado regions. Modern Pueblo peoples hold this deep history in oral tradition."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the biggest stage of all, the Pacific. Polynesian voyagers crossed huge stretches of open ocean without instruments."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Polynesian voyagers"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "They sailed double-hulled canoes. Two hulls make the canoe steady on open ocean."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A double-hulled voyaging canoe with a red sail, two hulls side by side"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Their method is called wayfinding. By day they used the Sun. At night they used stars. They also read swells, birds and clouds."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Sun by day | Stars by night | Ocean swells | Birds"
+   },
+   "cite": [
+    "s22",
+    "s21",
+    "s38"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Master navigators memorize where hundreds of stars rise and set. Swells travel in a steady direction, so a navigator can feel them rock the canoe and steer by them."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "hundreds of stars memorized"
+   },
+   "cite": [
+    "s21",
+    "s20"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Which clue can a navigator still use when clouds hide the stars?",
+    "right": "Ocean swells",
+    "wrong": [
+     "A magnetic compass needle",
+     "A printed sea chart",
+     "A satellite signal"
+    ],
+    "why": "Swells keep a steady direction and can be felt through the canoe. Traditional wayfinding uses no instruments."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Proof that it works came in 1976. The canoe Hōkūleʻa sailed from Hawaiʻi to Tahiti using only traditional methods. Its navigator was Mau Piailug of Satawal."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "1976: Hōkūleʻa sails to Tahiti"
+   },
+   "cite": [
+    "s38",
+    "s22"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now to the far south-west of Polynesia. Aotearoa New Zealand was one of the last large landmasses people settled."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map of the Pacific with Aotearoa New Zealand at the south-west corner of the Polynesian triangle"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Polynesian voyagers arrived about 1250 to 1300 CE. The evidence includes radiocarbon dates, the DNA of Māori descendants, whakapapa and volcanic ash layers."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1250–1300 CE"
+   },
+   "cite": [
+    "s18",
+    "s19"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Roughly when did Polynesian settlers reach Aotearoa New Zealand?",
+    "right": "About 1250–1300 CE",
+    "wrong": [
+     "About 100 CE",
+     "About 900 CE",
+     "After 1492"
+    ],
+    "why": "Several independent kinds of evidence agree on about 1250 to 1300 CE."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The earliest firm dates come from Wairau Bar, around 1280. At about the same time, the last Pueblo people were leaving the Mesa Verde region, a world away."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "c.1280: Wairau Bar settled; Mesa Verde emptied"
+   },
+   "cite": [
+    "s19",
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a question that covers the whole Americas. How many people lived there in 1492? Nobody counted, and the evidence is patchy."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Debate: how many people?"
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Published estimates run from about 8 million to 112 million. One well-known middle figure is Denevan's 54 million."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Estimates of the Americas' population in 1492, in millions",
+    "chart": "c1"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The highest numbers came from Henry Dobyns. He used how many people each landscape could feed, plus records of 16th-century epidemics, to reach about 112 million."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Dobyns: about 112 million"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Later digging showed the Americas were not settled evenly, so many experts now think Dobyns went too high. Recent North American estimates are far lower."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Higher counts: Dobyns about 90–112 million for the Americas | Lower counts: North America 3.4–7.0 million in many 1990s estimates; 2.8–5.7 million in one study"
+   },
+   "cite": [
+    "s25",
+    "s24"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why do estimates of the 1492 population differ so much?",
+    "right": "Nobody took a census, the evidence is patchy, and experts use different methods",
+    "wrong": [
+     "Everyone agrees on one exact number",
+     "Nobody has ever tried to estimate it",
+     "Records were kept in every village"
+    ],
+    "why": "The evidence is fragmentary, so scholars rely on different methods and reach different answers."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So, to sum up. The Maya built city-states and a calendar with zero. The Aztec built a tribute empire on a lake. The Inca linked the Andes with roads and quipu."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Maya: city-states, Long Count, zero | Aztec: Triple Alliance, tribute | Inca: roads, quipu"
+   },
+   "cite": [
+    "s33",
+    "s28",
+    "s5",
+    "s8",
+    "s11"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Mississippians raised Cahokia and Monks Mound. The Pueblo peoples built Chaco and moved on. Polynesian voyagers crossed the Pacific and reached Aotearoa."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Mississippian: Cahokia | Pueblo: Chaco, Mesa Verde | Polynesians: wayfinding, Aotearoa about 1250–1300"
+   },
+   "cite": [
+    "s12",
+    "s17",
+    "s18"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the frame of reference. In 1438 Pachacuti began Inca expansion, and in the same year Gutenberg signed a partnership to develop a printing press."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1428 Triple Alliance | 1438 Pachacuti expands the Inca state; Gutenberg's press partnership | 1441 Mayapán falls | c.1450 Machu Picchu estate and Gutenberg's press | 1453 Constantinople falls"
+   },
+   "cite": [
+    "s5",
+    "s10",
+    "s32",
+    "s35",
+    "s30",
+    "s29"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next class we go to High Medieval Europe: Crusades, castles and universities. The Spanish arrival here comes later, in class 38."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: High Medieval Europe"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Estimated people in the Americas in 1492 (millions)",
+   "rows": [
+    {
+     "label": "Lowest published estimate",
+     "value": 8,
+     "source": "s23"
+    },
+    {
+     "label": "Denevan's 'consensus' figure",
+     "value": 54,
+     "source": "s23"
+    },
+    {
+     "label": "Highest published estimate",
+     "value": 112,
+     "source": "s23"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Rough peak sizes of three places (estimates, not counts)",
+   "rows": [
+    {
+     "label": "Cahokia, about 1050–1150 (about 20,000)",
+     "value": 20000,
+     "source": "s13"
+    },
+    {
+     "label": "Tikal, about 750 (at least 60,000)",
+     "value": 60000,
+     "source": "s27"
+    },
+    {
+     "label": "Tenochtitlan, 1519 (estimates 100,000–300,000; 200,000 shown)",
+     "value": 200000,
+     "source": "s6"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Maya Long Count and zero",
+   "links": [
+    "[[Classic Maya]]",
+    "[[Mesoamerican calendars]]"
+   ]
+  },
+  {
+   "topic": "Classic Maya collapse",
+   "links": [
+    "[[Postclassic Maya]]",
+    "[[Mayapán]]"
+   ]
+  },
+  {
+   "topic": "Triple Alliance and Tenochtitlan",
+   "links": [
+    "[[Aztec tribute]]",
+    "[[Spanish conquest of the Aztec Empire]]"
+   ]
+  },
+  {
+   "topic": "Inca roads and quipu",
+   "links": [
+    "[[Tawantinsuyu]]",
+    "[[Qhapaq Ñan]]"
+   ]
+  },
+  {
+   "topic": "Cahokia and Monks Mound",
+   "links": [
+    "[[Mississippian culture]]",
+    "[[Mound builders]]"
+   ]
+  },
+  {
+   "topic": "Ancestral Pueblo: Chaco and Mesa Verde",
+   "links": [
+    "[[Pueblo oral traditions]]",
+    "[[Kachina ceremonialism]]"
+   ]
+  },
+  {
+   "topic": "Polynesian wayfinding",
+   "links": [
+    "[[Hōkūleʻa]]",
+    "[[Whakapapa]]",
+    "[[Settlement of Aotearoa]]"
+   ]
+  },
+  {
+   "topic": "Pre-1492 population of the Americas",
+   "links": [
+    "[[Columbian Exchange]]",
+    "[[Dobyns and Denevan]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "c.1050–1150",
+   "elsewhere": "Cahokia was at its peak, with a population that UNESCO says matched many European cities of the time.",
+   "cite": [
+    "s12"
+   ]
+  },
+  {
+   "when": "c.1280",
+   "elsewhere": "The last Ancestral Pueblo people were leaving the Mesa Verde region, while the earliest firmly dated Polynesian settlement in Aotearoa was at Wairau Bar.",
+   "cite": [
+    "s15",
+    "s19"
+   ]
+  },
+  {
+   "when": "1438",
+   "elsewhere": "Pachacuti began expanding the Inca state from Cusco. In Europe, Johannes Gutenberg signed a partnership contract to develop a printing press.",
+   "cite": [
+    "s10",
+    "s32"
+   ]
+  },
+  {
+   "when": "c.1450",
+   "elsewhere": "The Inca were building the Machu Picchu estate while Gutenberg's press was starting up in Mainz.",
+   "cite": [
+    "s30",
+    "s31"
+   ]
+  },
+  {
+   "when": "1453",
+   "elsewhere": "The Ottomans captured Constantinople on 29 May, ending the Byzantine Empire. Many historians use this to mark the end of the medieval period.",
+   "cite": [
+    "s29"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The Classic Maya collapse had a single main cause, such as drought, war or invasion.",
+   "other_view": "Over 80 theories have been counted, and most Mayanists doubt that foreign invasion was the main cause. Some researchers also question the word 'collapse'. Rural populations stayed fairly steady even as grand capitals rose and fell.",
+   "cite": [
+    "s3",
+    "s4"
+   ]
+  },
+  {
+   "claim": "The Postclassic Maya era (after about 900) was a time of decline.",
+   "other_view": "That view is common. But some scholars say the Postclassic looks different on its own terms: a time of political, economic and religious change, with new powers in the north and highlands.",
+   "cite": [
+    "s36",
+    "s1"
+   ]
+  },
+  {
+   "claim": "Tenochtitlan had about 200,000 people in 1519.",
+   "other_view": "Estimates vary widely. One source puts it at least 100,000 and perhaps 200,000. National Geographic gives 150,000 to 300,000. No census survives.",
+   "cite": [
+    "s6",
+    "s7"
+   ]
+  },
+  {
+   "claim": "Cahokia held about 20,000 people at its peak.",
+   "other_view": "UNESCO gives 10,000 to 20,000. Britannica says possibly 20,000, with some estimates reaching 40,000. The numbers depend on the method and on which decade is counted.",
+   "cite": [
+    "s12",
+    "s13"
+   ]
+  },
+  {
+   "claim": "Cahokia was abandoned because it ran out of natural resources.",
+   "other_view": "Some sources point to resource depletion, climate change and political turmoil. The anthropologist Timothy Pauketat argues that political and religious failures by its leaders were the main reason people dispersed.",
+   "cite": [
+    "s14",
+    "s34"
+   ]
+  },
+  {
+   "claim": "Chaco Canyon and Mesa Verde were 'abandoned' and the Pueblo world collapsed.",
+   "other_view": "One study argues that what ended about 1150 was Chaco's role as the central place, not the whole regional system. Other researchers note that an old idea about Ute or Athapaskan peoples forcing the Pueblo out has little archaeological support.",
+   "cite": [
+    "s17",
+    "s15"
+   ]
+  },
+  {
+   "claim": "Aotearoa was settled about 1250–1300 CE.",
+   "other_view": "This is now the widely accepted date, but it was not always so. From the 1960s to the 1980s, radiocarbon dates of 1000–1100 CE or earlier were reported. Later work found many of those dates unreliable. Most scientists would want many dating methods to agree before accepting an earlier date. Oral traditions point to 1325–1400, which is close to the scientific date.",
+   "cite": [
+    "s18",
+    "s19"
+   ]
+  },
+  {
+   "claim": "Early Inca history is well known.",
+   "other_view": "Historians connect Pachacuti with rewriting the reigns of earlier Inca rulers to justify expansion. Dates for his birth and death also differ between historians.",
+   "cite": [
+    "s31"
+   ]
+  },
+  {
+   "claim": "Over 100 million people lived in the Americas in 1492.",
+   "other_view": "Dobyns argued for numbers like this. Later archaeology showed settlement was uneven, and many researchers now think his figures were much too high. Others still defend larger numbers than the low counts. Published estimates still range from about 8 million to 112 million. For the Caribbean, a 2020 genetic study suggests earlier estimates may have been at least tenfold too large.",
+   "cite": [
+    "s23",
+    "s25",
+    "s24",
+    "s26"
+   ]
+  }
+ ]
+}

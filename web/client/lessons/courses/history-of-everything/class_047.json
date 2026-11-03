@@ -1,0 +1,1240 @@
+{
+ "about": {
+  "title": "Nations, Reform and Civil War in the 1800s",
+  "course": "history-of-everything",
+  "class_n": 47,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "Aimed at a half hour. There are five topics, so each gets about five minutes. The Civil War and Reconstruction get a little more because they carry the most steps. Abolition is kept short because class 41 covers the slave trade itself. The Italy and Germany parts are brief, with one clear path each."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "The European People's Spring, 1848",
+   "publisher": "Encyclopédie d'histoire numérique de l'Europe (EHNE)",
+   "date": "n.d.",
+   "link": "https://ehne.fr/en/encyclopedia/themes/political-europe/1848-european-people%E2%80%99s-spring/1848-european-people%E2%80%99s-spring",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "Revolutions of 1848",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Revolutions_of_1848",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "16.3: The Revolutions of 1848 (AP European History)",
+   "publisher": "LibreTexts, Mizzou Academy",
+   "date": "n.d.",
+   "link": "https://socialsci.libretexts.org/Courses/Mizzou_Academy/AP_European_History/16:_The_Politics_of_the_Nineteenth_Century/16.03:_The_Revolutions_of_1848",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "Revolutions of 1848 (entry sourced from HandWiki)",
+   "publisher": "Encyclopedia.pub",
+   "date": "n.d.",
+   "link": "https://encyclopedia.pub/entry/37962",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "Italy Is Proclaimed a Kingdom",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/history/italy-proclaimed-kingdom/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "Italy: Garibaldi and the Thousand",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/place/Italy/Garibaldi-and-the-Thousand",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "Italy Is Unified",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/history/italy-unified/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "Giuseppe Garibaldi: Kingdom of Italy and Legacy",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/biography/Giuseppe-Garibaldi/Kingdom-of-Italy",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "Unification of Germany, 1871",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/history/unification-germany-1871/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "German Wars of Unification",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/history/german-wars-unification/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "Otto von Bismarck and the Franco-Prussian War",
+   "publisher": "Lumen Learning (SUNY HCCC World History)",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/suny-hccc-worldhistory2/chapter/otto-von-bismarck-and-the-franco-prussian-war/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "Transatlantic Slave Trade Timeline",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/summary/Transatlantic-Slave-Trade-Timeline",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "Slavery Abolition Act 1833",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Slavery_Abolition_Act_1833",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "Slavery in Brazil",
+   "publisher": "Wilson Center",
+   "date": "n.d.",
+   "link": "https://www.wilsoncenter.org/blog-post/slavery-brazil",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "Slavery in History: The Age of Abolition 1781 to 1920",
+   "publisher": "Free the Slaves",
+   "date": "n.d.",
+   "link": "https://freetheslaves.net/slavery-today-2/slavery-in-history/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "Civil War: Causes, Dates, Battles & Aftermath",
+   "publisher": "History.com",
+   "date": "n.d.",
+   "link": "https://www.history.com/articles/american-civil-war-history",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "American Civil War",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/American_Civil_War",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "Reconstruction (Three Rivers African American History)",
+   "publisher": "Library at Connecticut State Community College",
+   "date": "n.d.",
+   "link": "https://library.ctstate.edu/trc/african-american-history/reconstruction",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "Welcome Remarks, Samuel DuBois Cook Center on Social Equity at Duke University Conference",
+   "publisher": "U.S. National Archives",
+   "date": "2017-03-15",
+   "link": "https://www.archives.gov/about/speeches/2017/samuel-dubois-cook-center-on-social-equity",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "Laws and Court Cases (African Americans and the vote)",
+   "publisher": "U.S. National Archives",
+   "date": "n.d.",
+   "link": "https://www.archives.gov/research/african-americans/vote/laws-and-courts",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "The Reconstruction Amendments: Official Documents as Social History",
+   "publisher": "Gilder Lehrman Institute of American History",
+   "date": "n.d.",
+   "link": "https://www.gilderlehrman.org/history-resources/essays/reconstruction-amendments-official-documents-social-history",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "Reconstruction era",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Reconstruction_era",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "Historian Eric Foner On The 'Unresolved Legacy Of Reconstruction'",
+   "publisher": "NPR (Fresh Air)",
+   "date": "2020-06-05",
+   "link": "https://www.npr.org/2020/06/05/870459750/historian-eric-foner-on-the-unresolved-legacy-of-reconstruction",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "The Failure of the Reconstruction Era: A Historiographical Literature Review",
+   "publisher": "Explaining History",
+   "date": "2025-05-27",
+   "link": "https://explaininghistory.org/2025/05/27/the-failure-of-the-reconstruction-era-a-historiographical-literature-review/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "Declaration of Sentiments",
+   "publisher": "DocsTeach (National Archives Foundation)",
+   "date": "n.d.",
+   "link": "https://docsteach.org/document/declaration-of-sentiments/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "Women's Rights National Historical Park",
+   "publisher": "U.S. National Park Service",
+   "date": "n.d.",
+   "link": "https://www.nps.gov/wori/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "Women's Rights in Seneca Falls",
+   "publisher": "U.S. National Park Service",
+   "date": "n.d.",
+   "link": "https://www.nps.gov/places/womensrights.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "Today in History - July 19 (The Seneca Falls Convention)",
+   "publisher": "Library of Congress",
+   "date": "n.d.",
+   "link": "https://www.loc.gov/item/today-in-history/july-19/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s29",
+   "title": "Women win the right to vote (19 September 1893)",
+   "publisher": "NZHistory, New Zealand Ministry for Culture and Heritage",
+   "date": "n.d.",
+   "link": "https://nzhistory.govt.nz/womens-suffrage-day",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s30",
+   "title": "Suffragette",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Suffragette",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s31",
+   "title": "1850-1877: World Events: Selected Occurrences Outside the United States",
+   "publisher": "Encyclopedia.com",
+   "date": "n.d.",
+   "link": "https://www.encyclopedia.com/history/news-wires-white-papers-and-books/1850-1877-world-events-selected-occurrences-outside-united-states",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s32",
+   "title": "Timeline of the 19th century",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Timeline_of_the_19th_century",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s33",
+   "title": "1850s",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/1850s",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s34",
+   "title": "Lei Áurea",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Lei_%C3%81urea",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s35",
+   "title": "The Civil War",
+   "publisher": "BriefHistory",
+   "date": "n.d.",
+   "link": "https://briefhistory.us/eras/civil-war",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s36",
+   "title": "New Zealand women and the vote",
+   "publisher": "NZHistory, New Zealand Ministry for Culture and Heritage",
+   "date": "n.d.",
+   "link": "https://nzhistory.govt.nz/politics/womens-suffrage",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 47. Last time we saw factories and railways change daily life. Today we ask two big questions the 1800s kept asking: who belongs to a nation, and who gets rights?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Nations, Reform and Civil War in the 1800s"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We will make five stops: the revolutions of 1848, the making of Italy and Germany, the end of slavery, the American Civil War and its aftermath, and the first women's rights movements."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Revolutions of 1848\n2. Italy and Germany become nations\n3. Abolition of slavery\n4. U.S. Civil War and Reconstruction\n5. Early women's rights movements"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, one new word. A nation-state is a country with one government, whose people mostly feel they belong to one nation, often with a shared language or history."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Nation-state"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is an example of what it is not. Before 1861, Italy was not one country. It was split into many smaller states, even though people shared a language and a culture."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A drawing of the Italian peninsula divided into many small coloured pieces, each a separate state."
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which sentence best describes a nation-state?",
+    "right": "A country with one government, whose people feel they belong to one nation.",
+    "wrong": [
+     "A country ruled only by a king.",
+     "A country with no borders.",
+     "A group of small states that keep fighting each other."
+    ],
+    "why": "A nation-state joins one government with a shared sense of nation. Italy before 1861 had a shared language but many governments, so it was not yet one."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now to 1848. Across Europe, people rose up against kings and old rulers. It lasted almost two years, from January 1848 to October 1849. Some call it the Springtime of the Peoples."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Springtime of the Peoples"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Three kinds of reformers joined forces. Liberals wanted constitutions and freedoms. Socialists wanted fairer treatment for workers. Nationalists wanted their own nation-state. Together they pushed against the old order, but only for a short time."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Liberals: constitutions and freedoms\nSocialists: fairer treatment for workers\nNationalists: a nation-state of their own"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It began in Sicily on 12 January. In France, King Louis-Philippe refused to widen the vote and was overthrown in three days, 22 to 24 February. Then the wave rolled on."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A map of Europe with arrows spreading from Palermo and Paris to Milan, Vienna and Berlin."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The reformers did not stay united. In Paris a republic was declared. Then workers rose up in the bloody June Days, and thousands of them were killed or jailed."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A street barricade in Paris, 1848, with a red flag of the workers beside the national flag."
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Most of the revolutions were put down. Tens of thousands of people were killed, and even more were forced to leave their countries."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Most were crushed"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Yet some changes lasted. Serfdom, where peasants were tied to the land they worked, ended in Austria and Hungary. The Netherlands brought in representative democracy."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Serfdom ended in Austria and Hungary\nAbsolute monarchy ended in Denmark\nRepresentative democracy in the Netherlands"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which of these was a lasting result of the 1848 revolutions?",
+    "right": "Serfdom ended in Austria and Hungary.",
+    "wrong": [
+     "Every European king lost his throne.",
+     "Italy and Germany became single countries within the year.",
+     "All the revolutions succeeded."
+    ],
+    "why": "Most revolutions were crushed, but some reforms lasted, such as the end of serfdom in Austria and Hungary. Italy and Germany did not unite until later."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Italy did not unite in 1848. The job fell later to a clever politician, Count Cavour, prime minister of Sardinia. He played France and Austria against each other and won most of northern and central Italy."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Italy: Cavour and Garibaldi"
+   },
+   "cite": [
+    "s5",
+    "s7"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The south came from a popular general, Giuseppe Garibaldi. He led revolutionary forces to victory in Sicily and the south, then handed his conquests to Sardinia's king."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Garibaldi, with his red-shirted volunteers, marching through southern Italy."
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "On 17 March 1861, a parliament in Turin proclaimed the Kingdom of Italy. Victor Emmanuel became its king. But Rome was still ruled by the Pope, and Venice was still Austrian."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "17 March 1861"
+   },
+   "cite": [
+    "s6",
+    "s7"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So the job was not finished. Venice joined in 1866. Rome joined in 1870."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1861: Kingdom of Italy proclaimed\n1866: Venice joins\n1870: Rome joins"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Was Italy fully unified when the kingdom was proclaimed in 1861?",
+    "right": "No. Venice joined in 1866 and Rome in 1870.",
+    "wrong": [
+     "Yes. Everything was finished in 1861.",
+     "No. Rome joined in 1850.",
+     "Yes. Cavour finished it before he died."
+    ],
+    "why": "The 1861 kingdom did not yet include Venice or Rome. Venice came in 1866 and Rome in 1870."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Who deserves the credit? Cavour's planning or Garibaldi's fighting? Historians weigh both. We put the two views in the notes at the end."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Cavour: diplomacy and alliances | Garibaldi: battles and mass appeal"
+   },
+   "cite": [
+    "s5",
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Germany had a similar dream. Many German states had hoped to unite for over half a century. In 1862 Otto von Bismarck took charge of the Prussian government."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Germany: Bismarck"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Bismarck got there through three wars: against Denmark, against Austria, and against France. He even defied the Prussian parliament along the way."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "tally-mark",
+    "count": 3,
+    "layout": "row",
+    "text": "Three wars: Denmark, Austria, France"
+   },
+   "cite": [
+    "s10",
+    "s9"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "On 18 January 1871, German rulers gathered in the Hall of Mirrors at Versailles, the palace of French kings. There Wilhelm of Prussia was proclaimed emperor, or Kaiser, of a new German Empire."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The Hall of Mirrors at Versailles, packed with uniformed German princes, officers and soldiers."
+   },
+   "cite": [
+    "s9",
+    "s10",
+    "s11"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Where was the German Empire proclaimed in 1871?",
+    "right": "In the Hall of Mirrors at the Palace of Versailles, in France.",
+    "wrong": [
+     "In Berlin.",
+     "In Vienna.",
+     "In Rome."
+    ],
+    "why": "The proclamation took place at Versailles, near Paris, on 18 January 1871."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Austria was left out. The new empire joined the other German states under Prussian leadership. That left Austria outside."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Germany, but without Austria"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a second question: who gets rights? Start with abolition, which means ending slavery by law. A British law took effect in 1834 and ended slavery in most British colonies."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Abolition"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "More than 800,000 people were freed, mostly in the Caribbean and South Africa. But it was not complete. Slave owners were paid compensation, and British India was handled by a different law."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "800,000+ freed in 1834"
+   },
+   "cite": [
+    "s12",
+    "s15",
+    "s13"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "France ended slavery in its colonies in 1848, the same year as the revolutions. Brazil came last. On 13 May 1888, Princess Isabel signed the Golden Law."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1834: British colonies\n1848: French colonies\n1888: Brazil, the Golden Law"
+   },
+   "cite": [
+    "s15",
+    "s14"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Golden Law freed about 700,000 people. Brazil was the last country in the Americas to abolish slavery. It had received about four in ten of all the enslaved Africans brought to the New World."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 700,000 freed in Brazil, 1888"
+   },
+   "cite": [
+    "s14",
+    "s34"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In the United States, slavery ended through a war. The Civil War ran from April 1861 to 1865, between the Union and the Southern states that tried to break away. Breaking away is called secession."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The U.S. Civil War, 1861 to 1865"
+   },
+   "cite": [
+    "s17",
+    "s35"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "At first the war was not mainly about ending slavery. That changed on 1 January 1863, when Lincoln's Emancipation Proclamation took effect. It freed enslaved people in the states in rebellion, but not in the border states loyal to the Union."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Emancipation Proclamation, effective 1 January 1863: slaves in rebel states declared free"
+   },
+   "cite": [
+    "s16",
+    "s17"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which enslaved people did the Emancipation Proclamation free?",
+    "right": "Those in the states in rebellion against the Union.",
+    "wrong": [
+     "Everyone in the United States, including the border states.",
+     "Only children.",
+     "Only those who joined the army."
+    ],
+    "why": "It applied to the rebel states. The border states loyal to the Union were not covered. It was framed as a wartime measure."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Proclamation also opened the army to Black soldiers. About 186,000 joined the Union Army, and 38,000 of them lost their lives."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Black soldiers in the Union Army",
+    "chart": "c1"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The war was terribly costly. Between 620,000 and 750,000 soldiers died. It remains the deadliest war ever fought on American soil."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "620,000 to 750,000 soldiers died"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Slavery ended for good with the 13th Amendment in 1865. Compare the numbers freed in these three places. The United States had about four million people enslaved.",
+    "chart": "c2"
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Roughly how many people were freed",
+    "chart": "c2"
+   },
+   "cite": [
+    "s12",
+    "s14",
+    "s17",
+    "s18"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Looking at the chart, which freed the most people?",
+    "right": "The United States, with about four million people.",
+    "wrong": [
+     "The British colonies in 1834.",
+     "Brazil in 1888.",
+     "All three freed the same number."
+    ],
+    "why": "About four million people were enslaved in the United States. That is far more than the roughly 800,000 in the British colonies or 700,000 in Brazil."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The years after the war are called Reconstruction, usually dated 1865 to 1877. The country tried to rebuild the South and decide what freedom meant for four million people."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Reconstruction"
+   },
+   "cite": [
+    "s17",
+    "s22"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Three amendments were the heart of it. The 13th ended slavery in 1865. The 14th, in 1868, made anyone born in the U.S. a citizen with equal protection. The 15th, in 1870, gave Black men the vote."
+   },
+   "show": {
+    "kind": "list",
+    "text": "13th, 1865: slavery abolished\n14th, 1868: citizenship and equal protection\n15th, 1870: vote for Black men"
+   },
+   "cite": [
+    "s18",
+    "s19"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which amendment gave Black men the right to vote?",
+    "right": "The 15th Amendment, in 1870.",
+    "wrong": [
+     "The 13th Amendment.",
+     "The 14th Amendment.",
+     "None of these three."
+    ],
+    "why": "The 13th ended slavery, the 14th defined citizenship and equal protection, and the 15th gave Black men the vote."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Rights on paper were not rights in practice. The Supreme Court in 1876 ruled that the 15th Amendment did not grant a right to vote. It only banned excluding people because of race. Reconstruction was abandoned in 1877."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Promised, then pushed back"
+   },
+   "cite": [
+    "s20",
+    "s35"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "By around 1900, the 14th and 15th Amendments had become dead letters in the South. So how should we judge Reconstruction? Historians disagree, and we give both views in the notes."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Failed from the start? | A revolution left unfinished?"
+   },
+   "cite": [
+    "s21",
+    "s24"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "The historian Eric Foner calls Reconstruction an 'unfinished revolution'. What does he mean?",
+    "right": "Big changes began, but equal rights and justice were left incomplete.",
+    "wrong": [
+     "It fully succeeded, so nothing more was needed.",
+     "It was a revolution that only happened in Europe.",
+     "It never really started."
+    ],
+    "why": "Foner's point is that the goals of equal rights and social justice were begun but left incomplete."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Our last stop is women's rights. In July 1848, the same year as the European revolutions, a convention met at Seneca Falls, New York. It was the first women's rights convention in American history."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Seneca Falls, July 1848"
+   },
+   "cite": [
+    "s26",
+    "s25"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "It was organised by Elizabeth Cady Stanton, Lucretia Mott and others who also worked against slavery. More than 300 people came, including the abolitionist Frederick Douglass."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Elizabeth Cady Stanton\nLucretia Mott\nFrederick Douglass"
+   },
+   "cite": [
+    "s25",
+    "s26"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Stanton chiefly wrote the Declaration of Sentiments. It copied the shape of the Declaration of Independence, but with women added."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "all men and women are created equal"
+   },
+   "cite": [
+    "s27",
+    "s25",
+    "s28"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which document did the Declaration of Sentiments copy in its shape and wording?",
+    "right": "The Declaration of Independence.",
+    "wrong": [
+     "The Slavery Abolition Act.",
+     "The Emancipation Proclamation.",
+     "A royal decree from Queen Victoria."
+    ],
+    "why": "Stanton modelled it on the Declaration of Independence, adding women to the words about equality."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One hundred people signed it: 68 women and 32 men. So some men backed the cause too."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Signers of the Declaration of Sentiments, 1848",
+    "chart": "c3"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Winning the vote took decades. The 15th Amendment named race, color and past slavery, not sex. In the U.S. and Britain, women could not vote nationally until after the First World War."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A long road to the vote"
+   },
+   "cite": [
+    "s20",
+    "s29"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "New Zealand got there first. On 19 September 1893, it became the first self-governing country where women could vote in parliamentary elections. Kate Sheppard led a campaign of huge petitions."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1893: New Zealand"
+   },
+   "cite": [
+    "s29",
+    "s36"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Which country was the first self-governing country to let women vote in parliamentary elections, in 1893?",
+    "right": "New Zealand.",
+    "wrong": [
+     "The United States.",
+     "Britain.",
+     "Brazil."
+    ],
+    "why": "New Zealand led the world in 1893. Women in the U.S. and Britain did not get the national vote until after the First World War."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let us pull it together. Nations were built by war and clever diplomacy. Slavery ended at different times and in different ways. Rights grew when people organised and petitioned, and they were often held back."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Nations: war and diplomacy\nSlavery: ended in different places at different times\nRights: won by people organising, and often pushed back"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is what else was happening, part one. In 1848 the Communist Manifesto was published. In 1850 the Taiping Rebellion began in China. In 1859 Darwin published On the Origin of Species."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1848: Communist Manifesto; Seneca Falls; France ends slavery in its colonies\n1850-1864: Taiping Rebellion in China\n1857: Indian Rebellion against British rule\n1859: Darwin's Origin of Species"
+   },
+   "cite": [
+    "s32",
+    "s15",
+    "s26",
+    "s33",
+    "s31"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Part two. The Civil War began and Italy became a kingdom in 1861. Japan restored imperial rule in 1868. Germany united in 1871. Brazil freed its enslaved people in 1888. New Zealand women voted in 1893."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1861: Kingdom of Italy; U.S. Civil War begins\n1868: Meiji Restoration in Japan\n1869: Women vote in Wyoming Territory\n1871: German Empire\n1888: Brazil's Golden Law\n1893: New Zealand women vote"
+   },
+   "cite": [
+    "s6",
+    "s17",
+    "s31",
+    "s30",
+    "s9",
+    "s14",
+    "s29"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next time, in class 48, we follow the same powers abroad. We look at imperialism in Africa, India, China and Japan."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Imperialism, Africa, India, China and Japan"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Black soldiers in the Union Army (about)",
+   "rows": [
+    {
+     "label": "Joined the Union Army",
+     "value": 186000,
+     "source": "s16"
+    },
+    {
+     "label": "Lost their lives",
+     "value": 38000,
+     "source": "s16"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Roughly how many people were freed",
+   "rows": [
+    {
+     "label": "British colonies, 1834 (more than 800,000)",
+     "value": 800000,
+     "source": "s12"
+    },
+    {
+     "label": "Brazil, 1888 (about)",
+     "value": 700000,
+     "source": "s14"
+    },
+    {
+     "label": "United States, 1865 (about 4 million enslaved)",
+     "value": 4000000,
+     "source": "s17"
+    }
+   ]
+  },
+  {
+   "id": "c3",
+   "kind": "pie",
+   "title": "Signers of the Declaration of Sentiments, 1848",
+   "rows": [
+    {
+     "label": "Women",
+     "value": 68,
+     "source": "s25"
+    },
+    {
+     "label": "Men",
+     "value": 32,
+     "source": "s25"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Nation-state",
+   "links": [
+    "[[The American and French Revolutions]]",
+    "[[Napoleon, Haiti and Latin American Independence]]",
+    "[[Imperialism: Africa, India, China and Japan]]"
+   ]
+  },
+  {
+   "topic": "Revolutions of 1848",
+   "links": [
+    "[[Enlightenment and Absolute Monarchy]]",
+    "[[The Industrial Revolution]]"
+   ]
+  },
+  {
+   "topic": "Abolition of slavery",
+   "links": [
+    "[[The Atlantic Slave Trade]]"
+   ]
+  },
+  {
+   "topic": "Reconstruction",
+   "links": [
+    "[[The 1950s and early 1960s: Space, Nuclear Fear and Civil Rights]]"
+   ]
+  },
+  {
+   "topic": "Women's suffrage",
+   "links": [
+    "[[Science and Ideas in the 1800s]]",
+    "[[Revolution, Flu and the Roaring Twenties]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "1848",
+   "elsewhere": "The Communist Manifesto was published. France ended slavery in its colonies. Women's rights activists met at Seneca Falls, New York.",
+   "cite": [
+    "s32",
+    "s15",
+    "s26"
+   ]
+  },
+  {
+   "when": "1850-1864",
+   "elsewhere": "The Taiping Rebellion in China is often called the bloodiest conflict of the century. One estimate puts the deaths at 20 million. It overlapped with the U.S. Civil War.",
+   "cite": [
+    "s32"
+   ]
+  },
+  {
+   "when": "1857",
+   "elsewhere": "The Indian Rebellion of 1857 was a revolt against British colonial rule in India.",
+   "cite": [
+    "s33"
+   ]
+  },
+  {
+   "when": "1859",
+   "elsewhere": "Charles Darwin published On the Origin of Species. John Stuart Mill published On Liberty. Charles Dickens published A Tale of Two Cities.",
+   "cite": [
+    "s31"
+   ]
+  },
+  {
+   "when": "1861",
+   "elsewhere": "The Kingdom of Italy was proclaimed on 17 March, and its architect, Cavour, died on 6 June. The U.S. Civil War had begun in April.",
+   "cite": [
+    "s6",
+    "s17"
+   ]
+  },
+  {
+   "when": "1868",
+   "elsewhere": "The shogunate was abolished and imperial rule restored in Japan (the Meiji Restoration). The 14th Amendment took effect in the U.S.",
+   "cite": [
+    "s31",
+    "s18"
+   ]
+  },
+  {
+   "when": "1869",
+   "elsewhere": "Women over 21 could vote in Wyoming Territory. John Stuart Mill published The Subjection of Women in Britain.",
+   "cite": [
+    "s30"
+   ]
+  },
+  {
+   "when": "1871",
+   "elsewhere": "The German Empire was proclaimed at Versailles on 18 January.",
+   "cite": [
+    "s9"
+   ]
+  },
+  {
+   "when": "1888",
+   "elsewhere": "Brazil abolished slavery on 13 May, the last country in the Americas to do so.",
+   "cite": [
+    "s14",
+    "s34"
+   ]
+  },
+  {
+   "when": "1893",
+   "elsewhere": "New Zealand became the first self-governing country to let women vote in parliamentary elections.",
+   "cite": [
+    "s29"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The revolutions of 1848 were a failure.",
+   "other_view": "Many were quickly crushed, with tens of thousands killed and many forced into exile. But some reforms lasted, such as the end of serfdom in Austria and Hungary and representative democracy in the Netherlands. EHNE says the meaning of 1848 is still open to debate.",
+   "cite": [
+    "s2",
+    "s4",
+    "s1"
+   ]
+  },
+  {
+   "claim": "Cavour's diplomacy was what made Italy.",
+   "other_view": "Cavour used alliances and clever moves. Garibaldi won most of the military victories and knew how to reach ordinary people. Evidence suggests Cavour, Garibaldi and the king were partners in the 1860 expedition, though Cavour always denied it.",
+   "cite": [
+    "s7",
+    "s8",
+    "s5"
+   ]
+  },
+  {
+   "claim": "Abolition came mainly from humanitarian campaigns.",
+   "other_view": "Britannica credits humanitarian efforts with ending the slave trade. For Brazil, though, the Wilson Center says slavery was already shrinking as farming modernised and people moved to cities, and British naval pressure also played a part.",
+   "cite": [
+    "s12",
+    "s14"
+   ]
+  },
+  {
+   "claim": "Reconstruction was a failed, misguided experiment.",
+   "other_view": "The early 20th-century Dunning School blamed Black politicians and Radical Republicans. Later historians such as Eric Foner see an unfinished revolution that was begun, left incomplete, and then rolled back over time rather than ending in a single year.",
+   "cite": [
+    "s24",
+    "s23"
+   ]
+  },
+  {
+   "claim": "About 620,000 soldiers died in the Civil War.",
+   "other_view": "That was the traditional figure. Many accounts now give a range of 620,000 to 750,000 or more, and some say about 700,000. Civilian deaths are not counted in these numbers.",
+   "cite": [
+    "s16",
+    "s17"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,1498 @@
+{
+ "about": {
+  "title": "Mesopotamia III: Trade, Everyday Life and Empires",
+  "course": "early-civilizations",
+  "class_n": 3,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 40,
+  "length_note": "About 40 minutes. The class has five topics, each taught in short steps with a check question. It can be split into two sittings, with a natural break after the trade section (before 'Empires'). Learners who pause to think over the questions will take a little longer."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Mesopotamian City Life (Expedition Magazine)",
+   "publisher": "Penn Museum",
+   "date": "n.d.",
+   "link": "https://www.penn.museum/sites/expedition/mesopotamian-city-life/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Daily Life in a Mesopotamian City: What Exactly Was It Like?",
+   "publisher": "History on the Net",
+   "date": "n.d.",
+   "link": "https://www.historyonthenet.com/daily-life-in-a-mesopotamian-city",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Daily Life of Mesopotamian Commoners",
+   "publisher": "History on the Net",
+   "date": "n.d.",
+   "link": "https://www.historyonthenet.com/daily-life-of-mesopotamian-commoners",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Daily Life in Ancient Mesopotamia",
+   "publisher": "The Archaeologist",
+   "date": "n.d.",
+   "link": "https://www.thearchaeologist.org/blog/daily-life-in-ancient-mesopotamia-1",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Daily Life in Ancient Mesopotamia (quotes a British Museum caption about beer rations)",
+   "publisher": "Brewminate",
+   "date": "n.d.",
+   "link": "https://brewminate.com/daily-life-in-ancient-mesopotamia/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Exploration and Long-Distance Trade",
+   "publisher": "Encyclopedia.com",
+   "date": "n.d.",
+   "link": "https://www.encyclopedia.com/history/news-wires-white-papers-and-books/exploration-and-long-distance-trade",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Meluhha",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Meluhha",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Trade and contraband in ancient Assyria",
+   "publisher": "The British Museum (blog)",
+   "date": "n.d.",
+   "link": "https://www.britishmuseum.org/blog/trade-and-contraband-ancient-assyria",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Cuneiform tablet: caravan account (Old Assyrian Trading Colony)",
+   "publisher": "The Metropolitan Museum of Art",
+   "date": "n.d.",
+   "link": "https://www.metmuseum.org/art/collection/search/325851",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Cuneiform tablet: private letter (Old Assyrian Trading Colony)",
+   "publisher": "The Metropolitan Museum of Art",
+   "date": "n.d.",
+   "link": "https://www.metmuseum.org/art/collection/search/325849",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Kaneš (Kültepe)",
+   "publisher": "Livius.org",
+   "date": "n.d.",
+   "link": "https://www.livius.org/articles/place/kanes-kultepe/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "King Sargon of Akkad—facts and information",
+   "publisher": "National Geographic",
+   "date": "n.d.",
+   "link": "https://www.nationalgeographic.com/culture/article/king-sargon-akkad",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Sargon",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/biography/Sargon",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Akkad and the Akkadian Empire: The First Multinational Empire in the World",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/akkad/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Akkad, an introduction",
+   "publisher": "Smarthistory",
+   "date": "n.d.",
+   "link": "https://smarthistory.org/art-of-akkad-an-introduction/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Sargon of Akkad Establishes the Akkadian Dynasty",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/history/sargon-akkad-establishes-akkadian-dynasty/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Hammurabi: Conquerer, King, and Law-Giver",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/hammurabi/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Babylonia",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/place/Babylonia",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Library of Ashurbanipal",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/Library_of_Ashurbanipal/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Knowledge as Power: King Ashurbanipal Forms the Earliest Systematically Collected Library as Distinct from an Archive",
+   "publisher": "historyofinformation.com",
+   "date": "n.d.",
+   "link": "https://www.historyofinformation.com/detail.php?id=8",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Lachish reliefs",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Lachish_reliefs",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Neo-Babylonian empire",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/place/Neo-Babylonian-Empire",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Babylon: The Gate of the Gods",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/babylon/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "Neo-Babylonian Empire",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Neo-Babylonian_Empire",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Babylonian mathematics is creating a buzz",
+   "publisher": "Centre for the Study of Manuscript Cultures, University of Hamburg",
+   "date": "2017",
+   "link": "https://www.csmc.uni-hamburg.de/publications/mesopotamia/2017-09-26.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Babylonian mathematics",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/mathematics/babylonian-mathematics/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "The Plimpton 322 Tablet and the Babylonian Method of Generating Pythagorean Triples",
+   "publisher": "arXiv (preprint)",
+   "date": "2010",
+   "link": "https://arxiv.org/pdf/1004.0025",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "Mathematical mystery of ancient clay tablet solved",
+   "publisher": "UNSW Sydney",
+   "date": "2017-08",
+   "link": "https://www.unsw.edu.au/newsroom/news/2017/08/mathematical-mystery-of-ancient-clay-tablet-solved",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "The New Year and calendar in Ancient Mesopotamia",
+   "publisher": "Centre for the Study of Manuscript Cultures, University of Hamburg",
+   "date": "2017",
+   "link": "https://www.csmc.uni-hamburg.de/publications/mesopotamia/2017-12-24.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "The Calendar Takes Shape in Mesopotamia",
+   "publisher": "Encyclopedia.com",
+   "date": "n.d.",
+   "link": "https://www.encyclopedia.com/science/encyclopedias-almanacs-transcripts-and-maps/calendar-takes-shape-mesopotamia",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s31",
+   "title": "Ancient technology",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Ancient_technology",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s32",
+   "title": "Indus civilization",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Indus-civilization",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s33",
+   "title": "Great Pyramid of Giza",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Great_Pyramid_of_Giza",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s34",
+   "title": "Caral",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Caral",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s35",
+   "title": "Erlitou",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Erlitou",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s36",
+   "title": "Nebuchadnezzar II",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Nebuchadnezzar_II",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s37",
+   "title": "karum",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/karum",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s38",
+   "title": "Dilmun: Trade, Mythology, Evidence, Tombs",
+   "publisher": "Facts and Details",
+   "date": "n.d.",
+   "link": "https://africame.factsanddetails.com/article/entry-850.html",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class three. So far we have met the first cities, writing and law. Today: how people lived, what they traded, and how cities grew into empires."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Mesopotamia III: Trade, Everyday Life and Empires"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We will go one step at a time: daily life, trade, empires, then numbers and the calendar, and last, what was happening elsewhere. You can pause any time."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. A day in the life\n2. Trade\n3. From city-states to empires\n4. Numbers, calendar, technology\n5. The wider world at the same time"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First idea: the ration. A ration is a fixed share of food or drink given as pay. In cities, many people stopped growing their own food and lived on wages or rations."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ration = a fixed share of food or drink given as pay"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is an example. Temples gave their workers a daily ration of barley beer, the staple drink of Mesopotamia."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Illustration: a temple worker holds out a bowl while an official pours barley beer from a large clay jar."
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is a ration?",
+    "right": "A fixed share of food or drink given as pay",
+    "wrong": [
+     "A tax paid to the king",
+     "A kind of clay tablet",
+     "A holiday from work"
+    ],
+    "why": "Workers were paid in wages or rations, such as a daily share of barley beer from the temple."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Farming did not disappear when cities grew. Farmers grew wheat, barley, lentils, onions, dates and grapes. They kept cattle, sheep, goats and pigs."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Crops: wheat, barley, lentils, onions, dates, grapes\nAnimals: cattle, sheep, goats, pigs"
+   },
+   "cite": [
+    "s1",
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Most people ate two meals a day, one before work in the morning and one after work in the evening. Bread, beer and onions were the staples."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "plate",
+    "count": 2,
+    "layout": "row"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "How many meals a day did most people eat?",
+    "right": "Two",
+    "wrong": [
+     "One",
+     "Three",
+     "Five"
+    ],
+    "why": "Most people ate one meal in the morning before work and one in the evening after work."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The evening meal might be vegetable stew or fish soup, with roast mutton or lamb on special days. Beer was the favourite drink, even for rich people who could afford wine."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Illustration: a family around a bowl of vegetable stew, with flat bread, onions and a jar of beer."
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next, houses. Most were built of sun-dried mud brick, with rooms around an open courtyard. Walls were plastered and whitewashed inside and out. Roofs were flat, and families slept up there when it was hot. The white walls helped reflect the heat of the sun."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Illustration: a mud-brick house with a central courtyard, whitewashed walls and a flat roof with a bed on it."
+   },
+   "cite": [
+    "s3",
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why were the walls whitewashed?",
+    "right": "To help reflect the heat",
+    "wrong": [
+     "To keep clay tablets safe",
+     "To show which gods the family followed",
+     "To stop the river flooding the house"
+    ],
+    "why": "The whitewash helped reflect heat, which mattered in a hot climate."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Homes showed wealth. Rich families had large, multi-storey mud-brick houses with separate rooms. Ordinary families had smaller one-storey homes with simple furnishings."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Wealthy: large, several storeys, open courtyard, separate rooms || Ordinary: smaller, one storey, simple furniture"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now family. Marriages were often arranged, and the household was usually patriarchal. That means the father held the authority."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Patriarchal = the father holds the authority in the family"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "What did women do? Most worked at home, caring for the family. Some worked as weavers, potters, tavern-keepers or bakers. Women and children also worked in the textile industry."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "At home: caring for the family, cooking, grinding grain || For work: weaving, pottery, tavern-keeping, baking, textiles"
+   },
+   "cite": [
+    "s2",
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Women also had some rights. In some periods, for example in Sumer, women could own property and take part in business."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Some Sumerian women: property and business rights"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which statement fits the sources we have just heard?",
+    "right": "In some periods, women in Sumer could own property and take part in business",
+    "wrong": [
+     "Women were never allowed to work for pay",
+     "Women ran every city",
+     "Only men could ever bake bread"
+    ],
+    "why": "Sources describe a father-led household, but also women who owned property and did business in some periods."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now put it together as a day. First, a farm family. Most commoners were farmers living outside the city walls. Women were up by sunrise to make breakfast."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Sunrise: breakfast of porridge, bread and beer\nMorning: work outside\nMidday: bread and beer carried as a snack\nEvening: main meal\nAfter dinner: singing and storytelling"
+   },
+   "cite": [
+    "s3",
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A city worker's day was different. City people could earn their living in industry, trade or administration, paid by wages or rations. A mother might grind grain while a child played with a clay toy pig with beads inside."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Illustration: a woman grinding grain at a stone, a child beside her shaking a hollow clay pig."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What mainly marked a city worker's day, compared with a farmer's?",
+    "right": "They earned wages or rations instead of growing most of their own food",
+    "wrong": [
+     "They never ate bread",
+     "They lived only on the roof",
+     "They were forbidden to work with their hands"
+    ],
+    "why": "City life brought many kinds of work, and urban people were paid in wages or rations."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In rich homes, the first people up were slaves or servants, who got the meal ready. Slaves were one of the groups that lived in the cities."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Illustration: a servant stoking a cooking fire early in a large house while the family sleeps."
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In a wealthy home, who was usually up first to prepare breakfast?",
+    "right": "Slaves or servants",
+    "wrong": [
+     "The king",
+     "The priests",
+     "The tax collector"
+    ],
+    "why": "In wealthy homes, slaves or servants prepared the meal. In ordinary homes, the women did."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Evenings could be lively. Clay plaques show people with drums and rattles, and families sang and told stories after dinner."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Illustration: a plaque-style scene of two musicians, one with a drum and one with a rattle."
+   },
+   "cite": [
+    "s1",
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now trade. The river valley gave good farmland. But metals and fine stones came from far away, even from lands thousands of kilometres off."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Trade: getting what you do not have"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Take lapis lazuli, a deep blue stone prized for beads and seals. As far as anyone can tell, it all came from mines in Badakhshan, in modern Afghanistan. That is about 2,400 kilometres, or 1,500 miles, east."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "2,400 km from the lapis mines to Mesopotamia"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Where did Mesopotamia's lapis lazuli come from?",
+    "right": "Mines in what is now Afghanistan",
+    "wrong": [
+     "Local river banks",
+     "Mines in Egypt",
+     "The sea floor near Ur"
+    ],
+    "why": "Lapis lazuli found in the ancient Near East appears to come from mines in Badakhshan, in modern Afghanistan."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Sumerian texts name three lands they traded with: Magan, Dilmun and Meluhha. Dilmun lay in the Persian Gulf, Magan is usually placed in Oman, and Meluhha is probably the Indus Valley."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map: Mesopotamia at the top of the Persian Gulf. Dilmun in the Gulf, Magan to the south-east in Oman, Meluhha far to the east (probably the Indus Valley), and the Badakhshan mountains to the north-east."
+   },
+   "cite": [
+    "s7",
+    "s38",
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Dilmun was an entrepôt, a meeting point where goods change hands. It did not make most of the goods. Mesopotamian goods were swapped there for goods from Magan and Meluhha."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Entrepôt = a meeting point where goods change hands"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is an entrepôt?",
+    "right": "A meeting point where goods change hands",
+    "wrong": [
+     "A royal storehouse for tax grain",
+     "A kind of trading boat",
+     "A law about prices"
+    ],
+    "why": "Dilmun was an entrepôt: goods from Mesopotamia were traded there for goods from Magan and Meluhha."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Magan was called the land of copper, and was probably the main copper source for the Sumerians. Before about 1000 BCE, copper was the cheapest and most widely used metal in Mesopotamia."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Magan = land of copper"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Meluhha sent timber, ivory, lapis lazuli, gold and carnelian. In return, Mesopotamia sent things like silver, tin and woollen textiles. Scholars are less sure of the full list."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Came to Mesopotamia: timber, ivory, lapis lazuli, gold, carnelian, pearls || Went out: silver, tin, woollen textiles, perhaps oil and grain"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which of these did Mesopotamia send out in trade?",
+    "right": "Woollen textiles",
+    "wrong": [
+     "Ivory",
+     "Carnelian beads",
+     "Lapis lazuli"
+    ],
+    "why": "Ivory, carnelian and lapis lazuli came in. Woollen textiles, silver and tin went out."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "How do we know the sea trade was real? Round stamped seals in a Persian Gulf style turned up in Mesopotamia, at Lothal in India, and on Failaka island. That is good evidence of long sea routes."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Photo-style image: a small round stamp seal with animal designs, shown beside a clay impression."
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A different route went north by land. Merchants from the city of Ashur led donkey caravans to Anatolia, in modern Turkey. They sold tin and textiles, and took back silver, gold and copper."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Illustration: a line of laden donkeys led along a mountain track by two merchants."
+   },
+   "cite": [
+    "s8",
+    "s9",
+    "s10"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What did the Old Assyrian merchants mainly sell in Anatolia?",
+    "right": "Tin and textiles",
+    "wrong": [
+     "Barley and beer",
+     "Pearls and ivory",
+     "Cedar logs"
+    ],
+    "why": "They exported tin and textiles and received silver, gold and copper."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Their main trading town was Kanesh, today called Kültepe. The Assyrian trading quarter was called a karum, a word that first meant a quay. Over 23,000 clay tablets have been dug up there, mostly from about 1950 to 1840 BCE."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Photo-style image: clay tablets in envelopes of clay, from the archive at Kanesh (Kültepe)."
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Trade had rules. Merchants paid taxes on imports, exports and tolls along the road. The karum could fix prices and settle debts. Copper and silver acted as money."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Taxes: import, export and road tolls\nThe karum: fixes prices, settles debts\nMoney: copper and silver"
+   },
+   "cite": [
+    "s8",
+    "s37",
+    "s12"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What was a karum?",
+    "right": "A trading outpost where merchants lived and did business",
+    "wrong": [
+     "A royal palace",
+     "A law code",
+     "A kind of donkey cart"
+    ],
+    "why": "A karum was an Assyrian trade outpost, with Kanesh as the most important."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now empires. At first, each city ran itself as a city-state. An empire puts many cities and peoples under one ruler. In the Mesopotamian story, Sargon was the first to do it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "City-state: one city runs itself || Empire: one ruler over many cities and peoples"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Sargon of Akkad ruled from about 2334 to 2279 BCE. He took all southern Mesopotamia and parts of Syria, Anatolia and Elam, and made the city of Akkad his capital."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "c. 2334 BCE: Sargon begins to rule || c. 2279 BCE: Sargon dies"
+   },
+   "cite": [
+    "s13",
+    "s14"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "How did he hold it together? He sent Akkadian governors to rule Sumerian cities and tore down their defensive walls. He left Sumerian religion alone but made Akkadian the official language."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Akkadian governors in each city\nCity defensive walls torn down\nSumerian religion left in place\nAkkadian as the official language"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "How did Sargon keep control of the cities he took?",
+    "right": "He sent Akkadian governors to rule them",
+    "wrong": [
+     "He let each city keep its own army and walls",
+     "He banned all religion",
+     "He moved every citizen to Akkad"
+    ],
+    "why": "Sargon replaced local rule with Akkadian governors and removed city defensive walls."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "This helped trade too. Fewer walls and one language made trade easier. Sargon's own inscription mentions ships from Meluhha, Magan and Dilmun."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Ships from Meluhha, Magan and Dilmun (Sargon's inscription)"
+   },
+   "cite": [
+    "s12",
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a site with a twist: the city of Akkad itself. Sargon either founded or restored it, around 2334 BCE. But archaeologists have never found it. It was probably on the Euphrates between Sippar and Kish."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Map-style image: the Euphrates with Kish and Sippar marked, and a question mark between them for Akkad."
+   },
+   "cite": [
+    "s14",
+    "s13",
+    "s15"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Has the city of Akkad been found?",
+    "right": "No, its location is still unknown",
+    "wrong": [
+     "Yes, it was dug up in the 1800s",
+     "Yes, its ruins are fully mapped",
+     "Only its temple has been found"
+    ],
+    "why": "Akkad, the capital of the first empire, has not yet been located."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The empire did not last. When Sargon died, there were revolts. In all, the Akkadian dynasty held on for about two hundred years. His grandson Naram-Sin was one of the later rulers."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Akkadian Empire: about 200 years"
+   },
+   "cite": [
+    "s16",
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Babylon's turn came later. When Hammurabi became king in 1792 BCE, his kingdom was only four cities: Babylon, Kish, Sippar and Borsippa. By 1750 BCE he held the whole region."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "house",
+    "count": 4,
+    "layout": "row"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "How many cities made up Hammurabi's kingdom when he began?",
+    "right": "Four",
+    "wrong": [
+     "One",
+     "Eleven",
+     "Forty"
+    ],
+    "why": "Babylon, Kish, Sippar and Borsippa. Through campaigns and alliances he held the whole region by 1750 BCE."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "After Hammurabi died, Babylonia declined. In 1595 BCE a Hittite king unseated its ruler, and the Kassites from the east took power for 400 years. His famous law code was in class two."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1792–1750 BCE: Hammurabi || 1595 BCE: Hittite king ends the dynasty || then Kassite rule (400 years)"
+   },
+   "cite": [
+    "s18",
+    "s17"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Assyria had two big chapters. The first was the merchants we met. The second was the Neo-Assyrian Empire, about 912 to 612 BCE. It took Babylonia in 729 BCE, and the Assyrian king became king of Babylon too."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "c. 912 BCE: Neo-Assyrian Empire || 729 BCE: Assyria takes Babylonia || 612 BCE: Nineveh falls"
+   },
+   "cite": [
+    "s23",
+    "s24",
+    "s19"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Its last great king, Ashurbanipal, ruled from 668 to 627 BCE from the capital Nineveh. He built a library. It was made in the 600s BCE, and Nineveh was sacked in 612 BCE, when the library burned."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Illustration: shelves of clay tablets in a palace room in Nineveh, a scribe reading one."
+   },
+   "cite": [
+    "s20",
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the twist. Clay tablets were usually not fired. But the fire that destroyed Nineveh baked many of them hard, so they survived. In the mid-1800s, Austen Henry Layard found them. Over 30,000 texts have been recovered."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Over 30,000 texts found in the 1800s"
+   },
+   "cite": [
+    "s20",
+    "s19"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "When was Ashurbanipal's library found by archaeologists?",
+    "right": "In the mid-1800s, by Austen Henry Layard",
+    "wrong": [
+     "In 612 BCE",
+     "In the 600s BCE, when it was built",
+     "In the early 1900s"
+    ],
+    "why": "The library was built in the 600s BCE and burned in 612 BCE. It was found again in the mid-1800s."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Another Nineveh find: stone wall carvings showing the Assyrian siege of Lachish in 701 BCE. Layard found them in 1847."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Photo-style image: a stone relief of Assyrian soldiers attacking a walled hill town."
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Then Babylon rose again. Nabopolassar began the Neo-Babylonian Empire in 626 BCE and led the conquest of Assyria. Nebuchadnezzar II ruled 605 to 562 BCE. He built the Ishtar Gate and great walls of Babylon around 575 BCE."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "626 BCE: Nabopolassar becomes king of Babylon || 605–562 BCE: Nebuchadnezzar II || c. 575 BCE: Ishtar Gate"
+   },
+   "cite": [
+    "s22",
+    "s36",
+    "s23"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The end came in 539 BCE. The Persian king Cyrus the Great took Babylon, and the older cuneiform record says his army entered without a battle."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "539 BCE: Cyrus of Persia takes Babylon"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is how long three of these empires lasted, in rough years. The dates for the starts and ends come from the sources shown."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1",
+    "text": "How long each empire lasted"
+   },
+   "cite": [
+    "s14",
+    "s23",
+    "s22"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Which of these three empires lasted longest, going by the chart?",
+    "right": "The Neo-Assyrian Empire",
+    "wrong": [
+     "The Akkadian Empire",
+     "The Neo-Babylonian Empire",
+     "They all lasted the same time"
+    ],
+    "why": "Neo-Assyria is about 300 years, Akkad about 180, and Neo-Babylon about 87."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A pattern appears. The rulers conquered cities, sent governors, used one official language and encouraged trade. Then revolts or outside powers brought the empires down."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Conquest\nGovernors from the centre\nOne official language\nMore trade\nThen: revolt or outside conquest"
+   },
+   "cite": [
+    "s12",
+    "s16",
+    "s18",
+    "s22"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now numbers. Mesopotamian scribes counted in base 60, called sexagesimal. Each place in a number was worth 60 times the one before. We count in base 10."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sexagesimal = base 60"
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Two signs wrote the numbers. An upright wedge meant 1, and a wedge head meant 10. Repeat them to reach 59. Ten plus one is 11. Sixty plus ten plus one reads as 71."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Upright wedge = 1\nWedge head = 10\nRepeat signs up to 59\n60 + 10 + 1 = 71"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Two wedge heads and three upright wedges. What number is that?",
+    "right": "23",
+    "wrong": [
+     "5",
+     "32",
+     "203"
+    ],
+    "why": "Two tens make 20, and three ones make 3, so 20 + 3 = 23."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "We still use this. Base 60 shapes how we measure time and angles. That is why an hour has 60 minutes."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "60 minutes in an hour"
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A famous tablet is Plimpton 322. It was written around 1800 BCE, in the Old Babylonian period. One study dates it to 1822–1784 BCE. It holds a table of numbers in base 60."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Photo-style image: a broken clay tablet, about 13 by 9 centimetres, with columns of wedge-shaped numbers."
+   },
+   "cite": [
+    "s27",
+    "s26"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It was found in the early 1900s in what is now southern Iraq, by Edgar Banks. Today it is held at Columbia University. Experts still debate what it was for."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Made c. 1800 BCE. Found early 1900s."
+   },
+   "cite": [
+    "s28",
+    "s27"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "When was Plimpton 322 found?",
+    "right": "In the early 1900s",
+    "wrong": [
+     "About 1800 BCE",
+     "In 1849 at Nineveh",
+     "In 612 BCE"
+    ],
+    "why": "It was written about 1800 BCE but found again in the early 1900s."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the calendar. It followed the Moon. A month began with the first sign of the new Moon and lasted 29 or 30 days. Twelve such months make 354 days."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Lunar month = 29 or 30 days"
+   },
+   "cite": [
+    "s30",
+    "s29"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "But a solar year is about 365 days. So twelve lunar months fall about eleven days short. Look at the gap."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c2",
+    "text": "Days in a year"
+   },
+   "cite": [
+    "s29"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The fix was to add a thirteenth month every few years, to keep in step with the seasons. This is called intercalation. Month names came from farm or religious tasks and differed by city. A regular 19-year pattern was found only around 400 BCE."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Intercalation = adding an extra month"
+   },
+   "cite": [
+    "s30",
+    "s29"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why did Mesopotamians add an extra month every few years?",
+    "right": "To keep the calendar in step with the seasons",
+    "wrong": [
+     "To honour the king's birthday",
+     "To make the months equal in length",
+     "To fit in more festivals"
+    ],
+    "why": "Twelve lunar months are about eleven days shorter than a solar year, so an extra month kept the seasons aligned."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A word on technology. The potter's wheel appeared in Mesopotamia in the 5th millennium BCE. The wheeled vehicle followed in the early 4th millennium BCE. Copper was the everyday metal."
+   },
+   "show": {
+    "kind": "list",
+    "text": "5th millennium BCE: potter's wheel\nEarly 4th millennium BCE: wheeled vehicle\nCopper: everyday metal"
+   },
+   "cite": [
+    "s31",
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last, the wider world. Around 2600 BCE the Great Pyramid was built in Egypt. Harappa and Mohenjo-daro were flourishing in the Indus. Caral in Peru was being settled."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "c. 2600 BCE: Great Pyramid built (Egypt) || 2600–1900 BCE: Indus civilization || c. 2600 BCE onward: Caral inhabited (Peru) || 2334–2279 BCE: Sargon || c. 1900–1500 BCE: Erlitou culture (China) || 1792–1750 BCE: Hammurabi || 605 BCE: Babylon defeats Egypt at Carchemish || 539 BCE: Cyrus takes Babylon"
+   },
+   "cite": [
+    "s33",
+    "s32",
+    "s34",
+    "s14",
+    "s35",
+    "s17",
+    "s36",
+    "s22"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Around 2600 BCE, what was being built in Egypt?",
+    "right": "The Great Pyramid of Giza",
+    "wrong": [
+     "The Ishtar Gate",
+     "The Library of Ashurbanipal",
+     "The Lachish carvings"
+    ],
+    "why": "The Great Pyramid dates to about 2600 BCE. The Ishtar Gate (about 575 BCE), the library (600s BCE) and the Lachish scene (701 BCE) are much later."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To finish: daily life was bread, beer and work. Trade reached Afghanistan and the Indus. Empires rose and fell. Let us check the order of four kings and rulers."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Daily life: bread, beer, mud-brick houses, wages and rations\nTrade: copper, lapis lazuli, tin, textiles, silver\nEmpires: Akkad, Babylon, Assyria, Neo-Babylon\nMaths and calendar: base 60 and a Moon-led year"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which order is right, earliest to latest?",
+    "right": "Sargon, Hammurabi, Ashurbanipal, Cyrus takes Babylon",
+    "wrong": [
+     "Hammurabi, Sargon, Cyrus takes Babylon, Ashurbanipal",
+     "Ashurbanipal, Sargon, Hammurabi, Cyrus takes Babylon",
+     "Sargon, Ashurbanipal, Hammurabi, Cyrus takes Babylon"
+    ],
+    "why": "Sargon began about 2334 BCE, Hammurabi in 1792 BCE, Ashurbanipal in 668 BCE, and Cyrus took Babylon in 539 BCE."
+   }
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "About how many years each empire lasted",
+   "rows": [
+    {
+     "label": "Akkadian Empire (about 2334–2154 BCE)",
+     "value": 180,
+     "source": "s14"
+    },
+    {
+     "label": "Neo-Assyrian Empire (about 912–612 BCE)",
+     "value": 300,
+     "source": "s23"
+    },
+    {
+     "label": "Neo-Babylonian Empire (626–539 BCE)",
+     "value": 87,
+     "source": "s22"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Days in a year: twelve lunar months vs one solar year",
+   "rows": [
+    {
+     "label": "Twelve lunar months",
+     "value": 354,
+     "source": "s29"
+    },
+    {
+     "label": "Solar year",
+     "value": 365,
+     "source": "s29"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Daily life in Mesopotamian cities",
+   "links": [
+    "[[Mesopotamia I: Rivers, Farms and the First Cities]]",
+    "[[Mesopotamia II: Writing, Law and Religion]]"
+   ]
+  },
+  {
+   "topic": "Trade with Dilmun, Magan and Meluhha",
+   "links": [
+    "[[The Indus Valley II: Script, Beliefs, Trade and Change]]",
+    "[[Egypt III: Trade, Everyday Life and Neighbours]]"
+   ]
+  },
+  {
+   "topic": "Akkad, Babylon and Assyria in outline",
+   "links": [
+    "[[Mesopotamia II: Writing, Law and Religion]]",
+    "[[Putting It All Together: Compare, Connect and Place on One Timeline]]"
+   ]
+  },
+  {
+   "topic": "Base 60, Plimpton 322 and the lunar calendar",
+   "links": [
+    "[[Putting It All Together: Compare, Connect and Place on One Timeline]]"
+   ]
+  },
+  {
+   "topic": "Mesopotamia and Egypt at roughly the same time",
+   "links": [
+    "[[Egypt I: The Nile, Unification and the Pharaoh]]"
+   ]
+  },
+  {
+   "topic": "Caral and Erlitou as contemporaries",
+   "links": [
+    "[[The Americas I: Caral, the Olmec and Early Cities]]",
+    "[[Early China I: The Yellow River, Early Farming and the Shang]]"
+   ]
+  },
+  {
+   "topic": "Gap to fill: the sources read for this class give no date for the first excavation of Kanesh (Kültepe) or for the rediscovery of the Ishtar Gate. Add both before publishing the 'built and found' pairs for those sites.",
+   "links": []
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "c. 2600 BCE",
+   "elsewhere": "The Great Pyramid of Giza was built in Egypt. The Indus cities were flourishing, and Caral in Peru was being settled.",
+   "cite": [
+    "s33",
+    "s32",
+    "s34"
+   ]
+  },
+  {
+   "when": "c. 2334–2279 BCE (Sargon of Akkad)",
+   "elsewhere": "The Indus civilization was in its core period (about 2600–1900 BCE), and Caral was still inhabited.",
+   "cite": [
+    "s32",
+    "s34",
+    "s14"
+   ]
+  },
+  {
+   "when": "c. 1950–1840 BCE (Assyrian trade at Kanesh) and 1792–1750 BCE (Hammurabi)",
+   "elsewhere": "The Erlitou culture of ancient China is dated to roughly 1900–1500 BCE.",
+   "cite": [
+    "s11",
+    "s17",
+    "s35"
+   ]
+  },
+  {
+   "when": "605 BCE",
+   "elsewhere": "Nebuchadnezzar defeated an Egyptian army under Pharaoh Necho II at Carchemish.",
+   "cite": [
+    "s36"
+   ]
+  },
+  {
+   "when": "539 BCE",
+   "elsewhere": "The Persian king Cyrus the Great took Babylon, ending the Neo-Babylonian Empire.",
+   "cite": [
+    "s22"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The Akkadian Empire was the first empire in the world.",
+   "other_view": "The title is common, but the size and reach of the Akkadian Empire are disputed. Its capital Akkad has never been found, and a few early kings with Semitic names appear in older king lists.",
+   "cite": [
+    "s14",
+    "s13",
+    "s15"
+   ]
+  },
+  {
+   "claim": "Women in Mesopotamia had a limited, home-based role.",
+   "other_view": "Sources say the household was father-led and most women worked at home. They also say that in some periods, such as in Sumer, women owned property and did business.",
+   "cite": [
+    "s4",
+    "s2"
+   ]
+  },
+  {
+   "claim": "Houses were two or three storeys high.",
+   "other_view": "One source says most city houses had two or three storeys. Another says commoners' houses were one or two. A third says ordinary people lived in single-storey homes and the rich in multi-storey ones. Height probably varied by wealth, place and period.",
+   "cite": [
+    "s2",
+    "s3",
+    "s4"
+   ]
+  },
+  {
+   "claim": "Meluhha was the Indus Valley, and the goods traded are known.",
+   "other_view": "Meluhha is only 'probably' the Indus Valley. One source says it was perhaps as far as the Indus. Another says the goods are less certain than the evidence for the sea route itself.",
+   "cite": [
+    "s6",
+    "s7"
+   ]
+  },
+  {
+   "claim": "Plimpton 322 is a Pythagorean-triples table, a trigonometry table, or something else.",
+   "other_view": "Scholars have long disagreed about its purpose. Some see Pythagorean triples. Others reject a trigonometric reading. A 2017 UNSW team argues it is the world's oldest and most accurate trigonometric table, using ratios rather than angles. Dating also varies: one study gives 1822–1784 BCE, another about 1700 BCE.",
+   "cite": [
+    "s27",
+    "s28",
+    "s26"
+   ]
+  },
+  {
+   "claim": "Ashurbanipal's library was found in 1849.",
+   "other_view": "One source gives 1849 for Layard's discovery, another gives 1850, and another says Layard and Rassam worked there between 1850 and 1853. Excavations continued for decades, so no single date is certain.",
+   "cite": [
+    "s20",
+    "s19"
+   ]
+  }
+ ]
+}

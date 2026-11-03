@@ -210,7 +210,9 @@ try {
       const p = r.problems.filter((x) => !x.startsWith('Read as'));
       if (!r.lesson || p.length) bad.push(`${c.id}/${k.file}: ${p[0] || 'no lesson'}`);
     }
-    check('*** all 128 classes of the seven courses play, with nothing wrong in them ***', n === 128 && COURSES.length === 7 && !bad.length, J({ n, bad: bad.slice(0, 5) }));
+    // (2026-11-03, note EQ: 240 classes in sixteen courses. Five faults the new History classes had were fixed at the
+    // source or are now read as described pictures: `map`.)
+    check('*** all 240 classes of the sixteen courses play, with nothing wrong in them ***', n === 240 && COURSES.length === 16 && !bad.length, J({ n, bad: bad.slice(0, 5) }));
   }
 
   console.log('GUESSES',J(Object.fromEntries(Object.entries(got).map(([k, r]) => [k, guessed(r)]))));

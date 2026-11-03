@@ -1,0 +1,1073 @@
+{
+ "about": {
+  "title": "Built to Learn From Others: Gene-Culture Coevolution",
+  "course": "cumulative-culture",
+  "class_n": 2,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 40,
+  "length_note": "About 40 minutes. There are 27 short beats and 10 check questions. Three examples (milk, fire, yams) need time, and the debates need time too. A learner who wants to pause on each question may need closer to 45 minutes. The amylase beat and the other_side notes can be skipped to save about 5 minutes."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Gene-culture coevolution: lactase persistence (book chapter)",
+   "publisher": "Oxford University Press",
+   "date": "not shown on page read",
+   "link": "https://academic.oup.com/book/10045/chapter/157474092",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Dairying and the evolution and consequences of lactase persistence in humans (Stock and Wells)",
+   "publisher": "Animal Frontiers, via PubMed Central",
+   "date": "2023-06-14",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10266752/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Famine and disease drove the evolution of lactose tolerance in Europe",
+   "publisher": "University College London",
+   "date": "2022-07",
+   "link": "https://www.ucl.ac.uk/life-sciences/news/2022/jul/famine-and-disease-drove-evolution-lactose-tolerance-europe",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Famine and disease may have driven ancient Europeans' lactose tolerance",
+   "publisher": "Science News",
+   "date": "2022-07-27",
+   "link": "https://www.sciencenews.org/article/lactose-tolerance-milk-famine-disease-ancient-europe",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Famine and disease drove the evolution of lactose tolerance in Europe (press release)",
+   "publisher": "ScienceDaily",
+   "date": "2022-07-27",
+   "link": "https://www.sciencedaily.com/releases/2022/07/220727110700.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Famine and disease drove the evolution of lactose tolerance in Europe",
+   "publisher": "Phys.org",
+   "date": "2022-07",
+   "link": "https://phys.org/news/2022-07-famine-disease-drove-evolution-lactose.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "The evolution of lactase persistence in Europe. A synthesis of archaeological and genetic evidence",
+   "publisher": "ScienceDirect (Elsevier)",
+   "date": "not shown on page read",
+   "link": "https://www.sciencedirect.com/science/article/abs/pii/S0958694611002536",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "New evidence for Early Pleistocene use of fire at Wonderwerk Cave (South Africa)",
+   "publisher": "PubMed Central",
+   "date": "2026 (exact date not shown on page read)",
+   "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC13225425/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Invention of cooking drove evolution of the human species, new book argues",
+   "publisher": "Harvard Gazette",
+   "date": "2009-06",
+   "link": "https://news.harvard.edu/gazette/story/2009/06/invention-of-cooking-drove-evolution-of-the-human-species-new-book-argues/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Cooking Up Bigger Brains",
+   "publisher": "Scientific American",
+   "date": "not shown on page read",
+   "link": "https://www.scientificamerican.com/article/cooking-up-bigger-brains/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Human Characteristics: Brains",
+   "publisher": "Smithsonian Institution, Human Origins Program",
+   "date": "not shown on page read",
+   "link": "https://humanorigins.si.edu/human-characteristics/brains",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Larger brains",
+   "publisher": "The Australian Museum",
+   "date": "not shown on page read",
+   "link": "https://australian.museum/learn/science/human-evolution/larger-brains/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Signatures of selection with cultural interference",
+   "publisher": "Proceedings of the National Academy of Sciences (PNAS)",
+   "date": "2024",
+   "link": "https://www.pnas.org/doi/10.1073/pnas.2322885121",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Malaria and Early African Development: Evidence from the Sickle Cell Trait",
+   "publisher": "PubMed Central",
+   "date": "not shown on page read",
+   "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC6171532/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Amylase Copy Number and Diet",
+   "publisher": "HHMI BioInteractive",
+   "date": "not shown on page read",
+   "link": "https://www.biointeractive.org/classroom-resources/amylase-copy-number-and-diet",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Obesity, starch digestion and amylase: association between copy number variants at human salivary (AMY1) and pancreatic (AMY2) amylase genes",
+   "publisher": "Human Molecular Genetics, Oxford University Press",
+   "date": "2015",
+   "link": "https://academic.oup.com/hmg/article/24/12/3472/622980",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Human cumulative culture: a comparative perspective (Dean and colleagues)",
+   "publisher": "Biological Reviews, via Queen's University Belfast",
+   "date": "2014-05",
+   "link": "https://pure.qub.ac.uk/en/publications/human-cumulative-culture-a-comparative-perspective/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Animal cultures: how we've only seen the tip of the iceberg",
+   "publisher": "Evolutionary Human Sciences, Cambridge University Press",
+   "date": "not shown on page read",
+   "link": "https://www.cambridge.org/core/journals/evolutionary-human-sciences/article/animal-cultures-how-weve-only-seen-the-tip-of-the-iceberg/2D9C2B4156E087ABC94A8AE99A6F0FAD",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Causal knowledge and imitation/emulation switching in chimpanzees and children (Horner and Whiten)",
+   "publisher": "Animal Cognition, via Semantic Scholar",
+   "date": "2005",
+   "link": "https://www.semanticscholar.org/paper/Causal-knowledge-and-imitation-emulation-switching-Horner-Whiten/f761b34a73200b4821d42fe0e5f3ca6510fc1cc8",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Being copycats might be key to being human",
+   "publisher": "Phys.org",
+   "date": "2020-01",
+   "link": "https://phys.org/news/2020-01-copycats-key-human.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Over-imitation: a review and appraisal (Whiten and colleagues)",
+   "publisher": "University of St Andrews research repository",
+   "date": "not shown on page read",
+   "link": "https://research-repository.st-andrews.ac.uk/bitstream/handle/10023/21213/Whiten_OverImitation_DevRev_AAM.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Emulation, Imitation, Over-imitation and the Scope of Culture for Child and Chimpanzee (Whiten and colleagues)",
+   "publisher": "ResearchGate listing of a journal article",
+   "date": "not shown on page read",
+   "link": "https://www.researchgate.net/publication/26683797_Emulation_Imitation_Over-imitation_and_the_Scope_of_Culture_for_Child_and_Chimpanzee",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Human Teaching and Cumulative Cultural Evolution",
+   "publisher": "PubMed Central",
+   "date": "not shown on page read",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6290649/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "A Diverse and Flexible Teaching Toolkit Facilitates the Human Capacity for Cumulative Culture",
+   "publisher": "PubMed Central",
+   "date": "not shown on page read",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6290851/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Apes have culture but may not know that they do",
+   "publisher": "Frontiers in Psychology",
+   "date": "2015",
+   "link": "https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2015.00091/full",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Demic and cultural diffusion propagated the Neolithic transition across different regions of Europe",
+   "publisher": "PubMed Central",
+   "date": "not shown on page read",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4424695/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "Origins of World Agriculture",
+   "publisher": "World History Encyclopedia",
+   "date": "not shown on page read",
+   "link": "https://www.worldhistory.org/article/1886/origins-of-world-agriculture/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "How Has the Human Brain Evolved?",
+   "publisher": "Scientific American",
+   "date": "not shown on page read",
+   "link": "https://www.scientificamerican.com/article/how-has-human-brain-evolved/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "Imitation in chimps and children (video, experiment)",
+   "publisher": "Max Planck Institute for Evolutionary Anthropology (OpenEvo)",
+   "date": "not shown on page read",
+   "link": "https://openevo.eva.mpg.de/teachingbase/imitation-in-chimps-and-children-video-experiment/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "The Imitative Behaviour of Children and Chimpanzees",
+   "publisher": "Semantic Scholar-hosted manuscript (in press, Primatologie)",
+   "date": "not shown on page read",
+   "link": "https://pdfs.semanticscholar.org/a018/4200a92622d09b8a2901c180b67458f9d720.pdf",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Last class we met the ratchet: knowledge that gets passed on and improved. Today we ask why humans are so good at it."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Built to Learn From Others"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, one big phrase. Gene-culture coevolution means our genes and our culture shape each other over many generations."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Gene-culture coevolution"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is how it works. A habit changes our surroundings, such as what we eat. The surroundings change which gene versions help. Genes shift over generations."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. People spread a habit (culture). 2. The habit changes the world around them. 3. Some gene versions now help more, so they become more common."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What does gene-culture coevolution mean?",
+    "right": "Culture changes what helps people survive, and genes can change over generations in response.",
+    "wrong": [
+     "Genes alone decide what a culture will be like.",
+     "Anything a person learns is written into their DNA.",
+     "Culture can change, but it can never have any effect on genes."
+    ],
+    "why": "Learning does not rewrite your DNA. Over many generations, a cultural habit can change which gene versions help people have children, and so change how common they are."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Example one is milk. Babies drink it. What happens to the body's milk-digesting skill as we grow up?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Example 1: Milk"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In most people, the enzyme that digests milk sugar, called lactase, fades after childhood."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A child drinking milk, with a bar showing the lactase enzyme switching off in mid-childhood."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "But many people from groups with a long history of dairying keep making lactase all their lives. That is called lactase persistence."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Lactase persistence"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The classic story goes like this. Where fresh milk was available, the gene helped. And dairying spread more among people who could digest milk. Round and round."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Culture: keep animals and drink milk | Genes: milk-digesting ability stays on in adults"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Today about one in three adults worldwide is lactase persistent. It arose several separate times, in different places."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "cup",
+    "count": 3,
+    "layout": "row",
+    "text": "About 1 in every 3 adults can keep digesting milk"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "But it did not happen overnight. In Europe, milk use goes back almost 9,000 years. The gene variant shows up about 6,650 years ago. It is common only about 3,000 years ago."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Milk use and the lactase gene in Europe (years ago)",
+    "chart": "c2"
+   },
+   "cite": [
+    "s6",
+    "s4"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Did lactase persistence become common as soon as Europeans began drinking milk?",
+    "right": "No. It became common thousands of years after milk use began.",
+    "wrong": [
+     "Yes. It was common within a few generations of the first dairy farmers.",
+     "Yes. It was already common before farming began.",
+     "No. It has never become common in Europe."
+    ],
+    "why": "Milk use began almost 9,000 years ago in Europe, but the gene variant only became common about 3,000 years ago."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So why so late? A 2022 study found that how much milk people used did not match how strongly the gene was selected. Famine and disease did match."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Stronger selection when there was more famine and more disease, not simply when there was more milk."
+   },
+   "cite": [
+    "s3",
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So scientists still agree the gene spread in dairying societies. They now argue about exactly why. That is how real science looks."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Settled: it happened. Debated: why."
+   },
+   "cite": [
+    "s7",
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Example two is fire. Be careful with this one: it is a hypothesis, and scientists disagree about it."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Example 2: Fire and Cooking (a hypothesis)"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, the evidence for fire. Gesher Benot Ya'aqov in Israel, about 800,000 years ago, is the earliest evidence of controlled fire outside Africa."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A map marking Gesher Benot Ya'aqov in Israel and Wonderwerk Cave in South Africa."
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In Wonderwerk Cave, South Africa, repeated burning deep inside the cave points to people bringing fire in. Clear traces are hard to find, though."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Burnt small-animal bones, in separate layers, deep inside the cave: fire brought in by hominins."
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the idea. Cooking makes food faster and easier to eat, and gets more energy from it. The human brain uses about a quarter of the body's energy."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Cooked food: quicker to eat, more energy. Brain: about a quarter of the body's energy."
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Richard Wrangham notes that around 1.8 million years ago Homo erectus appears with a bigger brain and smaller guts, jaws and teeth. He argues cooking explains this."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Wrangham's cooking hypothesis: cooked food helped make bigger brains possible."
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does the cooking hypothesis claim?",
+    "right": "Cooked food gave extra usable energy, which helped bigger brains and smaller guts and teeth to evolve.",
+    "wrong": [
+     "Early humans cooked because their brains had already grown large.",
+     "Cooking made brains smaller to save energy.",
+     "Cooking is a trait written in our DNA that appeared overnight."
+    ],
+    "why": "The hypothesis says cooking came first and its energy gains helped make bigger brains possible. Fire is a cultural practice with possible effects on our biology."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is brain size over time, in cubic centimetres. Scientists measure the space inside ancient skulls, because we have no ancient brains to weigh."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Brain size of some human ancestors (cubic centimetres)",
+    "chart": "c1"
+   },
+   "cite": [
+    "s12",
+    "s28"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Smithsonian says brain size tripled over human evolution, growing fastest between 800,000 and 200,000 years ago."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "3 times bigger"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the catch. Clear archaeological evidence of fire is only about 800,000 years old. The brain change Wrangham points to is much older. Many experts say he is wrong."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Brain and gut change: about 1.8 million years ago | Clear fire evidence: about 800,000 years ago"
+   },
+   "cite": [
+    "s9",
+    "s10"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why do some scientists doubt the cooking hypothesis?",
+    "right": "Clear evidence of fire is much younger than the brain change it is meant to explain.",
+    "wrong": [
+     "Because nobody has ever found evidence of ancient fire anywhere.",
+     "Because cooked food has no extra energy compared with raw food.",
+     "Because brains have never changed in size."
+    ],
+    "why": "Fire evidence exists but is younger than the proposed change. Some scientists suggest energy-rich animal foods, rather than cooking, could explain it."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Example three: yams, mosquitoes and a gene. In parts of Africa, slash-and-burn farming left more standing water, so more mosquitoes carried malaria."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Farming change, then standing water, then mosquitoes, then malaria."
+   },
+   "cite": [
+    "s13",
+    "s14"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One copy of a gene called HbS protects against malaria. So it became more common. Two copies bring sickle cell disease. In the past, people with two copies often died young."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Trade-off: one copy protects, two copies cause illness"
+   },
+   "cite": [
+    "s13",
+    "s14"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does the yam and malaria example show?",
+    "right": "A cultural change can raise the odds of a gene spreading, even when the gene has costs as well as benefits.",
+    "wrong": [
+     "Gene changes caused people to start farming yams.",
+     "Farming had no effect on disease.",
+     "Any gene a culture favours is always harmless."
+    ],
+    "why": "Farming changed the environment. That raised the benefit of a gene that protects against malaria, even though two copies cause illness."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A fourth idea is less settled. Many people carry two to fifteen copies of AMY1, a gene for a starch-digesting enzyme in spit."
+   },
+   "show": {
+    "kind": "list",
+    "text": "AMY1 copies per person: 2 to 15. 2007 study: high-starch groups had more copies on average."
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A 2015 study using other methods reported that the 2007 method undercounted copies. So this is a promising example, not a closed case."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Promising, but still being tested"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let us place these on the timeline. Fire comes first, then the brain growing, then farming and herding, then lactase persistence becoming common."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "About 800,000 years ago: fire at Gesher Benot Ya'aqov. 800,000 to 200,000 years ago: fastest brain growth. About 11,000 years ago: farming and herding begin in the Near East. About 9,000 years ago: farming spreads into Europe. About 3,000 years ago: lactase persistence common in Europe."
+   },
+   "cite": [
+    "s8",
+    "s11",
+    "s27",
+    "s26",
+    "s4"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which of these came first in the timeline?",
+    "right": "Evidence of controlled fire, about 800,000 years ago.",
+    "wrong": [
+     "Farming and herding beginning in the Near East, about 11,000 years ago.",
+     "Farming spreading into Europe, about 9,000 years ago.",
+     "Lactase persistence becoming common in Europe, about 3,000 years ago."
+    ],
+    "why": "Fire evidence is about 800,000 years old. Farming, herding and common lactase persistence all came within the last 11,000 years."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Those examples show culture can reshape genes. Now the second question: what kind of learners did that make us?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Why are humans such strong social learners?"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Remember the ratchet. Faithful copying plus helpful tweaks lets each generation start further along than the last."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "High-fidelity copying plus improvement"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Plenty of animals learn from each other, and great apes have group traditions. What looks different in humans is how much knowledge builds up over time."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Many animals: social learning and traditions. Humans: far more cumulative, complex and rule-bound."
+   },
+   "cite": [
+    "s17",
+    "s18",
+    "s25"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Two ways to copy. Emulation means aiming for the same result by your own method. Imitation means copying the method itself. Chimpanzees favour emulation when they can see how the thing works."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Emulation: copy the goal | Imitation: copy the method"
+   },
+   "cite": [
+    "s29",
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A famous test: young chimpanzees and 3- to 4-year-old children watched a person use a tool to get a reward from a puzzle box. The box was opaque, then transparent."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A puzzle box with a tool poking into it. In one version the box is clear, so the useless step can be seen."
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "With the clear box, chimpanzees skipped the useless step. The children kept copying every step, even the useless ones."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Chimpanzees: dropped the useless step | Children: copied everything"
+   },
+   "cite": [
+    "s20",
+    "s19"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Copying pointless steps is called over-imitation. Studies suggest older children and adults do it even more than young children, while infants do it less."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Over-imitation"
+   },
+   "cite": [
+    "s21",
+    "s20"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In the clear-box test, what did the chimpanzees do?",
+    "right": "They left out the step that did nothing useful.",
+    "wrong": [
+     "They copied every step, including the useless one.",
+     "They did not try the box at all.",
+     "They taught the children the quicker way."
+    ],
+    "why": "Chimpanzees ignored the step that did not help when they could see it was useless. Children kept copying it."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why copy a pointless step? Researchers suggest children may treat it as how things are done. It may be a base for rituals and fixed routines. Scientists still discuss the details."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Possible reasons: following convention, trusting the teacher, fixed routines like rituals."
+   },
+   "cite": [
+    "s22",
+    "s19",
+    "s21"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One way to see it: a faithful copy passes a recipe on intact even when you cannot see why each step matters. The cost is that mistakes get copied too."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Faithful copying: a strength and a risk"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why might faithful copying help a culture build up knowledge?",
+    "right": "Knowledge passes on intact, even when learners cannot yet tell why each step matters.",
+    "wrong": [
+     "It makes every learner invent everything from scratch.",
+     "It means nobody ever changes anything.",
+     "It only works for cooking."
+    ],
+    "why": "The ratchet needs knowledge passed on faithfully, and then improved. Copying keeps the knowledge intact until someone improves it."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Teaching helps too. One definition: behaviour that evolved to help others learn."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Teaching"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Some animals do teach. But spontaneous teaching in open settings is rare. Humans teach in flexible ways, and can say aloud: copy exactly, or feel free to change it."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Animals: some accepted examples, but rare in the wild | Humans: flexible teaching, with words"
+   },
+   "cite": [
+    "s23",
+    "s24"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What makes human teaching special, according to this research?",
+    "right": "We can flex it: ask for exact copying, or invite changes, partly through words.",
+    "wrong": [
+     "Humans are the only species that has ever taught anything.",
+     "Human teaching is always exact copying with no changes.",
+     "Human teaching never uses words."
+    ],
+    "why": "Some animals teach, but humans can vary how they teach. That lets them balance exact copying and new ideas."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So: culture can change genes. We copy faithfully, even pointless steps. We teach flexibly. Scientists still debate how much each part matters."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Culture and genes shape each other. 2. We copy faithfully. 3. We teach flexibly. Debated: which matters most."
+   },
+   "cite": [
+    "s1",
+    "s19",
+    "s24",
+    "s23",
+    "s25"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which pair are examples of culture shaping genes?",
+    "right": "Dairying and lactase persistence; yam farming and the sickle cell gene.",
+    "wrong": [
+     "Learning to swim and then having children who are born able to swim.",
+     "Memorising a poem and passing the memory on through DNA.",
+     "Wearing glasses and having children with sharper eyes."
+    ],
+    "why": "The first pair is the one backed by evidence. A cultural practice changed which gene versions helped, so those versions became more common. Skills a person learns are not passed on through DNA."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next class: speech. If we are built to learn from others, how did talking become the first great handing-down?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Speech, the First Great Handing-Down"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Brain size of some human ancestors (cubic centimetres)",
+   "rows": [
+    {
+     "label": "Australopithecus afarensis (about 3 million years ago)",
+     "value": 450,
+     "source": "s12"
+    },
+    {
+     "label": "Homo habilis",
+     "value": 610,
+     "source": "s12"
+    },
+    {
+     "label": "Homo ergaster",
+     "value": 860,
+     "source": "s12"
+    },
+    {
+     "label": "Homo heidelbergensis (about 600,000 years ago)",
+     "value": 1250,
+     "source": "s12"
+    },
+    {
+     "label": "Homo sapiens (today)",
+     "value": 1350,
+     "source": "s12"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Milk and the lactase gene in Europe (how many years ago)",
+   "rows": [
+    {
+     "label": "Milk use begins with the earliest farmers",
+     "value": 9000,
+     "source": "s6"
+    },
+    {
+     "label": "Lactase persistence variant first seen",
+     "value": 6650,
+     "source": "s4"
+    },
+    {
+     "label": "Lactase persistence common",
+     "value": 3000,
+     "source": "s4"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "gene-culture coevolution",
+   "links": [
+    "[[the ratchet]]",
+    "[[niche construction]]",
+    "[[natural selection]]"
+   ]
+  },
+  {
+   "topic": "lactase persistence",
+   "links": [
+    "[[dairying and herding]]",
+    "[[farming and the Neolithic]]"
+   ]
+  },
+  {
+   "topic": "cooking hypothesis",
+   "links": [
+    "[[control of fire]]",
+    "[[growth of the human brain]]"
+   ]
+  },
+  {
+   "topic": "over-imitation and teaching",
+   "links": [
+    "[[speech]]",
+    "[[cumulative culture]]",
+    "[[schools]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About 1.8 million years ago",
+   "elsewhere": "Homo habilis had appeared by about 1.9 million years ago, and the first Homo erectus skulls had brains a bit over 600 ml.",
+   "cite": [
+    "s28"
+   ]
+  },
+  {
+   "when": "About 800,000 years ago",
+   "elsewhere": "Fire is seen at Gesher Benot Ya'aqov. Human brain size is about to grow at its fastest, through a time of dramatic climate change.",
+   "cite": [
+    "s8",
+    "s11"
+   ]
+  },
+  {
+   "when": "About 11,000 years ago",
+   "elsewhere": "Barley, wheat, goats and sheep are domesticated in the Near East.",
+   "cite": [
+    "s27"
+   ]
+  },
+  {
+   "when": "About 9,000 years ago",
+   "elsewhere": "Farming begins to spread from the Near East into Europe, and milk is used from the earliest farming.",
+   "cite": [
+    "s26",
+    "s6"
+   ]
+  },
+  {
+   "when": "About 3,000 years ago",
+   "elsewhere": "Lactase persistence is common in Europe. Farming reached northern Europe about 5,500 years ago, so farming had been there for roughly 2,500 years.",
+   "cite": [
+    "s4",
+    "s26"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Cooking helped make bigger human brains possible.",
+   "other_view": "Many archaeologists and anthropologists disagree. The clear fire evidence is much younger than the brain change. Some argue energy-rich animal foods, not cooking, explain bigger brains and smaller guts.",
+   "cite": [
+    "s9",
+    "s10"
+   ]
+  },
+  {
+   "claim": "Drinking milk drove the spread of lactase persistence.",
+   "other_view": "A 2022 study found no link between how much milk people used and how strongly the gene was selected. It found that famine and disease explained selection better. The gene still spread among dairying peoples, so researchers are debating the cause, not the facts.",
+   "cite": [
+    "s3",
+    "s6",
+    "s7"
+   ]
+  },
+  {
+   "claim": "More copies of the AMY1 gene are an adaptation to starchy diets.",
+   "other_view": "The 2007 study found more copies in high-starch populations. A 2015 study using other methods reported that the 2007 assay undercounted copies. The link to starchy diets is a lead being tested, not a settled result.",
+   "cite": [
+    "s15",
+    "s16"
+   ]
+  },
+  {
+   "claim": "Only humans have cumulative culture.",
+   "other_view": "Most reviews say animal culture is not cumulative in the way human culture is. Researchers still debate what explains this gap, and some argue ape traditions may never ratchet because of how apes mentally represent what they know.",
+   "cite": [
+    "s18",
+    "s25"
+   ]
+  },
+  {
+   "claim": "Teaching is the reason humans can build up culture.",
+   "other_view": "Some researchers argue that cumulative culture can occur without teaching. Others say differences in social learning alone may not be enough to explain it.",
+   "cite": [
+    "s23",
+    "s25"
+   ]
+  },
+  {
+   "claim": "Over-imitation shows humans copy far more faithfully than chimpanzees.",
+   "other_view": "The results are strong, but the over-imitation studies have often used preschoolers from WEIRD (Western, educated, industrialised, rich, democratic) contexts. Another review argues that child and chimpanzee imitation may not be very different.",
+   "cite": [
+    "s21",
+    "s30"
+   ]
+  }
+ ]
+}

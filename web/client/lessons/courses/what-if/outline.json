@@ -1,0 +1,172 @@
+{
+ "course_id": "what-if",
+ "title": "What if? Ideas outside the mainstream",
+ "audience": [
+  "adult"
+ ],
+ "length_note": "The course has 11 classes. Each class covers one question, so nobody has to hold several big ideas at once. Most run 25 to 35 minutes. Class 1 is shorter because it only sets up the tools, and the last class is shorter because it is a wrap-up. Each of the five topics Mike asked for gets the room it needs. The Younger Dryas debate has two parts: what the climate event was, and the lost-civilization idea. The Big Bang topic has two parts: the real rival that lost (steady state), and the rivals still being researched (cyclic and bounce models). The evolution topic has two parts: challenges that were absorbed into the science, and challenges that were answered and set aside. Conspiracy theories also get two classes, one on how we weigh evidence and one on case studies. Ancient astronauts fit in one class. Each class builds on the one before. The tools come first, then the topics, with the most evidence-rich cases first and the most speculative ones later. The course ends by putting the tools to use. Every class is taught by the contrary voice, and the regular teacher plays devil's advocate. Every class states the accepted view plainly and uses a thought experiment. Every class that presents an outside-the-mainstream idea opens with a warm 'Where this idea stands' beat. That beat gives one tier, with sources, and never mocks the idea or the people who hold it. Left out on purpose: any theory that targets a group of people, and any idea that could lead someone to harm their health. Where an idea has a history of being used that way, the class says so briefly and moves on.",
+ "classes": [
+  {
+   "n": 1,
+   "title": "How to play 'What if?': the five tiers and the evidence toolkit",
+   "goal": "The learner can name the five 'where this idea stands' tiers (mainstream consensus, active research debate, minority scholarly view, popular speculation, fiction). They can ask three questions of any claim: what would we expect to see, what do we actually see, and what else could explain it?",
+   "minutes": 20,
+   "topics": [
+    "How the class works: the contrary voice and the devil's advocate",
+    "The five tiers, explained plainly and kindly",
+    "What counts as evidence, and what 'accepted view' means",
+    "A first small thought experiment: what would change your mind?",
+    "What this course leaves out, and why"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 2,
+   "title": "The Younger Dryas: what happened at the end of the Ice Age?",
+   "goal": "The learner can describe the accepted picture of the Younger Dryas cold period. They can explain what the impact hypothesis proposes, why it is debated, and which tier it sits in.",
+   "minutes": 30,
+   "topics": [
+    "Where this idea stands: the Younger Dryas impact hypothesis",
+    "The accepted view of the end of the last Ice Age and the Younger Dryas",
+    "What the hypothesis claims and what evidence supporters point to",
+    "How other researchers have tested and answered those claims",
+    "Thought experiment: if a sudden event shook the climate, what traces would it leave?"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 3,
+   "title": "Civilizations before the end of the Ice Age?",
+   "goal": "The learner can state what archaeology currently says about the earliest cities and monuments. They can explain why some people suspect an earlier lost civilization and what evidence such a claim would need. They can also say why this idea has to be handled with respect for the people of the past.",
+   "minutes": 35,
+   "topics": [
+    "Where this idea stands: lost Ice Age civilization ideas",
+    "The accepted view of early human settlement, farming and monument-building",
+    "Sites that prompted the debate, such as Göbekli Tepe, and what they do and don't show",
+    "Rising sea levels and what may be underwater",
+    "Thought experiment: what would a lost civilization leave behind after 12,000 years?",
+    "Why 'ancient people couldn't have done it' is a weak argument, and how it can sell past peoples short"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 4,
+   "title": "The Big Bang and the rival that lost: steady state",
+   "goal": "The learner can explain the accepted Big Bang picture and its main lines of evidence. They can explain what the steady-state idea proposed and why most cosmologists moved away from it.",
+   "minutes": 30,
+   "topics": [
+    "Where this idea stands: the steady-state universe",
+    "The accepted view: an expanding universe with a hot, dense early stage",
+    "The main lines of evidence for the Big Bang",
+    "The history and the people behind steady state, and the debate it sparked",
+    "Thought experiment: if the universe always looked the same, what would we see in the night sky?",
+    "A good example of an outside idea that was properly tested"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 5,
+   "title": "Cycles and bounces: universes that begin again",
+   "goal": "The learner can describe what cyclic and bounce models propose. They can say how these differ from the standard picture, and where they stand today as ideas still being researched.",
+   "minutes": 30,
+   "topics": [
+    "Where this idea stands: cyclic and bounce cosmologies",
+    "What the standard picture can and can't say about the very beginning",
+    "The main cyclic and bounce proposals, in plain language",
+    "What each would need to show in observations to be taken more seriously",
+    "Thought experiment: what if our 'beginning' was a turning point?",
+    "Why 'we don't know yet' is an honest answer"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 6,
+   "title": "Challenges evolution absorbed: when outsiders improved the science",
+   "goal": "The learner can state the accepted core of evolutionary theory. They can give examples of challenges that led to real changes, and can explain how the field decided which challenges held up.",
+   "minutes": 35,
+   "topics": [
+    "Where this idea stands: the challenges covered in this class, each placed in its own tier",
+    "The accepted view: variation, inheritance and natural selection",
+    "Examples such as endosymbiosis, punctuated equilibrium and neutral theory",
+    "What is still debated, such as calls for an 'extended' synthesis",
+    "Thought experiment: what would count as evidence against a theory?",
+    "How science answers challenges: testing, argument, revision"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 7,
+   "title": "Challenges evolution answered: gaps, 'missing links' and irreducible complexity",
+   "goal": "The learner can explain a few common objections to evolution, what the accepted answers are, and the evidence behind those answers. They can do this respectfully and without mocking people who hold the objections.",
+   "minutes": 35,
+   "topics": [
+    "Where this idea stands: design-based and gap-based objections",
+    "The accepted view and what the fossil, genetic and lab evidence shows",
+    "'Missing links' and what transitional fossils are",
+    "Irreducible complexity and the scientific replies to it",
+    "Thought experiment: building a complicated structure without a plan, step by step",
+    "Why some people find these objections convincing, and the difference between a scientific question and a question of belief"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 8,
+   "title": "Ancient astronauts: did visitors build the pyramids?",
+   "goal": "The learner can explain what the ancient-astronaut idea claims and where it sits among the tiers. They can explain what archaeology says about how ancient monuments were built, and what real evidence of visitors would look like.",
+   "minutes": 30,
+   "topics": [
+    "Where this idea stands: ancient-astronaut ideas",
+    "The accepted view of how and why ancient monuments were built",
+    "The best-known claims and what researchers have found about each",
+    "The place of this idea in popular culture and fiction",
+    "Thought experiment: what would proof of a visit look like, and what would it not look like?",
+    "Giving credit to the people who built the monuments"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 9,
+   "title": "Real conspiracies and unproven ones: how people weigh evidence",
+   "goal": "The learner can tell the difference between a documented conspiracy and an unsupported theory. They can name common thinking habits, such as pattern-seeking and distrust, that make theories feel convincing, and can use a short checklist for weighing a claim.",
+   "minutes": 35,
+   "topics": [
+    "Where this idea stands: conspiracy theories in general, and why some conspiracies are real and documented",
+    "The accepted view: how historians and courts establish that a conspiracy happened",
+    "Examples of documented conspiracies and how they came to light",
+    "Why the mind finds patterns and wants causes that match the size of the event",
+    "Thought experiment: how many people can keep a secret?",
+    "A short checklist for weighing a claim"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 10,
+   "title": "Case studies: the Moon landings, a presidential assassination and other open questions",
+   "goal": "The learner can take one well-known conspiracy theory and say what the accepted account is. They can set out the evidence on each side and place the theory in a tier, using the checklist from Class 9.",
+   "minutes": 35,
+   "topics": [
+    "Where this idea stands: each case study gets its own tier and sources",
+    "Case study: the Moon landing claims, and the evidence that answers them",
+    "Case study: a presidential assassination and the official investigations",
+    "Possibly one more case study with no group-targeting and no health risk, chosen after research",
+    "What was left out on purpose: theories that target groups of people or that could harm health",
+    "Thought experiment: if you were the investigator, what would convince you?"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 11,
+   "title": "Your own 'What if?': putting the tools to work",
+   "goal": "The learner can pick an idea, place it in a tier, say what the accepted view is, and set out what evidence would change their mind. They can then discuss it kindly with someone who disagrees.",
+   "minutes": 25,
+   "topics": [
+    "Recap of the five tiers and the evidence toolkit",
+    "Choosing an idea and finding its accepted view",
+    "Building a short 'where this idea stands' summary",
+    "Disagreeing kindly: arguing with an idea, not a person",
+    "A final thought experiment chosen by the learner"
+   ],
+   "needs_research": false
+  }
+ ]
+}

@@ -1,0 +1,753 @@
+{
+ "about": {
+  "title": "Higher-order theories: when the mind represents itself",
+  "course": "consciousness",
+  "class_n": 5,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 25,
+  "length_note": "About 25 minutes. The class teaches one idea per step, so it has 24 short steps and 10 check questions. Each critic gets time to be heard, and so do the replies. If you are short on time, skip the evidence steps (11 and 12). The rest still hangs together."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Higher-Order Theories of Consciousness",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://plato.stanford.edu/entries/consciousness-higher/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Consciousness (Spring 2018 archive edition)",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "2018",
+   "link": "https://plato.stanford.edu/archives/spr2018/entries/consciousness/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Higher-Order Theories of Consciousness",
+   "publisher": "Open Encyclopedia of Cognitive Science (MIT)",
+   "date": "n.d.",
+   "link": "https://oecs.mit.edu/pub/qctxcxis/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Higher-order theories of consciousness",
+   "publisher": "Scholarpedia",
+   "date": "n.d.",
+   "link": "http://www.scholarpedia.org/article/Higher-order_theories_of_consciousness",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Rosenthal's Higher-Order Thought",
+   "publisher": "Closer To Truth (Landscape of Consciousness)",
+   "date": "n.d.",
+   "link": "https://loc.closertotruth.com/theory/rosenthal-s-higher-order-thought",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Understanding the Higher-Order Approach to Consciousness (abstract)",
+   "publisher": "Trends in Cognitive Sciences, via PhilArchive",
+   "date": "2019",
+   "link": "https://philarchive.org/rec/BROTMH",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Conscious Processing and the Global Neuronal Workspace Hypothesis",
+   "publisher": "PubMed Central (NIH)",
+   "date": "n.d.",
+   "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8770991/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Higher-Order Theories of Consciousness",
+   "publisher": "Internet Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://iep.utm.edu/higher-order-theories-of-consciousness/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Minds, Animal",
+   "publisher": "Internet Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://iep.utm.edu/animal-mind/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Higher-Order Thoughts and The Consciousness Paradox (interview with Rocco Gennaro)",
+   "publisher": "Interalia Magazine",
+   "date": "n.d.",
+   "link": "https://www.interaliamag.org/interviews/rocco-gennaro-higher-order-thoughts-and-the-consciousness-paradox/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Higher-Order Theories of Consciousness",
+   "publisher": "The Unfinishable Map",
+   "date": "n.d.",
+   "link": "https://unfinishablemap.org/concepts/higher-order-theories/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Is Higher-Order Misrepresentation Empirically Plausible?",
+   "publisher": "Frontiers in Psychology",
+   "date": "2022",
+   "link": "https://frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2022.804896/full",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Empty Thoughts: An Explanatory Problem for Higher-Order Theories of Consciousness",
+   "publisher": "Consciousness Online",
+   "date": "2012-02-17",
+   "link": "https://consciousnessonline.wordpress.com/2012/02/17/empty-thoughts-an-explanatory-problem-for-higher-order-theories-of-consciousness/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Relative blindsight in normal observers and the neural correlate of visual consciousness",
+   "publisher": "Proceedings of the National Academy of Sciences (Lau and Passingham)",
+   "date": "2006",
+   "link": "https://www.pnas.org/doi/10.1073/pnas.0607716103",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Relative blindsight arises from a criterion confound in metacontrast masking: Implications for theories of consciousness",
+   "publisher": "ScienceDirect",
+   "date": "n.d.",
+   "link": "https://www.sciencedirect.com/science/article/abs/pii/S1053810011002637",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Consciousness, Metacognition, & Perceptual Reality Monitoring",
+   "publisher": "PsyArXiv preprint (Hakwan Lau)",
+   "date": "2019-06-10",
+   "link": "https://osf.io/preprints/psyarxiv/ckbyf/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Rethinking the Simulation vs. Rendering Dichotomy: No Free Lunch in Spatial World Modelling",
+   "publisher": "arXiv preprint",
+   "date": "2025",
+   "link": "https://arxiv.org/pdf/2510.20835",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Does the Prefrontal Cortex Play an Essential Role in Consciousness? Insights from Intracranial Electrical Stimulation of the Human Brain",
+   "publisher": "Journal of Neuroscience",
+   "date": "2021",
+   "link": "https://www.jneurosci.org/content/41/10/2076.abstract",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Representational Theories of Consciousness (Summer 2003 archive edition)",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "2003",
+   "link": "https://plato.stanford.edu/archives/sum2003/entries/consciousness-representational",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Understanding the Higher-Order Approach to Consciousness (full text page)",
+   "publisher": "Trends in Cognitive Sciences, via ScienceDirect",
+   "date": "2019",
+   "link": "https://www.sciencedirect.com/science/article/pii/S1364661319301615",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Quotational higher-order thought theory",
+   "publisher": "Philosophical Studies (Springer)",
+   "date": "2015",
+   "link": "https://link.springer.com/doi/10.1007/s11098-015-0441-1",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Computational higher-order theories of consciousness",
+   "publisher": "PhilArchive preprint",
+   "date": "n.d.",
+   "link": "https://philarchive.org/archive/FLECHT",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Last class we met global workspace theory. It says a state is conscious when its information is broadcast widely for many uses."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Class 5: Higher-order theories"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Today's idea is different. Maybe what matters is whether the mind represents the state to itself. First, two terms."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "First-order and higher-order"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A first-order state is about the world, like seeing a red apple. A higher-order state is about another mental state, like 'I am seeing red.'"
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "First-order: seeing a red apple | Higher-order: 'I am seeing red'"
+   },
+   "cite": [
+    "s1",
+    "s22"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which of these is a higher-order thought?",
+    "right": "I notice that I am feeling nervous.",
+    "wrong": [
+     "The kettle is boiling.",
+     "That apple is red.",
+     "It will rain tomorrow."
+    ],
+    "why": "Only the nervous one is about your own mental state. The other three are about things in the world."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Higher-order theories start from a common-sense point. A mental state is conscious only if you are, in some way, aware of being in it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The transitivity principle"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So the big claim is this. What makes a mental state conscious is a higher-order representation aimed at that state."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Conscious = represented by the mind"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "According to higher-order theory, what makes a mental state conscious?",
+    "right": "The mind has a higher-order representation of being in that state.",
+    "wrong": [
+     "The state is broadcast to the whole brain.",
+     "The state is about the outside world.",
+     "The state is very strong or loud."
+    ],
+    "why": "Higher-order theory points to a representation of the state itself. Broadcasting is the global workspace answer from last class."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Does that higher-order thought have to be conscious too? If so, you would need a third thought, then a fourth, forever. So the theory says it need not be."
+   },
+   "show": {
+    "kind": "list",
+    "text": "State M is conscious | because a thought about M exists | that thought can stay unconscious"
+   },
+   "cite": [
+    "s19",
+    "s5"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why do higher-order theorists say the higher-order thought need not itself be conscious?",
+    "right": "Otherwise you would need an endless chain of further thoughts.",
+    "wrong": [
+     "Because thoughts are never conscious.",
+     "Because the brain only has room for two thoughts.",
+     "Because unconscious thoughts are always stronger."
+    ],
+    "why": "If every conscious state needed a conscious thought about it, the chain would never end. The theory stops the chain by allowing the higher-order thought to be unconscious."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "There are two main versions. They differ in what kind of state does the representing."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Higher-order thought (HOT): a thought-like state, 'I am in this state' | Higher-order perception (HOP): an inner sense that 'perceives' your own states"
+   },
+   "cite": [
+    "s1",
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The thought version is mostly linked to philosopher David Rosenthal. A state is conscious if you have a thought that you are in that state. That thought is a separate state from the one it is about."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Rosenthal: higher-order thought"
+   },
+   "cite": [
+    "s5",
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which version says we have an inner sense that observes our own mental states?",
+    "right": "Higher-order perception (inner sense).",
+    "wrong": [
+     "Higher-order thought.",
+     "Global workspace theory.",
+     "None of them."
+    ],
+    "why": "The perception version treats awareness as a kind of inner perceiving. The thought version treats it as a thought."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A newer version comes from neuroscientist Hakwan Lau. It is called perceptual reality monitoring. The brain judges whether a sensory signal reflects the real world or is just noise or imagination."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Perceptual reality monitoring"
+   },
+   "cite": [
+    "s16",
+    "s17"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In perceptual reality monitoring, what is the brain checking?",
+    "right": "Whether a sensory signal reflects the real world or is internally made, like noise or imagination.",
+    "wrong": [
+     "Whether a signal is loud enough to hear.",
+     "Whether the body is awake or asleep.",
+     "Whether a thought is written in words."
+    ],
+    "why": "The theory says the brain tells apart signals that reflect reality from those that are noise or imagination."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the best case for the theory. If awareness is a representation, it can be wrong, like any other representation. So how an experience seems can differ from the state underneath."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Best case: we can be wrong about our own experience"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the picture some versions give. Your first-order state is a visual state of red. But the higher-order state makes you consciously experience blue. This is no sign that something is wrong with you. On this view it is just how representing works."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two boxes. The lower box is labelled 'first-order: red'. An arrow points up to a higher box labelled 'higher-order: I see blue'. A person looks at the higher box."
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why can higher-order theory explain being wrong about our own experience?",
+    "right": "Because a representation of a state can be inaccurate, so how things seem can differ from the state itself.",
+    "wrong": [
+     "Because the first-order state is always false.",
+     "Because experiences are never real.",
+     "Because higher-order thoughts are always right."
+    ],
+    "why": "On versions that allow misrepresentation, the higher-order state can be inaccurate about its target. That is the room for error."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Is there evidence? Lau and Passingham, in 2006, showed shapes that were quickly masked. At two timings, people did equally well at telling the shapes apart. But they reported seeing them differently."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Same performance | Different reports of seeing | Different prefrontal activity"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "In that experiment, what stayed the same between the two conditions?",
+    "right": "How well people could tell the shapes apart.",
+    "wrong": [
+     "How much people said they saw the shapes.",
+     "Which brain areas were active.",
+     "The timing between the shape and the mask."
+    ],
+    "why": "The point of the design was equal performance but different awareness reports. The timing and the reports differed."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The better-seen condition came with more activity in part of the prefrontal cortex. Higher-order fans take that as support. But a later study found the effect vanished when performance and awareness were measured another way."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Supported, but contested"
+   },
+   "cite": [
+    "s14",
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now compare with global workspace. Workspace asks: was the information broadcast widely for use? Higher-order asks: did the mind represent itself as being in that state?"
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Global workspace: conscious = broadcast widely | Higher-order: conscious = represented by a higher-order state"
+   },
+   "cite": [
+    "s7",
+    "s22"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Both families give the front of the brain a big role. But the job differs. For higher-order theory, prefrontal cortex builds the representation of the first-order state. For workspace theory, the key job is global broadcasting."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Same place: prefrontal cortex | Higher-order job: represent the state | Workspace job: broadcast the information"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which description matches higher-order theory rather than global workspace theory?",
+    "right": "A state becomes conscious when a higher-order state represents it.",
+    "wrong": [
+     "A state becomes conscious when it is broadcast across the brain.",
+     "A state becomes conscious when it is very complicated.",
+     "A state becomes conscious when it is stored in memory."
+    ],
+    "why": "Broadcasting is the workspace answer. Higher-order theory says a representation of the state is what matters."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Some of the theory's own supporters call it an intermediate position. It sits between global workspace views and views that stay with early sensory processing."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "An intermediate position"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the critics. First criticism: do animals and babies have such thoughts? A thought like 'I am in this state' seems to need fairly sophisticated concepts."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Critic 1: animals and babies"
+   },
+   "cite": [
+    "s8",
+    "s10"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "If they lack those concepts, the theory says they are not conscious. Gennaro, a defender of the theory, states the problem plainly. Either infants and most animals are not conscious, or higher-order thought theory is false."
+   },
+   "show": {
+    "kind": "list",
+    "text": "No higher-order thoughts | So no consciousness | Or the theory is wrong"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Defenders reply in different ways. Gennaro says the self-concept needed can be very simple, and points to self-recognition studies in apes, dolphins and elephants. Brown, Lau and LeDoux say the requirements are less than often assumed. Carruthers, also a higher-order theorist, accepts the stronger conclusion."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Replies: a simple self-concept, or accept the conclusion"
+   },
+   "cite": [
+    "s9",
+    "s6",
+    "s10"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why do critics think higher-order theories may rule out consciousness in babies and animals?",
+    "right": "They may lack the concepts needed for higher-order thoughts.",
+    "wrong": [
+     "They have no brains.",
+     "They cannot see anything.",
+     "They never have first-order states."
+    ],
+    "why": "The worry is about concepts. A thought about your own state seems to need self and mental concepts that babies and animals may lack."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Second criticism: misrepresentation. What if the higher-order state says you are in a state you are not in? In the radical case, there is no first-order state at all."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Critic 2: misrepresentation"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Then what is conscious? The theory says a higher-order state makes a first-order state conscious. But there is no first-order state to make conscious. Critics say this costs the theory its explanation. Rosenthal accepts that experience can still occur."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Higher-order state exists | First-order target is missing | So what is conscious?"
+   },
+   "cite": [
+    "s13",
+    "s11"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "In radical misrepresentation, what is missing?",
+    "right": "The first-order state the higher-order state claims to be about.",
+    "wrong": [
+     "The higher-order state.",
+     "The brain.",
+     "The person."
+    ],
+    "why": "Radical misrepresentation means the higher-order state exists but the state it represents does not."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Third criticism: is it really about experience? Critics say the theory explains how we get access to our states, but not why that access feels like anything. This connects to the hard problem from class 2."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Critic 3: access, or experience?"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Defenders reply that the higher-order state is what makes up how things appear to us. Its content gives the subjective appearances."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Reply: the content is the appearance"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is the third criticism of higher-order theories?",
+    "right": "They may explain access to our states without explaining why it feels like anything.",
+    "wrong": [
+     "They say consciousness is never about the brain.",
+     "They cannot say anything about perception.",
+     "They say animals are always more conscious than humans."
+    ],
+    "why": "The third criticism is the link to the hard problem. Critics say access is not the same as experience."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let us pull it together. The idea: a state is conscious when the mind represents it. There are thought and perception versions. The best case is that it explains mistakes about our own experience."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Idea: conscious = represented | Versions: thought, perception, reality monitoring | Best case: explains error | Critics: animals and babies, misrepresentation, experience"
+   },
+   "cite": [
+    "s1",
+    "s3",
+    "s16",
+    "s8",
+    "s12",
+    "s11"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which sentence best sums up the best case for higher-order theory?",
+    "right": "It explains how our awareness of an experience can be mistaken, since awareness is a representation that can be wrong.",
+    "wrong": [
+     "It proves that animals are conscious.",
+     "It shows that consciousness is a broadcast.",
+     "It completely solves the hard problem."
+    ],
+    "why": "The best case is about error. The other three are not claims the theory's supporters make, or are exactly what the critics dispute."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next class: integrated information theory. It is a very different idea. Well done for working through this one."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Class 6, Integrated information theory"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Higher-order theories",
+   "links": [
+    "[[Global workspace theory]]",
+    "[[The hard problem]]",
+    "[[Animal minds]]",
+    "[[Machine minds]]",
+    "[[Predictive processing and the controlled hallucination]]"
+   ]
+  },
+  {
+   "topic": "First-order and higher-order states",
+   "links": [
+    "[[What do we mean by 'consciousness'?]]",
+    "[[Looking for consciousness in the brain]]"
+   ]
+  },
+  {
+   "topic": "Perceptual reality monitoring",
+   "links": [
+    "[[Predictive processing and the controlled hallucination]]"
+   ]
+  },
+  {
+   "topic": "Misrepresentation and empty higher-order thoughts",
+   "links": [
+    "[[The hard problem]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Higher-order theory explains what makes a state conscious.",
+   "other_view": "Critics say it explains access to our own states but not why that access feels like anything. Defenders reply that the content of the higher-order state makes up how things appear to us.",
+   "cite": [
+    "s11",
+    "s3"
+   ]
+  },
+  {
+   "claim": "The 2006 relative blindsight result supports higher-order theory.",
+   "other_view": "A later replication found the effect vanished when performance was measured with a bias-free task, or when the awareness criterion was varied. Another study found the same effect in a different setup, so the matter is still debated.",
+   "cite": [
+    "s14",
+    "s15"
+   ]
+  },
+  {
+   "claim": "Higher-order theory needs thoughts that animals and babies may not have.",
+   "other_view": "Gennaro argues the needed self-concept can be very simple. Brown, Lau and LeDoux argue the requirements are lower than critics assume. Carruthers accepts that most animals may not be conscious on the theory.",
+   "cite": [
+    "s9",
+    "s6",
+    "s10"
+   ]
+  },
+  {
+   "claim": "Allowing misrepresentation leaves the theory with nothing to explain when the target state is missing.",
+   "other_view": "Critics such as Block and Levine press this objection. Rosenthal accepts experience can occur anyway. One paper argues the charge of incoherence fails, and another argues misrepresentation is empirically plausible.",
+   "cite": [
+    "s13",
+    "s11",
+    "s21",
+    "s12"
+   ]
+  },
+  {
+   "claim": "The prefrontal cortex is central to conscious experience, as higher-order theories suggest.",
+   "other_view": "Intracranial electrical stimulation of prefrontal cortex rarely changed what people experienced, which challenges both higher-order and global workspace theories. Brown, Lau and LeDoux discuss whether prefrontal cortex is necessary and reply to such challenges.",
+   "cite": [
+    "s18",
+    "s20"
+   ]
+  }
+ ]
+}

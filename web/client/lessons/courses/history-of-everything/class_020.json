@@ -1,0 +1,1294 @@
+{
+ "about": {
+  "title": "Thinkers and Teachers: Buddha, Confucius, the Greeks and the Prophets",
+  "course": "history-of-everything",
+  "class_n": 20,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. There are five traditions plus a debate, so I used short beats with one idea each and kept Greece to three thinkers. Each tradition gets its own question, and the Axial Age debate gets its own section at the end."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Buddhism - The life of the Buddha (Britannica)",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Buddhism/The-life-of-the-Buddha",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "Buddhism (Britannica)",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Buddhism",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "Buddha (Stanford Encyclopedia of Philosophy)",
+   "publisher": "Stanford University",
+   "date": "n.d.",
+   "link": "https://plato.stanford.edu/entries/buddha/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "Buddhism for Beginners: A Clear, Honest Introduction",
+   "publisher": "e-buddhism.com",
+   "date": "n.d.",
+   "link": "https://e-buddhism.com/buddhism-for-beginners/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "Buddha - Quotes, Teachings & Facts",
+   "publisher": "Biography.com",
+   "date": "n.d.",
+   "link": "https://www.biography.com/religious-figures/buddha",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "Mahavira (Britannica)",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/biography/Mahavira-Jaina-teacher",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "Confucianism - The Analects as the embodiment of Confucian ideas (Britannica)",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Confucianism/The-Analects-as-the-embodiment-of-Confucian-ideas",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "Ethics - Confucianism, Daoism, Legalism (Britannica)",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/ethics-philosophy/China",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "Confucius (551-479 B.C.) from The Analects and The Book of Filial Piety",
+   "publisher": "University of Utah, Marriott Library",
+   "date": "n.d.",
+   "link": "https://ethicsofsuicide.lib.utah.edu/selections/confucius/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "Analects",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Analects",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "Selections from Confucius' Analects (PDF)",
+   "publisher": "Otterbein University",
+   "date": "2020",
+   "link": "https://www.otterbein.edu/alumni/wp-content/uploads/sites/4/2020/11/Selections-from-Confucius-Analects.pdf",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "Analects of Confucius (translation by A. Charles Muller)",
+   "publisher": "acmuller.net",
+   "date": "n.d.",
+   "link": "http://www.acmuller.net/con-dao/analects.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "Confucius (Stanford Encyclopedia of Philosophy)",
+   "publisher": "Stanford University",
+   "date": "n.d.",
+   "link": "https://plato.stanford.edu/entries/confucius/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "Laozi (Stanford Encyclopedia of Philosophy)",
+   "publisher": "Stanford University",
+   "date": "n.d.",
+   "link": "https://plato.stanford.edu/entries/laozi/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "Laozi (Lao-tzu) (Internet Encyclopedia of Philosophy)",
+   "publisher": "Internet Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://iep.utm.edu/laozi/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "Daoism, in World Religions: The Spirit Searching",
+   "publisher": "Minnesota Libraries Publishing (Pressbooks)",
+   "date": "n.d.",
+   "link": "https://mlpp.pressbooks.pub/worldreligionsthespiritsearching/chapter/daoism/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "Confucianism and Daoism: On the relationship between the Analects, Laozi, and Zhuangzi, Part I",
+   "publisher": "Philosophy Compass (Wiley), via ResearchGate",
+   "date": "2020",
+   "link": "https://www.researchgate.net/publication/343852458_Confucianism_and_Daoism_On_the_relationship_between_the_Analects_Laozi_and_Zhuangzi_Part_I",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "Zoroastrianism",
+   "publisher": "Encyclopedia.com",
+   "date": "n.d.",
+   "link": "https://www.encyclopedia.com/philosophy-and-religion/ancient-religions/ancient-religion/zoroastrianism",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "Ancient Zoroastrianism",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/history/ancient-zoroastrianism",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "Zoroaster ii. General Survey",
+   "publisher": "Encyclopaedia Iranica",
+   "date": "n.d.",
+   "link": "https://www.iranicaonline.org/articles/zoroaster-ii-general-survey/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "Zoroastrianism: Dates & Origins",
+   "publisher": "World Zoroastrian Organisation",
+   "date": "n.d.",
+   "link": "https://www.w-z-o.org/zoroastrianism/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "Latter Prophets",
+   "publisher": "Minnesota State Colleges and Universities (Pressbooks)",
+   "date": "n.d.",
+   "link": "https://minnstate.pressbooks.pub/bible/chapter/latter-prophets/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "Prophets in Israel",
+   "publisher": "Loyola Press",
+   "date": "n.d.",
+   "link": "https://www.loyolapress.com/catholic-resources/scripture-and-tradition/scripture/prophets-in-israel/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "Prophets (Nevi'im)",
+   "publisher": "My Jewish Learning",
+   "date": "n.d.",
+   "link": "https://www.myjewishlearning.com/article/prophets-neviim/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "Yehud (Persian province)",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Yehud_(Persian_province)",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "The Cyrus Cylinder and Ancient Persia: A New Beginning",
+   "publisher": "J. Paul Getty Museum, Getty Villa",
+   "date": "n.d.",
+   "link": "https://www.getty.edu/art/exhibitions/cyrus_cylinder/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "Cyrus Cylinder",
+   "publisher": "Livius.org",
+   "date": "n.d.",
+   "link": "https://www.livius.org/sources/content/cyrus-cylinder/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "The Cyrus Cylinder and Ancient Persia: Charting a New Empire",
+   "publisher": "The Metropolitan Museum of Art",
+   "date": "2013",
+   "link": "https://www.metmuseum.org/exhibitions/listings/2013/cyrus-cylinder",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s29",
+   "title": "Greek philosophy (Britannica)",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Greek-philosophy",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s30",
+   "title": "Ancient Greek Philosophy (Internet Encyclopedia of Philosophy)",
+   "publisher": "Internet Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://iep.utm.edu/ancient-greek-philosophy/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s31",
+   "title": "Socrates",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Socrates",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s32",
+   "title": "Plato",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Plato",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s33",
+   "title": "Greek Philosophy: Socrates, Plato, and Aristotle - Complete Guide",
+   "publisher": "AnticoAntico",
+   "date": "n.d.",
+   "link": "https://www.anticoantico.com/en/guide/ancient-greece/greek-philosophy",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s34",
+   "title": "Axial Age",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Axial_Age",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s35",
+   "title": "Karl Jaspers and the Axial Age ... was it really a thing?",
+   "publisher": "David Myton, Substack",
+   "date": "n.d.",
+   "link": "https://davidmyton.substack.com/p/karl-jaspers-and-the-axial-age-was",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s36",
+   "title": "Inventing the axial age: the origins and uses of a historical concept (Boy and Torpey)",
+   "publisher": "Cleveland State University, The Ancient World (Pressbooks)",
+   "date": "n.d.",
+   "link": "https://pressbooks.ulib.csuohio.edu/the-ancient-world/wp-content/uploads/sites/29/2018/06/Boy-and-Torpey-Inventing-the-Axial-Age.pdf",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s37",
+   "title": "Between facts and myth: Karl Jaspers and the actuality of the axial age",
+   "publisher": "Taylor & Francis",
+   "date": "n.d.",
+   "link": "https://www.tandfonline.com/doi/full/10.1080/21692327.2015.1136794",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s38",
+   "title": "Complex societies gave birth to big gods, not the other way around: study",
+   "publisher": "Phys.org",
+   "date": "2019-03",
+   "link": "https://phys.org/news/2019-03-complex-societies-gave-birth-big.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s39",
+   "title": "Complex societies precede moralizing gods throughout world history (PubMed record, with retraction note)",
+   "publisher": "National Library of Medicine (PubMed)",
+   "date": "2019",
+   "link": "https://pubmed.ncbi.nlm.nih.gov/30894750/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s40",
+   "title": "RETRACTED: Complex societies precede moralizing gods throughout world history (record with note)",
+   "publisher": "Human Relations Area Files, Yale University",
+   "date": "n.d.",
+   "link": "https://hraf.yale.edu/ehc/documents/1225",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s41",
+   "title": "Corrected analyses show that moralizing gods precede complex societies but serious data concerns remain",
+   "publisher": "ResearchGate",
+   "date": "n.d.",
+   "link": "https://www.researchgate.net/publication/332832750_Corrected_analyses_show_that_moralizing_gods_precede_complex_societies_but_serious_data_concerns_remain",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Last class we met the big empires of the Iron Age. Today we meet people who asked a different question: how should a person live?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Thinkers and Teachers"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, an idea to carry with you. In 1949 a German philosopher, Karl Jaspers, gave a name to this period: the 'Axial Age', as if history turned on a hinge."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Axial Age"
+   },
+   "cite": [
+    "s34"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "His claim: in China, India, Persia, Judea and Greece, the spiritual foundations of humanity were laid at about the same time, independently. We will visit each place, then test his claim."
+   },
+   "show": {
+    "kind": "list",
+    "text": "India: Buddha, Mahavira | China: Confucius, Laozi | Persia and Judea: Zoroaster, the prophets | Greece: Socrates, Plato, Aristotle | The debate"
+   },
+   "cite": [
+    "s34"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Stop one, India. The teacher called the Buddha lived in northern India, sometime between the mid-6th and mid-4th centuries BCE. He was born in what is now southern Nepal."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "India: the Buddha"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "His name was Siddhartha Gautama. 'Buddha' means 'one who is awakened'. His life is known largely through legend, and the written texts about him come centuries after his death."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Buddha = 'the awakened one'"
+   },
+   "cite": [
+    "s5",
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The story goes like this. He grew up in luxury, shielded from old age, sickness and death. He gave up his wealth to live as an ascetic, someone who lives with great simplicity and self-denial."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Luxury and comfort | Gives up wealth and family | Six years of meditation and extreme self-denial"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Then he gave up the extreme self-denial, sat in meditation under a tree, and received enlightenment. That insight is often identified with the Four Noble Truths."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A man sitting calmly in meditation under a large tree"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here are the Four Noble Truths. The first is that suffering is part of existence. The second says suffering comes from craving. The third says it can end. The fourth is a path that leads to its end."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. There is suffering | 2. Suffering comes from craving | 3. Suffering can end | 4. There is a path to its end"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "According to the Four Noble Truths, where does suffering come from?",
+    "right": "From craving",
+    "wrong": [
+     "From the anger of the gods",
+     "From being born into the wrong family",
+     "From breaking a ritual"
+    ],
+    "why": "The second Noble Truth explains the origin of suffering as craving. The third says it can end, and the fourth gives a path to ending it."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "There's one more thing to know about the Buddha. Scholars agree he was a real person, but they do not agree on when he lived. Look at three answers for the year he died."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Three answers for the year the Buddha died",
+    "chart": "c1"
+   },
+   "cite": [
+    "s5",
+    "s3",
+    "s4"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "What do scholars agree about the Buddha?",
+    "right": "He was a real person, but the dates of his life are debated",
+    "wrong": [
+     "His exact birth and death years are known from his own writings",
+     "He never existed and the story is all legend",
+     "He lived in Greece at the same time as Socrates"
+    ],
+    "why": "Biography.com says scholars agree he existed but still debate the dates. Older books say about 483 BCE for his death. Many scholars now say around 400 BCE."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next, a second teacher from the same region of India: Mahavira, the central figure of Jainism. Jain tradition counts 24 'Tirthankaras', or ford-makers, and Mahavira is the last."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "India: Mahavira and Jainism"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The traditional dates are about 599 to 527 BCE. He grew up near Vaishali, where both Jainism and Buddhism began. That makes him a neighbour and near-contemporary of the Buddha."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "c. 599–527 BCE (traditional dates)"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Mahavira taught ahimsa, nonviolence in all circumstances, plus five great vows of renunciation. He especially avoided injuring any kind of life."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ahimsa = nonviolence"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does ahimsa mean?",
+    "right": "Nonviolence, not harming living things",
+    "wrong": [
+     "Obedience to one's parents",
+     "Belief in a single god",
+     "Sitting in silent meditation"
+    ],
+    "why": "Britannica says Mahavira advocated nonviolence (ahimsa) in all circumstances and avoided injuring any kind of life."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Stop two, China. Confucius lived from 551 to 479 BCE. The best source for his thought is the Analects, a book of sayings and conversations."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "China: Confucius (551–479 BCE)"
+   },
+   "cite": [
+    "s8",
+    "s9"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "He didn't write the Analects himself. It is credited to his disciples. So we hear him through his students, much as we hear Socrates through Plato later in this class."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Analects = sayings of Confucius, gathered by disciples"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "His key idea is 'ren', often translated humaneness, goodness or benevolence. The Analects lists five qualities of a good person. Ren comes first. The other four are righteousness, ritual propriety, wisdom and trustworthiness."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ren = humaneness"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is an example. In the Analects a student asks what ren is. The answer is only two words, and it is about caring for other people."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "\"Love men.\" (Analects 12.22: love people)"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which idea did Confucius treat as his central virtue?",
+    "right": "Ren, humaneness or goodness toward others",
+    "wrong": [
+     "Craving",
+     "Ahimsa as a vow of silence",
+     "Winning honour in battle"
+    ],
+    "why": "Ren was central to Confucius, and his answer about it was to love people."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So where does ren begin? Confucius saw respect for parents, called filial piety, as the first step toward moral excellence. Britannica says it doesn't mean blind obedience. It means reverence for the source of your life."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Filial piety = respect for parents, the first step toward ren"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What did Confucius treat as the first step toward being good?",
+    "right": "Respect and care for your parents (filial piety)",
+    "wrong": [
+     "Leaving society to live alone",
+     "Memorising the law codes",
+     "Winning wars for your ruler"
+    ],
+    "why": "Britannica says Confucius saw filial piety as the first step toward moral excellence, which he thought lay in ren."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "He also valued ritual, called 'li'. Law and punishment give a minimum of order. The higher goal, social harmony, comes through virtue shown in ritual."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Li = ritual that builds harmony"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a very different Chinese answer: Daoism. 'Dao' literally means 'Way'. Its classic book, the Daodejing, is made of short sayings, not an argued system."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "China: the Way of the Dao"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Chinese tradition links the book to Laozi, said to have lived in the 6th century BCE. To follow the Dao, says Britannica, is to live simply and honestly, being true to yourself."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Confucius: ren, respect for parents, ritual, duty | Laozi: simplicity, honesty, gentleness, calm"
+   },
+   "cite": [
+    "s14",
+    "s8"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which sounds most like Laozi's teaching?",
+    "right": "Live simply and honestly, true to yourself",
+    "wrong": [
+     "Perform every ritual exactly right",
+     "Obey your ruler in all things",
+     "Win glory and rank"
+    ],
+    "why": "Britannica describes the Dao as a simple, honest life. It says Laozi found rank, luxury and glamour empty compared with a peaceful inner life."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Who was Laozi? Even this is debated. His name means 'Old Master', and some scholars say he may be legendary. The Daoist religion later honoured him as a deity."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Laozi: person or legend?"
+   },
+   "cite": [
+    "s15",
+    "s16"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Stop three, Persia. Zoroaster, also called Zarathustra, is linked to the Gathas. These are old hymns believed to be his own, and they sit inside the scripture called the Avesta."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Persia: Zoroaster"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Gathas use the name Ahura Mazda for God. The religion was firmly established by the time of the Persian emperor Darius the Great, who ruled 522 to 486 BCE."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ahura Mazda"
+   },
+   "cite": [
+    "s21",
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "But when did Zoroaster live? Tradition said 258 years before Alexander the Great, which gives the sixth century BCE. Most modern historians say much earlier, roughly 1500 to 1000 BCE."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Tradition: 6th century BCE | Most modern historians: about 1500–1000 BCE"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why do many modern historians date Zoroaster much earlier than the 6th century BCE?",
+    "right": "The language of the Gathas and the customs they mention point to roughly 1500–1000 BCE",
+    "wrong": [
+     "A tomb with his name on it was found",
+     "Greek writers gave the exact year",
+     "Persian kings wrote it on a stone cylinder"
+    ],
+    "why": "Encyclopedia.com says these historians base their estimate on the language of the Gathas and on the social customs they refer to."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Stop four, Judea, and the Hebrew prophets. In the Hebrew Bible, prophets speak to the nation in times of crisis. Amos and Hosea warned that turning away from God's covenant would bring destruction by the Assyrians."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Judea: the Hebrew prophets"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One crisis was Assyria, centred on the fall of Israel in 722 BCE. Prophets then included Amos, Hosea, Isaiah and Micah. The second was Babylon's destruction of Jerusalem around 586 BCE, with Jeremiah and Ezekiel."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "722 BCE: Israel falls to Assyria (Amos, Hosea, Isaiah, Micah) | 586 BCE: Jerusalem destroyed by Babylon (Jeremiah, Ezekiel)"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Amos was a shepherd from Tekoa who insisted he wasn't a professional prophet. His message was unwelcome to Israel's rulers. Its heart is justice."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "\"Let justice roll down like water.\""
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What was the heart of Amos's message?",
+    "right": "Justice",
+    "wrong": [
+     "Conquest",
+     "Silence and withdrawal",
+     "Rituals above all else"
+    ],
+    "why": "Loyola Press says justice is the heart of Amos's message, and that it displeased Israel's ruling powers."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Jeremiah delivered warnings as the Babylonians approached and captured Jerusalem. Ezekiel, from exile in Babylonia, pictured Israel restored to its land. The last half of the Book of Isaiah offers comfort from anonymous prophets in exile."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Jeremiah: warns before the fall of Jerusalem | Ezekiel: from exile, pictures a restoration | Later Isaiah: comfort from anonymous prophets in exile"
+   },
+   "cite": [
+    "s24",
+    "s23"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Jeremiah and Ezekiel belong to which crisis?",
+    "right": "The Babylonian conquest and the destruction of Jerusalem",
+    "wrong": [
+     "The fall of Israel to Assyria in 722 BCE",
+     "The conquests of Alexander the Great",
+     "The rise of the Roman Republic"
+    ],
+    "why": "The Minnesota text places Amos, Hosea, Isaiah and Micah in the Assyrian crisis. It places Jeremiah and Ezekiel around the Babylonian destruction of Jerusalem in 586 BCE."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Persia and Judea now meet. In 539 BCE the Persian king Cyrus captured Babylon. The Cyrus Cylinder records him restoring shrines and letting deported peoples go home. The Bible says Jewish exiles were among them."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A clay cylinder covered in rows of cuneiform writing"
+   },
+   "cite": [
+    "s26",
+    "s28"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Stop five, Greece. Britannica traces Greek philosophy from early thinkers of the 6th and 5th centuries BCE, to Socrates, Plato and Aristotle in classical Athens, to schools like the Stoics and Epicureans."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Greece: Socrates, Plato, Aristotle"
+   },
+   "cite": [
+    "s29"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Socrates lived about 470 to 399 BCE. He wrote nothing himself. We know him through students such as Plato and Xenophon. His method was asking questions that expose errors in what people believe."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Socratic method: questions that expose inconsistencies"
+   },
+   "cite": [
+    "s31",
+    "s30",
+    "s33"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is an example. In Plato's Crito, Socrates sits in prison facing death. A friend urges him to escape. Socrates asks whether escaping would be just."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "An older man seated in a prison cell, speaking calmly with a friend"
+   },
+   "cite": [
+    "s30"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was Socrates' method?",
+    "right": "Asking questions to expose errors in people's positions",
+    "wrong": [
+     "Writing long treatises",
+     "Reciting hymns",
+     "Meditating under a tree"
+    ],
+    "why": "The Internet Encyclopedia of Philosophy says Socrates aimed to expose errors or inconsistencies in the positions of the people he questioned."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Plato, about 428 to 347 BCE, was Socrates' pupil. He wrote dialogues. He is best known for the Theory of Forms: our physical world is an imperfect reflection of eternal, unchanging Forms."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Plato's Forms: perfect and eternal"
+   },
+   "cite": [
+    "s32",
+    "s33"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why is it hard to know what Socrates really thought?",
+    "right": "He wrote nothing himself, and we rely on others like Plato, whose portrayal may not be exact",
+    "wrong": [
+     "His books were all burned by the Persians",
+     "He taught only in secret",
+     "Nobody wrote about him at all"
+    ],
+    "why": "Socrates left no writings. Scholars debate how accurately the dialogues portray him, and the exact relation between Plato and Socrates is contested."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Aristotle was Plato's student, and he took a different road. He worked in logic, physics, biology, ethics and politics, and he grounded his thinking in observable reality."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Socrates: asked for definitions of virtues | Plato: explored abstract Forms | Aristotle: grounded in observable reality"
+   },
+   "cite": [
+    "s33",
+    "s29"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which Greek thinker grounded his philosophy in observable reality?",
+    "right": "Aristotle",
+    "wrong": [
+     "Socrates",
+     "Plato",
+     "Laozi"
+    ],
+    "why": "Britannica says Socrates sought definitions of virtues, Plato explored abstract Forms, and Aristotle grounded his philosophy in observable reality."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the big question. Was there really an 'Axial Age'? Jaspers' window was about 800 to 200 BCE. Fans of the idea, such as Karen Armstrong, use it to explain the rise of compassion-based ethics."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "800–200 BCE"
+   },
+   "cite": [
+    "s35"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Critics start with timing. Zoroaster may have lived around 1000 BCE, before Jaspers' window. And the sociologist Robert Bellah said the changes were more gradual and ran beyond it."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Jaspers: a bounded age, 800–200 BCE | Critics: changes were gradual and uneven"
+   },
+   "cite": [
+    "s35",
+    "s20"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why does the uncertain date of Zoroaster matter for the Axial Age idea?",
+    "right": "If he lived around 1000 BCE or earlier, he falls before Jaspers' window",
+    "wrong": [
+     "It proves Zoroaster invented writing",
+     "It shows the Buddha lived in Greece",
+     "It means Persia had no empire"
+    ],
+    "why": "The Axial Age idea depends on a window of time. If Zoroaster belongs to about 1000 BCE or earlier, he is outside it."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Others object to the picture itself. Eisenstadt said it oversimplified the diversity of civilisations. Cobb said it was Eurocentric and neglected African and indigenous cultures. Others say it makes too sharp a break between before and after."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Too simple | Eurocentric: leaves out many cultures | Too sharp a break between 'before' and 'after'"
+   },
+   "cite": [
+    "s35",
+    "s36"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A newer test used data. Seshat is a database of about 500 past societies. In 2019 researchers reported that belief in moralizing gods tended to follow growth in social complexity, not come before it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Seshat: a database of 500 past societies"
+   },
+   "cite": [
+    "s38"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Then it got messy. That Nature paper was retracted in 2021 over concerns about its data. The authors republished corrected analyses, and a rival team said the corrected data reverse the result. It is still being debated."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "First study: complexity came first | Critics: corrected data reverse this, though concerns remain"
+   },
+   "cite": [
+    "s39",
+    "s40",
+    "s41"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What did the original Seshat study report?",
+    "right": "Moralizing gods tended to follow growth in social complexity",
+    "wrong": [
+     "Moralizing gods always came first",
+     "Complex societies never had religions",
+     "The Axial Age began in exactly 500 BCE"
+    ],
+    "why": "The 2019 study found that in nearly every region studied, moralizing gods followed increases in social complexity. That finding was later challenged."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So where does that leave us? The thinkers are real and influential. Whether they add up to one tidy 'Age' is disputed. One scholar even argues the idea itself has become a myth."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Real thinkers, disputed 'Age'"
+   },
+   "cite": [
+    "s34",
+    "s37"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which is a real criticism of the Axial Age idea?",
+    "right": "It bundles several regions into one tidy age, though dates vary and many cultures are left out",
+    "wrong": [
+     "It was first proposed in ancient Greece",
+     "Everyone agrees on the exact dates of each teacher",
+     "Nobody has ever challenged it"
+    ],
+    "why": "Jaspers proposed it in 1949. Critics say the dates vary and that the idea oversimplifies and leaves out many cultures, and its validity is disputed."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To sum up: a seeker in India, a teacher in China, a prophet in Judea, a questioner in Athens. Each asked how to live well. Next time we go deeper into Greece, in Classical Greece."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Classical Greece"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Three answers for the year the Buddha died (years BCE; a bigger number means earlier)",
+   "rows": [
+    {
+     "label": "Traditional Theravada reckoning (about)",
+     "value": 544,
+     "source": "s4"
+    },
+    {
+     "label": "Early 20th-century scholarly view (about)",
+     "value": 483,
+     "source": "s4"
+    },
+    {
+     "label": "Much recent scholarship (about)",
+     "value": 400,
+     "source": "s4"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Four Noble Truths",
+   "links": [
+    "[[Buddha]]",
+    "[[Ashoka and the spread of Buddhism]]"
+   ]
+  },
+  {
+   "topic": "Ahimsa",
+   "links": [
+    "[[Jainism]]",
+    "[[Mahavira]]"
+   ]
+  },
+  {
+   "topic": "Ren and li",
+   "links": [
+    "[[Confucius]]",
+    "[[Han dynasty]]"
+   ]
+  },
+  {
+   "topic": "Dao",
+   "links": [
+    "[[Laozi]]",
+    "[[Daodejing]]"
+   ]
+  },
+  {
+   "topic": "Zoroastrianism",
+   "links": [
+    "[[Persian Empire]]",
+    "[[Darius the Great]]"
+   ]
+  },
+  {
+   "topic": "Hebrew prophets",
+   "links": [
+    "[[Assyrian Empire]]",
+    "[[Babylonian exile]]",
+    "[[Cyrus the Great]]"
+   ]
+  },
+  {
+   "topic": "Socratic method",
+   "links": [
+    "[[Socrates]]",
+    "[[Plato]]",
+    "[[Classical Greece]]"
+   ]
+  },
+  {
+   "topic": "Axial Age",
+   "links": [
+    "[[Karl Jaspers]]",
+    "[[Seshat Global History Databank]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "c. 750-700 BCE",
+   "elsewhere": "The prophets Amos and Isaiah were speaking in Israel and Judah while Assyria threatened the region. Israel fell to Assyria in 722 BCE.",
+   "cite": [
+    "s22"
+   ]
+  },
+  {
+   "when": "c. 600-586 BCE",
+   "elsewhere": "Babylon destroyed Jerusalem around 586 BCE, and the prophet Ezekiel had been exiled to Babylon in 597 BCE. Chinese tradition places Laozi in the 6th century BCE, and Jain tradition dates Mahavira to about 599-527 BCE.",
+   "cite": [
+    "s22",
+    "s25",
+    "s14",
+    "s6"
+   ]
+  },
+  {
+   "when": "539 BCE",
+   "elsewhere": "Cyrus the Great (ruled 559-530 BCE) captured Babylon. Confucius, born in 551 BCE, would have been about twelve. On the older reckoning the Buddha (563-483 BCE) was alive too.",
+   "cite": [
+    "s26",
+    "s8",
+    "s4"
+   ]
+  },
+  {
+   "when": "522-486 BCE",
+   "elsewhere": "Darius the Great ruled Persia. His whole reign fell within Confucius's lifetime (551-479 BCE).",
+   "cite": [
+    "s19",
+    "s8"
+   ]
+  },
+  {
+   "when": "399 BCE",
+   "elsewhere": "Socrates died in Athens. On the newer dating, the Buddha had died only a few years before, around 405 BCE. Confucius had died about eighty years earlier.",
+   "cite": [
+    "s31",
+    "s3",
+    "s8"
+   ]
+  },
+  {
+   "when": "356-323 BCE",
+   "elsewhere": "Alexander the Great lived. Aristotle, who had ties to his court, left Athens after Alexander's fall. We pick up this story in the next classes.",
+   "cite": [
+    "s18",
+    "s30"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The Buddha lived from about 563 to 483 BCE.",
+   "other_view": "Scholars agree he existed but not when. The Theravada tradition's own count is earlier, at about 624-544 BCE. Much recent scholarship favours about 480-400 BCE, and the Stanford Encyclopedia says many scholars now put his death around 405 BCE.",
+   "cite": [
+    "s3",
+    "s4",
+    "s2"
+   ]
+  },
+  {
+   "claim": "Mahavira founded Jainism.",
+   "other_view": "Britannica says he may be regarded as its founder. Jain tradition says he systematized and reformed older teachings, including those of the 23rd Tirthankara, Parshvanatha, a 7th-century BCE teacher.",
+   "cite": [
+    "s6"
+   ]
+  },
+  {
+   "claim": "Laozi was a real person who wrote the Daodejing, and Confucianism and Daoism were two separate schools.",
+   "other_view": "Some scholars treat Laozi as legendary, and some call the Daodejing an anonymous text. One scholarly article says the early 'schools' are modern labels, since there is little evidence of organised factions in early China.",
+   "cite": [
+    "s15",
+    "s16",
+    "s17"
+   ]
+  },
+  {
+   "claim": "Zoroaster lived in the 6th century BCE, as tradition says.",
+   "other_view": "Most modern historians date him roughly 1500-1000 BCE from the language of the Gathas. A few put him later. Some scholars even deny that he wrote the Gathas, while others see in them a real individual and community.",
+   "cite": [
+    "s18",
+    "s20"
+   ]
+  },
+  {
+   "claim": "The Cyrus Cylinder proves Cyrus let the Jewish exiles go home.",
+   "other_view": "The Biblical books say he did, and the Met says that is thought to be when the Jews returned. But Livius notes that the Cylinder does not mention Jews, since it focuses on lands east of the Tigris.",
+   "cite": [
+    "s28",
+    "s27",
+    "s26"
+   ]
+  },
+  {
+   "claim": "The Socrates of Plato's dialogues is the real Socrates.",
+   "other_view": "Socrates wrote nothing, and scholars debate how authentically Plato's dialogues portray him. The precise relation between Plato's views and those of Socrates is also contested.",
+   "cite": [
+    "s31",
+    "s32"
+   ]
+  },
+  {
+   "claim": "There was a single Axial Age, around 800-200 BCE, when the great traditions arose.",
+   "other_view": "Critics say the dates vary, the picture is too simple and Eurocentric, and it exaggerates the break with earlier civilisations. Supporters, such as Karen Armstrong, still find it useful for explaining the rise of compassion-based ethics.",
+   "cite": [
+    "s34",
+    "s35",
+    "s36",
+    "s37"
+   ]
+  },
+  {
+   "claim": "Big data show that moralizing gods appeared after societies grew complex.",
+   "other_view": "The 2019 Seshat paper found this, but it was retracted in 2021 over data concerns. The authors republished corrected analyses, and critics reported that corrected data point the other way. The question remains open.",
+   "cite": [
+    "s38",
+    "s39",
+    "s40",
+    "s41"
+   ]
+  }
+ ]
+}

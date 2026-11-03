@@ -1,0 +1,1136 @@
+{
+ "about": {
+  "title": "Fire and the changing body",
+  "course": "prehistory",
+  "class_n": 4,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 25,
+  "length_note": "About 25 minutes. Fire has a lot to cover: three kinds of fire control, three sites that each get two dates, daily life, Homo erectus, and two open debates. The beats are short and each has a check question, so the class runs a little longer than a bare outline would. It can be split in two at the 'daily life' beat."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Microstratigraphic evidence of in situ fire in the Acheulean strata of Wonderwerk Cave, Northern Cape province, South Africa",
+   "publisher": "Proceedings of the National Academy of Sciences (Berna et al.)",
+   "date": "2012-04-02",
+   "link": "https://www.pnas.org/doi/10.1073/pnas.1117620109",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Humans used fire a million years ago",
+   "publisher": "University of Toronto News",
+   "date": "2012-04-02",
+   "link": "https://www.utoronto.ca/news/humans-used-fire-million-years-ago",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "From the ashes, the oldest controlled fire",
+   "publisher": "Science News",
+   "date": "n.d.",
+   "link": "https://www.sciencenews.org/article/ashes-oldest-controlled-fire",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "New evidence for Early Pleistocene use of fire at Wonderwerk Cave (South Africa)",
+   "publisher": "PLOS ONE",
+   "date": "2026-06-01",
+   "link": "https://journals.plos.org/plosone/article?id=10.1371%2Fjournal.pone.0347480",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Traces of Homo erectus Fire Use Dated to 1.8 Million Years Ago",
+   "publisher": "Archaeology Magazine",
+   "date": "2026-06-26",
+   "link": "https://archaeology.org/news/2026/06/26/traces-of-homo-erectus-fire-use-dated-to-1-8-million-years-ago/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Early Humans May Have Used Fire 1.8 Million Years Ago, Nearly Doubling the Age of the Oldest Known Evidence for the Feat",
+   "publisher": "Smithsonian Magazine",
+   "date": "2026-06",
+   "link": "https://www.smithsonianmag.com/smart-news/early-humans-may-have-used-fire-1-8-million-years-ago-nearly-doubling-the-age-of-the-oldest-known-evidence-for-the-feat-180989015/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Early humans were bringing fire into caves 1.8 million years ago",
+   "publisher": "ScienceDaily",
+   "date": "2026-06-24",
+   "link": "https://www.sciencedaily.com/releases/2026/06/260623083123.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Finding an Old Flame",
+   "publisher": "Penn Gazette (University of Pennsylvania)",
+   "date": "n.d.",
+   "link": "https://thepenngazette.com/finding-an-old-flame/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Fire-Altered Stone Tools",
+   "publisher": "Smithsonian Institution Human Origins Program",
+   "date": "n.d.",
+   "link": "https://humanorigins.si.edu/evidence/behavior/hearths-shelters/fire-altered-stone-tools",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Gesher Benot Ya'aqov (Acheulian Site Project)",
+   "publisher": "Hebrew University of Jerusalem",
+   "date": "n.d.",
+   "link": "http://gby.huji.ac.il/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Pleistocene Milestones on the Out-of-Africa Corridor at Gesher Benot Ya'aqov, Israel",
+   "publisher": "Science (Goren-Inbar et al.)",
+   "date": "2000",
+   "link": "https://www.science.org/doi/10.1126/science.289.5481.944",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Oldest evidence of the controlled use of fire to cook food",
+   "publisher": "Phys.org (on Zohar et al., Nature Ecology & Evolution)",
+   "date": "2022-11",
+   "link": "https://phys.org/news/2022-11-oldest-evidence-cook-food.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "The first barbecue: Earliest evidence of cooking found in 780,000-year-old grilled fish",
+   "publisher": "Haaretz",
+   "date": "2022-11-14",
+   "link": "https://www.haaretz.com/archaeology/2022-11-14/ty-article/earliest-evidence-of-cooking-found-in-780-000-year-old-grilled-fish/00000184-6150-df31-afc5-e7d83eb20000",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Scientists Find Earliest Evidence of Hominins Cooking with Fire",
+   "publisher": "Sci.News",
+   "date": "2022-11",
+   "link": "https://www.sci.news/archaeology/earliest-evidence-cooking-11393.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Groundbreaking discovery shows earliest evidence of fire-making",
+   "publisher": "British Museum",
+   "date": "2025-12-10",
+   "link": "https://www.britishmuseum.org/about-us/press/press-releases/groundbreaking-discovery-shows-earliest-evidence-fire-making",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "British discovery shows earliest evidence of humans making fire",
+   "publisher": "UCL Social & Historical Sciences",
+   "date": "2025-12",
+   "link": "https://www.ucl.ac.uk/social-historical-sciences/news/2025/dec/british-discovery-shows-earliest-evidence-humans-making-fire",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Archaeologists find earliest known fire made by humans",
+   "publisher": "CNN",
+   "date": "2025-12-10",
+   "link": "https://www.cnn.com/2025/12/10/science/earliest-fire-use-neanderthals",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Did we start the fire? A 400,000-year-old hearth sparks new questions about human evolution",
+   "publisher": "NBC News",
+   "date": "2025-12-10",
+   "link": "https://www.nbcnews.com/science/science-news/early-human-fire-evolution-rcna247493",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Could These 400,000-Year-Old Rock Fragments Be the Oldest Known Evidence of Human Fire-Making?",
+   "publisher": "Smithsonian Magazine",
+   "date": "2025-12",
+   "link": "https://www.smithsonianmag.com/smart-news/could-these-400000-year-old-rock-fragments-be-the-oldest-known-evidence-of-human-fire-making-180987861/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "This is the oldest evidence of people starting fires (Ars Technica, via Harvard TagTeam feed)",
+   "publisher": "Ars Technica",
+   "date": "2025-12-10",
+   "link": "https://tagteam.harvard.edu/hub_feeds/1804/feed_items/17115718",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "On the earliest evidence for habitual use of fire in Europe",
+   "publisher": "Proceedings of the National Academy of Sciences (Roebroeks and Villa)",
+   "date": "2011-03-14",
+   "link": "https://pubmed.ncbi.nlm.nih.gov/21402905/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Did humans colonize the northern latitudes without fire?",
+   "publisher": "John Hawks (blog)",
+   "date": "n.d.",
+   "link": "https://www.johnhawks.net/p/did-humans-colonize-the-northern-latitudes-without-fire",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Monkeys' Attraction to Burned Grasslands May Offer Clues to Human Ancestors' Mastery of Fire",
+   "publisher": "Smithsonian Magazine",
+   "date": "n.d.",
+   "link": "https://www.smithsonianmag.com/science-nature/monkeys-attraction-burned-grasslands-may-offer-clues-human-ancestors-mastery-fire-180975527/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "Why Fire Makes Us Human",
+   "publisher": "Smithsonian Magazine",
+   "date": "n.d.",
+   "link": "https://www.smithsonianmag.com/science-nature/why-fire-makes-us-human-72989884/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Cooking Up Bigger Brains",
+   "publisher": "Scientific American",
+   "date": "n.d.",
+   "link": "https://www.scientificamerican.com/article/cooking-up-bigger-brains/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Fire Good. Make Human Inspiration Happen.",
+   "publisher": "Smithsonian Magazine",
+   "date": "n.d.",
+   "link": "https://www.smithsonianmag.com/science-nature/fire-good-make-human-inspiration-happen-132494650/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "Homo erectus, our ancient ancestor",
+   "publisher": "Natural History Museum, London",
+   "date": "n.d.",
+   "link": "https://www.nhm.ac.uk/discover/homo-erectus-our-ancient-ancestor.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "10.3: Homo Erectus (ANT-103: Physical Biological Anthropology)",
+   "publisher": "LibreTexts, Lake Tahoe Community College",
+   "date": "n.d.",
+   "link": "https://socialsci.libretexts.org/Courses/Lake_Tahoe_Community_College/ANT-103:_Physical_Biological_Anthropology/10:_Early_Members_of_the_Genus_Homo/10.03:_Homo_Erectus",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "Homo erectus",
+   "publisher": "Becoming Human (Institute of Human Origins, Arizona State University)",
+   "date": "n.d.",
+   "link": "https://becominghuman.org/hominin-fossils/homo-erectus/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "Homo erectus: Body structure",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Homo-erectus/Body-structure",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class four: Fire and the changing body. Today we ask how fire changed daily life, and when people first took control of it."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Fire and the changing body"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last class was stone tools. Fire is another tool, and a strange one: you can't hold it, and it can run away from you. The original hot topic."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Fire: a tool you can't hold"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First idea: using fire. That means making use of a fire nature started, like a wildfire. Some researchers think our ancestors first met fire this way."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "1. Using fire"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Second idea: keeping fire. That means carrying flames somewhere else and feeding them so they don't go out."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "2. Keeping fire"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Third idea: making fire. That means starting a flame yourself, on demand. One way is striking flint against a mineral called pyrite to throw sparks."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "3. Making fire"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So there are three steps: use it, keep it, make it. Let's check you have them straight."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Using: borrow a natural fire | Keeping: carry it and feed it | Making: start it yourself"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A group carries a burning branch from a wildfire into a cave and feeds it until it dies out. Which step is this?",
+    "right": "Keeping fire",
+    "wrong": [
+     "Making fire",
+     "Cooking food",
+     "Nothing, because fire can't be carried"
+    ],
+    "why": "They didn't start the flame, but they moved it and fed it. That is keeping fire, not making it."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why does this matter? Because 'when did people control fire?' has a different answer for each step. Keep the three steps in mind all class."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Which step are we talking about?"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "How do we know about fire at all? Look for a hearth: a spot where fires were lit again and again. Fire leaves ash, burned bone, burned seeds and wood, and scorched stone."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Hearth: a place where fire was lit, again and again"
+   },
+   "cite": [
+    "s2",
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is an example from a site we'll visit soon: pieces of flint scorched by fire. Burned seeds and wood were found close by."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Three small pieces of flint, scorched and discoloured by burning, from Gesher Benot Ya'aqov in Israel."
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here's the trouble. Wildfires also leave burned ground, and the traces can be tiny and subtle. Archaeologists have to be careful."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Wildfires leave burned traces too | Old fire traces are subtle and hard to detect"
+   },
+   "cite": [
+    "s22",
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So what clues help? Burned pieces in tight clusters, fires repeated in the same spot, burning deep inside a cave, and signs of heat."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Dense clusters, not random scatter | Repeated fires in one spot | Burning deep inside a cave | Evidence of heating (about 500 degrees C in one case)"
+   },
+   "cite": [
+    "s13",
+    "s16",
+    "s6",
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Burned flints lie in tight clusters, in the same spots, across thousands of years. Which explanation fits best?",
+    "right": "People lit fires at those spots again and again",
+    "wrong": [
+     "One wildfire swept through once",
+     "The wind blew the flints into piles",
+     "Nobody can say anything at all"
+    ],
+    "why": "A single bush fire would scatter burned pieces at random. Dense clusters in repeated spots point to hearths."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now three sites, and each gets two dates. First, when people used fire there. Second, when archaeologists found it. Our first site is Wonderwerk Cave in South Africa."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The inside of Wonderwerk Cave, looking toward the back: a long, narrow tube in a hillside, with layered deposits being excavated."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Wonderwerk is a tube-shaped cave about 140 metres long, in the Kuruman Hills. Its two dates are very far apart."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Fire burned in the cave: about 1.79 to 1.07 million years ago | Found: 1940s, diggers taking cave dung for fertiliser expose old tools | 1970s-1990s: Peter Beaumont excavates | 2012: fire traces published | June 2026: older fire traces reported"
+   },
+   "cite": [
+    "s1",
+    "s8",
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The 2012 team found microscopic wood ash and burned bone with stone tools, in a layer about a million years old. The bone had been heated to around 500 degrees Celsius."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Wonderwerk 2012: ash, burned bone, tools, about 1 million years ago"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Notice the odd part. Beaumont had dug up this material long before. It took microscopes to recognise it as fire, so it was found twice. The team saw no sign of wind, water or wildfire."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Dug up once, recognised as fire decades later"
+   },
+   "cite": [
+    "s3",
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In June 2026 a new study reported fire traces in older layers, between about 1.07 and 1.79 million years ago. It used the glow of burned bone as a test."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1,790,000 years ago (upper end of the 2026 range)"
+   },
+   "cite": [
+    "s7",
+    "s4"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "But the team does not think these people lit the fire. Michael Chazan describes it as collecting a fire from the landscape. He says fire use was probably only occasional."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Kept, not made"
+   },
+   "cite": [
+    "s5",
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What do the Wonderwerk researchers think the early people did with fire?",
+    "right": "They carried and maintained fire from natural wildfires, but probably didn't light it",
+    "wrong": [
+     "They made fire with flint and pyrite",
+     "They baked fish in an earth oven",
+     "They never used fire at all"
+    ],
+    "why": "The researchers describe collecting a natural fire and keeping it going, not starting one."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Second site: Gesher Benot Ya'aqov, in Israel's Jordan Valley. About 780,000 years ago it was the shore of an ancient lake, called paleo-Lake Hula."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Northern Israel, south of the Hula Valley, along the Jordan River; the site lies on the corridor between Africa and Eurasia."
+   },
+   "cite": [
+    "s11",
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Again two dates. People lived there about 780,000 years ago. Archaeologists have studied it since the 1930s, with big digs in 1989 to 1997."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "People camp on the lake shore: about 780,000 years ago, returning over tens of thousands of years | Found: investigated since the 1930s | Excavated 1989-1997 under Naama Goren-Inbar | Fire evidence: Smithsonian lists 2004"
+   },
+   "cite": [
+    "s11",
+    "s12",
+    "s10",
+    "s9"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The fire evidence there is burned flint in dense clusters, plus burned seeds and wood. That points to hearths used again and again."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Gesher: clusters of burned flint = hearths"
+   },
+   "cite": [
+    "s9",
+    "s13"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 2022 researchers reported something more: teeth of a large carp-like fish near those burned-flint clusters, showing it was cooked. Cooking here means heating food at a controlled temperature."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Cooked fish, about 780,000 years ago"
+   },
+   "cite": [
+    "s12",
+    "s14"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was the evidence for cooking at Gesher Benot Ya'aqov?",
+    "right": "Fish teeth near burned-flint clusters, showing the fish had been heated",
+    "wrong": [
+     "Clay pots with stew inside",
+     "A written recipe",
+     "Burnt loaves of bread"
+    ],
+    "why": "The cooking evidence came from fish teeth found within or next to the burned-flint clusters."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Before this, firm evidence of cooking was only about 170,000 years old. That is a big jump back, and it shows how much depends on new methods."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "170,000 years -> 780,000 years"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Third site: Barnham, in Suffolk, England. About 400,000 years ago it was the edge of a stream-fed pond, with grass and woodland around it."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "An old clay pit in Suffolk, where archaeologists dig deep trenches into the sediments of an ancient dried-up pond."
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Its two dates again. People lit fires there about 400,000 years ago, probably early Neanderthals. Workers found stone tools in the early 1900s, and the fire evidence took until 2025."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Fires lit: about 400,000 years ago, probably early Neanderthals | Found: stone tools first noticed in the early 1900s | Excavations 1989-1994 | First pyrite fragment found 2017 | Published in Nature, December 2025"
+   },
+   "cite": [
+    "s15",
+    "s20",
+    "s17"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The evidence: baked earth forming a hearth, heat-shattered flint hand axes, and two pieces of iron pyrite. Pyrite throws sparks when struck with flint. The team thinks it was brought in on purpose."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Baked earth hearth | Heat-cracked flint hand axes | Two fragments of iron pyrite"
+   },
+   "cite": [
+    "s17",
+    "s16",
+    "s18"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why does the pyrite at Barnham matter?",
+    "right": "It makes sparks and was probably brought to the site, suggesting people made fire rather than only keeping it",
+    "wrong": [
+     "It was a food the people cooked",
+     "It was a stone used to build walls",
+     "It proves they lived in houses"
+    ],
+    "why": "Pyrite plus flint makes sparks. If it was carried in, that points to deliberate fire-making."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here are the claims side by side. The older ones are about keeping fire. Only the youngest, Barnham, is argued to show fire being made."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Claims for early fire, in years ago",
+    "chart": "c2"
+   },
+   "cite": [
+    "s7",
+    "s2",
+    "s11",
+    "s15"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "In the chart, which claim is argued to show fire being made, not only kept?",
+    "right": "Barnham, about 400,000 years ago",
+    "wrong": [
+     "Wonderwerk Cave, about 1.79 million years ago",
+     "Wonderwerk Cave, about 1 million years ago",
+     "Gesher Benot Ya'aqov, about 780,000 years ago"
+    ],
+    "why": "Barnham is the one with the pyrite and flint. The researchers say they have the earliest evidence of making fire."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now daily life. What did a fire give a family? Four things: warmth, protection, light, and cooked food."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Warmth | Protection | Light | Cooked food"
+   },
+   "cite": [
+    "s9",
+    "s26"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Fire gave comfort in the cold and safety from predators. At night it gave light. People could gather round it to socialise and share food and news."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A small group seated close around a glowing campfire at night, with darkness beyond."
+   },
+   "cite": [
+    "s9",
+    "s26"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Then cooking. Cooked food is easier to digest, so the body gets more energy from it. Great apes spend four to seven hours a day just chewing."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Cooking: easier to digest, more energy"
+   },
+   "cite": [
+    "s16",
+    "s24"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "How does cooking help the body?",
+    "right": "It makes food easier to digest, so more energy is gained from the same food",
+    "wrong": [
+     "It removes the need to eat",
+     "It makes teeth grow back",
+     "It makes food colder and lighter"
+    ],
+    "why": "Cooking improves digestibility and energy intake."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the body. Homo erectus appeared about 1.8 million years ago. It was the first of our relatives with human-like proportions: shorter arms and longer legs for its torso."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Homo erectus: a human-like body"
+   },
+   "cite": [
+    "s27",
+    "s29"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Its brain was bigger than earlier Homo. Estimates vary, but sources put the average near 900 cc or more, and its teeth were smaller than Homo habilis."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Average braincase size (cc)",
+    "chart": "c1"
+   },
+   "cite": [
+    "s30",
+    "s28",
+    "s27"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A fair warning: the body grew too. Compared with body size, the Homo erectus brain was not much bigger than Homo habilis."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Bigger brain, but a bigger body too"
+   },
+   "cite": [
+    "s29"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Big brains burn lots of energy. The 'expensive tissue' idea, from Leslie Aiello and Peter Wheeler in 1995, says a smaller gut can free up energy for a bigger brain."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Expensive tissue hypothesis: smaller gut, bigger brain"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What trade-off does the expensive tissue idea describe?",
+    "right": "A smaller gut saves energy that a bigger brain can use",
+    "wrong": [
+     "A bigger gut makes a bigger brain",
+     "A bigger brain needs less food",
+     "Smaller teeth always mean a smaller brain"
+    ],
+    "why": "The idea is a trade-off between two costly organs, the gut and the brain."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Where does fire fit? Richard Wrangham argues cooking was the real breakthrough, fuelling the brain. His timeline puts it around when Homo erectus appeared. That is where the argument starts."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Wrangham's cooking hypothesis"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First debate: when did regular fire use begin? Three views. Very early, for Homo erectus. Around a million years ago or 780,000. Or only about 400,000 to 300,000 years ago."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Early: about 1.8 million years ago (Wrangham; hints at Wonderwerk) | Middle: about 1 million to 780,000 years ago (Wonderwerk 2012, Gesher) | Late: regular use from about 400,000 to 300,000 years ago (Roebroeks and Villa, for Europe)"
+   },
+   "cite": [
+    "s24",
+    "s7",
+    "s2",
+    "s11",
+    "s21"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Wil Roebroeks and Paola Villa reviewed European sites. They found early people reached cold northern Europe without regular fire. They don't rule out earlier fire, but say it wasn't habitual."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Habitual fire in Europe: about 400,000-300,000 years ago"
+   },
+   "cite": [
+    "s21",
+    "s22"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Rick Potts adds a warning. Saying early people 'must have' used fire is not evidence. In his view only physical remains, like hearths and burned tools, can set the date."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "'Must have' is not evidence"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Second debate: did cooking drive bigger brains? Aiello and Wheeler think energy-rich animal foods like marrow and brain did it. Skeptics also say the archaeology of fire doesn't reach back far enough."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Cooking explains it (Wrangham) | Meat and marrow explain it (Aiello and Wheeler); fire evidence too late (skeptics)"
+   },
+   "cite": [
+    "s25",
+    "s24"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why do some experts doubt that cooking drove bigger brains in Homo erectus?",
+    "right": "Archaeological evidence for controlled fire doesn't clearly reach that far back, and eating more animal food could explain the same changes",
+    "wrong": [
+     "Because nobody ever cooked food",
+     "Because Homo erectus had a smaller brain than Homo habilis",
+     "Because cooking makes food harder to digest"
+    ],
+    "why": "Skeptics point to gaps in the fire record and to meat as another explanation. Wrangham answers that no other time fits the body changes so well."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So what is safe to say? Fire was used long before we can show it was made. The oldest claims are about keeping wildfire. Fire-making is shown from about 400,000 years ago."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Earliest claims: keeping natural fire, probably occasional | Fire-making: argued from about 400,000 years ago | Cooking and brain size: still debated"
+   },
+   "cite": [
+    "s5",
+    "s15",
+    "s21"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which statement is the safest summary?",
+    "right": "Fire use probably began long before fire-making can be shown, and scientists still debate when regular use began",
+    "wrong": [
+     "Everyone agrees people controlled fire 2 million years ago",
+     "Cooking is proven to have caused our big brains",
+     "Homo erectus lit fires with pyrite"
+    ],
+    "why": "The evidence for early fire is real but contested. Making fire is shown much later than keeping it, and the cooking-and-brains link is still argued."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next class: leaving Africa the first time. Keep today's question in mind: how did people cope in colder lands, with or without regular fire?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Leaving Africa the first time"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Average braincase size (cubic centimetres)",
+   "rows": [
+    {
+     "label": "Homo habilis",
+     "value": 640,
+     "source": "s30"
+    },
+    {
+     "label": "Homo erectus (Java)",
+     "value": 930,
+     "source": "s30"
+    },
+    {
+     "label": "Homo erectus (China)",
+     "value": 1029,
+     "source": "s30"
+    },
+    {
+     "label": "Homo sapiens",
+     "value": 1350,
+     "source": "s30"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Claims for early fire (years ago)",
+   "rows": [
+    {
+     "label": "Wonderwerk Cave 2026 (kept, not made): upper end",
+     "value": 1790000,
+     "source": "s7"
+    },
+    {
+     "label": "Wonderwerk Cave 2012 (ash and burned bone)",
+     "value": 1000000,
+     "source": "s2"
+    },
+    {
+     "label": "Gesher Benot Ya'aqov (hearths, cooked fish)",
+     "value": 780000,
+     "source": "s11"
+    },
+    {
+     "label": "Barnham (argued fire-making)",
+     "value": 400000,
+     "source": "s15"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Fire: using, keeping, making",
+   "links": [
+    "[[Hearth]]",
+    "[[The first stone tools]]",
+    "[[Cooking hypothesis]]"
+   ]
+  },
+  {
+   "topic": "Hearth",
+   "links": [
+    "[[How we know: reading the deep past without writing]]",
+    "[[Wonderwerk Cave]]",
+    "[[Gesher Benot Ya'aqov]]",
+    "[[Barnham]]"
+   ]
+  },
+  {
+   "topic": "Wonderwerk Cave",
+   "links": [
+    "[[Hearth]]",
+    "[[Homo erectus]]",
+    "[[Fire: using, keeping, making]]"
+   ]
+  },
+  {
+   "topic": "Gesher Benot Ya'aqov",
+   "links": [
+    "[[Leaving Africa the first time]]",
+    "[[Hearth]]",
+    "[[Cooking hypothesis]]"
+   ]
+  },
+  {
+   "topic": "Barnham",
+   "links": [
+    "[[Fire: using, keeping, making]]",
+    "[[Our species, our cousins: Homo sapiens, Neanderthals and Denisovans]]"
+   ]
+  },
+  {
+   "topic": "Homo erectus",
+   "links": [
+    "[[Leaving Africa the first time]]",
+    "[[Expensive tissue hypothesis]]",
+    "[[Cooking hypothesis]]"
+   ]
+  },
+  {
+   "topic": "Cooking hypothesis",
+   "links": [
+    "[[Expensive tissue hypothesis]]",
+    "[[Homo erectus]]"
+   ]
+  },
+  {
+   "topic": "Expensive tissue hypothesis",
+   "links": [
+    "[[Cooking hypothesis]]",
+    "[[Homo erectus]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About 1.8 million years ago",
+   "elsewhere": "Homo erectus appears in the fossil record. The species is dated from about 1.8 million to 112,000 years ago.",
+   "cite": [
+    "s29"
+   ]
+  },
+  {
+   "when": "About 780,000 years ago",
+   "elsewhere": "People at Gesher Benot Ya'aqov were living on a corridor between Africa and Eurasia, a route later important in the out-of-Africa story.",
+   "cite": [
+    "s11"
+   ]
+  },
+  {
+   "when": "About 400,000 years ago",
+   "elsewhere": "Early Neanderthals lived in the region. Fossils of about the same age come from Swanscombe in Kent and Atapuerca in Spain.",
+   "cite": [
+    "s15"
+   ]
+  },
+  {
+   "when": "About 170,000 years ago",
+   "elsewhere": "Before the 2022 Gesher fish study, this was the date of the firmest evidence of cooking, by early Homo sapiens and Neanderthals.",
+   "cite": [
+    "s14"
+   ]
+  },
+  {
+   "when": "About 50,000 years ago",
+   "elsewhere": "Neanderthals in northern France made fire. This was the oldest known fire-making evidence until Barnham in 2025.",
+   "cite": [
+    "s15"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Fire traces at Wonderwerk Cave up to about 1.8 million years ago show Homo erectus controlled fire.",
+   "other_view": "The study team does not claim these people lit fires. Michael Chazan says they collected a fire from the landscape, and that use was probably only occasional. Wil Roebroeks, who was not involved, says any fire use was marginal, not habitual. Rick Potts says a 'must have' argument is not evidence.",
+   "cite": [
+    "s5",
+    "s6",
+    "s23"
+   ]
+  },
+  {
+   "claim": "Barnham shows fire-making about 400,000 years ago, the earliest known.",
+   "other_view": "The authors say fire-making probably did not begin at Barnham. Wil Roebroeks, though, thinks the claim stretches the evidence, and no fire-lighting tools with friction marks have been found there yet.",
+   "cite": [
+    "s17",
+    "s18",
+    "s19"
+   ]
+  },
+  {
+   "claim": "Cooking made bigger brains possible, starting with Homo erectus (Richard Wrangham).",
+   "other_view": "Aiello and Wheeler agree that smaller guts go with bigger brains, but think energy-rich animal foods caused it. Skeptics say the archaeology of controlled fire doesn't support such early cooking. Wrangham replies that no other period fits the body changes so well.",
+   "cite": [
+    "s24",
+    "s25"
+   ]
+  },
+  {
+   "claim": "Early people could only have settled cold northern lands with fire.",
+   "other_view": "Many archaeologists have thought so. Roebroeks and Villa's review of European sites suggests early people got there without habitual fire, and that regular fire use there dates from about 300,000 to 400,000 years ago.",
+   "cite": [
+    "s21",
+    "s22"
+   ]
+  }
+ ]
+}

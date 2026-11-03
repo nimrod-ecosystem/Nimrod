@@ -1,0 +1,1361 @@
+{
+ "about": {
+  "title": "The Rise of Islam and the Caliphates",
+  "course": "history-of-everything",
+  "class_n": 27,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. There are 52 short beats and 14 quick checks. Each idea is taught in small steps, and the class includes a short debate about how we know this history."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "The Prophet Muhammad and the Origins of Islam",
+   "publisher": "The Metropolitan Museum of Art",
+   "date": "n.d.",
+   "link": "https://www.metmuseum.org/learn/educators/curriculum-resources/art-of-the-islamic-world/unit-one/the-prophet-muhammad-and-the-origins-of-islam",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "Hijrah",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/event/Hijrah-Islam",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "Battle of Badr",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/event/Battle-of-Badr",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "Muhammad's Successors",
+   "publisher": "Lumen Learning (SUNY HCCC World Civilization)",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/suny-hccc-worldcivilization/chapter/muhammads-successors/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "Rashidun Caliphate",
+   "publisher": "Wikiwand (mirror of Wikipedia)",
+   "date": "n.d.",
+   "link": "https://www.wikiwand.com/en/Rashidun_Caliphate",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "Military conquests of Umar's era",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Military_conquests_of_Umar%27s_era",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "Military campaigns under Caliph Uthman",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Military_campaigns_under_Caliph_Uthman",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "Rashidun army",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Rashidun_army",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "Early Muslim conquests",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Early_Muslim_conquests",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "Umayyad dynasty",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Umayyad-dynasty-Islamic-history",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "Abbasid Revolution",
+   "publisher": "King Saud University (faculty web page)",
+   "date": "n.d.",
+   "link": "https://faculty.ksu.edu.sa/en/aalmusayid/page/132143",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "Abd al-Malik ibn Marwan (summary)",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/summary/Abd-al-Malik-Umayyad-caliph",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "Dome of the Rock",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Dome_of_the_Rock",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "The Origins Of The Shiite-Sunni Split (transcript)",
+   "publisher": "NPR",
+   "date": "n.d.",
+   "link": "https://www.npr.org/transcripts/7332087",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "Chronology: A History of the Shiite-Sunni Split",
+   "publisher": "NPR",
+   "date": "2007-02-12",
+   "link": "https://www.npr.org/2007/02/12/7280905/chronology-a-history-of-the-shia-sunni-split",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "Flawed Summaries of the Sunni-Shi'i Split",
+   "publisher": "Alex Thurston (Substack)",
+   "date": "n.d.",
+   "link": "https://alexthurston.substack.com/p/flawed-summaries-of-the-sunni-shii",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "Revisionist school of Islamic studies",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Revisionist_school_of_Islamic_studies",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "The New Historiography of Islamic Origins: A Review of Some Recent Trends in the Field",
+   "publisher": "Islamic Origins",
+   "date": "n.d.",
+   "link": "https://islamicorigins.com/the-new-historiography-of-islamic-origins/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "Sayf ibn Umar",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Sayf_ibn_Umar",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "First Islamic state",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/First_Islamic_state",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "Abbasid Caliphate",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Abbasid_Caliphate",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "Round City of Baghdad",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Round_City_of_Baghdad",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "House of Wisdom",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/House_of_Wisdom",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "Basra",
+   "publisher": "Encyclopaedia Iranica",
+   "date": "n.d.",
+   "link": "https://www.iranicaonline.org/articles/basra/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "The Islamic Empire at the heart of commerce in the medieval world",
+   "publisher": "The Map as History",
+   "date": "n.d.",
+   "link": "https://www.the-map-as-history.com/origins-of-islam-and-the-arabo-muslim-empire/the-islamic-empire-at-the-heart-of-commerce-in-the-medieval-world",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "Tang dynasty",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Tang_dynasty",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "Battle of Tours",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/event/Battle-of-Tours-732",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "Xuanzang",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Xuanzang",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s29",
+   "title": "7. Western Europe and Byzantium circa 500-1000 CE",
+   "publisher": "Open world history textbook on Manifold (alg.manifoldapp.org)",
+   "date": "n.d.",
+   "link": "https://alg.manifoldapp.org/read/world-history/section/3cd0120b-1d40-49be-b270-bbe783ddbeb2",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s30",
+   "title": "Flight from Mecca to Medina",
+   "publisher": "Lumen Learning (SUNY HCCC World Civilization)",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/suny-hccc-worldcivilization/chapter/flight-from-mecca-to-medina/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s31",
+   "title": "Muhammad and the Rise of Islam",
+   "publisher": "Lumen Learning (Boundless World History)",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/tc3-boundless-worldhistory/chapter/muhammad-and-the-rise-of-islam/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s32",
+   "title": "Islam's Sunni-Shia Divide, Explained",
+   "publisher": "HISTORY",
+   "date": "n.d.",
+   "link": "https://www.history.com/articles/sunni-shia-divide-islam-muslim",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s33",
+   "title": "Sunni versus Shia: Origin Story of the Divide",
+   "publisher": "World History Edu",
+   "date": "n.d.",
+   "link": "https://worldhistoryedu.com/sunni-versus-shia-origin-story-of-the-divide/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s34",
+   "title": "Sunni and Shia Split Timeline",
+   "publisher": "Preceden",
+   "date": "n.d.",
+   "link": "https://www.preceden.com/timeline/sunni-and-shia-split",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s35",
+   "title": "Abd al-Malik (Research Starters)",
+   "publisher": "EBSCO",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/biography/abd-al-malik/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s36",
+   "title": "Abd al-Malik: Accomplishments & Coinage Reform",
+   "publisher": "StudySmarter",
+   "date": "n.d.",
+   "link": "https://www.studysmarter.co.uk/explanations/history/spread-of-islam/abd-al-malik/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s37",
+   "title": "From Forgery to Formation: An Intellectual History of Western Scholarship on the Hadith",
+   "publisher": "Quran Talk Blog",
+   "date": "2026-10-16",
+   "link": "https://qurantalkblog.com/2026/10/16/from-forgery-to-formation-an-intellectual-history-of-western-scholarship-on-the-hadith/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s38",
+   "title": "Muhsini Dilemma",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Muhsini_Dilemma",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 27. Today we follow a new faith from a trading town in Arabia to a huge empire. We will go one step at a time."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Rise of Islam and the Caliphates"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is our path: Muhammad and Arabia, the first four caliphs, the Umayyads and the Sunni–Shia split, the Abbasids and Baghdad, trade, and then a debate about how we know any of this."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Arabia and Muhammad; 2. The first four caliphs; 3. Umayyads and the Sunni–Shia split; 4. Abbasids, Baghdad, trade and cities; 5. A debate: how do we know?"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Start in Arabia. Southern Arabia had long been rich from trade, and routes ran north toward Syria and south toward Yemen, meeting at Mecca."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map of Arabia around 600 CE: trade routes running north to Syria and south to Yemen, crossing at Mecca, with Medina to the north."
+   },
+   "cite": [
+    "s9",
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Muhammad was born in Mecca around the year 570. His tribe, the Quraysh, was the most powerful there, and it controlled trade along Arabia's west coast. He later worked as a merchant."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Quraysh"
+   },
+   "cite": [
+    "s1",
+    "s31"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What gave the Quraysh their power in Mecca?",
+    "right": "They controlled trade along routes that crossed at Mecca.",
+    "wrong": [
+     "They ruled the Persian Empire.",
+     "They owned the biggest farms along the Nile.",
+     "They led the Roman army."
+    ],
+    "why": "Several trade routes met at Mecca, and the Quraysh controlled the trade along them."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Muslims believe that while Muhammad meditated near Mecca, the angel Gabriel appeared to him. This was the first of many revelations, which became the Qur'an, the holy book of Islam."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A quiet mountain slope near Mecca at dawn, with a small cave opening: Mount Hira."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "For about three years he preached privately, mainly among relatives and close friends. Later, opposition in Mecca grew."
+   },
+   "show": {
+    "kind": "list",
+    "text": "First 3 years: private preaching; then: growing opposition in Mecca"
+   },
+   "cite": [
+    "s30",
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 622, Muhammad and his followers left Mecca for Medina, about 320 kilometres, or 200 miles, north. This move is called the hijra, which means migration or flight."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Arrow from Mecca north to Medina, labelled 'Hijra, 622, about 320 km (200 miles)'."
+   },
+   "cite": [
+    "s30",
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The hijra is so important that it marks year 1 of the Islamic calendar. Dates in that calendar are written AH, short for 'after the hijra'."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Year 1 = 622 CE"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What event marks year 1 of the Islamic calendar?",
+    "right": "The hijra, the move from Mecca to Medina",
+    "wrong": [
+     "Muhammad's birth",
+     "The surrender of Mecca",
+     "Muhammad's death"
+    ],
+    "why": "The calendar counts from the hijra in 622."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In Medina, Muhammad was invited to settle quarrels between local clans. A agreement called the Constitution of Medina joined the clans into one community."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Constitution of Medina"
+   },
+   "cite": [
+    "s20",
+    "s2"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Then came conflict with Mecca. The Muslims of Medina won at Badr in 624. In 630 Mecca surrendered. In 632 Muhammad died."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "c.570 Muhammad born | 622 Hijra | 624 Battle of Badr | 630 Mecca surrenders | 632 Muhammad dies"
+   },
+   "cite": [
+    "s3",
+    "s4",
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which of these came first?",
+    "right": "The hijra (622)",
+    "wrong": [
+     "The Battle of Badr (624)",
+     "Mecca's surrender (630)",
+     "Muhammad's death (632)"
+    ],
+    "why": "The timeline runs 622, 624, 630, 632, so the hijra came first."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a big question. Muhammad had died, so who would lead the community? The answer was a new role: the caliph, a word that means 'successor'."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Caliph = successor"
+   },
+   "cite": [
+    "s5",
+    "s4"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "His friend Abu Bakr became the first caliph in 632. Several tribes then rebelled, so Abu Bakr sent armies to bring Arabia back together under the caliphate in Medina."
+   },
+   "show": {
+    "kind": "list",
+    "text": "632: Abu Bakr becomes caliph; tribes rebel; Arabia reunited under Medina"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The first four caliphs are called the Rashidun, the 'Rightly Guided'. Here is how long each ruled, in rounded years. Together they cover 632 to 661."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Years each Rashidun caliph ruled",
+    "chart": "c1"
+   },
+   "cite": [
+    "s5",
+    "s6",
+    "s7",
+    "s15"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Look at the bars again. Which caliph is the tallest bar?"
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Years each Rashidun caliph ruled",
+    "chart": "c1"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which Rashidun caliph ruled the longest?",
+    "right": "Uthman, about 12 years (644–656)",
+    "wrong": [
+     "Abu Bakr, about 2 years",
+     "Umar, about 10 years",
+     "Ali, about 5 years"
+    ],
+    "why": "Uthman's bar is the tallest: he ruled from 644 to 656."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Under these caliphs, armies moved out of Arabia against two great powers: the Byzantine Empire, which was the eastern Roman Empire, and the Sasanian Empire of Persia. Within about 24 years they held Mesopotamia, the Levant, parts of Anatolia and most of the Sasanian lands."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map: Arabia at the centre, with arrows to Mesopotamia (Iraq), the Levant (Syria and Palestine), parts of Anatolia, and Persia."
+   },
+   "cite": [
+    "s8",
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "How did they hold such lands? Under Umar, armies were settled in new garrison towns, such as Basra, Kufa and Fustat, apart from the local people. A garrison town is where soldiers are based. Leaders also worked with local elites."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Garrison town"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "What was a garrison town like Basra or Kufa?",
+    "right": "A new town where the Arab-Muslim armies were settled",
+    "wrong": [
+     "A holy city only for pilgrims",
+     "A port in Spain",
+     "A palace in Damascus"
+    ],
+    "why": "Armies were settled in separate new towns like Basra, Kufa and Fustat, which became administrative centres."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Trouble then came at home. A disaffected group killed the third caliph, Uthman. That began the first civil war, called the First Fitna, which lasted from 656 to 661. Ali became the fourth caliph in 656."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "656 Uthman killed; Ali becomes caliph | 656–661 First Fitna (civil war)"
+   },
+   "cite": [
+    "s4",
+    "s7",
+    "s10",
+    "s15"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Ali was assassinated in 661. Mu'awiya then established himself as the first Umayyad caliph, ending the civil war."
+   },
+   "show": {
+    "kind": "list",
+    "text": "661: Ali killed; Mu'awiya becomes the first Umayyad caliph"
+   },
+   "cite": [
+    "s15",
+    "s10"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was the First Fitna?",
+    "right": "A civil war over who should lead, after Uthman was killed (656–661)",
+    "wrong": [
+     "A war against the Byzantine Empire",
+     "A pilgrimage to Mecca",
+     "A treaty with the Persians"
+    ],
+    "why": "Fitna is the word for the civil war that followed Uthman's murder."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Mu'awiya ruled from Damascus. In 680 he passed rule to his son Yazid. That made the caliphate a family dynasty. A dynasty is a ruling family."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Dynasty = a ruling family"
+   },
+   "cite": [
+    "s10",
+    "s11"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Compare the Rashidun. Abu Bakr was confirmed with support. He then named Umar, and a council of electors chose Uthman. Under the Umayyads, rule passed within one family."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Rashidun: named or chosen by council | Umayyads: passed within one family (dynasty)"
+   },
+   "cite": [
+    "s4",
+    "s11"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What was new about Umayyad rule?",
+    "right": "The caliphate passed down within one family.",
+    "wrong": [
+     "The caliph was chosen by a vote of all Muslims.",
+     "The capital moved back to Medina.",
+     "Muhammad's tribe was banned from ruling."
+    ],
+    "why": "Mu'awiya passed rule to his son, which began a family dynasty."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Not everyone accepted this. Go back to our first big question: who should lead after Muhammad? Sunni Muslims hold that Abu Bakr was the proper successor. Shia Muslims hold that Ali should have been."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Sunni: Abu Bakr the proper successor | Shia: Ali should have succeeded"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The word Shia comes from Shiat Ali, meaning partisans of Ali. Shia call Ali their first imam. The two groups agree on most basic beliefs and practices."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Shia = 'partisans of Ali'"
+   },
+   "cite": [
+    "s15",
+    "s14",
+    "s32"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let us check the original disagreement. It was not about a prayer or a place. It was about leadership."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The original question: who leads?"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was the original disagreement between Sunni and Shia?",
+    "right": "Who should lead the Muslim community after Muhammad",
+    "wrong": [
+     "Which language to pray in",
+     "Whether to trade with China",
+     "Which city should be the capital"
+    ],
+    "why": "The split began as a political dispute over succession."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In 680, Ali's son Hussein, Muhammad's grandson, stood against the caliph's much larger army at Karbala, in today's Iraq. Hussein was killed."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A flat plain near the Euphrates in Iraq, a small group of tents facing a large army: Karbala, 680."
+   },
+   "cite": [
+    "s15",
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Karbala became a defining event for Shia identity and is remembered each year at Ashura. Shia call Hussein their third imam. Today roughly 85–90 percent of Muslims are Sunni and 10–15 percent Shia."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 10–15% of Muslims are Shia"
+   },
+   "cite": [
+    "s33",
+    "s15",
+    "s34"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Where was Hussein killed in 680?",
+    "right": "At Karbala, in Iraq",
+    "wrong": [
+     "In Mecca",
+     "In Medina",
+     "In Damascus"
+    ],
+    "why": "Hussein faced the caliph's army at Karbala, in today's Iraq."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Back to the Umayyads. Abd al-Malik, who reigned 685 to 705, made Arabic the language of government. He also struck Islamic gold coins to replace Byzantine ones."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Arabic as the language of government; Islamic gold coins"
+   },
+   "cite": [
+    "s35",
+    "s12"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "He also built the Dome of the Rock in Jerusalem, finished around 691–692. The Dome of the Rock is still in Jerusalem."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A golden dome on an eight-sided building of blue tile, in Jerusalem: the Dome of the Rock."
+   },
+   "cite": [
+    "s13",
+    "s12"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which change is linked to Abd al-Malik?",
+    "right": "Arabic became the language of government.",
+    "wrong": [
+     "The capital moved to Baghdad.",
+     "Persian became the language of government.",
+     "Coins were ended."
+    ],
+    "why": "Abd al-Malik made Arabic the language of government and struck Islamic coins."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Umayyads kept pushing outward. By 697 they had taken Carthage in North Africa from the Byzantines. In 732 an army from Spain was beaten by Charles Martel, in France."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "697 Carthage captured | 732 Battle of Tours, in France"
+   },
+   "cite": [
+    "s12",
+    "s27"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The empire became overextended, and many people were unhappy. The Abbasids, a family settled in Humayma, in today's Jordan, led a rebellion. They crushed the Umayyad army at the Battle of the Zab in 750."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Early 700s Abbasids settle at Humayma | 750 Battle of the Zab"
+   },
+   "cite": [
+    "s10",
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The last Umayyad caliph, Marwan II, fled to Egypt and was killed there. But one Umayyad survivor started a new line of rule in Córdoba, Spain, in 756."
+   },
+   "show": {
+    "kind": "list",
+    "text": "750: Umayyads fall in Damascus; 756: Umayyad rule begins again in Córdoba"
+   },
+   "cite": [
+    "s11",
+    "s10"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In which year did the Abbasids overthrow the Umayyads?",
+    "right": "750",
+    "wrong": [
+     "661",
+     "622",
+     "632"
+    ],
+    "why": "The Battle of the Zab in early 750 ended Umayyad rule in Damascus."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Abbasids first ruled from Kufa. In 762 the second Abbasid caliph, al-Mansur, founded Baghdad and made it the capital."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "762: Baghdad is founded"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "He built it as a circle about one kilometre in radius, called the Round City. Its official name was the City of Peace. It was built between 762 and 766."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A plan of a perfectly round walled city beside the Tigris River, with a palace at its centre."
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Baghdad drew people of many ethnicities and religions, and became famous as a centre of learning. It was home to the House of Wisdom."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "House of Wisdom"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The House of Wisdom was part of a translation movement. Scholars there turned works from Greek and Syriac into Arabic."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Greek → Arabic; Syriac → Arabic"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What was translated at the House of Wisdom?",
+    "right": "Greek and Syriac works, into Arabic",
+    "wrong": [
+     "Arabic works into Latin only",
+     "Chinese works into Greek",
+     "Only the Qur'an into Persian"
+    ],
+    "why": "The House of Wisdom took part in the movement that translated Greek and Syriac works into Arabic."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Abbasid caliphate lasted until 1258, when the Mongols sacked Baghdad. We meet the Mongols in class 34."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "750 Abbasids take power | 762 Baghdad founded | 1258 Mongols sack Baghdad"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now trade, which runs through this whole story. Remember that Mecca began as a trade town. Let us see how trade tied the new empire together."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Trade and cities"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Basra, in Iraq, was a key port. Goods from the Indian Ocean came in through the Persian Gulf to Basra. The founding of Baghdad raised demand for luxury goods."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map: Indian Ocean to the Persian Gulf to Basra, then up river to Baghdad."
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Ships carried spices from India and islands further east. From China came silk, precious wood and ceramics. In the 700s some merchants in Basra traded with China."
+   },
+   "show": {
+    "kind": "list",
+    "text": "From India and the islands: spices; from China: silk, wood, ceramics"
+   },
+   "cite": [
+    "s25",
+    "s24"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which port was the gateway for Indian Ocean goods heading to Baghdad?",
+    "right": "Basra",
+    "wrong": [
+     "Mecca",
+     "Medina",
+     "Damascus"
+    ],
+    "why": "Indian Ocean goods came up the Persian Gulf through Basra."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a clue we can touch. Islamic coins turn up far outside the empire, in Cluny, France, and on Gotland, in Sweden. They show trade over longer distances than ever before."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A small silver coin with Arabic writing and no portrait, lying in soil in Sweden."
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Coins lead us to the debate. A primary source is something made at the time, like a coin, an inscription or a letter. Historians love them. For early Islam, written ones from the Umayyad period are very sparse."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Primary source"
+   },
+   "cite": [
+    "s18",
+    "s20"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The detailed stories of Muhammad and the conquests come mostly from later writings. Hadith are reports of what Muhammad said and did. Critics say many were written down 150 to 250 years afterwards."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Hadith = reports of Muhammad's words and actions"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "An example: the historian al-Tabari, who lived from 839 to 923, relied on Sayf ibn Umar for the Ridda wars and early conquests. How reliable Sayf was is argued over."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Al-Tabari (839–923) | Source: Sayf ibn Umar, 8th century"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Traditional view first: the Islamic sources largely preserve an accurate account. Muslim scholars checked reports by examining the chain of people who passed each one on, called the isnad. Most non-Muslim scholars also held this view for a long time."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Isnad = chain of transmission"
+   },
+   "cite": [
+    "s17",
+    "s38"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The revisionist view: from the 1970s, some scholars, such as Crone and Cook in their 1977 book Hagarism, said to trust writings by outsiders, coins and inscriptions more than later Islamic accounts."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Traditional: later sources largely accurate | Revisionist: trust contemporary evidence first"
+   },
+   "cite": [
+    "s18",
+    "s37"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Others take a middle road, using the Islamic sources critically. Recent work on Sayf finds him more reliable than earlier writers thought."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Middle path: use the sources, but test them against other evidence"
+   },
+   "cite": [
+    "s37",
+    "s19"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So in this class we stick to what most agree on, and flag what is disputed. Let us check why historians are careful."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Why the care?"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Why are historians careful with the early Islamic sources?",
+    "right": "Many were written down a century or more after the events, so later beliefs may have shaped them.",
+    "wrong": [
+     "They are written in a language nobody can read.",
+     "They were all written by Byzantine emperors.",
+     "Nothing was written until the 1900s."
+    ],
+    "why": "Many detailed accounts were compiled well after the events, so historians test them against other evidence."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let us recap. Muhammad's move to Medina in 622 began year 1. Four Rashidun caliphs led until 661. The Umayyads ruled from Damascus until 750. The Abbasids built Baghdad in 762."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "622 Hijra | 632–661 Rashidun | 661–750 Umayyads | 750 Abbasids | 762 Baghdad"
+   },
+   "cite": [
+    "s2",
+    "s5",
+    "s10",
+    "s21"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now our frame of reference: what else was happening? In China, the Tang dynasty began in 618, four years before the hijra."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "618 Tang dynasty founded in China | 622 Hijra"
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Chinese monk Xuanzang lived from 602 to 664, across the whole Rashidun era. He travelled to India, and Emperor Taizong welcomed him home."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Xuanzang 602–664 | Rashidun 632–661"
+   },
+   "cite": [
+    "s28"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In England, Bede lived from 672 to 735 and wrote a history of the English people. He died three years after the Battle of Tours."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Bede 672–735 | 732 Tours"
+   },
+   "cite": [
+    "s29",
+    "s27"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 800, thirty-eight years after Baghdad was founded, Pope Leo III crowned Charlemagne Roman emperor."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "762 Baghdad founded | 800 Charlemagne crowned"
+   },
+   "cite": [
+    "s29",
+    "s21"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next class we look at Byzantium, early medieval Europe and the Vikings. Well done for today."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Byzantium, early medieval Europe and the Vikings"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Years each Rashidun caliph ruled (rounded)",
+   "rows": [
+    {
+     "label": "Abu Bakr (632–634)",
+     "value": 2,
+     "source": "s5"
+    },
+    {
+     "label": "Umar (634–644)",
+     "value": 10,
+     "source": "s6"
+    },
+    {
+     "label": "Uthman (644–656)",
+     "value": 12,
+     "source": "s7"
+    },
+    {
+     "label": "Ali (656–661)",
+     "value": 5,
+     "source": "s15"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Caliph",
+   "links": [
+    "[[Rashidun caliphs]]",
+    "[[Umayyad dynasty]]",
+    "[[Abbasid caliphate]]"
+   ]
+  },
+  {
+   "topic": "Sunni and Shia",
+   "links": [
+    "[[Karbala]]",
+    "[[Safavid Iran]]"
+   ]
+  },
+  {
+   "topic": "Byzantine and Sasanian empires",
+   "links": [
+    "[[Late Antiquity: Changing Empires]]"
+   ]
+  },
+  {
+   "topic": "Baghdad and the House of Wisdom",
+   "links": [
+    "[[Tang and Song China and the Islamic Golden Age]]",
+    "[[The Mongol Empire]]"
+   ]
+  },
+  {
+   "topic": "Trade routes",
+   "links": [
+    "[[Silk Roads]]",
+    "[[Medieval Africa: Ghana, Mali, Great Zimbabwe and the Swahili Coast]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "618",
+   "elsewhere": "In China, Li Yuan founded the Tang dynasty after the Sui collapsed, four years before the hijra.",
+   "cite": [
+    "s26"
+   ]
+  },
+  {
+   "when": "602–664",
+   "elsewhere": "The Chinese monk Xuanzang lived through the whole Rashidun era. He travelled to India and was welcomed home by Emperor Taizong.",
+   "cite": [
+    "s28"
+   ]
+  },
+  {
+   "when": "672–735 and 732",
+   "elsewhere": "In England, Bede wrote a history of the English people. In 732, Charles Martel defeated an invading army from Spain at Tours, in France.",
+   "cite": [
+    "s29",
+    "s27"
+   ]
+  },
+  {
+   "when": "762–766",
+   "elsewhere": "Baghdad's Round City was built while Western Europe was still reorganising after the end of Roman rule.",
+   "cite": [
+    "s22",
+    "s29"
+   ]
+  },
+  {
+   "when": "800",
+   "elsewhere": "Charlemagne was crowned Roman emperor by Pope Leo III, 38 years after Baghdad was founded.",
+   "cite": [
+    "s29",
+    "s21"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The detailed traditional account of Muhammad's life and the early conquests is a reliable guide to what happened.",
+   "other_view": "Revisionist scholars from the 1970s argue the main sources were written down 150 to 250 years later and were shaped by later bias. They prefer contemporary evidence such as outsiders' writings, coins and inscriptions. Others take a middle path, and recent work on Sayf ibn Umar finds him more reliable than once thought.",
+   "cite": [
+    "s17",
+    "s18",
+    "s37",
+    "s19"
+   ]
+  },
+  {
+   "claim": "The Sunni–Shia split began as a political dispute over who should succeed Muhammad.",
+   "other_view": "Some scholars stress that the split took a long time to crystallise. They say the leadership conflicts of the 650s to 680s were its origins but not the only decisive period. On that view, the split is an ongoing process of remembering and debating.",
+   "cite": [
+    "s14",
+    "s16"
+   ]
+  },
+  {
+   "claim": "Abd al-Malik built the Dome of the Rock to show the confidence of the new Islamic order.",
+   "other_view": "Historians disagree about why and when it was commissioned. One explanation is that it showed the legitimacy of Islamic culture. Another is that it was an alternative pilgrimage destination, so people would not have to travel into a rival's territory.",
+   "cite": [
+    "s35",
+    "s36"
+   ]
+  },
+  {
+   "claim": "The House of Wisdom in Baghdad was the one centre of the Abbasid translation movement.",
+   "other_view": "It is unlikely that it was the only centre of this work. Major translation efforts arose in Cairo and Damascus even earlier than the proposed founding of the House of Wisdom.",
+   "cite": [
+    "s23"
+   ]
+  }
+ ]
+}

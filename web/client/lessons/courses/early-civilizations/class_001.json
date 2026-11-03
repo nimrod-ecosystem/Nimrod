@@ -1,0 +1,1054 @@
+{
+ "about": {
+  "title": "Mesopotamia I: Rivers, Farms and the First Cities",
+  "course": "early-civilizations",
+  "class_n": 1,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 40,
+  "length_note": "About 40 minutes. There are 36 short beats, each with one idea. The last section, on sites outside Mesopotamia, can be paused and picked up later without losing the thread."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "3.2 Ancient Mesopotamia, World History Volume 1, to 1500",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/world-history-volume-1/pages/3-2-ancient-mesopotamia",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Civilizations",
+   "publisher": "National Geographic Education",
+   "date": "n.d.",
+   "link": "https://education.nationalgeographic.org/resource/civilizations/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Civilization: From Nomadic Life to the Farm and City",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/civilization/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Uruk: The First Great City",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/uruk/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Uruk (modern Warka)",
+   "publisher": "Cuneiform Digital Library Initiative (CDLI) Wiki, University of Oxford",
+   "date": "n.d.",
+   "link": "https://cdli.ox.ac.uk/wiki/doku.php?id=uruk_mod._warka",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Uruk: 5000 Years of the Megacity (exhibition page)",
+   "publisher": "Staatliche Museen zu Berlin",
+   "date": "2013",
+   "link": "https://www.smb.museum/en/exhibitions/detail/uruk/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Uruk-Warqa, Iraq",
+   "publisher": "Current World Archaeology",
+   "date": "n.d.",
+   "link": "https://www.world-archaeology.com/features/uruk-warqa-iraq/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "The Uruk Period (Museum Bulletin)",
+   "publisher": "Penn Museum",
+   "date": "n.d. (older report on the German excavations from 1928)",
+   "link": "https://www.penn.museum/sites/bulletin/2600/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Mesopotamia: The Land of Firsts",
+   "publisher": "OER Project (Big History Project)",
+   "date": "n.d.",
+   "link": "https://www.oerproject.com/OER-Materials/OER-Media/HTML-Articles/BHP/Unit5/Mesopotamia",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Morphodynamic Foundations of Sumer",
+   "publisher": "PubMed Central (NIH), open-access journal article",
+   "date": "n.d.",
+   "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12367111/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "History of Mesopotamia",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/place/Mesopotamia-historical-region-Asia",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Çatalhöyük",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/Catalhoyuk/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "So Fair a House: Göbekli Tepe and the Identification of Temples in the Pre-Pottery Neolithic of the Near East",
+   "publisher": "Current Anthropology, Vol. 52, No. 5 (University of Chicago Press)",
+   "date": "2011",
+   "link": "https://www.journals.uchicago.edu/doi/full/10.1086/661207",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Göbekli Tepe",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/G%C3%B6bekli_Tepe",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Neolithic",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Neolithic",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "History of Sumer",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/History_of_Sumer",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Uruk",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Uruk",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Cities Older Than Recorded History",
+   "publisher": "The Archaeologist",
+   "date": "n.d.",
+   "link": "https://www.thearchaeologist.org/blog/cities-older-than-recorded-history",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Irrigation System in Ancient Mesopotamia (Athens Journal of History, Vol. 11, Issue 1)",
+   "publisher": "Athens Institute for Education and Research",
+   "date": "2025-01",
+   "link": "https://www.athensjournals.gr/history/2025-11-1-4-Sabir.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "World History Connected 6.3 (article on defining civilization)",
+   "publisher": "University of Illinois Press",
+   "date": "n.d.",
+   "link": "https://worldhistoryconnected.press.uillinois.edu/6.3/brown.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Civilization",
+   "publisher": "New World Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.newworldencyclopedia.org/entry/Civilization",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome. Today we meet the first big cities, built between two rivers. Go at your own pace, and pause whenever you like."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Mesopotamia I: Rivers, Farms and the First Cities"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "By the end you will be able to do three things. Say what 'civilization' means, say why farming led to cities, and name early Sumerian cities on a map."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. What 'civilization' means\n2. Why farms between two rivers led to cities\n3. Name early Sumerian cities on a map"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "This course starts earlier than any city. Göbekli Tepe, a stone monument, was built around 9500 BC. Uruk, our first city, comes about 5,000 years later."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "c. 9500 BC: Göbekli Tepe (monument, no city)\nc. 4500 BC: Uruk founded (a city)\nWe visit Göbekli Tepe at the end of today."
+   },
+   "cite": [
+    "s13",
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a big word. 'Civilization' comes from a Latin word for 'city'. So the plainest meaning is a society made up of cities."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Civilization = a society made up of cities"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Historians often list some other traits too. Writing, a government, surplus food, cities, and people doing different jobs."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Writing\nGovernment\nSurplus food (extra, more than people need right now)\nDivision of labor (different people do different jobs)\nCities"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which of these is a surplus?",
+    "right": "More grain than the town can eat right now",
+    "wrong": [
+     "A very tall temple",
+     "A king with many titles",
+     "A river that floods every year"
+    ],
+    "why": "A surplus is extra food, more than people need at the moment. It lets some people do jobs other than farming."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the catch. Scholars do not all agree on the word. It has often been used to call some societies better than others."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Debated word"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The list is not perfect either. The Inca had no writing system, yet they are called a civilization. So the list is a guide, not a test."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Left: The usual list (writing, government, surplus, cities)\nRight: The Inca had no writing, but are called a civilization"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why do many scholars find the word 'civilization' tricky?",
+    "right": "It has been used to rank societies as better or worse, and not every society fits the list.",
+    "wrong": [
+     "Because no one knows where the word comes from",
+     "Because it only describes modern societies",
+     "Because it means the same as 'river'"
+    ],
+    "why": "The word has carried a judgment about some societies being superior. The list of traits also does not fit every society."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In this course we use the word as a label, not a prize. Some scholars prefer 'urban society'. Many historians keep 'civilization' and define it carefully."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Left: Keep the word, define it carefully\nRight: Prefer 'urban society'"
+   },
+   "cite": [
+    "s20",
+    "s21"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next question. How do we know anything about people who lived 5,000 years ago? Mostly, people dug. Let's follow one dig, at Uruk."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "How we know: digging up Uruk"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The first archaeologist at Uruk was William Loftus, in 1850. He gave up fairly soon. He had hoped for carved stone walls like those found farther north."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A nineteenth-century explorer standing on a huge, bare mound of earth in a desert, with workers digging a small trench."
+   },
+   "cite": [
+    "s5",
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "German teams began digging at Uruk in 1912. Since then there have been more than forty digs. Yet less than five percent of the city has been explored."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Under 5% explored"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "How much of ancient Uruk has been explored so far?",
+    "right": "Less than five percent",
+    "wrong": [
+     "All of it",
+     "About half",
+     "About ninety percent"
+    ],
+    "why": "After more than forty digs, most of the huge city is still unexplored."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "New tools help. A device that senses what is buried was used to map Uruk without digging."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A person pushing a survey instrument across flat desert ground, with a coloured map of buried walls appearing on a laptop."
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Uruk is also where writing first appears. One account puts the first written Sumerian at around 3600 to 3500 BCE. We'll look at writing in class 2."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Writing: first appears at Uruk, c. 3600–3500 BCE"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the place itself. 'Mesopotamia' is the region between the Tigris and Euphrates rivers. Today that is mostly Iraq and nearby areas."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map of southwest Asia. The Tigris and Euphrates are marked as two lines running from the north-west down to the Persian Gulf. The region between them is shaded and labelled Mesopotamia."
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The rivers flow from the Zagros Mountains in the north to the Persian Gulf in the south. The southern part was called Sumer."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Same map. The south, near the Persian Gulf, is shaded darker and labelled Sumer. The mountains are marked in the north."
+   },
+   "cite": [
+    "s9",
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which part of Mesopotamia was called Sumer?",
+    "right": "The south, near the Persian Gulf",
+    "wrong": [
+     "The far north, in the mountains",
+     "The land west of both rivers",
+     "An island in the middle of the Tigris"
+    ],
+    "why": "The first great cities arose in southern Mesopotamia, then called Sumer."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The land was a hard place to farm. It was flat and dry. Rivers flooded, and rising salt in the soil could ruin a harvest."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Flat and dry land\nFloods\nSalt in the soil\nA ruined harvest"
+   },
+   "cite": [
+    "s9",
+    "s19"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The answer was irrigation. That means bringing river water to fields through channels that people build. The rivers made the farming, and so the cities, possible."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Irrigation = bringing river water to fields"
+   },
+   "cite": [
+    "s9",
+    "s10"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is irrigation?",
+    "right": "Bringing river water to fields through channels people build",
+    "wrong": [
+     "Building a wall around a city",
+     "Storing extra food in a temple",
+     "Writing on clay tablets"
+    ],
+    "why": "Irrigation moves water from the river to the fields, so crops can grow where rain is not enough."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Big water projects need many people working together. Someone must organise them. In Sumerian cities, the ruler, usually a king, directed projects like canals and walls."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Left: Water projects (canals, walls)\nRight: Organisers (the ruler, usually a king)"
+   },
+   "cite": [
+    "s1",
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now put it in order. Farming reached Mesopotamia by about 8000 BCE. Settlers reached the south around 5500 BCE. Irrigation grew, and cities followed."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Farming reaches Mesopotamia (by c. 8000 BCE)\n2. Settlers move into the south (c. 5500 BCE)\n3. Irrigation needs people to work together\n4. Cities arise (4th millennium BCE)"
+   },
+   "cite": [
+    "s1",
+    "s10"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why did irrigation push people toward cities?",
+    "right": "Big water projects needed many people working together under organisers.",
+    "wrong": [
+     "The rivers were too small to use",
+     "Kings banned farming in the countryside",
+     "Cities were built to stay away from the rivers"
+    ],
+    "why": "Managing water took cooperation and leaders. Scholars link that to the first city-states."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is a rough map of time. The Ubaid period runs about 6500 to 4000 BCE. The Uruk period runs about 4000 to 3100 BCE."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "c. 6500–4000 BCE: Ubaid period\nc. 4000–3100 BCE: Uruk period (cities begin)\nc. 2900–2350 BCE: Early Dynastic period"
+   },
+   "cite": [
+    "s4",
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Meet Uruk, built. One account says it was founded around 4500 BCE. In the Uruk period it was the biggest site in Mesopotamia, at 100 hectares."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Artist's view of Uruk: mud-brick houses, canals, and a raised temple area in the middle, on a flat plain."
+   },
+   "cite": [
+    "s4",
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Then it grew. In the Early Dynastic period Uruk reached about 400 hectares. That is four times bigger."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Size of Uruk in hectares",
+    "chart": "c1"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "In which period was Uruk about 400 hectares?",
+    "right": "The Early Dynastic period",
+    "wrong": [
+     "The Ubaid period",
+     "The Uruk period",
+     "Before farming began"
+    ],
+    "why": "Uruk was about 100 hectares in the Uruk period and about 400 in the Early Dynastic period."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A wall once circled the city, about nine kilometres long. One scholar estimates tens of thousands of people lived there."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 9 km of city wall"
+   },
+   "cite": [
+    "s5",
+    "s7"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So Uruk has two dates. It was built from around 4500 BCE. It was found by archaeologists in 1850, and digging goes on today."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Uruk, built: founded c. 4500 BCE; wall c. 3000 BCE\nUruk, found: Loftus 1850; German digs from 1912; still going"
+   },
+   "cite": [
+    "s4",
+    "s7",
+    "s5",
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Uruk was not alone. Early Sumerian cities included Eridu, Ur, Uruk and Kish. Uruk lies about fifty miles northwest of Ur."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map of southern Mesopotamia with four dots: Eridu, Ur, Uruk (about 50 miles northwest of Ur) and Kish further north, all near the two rivers."
+   },
+   "cite": [
+    "s9",
+    "s11",
+    "s8"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which of these was an early Sumerian city?",
+    "right": "Ur",
+    "wrong": [
+     "Rome",
+     "Athens",
+     "London"
+    ],
+    "why": "Ur, Eridu, Uruk and Kish were early Sumerian cities. Rome, Athens and London came much later."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Each of these was a city-state. That means a city plus the land around it that it controls. Sumerian city-states were independent but shared a language and culture."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "City-state = a city + the land it controls"
+   },
+   "cite": [
+    "s1",
+    "s9"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is a city-state?",
+    "right": "A city together with the surrounding land it controls",
+    "wrong": [
+     "A city that has no farms",
+     "Two cities joined by a river",
+     "A temple with no town"
+    ],
+    "why": "A city-state is a city and its surrounding territory, governed as one place."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Each city-state had a ruler, usually a king. In Uruk the legend says the king was Gilgamesh. Rulers directed big projects, as we saw with water."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A king in a fringed robe, seen from the side, pointing at a canal while officials with clay tablets stand behind him."
+   },
+   "cite": [
+    "s9",
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In Uruk's centre was the Eanna, the main religious complex. The goddess Inanna was worshipped there from the earliest Uruk period."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Eanna: the temple complex at the centre of Uruk"
+   },
+   "cite": [
+    "s5",
+    "s17"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Another site is the White Temple, named for its white plaster walls. An older Penn Museum report dates it tentatively to about 3000 BC. It describes it in the German excavations that resumed in 1928."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "White Temple, built: c. 3000 BC (tentative)\nWhite Temple, studied: German excavations from 1928"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So how was a city laid out? The temple complex sat in the middle. Courtyard houses stood around it, in districts grouped by the jobs people did."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Centre: Eanna temple complex\nAround it: courtyard houses, grouped by trade"
+   },
+   "cite": [
+    "s17",
+    "s5"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Where was Uruk's main religious complex?",
+    "right": "At the centre of the city (the Eanna)",
+    "wrong": [
+     "Far outside the walls",
+     "On a boat in the river",
+     "There was none"
+    ],
+    "why": "The Eanna was the main religious complex in the centre, with houses in districts around it."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now back to the hook. Cities were not the first big thing people built. Göbekli Tepe, in Turkey, was built after 9500 BC, with rings of T-shaped stone pillars."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A circular stone enclosure on a hilltop with tall T-shaped pillars, some carved with animals."
+   },
+   "cite": [
+    "s13",
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Göbekli Tepe, found: it was discovered in 1963. Excavations have run since 1995. UNESCO named it a World Heritage Site in 2018."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "After 9500 BC: built\n1963: discovered\n1995–today: excavated\n2018: UNESCO World Heritage Site"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Is Göbekli Tepe older or younger than Uruk?",
+    "right": "Older, by thousands of years",
+    "wrong": [
+     "Younger than Uruk",
+     "The same age as Uruk",
+     "Built after Sumer ended"
+    ],
+    "why": "Göbekli Tepe dates to after 9500 BC. Uruk was founded around 4500 BCE."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Jericho is another early site. Its mound, Tell al-Sultan, dates to about 8500 to 7500 BCE. It had stone walls and towers by about 8000 BCE."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A round stone tower beside a thick stone wall in a dry hillside, with a stair inside the tower."
+   },
+   "cite": [
+    "s12",
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Çatalhöyük, in central Turkey, was built about 7500 to 5600 BCE. Its mud-brick houses were packed together with rooftop entrances. The archaeologist James Mellaart found it and dug there from 1961 to 1964."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Çatalhöyük, built: c. 7500–5600 BCE\nÇatalhöyük, found: Mellaart, 1961–1964"
+   },
+   "cite": [
+    "s12",
+    "s18"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here are the starting dates side by side. A longer bar means older. Göbekli Tepe is the oldest, and Uruk the youngest."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Approximate start dates, years BCE",
+    "chart": "c2"
+   },
+   "cite": [
+    "s13",
+    "s12",
+    "s1",
+    "s4"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Which of these places is the oldest?",
+    "right": "Göbekli Tepe",
+    "wrong": [
+     "Çatalhöyük",
+     "Jericho (Tell al-Sultan)",
+     "Uruk"
+    ],
+    "why": "Göbekli Tepe dates to about 9500 BC. Uruk is the youngest on the chart, at about 4500 BCE."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Archaeologists call Çatalhöyük a 'proto-city'. That is a step between villages and the first true cities. So cities had a long runway."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Proto-city = a step between villages and cities"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's gather it up. A civilization is often described as a society of cities, though the word is debated. In Sumer, rivers and irrigation helped cities grow."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Civilization: debated, often 'a society of cities'\nRivers + irrigation + cooperation = cities\nSumerian cities: Eridu, Ur, Uruk, Kish\nBefore cities: Göbekli Tepe, Jericho, Çatalhöyük"
+   },
+   "cite": [
+    "s2",
+    "s3",
+    "s10",
+    "s9",
+    "s11",
+    "s13",
+    "s12"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One last check, to pull it together."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Final check"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which pair is matched correctly?",
+    "right": "Uruk: a Sumerian city. Göbekli Tepe: a monument older than any city.",
+    "wrong": [
+     "Uruk: a monument older than any city. Göbekli Tepe: a Sumerian city.",
+     "Ur: a river. Kish: a mountain.",
+     "Eridu: a Greek city. Jericho: a Sumerian city."
+    ],
+    "why": "Uruk was a Sumerian city founded around 4500 BCE. Göbekli Tepe was built after 9500 BC, thousands of years before it."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Well done. Next time, in class 2, we look at Mesopotamian writing, law and religion. We'll also start comparing with Egypt, in class 4."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Mesopotamia II: Writing, Law and Religion"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Size of Uruk (hectares)",
+   "rows": [
+    {
+     "label": "Uruk period (4000–3000 BC)",
+     "value": 100,
+     "source": "s5"
+    },
+    {
+     "label": "Early Dynastic period (2900–2350 BC)",
+     "value": 400,
+     "source": "s5"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Approximate start dates (year BCE; a bigger number means older)",
+   "rows": [
+    {
+     "label": "Göbekli Tepe (monumental enclosures, after 9500)",
+     "value": 9500,
+     "source": "s13"
+    },
+    {
+     "label": "Tell al-Sultan, Jericho (c. 8500)",
+     "value": 8500,
+     "source": "s12"
+    },
+    {
+     "label": "Çatalhöyük (c. 7500)",
+     "value": 7500,
+     "source": "s12"
+    },
+    {
+     "label": "Settlements in southern Mesopotamia (c. 5500)",
+     "value": 5500,
+     "source": "s1"
+    },
+    {
+     "label": "Uruk founded (c. 4500)",
+     "value": 4500,
+     "source": "s4"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "What 'civilization' means and why it is debated",
+   "links": [
+    "[[Writing]]",
+    "[[Cities]]",
+    "[[Early civilizations: compare and connect]]"
+   ]
+  },
+  {
+   "topic": "Uruk: built and rediscovered",
+   "links": [
+    "[[Gilgamesh]]",
+    "[[Cuneiform]]",
+    "[[Eanna and the White Temple]]"
+   ]
+  },
+  {
+   "topic": "Irrigation and the Tigris and Euphrates",
+   "links": [
+    "[[Egypt: the Nile]]",
+    "[[Indus Valley: planned cities and water]]"
+   ]
+  },
+  {
+   "topic": "Göbekli Tepe, Jericho and Çatalhöyük",
+   "links": [
+    "[[Neolithic farming villages]]",
+    "[[Early China: Yellow River farming]]"
+   ]
+  },
+  {
+   "topic": "Gaps to check before this lesson is published: no source on 'tells' (the mound shape of ancient town sites) was read. The Egypt-versus-Mesopotamia timing and why schools often start with Egypt were not sourced for this class, so they are planned for class 4. Jericho's first dig date was not found in the sources read.",
+   "links": [
+    "[[Egypt I: The Nile, Unification and the Pharaoh]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "c. 9500 BC",
+   "elsewhere": "Göbekli Tepe was built in what is now Turkey. At Jericho, people were already eating figs by about 9400 BC. Farming had not yet reached Mesopotamia, which came by about 8000 BCE.",
+   "cite": [
+    "s13",
+    "s15",
+    "s1"
+   ]
+  },
+  {
+   "when": "c. 8500–8000 BCE",
+   "elsewhere": "Jericho (Tell al-Sultan) was a walled settlement with stone towers. Farming was reaching Mesopotamia by about this time.",
+   "cite": [
+    "s12",
+    "s18",
+    "s1"
+   ]
+  },
+  {
+   "when": "c. 7500–5600 BCE",
+   "elsewhere": "Çatalhöyük was a packed settlement in central Turkey. Around 5500 BCE people were beginning to settle in southern Mesopotamia.",
+   "cite": [
+    "s12",
+    "s1"
+   ]
+  },
+  {
+   "when": "c. 4000–3100 BCE (the Uruk period)",
+   "elsewhere": "In China the Neolithic period lasted until about 2000 BC, when the Erlitou culture arose.",
+   "cite": [
+    "s4",
+    "s15"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Uruk was the world's first city.",
+   "other_view": "Some sources call Uruk the earliest city or the first known urban culture. Others call Çatalhöyük a 'proto-city' and point to large settlements thousands of years earlier. It depends on how you define 'city'.",
+   "cite": [
+    "s7",
+    "s6",
+    "s12"
+   ]
+  },
+  {
+   "claim": "Sumer was the 'cradle of civilization'.",
+   "other_view": "Many older books describe it this way. Modern scholarship now sees Sumer as one major part of a wider network of complex societies across the Near East.",
+   "cite": [
+    "s16"
+   ]
+  },
+  {
+   "claim": "'Civilization' is a useful word for describing early societies.",
+   "other_view": "Many historians keep the word but define it carefully. Most scholars today find it problematic because it has been used to call some societies superior, and some prefer terms like 'urban society'.",
+   "cite": [
+    "s2",
+    "s20",
+    "s21"
+   ]
+  },
+  {
+   "claim": "Göbekli Tepe was a temple site, not a village.",
+   "other_view": "One scholar argues the buildings found were temples and that the site was not a settlement. Findings published in 2019 suggest there was a settlement, with domestic structures.",
+   "cite": [
+    "s13",
+    "s14"
+   ]
+  },
+  {
+   "claim": "Uruk was founded about 4500 BCE and the first cities appeared about 3800 to 3100 BCE.",
+   "other_view": "Dates differ by source. One says Uruk was occupied from at least 5000 BC. Another dates the Uruk period to 4000–3100 BCE. A third gives about 3800 BCE for the first large city-states. Treat all of these dates as approximate.",
+   "cite": [
+    "s4",
+    "s7",
+    "s9"
+   ]
+  }
+ ]
+}

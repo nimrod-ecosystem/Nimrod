@@ -1,0 +1,674 @@
+{
+ "about": {
+  "title": "What does it mean to define something?",
+  "course": "hard-to-define",
+  "class_n": 1,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 20,
+  "length_note": "About 20 minutes. The class has 27 short beats and 7 questions, and each of the six topics gets a plain explanation, an example and a check. Pause or replay any beat. Nothing here is timed."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Operationalism",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://plato.stanford.edu/entries/operationalism/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Operationalism (Fall 2026 Edition)",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "Fall 2026",
+   "link": "https://plato.stanford.edu/archives/fall2026/entries/operationalism/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Ludwig Wittgenstein, section 3.4 Language-games and Family Resemblance",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://plato.stanford.edu/entries/wittgenstein/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Games and Family Resemblances",
+   "publisher": "Philosophy (Cambridge University Press), Volume 42, Issue 161",
+   "date": "n.d.",
+   "link": "https://www.cambridge.org/core/journals/philosophy/article/abs/games-and-family-resemblances/CD09C9A79B6F10843601EF33BB774CE4",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "[M03] Evaluating definitions",
+   "publisher": "Department of Philosophy, University of Hong Kong",
+   "date": "n.d.",
+   "link": "https://philosophy.hku.hk/think/meaning/evaluate.php",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Logical Fallacies (Fallacies of Definition)",
+   "publisher": "Stanford University, Program in Writing and Rhetoric course page",
+   "date": "n.d.",
+   "link": "https://web.stanford.edu/~jonahw/PWR1/LogicalFallacies.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Descriptive vs. Prescriptive Defining in Lexicography",
+   "publisher": "Merriam-Webster",
+   "date": "n.d.",
+   "link": "https://www.merriam-webster.com/grammar/descriptive-vs-prescriptive-defining-lexicography",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Understanding Psychological Measurement (Operational Definitions)",
+   "publisher": "opentextbc.ca open textbook (Research Methods in Psychology)",
+   "date": "n.d.",
+   "link": "https://opentextbc.ca/researchmethods/chapter/understanding-psychological-measurement/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Chapter 5 Measurement: Operational Definitions, Numbers and Precision",
+   "publisher": "University of Central Arkansas, Psychology",
+   "date": "n.d.",
+   "link": "https://uca.edu/psychology/files/2013/08/Ch5-Measurement.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "SI base unit: second (s)",
+   "publisher": "BIPM (International Bureau of Weights and Measures)",
+   "date": "n.d.",
+   "link": "https://www.bipm.org/en/si-base-units/second",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Operational Definitions",
+   "publisher": "Psych Web (psywww.com)",
+   "date": "n.d.",
+   "link": "https://psywww.com/intropsych/ch01-psychology-and-science/operational-definitions.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Roadmap towards the redefinition of the second",
+   "publisher": "arXiv",
+   "date": "n.d. (arXiv 2307.14141)",
+   "link": "https://arxiv.org/pdf/2307.14141",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Lexicography",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/technology/lexicography",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Time (the second, s)",
+   "publisher": "Innovation and Technology Commission, Hong Kong (Standards and Calibration Laboratory)",
+   "date": "n.d.",
+   "link": "https://www.itc.gov.hk/en/quality/scl/teachers_students/si/second.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Definitions, section 2.8 Circular definitions",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://plato.stanford.edu/entries/definitions/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Family Resemblance",
+   "publisher": "Colin McGinn (personal website)",
+   "date": "n.d.",
+   "link": "https://colinmcginn.net/family-resemblance/",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome. Today's question sounds simple: what does it mean to define something? Go at your own pace, and pause whenever you like."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "What does it mean to define something?"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is our goal. By the end, you can explain why a word can be useful without a perfect definition. You can also tell a working definition from a full explanation."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Goal 1: Why a word can work without a perfect definition | Goal 2: Working definition versus full explanation"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, a definition is a short statement of what a word means. It can do one of two jobs."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Definition"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Job one is to report how people already use a word. Job two is to set a new meaning for a word you are introducing."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Job 1: report how a word is already used | Job 2: set a new meaning for a word"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Dictionaries do job one. A dictionary such as Merriam-Webster describes how people actually use words. It does not invent rules for them."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Descriptive dictionary"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Dictionary writers draft definitions from collected examples of real use. They also have to slice a word's meaning into separate senses, and that slicing can be arbitrary. So a dictionary entry is a useful report, not the final word."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Collect real examples of use | Draft a definition | Divide meaning into senses (sometimes arbitrarily)"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What does a descriptive dictionary try to do?",
+    "right": "Record how words are actually used by speakers and writers.",
+    "wrong": [
+     "Decide how words ought to be used, whatever people say.",
+     "Prove what a thing really is, once and for all.",
+     "Give an exact measurement for every word."
+    ],
+    "why": "A descriptive dictionary reflects real usage rather than imposing rules, as Merriam-Webster explains."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Scientists often need something sharper. Many ideas can be read in different ways, so a study needs a clear tool. That tool is a working definition."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Working definition"
+   },
+   "cite": [
+    "s9",
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A working definition is a tool for a job. It is not a claim that it says everything about the idea. Careful scientists have treated their definitions as provisional tools."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "A working definition is a best-for-now tool, not the whole story."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The most common working definition is the operational definition. It defines something by exactly how you measure it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Operational definition = defined by how it is measured"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is an example. Researchers have measured stress using blood pressure, and also using the hormone cortisol. That is two different measuring recipes for one word."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Stress measured by: blood pressure | Stress measured by: cortisol level"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Physics gives a very exact example. The second is defined as 9,192,631,770 periods of a particular radiation from caesium-133 atoms."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "9,192,631,770 periods of caesium-133 radiation = 1 second"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That recipe is a choice, and it has changed. Until 1967 the second was based on astronomy. A better way to measure came along, so the recipe changed, and the word 'second' stayed."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Until 1967: based on astronomy | 1967: caesium atom | 1997: 'atom at rest at 0 K' added | 2019: reworded, same content"
+   },
+   "cite": [
+    "s12",
+    "s14"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's check that idea with one question."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Quick check: operational definitions"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which of these is an operational definition of stress?",
+    "right": "The level of the hormone cortisol in a person, or their blood pressure.",
+    "wrong": [
+     "The feeling you get when life is too much.",
+     "Whatever makes people unhappy at work.",
+     "A word that people have used for a long time."
+    ],
+    "why": "An operational definition says precisely how something is measured, and researchers have measured stress with cortisol and blood pressure."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One physicist, Percy Bridgman, went further in 1927. He said a concept is nothing more than the operations used to measure it."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "\"nothing more than a set of operations\" (Bridgman, 1927)"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Bridgman later admitted that went too far. Measuring covers only one side of what a word means."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A measurement is one side of a meaning"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So here is the difference to remember. A working definition tells you how to spot or measure something. An operational definition, by itself, is not an explanation."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Working definition: how to spot or measure it | Full explanation: what it is and why it happens"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "A study defines stress as a person's cortisol level. What has that definition done?",
+    "right": "It gives a way to measure stress, but it does not fully explain what stress is.",
+    "wrong": [
+     "It fully explains what stress is.",
+     "It proves cortisol is the only possible way to measure stress.",
+     "It shows that dictionaries are wrong about stress."
+    ],
+    "why": "Operational definitions are not explanations by themselves. Researchers also use many different measures for one idea, so no single one settles it."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more warning. A measuring recipe is just a decision, and a decision can be faulty. A recipe is not good only because it is precise."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A precise recipe can still be a poor choice"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a different problem: words with fuzzy edges. Take the word 'game'. Everyone uses it, and almost no one can define it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Game"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Think of board games, card games, ball games and athletic games. The philosopher Ludwig Wittgenstein noticed that no single feature is shared by all of them."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Board games | Card games | Ball games | Athletic games"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "He compared games to a family. Build, eye colour, walk and temperament overlap and criss-cross among relatives. No one trait is in everyone, yet we see the family."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Family resemblance"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So a word can work well without sharp boundaries. We use 'game' every day and understand each other. That is our first goal: useful without perfect."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Useful without a perfect definition"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does 'family resemblance' mean for a word like 'game'?",
+    "right": "The examples are linked by overlapping similarities, with no single feature shared by all.",
+    "wrong": [
+     "Every game secretly shares one feature that we haven't found yet.",
+     "All games were invented by members of one family.",
+     "A word with no exact definition cannot be used."
+    ],
+    "why": "Wittgenstein said games have no common feature that makes them all games. They are linked by similarities that overlap, like the features of a family."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now three tests for any definition. Does it include too much? Does it leave out too much? Does it go in a circle?"
+   },
+   "show": {
+    "kind": "list",
+    "text": "Test 1: too wide? | Test 2: too narrow? | Test 3: circular?"
+   },
+   "cite": [
+    "s5",
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Test one: too wide. Say a chair is 'a piece of furniture for sitting'. A bench fits that, but a bench is not a chair. The definition includes too much."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Too wide: includes things it should not"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Someone defines a chair as 'a piece of furniture for sitting'. A bench fits this, but a bench is not a chair. Which test does the definition fail?",
+    "right": "It is too wide, because it includes things that are not chairs.",
+    "wrong": [
+     "It is too narrow, because it leaves out real chairs.",
+     "It is circular, because it uses the word 'chair'.",
+     "It fails because it is too short."
+    ],
+    "why": "A definition is too wide when it applies to things the word does not apply to. The bench is such a thing."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Test two: too narrow. A definition of religion that requires a creator would leave out religions with no creator, such as Jainism. The definition leaves out too much."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Too narrow: leaves out things it should include"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Test three: circular. A circular definition uses the word being defined inside its own definition. For example: 'Happy means being in a happy state.' It tells you nothing new."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Circular: the word defines itself"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which of these definitions is circular?",
+    "right": "'Happy means being in a happy state.'",
+    "wrong": [
+     "'A chair is a piece of furniture for sitting.'",
+     "'A second is 9,192,631,770 periods of caesium-133 radiation.'",
+     "'Stress is measured by blood pressure or cortisol level.'"
+    ],
+    "why": "A circular definition includes the term being defined as part of the definition. Only the first answer does that."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is your checklist. You will use it in every class that follows. Take a moment to read it."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. What is this definition for? | 2. Is it a report of use, or a working (measuring) definition? | 3. Does it include too much? | 4. Does it leave out too much? | 5. Does it go in a circle? | 6. Does it explain, or only point and measure?"
+   },
+   "cite": [
+    "s5",
+    "s6",
+    "s9"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last check, on our first goal."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Last check"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Why can a word like 'game' be useful even with no perfect definition?",
+    "right": "Its examples are linked by overlapping similarities, so people use it well without one shared feature.",
+    "wrong": [
+     "Because dictionaries have settled its exact edges.",
+     "Because every game can be measured the same way.",
+     "Because a word is only useful once it is operationally defined."
+    ],
+    "why": "Wittgenstein's family resemblance idea says a word can hold together through overlapping similarities. It does not need sharp boundaries."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To sum up: a definition has a job. A working definition is a tool and not a full explanation. Fuzzy edges are normal. Next time we use this checklist on energy."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next class: Energy, precise to calculate and slippery to explain"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "definition",
+   "links": [
+    "[[working definition]]",
+    "[[dictionary definition]]"
+   ]
+  },
+  {
+   "topic": "working definition",
+   "links": [
+    "[[operational definition]]",
+    "[[explanation]]"
+   ]
+  },
+  {
+   "topic": "operational definition",
+   "links": [
+    "[[measurement]]",
+    "[[energy]]",
+    "[[time]]"
+   ]
+  },
+  {
+   "topic": "family resemblance",
+   "links": [
+    "[[life]]",
+    "[[consciousness]]"
+   ]
+  },
+  {
+   "topic": "three tests for a definition",
+   "links": [
+    "[[checklist]]"
+   ]
+  },
+  {
+   "topic": "checklist",
+   "links": [
+    "[[energy]]",
+    "[[information]]",
+    "[[time]]",
+    "[[life]]",
+    "[[consciousness]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "An operational definition is what a scientific concept means.",
+   "other_view": "Bridgman put this strongly in 1927. Critics said operations capture only one aspect of a concept's meaning, and Bridgman later admitted the claim went too far. Sophisticated operationists then treated operational definitions as provisional tools, not full meanings.",
+   "cite": [
+    "s1",
+    "s2"
+   ]
+  },
+  {
+   "claim": "Words can work well without sharp definitions, because their uses are linked by family resemblance.",
+   "other_view": "Wittgenstein used this idea to reject the search for one shared essence. The philosopher Colin McGinn accepts that games overlap and criss-cross, but argues that 'family' is a poor and merely metaphorical picture of it. In his view the point applies to larger groups too.",
+   "cite": [
+    "s3",
+    "s16"
+   ]
+  },
+  {
+   "claim": "A circular definition is always a failure.",
+   "other_view": "Logic guides list circular definitions as a standard fault, because they use the term being defined. One circular-definition theory in the Stanford Encyclopedia argues there is no logical requirement that descriptive definitions avoid circularity. A circular definition can also help someone learn what a word means, even if it is weak as a definition.",
+   "cite": [
+    "s6",
+    "s15",
+    "s5"
+   ]
+  }
+ ]
+}

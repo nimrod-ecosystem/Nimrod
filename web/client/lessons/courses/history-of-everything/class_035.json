@@ -1,0 +1,1351 @@
+{
+ "about": {
+  "title": "The Black Death and the Crisis of the 1300s",
+  "course": "history-of-everything",
+  "class_n": 35,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. There are 37 short beats and 9 questions. The pace is slow so there is time to think and to pause. The death-toll debate and the persecution of Jewish communities are each given room because they are easy to get wrong."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "16.2 Famine, Climate Change, and Migration (World History Volume 1, to 1500)",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/world-history-volume-1/pages/16-2-famine-climate-change-and-migration",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "16.4: The Black Death from East to West (OpenStax World History Volume 1, hosted on LibreTexts)",
+   "publisher": "Humanities LibreTexts / OpenStax",
+   "date": "n.d.",
+   "link": "https://human.libretexts.org/Bookshelves/History/World_History/World_History_1:_to_1500_(OpenStax)/Unit_4:_A_Global_Middle_Ages_12001500_CE/16:_Climate_Change_and_Plague_in_the_Fourteenth_Century/16.04:_The_Black_Death_from_East_to_West",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "Black Death: Cause and outbreak",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/event/Black-Death/Cause-and-outbreak",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "Black Death: Effects and significance",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/event/Black-Death/Effects-and-significance",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "The Economic Impact of the Black Death (David Routt, University of Richmond)",
+   "publisher": "EH.Net Encyclopedia",
+   "date": "n.d.",
+   "link": "https://eh.net/encyclopedia/the-economic-impact-of-the-black-death/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "A draft genome of Yersinia pestis from victims of the Black Death",
+   "publisher": "Nature",
+   "date": "2011",
+   "link": "https://www.nature.com/articles/nature10549",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "Black Death bacterium identified: Genetic analysis of medieval plague skeletons shows presence of Yersinia pestis bacteria",
+   "publisher": "Universitaet Tübingen, via ScienceDaily",
+   "date": "2011-08-29",
+   "link": "https://www.sciencedaily.com/releases/2011/08/110829173751.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "Did the Black Death Rampage Across the World a Century Earlier Than Previously Thought?",
+   "publisher": "Smithsonian Magazine",
+   "date": "n.d.",
+   "link": "https://www.smithsonianmag.com/history/did-black-death-rampage-across-world-more-century-previously-thought-180977331/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "How the Black Death made life better",
+   "publisher": "Department of History, Washington University in St. Louis",
+   "date": "n.d.",
+   "link": "https://history.washu.edu/news/how-black-death-made-life-better",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "Peasants' Revolt",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Peasants%27_Revolt",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "The Black Death and the Jews, 1348-1349 (Internet History Sourcebook)",
+   "publisher": "Fordham University",
+   "date": "n.d.",
+   "link": "https://sourcebooks.fordham.edu/jewish/1348-jewsblackdeath.asp",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "Persecution of Jews during the Black Death",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Persecution_of_Jews_during_the_Black_Death",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "The Great Famine (1315-1317), Climate in Arts and History",
+   "publisher": "Smith College",
+   "date": "n.d.",
+   "link": "https://www.science.smith.edu/climatelit/the-great-famine/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "Great Famine of 1315-1317",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Great_Famine_of_1315%E2%80%931317",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "1200-1400, the Highlights",
+   "publisher": "Marc Carlson, University of Tulsa",
+   "date": "n.d.",
+   "link": "http://www.personal.utulsa.edu/~marc-carlson/history/1300.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "14th century (Wikipedia for Schools)",
+   "publisher": "SOS Children / Wikipedia for Schools",
+   "date": "n.d.",
+   "link": "https://dcyf.worldpossible.org/rachel/modules/wikipedia_for_schools/wp/1/14th_century.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "Black Death",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/Black_Death/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "Lecture 4. The Black Death (1347)",
+   "publisher": "University of California, Irvine (Plagues and People)",
+   "date": "n.d.",
+   "link": "http://faculty.humanities.uci.edu/bjbecker/PlaguesandPeople/lecture4.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "Medieval Cures for the Black Death",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/article/1540/medieval-cures-for-the-black-death/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "Contesting the Cause and Severity of the Black Death: A Review Essay",
+   "publisher": "IIASA (reprint RP-07-05)",
+   "date": "n.d.",
+   "link": "https://pure.iiasa.ac.at/id/eprint/8461/1/RP-07-05.pdf",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "Plague history, Mongol history, and the processes of focalisation leading up to the Black Death: a response to Brack et al. (Green and Fancy)",
+   "publisher": "Medical History, Cambridge University Press",
+   "date": "n.d.",
+   "link": "https://www.cambridge.org/core/journals/medical-history/article/plague-history-mongol-history-and-the-processes-of-focalisation-leading-up-to-the-black-death-a-response-to-brack-et-al/F38569656E9104D86612103560AE66EF",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "OpenStax World History, Volume 1: Section Summary by Chapter (Chapter 16)",
+   "publisher": "OER Commons",
+   "date": "n.d.",
+   "link": "https://oercommons.org/courseware/lesson/141866/overview",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "1340s",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/1340s",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "Crisis of the late Middle Ages",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Crisis_of_the_late_Middle_Ages",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "The Black Death and the Economy",
+   "publisher": "EconReads",
+   "date": "n.d.",
+   "link": "https://econreads.org/curriculum/economic-history/black-death-economics/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "Lessons From the Black Death",
+   "publisher": "Catholic Answers Magazine",
+   "date": "n.d.",
+   "link": "https://www.catholic.com/magazine/online-edition/lessons-from-the-black-death",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "Black Death",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Black_Death",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "How Many People Died from the Black Plague?",
+   "publisher": "ScienceInsights",
+   "date": "n.d.",
+   "link": "https://scienceinsights.org/how-many-people-died-from-the-black-plague/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s29",
+   "title": "Mansa Musa",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Mansa_Musa",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s30",
+   "title": "Consequences of the Black Death",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Consequences_of_the_Black_Death",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 35. Today we study the Black Death, a plague that killed millions of people in the 1300s. Go at your own pace, and pause whenever you like."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Black Death and the Crisis of the 1300s"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last class we met the Mongols and their huge, connected world. Today we see how long trade routes carried goods, and also a deadly disease."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A long caravan of camels and traders crossing a dry plain toward a seaport with ships."
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, one word we need: pandemic. A pandemic is a disease that spreads across many countries at the same time."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Pandemic"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "What does 'pandemic' mean?",
+    "right": "A disease spreading across many countries at once",
+    "wrong": [
+     "A disease that only affects animals",
+     "A disease that stays in one small town",
+     "A disease that already has a cure"
+    ],
+    "why": "A pandemic crosses borders. The Black Death spread across Asia, North Africa and Europe."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So what was the Black Death?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Black Death"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It was a plague pandemic that hit Europe from about 1347 to 1351. People then called it the great pestilence. The name 'Black Death' only became common in English in the 1700s."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Plague pandemic | Europe: about 1347 to 1351 | Called 'great pestilence' at the time | 'Black Death' common in English from the 1750s"
+   },
+   "cite": [
+    "s3",
+    "s17",
+    "s27"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What actually made people sick?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Yersinia pestis"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A tiny bacterium called Yersinia pestis. Scientists took DNA from skeletons in a London burial ground used in 1348 to 1350, and it showed the same bacterium."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A scientist in a lab coat holding a small, old tooth from a medieval skeleton."
+   },
+   "cite": [
+    "s6",
+    "s7"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What caused the Black Death?",
+    "right": "A bacterium called Yersinia pestis",
+    "wrong": [
+     "A virus carried by wild birds",
+     "Poisoned water in wells",
+     "A volcano eruption"
+    ],
+    "why": "Ancient DNA from London plague graves confirmed that the bacterium Yersinia pestis was the cause."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is how it moved. The bacterium lived in fleas, and fleas lived on rats. A flea bite could pass it from a rat to a person."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A drawing of a black rat with a tiny flea on its fur, and a person nearby."
+   },
+   "cite": [
+    "s3",
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "And what did it do to people?"
+   },
+   "show": {
+    "kind": "list",
+    "text": "Fever | Aches in the joints | Painful swellings called buboes"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The swellings are called buboes. That is where the word 'bubonic' comes from. Two even deadlier forms also appeared in the 1300s, called pneumonic and septicemic."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Bubonic"
+   },
+   "cite": [
+    "s17",
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What carried the bacterium from rats to people?",
+    "right": "Fleas",
+    "wrong": [
+     "Mosquitoes",
+     "Ticks",
+     "Spoiled grain"
+    ],
+    "why": "Fleas living on rats, especially black rats, passed the bacterium to people by biting."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now for the big question: how did it get to Europe?"
+   },
+   "show": {
+    "kind": "map",
+    "text": "A map of Europe, North Africa and Asia. An arrow runs west from Central Asia to the Black Sea, then by sea to Sicily and other Mediterranean ports."
+   },
+   "cite": [
+    "s17",
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Most historians say the plague began in Central Asia and travelled west along trade routes. By the mid-1340s it had reached the Black Sea region."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Trade routes"
+   },
+   "cite": [
+    "s17",
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Where did it cross into the Mediterranean?"
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A walled port town on the Black Sea, with merchant ships in the harbour."
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "At Caffa, an Italian trading port on the Black Sea. One famous story says an army besieging the town hurled plague victims' bodies over its walls. That is a story told in old accounts, so treat it with care."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Caffa: Italian trading colony on the Black Sea | The siege story: told in old accounts | Trading ships left Caffa for the Mediterranean"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In October 1347 ships from the Black Sea reached Messina, in Sicily. Plague broke out within days. The townspeople forced the sailors and ships to leave, but it was too late."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Messina, October 1347"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "After Sicily, how fast did it travel?"
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Mid-1340s: reaches the Black Sea region | Oct 1347: Messina, Sicily | Late 1347 and 1348: Marseille and Valencia | Aug 1348: Dorset, England | End of 1349: France, Spain, Britain and Ireland"
+   },
+   "cite": [
+    "s17",
+    "s18",
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It was fast because ports and roads were busy. Also, people fled from outbreaks, and they carried the disease with them."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Fleeing spread it"
+   },
+   "cite": [
+    "s17",
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why did fleeing from plague often make it spread further?",
+    "right": "Fleeing people carried the disease to new places",
+    "wrong": [
+     "Travelling made the bacterium stronger",
+     "Roads were full of infected rats only",
+     "Fleeing people ate infected food"
+    ],
+    "why": "People ran from outbreaks without knowing they were already infected, and they took the plague with them."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Was it only Europe?"
+   },
+   "show": {
+    "kind": "map",
+    "text": "The same map, now with North Africa and the Middle East shaded as well as Europe."
+   },
+   "cite": [
+    "s17",
+    "s22"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "No. It spread into North Africa and the Middle East too. The once-thriving cities of the Mamluk Sultanate in Egypt quickly went into decline. The plague also kept returning for centuries."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Europe | North Africa | The Middle East | Egypt's Mamluk cities declined | Outbreaks returned for centuries"
+   },
+   "cite": [
+    "s17",
+    "s22"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What did people do about it? They had no idea about bacteria."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "What people tried: smoke and incense, 'bad air' ideas | What really helped: keeping the sick apart (quarantine)"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Many thought the plague came from bad air, so they burned incense or smoke in their homes. Keeping sick and well people apart really helped, but many people could not or would not stay isolated."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Quarantine"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the hard question. How many people died?"
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 1 in 3"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A common estimate for Europe is about one person in three. Imagine three neighbours. About one of them would not survive."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "dot",
+    "count": 3,
+    "layout": "row",
+    "text": "Three dots in a row. One is dimmed."
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Britannica gives a rough figure of 25 million deaths in Europe. But it calls this a rough estimate. Nobody counted everyone."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 25 million (rough)"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why can't we just look it up?"
+   },
+   "show": {
+    "kind": "list",
+    "text": "No census in medieval Europe | Tax rolls | Church and manor records | Wills and burials"
+   },
+   "cite": [
+    "s28",
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Medieval Europe had no census. Historians piece the toll together from tax records, church and manor records, wills and burials. And the death rate varied a lot from place to place and between rich and poor."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Estimates, not counts"
+   },
+   "cite": [
+    "s28",
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So how far apart are the estimates?"
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1",
+    "text": "Share of people who died (percent): five different estimates"
+   },
+   "cite": [
+    "s5",
+    "s4",
+    "s8",
+    "s20"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Look at the spread. Some local death rates were credibly as low as a quarter. Others were as high as three quarters. One researcher's Europe-wide estimate is 60 percent, higher than the older one-third."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1",
+    "text": "From one quarter to three quarters"
+   },
+   "cite": [
+    "s5",
+    "s20"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Why do the estimates for the Black Death vary so much?",
+    "right": "There was no census, and death rates differed from place to place",
+    "wrong": [
+     "Historians refuse to count the dead",
+     "The plague only struck one city",
+     "All the records survive and agree"
+    ],
+    "why": "Historians have to rebuild the numbers from scattered records, and the local death rate ranged from about a quarter to three quarters."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now let's look at what happened to the survivors."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "After the plague: workers, wages and land"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So many peasants died that workers became scarce, and land became plentiful. Workers could now ask for more pay, and wages rose."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Before: many workers, low wages | After: few workers, wages rising"
+   },
+   "cite": [
+    "s9",
+    "s10"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Is there a real example of this?"
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A page from the medieval chronicle of Rochester Cathedral Priory, now in the British Library."
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Yes. A chronicle written at Rochester in England by 1350 complained that nobles and high churchmen had to pay much higher wages. They even had to do manual work themselves."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Scarce workers, higher pay"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why did wages rise after the Black Death?",
+    "right": "There were fewer workers, so employers had to compete for them",
+    "wrong": [
+     "Kings printed more money",
+     "The plague made people healthier and stronger",
+     "Landowners felt generous"
+    ],
+    "why": "After so many deaths, workers were scarce. Landowners had to offer more to get the work done."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Did the landowners just accept that?"
+   },
+   "show": {
+    "kind": "list",
+    "text": "Laws tried to cap wages | The laws were widely evaded | Serfdom weakened in Western Europe"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "No. They tried laws to cap wages, but the laws were widely evaded. Serfdom was the system tying peasants to their lord's land, and it weakened in Western Europe. Peasants could move to better terms."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Serfdom"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "And did that tension ever explode?"
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1348: plague reaches England | 1381: Peasants' Revolt"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 1381 a huge uprising swept across England, the Peasants' Revolt. Its causes included tensions from the plague, high taxes to pay for the war with France, and trouble in London's leadership."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Peasants' Revolt, 1381"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a hard part. Some people were so afraid that they looked for someone to blame. Please skip ahead if you need to."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Fear, blame and a hard chapter"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In many places Jewish communities were falsely blamed for the plague. In Strasbourg, on 14 February 1349, the Jewish community was burned to death. Accounts give between about 900 and 2,000 people."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Strasbourg, 14 February 1349"
+   },
+   "cite": [
+    "s11",
+    "s12",
+    "s26"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Plague had not even reached Strasbourg yet. Pope Clement VI declared Church protection for Jews in 1348. Some bishops protected them too, but many local leaders did not."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Plague had not yet reached Strasbourg | Pope Clement VI: protection for Jews (1348) | Some bishops protected Jews"
+   },
+   "cite": [
+    "s12",
+    "s26"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What was Pope Clement VI's official response to the attacks on Jewish communities?",
+    "right": "He declared that Jews should be protected",
+    "wrong": [
+     "He ordered them expelled",
+     "He stayed silent",
+     "He blamed them for the plague"
+    ],
+    "why": "Clement VI issued a bull in July 1348 declaring Church protection for Jews, though local violence still happened."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Others had a different reaction, didn't they?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Flagellants"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Yes. Flagellants were groups who whipped themselves in public to calm what they believed was God's anger. The Church banned them in 1349. Some towns noticed they sometimes brought plague with them."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Public self-whipping as penance | Banned by the Church in 1349 | Sometimes brought plague to new towns"
+   },
+   "cite": [
+    "s26",
+    "s30",
+    "s19"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now let's step back about thirty years. Was Europe already in trouble before the plague?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Before the plague: weather and famine"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Yes. The 1300s brought the Little Ice Age, a cooler, wetter climate in the Northern Hemisphere. The Great Famine of 1315 to 1317 struck much of Europe north of the Alps."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Little Ice Age"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What happened in 1315?"
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A farmer in a flooded field looking at rotting grain under grey skies."
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Crops failed in 1314 and 1315. Europe had just grown by a lot, so there was little spare food. Harvests returned to normal in 1317, but full recovery took years more."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1315: bad weather and failed crops | 1317: peak of the famine | 1322: Europe fully recovered"
+   },
+   "cite": [
+    "s13",
+    "s14"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So which one was worse, the famine or the plague?"
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Black Death: killed more people, but swept through a place in months | Great Famine: lingered for years"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "How did the Great Famine differ from the Black Death?",
+    "right": "The famine lingered for years, while the plague swept through a place in months",
+    "wrong": [
+     "The famine killed more people than the plague",
+     "The famine only happened in Asia",
+     "The famine came after the plague"
+    ],
+    "why": "The plague killed more people, but in a place it passed quickly. The famine dragged on for years, from 1315 to about 1322."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Climate may also have shaped the plague. Britannica says modern research points to climate shifts changing the rodent populations in Central Asia, and plague coming in waves along trade routes."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Climate and plague"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The 1300s were crowded with other crises too, weren't they?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Other events of the 1300s"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "England and France began the Hundred Years' War in 1337. In 1378 the Western Schism began, and in time there were three rival popes. Historians sometimes call this whole run of troubles the crisis of the late Middle Ages."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1315-1317: Great Famine | 1337: Hundred Years' War begins | 1347-1351: Black Death in Europe | 1378: Western Schism | 1381: Peasants' Revolt"
+   },
+   "cite": [
+    "s15",
+    "s16",
+    "s24",
+    "s10"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "And what was going on in the rest of the world?"
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1324: Mansa Musa's pilgrimage to Mecca | 1325: Mexica found Tenochtitlan | 1368: Ming dynasty begins in China"
+   },
+   "cite": [
+    "s29",
+    "s16",
+    "s15"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 1324 Mansa Musa, ruler of Mali, made his famous pilgrimage to Mecca. In 1325 the Mexica founded their city of Tenochtitlan. In 1368 the Ming dynasty began in China, as the Mongol army retreated to the steppe."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Mali: Mansa Musa's pilgrimage, 1324 | Mexico: Tenochtitlan founded, 1325 | China: Ming dynasty, 1368"
+   },
+   "cite": [
+    "s29",
+    "s16",
+    "s15"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So when plague reached Messina in 1347, who else was around?"
+   },
+   "show": {
+    "kind": "list",
+    "text": "Geoffrey Chaucer: a small child (born around 1343) | Mali: Mansa Suleyman on the throne (since 1341) | England: Edward III won at Crécy the year before | China: the Yuan dynasty struggling with floods and unrest"
+   },
+   "cite": [
+    "s16",
+    "s23"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's recap. The Black Death was caused by Yersinia pestis and spread along trade routes. It killed perhaps a third of Europe or more. Scarce workers won higher wages, fear led to terrible blame, and a famine had already shaken Europe."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Caused by Yersinia pestis | Spread along trade routes from 1347 | A third or more of Europe died | Wages rose and serfdom weakened | Fear led to scapegoating | Famine came first, 1315-1317"
+   },
+   "cite": [
+    "s6",
+    "s17",
+    "s4",
+    "s20",
+    "s10",
+    "s25",
+    "s12",
+    "s14"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which came first: the Great Famine or the Black Death in Europe?",
+    "right": "The Great Famine, in 1315 to 1317",
+    "wrong": [
+     "The Black Death, in 1347",
+     "They happened in the same year",
+     "The Great Famine came after the Peasants' Revolt"
+    ],
+    "why": "The Great Famine ran from 1315 to 1317. The Black Death reached Europe in 1347."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That's the end of class 35. Thank you for staying with it. Next time: the Renaissance."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next class: The Renaissance"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Estimates of how many people died in the Black Death (percent)",
+   "rows": [
+    {
+     "label": "Lowest credible local death rate",
+     "value": 25,
+     "source": "s5"
+    },
+    {
+     "label": "Classic Europe-wide estimate (about one third)",
+     "value": 33,
+     "source": "s4"
+    },
+    {
+     "label": "Top of the 'one third to one half' range",
+     "value": 50,
+     "source": "s8"
+    },
+    {
+     "label": "Benedictow's Europe-wide estimate",
+     "value": 60,
+     "source": "s20"
+    },
+    {
+     "label": "Highest credible local death rate",
+     "value": 75,
+     "source": "s5"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Black Death",
+   "links": [
+    "[[Yersinia pestis]]",
+    "[[Silk Roads]]",
+    "[[The Mongol Empire]]",
+    "[[Second Plague Pandemic]]"
+   ]
+  },
+  {
+   "topic": "Death toll debate",
+   "links": [
+    "[[Historical demography]]",
+    "[[Medieval population estimates]]"
+   ]
+  },
+  {
+   "topic": "Social and economic change",
+   "links": [
+    "[[Serfdom]]",
+    "[[Feudalism]]",
+    "[[Peasants' Revolt]]",
+    "[[Statute of Labourers]]"
+   ]
+  },
+  {
+   "topic": "Persecution during the plague",
+   "links": [
+    "[[Strasbourg massacre]]",
+    "[[Flagellants]]",
+    "[[Pope Clement VI]]"
+   ]
+  },
+  {
+   "topic": "Climate and famine",
+   "links": [
+    "[[Little Ice Age]]",
+    "[[Great Famine of 1315-1317]]",
+    "[[Medieval Warm Period]]"
+   ]
+  },
+  {
+   "topic": "The 1300s elsewhere",
+   "links": [
+    "[[Hundred Years' War]]",
+    "[[Western Schism]]",
+    "[[Mali Empire]]",
+    "[[Ming dynasty]]",
+    "[[Tenochtitlan]]",
+    "[[The Renaissance]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "1324",
+   "elsewhere": "Mansa Musa, ruler of Mali, makes his pilgrimage to Mecca.",
+   "cite": [
+    "s29"
+   ]
+  },
+  {
+   "when": "1325",
+   "elsewhere": "The Mexica found Tenochtitlan, the city that later becomes Mexico City.",
+   "cite": [
+    "s16"
+   ]
+  },
+  {
+   "when": "1337",
+   "elsewhere": "Edward III of England claims the French throne, and the Hundred Years' War begins. Mansa Musa is recorded as dying in this year.",
+   "cite": [
+    "s15",
+    "s16"
+   ]
+  },
+  {
+   "when": "Around 1343",
+   "elsewhere": "The English poet Geoffrey Chaucer is born. Some chronologies place his birth around 1340.",
+   "cite": [
+    "s16"
+   ]
+  },
+  {
+   "when": "1346 to 1347",
+   "elsewhere": "Edward III wins at Crécy in 1346. In the 1340s China's Yuan dynasty suffers floods, banditry and unrest, and the Mexica of Tenochtitlan are on the rise. Plague reaches Messina in October 1347.",
+   "cite": [
+    "s23",
+    "s18"
+   ]
+  },
+  {
+   "when": "14 February 1349",
+   "elsewhere": "The Jewish community of Strasbourg is destroyed, even though plague had not yet reached the city.",
+   "cite": [
+    "s11",
+    "s12"
+   ]
+  },
+  {
+   "when": "1368",
+   "elsewhere": "The Ming dynasty begins in China. The traveller Ibn Battuta (born 1304) died in 1368 or 1377; the sources are unclear.",
+   "cite": [
+    "s15",
+    "s16"
+   ]
+  },
+  {
+   "when": "1378",
+   "elsewhere": "The Western Schism begins in the Church, eventually leading to three rival popes.",
+   "cite": [
+    "s16"
+   ]
+  },
+  {
+   "when": "1381",
+   "elsewhere": "The Peasants' Revolt sweeps across England.",
+   "cite": [
+    "s10"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The Black Death killed about one third of Europe's people.",
+   "other_view": "One third is the older, widely quoted figure. Britannica gives about 25 million deaths, or a third. Other work argues for much more. A synthesis by Benedictow put the Europe-wide figure at about 60 percent, and one reviewer said he still had doubts about such very high figures. Local death rates ranged from about a quarter to three quarters, so a single number hides a lot.",
+   "cite": [
+    "s4",
+    "s20",
+    "s5"
+   ]
+  },
+  {
+   "claim": "Medieval chroniclers' figures show how many died.",
+   "other_view": "Britannica says the chronicler Froissart's 'about one third' may be fairly accurate. EH.Net says chroniclers' numbers are better read as evidence of how frightened people were than as accurate counts.",
+   "cite": [
+    "s4",
+    "s5"
+   ]
+  },
+  {
+   "claim": "The plague began in Central Asia and reached Europe in 1347 along trade routes.",
+   "other_view": "This is the traditional story. Historian Monica Green argues the Black Death was one of four explosive spreads of the bacterium and that plague was moving in Asia earlier, in the 1200s. OpenStax presents her view alongside the older one. Green and Fancy also criticise a 'complete' history that places the origin in reservoirs in the Caucasus. Britannica notes that modern research suggests plague entered Europe several times.",
+   "cite": [
+    "s2",
+    "s8",
+    "s21",
+    "s3"
+   ]
+  },
+  {
+   "claim": "Plague reached Europe because plague victims' bodies were hurled into Caffa during a siege.",
+   "other_view": "Britannica reports this as the way plague entered Europe. Becker's lecture calls it one story among others. Britannica also notes that plague entered Europe more than once along trade routes, so one event cannot be the whole explanation. This is an inference from those sources.",
+   "cite": [
+    "s3",
+    "s18"
+   ]
+  },
+  {
+   "claim": "Twelve Genoese ships brought plague to Messina.",
+   "other_view": "The friar Michael of Piazza, writing about ten years later, said twelve galleys. The World History Encyclopedia says four Genoese grain ships carried it to Sicily. Sources differ on the number of ships.",
+   "cite": [
+    "s18",
+    "s17"
+   ]
+  },
+  {
+   "claim": "The Black Death transformed European society by raising wages and ending serfdom.",
+   "other_view": "Many historians agree that scarce labour raised wages and weakened serfdom in Western Europe. Others add caveats. Historians Ada Palmer and Eleanor Janega argue that workers' gains did not survive the following centuries. EH.Net says climate, imperfect institutions, money problems and overpopulation reduce the plague's role as a transformative event.",
+   "cite": [
+    "s25",
+    "s9",
+    "s5"
+   ]
+  },
+  {
+   "claim": "The Great Famine of 1315 to 1317 left Europe more open to the Black Death.",
+   "other_view": "Smith College's Climate in Arts and History says the famine made the effects of the Black Death worse and began a series of crises. EH.Net stresses that overpopulation, weak institutions and money problems were also at work, so the famine was not the only cause.",
+   "cite": [
+    "s13",
+    "s5"
+   ]
+  }
+ ]
+}

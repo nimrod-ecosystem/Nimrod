@@ -1,0 +1,934 @@
+{
+ "about": {
+  "title": "Information: from yes/no questions to meaning",
+  "course": "hard-to-define",
+  "class_n": 3,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 28,
+  "length_note": "The target was about 25 minutes. This class runs about 28 because it has six linked topics, each in short beats with a check question. That leaves time to pause and take it slowly. Anyone who needs more time can stop after any check question and pick up from there."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "A Mathematical Theory of Communication",
+   "publisher": "C. E. Shannon, Bell System Technical Journal (copy hosted by Harvard Mathematics)",
+   "date": "1948",
+   "link": "https://people.math.harvard.edu/~ctm/home/text/others/shannon/entropy/entropy.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Prediction and Entropy of Printed English",
+   "publisher": "C. E. Shannon, Bell System Technical Journal (copy hosted by Princeton University)",
+   "date": "1951",
+   "link": "https://www.princeton.edu/~wbialek/rome/refs/shannon_51.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Information theory: Linguistics, Communication, Data",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/science/information-theory/Linguistics",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Information Theory: A Tutorial Introduction",
+   "publisher": "arXiv (J. V. Stone)",
+   "date": "2018",
+   "link": "https://arxiv.org/pdf/1802.05968",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Information theory in molecular biology",
+   "publisher": "arXiv (C. Adami)",
+   "date": "2004",
+   "link": "https://arxiv.org/pdf/q-bio/0405004",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Information (Summer 2022 Edition)",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "2022",
+   "link": "https://plato.stanford.edu/archives/sum2022/entries/information/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Logic and Information",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://plato.stanford.edu/entries/logic-information/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "A Mathematical Theory of Semantic Communication: Overview",
+   "publisher": "arXiv",
+   "date": "2024",
+   "link": "https://arxiv.org/pdf/2401.14160",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Joint Data and Semantics Lossy Compression: Nonasymptotic Converse Bounds and Second-Order Asymptotics",
+   "publisher": "arXiv",
+   "date": "2024",
+   "link": "https://arxiv.org/pdf/2402.02501",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "The relevance of communication theory for theories of representation",
+   "publisher": "Philosophy and the Mind Sciences",
+   "date": "n.d.",
+   "link": "https://philosophymindscience.org/index.php/phimisci/article/download/10992/10837",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Information and The Brukner-Zeilinger Interpretation of Quantum Mechanics: A Critical Investigation",
+   "publisher": "arXiv",
+   "date": "2004",
+   "link": "https://arxiv.org/pdf/quant-ph/0407198",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Entropy: From Thermodynamics to Information Processing",
+   "publisher": "Entropy (journal), via PubMed Central",
+   "date": "2021",
+   "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8534765/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Possible connections between relativity theory and a version of quantum theory based upon theoretical variables (section 6, Information and entropy)",
+   "publisher": "arXiv",
+   "date": "2023",
+   "link": "https://arxiv.org/pdf/2305.15435",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Deriving Landauer's erasure principle from statistical mechanics",
+   "publisher": "arXiv",
+   "date": "2005",
+   "link": "https://arxiv.org/pdf/quant-ph/0512105",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Finite-time Landauer principle",
+   "publisher": "arXiv (Proesmans, Ehrich, Bechhoefer)",
+   "date": "2020",
+   "link": "https://arxiv.org/pdf/2006.03242",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Landauer's principle",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Landauer%27s_principle",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Landauer's Erasure Principle and Data Compression",
+   "publisher": "IEEE International Symposium on Information Theory (S. Wolf)",
+   "date": "2017",
+   "link": "https://cqi.inf.usi.ch/publications/isit17-sub-ieee.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "DNA could store all of the world's data in one room",
+   "publisher": "Science (news report)",
+   "date": "n.d.",
+   "link": "https://www.science.org/content/article/dna-could-store-all-worlds-data-one-room",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "DNA Molecular Storage System: Transferring Digitally Encoded Information through Bacterial Nanonetworks",
+   "publisher": "arXiv",
+   "date": "2018",
+   "link": "https://arxiv.org/pdf/1801.04774",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Natural Data Storage: A Review on sending Information from now to then via Nature",
+   "publisher": "arXiv",
+   "date": "2015",
+   "link": "https://arxiv.org/pdf/1505.04890",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Security Science (SecSci), Basic Concepts and Mathematical Foundations",
+   "publisher": "arXiv",
+   "date": "2025",
+   "link": "https://arxiv.org/pdf/2504.16617",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "John Archibald Wheeler Postulates 'It from Bit'",
+   "publisher": "HistoryofInformation.com",
+   "date": "n.d.",
+   "link": "https://www.historyofinformation.com/detail.php?id=5041",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Information Is Not Physical: Possibility Spaces, Erasure, and the Structure of Unrealized Alternatives",
+   "publisher": "arXiv",
+   "date": "2026",
+   "link": "https://arxiv.org/pdf/2606.15120",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "Are black holes about information?",
+   "publisher": "arXiv",
+   "date": "2017",
+   "link": "https://arxiv.org/pdf/1708.05631",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Information and Computation",
+   "publisher": "arXiv",
+   "date": "2013",
+   "link": "https://arxiv.org/pdf/1304.1428",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Semantic Conceptions of Information",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://plato.stanford.edu/entries/information-semantic/",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Last class we saw that energy is precise to calculate but slippery to explain. Information is the same kind of word: everyday on the surface, very exact underneath."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Information: from yes/no questions to meaning"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In daily life, information is something that tells you something: a bus timetable, a doctor's letter. It has a meaning, and we expect it to be true."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Everyday information = meaning (and usually truth)"
+   },
+   "cite": [
+    "s6",
+    "s11"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In the everyday sense, what usually makes something count as information?",
+    "right": "It means something to someone, and it is usually true.",
+    "wrong": [
+     "It is written in a secret code.",
+     "It is very long.",
+     "It is stored on a computer."
+    ],
+    "why": "In ordinary talk, information carries meaning and is expected to be true. Philosophers add exactly those two dimensions when they study semantic information."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Scientists also use a second, narrower sense. Today's one idea: the technical measure counts how much a message could tell you, and ignores what it says."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Two senses of 'information'",
+    "left": "Everyday: what a message means, and whether it is true",
+    "right": "Technical (Shannon): how many possible messages, and how surprising this one is"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The technical sense comes from Claude Shannon. In 1948 he studied how to get messages from one place to another. His question was about engineering, not meaning."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Claude Shannon, 1948"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "His key step: any message is one choice from a set of possible messages. A light switch can say on or off. That is a set of two."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A message = one choice from a set"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the surprise. The less expected a message is, the more information it carries. 'The sun rose today' tells you almost nothing. 'Snow in July' tells you a lot."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Less expected = more information"
+   },
+   "cite": [
+    "s7",
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A weather station nearly always reports 'dry'. Today it reports 'dry'. Tomorrow it reports 'hail'. Which report carries more Shannon information?",
+    "right": "'Hail', because it was far less expected.",
+    "wrong": [
+     "'Dry', because it is true more often.",
+     "Both carry the same amount.",
+     "Neither, because they are only words."
+    ],
+    "why": "In Shannon's sense, information grows with surprise. A rare message resolves more uncertainty than a message you almost expected."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To measure surprise, Shannon needed a unit: the bit. One bit is what you learn when a fair yes/no question with two equally likely answers is settled."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "1 bit = one fair yes/no answer"
+   },
+   "cite": [
+    "s25",
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A fair coin flip gives one bit. Flip three fair coins and you learn three bits. Bits simply add up."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "coin",
+    "count": 3,
+    "layout": "row",
+    "text": "3 fair coin flips = 3 bits"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Another way to see a bit: count yes/no questions. Eight equally likely choices need three questions, because each question can cut the choices in half."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Halving 8 choices",
+    "items": [
+     "8 choices",
+     "Question 1 leaves 4",
+     "Question 2 leaves 2",
+     "Question 3 leaves 1"
+    ]
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "You must pick one of 16 equally likely cards, using yes/no questions that halve the choices each time. How many questions are enough?",
+    "right": "4",
+    "wrong": [
+     "2",
+     "8",
+     "16"
+    ],
+    "why": "16 halves to 8, then 4, then 2, then 1. That is four questions, so the card carries 4 bits."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Outcomes are not always equally likely. A coin that lands heads nine times in ten makes heads a small surprise and tails a big one."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Bits of surprise for different outcomes",
+    "chart": "c2"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Shannon's entropy is the average surprise from a source. A fair coin has the most: one bit per flip. A coin with heads on both sides has none."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Entropy = average surprise"
+   },
+   "cite": [
+    "s4",
+    "s21"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which source has the lowest Shannon entropy?",
+    "right": "A coin with heads on both sides.",
+    "wrong": [
+     "A fair coin.",
+     "A coin that lands heads about 6 times in 10.",
+     "A coin that lands heads about 9 times in 10."
+    ],
+    "why": "A two-headed coin is never a surprise, so its entropy is zero. The more predictable the source, the lower the entropy."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Real text shows this. If all 26 letters were equally likely, each would carry about 4.7 bits. English is predictable, so the real figure is much lower."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Bits per letter of English text",
+    "chart": "c1"
+   },
+   "cite": [
+    "s3",
+    "s2"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Predictable means redundant. In longer text, nearly all of a message can be guessed from a small random sample. That is why you can often read with letters missing."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Predictable = redundant"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why does ordinary English carry fewer bits per letter than random letters would?",
+    "right": "Its letters are far more predictable, so each one is less of a surprise.",
+    "wrong": [
+     "English words are shorter than random words.",
+     "English sentences are always true.",
+     "Computers store English more cheaply."
+    ],
+    "why": "Entropy measures average surprise. English has strong patterns, such as 'u' after 'q', so each letter is more predictable than a random one."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the key point. Shannon wrote that meaning is not part of his engineering problem. Here are his words."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "These semantic aspects of communication are irrelevant to the engineering problem."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "He did not say meaning is unimportant in life. He meant that delivering the symbols does not depend on it. His co-author Warren Weaver made the same point."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Delivering symbols is a separate job from meaning"
+   },
+   "cite": [
+    "s9",
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So a random string of letters usually carries more Shannon information than a wise sentence of the same length. The random string is less predictable."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Same length, different bits",
+    "left": "Wise sentence: predictable patterns, fewer bits per letter",
+    "right": "Random letters: no patterns, more bits per letter"
+   },
+   "cite": [
+    "s3",
+    "s11"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Two messages are the same length. One is a wise sentence. The other is random letters. Which usually has more Shannon information per letter?",
+    "right": "The random letters.",
+    "wrong": [
+     "The wise sentence.",
+     "They always have the same amount.",
+     "Neither has any information."
+    ],
+    "why": "Shannon's measure ignores meaning and only counts surprise. Random letters are less predictable than English, so each letter carries more bits."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Philosophers wanted a measure that does care about meaning. Luciano Floridi defines semantic information as well-formed, meaningful and truthful data."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Semantic information = meaningful, truthful data"
+   },
+   "cite": [
+    "s6",
+    "s26"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "On Floridi's definition, which of these is semantic information?",
+    "right": "A well-formed, true report that the shop opens at nine.",
+    "wrong": [
+     "A burst of random noise.",
+     "A false rumour that the shop is closed forever.",
+     "A blank page."
+    ],
+    "why": "His definition needs data that is well-formed, meaningful and truthful. Noise has no meaning, a false rumour fails on truth, and a blank page says nothing."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "These theories share one thread with Shannon. A statement is informative only if it narrows down the possibilities. A statement that is always true tells you nothing new."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Informative = narrows the possibilities"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the link to physics. Shannon called his measure entropy because his formula matches one from thermodynamics, Boltzmann's. In physics, entropy rises when there are more possible microscopic arrangements."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Entropy: counting possibilities"
+   },
+   "cite": [
+    "s25",
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Physicist E. T. Jaynes argued that thermodynamic entropy is the extra information you would need to pin down the exact microscopic state. You know a gas's temperature, not each molecule."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Jaynes: entropy = missing detail"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Years before Shannon, a thought experiment called Maxwell's demon seemed to break the second law of thermodynamics. A tiny doorkeeper uses information about molecules to lower entropy."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Maxwell's demon"
+   },
+   "cite": [
+    "s12",
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A widely used fix is Landauer's principle. The demon must remember what it measured, and erasing a bit of memory must raise the environment's entropy by at least k ln 2."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Erasing a bit has a minimum cost"
+   },
+   "cite": [
+    "s14",
+    "s12",
+    "s15"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "According to Landauer's principle, which step has an unavoidable minimum cost?",
+    "right": "Erasing a stored bit.",
+    "wrong": [
+     "Reading it aloud.",
+     "Giving it a meaning.",
+     "Copying it onto paper."
+    ],
+    "why": "Landauer's principle is about erasure: forgetting a bit must increase entropy in the surroundings. It says nothing about what the bit means."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "This ties back to energy. At a given temperature, the erasure cost is a tiny but real amount of heat. In one lab test, flipping a bit took about 4.2 × 10⁻²¹ joules at 300 kelvin."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "4.2 × 10⁻²¹ joules",
+    "note": "measured to flip one bit at 300 K, 44% above the Landauer minimum"
+   },
+   "cite": [
+    "s16",
+    "s15"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The minimum applies only to very slow erasure. Faster erasure costs extra. So how quickly the hardware works enters the bill too."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Minimum cost = slow erasure only"
+   },
+   "cite": [
+    "s16",
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "This is why people say information is physical. Every stored bit sits in something real, such as molecules on the left or right side of a box. That is how the heat bill arises."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A box with a divider: gas molecules on the left stand for 0, molecules on the right stand for 1"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "DNA is a physical store too. It has four bases: A, C, G and T. One base is a choice among four, which is two bits."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "2 bits per base",
+    "note": "log base 2 of 4"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Four possible DNA bases, all equally likely. How many bits can one base carry at most?",
+    "right": "2",
+    "wrong": [
+     "1",
+     "4",
+     "8"
+    ],
+    "why": "One base is a choice among four options. Two yes/no questions are enough to pick one of four, so the most a base can carry is 2 bits."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In practice, labs have written computer files into DNA. One team reached about 1.6 bits per base. Errors in writing and reading keep the realistic ceiling nearer 1.8."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Files stored in DNA: about 1.6 bits per base"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Counting two bits per base, one human genome is roughly 1.5 gigabytes. That counts capacity, like counting letters in a book. It does not say what the genome means."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "about 1.5 gigabytes",
+    "note": "rough capacity of a diploid human genome at 2 bits per base"
+   },
+   "cite": [
+    "s20",
+    "s1"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now two open questions. First: is information physical, or is physics information? Physicist John Wheeler pushed the second idea with a famous slogan, 'it from bit'."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "every physical quantity, every it, derives its ultimate significance from bits, binary yes-or-no indications"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Second: what is meaning? Shannon's theory does not say, and researchers building theories of semantic information report that nobody can yet say precisely what semantic information is."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Open: what is meaning?"
+   },
+   "cite": [
+    "s8",
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's gather it up. Information has an everyday sense about meaning, and a technical sense about surprise. Surprise is measured in bits, and it links to entropy and to energy cost."
+   },
+   "show": {
+    "kind": "list",
+    "text": "What we learned",
+    "items": [
+     "Everyday information: meaning and truth",
+     "Shannon information: surprise, in bits",
+     "Shannon's measure ignores meaning",
+     "Entropy links bits to physics; erasing a bit has a minimum cost",
+     "Open: is information physical, and what is meaning?"
+    ]
+   },
+   "cite": [
+    "s1",
+    "s4",
+    "s14"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which statement best sums up today's class?",
+    "right": "Shannon's bits measure how surprising a message is, not what it means, and the same mathematics links to entropy and energy in physics.",
+    "wrong": [
+     "Shannon's bits measure how true and meaningful a message is.",
+     "Information in physics has nothing to do with entropy.",
+     "Meaning has been fully measured, and the matter is closed."
+    ],
+    "why": "Shannon deliberately set meaning aside to measure surprise in bits. That measure connects to physical entropy and to the cost of erasing bits, while the meaning of information remains an open question."
+   }
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Bits per letter of English text, by how much context is used",
+   "rows": [
+    {
+     "label": "All 26 letters equally likely",
+     "value": 4.7,
+     "source": "s3"
+    },
+    {
+     "label": "Counting how common each letter is",
+     "value": 4.08,
+     "source": "s3"
+    },
+    {
+     "label": "Looking at up to eight letters at a time",
+     "value": 2.3,
+     "source": "s2"
+    },
+    {
+     "label": "Long stretches of text (Shannon's estimate)",
+     "value": 1,
+     "source": "s2"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Bits of surprise when an outcome happens",
+   "rows": [
+    {
+     "label": "Outcome that happens 9 times in 10",
+     "value": 0.15,
+     "source": "s4"
+    },
+    {
+     "label": "Fair coin outcome (1 time in 2)",
+     "value": 1,
+     "source": "s4"
+    },
+    {
+     "label": "Outcome that happens 1 time in 10",
+     "value": 3.32,
+     "source": "s4"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Shannon information",
+   "links": [
+    "[[bit]]",
+    "[[entropy]]",
+    "[[redundancy]]"
+   ]
+  },
+  {
+   "topic": "entropy",
+   "links": [
+    "[[Maxwell's demon]]",
+    "[[Landauer's principle]]",
+    "[[energy]]"
+   ]
+  },
+  {
+   "topic": "semantic information",
+   "links": [
+    "[[meaning]]",
+    "[[Shannon information]]"
+   ]
+  },
+  {
+   "topic": "Landauer's principle",
+   "links": [
+    "[[energy]]",
+    "[[entropy]]",
+    "[[Maxwell's demon]]"
+   ]
+  },
+  {
+   "topic": "DNA data storage",
+   "links": [
+    "[[bit]]",
+    "[[life]]"
+   ]
+  },
+  {
+   "topic": "it from bit",
+   "links": [
+    "[[Landauer's principle]]",
+    "[[meaning]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Shannon's measure ignores meaning, so meaning plays no part in communication engineering.",
+   "other_view": "Weaver's later remarks and a later paper clarify that Shannon's remark was about one narrow engineering problem. It did not say that engineering and meaning have nothing to do with each other. Some philosophers go further and argue that the content of signals is relevant to communication theory. Researchers are now building theories and systems that try to bring semantics back in.",
+   "cite": [
+    "s9",
+    "s10",
+    "s8"
+   ]
+  },
+  {
+   "claim": "Landauer's principle ties information to physics and resolves Maxwell's demon.",
+   "other_view": "Many physicists treat this as settled, and experiments have approached the bound. The philosopher John Norton argues that information-based arguments against the demon have not worked, and that thinking in terms of information has hidden a more direct explanation. Another point he makes is that Shannon entropy changes with what an observer knows, while the physical entropy of a gas does not.",
+   "cite": [
+    "s15",
+    "s24"
+   ]
+  },
+  {
+   "claim": "Entropy and information are the same thing.",
+   "other_view": "Many texts equate them, and Shannon himself used the word entropy. One author warns that in Shannon's theory entropy means uncertainty, which is not the same thing as information. For him, information is what reduces the uncertainty.",
+   "cite": [
+    "s5",
+    "s4"
+   ]
+  },
+  {
+   "claim": "Wheeler's 'it from bit': physical reality is built from information.",
+   "other_view": "One reading, that our knowledge of physical systems comes as yes/no measurement outcomes, is widely accepted. The stronger reading, that physical things are informational structures, is contentious. A 2026 paper argues that it is hard to say what binary choices existed before any observer, and that it makes physics depend on minds.",
+   "cite": [
+    "s22",
+    "s23"
+   ]
+  }
+ ]
+}

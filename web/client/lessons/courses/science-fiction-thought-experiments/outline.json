@@ -1,0 +1,164 @@
+{
+ "course_id": "science-fiction-thought-experiments",
+ "title": "Science-Fiction Thought Experiments: Real Science Through Invented Worlds",
+ "audience": [
+  "high school",
+  "adult"
+ ],
+ "length_note": "Eleven classes. Four real subjects need different amounts of room. Epidemiology needs two classes, one on how an outbreak spreads and one on how it is slowed, and logistics needs one more on top of that. Diplomacy and economics each get one class because they use different tools. Linguistics needs two: first what language is, then how people build shared meaning without one. Planetary science needs two: first what makes a world livable, then how and whether to change one. A short opener teaches the method and the 'real vs invented' labelling. A short closing class lets learners apply it. Most classes run 40 minutes, with two shorter ones for the opener and capstone. Each class can be split into two sittings of about 20 minutes, which suits learners who tire easily, such as adults relearning after a brain injury. Every class uses one original invented setting, with no borrowed characters or worlds. Every class ends with a 'Real / Invented / Unknown' ledger, so learners always know which parts are established science and which are story. All sources for facts are to be gathered in the research step, so classes that teach real facts are marked needs_research.",
+ "classes": [
+  {
+   "n": 1,
+   "title": "What a Thought Experiment Is, and How to Tell Fact from Story",
+   "goal": "Explain in plain words what a thought experiment is, and sort statements about the course's invented setting into Real, Invented or Unknown.",
+   "minutes": 25,
+   "topics": [
+    "What a thought experiment is and why scientists and writers use them",
+    "Meet the original setting used in every class: a small, invented frontier community with its own people, places and rules",
+    "The Real / Invented / Unknown ledger used at the end of every class",
+    "Content note: the outbreak classes use an invented, fictional infection, with no gore, and learners can skip any scene"
+   ],
+   "needs_research": false
+  },
+  {
+   "n": 2,
+   "title": "Outbreak, Part 1: How an Infection Spreads",
+   "goal": "Describe how an infection moves through a population and use a simple spreading number to compare two outbreaks.",
+   "minutes": 40,
+   "topics": [
+    "Real: transmission routes, incubation period, and the basic reproduction number (R0)",
+    "Real: why some infections spread faster than others, and what 'exponential growth' looks like",
+    "Invented: the story's fictional infection and the 'infected' of the story, shown as a story device with no real-world counterpart",
+    "Real vs invented: why real diseases do not behave like movie monsters",
+    "Learner activity: change one number in a simple outbreak model and watch what happens"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 3,
+   "title": "Outbreak, Part 2: Slowing It Down",
+   "goal": "Explain at least three real ways outbreaks are slowed, and say why decisions must be made with incomplete information.",
+   "minutes": 40,
+   "topics": [
+    "Real: surveillance, testing, contact tracing, isolation and quarantine",
+    "Real: vaccines, treatment and hygiene, and how each changes the spreading number",
+    "Real: uncertainty in early data and why advice changes as evidence arrives",
+    "Fairness and trust: why communities cooperate or do not",
+    "Learner activity: advise the invented community with partial information"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 4,
+   "title": "Logistics: Keeping a Community Going",
+   "goal": "Make a simple supply plan for a small group, covering water, food, power, shelter and medical care, and explain the trade-offs.",
+   "minutes": 40,
+   "topics": [
+    "Real: the basics of supply chains, stock levels, and single points of failure",
+    "Real: water, food, energy and sanitation needs per person, from established humanitarian and emergency-planning guidance",
+    "Real: triage and prioritisation as used in emergencies",
+    "Invented: the community's map, stores and constraints",
+    "Learner activity: build a one-page supply plan and test it against a surprise"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 5,
+   "title": "Diplomacy: The Intergalactic Model UN",
+   "goal": "Describe how negotiation works between groups with different interests, and take part in a short simulated session.",
+   "minutes": 40,
+   "topics": [
+    "Real: how model UN and real diplomatic bodies work, including delegations, resolutions, speaking order and voting",
+    "Real: interests versus positions, and how compromise and coalitions form",
+    "Invented: the delegations of the invented 'Concord of Worlds' and their histories",
+    "Learner activity: represent one delegation and draft a short resolution on the shared resource problem from class 4",
+    "Optional supports: role cards, sentence starters, and a solo version against scripted delegations"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 6,
+   "title": "Economics: Scarcity, Trade and Fair Shares",
+   "goal": "Use scarcity, trade and incentives to explain why the Concord's worlds might cooperate or compete, and recognise what a simple model leaves out.",
+   "minutes": 40,
+   "topics": [
+    "Real: scarcity, opportunity cost, comparative advantage and gains from trade",
+    "Real: shared resources, public goods and the 'tragedy of the commons'",
+    "Real: sanctions, aid and incentives, and their limits",
+    "Invented: the Concord's goods, currencies and distances",
+    "Learner activity: set a trade deal between two invented worlds and check who gains and who loses"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 7,
+   "title": "First Contact, Part 1: What Language Is",
+   "goal": "Name the main parts of any human language and explain why translating an unknown language is hard.",
+   "minutes": 40,
+   "topics": [
+    "Real: sounds, words, grammar and meaning, and how languages differ",
+    "Real: how linguists document an unfamiliar language, including fieldwork methods",
+    "Real: why word-for-word translation fails",
+    "Invented: the visitors' signals, which are made up for the story and have no real-world counterpart",
+    "Real vs unknown: what scientists do and do not know about communication in other animals"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 8,
+   "title": "First Contact, Part 2: Building Shared Meaning",
+   "goal": "Describe step by step how two groups with no shared language could begin to understand each other, and name the risks of misunderstanding.",
+   "minutes": 40,
+   "topics": [
+    "Real: pointing and naming, gesture, and how pidgin languages form between groups",
+    "Real: how past scripts were deciphered, and the role of bilingual clues",
+    "Real: the debate over whether mathematics or physics could serve as a common ground, which is an open question rather than a settled one",
+    "Unknown: whether any non-human intelligence exists, and how we would know",
+    "Learner activity: decode a short invented signal set using a few clues"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 9,
+   "title": "Terraforming, Part 1: What Makes a World Livable",
+   "goal": "List the main features that make a planet habitable and compare Earth with at least two other worlds using them.",
+   "minutes": 40,
+   "topics": [
+    "Real: atmosphere, temperature, liquid water, radiation and magnetic fields",
+    "Real: the greenhouse effect and how planets hold or lose heat and air",
+    "Real: how Earth, Mars and Venus differ, using measured data",
+    "Invented: the story's target world, which is original and not modelled on any existing fictional planet",
+    "Learner activity: score the invented world on a habitability checklist"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 10,
+   "title": "Terraforming, Part 2: Methods, Timescales and Ethics",
+   "goal": "Explain proposed terraforming methods, say which are speculative, and discuss the ethical questions in a balanced way.",
+   "minutes": 40,
+   "topics": [
+    "Real: proposed methods discussed by scientists, and the limits of what current technology could do",
+    "Real: timescales, from decades to millennia, and the energy involved",
+    "Real: planetary protection rules and the question of possible native life",
+    "Unknown: whether any of these methods would work at full scale",
+    "Ethics: who decides, and what is owed to a world and to the people who might one day live there"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 11,
+   "title": "Capstone: Design Your Own Thought Experiment",
+   "goal": "Create and present a short thought experiment in an original setting, with a Real / Invented / Unknown ledger that is accurate and clear.",
+   "minutes": 35,
+   "topics": [
+    "Choose one subject from the course: outbreak, logistics, diplomacy, economics, language or planets",
+    "Write a one-page scenario with an original setting and no borrowed characters",
+    "Build the ledger: label each claim Real, Invented or Unknown, and point to where the real claims came from",
+    "Formats on offer: written, spoken, drawn or a short game",
+    "Peer feedback and a plain-language self-check"
+   ],
+   "needs_research": false
+  }
+ ]
+}

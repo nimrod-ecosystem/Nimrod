@@ -1,0 +1,988 @@
+{
+ "about": {
+  "title": "How to Learn About Religions Respectfully",
+  "course": "religions-of-the-world",
+  "class_n": 1,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 20,
+  "length_note": "About 20 minutes. Six topics, each taught one idea at a time in short steps, with a check question after most steps. You can pause after any step. The vocabulary and calendar sections are the longest, because later classes depend on them."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "The World's Religious Groups: How Their Sizes Changed from 2010 to 2020",
+   "publisher": "Pew Research Center",
+   "date": "2025-06-09",
+   "link": "https://www.pewresearch.org/religion/2025/06/09/how-the-global-religious-landscape-changed-from-2010-to-2020/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "How the Global Religious Landscape Changed (report PDF)",
+   "publisher": "Pew Research Center",
+   "date": "2025-06-09",
+   "link": "https://www.pewresearch.org/wp-content/uploads/sites/20/2025/06/PR_2025.06.09_global-religious-change_report.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "The Global Religious Landscape",
+   "publisher": "Pew Research Center (Forum on Religion & Public Life)",
+   "date": "2012-12-18",
+   "link": "https://www.pewresearch.org/religion/2012/12/18/global-religious-landscape-exec/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Many religions are heavily concentrated in a few countries",
+   "publisher": "Pew Research Center",
+   "date": "2025-12-08",
+   "link": "https://www.pewresearch.org/short-reads/2025/12/08/many-religions-heavily-concentrated-in-one-or-two-countries/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "13.1 What Is Religion? (Introduction to Anthropology)",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/introduction-anthropology/pages/13-1-what-is-religion",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Chapter 15. Religion (Introduction to Sociology, 2nd edition)",
+   "publisher": "BCcampus Open Education (opentextbc.ca)",
+   "date": "n.d.",
+   "link": "https://opentextbc.ca/introductiontosociology2ndedition/chapter/chapter-15-religion/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Introduction to Religion (Introduction to Sociology, open textbook)",
+   "publisher": "Pressbooks (louis.pressbooks.pub)",
+   "date": "n.d.",
+   "link": "https://louis.pressbooks.pub/introsociology/chapter/introduction-to-religion/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Religious text",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Religious_text",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Religious denomination",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Religious_denomination",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "AAR Guidelines for Teaching About Religion in K–12 Public Schools in the United States",
+   "publisher": "American Academy of Religion",
+   "date": "2010 (guidelines approved; web page undated)",
+   "link": "https://aarweb.org/resource/aar-guidelines-for-teaching-about-religion-in-k-12-public-schools-in-the-united-states/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Encounter over the Curriculum",
+   "publisher": "The Pluralism Project, Harvard University",
+   "date": "n.d.",
+   "link": "https://pluralism.org/encounter-over-the-curriculum",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "A Six-Point Framework for Teaching Religion in the Classroom",
+   "publisher": "Religion Matters",
+   "date": "2021-02-24",
+   "link": "https://religionmatters.org/2021/02/24/a-six-point-framework-for-teaching-religion-in-the-classroom/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Emic and etic",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Emic_and_etic",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Emic and etic",
+   "publisher": "Cambridge Encyclopedia of Anthropology",
+   "date": "n.d.",
+   "link": "https://www.anthroencyclopedia.com/entry/emic-and-etic",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Insider and Outsider Knowledge: Etic and Emic Perspectives on Empirical Missiological Research and Its Consequences for Theological Education",
+   "publisher": "SAGE Journals (author: Tobias Schuckert)",
+   "date": "2023",
+   "link": "https://journals.sagepub.com/doi/10.1177/23969393231172499",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "The Emics and Etics of Religion: What we know, how we know it and why this matters",
+   "publisher": "University of Edinburgh Research Explorer (in The Insider/Outsider Debate, Equinox)",
+   "date": "n.d.",
+   "link": "https://www.research.ed.ac.uk/en/publications/the-emics-and-etics-of-religion-what-we-know-how-we-know-it-and-w/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "The Insider/Outsider Debate (review)",
+   "publisher": "Reading Religion",
+   "date": "n.d.",
+   "link": "https://readingreligion.org/9781781793442/the-insideroutsider-debate/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "The Ultimate Guide to Lunar Calendars Around the World",
+   "publisher": "Universal Time Date",
+   "date": "n.d.",
+   "link": "https://www.universaltimedate.com/articles/guide-to-lunar-calendars",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Lunar Calendars and How They Differ from the Solar Calendar",
+   "publisher": "Time.now",
+   "date": "n.d.",
+   "link": "https://time.now/articles/lunar-vs-solar-calendar/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Islamic Date Converter — Hijri, Hebrew, Chinese Lunar & Hindu",
+   "publisher": "SacredCal",
+   "date": "n.d.",
+   "link": "https://sacredcal.com/date-converter",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Lunar Calendar vs Solar Calendar: The 11-Day Gap",
+   "publisher": "DayFour Calendar",
+   "date": "n.d.",
+   "link": "https://dayfourcalendar.com/en/blog/lunar-calendar-vs-solar-calendar/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Lunisolar calendar",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Lunisolar_calendar",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 1 of 17. Over this course we will meet many religions, large and small."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "How to Learn About Religions Respectfully"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Before we visit any of them, we agree on how we will learn. That way every class feels fair and clear."
+   },
+   "show": {
+    "kind": "list",
+    "text": "This class: 1. Describing, not judging  2. Insider and outsider views  3. Words we will use  4. Five questions  5. Size  6. Calendars"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Our first idea is the word describe. To describe a belief is to say what people hold to be true, and why it matters to them."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Describe"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To endorse a belief is to say, 'I agree, this is true.' This course does not endorse. It does not dismiss either."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Endorse"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the difference in practice. One textbook lists belief in karma, the idea that actions have effects, as characteristic of Hinduism."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Describing: 'Many Hindus believe actions have effects, called karma.' | Endorsing: 'Karma is real.' Dismissing: 'Karma is nonsense.'"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Your turn. Which sentence describes a belief, without endorsing or dismissing it?"
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Describing | Endorsing or dismissing"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which sentence describes a belief without endorsing or dismissing it?",
+    "right": "Many Hindus believe actions have effects, called karma.",
+    "wrong": [
+     "Karma is real, so everyone should accept it.",
+     "Karma is nonsense and nobody should believe it.",
+     "Karma is the best idea any religion has."
+    ],
+    "why": "The right answer only says what a group believes. The others agree with the belief, dismiss it, or rank it."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why teach this way? Scholars who wrote guidelines for teaching about religion separate two approaches: academic and devotional."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Academic: learning about religions | Devotional: practising a faith"
+   },
+   "cite": [
+    "s10",
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The guidelines say teaching should inform about religions, not promote or put down any of them. This course follows that path: academic."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Academic, not devotional"
+   },
+   "cite": [
+    "s11",
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That brings us to ranking. There is none here, and no verdict on which belief is true."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "No ranking. No verdict on truth."
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Describing what people believe is one job. Deciding whether it is right is another. You may think about that second question, but it is not this course's job."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Describe ≠ decide"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "A friend says, 'This course should tell us which religion is correct.' What is the best reply?",
+    "right": "This course describes what each tradition teaches. It does not rule on which is true.",
+    "wrong": [
+     "Yes, the biggest religion will be marked as correct.",
+     "Yes, the oldest religion will be marked as correct.",
+     "Yes, we will vote on it at the end."
+    ],
+    "why": "The course describes. It does not rank traditions or judge truth, and size or age would not settle it anyway."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next idea: who is speaking? An insider belongs to a tradition. An outsider does not."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Insider: belongs to the tradition | Outsider: does not belong"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Scholars have matching words. 'Emic' means describing from the insider's view. 'Etic' means describing from the outsider's view."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Emic: the insider's view | Etic: the outsider's view"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why does this matter? One researcher argues that European outsiders' accounts of Indian religion led to a misunderstanding of Hinduism that lasted to today."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A pair of glasses with two different lenses, one labelled 'inside' and one labelled 'outside'"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So our rule is this. Each tradition is described as its own followers and scholars describe it. We start with what insiders say, and scholars add context."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Followers first, scholars add context"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Someone who belongs to a tradition describes it in their own words. Which view is that?",
+    "right": "An insider's view",
+    "wrong": [
+     "An outsider's view",
+     "A ranking of religions",
+     "A verdict on truth"
+    ],
+    "why": "An insider belongs to the tradition. This course starts from how followers describe their own faith."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now six words we will use all course. We start with the biggest: religion."
+   },
+   "show": {
+    "kind": "list",
+    "text": "religion, belief, practice, ritual, scripture, community, denomination"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A common textbook definition: religion is a shared system of beliefs and practices about the natural and the supernatural. The textbook also says simple definitions sometimes fall short."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Religion: shared beliefs and practices"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Word one: belief. A belief is a specific idea that members of a faith hold to be true."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Belief: an idea held to be true"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Word two: practice. Practice is what people do as part of their faith. Word three: ritual, a behaviour that members of a group are expected to do."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Belief: what people hold true | Practice and ritual: what people do"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a ritual example. Across many societies, a ceremony after a death includes steps like announcing the death and caring for the person who died."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Announce the death · Care for the deceased · Ceremony or ritual"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which of these is a ritual?",
+    "right": "A ceremony after a death, with set steps",
+    "wrong": [
+     "An idea that members hold to be true",
+     "A book that a community treats as authoritative",
+     "A subgroup within a religion"
+    ],
+    "why": "A ritual is something people do, a set action. The other answers are a belief, a scripture and a denomination."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Word four: scripture. Scripture is a text that a religious community treats as especially authoritative or sacred."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Scripture: an authoritative sacred text"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "For example, the Rigveda is a Hindu scripture. This source dates it to about 1500 BCE. Later classes show how traditions treat their texts."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "c. 1500 BCE: the Rigveda, a Hindu scripture"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is a scripture?",
+    "right": "A text that a religious community treats as especially authoritative or sacred",
+    "wrong": [
+     "Any ceremony a community performs",
+     "A person who leads worship",
+     "A group of people who share a tradition"
+    ],
+    "why": "Scripture names a kind of text. A ceremony is a ritual, and a group of people is a community."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Word five: community. A community is the group of people who share a tradition. One classic definition says shared beliefs and practices unite people into one moral community."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Community: people who share a tradition"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Word six: denomination. A denomination is a subgroup within a religion that has its own common name and tradition."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Denomination: a subgroup within a religion"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Christianity is a well-known example. Its denominations are separated by things like doctrine and church authority. We will meet those in Class 7."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A large tree with one trunk labelled 'religion' and several branches labelled 'denominations'"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In this course, what does 'denomination' mean?",
+    "right": "A subgroup within a religion with its own common name and tradition",
+    "wrong": [
+     "A sacred text",
+     "A ceremony with set steps",
+     "A person studying religion from the outside"
+    ],
+    "why": "A denomination is a branch within a religion. A sacred text is scripture, a ceremony is a ritual, and an outside student is an outsider."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the five questions we ask of every tradition. Each tradition gets the same five, in the same order."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Beliefs  2. Practices  3. History  4. Holidays  5. Where it is practised today"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why the same five every time? Because it is fair. No tradition gets more attention or a harsher test than another."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Same five questions, every tradition"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which of these is NOT one of our five questions?",
+    "right": "Which tradition is most correct?",
+    "wrong": [
+     "What do followers believe?",
+     "What are the holidays?",
+     "Where is it practised today?"
+    ],
+    "why": "We describe beliefs, practices, history, holidays and where a tradition is practised today. We do not rank traditions or rule on truth."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now size. Pew Research counted religious groups for 2020, using more than 2,700 censuses and surveys. Here are the shares of the world's people."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Share of the world's people by religious group, 2020",
+    "chart": "c1"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Notice the bar for 'other religions'. It holds many groups, including Sikhs, Jains and Baháʼís. That is why this course gives smaller faiths their own classes."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "One bar, many traditions"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The smallest group Pew studied, Jews, is about 14.8 million people. That is roughly 0.2% of the world."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "14.8 million Jews, about 0.2% of the world"
+   },
+   "cite": [
+    "s2",
+    "s1"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In an earlier Pew report, Sikhs were put at about 25 million. Estimates for small faiths often come from the groups themselves."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 25 million Sikhs (Pew 2012, citing the World Religion Database)"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So what does size tell us? It counts followers. It does not measure how deep a tradition is, or how much it matters to the people in it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Size counts followers"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "A tradition has fewer followers than another. What does its size tell us?",
+    "right": "How many followers it has, and nothing about how true or important it is",
+    "wrong": [
+     "It is less true than larger traditions",
+     "It matters less to its followers",
+     "It is not worth studying"
+    ],
+    "why": "Size is a head count. It says nothing about truth, or about how much a faith matters to its followers."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Size also connects to our fifth question: where a tradition is practised today. Some traditions are spread out and others are concentrated."
+   },
+   "show": {
+    "kind": "map",
+    "text": "World map. Three Asian countries (Thailand, China, Myanmar) shaded for Buddhists; twelve countries across several continents shaded for Christians"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "By Pew's count, a majority of Buddhists live in just three countries: Thailand, China and Myanmar. It takes at least twelve countries to reach half of all Christians."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Buddhists: 3 countries hold 52%  |  Christians: 12 countries hold 51%"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now holidays. Holidays follow calendars, and calendars do not all work the same way. There are three main kinds."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "How religious calendars differ"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A solar calendar follows the sun. A year is about 365 days. The Gregorian calendar, the world's most commonly used, is solar."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Solar: follows the sun (about 365 days)"
+   },
+   "cite": [
+    "s19",
+    "s22"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A lunar calendar follows the moon alone. The Islamic Hijri calendar has twelve months of 29 or 30 days. Its year is about 11 days shorter than the Gregorian one."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Lunar: follows the moon (about 354 days)"
+   },
+   "cite": [
+    "s18",
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Because the lunar year is shorter, Ramadan moves backward through the seasons. It takes about 33 years to come back to the same season."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Each Gregorian year, Ramadan begins about 11 days earlier. After about 33 years it returns to the same season."
+   },
+   "cite": [
+    "s21",
+    "s18"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why does Ramadan move earlier through the seasons from year to year?",
+    "right": "The Islamic calendar is purely lunar, so its year is about 11 days shorter than the solar year.",
+    "wrong": [
+     "Because it follows the sun more closely than other calendars",
+     "Because it adds a leap month every year",
+     "Because its dates are chosen at random"
+    ],
+    "why": "A purely lunar year is shorter than a solar year and has no leap month to catch up, so its dates drift earlier through the seasons."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A lunisolar calendar follows the moon month by month, then adds a leap month from time to time. That keeps festivals near their seasons."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Lunisolar: moon months plus a leap month"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Hebrew, Chinese and Hindu calendars are lunisolar. So a festival can land a month later one year than the year before, yet stay in its season."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Lunisolar: Hebrew, Chinese, Hindu  |  Lunar: Islamic (Hijri)  |  Solar: Gregorian"
+   },
+   "cite": [
+    "s20",
+    "s19"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which kind of calendar adds an occasional leap month to stay near the seasons?",
+    "right": "Lunisolar",
+    "wrong": [
+     "Purely lunar",
+     "Purely solar",
+     "None of them"
+    ],
+    "why": "A lunisolar calendar follows the moon each month, then adds a leap month to stay in step with the solar year."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Many communities use more than one calendar. Muslims, for example, use the Hijri calendar for religious observances and the Gregorian calendar for business and government."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "More than one calendar, side by side"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One practical tip. A date calculator can be a day off from the date your local community announces. For an important date, check with your local community."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Check dates with your local community"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's gather it up. We describe, we do not judge. We hear insiders first. We use six shared words. We ask five questions of every tradition, and we do not rank or rule on truth."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Describe, don't judge · Insiders first · Shared words · Five questions · No ranking, no verdict on truth"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which sentence best sums up how this course works?",
+    "right": "It describes each tradition as its followers and scholars do, asks the same five questions of each, and does not rank them or rule on truth.",
+    "wrong": [
+     "It ranks religions from largest to smallest and treats the largest as most important.",
+     "It tells you which religion is correct.",
+     "It only covers the biggest religions."
+    ],
+    "why": "The course describes respectfully, asks the same five questions of every tradition, and includes small faiths as well as large ones."
+   }
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Share of the world's people by religious group, 2020 (percent; 'other religions' combines many smaller groups)",
+   "rows": [
+    {
+     "label": "Christians",
+     "value": 28.8,
+     "source": "s1"
+    },
+    {
+     "label": "Muslims",
+     "value": 25.6,
+     "source": "s1"
+    },
+    {
+     "label": "Religiously unaffiliated",
+     "value": 24.2,
+     "source": "s1"
+    },
+    {
+     "label": "Hindus",
+     "value": 14.9,
+     "source": "s1"
+    },
+    {
+     "label": "Buddhists",
+     "value": 4.1,
+     "source": "s1"
+    },
+    {
+     "label": "All other religions combined",
+     "value": 2.2,
+     "source": "s2"
+    },
+    {
+     "label": "Jews",
+     "value": 0.2,
+     "source": "s2"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Describing versus endorsing",
+   "links": [
+    "[[Insider and outsider views]]",
+    "[[No ranking and no verdict on truth]]"
+   ]
+  },
+  {
+   "topic": "Insider and outsider views",
+   "links": [
+    "[[Describing versus endorsing]]",
+    "[[Emic and etic]]"
+   ]
+  },
+  {
+   "topic": "Course vocabulary: belief, practice, ritual, scripture, community, denomination",
+   "links": [
+    "[[The five questions]]",
+    "[[Denominations in Christianity]]"
+   ]
+  },
+  {
+   "topic": "The five questions",
+   "links": [
+    "[[Course vocabulary: belief, practice, ritual, scripture, community, denomination]]",
+    "[[Size is not importance]]"
+   ]
+  },
+  {
+   "topic": "Size is not importance",
+   "links": [
+    "[[No ranking and no verdict on truth]]",
+    "[[Where a tradition is practised today]]"
+   ]
+  },
+  {
+   "topic": "Religious calendars: solar, lunar, lunisolar",
+   "links": [
+    "[[Holidays]]",
+    "[[Calendars, sacred places and living side by side]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "People are either insiders or outsiders, and the two give different kinds of knowledge.",
+   "other_view": "Scholars disagree about this. Some argue that 'emic' and 'etic' name methods, not types of people, and that insiders and outsiders can each give both kinds of account. Others say one person can hold several roles and perspectives at once, so the line is blurry. The rule in this course is a practical choice: start with how followers describe their own tradition.",
+   "cite": [
+    "s14",
+    "s16",
+    "s17"
+   ]
+  },
+  {
+   "claim": "'Denomination' means a subgroup within a religion.",
+   "other_view": "That is the meaning we use, and it fits Christianity best. Some sociology textbooks define denomination differently: a large, mainstream religion that is not sponsored by the state. Traditions also divide in different ways, so later classes will say which word followers themselves use for their own branches.",
+   "cite": [
+    "s9",
+    "s7"
+   ]
+  },
+  {
+   "claim": "Counts such as 'Christians 28.8%' show how big each religion is.",
+   "other_view": "The counts are estimates. For smaller faiths, global sizes often come from other sources, such as the groups themselves. How a group is counted also affects results: Pew counts people who identify with a group, which is not the same as how often they take part.",
+   "cite": [
+    "s3",
+    "s1"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,1475 @@
+{
+ "about": {
+  "title": "Hinduism",
+  "course": "religions-of-the-world",
+  "class_n": 2,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. The seven topics each get small steps and a check question. If you need a break, stop after the Gita (the end of the texts section) or after the worship section. Each part stands on its own."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Hinduism (Britannica Students)",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated (2026 copyright notice on page)",
+   "link": "https://kids.britannica.com/students/article/Hinduism/274887",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Hinduism - Beliefs, Practices, & History: General nature of Hinduism",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated (page shows recent update)",
+   "link": "https://www.britannica.com/topic/Hinduism/General-nature-of-Hinduism",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Karma",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated (page shows recent update)",
+   "link": "https://www.britannica.com/topic/karma",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Hinduism (World Religions chapter by OpenStax CNX, reproduced in an introductory sociology course)",
+   "publisher": "Lumen Learning, reproducing OpenStax CNX",
+   "date": "undated",
+   "link": "https://courses.lumenlearning.com/wm-introductiontosociology/chapter/hinduism/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Bhagavad Gita",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated (page shows recent update)",
+   "link": "https://www.britannica.com/topic/Bhagavad-Gita",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Hinduism - Bhagavadgita, Dharma, Karma",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated (page shows recent update)",
+   "link": "https://www.britannica.com/topic/Hinduism/The-Bhagavadgita",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Bhagavad-gita",
+   "publisher": "Encyclopedia.com (reference entries)",
+   "date": "updated 2018-05-14 per page",
+   "link": "https://www.encyclopedia.com/philosophy-and-religion/eastern-religions/hinduism/bhagavad-gita",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Hindu Texts: The Vedas, Upanishads, Bhagavad Gita and Ramayana",
+   "publisher": "Facts and Details",
+   "date": "undated",
+   "link": "https://factsanddetails.com/world/cat55/sub354/item1357.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Concept summaries: Bhagavad Gita, Vedas, Brahman",
+   "publisher": "EPFL GraphSearch",
+   "date": "undated",
+   "link": "https://graphsearch.epfl.ch/en/concept/744158/concepts",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Trimurti",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated (page shows recent update)",
+   "link": "https://www.britannica.com/topic/trimurti-Hinduism",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Hinduism (Religion Library)",
+   "publisher": "Patheos",
+   "date": "undated",
+   "link": "https://www.patheos.com/library/hinduism",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "God in Hinduism: Brahman and the Many Deities",
+   "publisher": "My Dharma Path",
+   "date": "undated",
+   "link": "https://mydharmapath.com/concepts/god-in-hinduism",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Murti",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/topic/murti",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Hindu temple",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated (page shows recent update)",
+   "link": "https://www.britannica.com/topic/Hindu-temple",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "The Home Shrine",
+   "publisher": "Himalayan Academy (Hindu publisher)",
+   "date": "undated",
+   "link": "https://www.himalayanacademy.com/media/books/the-home-shrine_ei/web/ch22.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Sacred Shrine, Heartbeat of the Home",
+   "publisher": "Hinduism Today",
+   "date": "October-December 2026 issue",
+   "link": "https://www.hinduismtoday.com/october-november-december-2026/sacred-shrine-heartbeat-of-the-home",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Hindu Worship: Types, How, Darshan and Home Altars",
+   "publisher": "Facts and Details",
+   "date": "undated",
+   "link": "https://factsanddetails.com/india/Religion_Caste_Folk_Beliefs_Death/Hindu_Worship_Customs_and_Practices/entry-8571.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Kumbh Mela (Sacred Journeys with Bruce Feiler)",
+   "publisher": "PBS",
+   "date": "undated",
+   "link": "https://www.pbs.org/wgbh/sacredjourneys/content/kumbh-mela/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Kumbh Mela Diaries: Varanasi",
+   "publisher": "Deccan Herald",
+   "date": "undated (about 2019)",
+   "link": "https://www.deccanherald.com/india/kumbh-mela-diaries-varanasi-717844.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "The Festival of Lights",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/story/the-festival-of-lights",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Why Is Diwali Called the Festival of Lights? (video transcript)",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/video/Diwali-festival-significance-traditions/-283960",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Diwali: Celebrating the Festival of Lights (interview with Vasudha Narayanan, University of Florida)",
+   "publisher": "NPR",
+   "date": "2012-11-13",
+   "link": "https://www.npr.org/2012/11/13/165046185/diwali-celebrating-the-festival-of-lights",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Holi Hai!",
+   "publisher": "Hindu American Foundation",
+   "date": "2026",
+   "link": "https://www.hinduamerican.org/holi/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "Hindu Festivals - Diwali, Holi, Navratri & More",
+   "publisher": "Vidyalaya",
+   "date": "undated",
+   "link": "https://vidyalaya.org/festivals",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Hindu Festivals Explained: A Beginner's Guide",
+   "publisher": "Vedkosh",
+   "date": "undated",
+   "link": "https://www.vedkosh.com/en/guide/hindu-festivals-explained",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Celebrating Diwali: Information for students and staff",
+   "publisher": "Loughborough University",
+   "date": "2026-11",
+   "link": "https://www.lboro.ac.uk/internal/news/2026/november/celebrating-diwali/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "Countries with the most Hindus and global Hindu population change, 2010-2020",
+   "publisher": "Pew Research Center",
+   "date": "2025-06-09",
+   "link": "https://www.pewresearch.org/religion/2025/06/09/hindu-population-change/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "Many religions are heavily concentrated in a few countries",
+   "publisher": "Pew Research Center",
+   "date": "2025-12-08",
+   "link": "https://www.pewresearch.org/short-reads/2025/12/08/many-religions-heavily-concentrated-in-one-or-two-countries/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "HAF's Ancient India Primer",
+   "publisher": "Hindu American Foundation",
+   "date": "undated",
+   "link": "https://www.hinduamerican.org/ancient-india-primer/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "Indus Valley Civilization: Hindu perspectives",
+   "publisher": "The Indosphere",
+   "date": "undated (page shows recent update)",
+   "link": "https://theindosphere.com/indus-valley-civilization-hindu-perspectives/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s31",
+   "title": "The Hindu Belief System: Dharma, Karma and Moksha",
+   "publisher": "Study.com",
+   "date": "undated",
+   "link": "https://study.com/academy/lesson/the-hindu-belief-system-darma-karma-and-moksha.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s32",
+   "title": "Overview of Hinduism",
+   "publisher": "University of Cambridge, Equality and Diversity",
+   "date": "undated",
+   "link": "https://www.equality.admin.cam.ac.uk/projects/faith-and-belief-practice/overview-hinduism",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class two. Last time we learned how to study religions respectfully. Today we put that into practice with Hinduism."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Hinduism"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We will cover five things: key ideas, holy texts, worship, festivals, and where Hindus live. We will take one step at a time."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Key ideas; Texts; Worship; Festivals; Where Hindus live"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let us start with the name. 'Hinduism' is fairly new. British writers coined it in the 19th century, at first as an outsiders' term."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Hinduism: a 19th-century English word"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Many Hindus prefer 'sanatana dharma', meaning 'eternal law'. It points to a whole web of customs, duties and ideals, not only beliefs."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sanatana dharma = eternal law"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What does 'sanatana dharma' mean?",
+    "right": "Eternal law",
+    "wrong": [
+     "A new teaching from the 19th century",
+     "A book of rules written by one founder",
+     "The name of a festival"
+    ],
+    "why": "Many Hindus use this name for their tradition. Sanatana means eternal, and dharma means law or duty."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That 'eternal' idea fits the history. Hinduism has no single founder, and its origins are lost in a very distant past."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "No single founder"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is a rough timeline. Dates are approximate, and some are debated, as we will see."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "More than 3,000 years ago: early roots of the tradition | from about 1500 BCE: Indo-Aryan speakers in the north-west, in the mainstream scholarly view | between 400 BCE and 400 CE: Bhagavad Gita composed (estimates) | 19th century: the word 'Hinduism' coined | 2020: nearly 1.2 billion Hindus"
+   },
+   "cite": [
+    "s1",
+    "s30",
+    "s7",
+    "s27"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The mainstream scholarly view says Indo-Aryan speakers came from Central Asia and absorbed local traditions. Some Indian scholars say the tradition began inside India."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Mainstream scholarship: migration, then blending | Another view: began within the subcontinent"
+   },
+   "cite": [
+    "s30",
+    "s29"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Do scholars agree on exactly how the Vedic tradition began?",
+    "right": "No. There are several theories, and the debate continues.",
+    "wrong": [
+     "Yes, it is completely settled",
+     "Yes, one founder started it in a single year",
+     "No, nobody has studied it"
+    ],
+    "why": "The Hindu American Foundation itself says the origins are unclear and contested. Scholars outside the tradition also disagree among themselves."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the ideas. Four words carry a lot of Hindu thought: dharma, karma, rebirth and liberation. We will take them one by one."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Dharma; Karma; Samsara (rebirth); Moksha (liberation)"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, dharma. It means duty: the right way to live and act, in the world and towards others."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Dharma = duty, right living"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is an example. Dharma includes values such as honesty, generosity and compassion."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Honesty; Generosity; Compassion"
+   },
+   "cite": [
+    "s31"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which is an example of living by dharma?",
+    "right": "Telling the truth and helping someone in need",
+    "wrong": [
+     "Collecting as much money as possible",
+     "Avoiding all other people",
+     "Winning every argument"
+    ],
+    "why": "Dharma is about right conduct, with values like honesty, generosity and compassion."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next, karma. Karma is the idea that actions have results. What you do shapes what comes next, in this life or a future one."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Karma = actions have results"
+   },
+   "cite": [
+    "s4",
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Think of a seed. The seed you plant decides the plant you get. Karma is the same idea, but for actions. It is about cause and effect, not luck."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A seed in soil, and a plant growing from it"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Karma is best described as...",
+    "right": "Actions have consequences, now or in a later life",
+    "wrong": [
+     "Random luck",
+     "A god's changing mood",
+     "A type of festival"
+    ],
+    "why": "Britannica calls karma the ethical side of rebirth: present actions shape what follows."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That brings us to rebirth. Hindus speak of a soul, called atman, and of samsara, the cycle of birth, death and rebirth."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Samsara = cycle of birth, death, rebirth"
+   },
+   "cite": [
+    "s4",
+    "s3"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Many Hindus believe every living creature has a soul. That is one reason many Hindus are vegetarian."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Every living creature has a soul"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is samsara?",
+    "right": "The cycle of birth, death and rebirth",
+    "wrong": [
+     "A daily prayer",
+     "A holy river",
+     "A kind of duty"
+    ],
+    "why": "Samsara is the cycle. Karma and dharma shape how a person moves through it."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "And the goal: moksha, or liberation. It means freedom from that cycle, and for many Hindus it is the ultimate goal."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Moksha = liberation from the cycle"
+   },
+   "cite": [
+    "s4",
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One textbook describes moksha as oneness with God and existence. Different Hindu traditions picture it in their own ways."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Moksha ends the cycle of sorrow, suffering and rebirths. (OpenStax, paraphrased)"
+   },
+   "cite": [
+    "s4",
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which word means freedom from the cycle of rebirth?",
+    "right": "Moksha",
+    "wrong": [
+     "Dharma",
+     "Karma",
+     "Atman"
+    ],
+    "why": "Moksha is liberation. Dharma is duty, karma is action and result, and atman is the soul."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let us put the four together in one picture."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Dharma: duty | Karma: actions and results | Samsara: the cycle | Moksha: freedom from the cycle"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Where do these ideas appear? In sacred texts. The oldest are the Vedas. 'Veda' means knowledge."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Veda = knowledge"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "There are four Vedas: the Rigveda, Yajurveda, Samaveda and Atharvaveda."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "book",
+    "count": 4,
+    "layout": "row",
+    "text": "Four Vedas"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "How many Vedas are there?",
+    "right": "Four",
+    "wrong": [
+     "Two",
+     "Seven",
+     "Twelve"
+    ],
+    "why": "The Rigveda, Yajurveda, Samaveda and Atharvaveda make four."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Hindu texts come in two groups. Shruti, including the Vedas and Upanishads, is seen as divinely inspired. Smriti, including the Mahabharata and Ramayana, comes from great sages."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Shruti: Vedas, Upanishads | Smriti: Mahabharata (with the Gita), Ramayana"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which group includes the Mahabharata?",
+    "right": "Smriti",
+    "wrong": [
+     "Shruti",
+     "The four Vedas",
+     "Neither; it is not a Hindu text"
+    ],
+    "why": "The Mahabharata, which contains the Bhagavad Gita, is smriti. It is remembered tradition from sages."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One part of the Mahabharata is read and loved on its own: the Bhagavad Gita. Its name means 'Song of God'."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Bhagavad Gita = Song of God"
+   },
+   "cite": [
+    "s5",
+    "s6"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "It is a conversation. Prince Arjuna despairs before a battle. Krishna, an avatar of Vishnu, is his charioteer and guide."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A chariot between two armies; Krishna holds the reins while Arjuna listens"
+   },
+   "cite": [
+    "s5",
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Gita has 700 verses in 18 chapters. So it is short enough to be read, memorised and discussed widely."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "700 verses, 18 chapters"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Who gives guidance to Arjuna in the Gita?",
+    "right": "Krishna",
+    "wrong": [
+     "Brahma",
+     "Ganesha",
+     "The Buddha"
+    ],
+    "why": "The Gita is a dialogue between Arjuna and Krishna, an avatar of Vishnu."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Many Hindus have long cherished the Gita for spiritual guidance. In the 19th century, thinkers such as Emerson and Thoreau in America also gave it new attention."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Cherished guidance"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Scholars cannot date the Gita exactly. One reference work says between 400 BCE and 400 CE, and notes Indian scholars generally prefer earlier dates."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "400 BCE to 400 CE: estimated range for the Bhagavad Gita"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Gita names Krishna as an avatar of Vishnu. That leads to a big question: how do Hindus understand the divine?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Many ways of understanding the divine"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Hinduism has a rich family of divine beings. It also has a widely held belief in one creative principle behind everything, called brahman."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Brahman = the one underlying principle"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So Hindus hold several views. Some honour many gods and goddesses. Some speak of a trinity. Others say all the gods are forms of one."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Many gods and goddesses; a trinity (trimurti); one reality in many forms"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Devotion often has a focus. Many devotees of Vishnu see the divine as Vishnu or Krishna. Devotees of Shiva see Shiva. Devotees of the Goddess see the Divine Mother."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Vishnu or Krishna; Shiva; the Goddess (Devi)"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which statement fits what we have learned?",
+    "right": "Hindus hold several views of the divine, such as many deities, a trinity, or one reality in many forms.",
+    "wrong": [
+     "All Hindus worship exactly one god, named Brahma",
+     "All Hindus agree on one fixed list of gods",
+     "Hinduism says there is nothing divine"
+    ],
+    "why": "Patheos notes that Hindus recognise many gods, a trinity, or one God in many forms, depending on the tradition."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let us look at the trinity, the trimurti. Brahma is the creator, Vishnu the preserver, and Shiva the destroyer."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Brahma: creator | Vishnu: preserver | Shiva: destroyer"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "In the trimurti, which god is the preserver?",
+    "right": "Vishnu",
+    "wrong": [
+     "Brahma",
+     "Shiva",
+     "Krishna"
+    ],
+    "why": "Brahma creates, Vishnu preserves and Shiva destroys, in the trimurti's three functions."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Two cautions. Scholars say Vishnu and Shiva are more than those labels. And Brahma, the god, is not the same as brahman, the ultimate reality."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Brahma (a god) is not brahman (ultimate reality)"
+   },
+   "cite": [
+    "s10",
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "With different views of the divine, it makes sense that there are different paths. The Gita describes ways of approaching life through the mind, the emotions and actions."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Through the mind; through the emotions; through actions"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Devotion, called bhakti, became a central path in Hinduism. Love and devotion towards a personal God is one way to seek the goal."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Bhakti = devotion"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Someone who mainly follows the path of devotion would most likely...",
+    "right": "Express love for God through prayer and worship",
+    "wrong": [
+     "Avoid every ritual and prayer",
+     "Study only mathematics",
+     "Reject the idea of God completely"
+    ],
+    "why": "Bhakti means devotion to a personal God, a central path in Hinduism."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So why do Hindus themselves call their tradition diverse? Many hold that truth cannot be captured in one creed, so it must be sought from many sources."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "May good thoughts come to us from all sides."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "As a result, many sects, theologies and schools live side by side within Hinduism, and they tend not to accuse each other of heresy."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Unity in diversity"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why do many Hindus describe their tradition as diverse?",
+    "right": "Many hold that truth can't be fit into one creed, so it is sought in many ways.",
+    "wrong": [
+     "Hindus have never talked to each other",
+     "There are no shared Hindu practices at all",
+     "The tradition forbids any change"
+    ],
+    "why": "Britannica says this expansiveness comes from the widely shared view that truth cannot be put into one creedal formula."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A tip for your own studying: a university guide says it is hard to make statements about Hinduism in general. So ask 'which Hindus?' before saying 'Hindus believe'."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Which Hindus?"
+   },
+   "cite": [
+    "s32"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now practice: how do Hindus worship? Worship is called puja. Devotees offer gifts and show humility with gestures like namaste or bowing."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Puja = worship with offerings"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Worship often centres on a murti, an image of a deity. The aim is darshan: seeing and being seen by the deity."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Darshan = seeing and being seen by the deity"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is darshan?",
+    "right": "Seeing and being seen by the deity",
+    "wrong": [
+     "A bath in a holy river",
+     "A festival of lights",
+     "A type of food offering"
+    ],
+    "why": "Britannica describes darshan as the primary goal of worship before a murti."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Some people ask if Hindus worship the stone or metal. Hindu teachers say no: they worship God, who is present in the image."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "God is present in the image"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Many Hindus worship at home. A home shrine can be a room, a small altar, or just pictures or statues of a deity."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A small shelf shrine with a statue, flowers and a lamp"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One Hindu family describes using their shrine for a simple puja each morning and evening."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Daily puja at home"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now temples. A temple is a home for the deities, with a central shrine holding the murti of the main deity."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A temple with a central shrine and an image of a deity"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The murti is treated as a living being, with times to wake, eat, receive visitors and rest. Sermons are not typically part of a visit."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Wake; eat; receive visitors; rest"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which is true of a Hindu temple?",
+    "right": "It is seen as a home for the deities, with a central shrine",
+    "wrong": [
+     "It always holds a weekly sermon",
+     "It contains no images",
+     "It opens only on festival days"
+    ],
+    "why": "Britannica describes temples as homes for deities. They are built around a central shrine with a murti."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Many Hindus also travel to sacred places. Varanasi, on the Ganges, is described as a holy city for Hindus. Many are called to visit it once in their lives."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Stone steps (ghats) down to a river at dawn, with bathers and lamps"
+   },
+   "cite": [
+    "s19",
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Kumbh Mela is a huge pilgrimage. Pilgrims bathe in the Ganges, and its climax comes when Jupiter completes its 12-year cycle."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Kumbh Mela: bathing in the Ganges"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "At the Kumbh Mela, pilgrims bathe in which river?",
+    "right": "The Ganges",
+    "wrong": [
+     "The Nile",
+     "The Thames",
+     "The Danube"
+    ],
+    "why": "PBS describes pilgrims bathing in the sacred waters of the Ganges."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Pilgrimage and worship lead us to festivals. Most Hindu festivals follow a moon-based calendar, so their dates move each year."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Moon-based calendar: dates shift"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Diwali is the festival of lights, and it is this very week. In 2026 the main day is 8 November."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Diwali 2026: 8 November"
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "'Diwali' comes from Sanskrit 'dipavali', a row of lights. Small oil lamps called diyas are set outside homes and temples."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A row of small clay oil lamps (diyas) glowing outside a doorway at night"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Diwali lasts five days. The third day, at the new moon, is the most important."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "star",
+    "count": 5,
+    "layout": "row",
+    "text": "Five days"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "How many days does Diwali last?",
+    "right": "Five",
+    "wrong": [
+     "One",
+     "Three",
+     "Ten"
+    ],
+    "why": "Diwali is a five-day festival, with the third day as its high point."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why the lamps? Stories vary by region. In north India it is Rama's return to Ayodhya. In south India, Krishna's victory over Narakasura. Many also honour Lakshmi, goddess of good fortune."
+   },
+   "show": {
+    "kind": "list",
+    "text": "North: Rama returns to Ayodhya; South: Krishna defeats Narakasura; Lakshmi, goddess of good fortune"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Scholar Vasudha Narayanan puts it simply: there is no single reason anyone celebrates a festival, and Diwali has many stories."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Many stories, many reasons"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why do Hindus celebrate Diwali?",
+    "right": "For many reasons, with different stories in different regions",
+    "wrong": [
+     "Only to remember Rama, everywhere",
+     "For one reason that everyone agrees on",
+     "There is no meaning behind it"
+    ],
+    "why": "Regional stories differ, and a scholar of Hindu traditions says there is no single reason."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Families clean homes, wear new clothes, share sweets and forgive past conflicts. Diwali is also marked by Jains and Sikhs, for their own reasons. We will meet those in later classes."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Clean homes; new clothes; sweets; forgiveness"
+   },
+   "cite": [
+    "s26",
+    "s20"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Another much-loved festival is Holi. It celebrates the start of spring and is often called the Festival of Colors."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Holi: start of spring, Festival of Colors"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "On the first evening, people gather around a bonfire to sing and dance. Today people of many backgrounds join in. One well-known story is about Prahlad's devotion."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "People around an evening bonfire, then crowds playing with colored powder"
+   },
+   "cite": [
+    "s23",
+    "s24"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Holi marks the start of which season?",
+    "right": "Spring",
+    "wrong": [
+     "Winter",
+     "Autumn",
+     "The monsoon"
+    ],
+    "why": "Holi celebrates the arrival of spring, a season of hope and new beginnings."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "There are many more festivals, such as Navratri, Ganesh Chaturthi, Janmashtami and Maha Shivaratri. Each marks a story, a season or a deity."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Navratri; Ganesh Chaturthi; Janmashtami; Maha Shivaratri"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last topic: where do Hindus live today? Pew Research estimated nearly 1.2 billion Hindus in 2020."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Nearly 1.2 billion Hindus (2020)"
+   },
+   "cite": [
+    "s27"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Nearly all of them live in one country: India. About 95 in every 100 Hindus live there."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Where the world's Hindus live",
+    "chart": "c1"
+   },
+   "cite": [
+    "s28"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "About what share of the world's Hindus live in India?",
+    "right": "About 95%",
+    "wrong": [
+     "About 50%",
+     "About 25%",
+     "Almost none"
+    ],
+    "why": "Pew found more than nine in ten of the world's Hindus live in India."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Hindus are a majority in two countries: Nepal and India. In Mauritius they are the largest group, at 48%."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Hindu share of the population, 2020",
+    "chart": "c2"
+   },
+   "cite": [
+    "s27"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "In which two countries are Hindus a majority of the population?",
+    "right": "India and Nepal",
+    "wrong": [
+     "India and Mauritius",
+     "Nepal and Indonesia",
+     "India and Fiji"
+    ],
+    "why": "Pew puts the Hindu share at 79% in India and 81% in Nepal. In Mauritius they are the largest group, but not a majority."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Hindu communities live in other regions too. From 2010 to 2020, the Hindu count grew fastest in the Middle East and North Africa, up 62% to 3.2 million."
+   },
+   "show": {
+    "kind": "map",
+    "text": "World map: India, Nepal and Mauritius marked, with smaller communities in many regions including the Middle East and the Caribbean"
+   },
+   "cite": [
+    "s27",
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let us recap. Four ideas: dharma, karma, samsara and moksha. Key texts: the Vedas and the Gita. Worship through puja and darshan, at home and in temples."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Dharma, karma, samsara, moksha; Vedas and Gita; puja and darshan; Diwali and Holi; mostly in India"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One last respectful tip: guests are generally welcome at Hindu celebrations, and a sincere 'Happy Diwali' is a kind way to take part. Next class: Jainism."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Jainism"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "pie",
+   "title": "Where the world's Hindus live, 2020 (percent)",
+   "rows": [
+    {
+     "label": "India",
+     "value": 95,
+     "source": "s28"
+    },
+    {
+     "label": "All other countries (100 minus 95)",
+     "value": 5,
+     "source": "s28"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Hindu share of the population, 2020 (percent)",
+   "rows": [
+    {
+     "label": "Nepal",
+     "value": 81,
+     "source": "s27"
+    },
+    {
+     "label": "India",
+     "value": 79,
+     "source": "s27"
+    },
+    {
+     "label": "Mauritius",
+     "value": 48,
+     "source": "s27"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Hinduism overview",
+   "links": [
+    "[[Jainism]]",
+    "[[Buddhism]]",
+    "[[Sikhism]]",
+    "[[Calendars, sacred places and living side by side]]"
+   ]
+  },
+  {
+   "topic": "Dharma, karma, samsara, moksha",
+   "links": [
+    "[[Jainism]]",
+    "[[Buddhism]]",
+    "[[Sikhism]]"
+   ]
+  },
+  {
+   "topic": "Vedas and Bhagavad Gita",
+   "links": [
+    "[[Hinduism overview]]"
+   ]
+  },
+  {
+   "topic": "Puja, murti and darshan",
+   "links": [
+    "[[Hinduism overview]]",
+    "[[Shinto and Other Religions of Japan, Korea and Vietnam]]"
+   ]
+  },
+  {
+   "topic": "Diwali",
+   "links": [
+    "[[Jainism]]",
+    "[[Sikhism]]",
+    "[[Calendars, sacred places and living side by side]]"
+   ]
+  },
+  {
+   "topic": "Holi",
+   "links": [
+    "[[Calendars, sacred places and living side by side]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "The Vedic tradition came to the subcontinent with Indo-Aryan speakers who arrived from Central Asia in the second millennium BCE.",
+   "other_view": "The mainstream scholarly view, based on linguistics, archaeology and ancient DNA, favours migration from Central Asia. A minority view, held by some Indian scholars and many traditionalist writers, says Vedic religion began inside the subcontinent. The Hindu American Foundation describes the origins as unclear and contested, with several theories.",
+   "cite": [
+    "s30",
+    "s29"
+   ]
+  },
+  {
+   "claim": "The Bhagavad Gita was composed around the 1st or 2nd century CE.",
+   "other_view": "Britannica gives perhaps the 1st or 2nd century CE. Another reference work gives a wider range of 400 BCE to 400 CE and notes that Indian scholars generally prefer earlier dates than Western scholars do. The exact date is unresolved.",
+   "cite": [
+    "s5",
+    "s7"
+   ]
+  },
+  {
+   "claim": "Hinduism is a polytheistic religion with many gods.",
+   "other_view": "Many people describe it that way because it has many deities. Many Hindus say the deities are forms of one ultimate reality, brahman. Others hold that individual deities, such as Shiva or Vishnu, are supreme. Hindu traditions differ on this.",
+   "cite": [
+    "s11",
+    "s12"
+   ]
+  },
+  {
+   "claim": "'Hinduism' is the proper name for this tradition.",
+   "other_view": "The word was coined by British writers in the 19th century and began as an outsiders' term. Many Hindus prefer 'sanatana dharma' or 'Vedic religion'. Some English-speaking Hindus say it is a way of life rather than a religion in the Western sense.",
+   "cite": [
+    "s1",
+    "s2"
+   ]
+  }
+ ]
+}

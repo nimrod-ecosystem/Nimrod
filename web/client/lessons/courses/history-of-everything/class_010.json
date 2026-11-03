@@ -1,0 +1,1236 @@
+{
+ "about": {
+  "title": "From Primates to Early Hominins",
+  "course": "history-of-everything",
+  "class_n": 10,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes at an unhurried pace. There are 44 short steps and 9 questions, so there is time to stop and think. The topics fit one half-hour class. Early hominin fossils and the evidence for upright walking are the heart of it, and the next class starts the genus Homo."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Australopithecus afarensis",
+   "publisher": "Smithsonian Institution Human Origins Program",
+   "date": "undated (page updated within the last year)",
+   "link": "https://humanorigins.si.edu/evidence/human-fossils/species/australopithecus-afarensis",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "AL 288-1 (Lucy)",
+   "publisher": "Smithsonian Institution Human Origins Program",
+   "date": "undated",
+   "link": "https://humanorigins.si.edu/evidence/human-fossils/fossils/al-288-1",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "After 50 Years, Scientists Still Love Lucy",
+   "publisher": "Smithsonian Magazine, National Museum of Natural History blog",
+   "date": "2024-11-22",
+   "link": "https://www.smithsonianmag.com/blogs/national-museum-of-natural-history/2024/11/22/after-50-years-scientists-still-love-lucy/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "Human ancestor Lucy a tree climber",
+   "publisher": "EarthSky",
+   "date": "undated",
+   "link": "https://earthsky.org/human-world/lucy-australopithecus-afarensis-tree-climber/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "The tale of anthropology's sweetheart: Lucy",
+   "publisher": "Indiana University (SciU blog)",
+   "date": "2020-12-05",
+   "link": "https://blogs.iu.edu/sciu/2020/12/05/anthropology-sweetheart-lucy/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "1.7 The Evolution of Primates",
+   "publisher": "University of Minnesota Libraries, Human Biology (open textbook)",
+   "date": "undated",
+   "link": "https://open.lib.umn.edu/humanbiology/chapter/1-7-the-evolution-of-primates/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "The Evolution of Primates (OpenStax Biology 2e)",
+   "publisher": "OpenStax via Lumen Learning",
+   "date": "undated",
+   "link": "https://courses.lumenlearning.com/suny-osbiology2e/chapter/the-evolution-of-primates/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "5.9.8: The Evolution of Primates (OpenStax Biology 2e)",
+   "publisher": "OpenStax via Biology LibreTexts",
+   "date": "undated",
+   "link": "https://bio.libretexts.org/Bookshelves/Introductory_and_General_Biology/General_Biology_2e_(OpenStax)/05:_Unit_V-_Biological_Diversity/5.09:_Vertebrates/5.9.08:_The_Evolution_of_Primates",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "Scientists Narrow The Time Limits For The Human And Chimpanzee Split",
+   "publisher": "Penn State, via ScienceDaily",
+   "date": "2005-12-22",
+   "link": "https://www.sciencedaily.com/releases/2005/12/051222083255.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "Human-chimpanzee split",
+   "publisher": "Becoming Human (Institute of Human Origins, Arizona State University)",
+   "date": "undated",
+   "link": "https://becominghuman.org/timeline/human-chimpanzee-split/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "Ancestors Of Humans And Chimps May Have Begun Diverging 13 Million Years Ago",
+   "publisher": "IFLScience",
+   "date": "undated",
+   "link": "https://www.iflscience.com/ancestors-humans-and-chimps-may-have-begun-diverging-13-million-years-ago-24817",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "Artist's recreation of 7- to 6-million-year-old early human unveiled in Hall of Human Origins",
+   "publisher": "Smithsonian Institution (Insider)",
+   "date": "undated",
+   "link": "https://insider.si.edu/?p=10435",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "Sahelanthropus tchadensis: Ten Years After the Discovery",
+   "publisher": "Smithsonian Magazine",
+   "date": "undated",
+   "link": "https://www.smithsonianmag.com/science-nature/sahelanthropus-tchadensis-ten-years-after-the-disocvery-2449553/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "Earliest evidence of hominin bipedalism in Sahelanthropus tchadensis",
+   "publisher": "Science Advances (via PubMed Central)",
+   "date": "2026-01-02",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC12758524/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "Ancient bones confirm earliest-known human ancestor walked upright",
+   "publisher": "NBC News",
+   "date": "undated",
+   "link": "https://www.nbcnews.com/science/science-news/ancient-bones-confirm-earliest-known-human-ancestor-walked-upright-rcna44187",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "The Earliest Hominins: Sahelanthropus, Orrorin, and Ardipithecus",
+   "publisher": "Nature Education (Scitable)",
+   "date": "undated",
+   "link": "https://www.nature.com/scitable/knowledge/library/the-earliest-hominins-sahelanthropus-orrorin-and-ardipithecus-67648286/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "human origins (Students)",
+   "publisher": "Britannica Kids",
+   "date": "undated",
+   "link": "https://kids.britannica.com/students/article/human-origins/274982",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "ARA-VP-6/500 (Ardi)",
+   "publisher": "Smithsonian Institution Human Origins Program",
+   "date": "undated",
+   "link": "https://humanorigins.si.edu/evidence/human-fossils/fossils/ara-vp-6500",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "Ardipithecus ramidus",
+   "publisher": "Smithsonian Institution Human Origins Program",
+   "date": "undated",
+   "link": "https://humanorigins.si.edu/evidence/human-fossils/species/ardipithecus-ramidus",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "The Human Family's Earliest Ancestors",
+   "publisher": "Smithsonian Magazine",
+   "date": "undated",
+   "link": "https://www.smithsonianmag.com/science-nature/the-human-familys-earliest-ancestors-7372974/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "'Ardi' skull reveals links to human lineage",
+   "publisher": "Arizona State University News",
+   "date": "undated",
+   "link": "https://news.asu.edu/content/ardi-skull-reveals-links-human-lineage",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "Footprint evidence of early hominin locomotor diversity at Laetoli, Tanzania",
+   "publisher": "Nature",
+   "date": "2021",
+   "link": "https://www.nature.com/articles/s41586-021-04187-7",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "Mystery solved: footprints from Site A at Laetoli, Tanzania, are from early humans, not bears",
+   "publisher": "The Leakey Foundation",
+   "date": "2021",
+   "link": "https://leakeyfoundation.org/mystery-solved-footprints-from-site-a-at-laetoli-tanzania-are-from-early-humans-not-bears/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "Paleontology: These feet were made for walking",
+   "publisher": "eLife",
+   "date": "2016-12-14",
+   "link": "https://elifesciences.org/articles/22886",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "Changing Climates and Changing Faces (How climate shaped human evolution)",
+   "publisher": "Arizona State University, Ask an Anthropologist",
+   "date": "undated",
+   "link": "https://askananthropologist.asu.edu/stories/changing-climates-and-changing-faces",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "Early humans may have first walked upright in the trees",
+   "publisher": "University College London",
+   "date": "2022-12",
+   "link": "https://www.ucl.ac.uk/news/2022/dec/early-humans-may-have-first-walked-upright-trees",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "Human Ancestors May Have Evolved to Walk Upright in Trees",
+   "publisher": "Smithsonian Magazine",
+   "date": "undated",
+   "link": "https://www.smithsonianmag.com/smart-news/human-ancestors-may-have-evolved-to-walk-upright-in-trees-180981300/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "Did Humans Evolve On The Savanna? The Debate Heats Up",
+   "publisher": "NPR, 13.7: Cosmos and Culture",
+   "date": "2014-03-06",
+   "link": "https://www.npr.org/sections/13.7/2014/03/06/286707582/did-humans-evolve-on-the-savanna-the-debate-heats-up",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s29",
+   "title": "Origins of Bipedalism",
+   "publisher": "arXiv (review paper)",
+   "date": "2015",
+   "link": "https://arxiv.org/pdf/1508.02739",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s30",
+   "title": "Walking Upright: A Tale of Two Legs",
+   "publisher": "Arizona State University, Ask an Anthropologist",
+   "date": "undated",
+   "link": "https://askanexpert.asu.edu/anthropology/stories/walking-upright-tale-two-legs",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s31",
+   "title": "Foreign Relations of the United States, 1969–1976, Volume XXXIX, document 242 (Editorial Note)",
+   "publisher": "U.S. Department of State, Office of the Historian",
+   "date": "undated",
+   "link": "https://history.state.gov/historicaldocuments/frus1969-76v39/d242",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s32",
+   "title": "The Isthmus of Panama and the Ice Ages",
+   "publisher": "Science",
+   "date": "2000",
+   "link": "https://www.science.org/doi/10.1126/science.287.5450.13b",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s33",
+   "title": "3B.4 Late Cenozoic Ice Age",
+   "publisher": "Minnesota State open textbook, Environmental Geology",
+   "date": "undated",
+   "link": "https://minnstate.pressbooks.pub/environmentalgeology/chapter/late-cenozoic-ice-age/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s34",
+   "title": "Ardipithecus",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/topic/Ardipithecus",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s35",
+   "title": "TM 266-01-060-1 (Toumaï)",
+   "publisher": "Smithsonian Institution Human Origins Program",
+   "date": "undated",
+   "link": "https://humanorigins.si.edu/evidence/human-fossils/fossils/tm-266-01-060-1",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s36",
+   "title": "Northern Hemisphere Glaciation during the Globally Warm Early Late Pliocene",
+   "publisher": "PLOS ONE (via PubMed Central)",
+   "date": "undated",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3861316/",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 10. Last time we followed the mammals. Today's question: how did the human line separate from the other apes?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "From Primates to Early Hominins"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, one word: primate. A primate belongs to the group that includes lemurs, tarsiers, monkeys, apes and humans."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Primate"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Yes, humans too. Apes split into lesser apes, like gibbons, and great apes: chimpanzees and bonobos, gorillas, orangutans and humans."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Primates: lemurs and tarsiers | monkeys | lesser apes (gibbons) | great apes (chimpanzees and bonobos, gorillas, orangutans, humans)"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In this way of sorting living things, which group do humans belong to?",
+    "right": "The great apes, along with chimpanzees, gorillas and orangutans",
+    "wrong": [
+     "The monkeys",
+     "The lemurs",
+     "The lesser apes, with the gibbons"
+    ],
+    "why": "Humans are classed as great apes, in the same group as chimpanzees and bonobos, gorillas and orangutans."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "How old is this family? Fossils of a primate-like mammal are about 55 million years old. By 40 million years ago, monkeys lived in Africa, Asia and South America."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "About 55 million years ago: primate-like fossils | By 40 million years ago: monkeys in the Americas, Africa and Asia"
+   },
+   "cite": [
+    "s6",
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Apes came later. They arose in Africa during the Miocene epoch, which ran from about 23 to 5.3 million years ago."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Miocene epoch: 23 to 5.3 million years ago. Apes evolve in Africa."
+   },
+   "cite": [
+    "s7",
+    "s34"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One more fact about primates. All of them have bodies made for climbing trees, because their ancestors lived in trees. Keep that in mind."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Built for climbing"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the split. Our closest living relatives are the chimpanzees. Genes show that our two lines grew from one shared ancestor and then went separate ways."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Common ancestor"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Think of cousins. You are not descended from your cousin. You share grandparents. Humans and chimpanzees are like that: we share an ancestor, and neither came from the other."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A family tree. One old ancestor at the bottom splits into two branches, one labelled 'human line', one labelled 'chimpanzee line'."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which sentence is right?",
+    "right": "Humans and chimpanzees share a common ancestor that lived millions of years ago.",
+    "wrong": [
+     "Humans evolved from today's chimpanzees.",
+     "Chimpanzees evolved from humans.",
+     "Humans and chimpanzees are not related."
+    ],
+    "why": "Both lines come from an earlier shared ancestor. Each has changed since the split."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "When did the split happen? A 2005 study of genes put that last shared ancestor between 5 and 7 million years ago."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "5 to 7 million years ago"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "How can genes give a date? Scientists count the DNA differences and tune the count against fossils of known age. It works like a clock that must be set."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A DNA clock, set with fossils"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Clocks can be set differently, so dates differ. One source says 8 to 7 million years ago. A 2017 report said up to 13. A rough summary is several million years, around 5 to 8."
+   },
+   "show": {
+    "kind": "list",
+    "text": "5 to 7 million years ago (2005 study) | 8 to 7 million years ago (Becoming Human) | up to 13 million years ago (a mutation-rate study)"
+   },
+   "cite": [
+    "s9",
+    "s10",
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "What marks the human side after the split? Walking upright on two legs. This is called bipedalism. Other great apes mostly use four limbs, and some knuckle-walk."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Bipedalism: walking on two legs"
+   },
+   "cite": [
+    "s24",
+    "s26"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "It came early. One expert says bipedality \"evolved long before brain enlargement and tool use.\" Big brains and tools came much later."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Bipedality evolved long before brain enlargement and tool use. (Yohannes Haile-Selassie)"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Scientists call humans and our extinct relatives hominins. To spot an early hominin, they look for small canine teeth and bones that show upright walking, especially in the pelvis and legs."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Hominin = humans and our extinct relatives | Clue 1: smaller canine teeth | Clue 2: bones built for upright walking (pelvis, leg)"
+   },
+   "cite": [
+    "s14",
+    "s16"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which clue helps mark a fossil as an early hominin?",
+    "right": "Smaller canine teeth and bones that show upright walking",
+    "wrong": [
+     "A big brain",
+     "Stone tools lying next to it",
+     "Living on open grassland"
+    ],
+    "why": "The earliest hominins had apelike brain sizes, and tools came much later. Small canines and walking upright are the early clues."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The skull can tell us too. In upright walkers, the hole where the spinal cord leaves the skull sits underneath. In non-upright apes it points more toward the back."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two skulls seen from below. In the human-like skull the spinal-cord hole is near the middle. In the ape-like skull it is toward the back."
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the oldest candidate: Sahelanthropus tchadensis. It lived between 7 and 6 million years ago in Chad. Its skull, nicknamed Toumaï, was found in 2001 by a team led by Michel Brunet."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The Toumaï skull: a small braincase, sloping face, heavy brow ridges."
+   },
+   "cite": [
+    "s12",
+    "s35"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "It is a mix. Its brain was small, slightly smaller than a chimpanzee's, and it had heavy brow ridges. But it had small canine teeth and a spinal-cord hole set beneath the skull."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Apelike: small brain, brow ridges, sloping face | Humanlike: small canines, short mid-face, spinal-cord hole underneath"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Is it a hominin or just an ape? Experts still argue. Only a few bones survive, and the scientists read them differently."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Hominin or ape? Still debated"
+   },
+   "cite": [
+    "s13",
+    "s14",
+    "s15"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why is Sahelanthropus still debated?",
+    "right": "Only a few bones survive, and scientists read the evidence differently.",
+    "wrong": [
+     "Nobody has ever found its skull.",
+     "It lived too recently to be an ancestor.",
+     "It was proven to be a modern chimpanzee."
+    ],
+    "why": "The skull and a few limb bones exist, but experts disagree about what they show. Some see an early hominin and others see an ape."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next is Orrorin, from the Tugen Hills of Kenya. Found in 2000, it is about 6 million years old. Its thighbone has humanlike features that hint at upright walking, though that is disputed."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A map of East Africa with the Tugen Hills in Kenya marked, and a drawing of a thighbone."
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Then Ardipithecus. A team led by Tim White found its first fossils in 1994. In 2009 they announced a partial female skeleton nicknamed Ardi, about 4.4 million years old, from Ethiopia."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Ardi's partial skeleton laid out, with the pelvis and the grasping big toe pointed out."
+   },
+   "cite": [
+    "s18",
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Ardi stood almost four feet tall, about as big as a chimpanzee. Her pelvis was short and broad to help balance upright. Her big toe could grasp branches."
+   },
+   "show": {
+    "kind": "list",
+    "text": "About 4 feet tall, about 110 pounds | Short, broad pelvis: balance when upright | Grasping big toe: climbing"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So Ardi walked upright, yet she could also move through trees on all four limbs. Her body mixes human and other primate traits. Evolution did not switch on one feature at a time."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A mosaic of features"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What did Ardi's body show?",
+    "right": "A mix: upright walking together with tree-climbing features",
+    "wrong": [
+     "Fully modern human walking and no climbing",
+     "Knuckle-walking exactly like a gorilla",
+     "A large brain like ours"
+    ],
+    "why": "Her pelvis suited upright walking, and her grasping big toe suited climbing. Her brain was small."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a different kind of evidence: footprints. At Laetoli in Tanzania, early hominins walked through wet volcanic ash 3.66 million years ago. Mary Leakey's team found the Site G trails in 1978."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A trail of footprints pressed into grey volcanic ash, with a small human foot beside it for scale."
+   },
+   "cite": [
+    "s22",
+    "s23",
+    "s24"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "They are widely accepted as the oldest clear proof of regular upright walking in our lineage. They are attributed to Australopithecus afarensis, Lucy's species."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "3.66 million years old"
+   },
+   "cite": [
+    "s22",
+    "s24"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A twist. In 1976 five prints turned up at nearby Site A. Some thought a young bear made them. In 2021 a re-dig found they were made by a hominin walking on two legs."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Checking the evidence again"
+   },
+   "cite": [
+    "s22",
+    "s23"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why are the Laetoli footprints valuable evidence?",
+    "right": "They record upright-walking early hominins in volcanic ash 3.66 million years ago.",
+    "wrong": [
+     "They show the first stone tools.",
+     "They prove chimpanzees walk upright.",
+     "They were made by modern humans last century."
+    ],
+    "why": "The ash preserved actual steps, so they are direct evidence of upright walking in a hominin at 3.66 million years ago."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now Lucy. Donald Johanson and Maurice Taieb's team found her in 1974 at Hadar, Ethiopia. She is about 3.2 million years old, of the species Australopithecus afarensis."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The Lucy skeleton laid out, with the recovered bones lighter in colour. About 40 percent of the skeleton was found."
+   },
+   "cite": [
+    "s2",
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Her nickname came the night of the find. The team was celebrating to a Beatles hit, 'Lucy in the Sky with Diamonds'. Her Ethiopian name, Dinknesh, means 'you are marvelous'."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Dinknesh: You are marvelous"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Her feet were compact and could carry her full weight upright. But her long, curved toe bones look like a tree climber's. Her brain was about a third the size of ours, a little bigger than a chimpanzee's."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Walking: compact feet, full weight upright | Climbing: long curved toe bones | Brain: about one third of ours"
+   },
+   "cite": [
+    "s2",
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why does a partial skeleton matter so much? Pieces from one body let us study size, shape and movement. Scattered, sparse fragments cannot tell us that much."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "One body, many clues"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why is a partial skeleton like Lucy's so useful?",
+    "right": "It lets scientists learn the body size, shape and way of moving of one individual.",
+    "wrong": [
+     "It proves she was our direct grandmother.",
+     "It shows exactly what she ate for dinner.",
+     "It shows she made stone tools."
+    ],
+    "why": "Bones from one body fit together to show size, shape and movement. A few scattered fragments cannot do that."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Lucy's species was not rare. Remains of more than 300 individuals have been found. They lived between about 3.85 and 2.95 million years ago in eastern Africa."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "More than 300 individuals"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One young one, found at Dikika, Ethiopia, grew up at a chimpanzee-like rate by her teeth. But her brain size shows a human growth pattern was starting to evolve."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Teeth like a chimp, brain on the way to human"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Lucy's relatives were, in one scientist's words, \"experiments in being human.\" So the family tree is tangled, not a straight ladder."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Experiments in being human. (Rick Potts, Smithsonian)"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's line up the key fossils by age. Bars show millions of years ago, so a longer bar is older."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Ages of the key early hominin fossils (millions of years ago)",
+    "chart": "c1"
+   },
+   "cite": [
+    "s2",
+    "s14",
+    "s17",
+    "s18",
+    "s22"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Which fossil on the chart is the oldest?",
+    "right": "Sahelanthropus, at about 7 million years",
+    "wrong": [
+     "Lucy, at about 3.2 million years",
+     "Ardi, at about 4.4 million years",
+     "The Laetoli footprints, at about 3.66 million years"
+    ],
+    "why": "The longest bar is the oldest. Sahelanthropus is about 7 million years old, so it is older than all the others on the chart."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So we know roughly when and how our ancestors walked. Where and why did it begin? Here scientists truly disagree."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Where and why upright?"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Idea one is the savanna hypothesis. Grasslands spread as the climate cooled and dried over the last six million years. Some think our ancestors stood up to peek over tall grass. Others think they walked between patches of fruit trees."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Climate cooled and dried | Grasslands spread | Stand up to see over grass, or cross open ground between trees"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "But Ardi, one of the earliest upright walkers, was found among woodland remains. That is awkward for the savanna idea."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ardi lived among trees"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Idea two is the trees. In Tanzania's Issa Valley, chimpanzees live in a mix of open and wooded land. More than 85 percent of their upright walking happened in the trees."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "More than 85% of two-legged steps were in trees"
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The researchers suggest upright walking may have begun on branches. A fair warning: this does not explain why human ancestors, and not other apes, kept going upright."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Walking upright in the branches"
+   },
+   "cite": [
+    "s26",
+    "s27"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Other ideas: standing to reach fruit on a branch, called postural feeding. Or carrying things and sharing food over long distances. These are possibilities, and we need more fossils to test them."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Reaching up for food (postural feeding) | Carrying things | Sharing food"
+   },
+   "cite": [
+    "s29",
+    "s30"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Defenders of the savanna say a savanna is not just open grass. It can mix open and wooded land. In that view, Ardi's world counts as a savanna after all."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Savanna view: a mix of open and wooded land counts as savanna | Tree view: upright walking began in the branches"
+   },
+   "cite": [
+    "s28",
+    "s26"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why do some scientists doubt that grasslands alone caused upright walking?",
+    "right": "One of the earliest upright walkers lived in a wooded place, and chimps in Tanzania walked upright mostly in trees.",
+    "wrong": [
+     "No grasslands existed in Africa then.",
+     "Early hominins never climbed trees.",
+     "Upright walking appeared after stone tools."
+    ],
+    "why": "Ardi's woodland home and the Issa Valley chimpanzees point toward trees as a setting for early upright walking. Defenders reply that a savanna can include trees."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The debate is not settled. It is still an area of intense research, and new fossils could change the picture."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Still unsettled"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a frame of reference. In Lucy's day, about 3.2 million years ago, the early Late Pliocene was the last long stretch warmer than today. The Isthmus of Panama was forming about 3 million years ago."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "3.6 to 3.0 million years ago: warmer than today | About 3 million years ago: Panama land bridge forms"
+   },
+   "cite": [
+    "s32",
+    "s36"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Soon after that, ice sheets began to grow in the Northern Hemisphere, around 3 million years ago. The ice ages were starting as Lucy's kind lived on."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "About 3 million years ago: Northern Hemisphere ice sheets begin to grow"
+   },
+   "cite": [
+    "s33"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "And the finding of Lucy in 1974 has its own date neighbour. In August of that year Richard Nixon announced his resignation, and Gerald Ford became President."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1974: Lucy found at Hadar, Ethiopia | 8 to 9 August 1974: Nixon resigns, Ford takes office"
+   },
+   "cite": [
+    "s2",
+    "s31"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's gather it up. Primates are climbers. Humans split from the chimpanzee line millions of years ago, and early hominins show upright walking. Lucy, Ardi and the Laetoli footprints are our best clues. Why we stood up is still debated."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Primates: built for climbing | Split from chimpanzee line: roughly 5 to 8 million years ago | Early hominins: small canines, upright walking | Lucy, Ardi, Laetoli: key evidence | Why upright: still debated"
+   },
+   "cite": [
+    "s2",
+    "s9",
+    "s10",
+    "s16",
+    "s18",
+    "s22"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next class, class 11, we meet the genus Homo, with the Neanderthals, Denisovans and us."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: The Genus Homo"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "How old are the key early hominin fossils? (millions of years ago)",
+   "rows": [
+    {
+     "label": "Sahelanthropus (Toumaï), about",
+     "value": 7,
+     "source": "s14"
+    },
+    {
+     "label": "Orrorin, about",
+     "value": 6,
+     "source": "s17"
+    },
+    {
+     "label": "Ardipithecus ramidus (Ardi)",
+     "value": 4.4,
+     "source": "s18"
+    },
+    {
+     "label": "Laetoli footprints",
+     "value": 3.66,
+     "source": "s22"
+    },
+    {
+     "label": "Lucy (Australopithecus afarensis)",
+     "value": 3.2,
+     "source": "s2"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Primates and the great apes",
+   "links": [
+    "[[How Do We Know? Reading the Evidence and Telling Time]]",
+    "[[Extinctions, Dinosaurs and the Rise of Mammals]]"
+   ]
+  },
+  {
+   "topic": "Common ancestor of humans and chimpanzees",
+   "links": [
+    "[[Molecular clock]]",
+    "[[Telling time in deep history]]"
+   ]
+  },
+  {
+   "topic": "Bipedalism and the hominin clues (small canines, pelvis, spinal-cord opening)",
+   "links": [
+    "[[Hominin]]",
+    "[[Mosaic evolution]]"
+   ]
+  },
+  {
+   "topic": "Early hominin fossils: Sahelanthropus, Orrorin, Ardipithecus, Lucy",
+   "links": [
+    "[[Lucy (AL 288-1)]]",
+    "[[Laetoli footprints]]",
+    "[[Australopithecus afarensis]]"
+   ]
+  },
+  {
+   "topic": "Debate: why did upright walking evolve?",
+   "links": [
+    "[[Savanna hypothesis]]",
+    "[[Postural feeding hypothesis]]"
+   ]
+  },
+  {
+   "topic": "Next class",
+   "links": [
+    "[[The Genus Homo: Neanderthals, Denisovans and Us]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About 8 to 5 million years ago (the human and chimpanzee lines separate)",
+   "elsewhere": "The climate was cooling and grasslands were expanding in Africa. Sahelanthropus lived toward the start of this time (about 7 million years ago).",
+   "cite": [
+    "s10",
+    "s14"
+   ]
+  },
+  {
+   "when": "About 3.6 to 3.0 million years ago (Laetoli footprints and Lucy)",
+   "elsewhere": "This early Late Pliocene stretch was the last long period of Earth's history warmer than today. The Isthmus of Panama formed about 3 million years ago.",
+   "cite": [
+    "s36",
+    "s32"
+   ]
+  },
+  {
+   "when": "About 3 million years ago (Lucy's species still living)",
+   "elsewhere": "Ice sheets began to grow in the Northern Hemisphere, the start of the ice ages.",
+   "cite": [
+    "s33"
+   ]
+  },
+  {
+   "when": "1974 (Lucy found at Hadar, Ethiopia)",
+   "elsewhere": "In August 1974 Richard Nixon announced his resignation as U.S. President, and Gerald Ford took office the next day.",
+   "cite": [
+    "s2",
+    "s31"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The human and chimpanzee lines split about 5 to 7 million years ago.",
+   "other_view": "Other work gives a different range. Becoming Human says roughly 8 to 7 million years ago. A mutation-rate study argued for around 13 million years, though the paleoanthropologist John Hawks noted that a split around 7 million years ago is still possible if the ancestral population was very large. Different ways of setting the DNA clock give different dates.",
+   "cite": [
+    "s9",
+    "s10",
+    "s11"
+   ]
+  },
+  {
+   "claim": "Sahelanthropus is the earliest known hominin and walked upright.",
+   "other_view": "Some anthropologists think it was only an ancient ape. Critics said that, without limb bones, claims about its walking were premature. Newer limb-bone studies argue for upright walking, but the 2026 Science Advances paper itself calls the literature polarized. One camp promotes it as the earliest hominin and another doubts both its hominin status and its bipedalism.",
+   "cite": [
+    "s13",
+    "s14",
+    "s15",
+    "s16"
+   ]
+  },
+  {
+   "claim": "Orrorin walked upright and may be in the direct line to humans.",
+   "other_view": "The original research team says its thighbone shows upright walking and a place in the direct line to us. Later studies suggest it walked upright, but in a way between apes and later australopiths, and probably not in the direct line to Homo. The likeness of its thighbone to other early humans is disputed.",
+   "cite": [
+    "s16",
+    "s17"
+   ]
+  },
+  {
+   "claim": "Ardi shows the common ancestor of humans and chimpanzees did not look like a chimpanzee.",
+   "other_view": "Ardi's discoverers argue that chimpanzees have changed so much that they are poor models for the common ancestor. Other scientists disagree about where Ardi's mix of features places her. Was she an ape with a few humanlike features kept from an ancestor near the split, or something else? The Smithsonian also notes it is still unclear what her stiff foot with a divergent big toe means for her bipedal behaviour.",
+   "cite": [
+    "s19",
+    "s20",
+    "s21"
+   ]
+  },
+  {
+   "claim": "Upright walking began when grasslands spread (the savanna hypothesis).",
+   "other_view": "Ardi lived in a wooded place, which challenges the idea. A 2022 study of Issa Valley chimpanzees found most of their two-legged steps happened in trees, and its authors say this contradicts the savanna idea. It does not explain why human ancestors, rather than other apes, went on to walk upright. Defenders reply that a savanna can include both open and wooded land. Ardi's world, in their view, was a savanna.",
+   "cite": [
+    "s25",
+    "s26",
+    "s27",
+    "s28"
+   ]
+  },
+  {
+   "claim": "Plesiadapis is the oldest known primate-like mammal, about 55 million years old.",
+   "other_view": "Some researchers do not agree that Plesiadapis was a proto-primate at all.",
+   "cite": [
+    "s8"
+   ]
+  },
+  {
+   "claim": "Lucy was a confident ground walker.",
+   "other_view": "Lucy's feet could carry her weight upright, which supports the claim, and the Smithsonian says she lived in both worlds of ground and trees. But CT scans of her arm bones show heavy build that points to tree climbing, so how much she climbed versus walked remains a matter of emphasis.",
+   "cite": [
+    "s2",
+    "s4"
+   ]
+  }
+ ]
+}

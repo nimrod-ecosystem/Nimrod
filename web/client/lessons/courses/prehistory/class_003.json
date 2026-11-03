@@ -1,0 +1,1320 @@
+{
+ "about": {
+  "title": "The first stone tools",
+  "course": "prehistory",
+  "class_n": 3,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 25,
+  "length_note": "About 25 minutes. There are five linked ideas and four sites that each need a 'made' and a 'found' date. I kept every beat short and added eight check questions, so it runs close to the usual length instead of being squeezed."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "3.3-million-year-old stone tools from Lomekwi 3, West Turkana, Kenya",
+   "publisher": "Nature",
+   "date": "2015-05-21",
+   "link": "https://www.nature.com/articles/nature14464",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Stony Brook Archaeologists Find the Earliest Evidence of Stone Tool Making in Cradle of Humankind",
+   "publisher": "Stony Brook University News",
+   "date": "2015-05-20",
+   "link": "https://news.stonybrook.edu/newsroom/press-release/general/150520stonetools/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "World's oldest stone tools discovered in Kenya",
+   "publisher": "Science (AAAS news)",
+   "date": "2015 (reports an April 2015 conference talk)",
+   "link": "https://www.science.org/content/article/world-s-oldest-stone-tools-discovered-kenya",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Stone Tools",
+   "publisher": "Smithsonian Institution Human Origins Program",
+   "date": "n.d.",
+   "link": "https://humanorigins.si.edu/evidence/behavior/stone-tools",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Olduvai Chopper",
+   "publisher": "Smithsonian Institution Human Origins Program",
+   "date": "n.d.",
+   "link": "https://humanorigins.si.edu/evidence/behavior/stone-tools/early-stone-age-tools/olduvai-chopper",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Becoming Human: The Origin of Stone Tools",
+   "publisher": "Smithsonian Magazine",
+   "date": "n.d.",
+   "link": "https://www.smithsonianmag.com/science-nature/becoming-human-the-origin-of-stone-tools-55335180/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Humans May Have Been Crafting Stone Tools for 2.6 Million Years",
+   "publisher": "Smithsonian Magazine",
+   "date": "n.d.",
+   "link": "https://www.smithsonianmag.com/smart-news/humans-have-been-crafting-stone-tools-26-million-years-180972346/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "2.6-Million-year-old stone tools and associated bones from OGS-6 and OGS-7, Gona, Afar, Ethiopia",
+   "publisher": "Journal of Human Evolution (via ScienceDirect)",
+   "date": "2003",
+   "link": "https://www.sciencedirect.com/science/article/abs/pii/S0047248403000939",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Evidence for stone-tool-assisted consumption of animal tissues before 3.39 million years ago at Dikika, Ethiopia",
+   "publisher": "Nature",
+   "date": "2010",
+   "link": "https://www.nature.com/articles/nature09248",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Marks on 3.4-million-year-old bones not due to trampling, analysis confirms",
+   "publisher": "ScienceDaily (Emory University release)",
+   "date": "2015-08-13",
+   "link": "https://www.sciencedaily.com/releases/2015/08/150813171207.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Ancient animal and human bone cuts could be the work of crocodile teeth instead of early butchers",
+   "publisher": "Science (AAAS news)",
+   "date": "n.d.",
+   "link": "https://www.science.org/content/article/ancient-animal-and-human-bone-cuts-could-be-work-crocodile-teeth-instead-early-butchers",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Scientists Debate When Human Ancestors Picked Up Stone Tools",
+   "publisher": "NBC News",
+   "date": "n.d.",
+   "link": "https://www.nbcnews.com/news/amp/wbna40199882",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Was it a stone tool or just a rock? An archaeologist explains how scientists can tell the difference",
+   "publisher": "Phys.org (The Conversation)",
+   "date": "2025-05",
+   "link": "https://phys.org/news/2025-05-stone-tool-archaeologist-scientists-difference.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Identification of knapped flints and stone tools",
+   "publisher": "Peterborough Archaeology",
+   "date": "n.d.",
+   "link": "https://peterborougharchaeology.org/archaeology-skills-techniques/identification-of-knapped-flints/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "An earlier origin for the Acheulian",
+   "publisher": "Nature",
+   "date": "2011",
+   "link": "https://www.nature.com/articles/nature10372",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "The origins of the Acheulean: past and present perspectives on a major transition in human evolution",
+   "publisher": "Philosophical Transactions of the Royal Society B",
+   "date": "2016",
+   "link": "https://royalsocietypublishing.org/rstb/article/371/1698/20150245/22973/The-origins-of-the-Acheulean-past-and-present",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "The World's Most Sustainable Technology",
+   "publisher": "SAPIENS",
+   "date": "n.d.",
+   "link": "https://www.sapiens.org/archaeology/hand-ax/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "The Origin of The Acheulean: The 1.7 Million-Year-Old Site of FLK West, Olduvai Gorge (Tanzania)",
+   "publisher": "Scientific Reports (via PubMed Central)",
+   "date": "2015-12-07",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4671088/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Symmetry is its own reward: on the character and significance of Acheulean handaxe symmetry in the Middle Pleistocene",
+   "publisher": "Antiquity (Cambridge University Press)",
+   "date": "2018",
+   "link": "https://www.cambridge.org/core/journals/antiquity/article/symmetry-is-its-own-reward-on-the-character-and-significance-of-acheulean-handaxe-symmetry-in-the-middle-pleistocene/B9CE356FBF387AE0CC1C724FEFD26DF0",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "When is a handaxe a planned-axe? exploring morphological variability in the Acheulean",
+   "publisher": "PLOS ONE",
+   "date": "2024",
+   "link": "https://journals.plos.org/plosone/article?id=10.1371%2Fjournal.pone.0307081",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "The Skills of Handaxe Making: Quantifying and Explaining Variability in 3D Sinuosity and Bifacial Asymmetry",
+   "publisher": "Journal of Archaeological Method and Theory (Springer)",
+   "date": "2025",
+   "link": "https://link.springer.com/article/10.1007/s10816-025-09705-9",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Homo habilis, an early maker of stone tools",
+   "publisher": "Natural History Museum, London",
+   "date": "n.d.",
+   "link": "https://www.nhm.ac.uk/discover/homo-habilis-early-maker-stone-tools.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "To craft early tools, ancient human relatives transported stones over long distances 600,000 years earlier than previously thought",
+   "publisher": "Smithsonian (via EurekAlert)",
+   "date": "n.d.",
+   "link": "https://www.eurekalert.org/news-releases/1094162",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "Searching for the earliest tools",
+   "publisher": "The Leakey Foundation",
+   "date": "n.d.",
+   "link": "https://leakeyfoundation.org/searching-for-the-earliest-tools/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Stone tool",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Stone_tool",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Olduvai Gorge",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Olduvai_Gorge",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "Lomekwi",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Lomekwi",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "3.3-Million-Year-Old Stone Tools and Butchery Traces? More Evidence Needed",
+   "publisher": "PaleoAnthropology (Paleoanthropology Society)",
+   "date": "n.d.",
+   "link": "https://paleoanthropology.org/ojs/index.php/paleo/article/download/742/703/1158",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "Kenyanthropus platyops",
+   "publisher": "Bradshaw Foundation",
+   "date": "n.d.",
+   "link": "https://www.bradshawfoundation.com/origins/kenyanthropus_platyops.php",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "Archaeologists Take Wrong Turn, Find World's Oldest Stone Tools [Update]",
+   "publisher": "Scientific American",
+   "date": "2015",
+   "link": "https://blogs.scientificamerican.com/observations/archaeologists-take-wrong-turn-find-world-s-oldest-stone-tools-update/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s31",
+   "title": "Oldest hand axes found",
+   "publisher": "Science News",
+   "date": "2011",
+   "link": "https://www.sciencenews.org/article/oldest-hand-axes-found",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s32",
+   "title": "Emergence of Oldowan tools",
+   "publisher": "Becoming Human (Institute of Human Origins, Arizona State University)",
+   "date": "n.d.",
+   "link": "https://becominghuman.org/timeline/emergence-of-oldowan-tools/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s33",
+   "title": "Butchery or trampling? Controversy marks ancient animal bones",
+   "publisher": "EARTH Magazine",
+   "date": "n.d.",
+   "link": "https://www.earthmagazine.org/article/butchery-or-trampling-controversy-marks-ancient-animal-bones/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s34",
+   "title": "Questions arise over earliest evidence of human tool use",
+   "publisher": "EARTH Magazine",
+   "date": "n.d.",
+   "link": "https://www.earthmagazine.org/article/questions-arise-over-earliest-evidence-human-tool-use/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s35",
+   "title": "Human Ancestors May Have Butchered Animals 3.4 Million Years Ago",
+   "publisher": "Live Science",
+   "date": "2015-08-20",
+   "link": "https://www.livescience.com/51936-human-ancestors-may-have-butchered-animals.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s36",
+   "title": "Acheulean handaxe (object details)",
+   "publisher": "North Hertfordshire Museum",
+   "date": "n.d.",
+   "link": "https://northhertsmuseum.org/north-hertfordshire-museum/collections/object-details/175449/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s37",
+   "title": "Acheulean Handaxe",
+   "publisher": "Fiveable (Intro to Anthropology study guide)",
+   "date": "n.d.",
+   "link": "https://fiveable.me/intro-anthropology/key-terms/acheulean-handaxe",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s38",
+   "title": "Earliest known stone tools unearthed in Kenya",
+   "publisher": "Science News",
+   "date": "2015-05-20",
+   "link": "https://www.sciencenews.org/article/earliest-known-stone-tools-unearthed-kenya",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s39",
+   "title": "Kokiselei 4, West Turkana, Kenya",
+   "publisher": "ResearchGate (book chapter listing)",
+   "date": "n.d.",
+   "link": "https://www.researchgate.net/publication/373207539_Kokiselei_4_West_Turkana_Kenya",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s40",
+   "title": "Acheulean",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Acheulean",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class three: the first stone tools. By the end, you will be able to tell the early tool types apart, say what they were for, and explain a real argument about who made the very first ones."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The first stone tools"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We will go in five steps: how to spot a made tool, the Oldowan, the Acheulean handaxes, marks on bones, and then the debate."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Tool or just a rock?\n2. Oldowan tools\n3. Acheulean handaxes\n4. Cut marks on bones\n5. Who made the first tools?"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, what is a tool? Simply, something used or shaped to do a job. Animals do this too: wild chimpanzees and capuchin monkeys crack nuts with hammerstones, and sometimes make sharp flakes by accident."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Tool: an object used or shaped to do a job"
+   },
+   "cite": [
+    "s29"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That 'by accident' matters. It is the heart of today's puzzle: when does using a stone turn into making a tool on purpose?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "By accident, or on purpose?"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Stone is what we usually find. Stone tools are much less likely to be destroyed than bones, so they are our best record of where and when early humans lived."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A museum tray of grey stone flakes and cores, sorted and labelled, on a white background."
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Researchers think tool use started even earlier, with things like pounding stones and plant tools. Those leave almost no trace, so archaeology mostly cannot see them."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Stone survives. Wood and plants rot."
+   },
+   "cite": [
+    "s27"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why do archaeologists mostly find stone tools rather than wooden ones from this period?",
+    "right": "Stone survives far better than wood or plants.",
+    "wrong": [
+     "Early humans only ever used stone.",
+     "Wooden tools were too heavy to carry.",
+     "Wooden tools were always hidden inside caves."
+    ],
+    "why": "Stone tools are much less likely to be destroyed than bones, and perishable plant tools leave almost no trace."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So how do you tell a made tool from a rock that simply broke? Flint and similar stones, when struck, break in smooth, curved, shell-like scars. That is called conchoidal fracture."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Conchoidal fracture: a smooth, shell-like break"
+   },
+   "cite": [
+    "s14",
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Struck stone leaves clues: flake scars, which are ridges outlining earlier flakes; a bulge called the bulb of percussion; and ripples spreading from the spot where the blow landed."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Flake scars\nBulb of percussion\nRipples spreading from the point of the blow"
+   },
+   "cite": [
+    "s13",
+    "s14"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "But nature breaks rocks too. Shape alone is not proof. Archaeologists also check the pattern of scars, the type of stone, and the context, such as whether other tools lie nearby."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Made by people: patterned flake scars, bulb of percussion, found with other tools\nBroken by nature: irregular breaks, no pattern, no company"
+   },
+   "cite": [
+    "s13",
+    "s14"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which is the best clue that a stone was struck on purpose?",
+    "right": "Several flake scars forming a pattern, with a bulb of percussion.",
+    "wrong": [
+     "It has a sharp edge.",
+     "It was found near a river.",
+     "It is grey."
+    ],
+    "why": "A sharp edge or a shape is not the smoking gun. The pattern left by conchoidal fracture is."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the basic recipe, with two rocks. The hammerstone is the one that strikes. The core is the one that gets struck. The pieces that fly off are flakes, and their edges are sharp."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "rock",
+    "count": 2,
+    "layout": "group",
+    "text": "Hammerstone strikes core; flakes fly off"
+   },
+   "cite": [
+    "s4",
+    "s5"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The oldest widely accepted tool tradition built on that recipe is the Oldowan. It is named for Olduvai Gorge in Tanzania, where it was first recognised."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Oldowan"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Olduvai Gorge is a site worth knowing twice. First, when the tools were made: the Smithsonian's Oldowan chopper from there is about 1.8 million years old."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A dark, rounded stone chopper with several flake scars along one edge, photographed on a plain background."
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Second, when archaeologists found it. Wilhelm Kattwinkel visited the gorge in 1911, and Louis Leakey first found tools there in the 1930s."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "About 1.8 million years ago: tools made at Olduvai\n1911: Kattwinkel visits the gorge\n1930s: Leakey finds Oldowan tools"
+   },
+   "cite": [
+    "s26",
+    "s6",
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "An Oldowan chopper is a stone core with flakes knocked off to leave a sharp edge. The flakes themselves were useful too."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Chopper: a core with flakes removed to make an edge"
+   },
+   "cite": [
+    "s5",
+    "s32"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which is the best description of an Oldowan chopper?",
+    "right": "A stone core with flakes struck off to leave a sharp edge.",
+    "wrong": [
+     "A polished stone axe with a wooden handle.",
+     "A pointed bone needle for sewing.",
+     "A clay pot for storing grain."
+    ],
+    "why": "Oldowan tools were made by striking flakes off a core with a hammerstone, leaving a sharp edge."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So what were they for? The Smithsonian says people used them for several jobs, including getting meat and bone marrow from large animals."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Oldowan job: meat and marrow from big animals"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "According to the Smithsonian, what was one use of Oldowan stone tools?",
+    "right": "Getting meat and bone marrow from large animals.",
+    "wrong": [
+     "Painting cave walls.",
+     "Harvesting grain on farms.",
+     "Building houses."
+    ],
+    "why": "Early humans used these tools to extract meat and marrow from large animals."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Oldowan tools were not only for meat. Microscope studies reported by the Leakey Foundation point to cutting plants, pounding tubers, and possibly working wood."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Butchering animals\nCutting plants\nPounding tubers\nPossibly woodworking"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Older Oldowan tools come from Gona, in Ethiopia's Afar region. Made first: they are about 2.6 to 2.5 million years old."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "2.6 million years old: Gona tools"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Found second: systematic digging at Gona ran from 1992 to 1994, and the tools were reported in the journal Nature in 1997."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "About 2.6-2.5 million years ago: tools made at Gona\n1992-1994: systematic excavation\n1997: reported in Nature"
+   },
+   "cite": [
+    "s8",
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One recent study found that even the earliest Oldowan makers carried stones more than six miles. A Smithsonian scientist said the real innovation may have been moving resources from place to place."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Carrying stones: planning ahead, even then"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next, a new kind of tool. By about 1.76 million years ago, early humans began making Acheulean handaxes and other large cutting tools."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Acheulean handaxes"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A handaxe is a stone shaped by flaking both faces until it has a sharp edge and a fairly even oval or pear shape."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A flat, teardrop-shaped stone handaxe, pointed at the top and rounded at the bottom, with scars on both faces."
+   },
+   "cite": [
+    "s37",
+    "s36"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The name comes from Saint-Acheul, near Amiens in France. Jacques Boucher de Perthes dug there in 1859, after finding similar tools in the 1830s and 1840s."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Saint-Acheul, France: dug in 1859 (this gives the tradition its name)"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "At first his colleagues doubted the tools were ancient. One of his main opponents began finding more near Saint-Acheul, and visits by the geologist Joseph Prestwich helped win the argument."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1830s-1840s: handaxes found near Abbeville\n1859: Saint-Acheul dug\nAfter visits by Prestwich: great age accepted"
+   },
+   "cite": [
+    "s40",
+    "s17"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Saint-Acheul gave the tradition its name, but the oldest handaxes are African. The oldest known come from Kokiselei 4 in West Turkana, Kenya, and were made about 1.76 million years ago."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1.76 million years old: Kokiselei 4 handaxes"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Found and dated: a study published in 2011 showed these handaxes were 350,000 years older than any known before. Simpler Oldowan tools were still in use around then."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "About 1.76 million years ago: handaxes made at Kokiselei 4\n2011: dating published in Nature"
+   },
+   "cite": [
+    "s15",
+    "s31"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "About how old are the oldest known Acheulean handaxes?",
+    "right": "About 1.76 million years old.",
+    "wrong": [
+     "About 2.6 million years old.",
+     "About 900,000 years old.",
+     "About 12,000 years old."
+    ],
+    "why": "The Kokiselei 4 handaxes from Kenya are dated to about 1.76 million years ago."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "And handaxes lasted. They turn up across Africa, Europe and Asia over about a million and a half years, which makes them one of the most durable technologies our genus ever made."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A map of Africa, Europe and Asia with dots for handaxe sites, thickest in East Africa."
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why do researchers care? Making the same shape again and again takes more forethought than knocking off a few flakes. One study argues that even early handaxes imply more planning than Oldowan tools."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Same shape, again and again = forethought"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Think of a recipe with steps: choose a stone, carry it, shape it, use it, discard it. Archaeologists describe the Acheulean as having longer, more complex sequences like this than the Oldowan."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Choose the stone\nCarry it\nShape it\nUse it\nDiscard it"
+   },
+   "cite": [
+    "s39"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why do researchers say handaxes suggest planning?",
+    "right": "Making the same shape repeatedly needs steps done in order, with forethought.",
+    "wrong": [
+     "They are older than any other tool.",
+     "They were found only in caves.",
+     "They were made by modern humans."
+    ],
+    "why": "The Acheulean involved longer sequences of choosing, making, using and discarding than the Oldowan, which suggests more forethought."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Many handaxes are also symmetrical, with one side mirroring the other. One team of researchers argues this was deliberate and social, and that making a good one felt rewarding."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Symmetry: one side mirrors the other"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Not everyone agrees. A 2025 study of handaxes from the Levant found very few matched the 'ideal' symmetrical form, so a perfect shape was often not the goal."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Perfect symmetry: the goal, or not?"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now to what these tools did. The best evidence is on bones. A cut mark is a thin groove left when a sharp stone edge slices flesh off a bone."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Cut mark: a groove made by a sharp stone edge"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Smashing a bone to get at the marrow leaves a different mark, called a percussion mark. Cut marks suggest flesh removal. Percussion marks suggest marrow."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Cut mark: flesh removed\nPercussion mark: marrow reached"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "But animals trampling a bone can scratch it too. Trampling marks tend to be shallow and curvy. Cut marks from a stone tool tend to be straight, narrow and V-shaped."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Trampling: shallow, curvy\nStone cut: straight, narrow, V-shaped"
+   },
+   "cite": [
+    "s33"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which description fits a cut mark from a stone tool rather than trampling?",
+    "right": "Straight, narrow and V-shaped.",
+    "wrong": [
+     "Shallow and curvy.",
+     "A scatter of tiny pits all over the bone.",
+     "A round hole through the bone."
+    ],
+    "why": "Researchers say trampling marks are usually shallow and curvy, while stone-tool cut marks are straight, narrow and V-shaped."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "At Gona, stone tools lay together with broken bones. At Bouri, about 90 kilometres south, bones carry cut marks. Together they suggest the first stone tools were used to process carcasses for meat and marrow."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A fossil rib bone with two fine, straight, parallel grooves running across it, shown close up."
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Handaxes link to butchery too. At FLK West in Olduvai Gorge, about 1.7 million years old and reported in 2015, handaxes lay with animal remains, linking early Acheulean tools to cutting up carcasses."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "FLK West: made about 1.7 million years ago; reported 2015"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Notice that big brains were not needed for any of this. Brains grew at least a million years after the Oldowan toolkit appeared."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Simple tools came before big brains"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the big argument. Who made the very first stone tools, and how early did it begin?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Who made the first tools?"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The old answer was Homo habilis, 'handy man', whose fossils were first found with stone tools at Olduvai Gorge. The Leakeys had first thought another species, Paranthropus boisei, was the maker."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Old answer: Homo habilis, 'handy man'"
+   },
+   "cite": [
+    "s22",
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Then Lomekwi 3, in Kenya, changed things. Made first: its tools are about 3.3 million years old, roughly half a million years before the earliest known Homo fossils."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "3.3 million years old: Lomekwi 3 tools"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Found second: the tools were found between 2011 and 2014, and a wrong turn led the team to the spot. A team led by Sonia Harmand published the find in Nature in May 2015."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "About 3.3 million years ago: tools made at Lomekwi 3\n2011-2014: tools found and excavated\nMay 2015: published in Nature"
+   },
+   "cite": [
+    "s25",
+    "s3",
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The kit included pounding tools, cores, and platforms to bash them on, with flakes probably used for cutting. The team proposed a new name, the Lomekwian, because it differs from the Oldowan."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Pounding tools\nCores\nPlatforms (anvils)\nFlakes, probably for cutting"
+   },
+   "cite": [
+    "s38",
+    "s30"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So who made them? Several hominin species often lived at the same time, so even good sites cannot always say. Lomekwi had hominin fossils nearby, but which species is debated."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Which species? Not settled"
+   },
+   "cite": [
+    "s4",
+    "s1",
+    "s29"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Harmand says the finds are real tools. Her words were that the cores and flakes are clearly knapped and not accidental or natural breaks."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "\"clearly knapped and are not the result of accidental or natural rock fracture\" (Sonia Harmand)"
+   },
+   "cite": [
+    "s30"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Other experts are not convinced. In 2016, Manuel Domínguez-Rodrigo and Luis Alcalá argued the team had not shown the tools lay where they were first buried, so they might be younger."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Harmand and team: tools are real, 3.3 million years old\nDomínguez-Rodrigo and Alcalá: more evidence needed"
+   },
+   "cite": [
+    "s29",
+    "s28"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Another claim is older still. At Dikika, Ethiopia, two animal bones about 3.4 million years old were reported in 2010. The team said they showed stone cut marks and percussion marks."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "3.4 million years old: Dikika marked bones"
+   },
+   "cite": [
+    "s9",
+    "s11"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Critics said the marks could be trampling. They also noted that no sharp stones were found at Dikika, and the bones came from the surface, so their exact layer was uncertain."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Dikika team: cut and percussion marks\nCritics: trampling, no stones found, layer uncertain"
+   },
+   "cite": [
+    "s12",
+    "s34"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A 2015 statistical study of over 450 marks found these two bones were not trampled. A news report says that supports butchery but does not prove it, and another team suggested crocodile teeth."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Not trampling: but butchery is still not proven"
+   },
+   "cite": [
+    "s10",
+    "s35",
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Other finds push the story back too. Oldowan-type tools at Nyayanga, Kenya, are dated between about 2.6 and 2.9 million years ago. Harmand thinks even older, more primitive tools may await discovery."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "How early did it start? Still open"
+   },
+   "cite": [
+    "s24",
+    "s38"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the evidence in order of age. Notice that the two oldest bars are the ones most argued over."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "How old is the evidence? (millions of years ago)",
+    "chart": "c1"
+   },
+   "cite": [
+    "s9",
+    "s1",
+    "s8",
+    "s5",
+    "s15"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Why do experts still disagree about who made the first tools?",
+    "right": "The oldest evidence is rare and disputed, marks and rocks may be natural, and several species lived at once.",
+    "wrong": [
+     "No stone tools older than 2 million years have ever been found.",
+     "Everyone agrees it was Homo habilis.",
+     "Stone tools cannot be dated at all."
+    ],
+    "why": "The oldest claims at Lomekwi 3 and Dikika are debated, and since several hominin species coexisted, it is hard to tie a tool to one species."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To recap: made tools show a shell-like fracture pattern. Oldowan tools were simple cores and flakes used for butchery and more. Acheulean handaxes suggest planning. And the very first toolmaker is still debated."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Made tool: conchoidal fracture clues\nOldowan: cores and flakes, from about 2.6 million years ago\nAcheulean: handaxes, from about 1.76 million years ago\nCut marks: meat and marrow\nFirst maker: debated"
+   },
+   "cite": [
+    "s13",
+    "s5",
+    "s4",
+    "s15",
+    "s9"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next class we look at fire, and how it changed our bodies. Thanks for working through this one with us."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Fire and the changing body"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "How old is the evidence? (millions of years ago)",
+   "rows": [
+    {
+     "label": "Dikika cut-marked bones (disputed)",
+     "value": 3.4,
+     "source": "s9"
+    },
+    {
+     "label": "Lomekwi 3 stone tools (debated)",
+     "value": 3.3,
+     "source": "s1"
+    },
+    {
+     "label": "Gona Oldowan tools",
+     "value": 2.6,
+     "source": "s8"
+    },
+    {
+     "label": "Olduvai Gorge chopper",
+     "value": 1.8,
+     "source": "s5"
+    },
+    {
+     "label": "Kokiselei 4 handaxes",
+     "value": 1.76,
+     "source": "s15"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Conchoidal fracture and knapping",
+   "links": [
+    "[[How we know: reading the deep past without writing]]",
+    "[[Oldowan tools]]"
+   ]
+  },
+  {
+   "topic": "Oldowan tools",
+   "links": [
+    "[[Olduvai Gorge]]",
+    "[[Gona]]",
+    "[[Homo habilis]]",
+    "[[Cut marks and early meat-eating]]"
+   ]
+  },
+  {
+   "topic": "Acheulean handaxes",
+   "links": [
+    "[[Saint-Acheul]]",
+    "[[Kokiselei 4]]",
+    "[[Homo erectus]]",
+    "[[Leaving Africa the first time]]"
+   ]
+  },
+  {
+   "topic": "Lomekwi 3 and the Lomekwian",
+   "links": [
+    "[[Kenyanthropus platyops]]",
+    "[[Australopithecus afarensis]]",
+    "[[Walking upright: the first human relatives]]"
+   ]
+  },
+  {
+   "topic": "Dikika cut-marked bones",
+   "links": [
+    "[[Cut marks and early meat-eating]]",
+    "[[Australopithecus afarensis]]"
+   ]
+  },
+  {
+   "topic": "Tools and meat-eating",
+   "links": [
+    "[[Fire and the changing body]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About 3.4 to 3.3 million years ago",
+   "elsewhere": "Australopithecus afarensis, the species of the famous fossil Lucy, lived in Ethiopia's Afar region. Fossils of the species at Dikika are about 3.3 million years old.",
+   "cite": [
+    "s10",
+    "s11"
+   ]
+  },
+  {
+   "when": "About 2.8 million years ago",
+   "elsewhere": "This is the age of the earliest known Homo fossils, from Ledi-Geraru in Ethiopia, so Lomekwi 3 is older than the oldest known Homo.",
+   "cite": [
+    "s1"
+   ]
+  },
+  {
+   "when": "About 1.76 million years ago",
+   "elsewhere": "In West Asia, Homo erectus fossils at Dmanisi are about as old as Kokiselei. They came with simple chopping stones but no handaxes.",
+   "cite": [
+    "s31"
+   ]
+  },
+  {
+   "when": "About 900,000 years ago",
+   "elsewhere": "The earliest handaxe technology outside Africa shows up at two cave sites in Spain.",
+   "cite": [
+    "s36"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Homo habilis, the 'handy man', was the first toolmaker.",
+   "other_view": "This was the long-held view, and Homo habilis fossils were first found with Oldowan tools at Olduvai Gorge. But the Gona tools, about 2.6 million years old, and the Lomekwi 3 tools, about 3.3 million years old, are older than the earliest known Homo fossils. The Lomekwi authors argue that a pre-Homo hominin made tools. Because several species coexisted, many researchers say the tools cannot easily be tied to one species.",
+   "cite": [
+    "s22",
+    "s6",
+    "s1",
+    "s4"
+   ]
+  },
+  {
+   "claim": "The Lomekwi 3 tools are real, 3.3-million-year-old stone tools.",
+   "other_view": "Harmand and colleagues say the pieces were clearly knapped and securely dated. Domínguez-Rodrigo and Alcalá argue that more evidence is needed. They say the team did not convincingly show that the tools lay in place in the old layer, and they raise the possibility that some breaks are natural. The authors replied to these critiques.",
+   "cite": [
+    "s30",
+    "s28",
+    "s29"
+   ]
+  },
+  {
+   "claim": "Two bones from Dikika, about 3.4 million years old, show stone-tool butchery.",
+   "other_view": "The 2010 team said the marks were cut and percussion marks. Critics said trampling was more likely, noting that no sharp stones were found there and that the bones' layer was uncertain. A 2015 statistical study found that the two bones were not trampled. A news report said this supports butchery but does not prove it. A separate study suggested crocodile teeth could make similar marks.",
+   "cite": [
+    "s9",
+    "s12",
+    "s34",
+    "s10",
+    "s35",
+    "s11"
+   ]
+  },
+  {
+   "claim": "Which species made the Lomekwi tools, and what is the oldest true Oldowan?",
+   "other_view": "The Lomekwi tools have been linked to Kenyanthropus because it is the only hominin named from the site. Another researcher suggested that some of the fossils there could be Australopithecus afarensis. On the Oldowan, Gona (about 2.6 million years ago) was long the oldest, while Nyayanga, Kenya, has been dated to 2.6-2.9 million years ago. Some experts said it was unwarranted to call the Ledi-Geraru tools the oldest Oldowan without further testing.",
+   "cite": [
+    "s29",
+    "s24",
+    "s7"
+   ]
+  },
+  {
+   "claim": "Handaxe symmetry shows deliberate planning and even enjoyment.",
+   "other_view": "One team reads high symmetry in British handaxes as a deliberate, social act. Other studies are more cautious. A 2025 study found that few Levantine handaxes matched the 'ideal' symmetrical form. A 2024 study found symmetry lowest at the very start of the European Acheulean, which suggests less investment on arrival there. Handaxe shape varies a lot between sites, and goals other than perfect symmetry may explain some of it.",
+   "cite": [
+    "s19",
+    "s21",
+    "s20"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,1167 @@
+{
+ "about": {
+  "title": "Tang and Song China and the Islamic Golden Age",
+  "course": "history-of-everything",
+  "class_n": 29,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. There are 31 short steps, and most end with a quick check. Two civilizations plus a debate put this near the top of a half-hour class. Anyone who wants a shorter class can stop after step 25 and read the debate steps later."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "China's Age of Invention",
+   "publisher": "PBS NOVA",
+   "date": "undated",
+   "link": "https://www.pbs.org/wgbh/nova/article/song-dynasty/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "Science and technology of the Song dynasty",
+   "publisher": "EBSCO Research Starters",
+   "date": "undated",
+   "link": "https://www.ebsco.com/research-starters/history/science-and-technology-song-dynasty/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "The world's earliest dated printed book: The Diamond Sutra, 868 CE",
+   "publisher": "Cabinet, University of Oxford",
+   "date": "undated",
+   "link": "https://www.cabinet.ox.ac.uk/worlds-earliest-dated-printed-book-diamond-sutra-868-ce",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "The Diamond Sutra",
+   "publisher": "International Dunhuang Programme (British Library)",
+   "date": "undated",
+   "link": "https://idp.bl.uk/blog/the-diamond-sutra/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "The Diamond Sutra",
+   "publisher": "Linda Hall Library",
+   "date": "undated",
+   "link": "https://www.lindahall.org/about/news/scientist-of-the-day/the-diamond-sutra/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "Four Great Inventions",
+   "publisher": "Berkshire Publishing (Encyclopedia of China's Past and Present)",
+   "date": "2018-01-04",
+   "link": "https://www.berkshirepublishing.com/ecph-china/2018/01/04/four-great-inventions/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "Ancient Chinese Inventions",
+   "publisher": "History Cooperative",
+   "date": "undated",
+   "link": "https://historycooperative.org/chinese-inventions/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "Science and technology of the Song dynasty",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Science_and_technology_of_the_Song_dynasty",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "Shen Kuo",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Shen_Kuo",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "Zhu Yu (author)",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Zhu_Yu_(author)",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "Four Great Inventions",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Four_Great_Inventions",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "Song Dynasty Invented Paper Money and Gunpowder, Then Fell to the Mongols",
+   "publisher": "History Collection",
+   "date": "undated",
+   "link": "https://historycollection.com/song-dynasty-inventions-achievements-mongol-conquest/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "The Tang Dynasty, China's Golden Age of Poetry",
+   "publisher": "China Highlights",
+   "date": "undated",
+   "link": "https://www.chinahighlights.com/travelguide/culture/the-tang-dynasty.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "Tang Dynasty (618-907)",
+   "publisher": "GeeksforGeeks",
+   "date": "undated",
+   "link": "https://www.geeksforgeeks.org/social-science/tang-dynasty-618-907/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "Tang Dynasty History: How China Reached Its Golden Age of Art, Trade, and Power",
+   "publisher": "LingoAce",
+   "date": "undated",
+   "link": "https://www.lingoace.com/blog/introducing-tang-dynasty/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "Bayt al-Hikmah",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/place/Bayt-al-Hikmah",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "Foundation of the House of Wisdom in Baghdad (discussing Dimitri Gutas, Greek Thought, Arabic Culture, 1998)",
+   "publisher": "historyofinformation.com",
+   "date": "undated",
+   "link": "https://www.historyofinformation.com/detail.php?id=1583",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "House of Wisdom",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/House_of_Wisdom",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "The influence of the Academy of Gondishapur on the formation of the House of Wisdom in Baghdad and the science of the Golden Age of Islam",
+   "publisher": "arXiv (preprint)",
+   "date": "undated",
+   "link": "https://arxiv.org/pdf/2607.03483",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "The Science of al-Biruni",
+   "publisher": "arXiv (preprint)",
+   "date": "undated",
+   "link": "https://arxiv.org/pdf/1312.7288",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "al-Khwarizmi",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/biography/al-Khwarizmi",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "Al-Khwarizmi",
+   "publisher": "Orbisica",
+   "date": "undated",
+   "link": "https://orbisica.com/articles/al-khwarizmi",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "Al-Jabr",
+   "publisher": "Islam Fandom wiki",
+   "date": "undated",
+   "link": "https://islam.fandom.com/wiki/Al-Jabr",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "Who Was Ibn al-Haytham",
+   "publisher": "1001 Inventions",
+   "date": "undated",
+   "link": "https://www.1001inventions.com/ibnh-who/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "Ibn al-Haytham",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Ibn_al-Haytham",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "The Canon of Medicine",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/The_Canon_of_Medicine",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "Medieval Islamic medicine: Influences, thinkers, and anatomy",
+   "publisher": "Medical News Today",
+   "date": "undated",
+   "link": "https://www.medicalnewstoday.com/articles/323612",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "Reconsidering the Golden Age of Islam: Persian vs. Arab-Islamic Roots?",
+   "publisher": "ResearchGate (abstract)",
+   "date": "undated",
+   "link": "https://www.researchgate.net/publication/395173133_Reconsidering_the_Golden_Age_of_Islam_Persian_vs_Arab-Islamic_Roots",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s29",
+   "title": "House Of Wisdom: Historical Significance And Modern Legacy",
+   "publisher": "Dubai Archives",
+   "date": "undated",
+   "link": "https://dubaiarchives.com/house-of-wisdom/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s30",
+   "title": "An Elephant for Charlemagne",
+   "publisher": "Saudi Aramco World",
+   "date": "1977-03",
+   "link": "https://archive.aramcoworld.com/issue/197702/an.elephant.for.charlemagne.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s31",
+   "title": "Charlemagne",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Charlemagne",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome. Today we visit two great centers of science, trade and invention: China under the Tang and Song dynasties, and Baghdad under the Abbasid caliphs."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Two Great Centers: Tang–Song China and Abbasid Baghdad"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a map of time. The Tang dynasty ruled China from 618 to 907. The Song followed, from 960 to 1279. Baghdad's House of Wisdom is traditionally dated to about 830."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "618–907 Tang | 960–1279 Song | about 830 House of Wisdom, Baghdad"
+   },
+   "cite": [
+    "s13",
+    "s7",
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "People call these centuries 'golden ages'. A golden age is a time when art, learning and wealth all bloom together. Hold that phrase. At the end we will ask if it fits."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Golden age"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "What does 'golden age' mean?",
+    "right": "A time when art, learning and wealth all bloom together",
+    "wrong": [
+     "A time when everything was made of gold",
+     "A war that lasted a hundred years",
+     "A time when nobody made mistakes"
+    ],
+    "why": "A golden age is a way of describing a flourishing time. It is not about real gold."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Start with Tang China. Its capital, Chang'an, is today's Xi'an. It sat on the Silk Road, the chain of trade routes joining China to lands in the west."
+   },
+   "show": {
+    "kind": "map",
+    "text": "China's capital Chang'an (modern Xi'an) at the eastern end of the Silk Road, with routes running west across Central Asia"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Ideas travelled with traders. In 635 a Christian named Alopun reached Chang'an. Emperor Taizong approved his preaching and ordered a church built there."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A Tang street scene in Chang'an: merchants in many styles of dress, camels, and a small church beside Buddhist temples"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does Alopun's visit show about Tang Chang'an?",
+    "right": "People from other lands and faiths were welcomed there",
+    "wrong": [
+     "No foreigners were allowed in",
+     "Only Buddhists were allowed to live there",
+     "The Silk Road was closed"
+    ],
+    "why": "The emperor allowed Alopun to preach and ordered a church built. That shows an open, mixed city."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Tang is also famous for poetry. About 48,900 poems survive, by some 2,200 poets. Li Bai and Du Fu are the best known."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "48,900 Tang poems still survive"
+   },
+   "cite": [
+    "s14",
+    "s15"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the first invention: printing. Before it, every book was copied by hand. That was slow, and it let mistakes creep in."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Printing"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In the Tang, carvers began block printing. They carved a whole page into a wooden board, inked it, and pressed paper onto it. One board could make many copies."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A carver cutting Chinese characters into a wooden board, with a stack of printed pages beside him"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why did copying books by hand limit how many books existed?",
+    "right": "It was slow and mistakes crept in",
+    "wrong": [
+     "Paper had not been invented",
+     "Nobody wanted books",
+     "Books had to be written in secret"
+    ],
+    "why": "Hand copying took a lot of time and effort and often added errors. Block printing made copies faster."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is proof. The Diamond Sutra, a Buddhist scroll, is dated 11 May 868. It is the earliest dated printed book known."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "868"
+   },
+   "cite": [
+    "s3",
+    "s4"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "In what year was the Diamond Sutra printed?",
+    "right": "868",
+    "wrong": [
+     "618",
+     "1279",
+     "1450"
+    ],
+    "why": "Its printed date is 11 May 868, in the Tang dynasty. That makes it the earliest dated printed book known."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A man named Wang Jie had it made, to give away free in honor of his parents. It lay sealed in a cave at Dunhuang until about 1900. Today it is in the British Library."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A long woodblock-printed paper scroll with a carved picture of the Buddha teaching at the start"
+   },
+   "cite": [
+    "s5",
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Song dynasty improved on this. Around 1040 an official named Bi Sheng made single characters that could be rearranged and reused. That is movable type."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Movable type"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "His first characters were made of fragile clay or porcelain. Chinese uses thousands of characters, so carving them was hard work."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Small clay blocks, each with one carved character, arranged in rows on an iron plate"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was new about movable type?",
+    "right": "Single characters could be rearranged and reused",
+    "wrong": [
+     "A whole page was carved into one board",
+     "Books were copied by hand",
+     "Pages were printed without ink"
+    ],
+    "why": "Block printing carves a whole page. Movable type uses single characters that can be reused for new pages."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why did printing matter? The Song government promoted printing of the Confucian texts that exam candidates had to study. Printing also helped literacy grow."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Printed Confucian texts for exams | More readers | A larger learned class"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Second invention: gunpowder. It was first developed in the Tang. One account says it grew out of alchemy, early experiments with substances. It was used for fireworks, and later for weapons."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Gunpowder"
+   },
+   "cite": [
+    "s2",
+    "s6",
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In which dynasty was gunpowder first developed?",
+    "right": "The Tang",
+    "wrong": [
+     "The Song, after 1279",
+     "The Abbasid dynasty",
+     "Only after the Mongols arrived"
+    ],
+    "why": "Gunpowder was first developed in the Tang. The Song then built many weapons with it."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Song soldiers used 'flying fire' arrows, grenades, flamethrowers and landmines. In 1279 the Mongols ended the Song and used gunpowder weapons against them."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Flying fire arrows | Grenades | Flamethrowers | Landmines"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Third invention: the compass. At first it was a south-pointing spoon of lodestone, a naturally magnetic rock. It dates back to the Han dynasty and was used for divination."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Compass"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What were the earliest compasses used for?",
+    "right": "Divination, or telling fortunes",
+    "wrong": [
+     "Sailing across oceans",
+     "Telling the time",
+     "Cooking food"
+    ],
+    "why": "The early 'spoon' compass was used for divination. Navigation came later."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 1088 the Song scholar Shen Kuo wrote the first known description of the magnetic needle compass. A book by Zhu Yu in 1119 outlined its use for sailing at sea."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1088 Shen Kuo describes the needle compass | 1119 Zhu Yu describes use at sea"
+   },
+   "cite": [
+    "s9",
+    "s10"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Who wrote the first known description of the magnetic needle compass?",
+    "right": "Shen Kuo",
+    "wrong": [
+     "Zhu Yu",
+     "Bi Sheng",
+     "Wang Jie"
+    ],
+    "why": "Shen Kuo described it in 1088. Zhu Yu's 1119 book was the first to outline its use at sea."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In Europe the first description of the compass came from Alexander Neckam in 1187. That was about 99 years after Shen Kuo's."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "99 years: 1088 to 1187"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Song China was an age of invention. It gave us printing, paper money, porcelain, tea, restaurants, gunpowder and the compass. Thinkers like Shen Kuo and Su Song also pushed early science forward."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Printing | Paper money | Porcelain | Tea | Restaurants | Gunpowder | Compass"
+   },
+   "cite": [
+    "s1",
+    "s8"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now we travel west to Baghdad, capital of the Abbasid caliphs. They kept a royal library there called the House of Wisdom, with a translation center. One account says it was founded in 830 by al-Ma'mun."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Baghdad on the Tigris river, west of Persia and east of the Mediterranean"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To translate is to carry a text from one language into another. Scholars in Baghdad translated Greek, Persian and Syriac works into Arabic."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Translation movement"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The translators were a mixed group. Hunayn ibn Ishaq, who lived from 809 to 873, was a Syrian Christian and the leading translator of the 9th century."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A scholar at a desk surrounded by scrolls, copying a Greek text into Arabic"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What did the translators in Baghdad do?",
+    "right": "They carried works from Greek, Persian and Syriac into Arabic",
+    "wrong": [
+     "They turned Arabic books into Chinese",
+     "They carved printing blocks",
+     "They built compasses"
+    ],
+    "why": "Translation means moving a text from one language to another. In Baghdad that mostly meant translating into Arabic."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next, algebra. It means solving for an unknown number by keeping both sides balanced. Try 5 + x = 12. Take 5 away from both sides and you get x = 7."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Algebra: keep both sides balanced"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "In 5 + x = 12, what do you do to find x?",
+    "right": "Take 5 away from both sides, so x = 7",
+    "wrong": [
+     "Add 5 to one side only",
+     "Multiply both sides by zero",
+     "Ignore the 5, so x = 12"
+    ],
+    "why": "Whatever you do to one side, you do to the other. Taking 5 from both sides leaves x = 7."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Around 830, al-Khwarizmi wrote a famous book in Baghdad: 'The Compendious Book on Calculation by Completion and Balancing'."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A page of Arabic writing with diagrams of squares and rectangles used to solve equations"
+   },
+   "cite": [
+    "s21",
+    "s22"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Arabic word 'al-jabr' in that title, meaning 'completion', became our word 'algebra'. His own name gave us 'algorithm'. His books also helped bring Hindu-Arabic numerals to Europe."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "al-jabr → algebra | al-Khwarizmi → algorithm"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which English word comes from al-Khwarizmi's name?",
+    "right": "Algorithm",
+    "wrong": [
+     "Alphabet",
+     "Almanac",
+     "Algae"
+    ],
+    "why": "'Algorithm' comes from a Latin form of his name. 'Algebra' comes from the title of his book."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "His book was practical. He said it was for everyday needs like inheritance, lawsuits, trade, surveying and digging canals."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Inheritance | Lawsuits | Trade | Surveying | Canals"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next, optics, the study of light and sight. An old question: do we see because rays shoot out of our eyes, or because light comes into them?"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Optics"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Both ideas had been proposed before. Ibn al-Haytham argued that light from objects travels in straight lines into our eyes. He tested this with experiments."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Light rays running in straight lines from a candle through a small hole and into an eye"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "According to Ibn al-Haytham, how do we see?",
+    "right": "Light from objects travels into our eyes",
+    "wrong": [
+     "Rays shoot out of our eyes",
+     "Sound waves bounce off objects",
+     "We see only in dreams"
+    ],
+    "why": "He argued that light from objects enters the eye in straight lines, and he backed this with experiments."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "He studied lenses and built apparatus. He tried flat, curved, concave and convex mirrors. His 'Book of Optics' had seven volumes. Sources give different dates for it, from about 1011 to about 1027."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "book",
+    "count": 7,
+    "layout": "row",
+    "text": "The Book of Optics: seven volumes"
+   },
+   "cite": [
+    "s24",
+    "s25"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "How many volumes did the Book of Optics have?",
+    "right": "Seven",
+    "wrong": [
+     "Three",
+     "Five",
+     "Twelve"
+    ],
+    "why": "The Book of Optics ran to seven volumes."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now medicine. Ibn Sina, called Avicenna in Europe, finished The Canon of Medicine in 1025. It was an encyclopedia of medicine in five books, and it stayed an authority for centuries."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "book",
+    "count": 5,
+    "layout": "row",
+    "text": "The Canon of Medicine: five books"
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "In how many books was The Canon of Medicine arranged?",
+    "right": "Five",
+    "wrong": [
+     "Two",
+     "Seven",
+     "Nine"
+    ],
+    "why": "The Canon is an encyclopedia of medicine in five books."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Cities like Baghdad, Cairo and Harran had famous hospitals. They were called 'bimaristans', from a Persian word meaning 'house of the sick'."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Bimaristan: house of the sick"
+   },
+   "cite": [
+    "s27"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Some were teaching hospitals, where students learned to treat patients. People did not always have to pay."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A hospital ward with beds, a physician examining a patient, and students watching"
+   },
+   "cite": [
+    "s27"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What does 'bimaristan' mean?",
+    "right": "House of the sick, meaning a hospital",
+    "wrong": [
+     "House of wisdom",
+     "A book of laws",
+     "A trading ship"
+    ],
+    "why": "It comes from a Persian word meaning 'house of the sick', which is how medieval hospitals were named."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let us put the two centers side by side."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Tang–Song China: block printing, movable type, gunpowder, compass, paper money | Abbasid Baghdad: translation movement, algebra, optics, the Canon of Medicine, bimaristans"
+   },
+   "cite": [
+    "s1",
+    "s21",
+    "s24",
+    "s26",
+    "s27"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the big question. How much of this was new, and how much was borrowed or shared? Start with Baghdad. A Sanskrit astronomy text was translated into Arabic after 770, and Arab scholars adopted the sine function from Indian geometry."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Debate: how golden, how borrowed?"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "Where did Arab astronomers get the sine function?",
+    "right": "From Indian geometry",
+    "wrong": [
+     "From Chinese printing",
+     "From Roman laws",
+     "They invented it with no earlier source"
+    ],
+    "why": "One source says Arab scholars adopted the sine function from Indian geometry, in place of the Greek method using chords of arcs."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "China built on earlier ideas too. The compass began as a Han-dynasty spoon, and gunpowder began in the Tang. Even the first printed book, the Diamond Sutra, carries an Indian Buddhist text that was translated into Chinese about AD 400."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Compass: Han spoon | Gunpowder: Tang alchemy | Diamond Sutra: Indian text, translated into Chinese about 400"
+   },
+   "cite": [
+    "s1",
+    "s2",
+    "s3",
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Even the House of Wisdom is debated. Britannica says scholarship did flourish in Baghdad, but there is little evidence the House of Wisdom was at the center of it."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Little evidence that the House of Wisdom was at the center of Baghdad's scholarship (Britannica)"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The scholar Dimitri Gutas argued that its main job was housing Persian-to-Arabic translation. He said the Greek translation movement was separate. Historians still agree Baghdad had a rich library and scholarly culture."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Idea one: a grand academy for all translation | Idea two: a royal library with a narrower role"
+   },
+   "cite": [
+    "s17",
+    "s29"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What do some historians say about the House of Wisdom?",
+    "right": "It existed, but it may not have been the center of all Baghdad's translation",
+    "wrong": [
+     "It never existed at all",
+     "It was a hospital",
+     "It was in Chang'an"
+    ],
+    "why": "The debate is over how big, formal and central it was. It is not about whether it existed."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "How did the Chinese inventions travel west? One account says Arab traders carried them. Another says they spread along Mongol trade networks. Both agree they reached the Islamic world and Europe."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Account one: Arab traders | Account two: Mongol trade networks"
+   },
+   "cite": [
+    "s11",
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So was it a golden age? Scholars still argue over its roots: some stress Arab-Islamic thinkers, others stress Greek, Persian and Indian traditions. A fair summary is that both centers built on earlier ideas from many places, and both added new work."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Built on others, then added their own"
+   },
+   "cite": [
+    "s28"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which statement is fairest?",
+    "right": "Both centers built on earlier ideas from many places and added important new work",
+    "wrong": [
+     "They invented everything from nothing",
+     "They only copied other people",
+     "Nothing from either place ever reached Europe"
+    ],
+    "why": "Each center borrowed and shared ideas, and each also added its own advances. The inventions and books we met today show both."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To recap: China gave us printing, gunpowder and the compass. Baghdad gave us algebra, optics and the Canon of Medicine. Next class we visit Japan, Korea, Southeast Asia and medieval India."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Printing | Gunpowder | Compass | Algebra | Optics | Medicine | Next: Japan, Korea, Southeast Asia and medieval India"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Silk Road trade",
+   "links": [
+    "[[The Roman Empire, the Silk Roads and Early Christianity]]",
+    "[[The Rise of Islam and the Caliphates]]"
+   ]
+  },
+  {
+   "topic": "Printing, movable type and later European printing",
+   "links": [
+    "[[The Renaissance]]",
+    "[[The Reformation and the Wars of Religion]]"
+   ]
+  },
+  {
+   "topic": "Gunpowder, Mongol conquests and the end of the Song",
+   "links": [
+    "[[The Mongol Empire]]"
+   ]
+  },
+  {
+   "topic": "The compass and ocean exploration",
+   "links": [
+    "[[Ottomans, Ming China and the Age of Exploration]]"
+   ]
+  },
+  {
+   "topic": "Optics, algebra and medicine reaching Europe",
+   "links": [
+    "[[The Scientific Revolution]]",
+    "[[High Medieval Europe: Crusades, Castles and Universities]]"
+   ]
+  },
+  {
+   "topic": "Neighbors of Tang and Song China",
+   "links": [
+    "[[Japan, Korea, Southeast Asia and Medieval India]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About 800",
+   "elsewhere": "China was under the Tang dynasty. In Baghdad, Harun al-Rashid exchanged envoys with Charlemagne, who was crowned emperor in Rome on 25 December 800. The caliph sent him a white elephant named Abul-Abbas.",
+   "cite": [
+    "s13",
+    "s30",
+    "s31"
+   ]
+  },
+  {
+   "when": "About 830 to 868",
+   "elsewhere": "Al-Khwarizmi wrote his algebra in Baghdad around 830. In Tang China the Diamond Sutra was printed on 11 May 868. That was about four decades later.",
+   "cite": [
+    "s22",
+    "s3"
+   ]
+  },
+  {
+   "when": "1020s to 1040s",
+   "elsewhere": "Ibn Sina finished the Canon of Medicine in 1025. Ibn al-Haytham's Book of Optics was written in the early 1000s, with dates given from about 1011 to 1027. Su Song was born in 1020, Shen Kuo in 1031, and Bi Sheng made movable type around 1040.",
+   "cite": [
+    "s26",
+    "s25",
+    "s24",
+    "s8",
+    "s9",
+    "s7"
+   ]
+  },
+  {
+   "when": "1088 to 1187",
+   "elsewhere": "Shen Kuo described the magnetic needle compass in 1088. Alexander Neckam gave Europe's first description in 1187.",
+   "cite": [
+    "s9"
+   ]
+  },
+  {
+   "when": "1258 and 1279",
+   "elsewhere": "1258 marked the end of Baghdad's House of Wisdom as an institution. In 1279 the Mongols overthrew the Song.",
+   "cite": [
+    "s29",
+    "s2"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The House of Wisdom was the great academy of Baghdad and the heart of the translation movement.",
+   "other_view": "Britannica says scholarship flourished but there is little evidence the House of Wisdom was central to it. Dimitri Gutas argued its main function was housing Persian-to-Arabic translation, and that Greek translation was separate. Some historians say the 'academy' picture was built in the 19th and early 20th centuries. Other sources say the real debate is about how big, formal and central it was, not whether it existed.",
+   "cite": [
+    "s16",
+    "s17",
+    "s18",
+    "s29"
+   ]
+  },
+  {
+   "claim": "The Islamic Golden Age was a brilliant, original burst of new knowledge.",
+   "other_view": "Scholars debate its roots. Some stress Arab-Islamic thinkers. Others stress Greek, Persian and Indian traditions that were already in the region, and Arabic science took in Indian astronomy and the sine function. A fair reading is that scholars built on shared knowledge and added new work.",
+   "cite": [
+    "s28",
+    "s20"
+   ]
+  },
+  {
+   "claim": "Al-Khwarizmi founded algebra.",
+   "other_view": "His book is a landmark in systematic treatment of equations. But it cites no earlier authors, so historians infer from the text what he drew on. They argue over how much came from earlier work.",
+   "cite": [
+    "s21",
+    "s23"
+   ]
+  },
+  {
+   "claim": "Ibn al-Haytham was first to show that we see because light enters the eye.",
+   "other_view": "Sources say both theories of vision, light entering the eye and rays leaving it, had been put forward before him. His novelty was systematic experiment. Dates for the Book of Optics also vary between sources.",
+   "cite": [
+    "s24",
+    "s25"
+   ]
+  },
+  {
+   "claim": "Song China invented the compass, gunpowder and printing.",
+   "other_view": "The Song made major breakthroughs, but roots go back earlier: the compass to a Han-era spoon, gunpowder to the Tang, and block printing to the Tang. Shen Kuo's 1088 text described the needle but did not specifically outline sea use. Zhu Yu's 1119 book did.",
+   "cite": [
+    "s2",
+    "s1",
+    "s6",
+    "s9",
+    "s10"
+   ]
+  },
+  {
+   "claim": "Chinese inventions reached the West through Arab traders.",
+   "other_view": "One account says Arab traders carried them to Europe. Another says they travelled through Mongol trade networks into the Islamic world and Europe.",
+   "cite": [
+    "s11",
+    "s12"
+   ]
+  }
+ ]
+}

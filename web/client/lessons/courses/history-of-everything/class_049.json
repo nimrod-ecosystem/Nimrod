@@ -1,0 +1,1662 @@
+{
+ "about": {
+  "title": "Science and Ideas in the 1800s",
+  "course": "history-of-everything",
+  "class_n": 49,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "Six topics, each taught in short steps with a check question after the main idea. This fits about 30 minutes at an unhurried pace, including pauses for the 11 questions."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "The writing of 'Origin'",
+   "publisher": "Darwin Correspondence Project, University of Cambridge",
+   "date": "n.d.",
+   "link": "https://www.darwinproject.ac.uk/people/about-darwin/origin-species/writing-origin",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "The Origin of Species: The Making of a Theory",
+   "publisher": "HHMI BioInteractive",
+   "date": "n.d.",
+   "link": "https://www.biointeractive.org/classroom-resources/origin-species-making-theory",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "Natural Selection: Charles Darwin & Alfred Russel Wallace",
+   "publisher": "Understanding Evolution, UC Berkeley",
+   "date": "n.d.",
+   "link": "https://evolution.berkeley.edu/the-history-of-evolutionary-thought/1800s/natural-selection-charles-darwin-alfred-russel-wallace/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "1859: Darwin Published On the Origin of Species, Proposing Continual Evolution of Species",
+   "publisher": "National Human Genome Research Institute",
+   "date": "n.d.",
+   "link": "https://www.genome.gov/25520157/online-education-kit-1859-darwin-published-on-the-origin-of-species-proposing-continual-evolution-of-species",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "On the Origin of Species",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/On_the_Origin_of_Species",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "Reactions to On the Origin of Species",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Reactions_to_On_the_Origin_of_Species",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "John Snow",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/biography/John-Snow-British-physician",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "1.6.6: Improvement in Public Health",
+   "publisher": "Biology LibreTexts (Prince George's Community College)",
+   "date": "n.d.",
+   "link": "https://bio.libretexts.org/Courses/Prince_Georges_Community_College/PGCC_Microbiology/01:_Introduction_to_Microbiology/1.06:_History_of_Microbiology/1.6.06:_Improvement_in_Public_Health",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "Germ Theory",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/Germ_Theory/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "What Is Germ Theory? Public Health & Epidemiology Explained",
+   "publisher": "Texas A&M University School of Public Health",
+   "date": "n.d.",
+   "link": "https://public-health.tamu.edu/degrees/mph/blog/what-is-germ-theory.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "Pioneering Hand Hygiene: Ignaz Semmelweis and the Fight Against Puerperal Fever",
+   "publisher": "Cureus, via PubMed Central",
+   "date": "n.d.",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11568873/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "The Idea of Surgeons Washing Their Hands is Only 154 Years Old",
+   "publisher": "Smithsonian Magazine",
+   "date": "n.d.",
+   "link": "https://www.smithsonianmag.com/smart-news/idea-sterilizing-surgical-instruments-only-150-years-old-180962498/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "Joseph Lister's antisepsis system",
+   "publisher": "Science Museum Group",
+   "date": "n.d.",
+   "link": "https://www.sciencemuseum.org.uk/objects-and-stories/medicine/listers-antisepsis-system",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "Lines and Waves - Faraday, Maxwell, and 150 Years of Electromagnetism",
+   "publisher": "IEEE Reach",
+   "date": "n.d.",
+   "link": "https://reach.ieee.org/primary-sources/lines-and-waves/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "Classical Electrodynamics of Extended Bodies (historical review section)",
+   "publisher": "arXiv",
+   "date": "n.d.",
+   "link": "https://arxiv.org/pdf/1802.02141",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "Vito Volterra and his commemoration for the centenary of Faraday's discovery of electromagnetic induction",
+   "publisher": "arXiv",
+   "date": "n.d.",
+   "link": "https://arxiv.org/pdf/1609.02659",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "Milestones: Pearl Street Station, 1882",
+   "publisher": "Engineering and Technology History Wiki (IEEE)",
+   "date": "n.d.",
+   "link": "https://ethw.org/Milestones:Pearl_Street_Station,_1882",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "Pearl Street Station",
+   "publisher": "Engineering and Technology History Wiki (IEEE)",
+   "date": "n.d.",
+   "link": "https://ethw.org/Pearl_Street_Station",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "When Edison Lit Up Manhattan",
+   "publisher": "New-York Historical Society",
+   "date": "n.d.",
+   "link": "https://www.nyhistory.org/blogs/edison-lit-manhattan",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "Pearl Street Station",
+   "publisher": "CultureNow",
+   "date": "n.d.",
+   "link": "https://culturenow.org/site/pearl-street-station",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "Lighting A Revolution: 19th Century Promotion",
+   "publisher": "Smithsonian National Museum of American History",
+   "date": "n.d.",
+   "link": "https://americanhistory.si.edu/lighting/19thcent/promo19.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "2.5: Mendeleev and Periodic Table",
+   "publisher": "Chemistry LibreTexts",
+   "date": "n.d.",
+   "link": "https://chem.libretexts.org/Bookshelves/Introductory_Chemistry/Chemistry_for_Changing_Times_(Hill_and_McCreary)/02:_Atoms/2.05:_Mendeleev_and_Periodic_Table",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "The Genius of Mendeleev's Table",
+   "publisher": "Let's Talk Science",
+   "date": "n.d.",
+   "link": "https://letstalkscience.ca/educational-resources/stem-explained/genius-mendeleevs-table",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "Mendeleev's Periodic Table",
+   "publisher": "Science Notes",
+   "date": "n.d.",
+   "link": "https://sciencenotes.org/mendeleevs-periodic-table/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "Mendeleev and the Periodic Table of Elements",
+   "publisher": "arXiv",
+   "date": "n.d.",
+   "link": "https://arxiv.org/pdf/physics/0411080",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "First Periodic Table is Created in 1869",
+   "publisher": "EDN",
+   "date": "n.d.",
+   "link": "https://www.edn.com/1st-periodic-table-is-presented-march-6-1869/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "The law of conservation of energy",
+   "publisher": "Institute of Physics (Spark)",
+   "date": "n.d.",
+   "link": "https://spark.iop.org/law-conservation-energy",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "Hermann von Helmholtz",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://plato.stanford.edu/entries/hermann-helmholtz/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s29",
+   "title": "Heat, work and subtle fluids: a commentary on Joule (1850) 'On the mechanical equivalent of heat'",
+   "publisher": "Philosophical Transactions of the Royal Society A",
+   "date": "n.d.",
+   "link": "https://royalsocietypublishing.org/rsta/article/373/2039/20140348/114855/Heat-work-and-subtle-fluids-a-commentary-on-Joule",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s30",
+   "title": "Social Darwinism",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/social-sciences-and-humanities/social-darwinism/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s31",
+   "title": "Social Darwinism - Definition, Examples, Imperialism",
+   "publisher": "HISTORY",
+   "date": "n.d.",
+   "link": "https://www.history.com/articles/social-darwinism",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s32",
+   "title": "Social Darwinism",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Social_Darwinism",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s33",
+   "title": "Social Darwinism and Eugenics (Breeding Society's 'Fittest')",
+   "publisher": "Facing History and Ourselves",
+   "date": "n.d.",
+   "link": "https://www.facinghistory.org/resource-library/breeding-societys-fittest",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s34",
+   "title": "Romanticism",
+   "publisher": "The Metropolitan Museum of Art, Heilbrunn Timeline of Art History",
+   "date": "n.d.",
+   "link": "https://www.metmuseum.org/essays/romanticism",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s35",
+   "title": "Nineteenth-Century French Realism",
+   "publisher": "The Metropolitan Museum of Art, Heilbrunn Timeline of Art History",
+   "date": "n.d.",
+   "link": "https://www.metmuseum.org/essays/nineteenth-century-french-realism",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s36",
+   "title": "Impressionism: Art and Modernity",
+   "publisher": "The Metropolitan Museum of Art, Heilbrunn Timeline of Art History",
+   "date": "n.d.",
+   "link": "https://www.metmuseum.org/essays/impressionism-art-and-modernity",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s37",
+   "title": "Impressionism (art term)",
+   "publisher": "Tate",
+   "date": "n.d.",
+   "link": "https://www.tate.org.uk/art/art-terms/i/impressionism",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s38",
+   "title": "Claude Monet, Impression, Sunrise",
+   "publisher": "Smarthistory",
+   "date": "n.d.",
+   "link": "https://smarthistory.org/claude-monets-impression-sunrise/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s39",
+   "title": "Impression, Sunrise",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Impression-Sunrise",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s40",
+   "title": "The Meeting (Courbet)",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/The_Meeting_(Courbet)",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s41",
+   "title": "A Brief history of magnetism",
+   "publisher": "arXiv",
+   "date": "n.d.",
+   "link": "https://arxiv.org/pdf/1903.07031",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s43",
+   "title": "History of Antiseptics Timeline",
+   "publisher": "Preceden",
+   "date": "n.d.",
+   "link": "https://www.preceden.com/timeline/history-of-antiseptics",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Today we look at the 1800s. People found new answers about life, disease, electricity, matter and energy."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Science and Ideas in the 1800s"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We will take six ideas, one at a time, in this order. We will check each main idea with a question."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Darwin and evolution\n2. Germs and public health\n3. Electricity and electromagnetism\n4. The periodic table and energy\n5. The debate over Darwin's ideas\n6. Romanticism, realism, Impressionism"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, Darwin. Until the early 1800s, most Europeans, scientists included, believed each species was made in a form that never changed."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Species were thought to be fixed"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Two young British naturalists, Charles Darwin and Alfred Russel Wallace, collected many plants and animals. They saw how much species vary, and how closely some are related."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A naturalist's desk with pinned beetles, bird skins and open notebooks"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Each of them, working independently, came up with a way for life to change. Darwin called it natural selection."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Natural selection"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the idea in three steps. Members of a species differ. Helpful differences can mean more offspring. Over many generations, the group changes."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Individuals vary\n2. Helpful traits mean more offspring\n3. Over many generations, the group changes"
+   },
+   "cite": [
+    "s3",
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "An example. Darwin spent a great deal of time with pigeon breeders. Breeders choose which birds have chicks. In nature, birds with helpful traits simply leave more chicks."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Pigeons of several shapes and colours side by side, with a breeder's hand holding one"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's check that idea."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Natural selection"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is natural selection?",
+    "right": "Animals with helpful traits tend to leave more offspring, so a group slowly changes over generations.",
+    "wrong": [
+     "Every species was made once and never changes.",
+     "A breeder decides which animals will have young.",
+     "Animals change their bodies on purpose during their lives."
+    ],
+    "why": "Darwin and Wallace both realized that a helpful trait can mean more offspring. Over many generations, that changes the group."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 1858 a letter from Wallace jolted Darwin into action. Their two theories were announced together at the Linnean Society in London that July."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "July 1858: joint announcement at the Linnean Society, London"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Darwin then published On the Origin of Species on 24 November 1859. The first printing sold out in a matter of days."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1859"
+   },
+   "cite": [
+    "s5",
+    "s4"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Within about twenty years, most scientists agreed that evolution had happened. They were slower to agree that natural selection was the main cause."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Evolution happened: widely accepted within two decades.\nNatural selection as the main cause: accepted more slowly."
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Genetics came later. It explained how natural selection could work, and it helped show that Darwin was right."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Genetics came later"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now, disease. For a long time a popular idea, called miasma theory, said that diseases were caused by 'bad air'."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Germs and public health"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In 1854, cholera struck Soho in London. A doctor, John Snow, mapped the deaths. They clustered around the water pump on Broad Street."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A street map of Soho with small black bars for deaths, thickest around one pump on Broad Street"
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Snow proposed that cholera spread through contaminated water. Local officials removed the pump's handle, and the outbreak was contained."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Pump handle removed"
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's check what Snow's evidence showed."
+   },
+   "show": {
+    "kind": "map",
+    "text": "The Soho map with the Broad Street pump marked"
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In 1854, what did John Snow's map point to as the source of the cholera outbreak?",
+    "right": "A contaminated water pump on Broad Street.",
+    "wrong": [
+     "Bad air drifting up from the river.",
+     "A crowded hospital.",
+     "A spoiled food shipment."
+    ],
+    "why": "Snow mapped the deaths and linked them to the Broad Street pump. After the handle was removed, new cases dwindled."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Snow never saw the germ. Between the 1860s and 1880s, Louis Pasteur and Robert Koch are credited with building the proof."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Germ theory"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Germ theory says that specific diseases are caused by specific microorganisms, not by vapours in the air. Koch identified the microbe behind cholera."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Old idea: bad air (miasma)\nGerm theory: specific microbes cause specific diseases"
+   },
+   "cite": [
+    "s10",
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It changed surgery. In the 1840s Hungarian doctor Ignaz Semmelweis cut deaths from childbed fever by making doctors wash their hands with chlorinated lime."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A hospital ward in the 1840s with a basin of chlorinated lime solution by the door"
+   },
+   "cite": [
+    "s11",
+    "s43"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Many colleagues resisted him. His methods were accepted only after his death, once germ theory was widely understood."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Right, but ignored"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Joseph Lister built on Pasteur's work. In 1867 he published his antiseptic system. Carbolic acid on wounds, dressings and tools, plus hand washing, killed germs before they could cause infection."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Carbolic acid on wounds\nCarbolic acid on dressings and instruments\nWashing hands"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "At first some surgeons found it excessive, because they did not accept that germs cause infection. By 1875, scrubbing hands and sterilizing instruments were widely practised."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Widely practised by 1875"
+   },
+   "cite": [
+    "s13",
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's check why Lister used carbolic acid."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Antiseptic surgery"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why did Lister put carbolic acid on wounds and instruments?",
+    "right": "To kill germs before they could cause infection.",
+    "wrong": [
+     "To hide bad smells in the operating room.",
+     "To put patients to sleep.",
+     "To make the air in the room feel fresher."
+    ],
+    "why": "Lister's idea was simply to try to kill the germs, and washing hands kept new germs from being introduced."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now electricity. In 1831 Michael Faraday found that moving a magnet near a wire made an electric current in the wire. This is called electromagnetic induction."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A magnet moving in and out of a coil of wire, with a meter needle that jumps each time"
+   },
+   "cite": [
+    "s15",
+    "s14"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Faraday also pictured invisible 'lines of force' around magnets. That helped lead to the modern idea of electric and magnetic fields."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Fields"
+   },
+   "cite": [
+    "s41"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "James Clerk Maxwell was born in Scotland the same year as Faraday's discovery. He turned Faraday's ideas into mathematics."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Maxwell: the maths of Faraday's ideas"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "By 1865, Maxwell's theory predicted electromagnetic waves travelling at close to the speed of light. So light itself is an electromagnetic wave."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Light is an electromagnetic wave."
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's check what Maxwell found."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Electromagnetic waves"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What did Maxwell's theory show about light?",
+    "right": "Light is an electromagnetic wave.",
+    "wrong": [
+     "Light is made of tiny pieces of paper.",
+     "Light is made by moving a magnet near a pump.",
+     "Light is a kind of germ."
+    ],
+    "why": "Maxwell calculated that electromagnetic waves travel at close to the speed of light. That identified light as an electromagnetic wave."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "These waves soon found a use. Marconi sent signals over distance without wires, using electromagnetic waves."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Wireless telegraph"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Electricity also reached ordinary customers. On 4 September 1882, Edison's Pearl Street Station in Manhattan began sending electricity along wires to many customers."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A brick power station beside a narrow street, with wires running underground along the road"
+   },
+   "cite": [
+    "s17",
+    "s19"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It was a central power station: one plant, many users. The price was comparable to gas lighting."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Central power station"
+   },
+   "cite": [
+    "s17",
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Customers grew fast. There were 59 by the end of September 1882. By 1884 there were 508 customers with over ten thousand lamps."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Pearl Street customers",
+    "chart": "c2"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's check what was new about Pearl Street."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Pearl Street, 1882"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was new about Pearl Street Station?",
+    "right": "One central power station sent electricity along wires to many customers.",
+    "wrong": [
+     "It was where Faraday first made a current.",
+     "It was where Snow mapped the cholera deaths.",
+     "It was where Mendeleev built his table."
+    ],
+    "why": "Pearl Street was a central station with a system of wires to deliver electricity to the people who used it."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now matter and energy. By 1869, chemists knew of 63 elements, the basic kinds of matter. They wanted to find order among them."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "63 known elements in 1869"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Dmitri Mendeleev set the elements in rows and columns by increasing atomic weight. Each column held elements with similar properties."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A grid of boxes with element symbols, columns shaded by similar behaviour, and a few boxes left empty with question marks"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The key step: he left blank spaces for elements nobody had found yet. He predicted what their properties would be."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Gaps that made predictions"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "His predictions came true. Gallium was found in 1875 and germanium in 1886. They matched what he had predicted for 'eka-aluminum' and 'eka-silicon'."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Predicted: eka-aluminum, eka-silicon\nFound: gallium (1875), germanium (1886)"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The table kept growing. In Mendeleev's time scientists knew 63 elements. Today the table has 118."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Known elements, then and now",
+    "chart": "c1"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's check why his table was so convincing."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Mendeleev's table"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why did Mendeleev's table convince so many chemists?",
+    "right": "He left gaps and predicted elements that were found later, such as gallium and germanium.",
+    "wrong": [
+     "He discovered all 118 elements himself.",
+     "He was the only person who ever tried to sort the elements.",
+     "He proved that light is an electromagnetic wave."
+    ],
+    "why": "The discovery of elements that closely matched his predictions was the most convincing evidence for his arrangement."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Also in the 1840s, people worked out the conservation of energy. In plain words: energy changes form, but the total is not simply lost. Mayer, Joule and Helmholtz all helped."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Conservation of energy"
+   },
+   "cite": [
+    "s27",
+    "s28",
+    "s29"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "This grew up in the age of steam engines. Joule's famous paddle-wheel experiment measured how much heat a given amount of motion makes."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A paddle wheel in a water-filled tub, turned by a falling weight on a cord, with a thermometer"
+   },
+   "cite": [
+    "s27",
+    "s29"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Later in the century this became thermodynamics. Its First law is energy conservation. Its Second law is that energy dissipates."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "First law: energy is conserved\nSecond law: energy dissipates"
+   },
+   "cite": [
+    "s27"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's check the energy idea."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "First law of thermodynamics"
+   },
+   "cite": [
+    "s27"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does the conservation of energy say?",
+    "right": "Energy changes from one form to another, and the total is not simply lost.",
+    "wrong": [
+     "Energy is used up and disappears.",
+     "Energy only exists as light.",
+     "Energy can only be made by magnets."
+    ],
+    "why": "The conservation of energy became the First law of thermodynamics. Joule, Mayer and Helmholtz helped establish it."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Back to Darwin. How did people react? It was not a simple fight of science against religion. Religious views were mixed."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The debate: Darwin's ideas in the wider world"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Church of England's scientific establishment reacted against the book. Liberal Anglicans strongly supported natural selection as an instrument of God's design."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Against: Church of England's scientific establishment\nFor: liberal Anglicans"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One phrase spread everywhere: 'survival of the fittest'. Darwin borrowed it from the thinker Herbert Spencer, to help explain his ideas to the public."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Survival of the fittest"
+   },
+   "cite": [
+    "s31"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Social Darwinism is the use of Darwin's natural selection to justify political, social or economic views about human societies. It emerged in the late 1800s."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Social Darwinism"
+   },
+   "cite": [
+    "s31",
+    "s30"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "It was used to justify imperialism, racism, eugenics and inequality. Some argued the people at the top were the 'fittest', so extending rights like voting to others was unwise."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Imperialism\nRacism\nEugenics\nSocial inequality"
+   },
+   "cite": [
+    "s31",
+    "s33"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Eugenics was started by Francis Galton, a relative of Darwin. It aimed to 'improve' humans by removing people he thought 'undesirable'. Later lessons return to where this led."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Eugenics"
+   },
+   "cite": [
+    "s31",
+    "s30"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Many historians say this was a misuse of Darwin. Darwin rarely commented on the social meaning of his theory. Spencer believed learned traits could be inherited, unlike Darwin."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Darwin: rarely commented on social meaning\nSpencer: believed learned traits are passed on"
+   },
+   "cite": [
+    "s31",
+    "s30"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The other side. Some scholars see real historical links between spreading Darwin's theory and social Darwinism. They still say it is not a necessary result of evolution."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Linked in history, not required by biology"
+   },
+   "cite": [
+    "s32"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's check where historians stand."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Social Darwinism"
+   },
+   "cite": [
+    "s30",
+    "s31",
+    "s32"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which statement fits what we have learned about social Darwinism?",
+    "right": "It applied natural selection to human societies, and many historians say it misused Darwin's ideas.",
+    "wrong": [
+     "It was the part of biology that Darwin himself taught as a rule for society.",
+     "Darwin wrote that the poor deserved to be poor.",
+     "It only ever meant cooperation between people."
+    ],
+    "why": "Social Darwinism applied natural selection to societies. Many historians say Darwin rarely commented on social meaning, though some scholars see historical links."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Finally, art. Romanticism took hold in France and Britain in the early 1800s and flourished until mid-century. It valued the artist's originality."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Romanticism, realism, Impressionism"
+   },
+   "cite": [
+    "s34"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Romantic art often carried viewers to other worlds and eras, through the novels of Walter Scott and the poetry of Lord Byron. Delacroix painted a scene from Scott's Ivanhoe."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A tumultuous painted scene from a medieval tale, in the style of Delacroix"
+   },
+   "cite": [
+    "s34"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Realism turned away from that. It rejected idealized classicism and Romantic exotic themes, and was based on direct observation of the modern world."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Romanticism: other worlds, drama, originality\nRealism: direct observation of the modern world"
+   },
+   "cite": [
+    "s35",
+    "s34"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Gustave Courbet said in 1861 that painting should show real, existing things. Realists painted the lives of humble people, such as stonebreakers."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "'painting is an essentially concrete art and can only consist in the representation of real and existing things'"
+   },
+   "cite": [
+    "s35"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's check what Realists painted."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Realism"
+   },
+   "cite": [
+    "s35"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What did Realist painters like Courbet usually show?",
+    "right": "Everyday life and ordinary people as they really were.",
+    "wrong": [
+     "Dramatic scenes from the novels of Walter Scott.",
+     "Gods and heroes from ancient myths.",
+     "Dreamlike landscapes from the artist's imagination."
+    ],
+    "why": "Realists recorded the present-day lives of humble people, often in gritty detail, based on direct observation."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Then came Impressionism. Artists painted outdoors, on the spot, using short broken brushstrokes to catch the fleeting quality of light."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A harbour at dawn made of short dabs of orange, blue and grey, with a small boat and a low sun"
+   },
+   "cite": [
+    "s37",
+    "s36"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In April 1874, a group including Monet, Degas and Pissarro held a Paris exhibition on their own. They stood apart from the official Salon, where a jury chose the art."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "1874: independent exhibition"
+   },
+   "cite": [
+    "s36"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A critic, Louis Leroy, mocked Monet's Impression, Sunrise as a mere sketch. He named the show 'The Exhibition of the Impressionists', and several artists proudly adopted the name."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "'Wallpaper in an embryonic state is more finished than that seascape.' (Louis Leroy, 1874)"
+   },
+   "cite": [
+    "s39",
+    "s38"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's check how the name started."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Impressionism"
+   },
+   "cite": [
+    "s39"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "How did Impressionism get its name?",
+    "right": "A critic mocked Monet's painting Impression, Sunrise, and the artists later adopted the name.",
+    "wrong": [
+     "Monet and Degas voted on a name at the official Salon.",
+     "It was named after a cholera map.",
+     "Maxwell suggested it, because light is a wave."
+    ],
+    "why": "Louis Leroy used the word to mock the 1874 show, and several of the artists proudly kept it."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's line up the dates from today's class."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1831 Faraday: induction | 1847 Helmholtz: conservation of energy | 1854 Snow: Broad Street pump | 1859 Darwin: Origin | 1867 Lister: antiseptic surgery | 1869 Mendeleev: periodic table | 1874 first Impressionist exhibition | 1882 Pearl Street Station"
+   },
+   "cite": [
+    "s15",
+    "s27",
+    "s7",
+    "s5",
+    "s12",
+    "s26",
+    "s36",
+    "s17"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "What changed in daily life? Electric light and power, safer operations, and better understanding of how disease spreads. And in worldviews? Humans were placed within nature's long history, and art looked at the world in new ways."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Electricity into homes\nSafer surgery\nClearer ideas about how disease spreads\nA new view of life's history\nNew ways of seeing in art"
+   },
+   "cite": [
+    "s17",
+    "s12",
+    "s8",
+    "s3",
+    "s36"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One last check, using the timeline."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1859: ?"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which of these happened in 1859?",
+    "right": "Darwin published On the Origin of Species.",
+    "wrong": [
+     "Edison's Pearl Street Station opened.",
+     "Mendeleev presented the first periodic table.",
+     "Lister published his antiseptic system."
+    ],
+    "why": "Darwin's book came out on 24 November 1859. Pearl Street opened in 1882, Mendeleev's table came in 1869, and Lister's paper in 1867."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next time, we follow the road that led to World War I."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: The Road to World War I"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Known chemical elements: Mendeleev's time and today",
+   "rows": [
+    {
+     "label": "Known in 1869",
+     "value": 63,
+     "source": "s23"
+    },
+    {
+     "label": "In the periodic table today",
+     "value": 118,
+     "source": "s23"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Customers of Edison's Pearl Street Station",
+   "rows": [
+    {
+     "label": "End of September 1882",
+     "value": 59,
+     "source": "s20"
+    },
+    {
+     "label": "1884",
+     "value": 508,
+     "source": "s20"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Natural selection and evolution",
+   "links": [
+    "[[The Scientific Revolution]]",
+    "[[20th-Century Science and Technology]]"
+   ]
+  },
+  {
+   "topic": "Germ theory and public health",
+   "links": [
+    "[[The Industrial Revolution]]",
+    "[[20th-Century Science and Technology]]"
+   ]
+  },
+  {
+   "topic": "Electricity and electromagnetism",
+   "links": [
+    "[[The Industrial Revolution]]",
+    "[[20th-Century Science and Technology]]"
+   ]
+  },
+  {
+   "topic": "Periodic table and conservation of energy",
+   "links": [
+    "[[The Industrial Revolution]]",
+    "[[20th-Century Science and Technology]]"
+   ]
+  },
+  {
+   "topic": "Social Darwinism and eugenics",
+   "links": [
+    "[[Imperialism: Africa, India, China and Japan]]",
+    "[[The Holocaust and the Memory of Genocide]]"
+   ]
+  },
+  {
+   "topic": "Romanticism, realism and Impressionism",
+   "links": [
+    "[[Nations, Reform and Civil War in the 1800s]]",
+    "[[The Road to World War I]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "1831",
+   "elsewhere": "Michael Faraday discovers electromagnetic induction in Britain. James Clerk Maxwell, who later gave Faraday's ideas their mathematics, is born in Scotland the same year.",
+   "cite": [
+    "s14",
+    "s15"
+   ]
+  },
+  {
+   "when": "1847",
+   "elsewhere": "Hermann von Helmholtz publishes his book on the conservation of force (energy). Around the same time, Ignaz Semmelweis introduces handwashing in a Vienna maternity clinic.",
+   "cite": [
+    "s27",
+    "s43"
+   ]
+  },
+  {
+   "when": "1854",
+   "elsewhere": "John Snow traces the Broad Street cholera outbreak in London. In France, Gustave Courbet paints The Meeting, one of his best-known Realist works.",
+   "cite": [
+    "s7",
+    "s40"
+   ]
+  },
+  {
+   "when": "1858-1859",
+   "elsewhere": "Darwin's and Wallace's theories are announced together in London in July 1858. Darwin's Origin of Species is published on 24 November 1859.",
+   "cite": [
+    "s1",
+    "s5"
+   ]
+  },
+  {
+   "when": "1861",
+   "elsewhere": "Courbet states that painting must show real and existing things. Maxwell publishes 'On physical lines of force' (1861-62).",
+   "cite": [
+    "s35",
+    "s15"
+   ]
+  },
+  {
+   "when": "1865",
+   "elsewhere": "Maxwell presents a complete framework of electromagnetism. Semmelweis dies.",
+   "cite": [
+    "s15",
+    "s11"
+   ]
+  },
+  {
+   "when": "1867",
+   "elsewhere": "Joseph Lister publishes his antiseptic system in The Lancet.",
+   "cite": [
+    "s12"
+   ]
+  },
+  {
+   "when": "1869",
+   "elsewhere": "Dmitri Mendeleev presents his periodic table to the Russian Chemical Society. The German chemist Julius Lothar Meyer independently proposes an essentially identical arrangement.",
+   "cite": [
+    "s26",
+    "s22"
+   ]
+  },
+  {
+   "when": "1874",
+   "elsewhere": "Independent artists hold the exhibition in Paris that launches the movement called Impressionism.",
+   "cite": [
+    "s36",
+    "s38"
+   ]
+  },
+  {
+   "when": "1875",
+   "elsewhere": "Gallium, the element Mendeleev predicted, is discovered.",
+   "cite": [
+    "s22"
+   ]
+  },
+  {
+   "when": "1882",
+   "elsewhere": "The Holborn Viaduct power installation in London starts in January. Edison's Pearl Street Station opens in New York on 4 September.",
+   "cite": [
+    "s21",
+    "s17"
+   ]
+  },
+  {
+   "when": "1886",
+   "elsewhere": "Germanium, the element Mendeleev predicted, is discovered. The eighth and last of the independent Impressionist exhibitions is held (1874-1886).",
+   "cite": [
+    "s22",
+    "s36"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Darwin and Wallace shared credit for natural selection in a friendly, agreed arrangement.",
+   "other_view": "Lyell and Hooker arranged for both theories to be presented together in 1858. The Darwin Correspondence Project also notes a view (attributed to Brooks) that Darwin kept Wallace's letter for a month and, without acknowledgment, took in Wallace's theory of divergence.",
+   "cite": [
+    "s3",
+    "s1"
+   ]
+  },
+  {
+   "claim": "The reaction to Darwin was science against religion.",
+   "other_view": "Religious views were mixed. The Church of England's scientific establishment reacted against the book, but liberal Anglicans strongly supported natural selection as an instrument of God's design.",
+   "cite": [
+    "s6"
+   ]
+  },
+  {
+   "claim": "Evolution and natural selection were accepted together.",
+   "other_view": "Within about two decades scientists broadly agreed that evolution with common descent had occurred. They were slower to give natural selection the importance Darwin thought it deserved.",
+   "cite": [
+    "s5"
+   ]
+  },
+  {
+   "claim": "Germ theory was quickly welcomed once it was shown.",
+   "other_view": "Semmelweis met strong resistance and was accepted only after his death. Many surgeons first found Lister's system excessive because they did not accept that germs cause infection.",
+   "cite": [
+    "s11",
+    "s13",
+    "s12"
+   ]
+  },
+  {
+   "claim": "Edison's Pearl Street Station was the first central electric power station.",
+   "other_view": "It is described as the first permanent central power station for incandescent lighting. A temporary Edison installation under London's Holborn Viaduct began service in January 1882 and ran until 1884.",
+   "cite": [
+    "s17",
+    "s21"
+   ]
+  },
+  {
+   "claim": "Mendeleev alone created the periodic table.",
+   "other_view": "Meyer independently proposed an essentially identical arrangement in 1869, and the two argued for years over priority. Mendeleev usually gets the credit because his predictions of unknown elements secured his fame.",
+   "cite": [
+    "s22",
+    "s25",
+    "s26"
+   ]
+  },
+  {
+   "claim": "One person discovered the conservation of energy.",
+   "other_view": "Several people worked it out in the 1840s: Mayer, Joule and Helmholtz, along with others such as Colding. Helmholtz himself acknowledged earlier scientists who had reached versions of the principle.",
+   "cite": [
+    "s27",
+    "s28"
+   ]
+  },
+  {
+   "claim": "Social Darwinism is a misuse of Darwin and has little to do with him.",
+   "other_view": "Many historians say it misused Darwin's ideas, and that Spencer's ideas were different from Darwin's. Some scholars still recognise historical links between the popularisation of Darwin's theory and social Darwinism. They generally say it is not a necessary result of evolutionary biology.",
+   "cite": [
+    "s30",
+    "s31",
+    "s32"
+   ]
+  },
+  {
+   "claim": "Darwin took the phrase 'survival of the fittest' from Herbert Spencer.",
+   "other_view": "HISTORY.com credits Spencer. An NHGRI page instead describes it as Wallace's phrase. Sources differ on who used it first, so we credit it to Spencer here, following the majority of sources.",
+   "cite": [
+    "s31",
+    "s4"
+   ]
+  },
+  {
+   "claim": "The Impressionists were one unified movement with a shared style.",
+   "other_view": "The exhibiting group was unified mainly by independence from the official Salon. Artists in the 1874 show worked in a variety of styles and formats, and the organisers avoided a title implying a single school.",
+   "cite": [
+    "s36",
+    "s38"
+   ]
+  }
+ ]
+}

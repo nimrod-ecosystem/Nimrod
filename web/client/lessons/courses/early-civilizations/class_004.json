@@ -1,0 +1,1781 @@
+{
+ "about": {
+  "title": "Egypt I: The Nile, Unification and the Pharaoh",
+  "course": "early-civilizations",
+  "class_n": 4,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 45,
+  "length_note": "Longer than the 40-minute aim, because the class covers six topics and gives each archaeological site two beats (when it was built, and when it was found or studied). If time is short, skip the Kahun and Amarna beats and the Second Intermediate Period beat. The rest still holds together."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Akhet",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/science/akhet",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Nilometer",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Nilometer",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Ancient Egyptian agriculture",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Ancient_Egyptian_agriculture",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Timekeeping at Akhet Khufu, as shown by the Diary of Merer (preprint)",
+   "publisher": "arXiv",
+   "date": "2024",
+   "link": "https://arxiv.org/pdf/2411.08061",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Ancient Egypt and Mesopotamia: Rivers, Religion & Monuments",
+   "publisher": "Timeless Myths",
+   "date": "n.d.",
+   "link": "https://timelessmyths.com/stories/what-did-egypt-and-mesopotamia-have-in-common/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Palette of King Narmer",
+   "publisher": "Smarthistory",
+   "date": "n.d.",
+   "link": "https://smarthistory.org/palette-of-king-narmer/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Palette of King Narmer (article)",
+   "publisher": "Khan Academy",
+   "date": "n.d.",
+   "link": "https://www.khanacademy.org/humanities/ap-art-history/ancient-mediterranean-ap/ancient-egypt-ap/a/palette-of-king-narmer",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Hierakonpolis",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/place/Hierakonpolis",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "History of Exploration (in a nutshell)",
+   "publisher": "Hierakonpolis Expedition",
+   "date": "n.d.",
+   "link": "https://www.hierakonpolis-online.org/index.php/history-of-exploration",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Hierakonpolis",
+   "publisher": "The Past",
+   "date": "n.d.",
+   "link": "https://the-past.com/feature/hierakonpolis/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Narmer Palette",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Narmer_Palette",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Naqada III",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Naqada_III",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Timeline of ancient Egypt",
+   "publisher": "The British Museum",
+   "date": "n.d.",
+   "link": "https://www.britishmuseum.org/learn/schools/ages-7-11/ancient-egypt/timeline-ancient-egypt",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Ancient Egyptian chronology and historical framework",
+   "publisher": "Smarthistory",
+   "date": "n.d.",
+   "link": "https://smarthistory.org/ancient-egyptian-chronology-historical-framework/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Egypt, 8000-2000 B.C.",
+   "publisher": "The Metropolitan Museum of Art (Heilbrunn Timeline of Art History)",
+   "date": "n.d.",
+   "link": "https://www.metmuseum.org/toah/ht/02/afe.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Egyptian chronology",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Egyptian_chronology",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Dynasties of ancient Egypt",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Dynasties_of_ancient_Egypt",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Dynasties (3c)",
+   "publisher": "ushistory.org",
+   "date": "n.d.",
+   "link": "https://www.ushistory.org/civ/3c.asp",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Timeline: Great Pyramid of Giza",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/timeline/Great_Pyramid_of_Giza/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Great Pyramid of Giza: Royal Tomb of Pharaoh Khufu",
+   "publisher": "Ancient History Sites",
+   "date": "n.d.",
+   "link": "https://www.ancient-history-sites.com/sites/great-pyramid-of-giza/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Pharaoh: Born of the Gods",
+   "publisher": "National Gallery of Victoria",
+   "date": "n.d.",
+   "link": "https://www.ngv.vic.gov.au/labels/pharaoh-born-of-the-gods/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Horus",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Horus",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Sacred kingship: the divine or semidivine king",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/sacred-kingship/The-divine-or-semidivine-king",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "Ancient Egyptian Government",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/Egyptian_Government/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Inebu-hedj",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Inebu-hedj",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Merenre Nemtyemsaf I",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Merenre_Nemtyemsaf_I",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "Memphis, Egypt",
+   "publisher": "Simple English Wikipedia",
+   "date": "n.d.",
+   "link": "https://simple.wikipedia.org/wiki/Memphis,_Egypt",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "List of ancient Egyptian towns and cities",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/List_of_ancient_Egyptian_towns_and_cities",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "Memphis: Ancient Capital of Lower Egypt",
+   "publisher": "Landious Travel (travel site)",
+   "date": "n.d.",
+   "link": "https://landioustravel.com/egypt/ancient-egyptian-towns/memphis/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "Egyptian Urbanism",
+   "publisher": "University of New Mexico (course page)",
+   "date": "n.d.",
+   "link": "https://www.unm.edu/~gbawden/328-egurb/328-egurb.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s31",
+   "title": "El Lahun",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/El_Lahun",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s32",
+   "title": "Amarna",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Amarna",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s33",
+   "title": "Amarna: Layout, Buildings, Areas, Houses, Infrastructure (quotes Anna Stevens, Cambridge)",
+   "publisher": "Facts and Details",
+   "date": "n.d.",
+   "link": "https://africame.factsanddetails.com/article/entry-1127.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s34",
+   "title": "How Egypt and Mesopotamia Developed in Similar Ways",
+   "publisher": "Curiosity Era",
+   "date": "n.d.",
+   "link": "https://curiosityera.com/civilizations/how-did-two-ancient-civilizations-develop-in-similar-ways",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s35",
+   "title": "Timeline of Ancient Civilizations: Sumer to Maya on a Map",
+   "publisher": "Atlas Anatolia",
+   "date": "n.d.",
+   "link": "https://atlasanatolia.com/stories/the-complete-timeline-of-ancient-civilizations",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s36",
+   "title": "Texts in Context: Timeline of the Bronze Age",
+   "publisher": "CLT Journal",
+   "date": "n.d.",
+   "link": "https://blog.cltexam.com/texts-in-context-timeline-of-the-bronze-age/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s37",
+   "title": "The 3 Kingdoms of Ancient Egypt - Old, Middle, And New",
+   "publisher": "Ancient Egypt Online",
+   "date": "n.d.",
+   "link": "https://www.ancient-egypt-online.com/ancient-egypt-kingdoms.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s38",
+   "title": "Ancient Egypt Timeline: Dynasties & Periods Explained",
+   "publisher": "Egypt Day Tours",
+   "date": "n.d.",
+   "link": "https://egyptdaytours.com/ancient-egypt-timeline-periods/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s39",
+   "title": "City of the falcon: excavations at Egypt's earliest capital (lecture notice)",
+   "publisher": "University of Memphis, Institute of Egyptian Art & Archaeology",
+   "date": "n.d.",
+   "link": "https://www.memphis.edu/egypt/events/friedman.php",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s40",
+   "title": "Early Dynastic Period of Egypt",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Early_Dynastic_Period_of_Egypt",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s41",
+   "title": "The discovery of the Narmer Palette",
+   "publisher": "The Past",
+   "date": "n.d.",
+   "link": "https://the-past.com/shorts/the-picture-desk/the-discovery-of-the-narmer-palette/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s42",
+   "title": "The Nomes of Ancient Egypt (self-published paper)",
+   "publisher": "Academia.edu",
+   "date": "2019",
+   "link": "https://www.academia.edu/41245583/The_Nomes_of_Ancient_Egypt",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s43",
+   "title": "The Narmer Palette",
+   "publisher": "Egypt Museum (website)",
+   "date": "n.d.",
+   "link": "https://egypt-museum.com/the-narmer-palette/",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class four. Today we visit Egypt, and we begin with its river."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Egypt I: The Nile, Unification and the Pharaoh"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "By the end you can say three things: how the Nile shaped life, how Egypt became one kingdom, and how a pharaoh and his officials ruled it."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. How the Nile shaped life. 2. How Egypt became one kingdom. 3. How the pharaoh and officials ruled."
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "You have met Mesopotamia, the land between two rivers. Egypt also grew beside a river, but just one: the Nile."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A long green strip along the Nile, running from the south at the bottom up to the north. In the far north the river spreads into the Delta beside the Mediterranean Sea. Desert lies on both sides."
+   },
+   "cite": [
+    "s5",
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Nile flows from south to north. At the end, it branches into the Delta and reaches the sea."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "South to north"
+   },
+   "cite": [
+    "s5",
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which way does the Nile flow?",
+    "right": "From south to north",
+    "wrong": [
+     "From north to south",
+     "From east to west",
+     "It does not flow; it is a lake"
+    ],
+    "why": "The Nile flows south to north and empties into the Mediterranean Sea."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Egypt grew up in dry country, so the river's water mattered enormously. Every year the Nile rose, spilled over its banks and covered the flat land beside it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Inundation = the yearly flood"
+   },
+   "cite": [
+    "s3",
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "When the water drew back, it left silt behind. Silt is fine, fertile mud, and farmers could grow crops in it."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Dark mud on green fields beside a brown river, with pale desert behind."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What did the flood leave on the land?",
+    "right": "Fertile silt",
+    "wrong": [
+     "A crust of salt",
+     "Loose sand",
+     "Stones for building"
+    ],
+    "why": "The yearly overflow of the Nile laid fertile silt on the land, and that made farming possible."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Egyptians divided their year by the river. They had three seasons, not four."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "sun",
+    "count": 3,
+    "layout": "row",
+    "text": "Three seasons in the Egyptian year"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Akhet was the flood. Peret was when the land came out of the water and crops were sown and grew. Shemu was the harvest, when water ran short."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Akhet: the flood. Peret: sowing and growing. Shemu: harvest and low water."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which season was the harvest?",
+    "right": "Shemu",
+    "wrong": [
+     "Akhet",
+     "Peret",
+     "There was no harvest season"
+    ],
+    "why": "Akhet was the flood, Peret was sowing and growth, and Shemu was harvest and low water."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The flood was never a sure thing. Too little water meant hunger. Too much could wash away what people had built."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Not too little. Not too much."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So Egyptians built nilometers. These were stairs, columns or wells marked with a scale, and officials read them to watch the flood."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A stone staircase going down into the river, with marks cut along the wall to show the water level."
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What was a nilometer used for?",
+    "right": "To measure the water level of the Nile during the flood",
+    "wrong": [
+     "To measure how long the Nile was",
+     "To tell the time at night",
+     "To count the harvest in storehouses"
+    ],
+    "why": "Nilometers were marked structures that let officials track flood levels, which affected the crops."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Nile was also a road. A logbook from near the end of King Khufu's reign shows work gangs moving heavy loads by boat toward Giza."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A work gang's logbook laid out by month, with boat trips listed beside the flood season."
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The same logbook says that once the flood ebbed, moving heavy loads by boat to Giza was no longer practical. The river's seasons shaped the work as well as the farming."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "River = water, soil and road"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let us pull the Nile story together before we move on."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Flood = water + silt"
+   },
+   "cite": [
+    "s1",
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why did Egyptian farmers depend on the yearly flood?",
+    "right": "It watered dry land and left fertile silt for crops",
+    "wrong": [
+     "It brought heavy winter rain",
+     "It chased away all the insects",
+     "It made the desert disappear"
+    ],
+    "why": "Egypt is dry, so the yearly flood supplied the water and the fertile silt."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Part two: how Egypt became one kingdom. We start with a simple question: one kingdom out of what?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Part 2: From two lands to one"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Egyptians spoke of two halves. Upper Egypt is the south, the river valley. Lower Egypt is the north, the Delta."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Upper Egypt: south, the Nile valley. Lower Egypt: north, the Delta."
+   },
+   "cite": [
+    "s11",
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which part was called Upper Egypt?",
+    "right": "The southern river valley",
+    "wrong": [
+     "The northern Delta",
+     "The western desert",
+     "The Mediterranean coast"
+    ],
+    "why": "The Nile flows south to north, so 'upper' means upstream, which is the south."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Each half had its own crown. Upper Egypt had the tall White Crown. Lower Egypt had the Red Crown."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "hat",
+    "count": 2,
+    "layout": "row",
+    "text": "Two crowns: the White Crown of Upper Egypt and the Red Crown of Lower Egypt"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Joining the halves was a process, not one day. In the south, several power centers existed, and Hierakonpolis was one of four."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Unification = a process"
+   },
+   "cite": [
+    "s12",
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Hierakonpolis, which the Egyptians called Nekhen, is the largest settlement known from the Predynastic age. That is the age before the dynasties of kings began."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Site of Hierakonpolis: a long town and cemeteries on the desert edge, about three kilometres end to end. Digs found industrial areas, including one of the oldest breweries ever recovered."
+   },
+   "cite": [
+    "s15",
+    "s14",
+    "s8",
+    "s39"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Its late Predynastic and early dynastic kings built an oval mud-brick and stone temple, and a large niched mud-brick enclosure. That is the site as it was built."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Hierakonpolis: built before about 3100 BCE"
+   },
+   "cite": [
+    "s8",
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now its second date: when it was found. By 1897 looters had already stripped it. Quibell, joined by Green, was sent to rescue what remained."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1897: Quibell, then Green, dig to salvage Hierakonpolis. 1899: Green works alone on the town mound. 1905-06: Garstang digs. 1967: the modern project begins."
+   },
+   "cite": [
+    "s9",
+    "s10"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why were Quibell and Green sent to Hierakonpolis in 1897?",
+    "right": "To salvage the site after looters had damaged it",
+    "wrong": [
+     "To build a museum there",
+     "To measure the Nile flood",
+     "To search for Mesopotamian cities"
+    ],
+    "why": "The expedition's own history says they came to salvage the site after the looting."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "At Hierakonpolis they found one of the most famous objects in Egypt: the Narmer Palette. First, when it was made."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "about 3100 BCE"
+   },
+   "cite": [
+    "s13",
+    "s7"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "It is a carved slate palette about 64 centimetres tall. Books date it slightly differently, between about 3100 and 2920 BCE."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A shield-shaped slate palette, carved on both faces with a king, officials and defeated enemies."
+   },
+   "cite": [
+    "s7",
+    "s13"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "And when it was found: Quibell and Green found it in 1898, in a deposit of ceremonial objects that had been ritually buried in the temple."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Found 1898, Hierakonpolis"
+   },
+   "cite": [
+    "s6",
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The dig was not carefully recorded at that time, so we do not know the exact spot where it lay."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Exact find spot: unknown"
+   },
+   "cite": [
+    "s41"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "On one face the king wears the White Crown. On the other he wears the Red Crown. It is the earliest preserved example of one ruler wearing both."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Two faces of the palette. Front: a king in the tall White Crown. Back: a king in the Red Crown, leading a procession."
+   },
+   "cite": [
+    "s6",
+    "s11"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What on the palette suggests one king ruling both lands?",
+    "right": "He wears the White Crown on one face and the Red Crown on the other",
+    "wrong": [
+     "He stands beside a nilometer",
+     "He is shown building a pyramid",
+     "It shows two rivers joining"
+    ],
+    "why": "The two crowns, one for Upper and one for Lower Egypt, are worn by the same ruler."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Many scholars read the palette as a picture of unification. Others read it differently, and we give their side at the end."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "One reading, not the only one"
+   },
+   "cite": [
+    "s6",
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "After the joining, Egypt was called the Two Lands. Soon a First Dynasty king appears wearing both crowns combined as one."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The Two Lands"
+   },
+   "cite": [
+    "s40",
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The first capital of the united land was Memphis. It sat on the boundary between Upper and Lower Egypt. Its Egyptian name meant 'The White Walls'."
+   },
+   "show": {
+    "kind": "map",
+    "text": "The Nile valley meeting the Delta, with Memphis marked where the two halves of Egypt meet."
+   },
+   "cite": [
+    "s29",
+    "s27"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why was Memphis a sensible place for a capital of the Two Lands?",
+    "right": "It sat on the boundary between Upper and Lower Egypt",
+    "wrong": [
+     "It was the only city on the Nile",
+     "It was far from the river",
+     "It was in the middle of the desert"
+    ],
+    "why": "Memphis stood at the boundary of the two halves, where a ruler of both could manage them."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Part three: the three kingdoms, in outline. You do not need to memorise dates yet. Just learn the order."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Part 3: Three kingdoms in outline"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Egyptian rulers are grouped into dynasties, which are family lines of kings. The 31 dynasties we use come from a priest of the 3rd century BCE."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Dynasty = a family line of kings"
+   },
+   "cite": [
+    "s18",
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Historians then group dynasties into kingdoms: Old, Middle and New. Between them come Intermediate Periods, times without a strong ruling family."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Old Kingdom. Intermediate Period. Middle Kingdom. Intermediate Period. New Kingdom."
+   },
+   "cite": [
+    "s18",
+    "s13"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the outline, with approximate dates from the British Museum. Dates in books differ a little."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "about 3100 BCE: Early Dynastic Period begins. about 2686-2181 BCE: Old Kingdom. about 2055-1795 BCE: Middle Kingdom. about 1550-1069 BCE: New Kingdom."
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Old Kingdom ran from about 2686 to 2181 BCE. Its capital was Memphis, and it is called the pyramid age."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Old Kingdom: Memphis and pyramids"
+   },
+   "cite": [
+    "s13",
+    "s27",
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Great Pyramid at Giza was built about 2560 BCE, as a tomb for King Khufu of the Fourth Dynasty. Building took about twenty years."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "about 2560 BCE: the Great Pyramid is built"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Who was the Great Pyramid built for?",
+    "right": "King Khufu, as his tomb",
+    "wrong": [
+     "The god Horus, as a temple",
+     "The vizier, as a storehouse for grain",
+     "Every king of the Old Kingdom together"
+    ],
+    "why": "The Great Pyramid was built as the tomb of Khufu, a Fourth Dynasty king."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Its second date is about study, not finding. The Great Pyramid never needed finding: it is the only one of the ancient Seven Wonders still standing."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Never lost, but studied"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In 1837 Vyse and Perring revealed four chambers above the King's Chamber. They also found work-gang graffiti with Khufu's name."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1837: Vyse and Perring open the relieving chambers and find graffiti naming Khufu."
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Then Flinders Petrie surveyed the pyramid in 1880 to 1882. His careful measuring showed that its size was based on the royal cubit."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1880-1882: Petrie's precise survey of the Great Pyramid."
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What did Petrie's survey of 1880 to 1882 do?",
+    "right": "It measured the pyramid precisely and showed its size was based on the royal cubit",
+    "wrong": [
+     "It found the pyramid buried under sand",
+     "It built the pyramid's outer casing",
+     "It proved the pyramid was a temple to Horus"
+    ],
+    "why": "The Great Pyramid was never lost. Petrie's survey gave it exact measurements."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Around 2200 BCE the central government collapsed, and different rulers held Upper and Lower Egypt. This is the First Intermediate Period."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "First Intermediate Period"
+   },
+   "cite": [
+    "s13",
+    "s15"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is an 'Intermediate Period' in Egyptian history?",
+    "right": "A time when Egypt lacked strong central rule",
+    "wrong": [
+     "The time between the flood and the harvest",
+     "A style of building pyramids",
+     "A period when Egypt had no Nile flood"
+    ],
+    "why": "Intermediate Periods fall between the kingdoms, when strong ruling families were missing and rival rulers shared the land."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Egypt was joined again in the Middle Kingdom, about 2055 to 1795 BCE. Thebes was the capital for most of the Middle and New Kingdoms."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Middle Kingdom: reunited, Thebes"
+   },
+   "cite": [
+    "s13",
+    "s28"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Middle Kingdom ended in another split. The northern Delta was ruled by outsiders, called the Hyksos. King Ahmose drove them out around 1550 BCE."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "about 1640-1540 BCE: Second Intermediate Period, with the Delta ruled by Asiatics. about 1550 BCE: Ahmose begins the New Kingdom."
+   },
+   "cite": [
+    "s14",
+    "s37"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The New Kingdom, about 1550 to 1069 BCE, was Egypt's age of empire. Its famous names include Hatshepsut, Akhenaten, Tutankhamun and Ramesses II."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "New Kingdom: empire"
+   },
+   "cite": [
+    "s13",
+    "s38"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which list shows the kingdoms in order, earliest first?",
+    "right": "Old, Middle, New",
+    "wrong": [
+     "New, Old, Middle",
+     "Middle, New, Old",
+     "New, Middle, Old"
+    ],
+    "why": "The order is Old Kingdom, Middle Kingdom, then New Kingdom."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is how long each kingdom lasted, found by subtracting the dates. These are about-figures."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1",
+    "text": "Length of each kingdom in years, from British Museum dates"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Which kingdom lasted longest?",
+    "right": "The Old Kingdom, about 505 years",
+    "wrong": [
+     "The Middle Kingdom, about 260 years",
+     "The New Kingdom, about 700 years",
+     "They all lasted the same time"
+    ],
+    "why": "2686 minus 2181 is about 505 years. The New Kingdom is about 481 years and the Middle Kingdom about 260."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Part four: the pharaoh. He was a ruler, but also something more."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Part 4: The pharaoh"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The word 'pharaoh' comes from an Egyptian title meaning 'Great House'. It was used from the New Kingdom on. Before that, Egyptians usually said 'king'."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Pharaoh = 'Great House'"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What did the title 'pharaoh' first mean?",
+    "right": "Great House",
+    "wrong": [
+     "Son of the Nile",
+     "Lord of the Two Rivers",
+     "Keeper of the Crowns"
+    ],
+    "why": "Pharaoh is Greek for the Egyptian title per-aa, which means 'Great House'."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Egyptians held that the reigning king was a living form of Horus, the falcon-headed sky god."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The king = living Horus"
+   },
+   "cite": [
+    "s21",
+    "s22"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "This idea took shape at Nekhen, the Hierakonpolis we met earlier. It became accepted everywhere once kings from Nekhen had united the land."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Nekhen: where the idea of Horus-as-king arose"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "At death, each king became Osiris, the father of Horus. The next king then became Horus in his turn."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "In life: the king is Horus. After death: the king becomes Osiris."
+   },
+   "cite": [
+    "s21",
+    "s23"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What did a king become after death?",
+    "right": "Osiris, the father of Horus",
+    "wrong": [
+     "Horus, the falcon god",
+     "The god of the Nile flood",
+     "A vizier of the next king"
+    ],
+    "why": "Each king ruled as Horus and became Osiris after death."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The pharaoh also had a duty: to keep Maat, meaning justice, truth and good order. Temple scenes show him offering a small figure of the goddess Maat to the gods."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A temple wall carving of a king holding out a small figure of the goddess Maat to a god."
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What was the pharaoh's duty about Maat?",
+    "right": "To keep order and balance between people and gods",
+    "wrong": [
+     "To measure the flood each year",
+     "To tax every farm in the country",
+     "To lead the harvest each spring"
+    ],
+    "why": "Temple scenes show the king offering Maat to the gods to keep the cosmos steady."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Part five: how a kingdom that long was run. One person cannot do it alone."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Part 5: Cities, towns and officials"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The most powerful person after the king was the vizier. He spoke for the king and managed the officials."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Vizier = the king's chief official"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Who was the most powerful person in Egypt after the king?",
+    "right": "The vizier",
+    "wrong": [
+     "The nomarch",
+     "The high priest of Horus",
+     "The chief of the farmers"
+    ],
+    "why": "The vizier was the king's voice and ran the government's work."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Egypt was split into provinces called nomes. A governor, called a nomarch, ran each one. In the later Greco-Roman age there were 42 nomes."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Illustration: 42 nomes (in the later Greco-Roman period): 22 in Upper Egypt, 20 in Lower Egypt"
+   },
+   "cite": [
+    "s42",
+    "s25"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What was a nomarch?",
+    "right": "The governor of a province, called a nome",
+    "wrong": [
+     "The king's chief judge",
+     "A priest of Horus",
+     "A worker on the pyramids"
+    ],
+    "why": "A nome was a province and a nomarch was the governor in charge of it."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In the Sixth Dynasty, the number of provincial officials grew while the central office in Memphis shrank. Not long after, the Old Kingdom broke apart."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Strong provinces, weak centre"
+   },
+   "cite": [
+    "s26",
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Memphis was the capital of the Old Kingdom and an administrative centre for most of ancient history. Thebes was the capital for most of the Middle and New Kingdoms."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Memphis: Old Kingdom capital, at the join of the Two Lands. Thebes: capital of the Middle and New Kingdoms."
+   },
+   "cite": [
+    "s27",
+    "s28"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Memphis, as a site, was later used as a quarry. Its stones went into the foundations of Fustat and later Cairo."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Memphis: ruins reused as a quarry"
+   },
+   "cite": [
+    "s29"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Even so, most Egyptians did not live in big cities. By the Second Dynasty, most lived in small villages scattered along the valley and Delta."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Mostly villages, a few capitals"
+   },
+   "cite": [
+    "s30"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Where did most ancient Egyptians live?",
+    "right": "In small villages along the Nile Valley and the Delta",
+    "wrong": [
+     "In a few huge walled cities",
+     "In tents in the desert",
+     "In boats on the river"
+    ],
+    "why": "The pattern was a few capitals and provincial towns, with most people in villages."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Kahun, in the Faiyum, was a planned town founded by King Senusret II. It mostly dates to the Middle Kingdom. It had mansions, medium houses and small homes."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A town plan: rows of small houses beside a few large mansions, all inside a walled grid."
+   },
+   "cite": [
+    "s31"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Kahun was dug long after. Petrie coined the name 'Kahun', and Borchardt recorded its buildings in 1899. About 1,000 papyrus fragments were found there, covering law, medicine, religion and astronomy."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Middle Kingdom: Kahun founded. 1899: Borchardt records its architecture."
+   },
+   "cite": [
+    "s31"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Amarna was a city built about 1346 BCE, halfway between Memphis and Thebes. It was built fast. After it was abandoned, nobody lived there until Roman times."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A wide plain beside the Nile with the outlines of streets, villas and temples, and cliffs behind."
+   },
+   "cite": [
+    "s32",
+    "s33"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Amarna is the most studied settlement in Egypt. Because it was a short-lived royal city, we should be careful about calling it typical."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Famous is not the same as typical"
+   },
+   "cite": [
+    "s33",
+    "s32"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why should we be careful using Amarna as a picture of a typical Egyptian town?",
+    "right": "It was a hastily built royal city that was soon abandoned",
+    "wrong": [
+     "It was in Mesopotamia",
+     "Nobody has ever dug there",
+     "It was the biggest city in Egypt for 3,000 years"
+    ],
+    "why": "Because of how it was founded and abandoned, it may not be representative."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Part six: Egypt and Mesopotamia side by side. Both lived beside rivers. Did they build the same kind of state?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Part 6: A river, but a different kind of state"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the plain answer on timing. Cities appear very early in southern Mesopotamia. Egypt became one state around 3100 BCE. They arose at roughly the same time, and goods from Mesopotamia turn up in Egypt."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Roughly the same time"
+   },
+   "cite": [
+    "s34",
+    "s12",
+    "s13"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which statement is best supported?",
+    "right": "Egypt and Mesopotamia arose at roughly the same time, and they had contact",
+    "wrong": [
+     "Egypt arose a thousand years before Mesopotamia",
+     "Mesopotamia arose long after Egypt ended",
+     "They never had any contact"
+    ],
+    "why": "Egypt's unification and the early cities of southern Mesopotamia fall in the same broad era, and Mesopotamian goods reached Egypt."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Many courses start with Egypt. That is our guess, not a finding: the pyramids and one long line of kings make a tidy story. It is a teaching habit, not a rule of history."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Starting with Egypt is a habit"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The big difference was politics. Egypt was one kingdom under one ruler. Early Mesopotamia was a region of city-states, each with its own king."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Egypt: one kingdom, one ruler. Mesopotamia: many city-states, each with its own king."
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A city-state is a city that is its own seat of power, with a king, and that also rules the land around it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "City-state = a city that rules itself and its land"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One explanation is geography. Egypt's narrow Nile corridor made joining north to south easier, and the Nile flooded more predictably than the Tigris and Euphrates."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Narrow corridor + predictable flood"
+   },
+   "cite": [
+    "s34",
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "But it was not that simple. Egypt split more than once. Mesopotamian city-states also joined, sometimes, into empires like Babylonia and Assyria."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Egypt split in the Intermediate Periods. Mesopotamian cities sometimes formed empires."
+   },
+   "cite": [
+    "s15",
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the whole comparison in one table."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Egypt: one river, the Nile; predictable yearly flood; one kingdom under a pharaoh; mostly villages with a few capitals. Mesopotamia: two rivers; less predictable floods; many city-states; dense cities."
+   },
+   "cite": [
+    "s5",
+    "s30"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "A friend says: both used rivers for farming, so they were the same kind of state. What is the best reply?",
+    "right": "Both farmed along rivers, but Egypt became one kingdom under a pharaoh while early Mesopotamia had many city-states",
+    "wrong": [
+     "Egypt had no farming at all",
+     "Mesopotamia was ruled by one pharaoh",
+     "Neither civilization had kings"
+    ],
+    "why": "They shared river farming, but the Egyptian state was one kingdom, while Mesopotamia began as many city-states."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Five things to remember. The Nile's flood gave water and silt. Egypt joined into Two Lands about 3100 BCE. History runs Old, Middle, New. The pharaoh was Horus on earth. Officials and nomes ran the land."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Nile flood: water and silt. 2. Two Lands joined about 3100 BCE. 3. Old, Middle, New Kingdoms. 4. Pharaoh = living Horus, keeper of Maat. 5. Vizier and nomarchs ran the land."
+   },
+   "cite": [
+    "s1",
+    "s13",
+    "s21",
+    "s24"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next class: Egypt II, with hieroglyphs, religion and law. Well done today."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Egypt II: Hieroglyphs, Religion and Law"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "About how many years each Egyptian kingdom lasted (end date subtracted from start date, British Museum dates)",
+   "rows": [
+    {
+     "label": "Old Kingdom (2686-2181 BCE)",
+     "value": 505,
+     "source": "s13"
+    },
+    {
+     "label": "Middle Kingdom (2055-1795 BCE)",
+     "value": 260,
+     "source": "s13"
+    },
+    {
+     "label": "New Kingdom (1550-1069 BCE)",
+     "value": 481,
+     "source": "s13"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "The Nile flood (inundation)",
+   "links": [
+    "[[Mesopotamia I: Rivers, Farms and the First Cities]]",
+    "[[Egypt III: Trade, Everyday Life and Neighbours]]"
+   ]
+  },
+  {
+   "topic": "Akhet, Peret and Shemu: the three Egyptian seasons",
+   "links": [
+    "[[The Nile flood (inundation)]]"
+   ]
+  },
+  {
+   "topic": "Nilometer",
+   "links": [
+    "[[The Nile flood (inundation)]]"
+   ]
+  },
+  {
+   "topic": "Narmer Palette: made about 3100 BCE; found 1898 at Hierakonpolis by Quibell and Green",
+   "links": [
+    "[[Hierakonpolis (Nekhen)]]",
+    "[[Upper and Lower Egypt]]",
+    "[[Egypt II: Hieroglyphs, Religion and Law]]"
+   ]
+  },
+  {
+   "topic": "Hierakonpolis (Nekhen): built before about 3100 BCE; salvage digs from 1897, modern project from 1967",
+   "links": [
+    "[[Narmer Palette: made about 3100 BCE; found 1898 at Hierakonpolis by Quibell and Green]]",
+    "[[Horus and the pharaoh]]"
+   ]
+  },
+  {
+   "topic": "Great Pyramid of Giza: built about 2560 BCE for Khufu; opened chambers 1837; surveyed by Petrie 1880-1882",
+   "links": [
+    "[[Old Kingdom]]",
+    "[[Pharaoh]]"
+   ]
+  },
+  {
+   "topic": "Memphis: first capital of the Two Lands; later reused as a quarry",
+   "links": [
+    "[[Upper and Lower Egypt]]",
+    "[[Old Kingdom]]"
+   ]
+  },
+  {
+   "topic": "Kahun (El Lahun): planned Middle Kingdom town; architecture recorded 1899",
+   "links": [
+    "[[Cities, towns and villages in Egypt]]",
+    "[[Middle Kingdom]]"
+   ]
+  },
+  {
+   "topic": "Amarna (Akhetaten): royal city built about 1346 BCE",
+   "links": [
+    "[[Cities, towns and villages in Egypt]]",
+    "[[New Kingdom]]"
+   ]
+  },
+  {
+   "topic": "Pharaoh, Horus, Osiris and Maat",
+   "links": [
+    "[[Egypt II: Hieroglyphs, Religion and Law]]",
+    "[[Vizier and nomarchs]]"
+   ]
+  },
+  {
+   "topic": "Vizier and nomarchs",
+   "links": [
+    "[[Pharaoh, Horus, Osiris and Maat]]"
+   ]
+  },
+  {
+   "topic": "Egypt compared with Mesopotamia: one kingdom or many city-states",
+   "links": [
+    "[[Mesopotamia I: Rivers, Farms and the First Cities]]",
+    "[[Putting It All Together: Compare, Connect and Place on One Timeline]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About 3100 BCE: Egypt is joined into the Two Lands",
+   "elsewhere": "In Mesopotamia, Uruk-period cultures were at their height, and imports from Mesopotamia were reaching Egypt in the period just before unification.",
+   "cite": [
+    "s12"
+   ]
+  },
+  {
+   "when": "About 2900-2334 BCE: Egypt's Early Dynastic Period and the start of the Old Kingdom",
+   "elsewhere": "Sumer was in its Early Dynastic Period, a time of competing city-states.",
+   "cite": [
+    "s36",
+    "s5"
+   ]
+  },
+  {
+   "when": "About 2600-2500 BCE: the Great Pyramid is built at Giza",
+   "elsewhere": "Harappa and Mohenjo-daro in the Indus Valley were occupied from about 2600 BCE, and Caral in Peru was building platform mounds and sunken plazas between about 3000 and 1800 BCE.",
+   "cite": [
+    "s35",
+    "s19"
+   ]
+  },
+  {
+   "when": "About 2055-1795 BCE: the Middle Kingdom",
+   "elsewhere": "Indus Valley cities such as Harappa and Mohenjo-daro were still occupied until about 1900 BCE.",
+   "cite": [
+    "s35",
+    "s13"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The Narmer Palette records the unification of Egypt under King Narmer.",
+   "other_view": "Some scholars read it as a record of unification, but it is an interpretation. Another reading focuses on the sun and the king, and one theory has Narmer following an earlier king, perhaps Scorpion, who had already unified Egypt. Unification also looks like a long process, not a single event.",
+   "cite": [
+    "s6",
+    "s7",
+    "s43",
+    "s12"
+   ]
+  },
+  {
+   "claim": "The pharaoh was a god.",
+   "other_view": "Sources differ on how to put it. One reading is that the king was himself a god. Another is that he was the living form of Horus, or the 'image' of a god, and not simply a god in his own right.",
+   "cite": [
+    "s23",
+    "s21"
+   ]
+  },
+  {
+   "claim": "Egypt was a civilization without cities.",
+   "other_view": "This older view comes from comparing Egypt with Sumer's dense cities. Later scholars say the gap is smaller than it looks. Egypt had a few capitals and provincial towns, but most people lived in villages.",
+   "cite": [
+    "s30"
+   ]
+  },
+  {
+   "claim": "The dates for Egypt's kingdoms are fixed.",
+   "other_view": "They are not. The Old Kingdom's dating can shift by a few centuries, while the Middle and New Kingdoms are steadier to within a few decades. Sources also disagree on the end of the Middle Kingdom: the British Museum gives about 1795 BCE, while Smarthistory gives about 1640 BCE.",
+   "cite": [
+    "s16",
+    "s13",
+    "s14"
+   ]
+  },
+  {
+   "claim": "The Nile's geography explains why Egypt was one kingdom and Mesopotamia was many city-states.",
+   "other_view": "Geography is one explanation, but it is not the whole story. Egypt split into rival rulers in the Intermediate Periods, and Mesopotamian city-states sometimes joined into empires.",
+   "cite": [
+    "s34",
+    "s15",
+    "s5"
+   ]
+  },
+  {
+   "claim": "Amarna shows what an ordinary Egyptian town looked like.",
+   "other_view": "Because it was hastily built as a royal city and soon abandoned, it may not be representative of typical Egyptian towns.",
+   "cite": [
+    "s32"
+   ]
+  }
+ ]
+}

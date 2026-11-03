@@ -1,0 +1,1062 @@
+{
+ "about": {
+  "title": "Looking Ahead: The Future of Earth and the Universe",
+  "course": "history-of-everything",
+  "class_n": 63,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. This last class has a short review and four topics (Sun and Earth, the universe, human futures, where to learn more). It is split into 32 short beats, one idea each. The 'frame of reference' here is about when each piece of knowledge arrived, not world events of one year. This class looks forward, so there is no single year to compare against. The search did not return enough sourced material for a year-by-year frame."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Types (stars) - NASA Science",
+   "publisher": "NASA Science",
+   "date": "n.d.",
+   "link": "https://science.nasa.gov/universe/stars/types/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "Red giant stars: Facts, definition & the future of the sun",
+   "publisher": "Space.com",
+   "date": "2022-01-21",
+   "link": "https://www.space.com/22471-red-giant-stars.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "Earth Won't Die as Soon as Thought",
+   "publisher": "Science (AAAS)",
+   "date": "n.d.",
+   "link": "https://www.science.org/content/article/earth-wont-die-soon-thought",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "Better Than Earth (arXiv 1503.00701)",
+   "publisher": "arXiv",
+   "date": "2015 (from arXiv ID)",
+   "link": "https://arxiv.org/pdf/1503.00701",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "The sun won't die for 5 billion years, so why do humans have only 1 billion years left on Earth?",
+   "publisher": "The Conversation",
+   "date": "n.d.",
+   "link": "https://theconversation.com/the-sun-wont-die-for-5-billion-years-so-why-do-humans-have-only-1-billion-years-left-on-earth-37379",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "What is the Ultimate Fate of the Universe?",
+   "publisher": "NASA WMAP mission",
+   "date": "n.d.",
+   "link": "https://wmap.gsfc.nasa.gov/universe/uni_fate.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "NASA's WFIRST Will Help Uncover Universe's Fate",
+   "publisher": "NASA",
+   "date": "n.d.",
+   "link": "https://www.nasa.gov/missions/roman-space-telescope/nasas-wfirst-will-help-uncover-universes-fate/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "The Big Freeze: How the universe will die",
+   "publisher": "Astronomy magazine",
+   "date": "n.d.",
+   "link": "https://www.astronomy.com/science/the-big-freeze-how-the-universe-will-die/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "Tantalizing Hints That Dark Energy is Evolving - New Results and Data Released by the DESI Project",
+   "publisher": "NSF NOIRLab",
+   "date": "2025",
+   "link": "https://noirlab.edu/public/news/noirlab2512/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "New DESI DR2 Lyman-alpha Results Shed Light on Dark Energy",
+   "publisher": "DESI Collaboration (Berkeley Lab)",
+   "date": "2026-07-30",
+   "link": "https://www.desi.lbl.gov/2026/07/30/new-desi-dr2-lyman-alpha-results-shed-light-on-dark-energy/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "Scientists predict the universe will end in 'big crunch'",
+   "publisher": "Popular Science",
+   "date": "n.d.",
+   "link": "https://www.popsci.com/science/universe-ends-big-crunch/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "Chapter 4: Future Global Climate: Scenario-Based Projections and Near-Term Information (AR6 WG1)",
+   "publisher": "IPCC",
+   "date": "2021",
+   "link": "https://www.ipcc.ch/report/ar6/wg1/chapter/chapter-4/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "Comparing IPCC Scenarios",
+   "publisher": "UCAR Center for Science Education",
+   "date": "n.d.",
+   "link": "https://scied.ucar.edu/interactive/compare-ipcc-scenarios",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "How Do 'Future Climate Scenarios' Shape Climate Science and Inform Policy?",
+   "publisher": "Union of Concerned Scientists",
+   "date": "n.d.",
+   "link": "https://blog.ucs.org/delta-merner/how-do-future-climate-scenarios-shape-climate-science-and-inform-policy/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "Perceptions of carbon dioxide emission reductions and future warming among climate experts",
+   "publisher": "Communications Earth & Environment (via PubMed Central)",
+   "date": "2024",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11392805/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "Homo sapiens",
+   "publisher": "Smithsonian Institution Human Origins Program",
+   "date": "n.d.",
+   "link": "https://humanorigins.si.edu/evidence/human-fossils/species/homo-sapiens",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "Did You Know? Human Origins Facts",
+   "publisher": "Smithsonian Institution",
+   "date": "n.d.",
+   "link": "https://www.si.edu/stories/human-origins-facts",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "Powell Expedition - Geologic Time. Then and Now.",
+   "publisher": "U.S. Geological Survey",
+   "date": "n.d.",
+   "link": "https://www.usgs.gov/news/powell-expedition-geologic-time-then-and-now",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "Big Bang - NASA Science (Hubble)",
+   "publisher": "NASA Science",
+   "date": "n.d.",
+   "link": "https://science.nasa.gov/mission/hubble/science/science-behind-the-discoveries/hubble-big-bang/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "Big Bang Timeline: From the Early Universe to Today",
+   "publisher": "Physics of the Universe",
+   "date": "n.d.",
+   "link": "https://www.physicsoftheuniverse.com/topics_bigbang_timeline.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "Future of Earth",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Future_of_Earth",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "Dark Energy Changes the Universe",
+   "publisher": "NASA Science (Hubble)",
+   "date": "n.d.",
+   "link": "https://science.nasa.gov/missions/hubble/dark-energy-changes-the-universe/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "Start your 13.8 billion-year journey with the Big History Project",
+   "publisher": "Khan Academy Blog",
+   "date": "n.d.",
+   "link": "https://blog.khanacademy.org/start-your-138-billion-year-journey-with-the-big/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "Courses",
+   "publisher": "International Big History Association",
+   "date": "n.d.",
+   "link": "https://bighistory.org/courses/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "5 Free History Curriculum Options",
+   "publisher": "The Organized Homeschooler",
+   "date": "n.d.",
+   "link": "https://www.organizedhomeschooler.com/free-history-curriculum-options/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "What Will Our Sun Become? A Red Giant, Then White Dwarf",
+   "publisher": "ScienceInsights",
+   "date": "n.d.",
+   "link": "https://scienceinsights.org/what-will-our-sun-become-a-red-giant-then-white-dwarf/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "Is Dark Energy Getting Weaker? New Evidence Strengthens the Case.",
+   "publisher": "Quanta Magazine",
+   "date": "2025-03-19 (from URL)",
+   "link": "https://www.quantamagazine.org/is-dark-energy-getting-weaker-new-evidence-strengthens-the-case-20250319/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "Our species arose at least 300,000 years ago",
+   "publisher": "Smithsonian Institution Human Origins Program",
+   "date": "n.d.",
+   "link": "https://humanorigins.si.edu/research/whats-hot-human-origins/our-species-arose-least-300000-years-ago",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to the last class of the course. We have told the whole story, from the Big Bang to today."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Looking Ahead: The Future of Earth and the Universe"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Today we do five things, one at a time. We look back once, then look at the Sun and Earth, the universe, human futures, and where to keep learning."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Review the big turning points\n2. The future of the Sun and Earth\n3. Possible fates of the universe\n4. Choices and uncertainty for people\n5. Where to keep learning"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, a word. A turning point is a moment when the story changed direction and could not go back."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Turning point"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Turning point one is the Big Bang, about 13.8 billion years ago. Within a few minutes the universe had cooled enough to form the nuclei of hydrogen and helium."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "13.8 billion years ago: the Big Bang"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Turning point two came about 380,000 years later. The universe cooled enough for those nuclei to catch electrons and form atoms."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Big Bang → a few minutes: hydrogen and helium nuclei → about 380,000 years: atoms"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Much later, the Sun and Solar System formed, about 4.6 billion years ago. That is about 9.2 billion years after the Big Bang."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 4.6 billion years ago: the Solar System forms"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Earth is about 4.54 billion years old. That figure comes from dating meteorites, which formed at the same time as Earth."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Earth: about 4.54 billion years old"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Between those turning points came life, complex cells, animals, and the mammals. You met them in classes 6 to 9. Our own species, Homo sapiens, is very recent: about 300,000 years old."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Homo sapiens: about 300,000 years"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "About how long has our species, Homo sapiens, existed?",
+    "right": "About 300,000 years",
+    "wrong": [
+     "About 13.8 billion years",
+     "About 4.54 billion years",
+     "About 30,000 years"
+    ],
+    "why": "The Smithsonian's Human Origins Program says Homo sapiens has lived since about 300,000 years ago. The other numbers are the age of the universe, the age of Earth, and a figure that is far too small."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "And within just the past 12,000 years, our species began producing its own food and changing its surroundings. The farming, cities and empires of classes 14 to 62 all fit in that short span."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "300,000 years ago: Homo sapiens → within the past 12,000 years: producing food"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now we turn to the future. Scientists use the same physics that explains the past to make projections."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Projection"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A projection is a careful look ahead based on known physics. It is not a promise. Some projections are very solid, and some are not."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "A projection is a careful look ahead, not a promise."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Start with our Sun. NASA calls it a main sequence star, which is the long, steady stage of a star's life. It expects about 5 billion more years of it."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 5 billion more years of steady Sun"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "But steady does not mean unchanging. The Sun is slowly getting brighter, by just over 1 percent every 100 million years."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 1% brighter every 100 million years"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A brighter Sun heats Earth. Models say that in roughly a billion years or more the heat could start to evaporate the oceans."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A glowing Sun above an Earth whose oceans are shrinking, leaving dry, pale land"
+   },
+   "cite": [
+    "s3",
+    "s5"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is the Sun's slow brightening expected to do to Earth first?",
+    "right": "Heat it until the oceans could eventually evaporate",
+    "wrong": [
+     "Freeze the oceans solid",
+     "Make the Sun explode as a supernova",
+     "Nothing at all, for the whole life of the Sun"
+    ],
+    "why": "Models say a brightening Sun heats Earth until the oceans are lost, long before the Sun's final stages. The Sun is also expected not to explode."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The next stage is a red giant. When the Sun uses up its core hydrogen, it swells enormously. NASA says that happens in about 5 billion years."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Red giant"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A red giant can swallow the planets closest to it. Earth's fate then is less certain, and we come back to that in the other-side notes."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A huge red Sun filling the sky, with the small inner planets close to its edge"
+   },
+   "cite": [
+    "s2",
+    "s21"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "After the red giant stage, the Sun sheds its outer layers. Only the core is left, and that is a white dwarf."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "White dwarf"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A white dwarf is usually about Earth-size but hundreds of thousands of times more massive. It makes no new heat, so it slowly cools over billions of years."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A small, bright white dot, about the size of Earth, glowing faintly in dark space"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What does NASA say is left after a Sun-like star has been a red giant and shed its atmosphere?",
+    "right": "A white dwarf, which slowly cools",
+    "wrong": [
+     "A new, brighter main sequence star",
+     "A supernova",
+     "A second Big Bang"
+    ],
+    "why": "After a red giant sheds its atmosphere, only the core remains, and that is a white dwarf. It produces no new heat and cools slowly. A Sun-like star does not explode."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here are the three Sun-and-Earth dates side by side, in billions of years from now. The oceans' loss is shown at the earliest estimate."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Sun and Earth: billions of years from now",
+    "chart": "c1"
+   },
+   "cite": [
+    "s1",
+    "s3"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Which of these comes first, according to the chart?",
+    "right": "The oceans start to be lost",
+    "wrong": [
+     "The Sun becomes a red giant",
+     "The Sun becomes a white dwarf",
+     "They all happen at the same time"
+    ],
+    "why": "The chart shows the oceans at about 1 billion years, the red giant at about 5 billion, and the white dwarf later still."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Put that in perspective. Earth's habitable future is estimated at a billion years or more. Our species has existed for about 300,000 years. That is more than 3,000 times as long."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "More than 3,000 times as long as our species has existed"
+   },
+   "cite": [
+    "s3",
+    "s16"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the whole universe. Space has been expanding since the Big Bang. At first gravity slowed the expansion, because matter pulls on matter."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Expansion"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Then, around 7.5 billion years ago, the expansion began to speed up instead."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 7.5 billion years ago: expansion starts to speed up"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The name for whatever causes this is dark energy. Where gravity slows expansion, dark energy speeds it up. NASA says it makes up about 68 percent of the universe's energy, and we do not yet know what it is."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Dark energy"
+   },
+   "cite": [
+    "s6",
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So the universe's fate depends on a tug-of-war between gravity and dark energy. Scientists describe three main possible endings."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Big Freeze\nBig Rip\nBig Crunch"
+   },
+   "cite": [
+    "s6",
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Big Freeze: expansion goes on forever. All heat and energy spread out evenly and the universe grows cold. Black holes are the last matter left. Even the longest-lived small stars last only up to about 14 trillion years."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A vast, dark, empty sky with a few faint dots fading out"
+   },
+   "cite": [
+    "s8",
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Big Rip: if dark energy keeps getting stronger, it could one day overpower the forces that hold things together. Galaxies, planets and people would be pulled apart."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A galaxy stretched into streaks and pulled apart"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Big Crunch: if gravity wins, expansion stops and reverses. The universe collapses back in on itself."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Galaxies drawn back together toward a single bright point"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which fate needs gravity to win the tug-of-war and pull everything back together?",
+    "right": "The Big Crunch",
+    "wrong": [
+     "The Big Freeze",
+     "The Big Rip",
+     "All three of them"
+    ],
+    "why": "In the Big Crunch there is enough pull from gravity to stop the expansion and reverse it. The Big Freeze is endless expansion, and the Big Rip is expansion that tears things apart."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why is this still debated? NASA says that if dark energy plays a big role, the universe will most likely expand forever. But we need more study to learn what dark energy really is."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Expand forever is the likely answer, but we still need to learn what dark energy is."
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a recent clue. A big sky survey called DESI mapped nearly 15 million galaxies and quasars. Combined with other data, it hints that dark energy may change over time."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "DESI: hints that dark energy changes"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Scientists rate such results on a scale called sigma. 5 sigma is the usual bar for a discovery. DESI's combined results ranged from 2.8 to 4.2, so they are strong hints but not a discovery yet."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "2.8 to 4.2 sigma, below the 5 sigma bar"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "And the story moved again on 30 July 2026. A new DESI analysis of one kind of data shifted toward the standard model. That could mean the hints fade, or that a more complex model is needed."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Hints may fade, or a more complex model may be needed."
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why do scientists say the fate of the universe is not settled?",
+    "right": "Measurements hint that dark energy might change, but the evidence has not reached the usual 5 sigma bar",
+    "wrong": [
+     "Because scientists now agree the Big Bang never happened",
+     "Because everyone agrees on the Big Rip",
+     "Because telescopes cannot look at distant galaxies"
+    ],
+    "why": "DESI's combined results range from 2.8 to 4.2 sigma, which is below the usual discovery bar, and a July 2026 result shifted back toward the standard model."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One study went further. It suggested the data point to a Big Crunch, with the universe reaching its largest size in about 11 billion years. Most sources still treat endless expansion as the leading picture, so we list this in the other-side notes."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "A study proposes a Big Crunch; most sources still favour endless expansion."
+   },
+   "cite": [
+    "s11",
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now people. The Sun follows physics, but human futures depend on human choices. Scientists handle this with scenarios."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Scenario"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A scenario is a what-if story, not a prediction. The IPCC's climate scenarios show possible sets of decisions by humanity. The IPCC does not say that any one set is more likely."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Scenarios are what-if frameworks, not predictions."
+   },
+   "cite": [
+    "s12",
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here are four of the IPCC's scenarios, as listed by UCAR. Lower emissions give lower expected warming. Higher emissions give more."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Expected warming in four IPCC scenarios (°C)",
+    "chart": "c2"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "What do these IPCC scenarios show?",
+    "right": "What could happen under different human choices about emissions",
+    "wrong": [
+     "An exact forecast of what will happen",
+     "Only the worst possible case",
+     "That climate will not change in any scenario"
+    ],
+    "why": "The IPCC scenarios are what-if frameworks built from different sets of human decisions. They are not a single forecast."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The IPCC also says that cutting emissions will eventually slow and limit climate change. But the effects show up slowly, and only sustained reductions over decades have a widespread effect."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Only sustained reductions over decades have a widespread effect."
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "How long will our species last? Nobody knows. We are the only human species left. Just 70,000 years ago there were at least four. Some earlier human species lasted several times longer than we have so far."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "70,000 years ago: at least four human species"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Where can you keep learning? The Big History Project is free on Khan Academy. It is self-paced and covers the whole story in 10 tutorials."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Khan Academy: Big History Project (free)\nBig History Project / OER Project (free)\nOpenStax World History 1 and 2 (free digital textbooks)"
+   },
+   "cite": [
+    "s23",
+    "s24",
+    "s25"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "OpenStax, from Rice University, gives its digital textbooks away free. Its World History books cover the human story in more depth than we could in half an hour per class."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Free to keep learning"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A last thought on how we know all this. Our knowledge has a date. Linnaeus named our species in 1758. Earth's age was fixed in 1956. And DESI's newest result arrived in July 2026."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1758: Homo sapiens named → 1956: Earth dated at 4.55 billion years → 2026: DESI new results on dark energy"
+   },
+   "cite": [
+    "s16",
+    "s18",
+    "s10"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The story is still being told, and the next chapters have not been written. Thank you for coming all the way from the Big Bang to today. You are in the story, too."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The story continues"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Sun and Earth: billions of years from now",
+   "rows": [
+    {
+     "label": "Oceans start to be lost (earliest estimates)",
+     "value": 1,
+     "source": "s3"
+    },
+    {
+     "label": "Sun becomes a red giant",
+     "value": 5,
+     "source": "s1"
+    },
+    {
+     "label": "Sun becomes a white dwarf",
+     "value": 10,
+     "source": "s1"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Expected warming (°C) in four IPCC scenarios, as listed by UCAR",
+   "rows": [
+    {
+     "label": "SSP1-1.9 (most optimistic)",
+     "value": 1.5,
+     "source": "s13"
+    },
+    {
+     "label": "SSP1-2.6 (next best)",
+     "value": 1.8,
+     "source": "s13"
+    },
+    {
+     "label": "SSP2-4.5 (middle of the road)",
+     "value": 2.7,
+     "source": "s13"
+    },
+    {
+     "label": "SSP3-7.0 (medium to high emissions)",
+     "value": 3.6,
+     "source": "s13"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Future of the Sun",
+   "links": [
+    "[[Our Sun and Solar System]]",
+    "[[Early Earth and the Moon]]"
+   ]
+  },
+  {
+   "topic": "Dark energy and the fate of the universe",
+   "links": [
+    "[[The Big Bang and the First Minutes]]",
+    "[[First Stars, Galaxies and the Making of the Elements]]"
+   ]
+  },
+  {
+   "topic": "Scenarios and choices",
+   "links": [
+    "[[2008 to Today]]",
+    "[[Globalization, the Internet and a New Century]]"
+   ]
+  },
+  {
+   "topic": "Where our species fits",
+   "links": [
+    "[[The Genus Homo: Neanderthals, Denisovans and Us]]",
+    "[[The Farming Revolution]]"
+   ]
+  },
+  {
+   "topic": "How we know",
+   "links": [
+    "[[How Do We Know? Reading the Evidence and Telling Time]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "1758",
+   "elsewhere": "Carl Linnaeus first described our species as Homo sapiens, the name we still use.",
+   "cite": [
+    "s16"
+   ]
+  },
+  {
+   "when": "1956",
+   "elsewhere": "Geochemist Clair Patterson used lead dating on the Canyon Diablo meteorite and arrived at 4.55 billion years, very close to today's accepted age of Earth.",
+   "cite": [
+    "s18"
+   ]
+  },
+  {
+   "when": "8 June 2017",
+   "elsewhere": "A paper in Nature reported that the Jebel Irhoud fossils from Morocco, about 300,000 years old, are the oldest known Homo sapiens.",
+   "cite": [
+    "s28"
+   ]
+  },
+  {
+   "when": "April 2024",
+   "elsewhere": "DESI shared its first-year results, with hints that dark energy may have been weakening over the last few billion years.",
+   "cite": [
+    "s27"
+   ]
+  },
+  {
+   "when": "March 2025",
+   "elsewhere": "DESI announced its three-year analysis, covering nearly 15 million galaxies and quasars, with hints of changing dark energy at 2.8 to 4.2 sigma.",
+   "cite": [
+    "s9",
+    "s27"
+   ]
+  },
+  {
+   "when": "30 July 2026",
+   "elsewhere": "New DESI Lyman-alpha results shifted toward the standard model of dark energy.",
+   "cite": [
+    "s10"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The oceans will start to be lost in about a billion years.",
+   "other_view": "Estimates differ. One pair of modelling studies found the oceans would last at least 1 to 1.5 billion years. Another paper estimates Earth leaves the habitable zone in about 1.75 billion years. Wikipedia's summary of the literature puts a runaway evaporation at about a billion years.",
+   "cite": [
+    "s3",
+    "s4",
+    "s21"
+   ]
+  },
+  {
+   "claim": "The red giant Sun will swallow Earth.",
+   "other_view": "Sources agree the red giant Sun will engulf the inner planets, and some say Earth is included. Others say Earth is only possibly engulfed, in about 7.6 billion years. One article says Earth's orbit may widen a little, but not enough to save it.",
+   "cite": [
+    "s2",
+    "s5",
+    "s21"
+   ]
+  },
+  {
+   "claim": "The universe will expand forever and end in a Big Freeze.",
+   "other_view": "NASA says that if dark energy matters as much as it seems to, the universe will most likely expand forever. One study published in the Journal of Cosmology and Astroparticle Physics instead argues for a Big Crunch, based on a negative cosmological constant. It puts the universe's maximum size about 11 billion years from now.",
+   "cite": [
+    "s6",
+    "s11"
+   ]
+  },
+  {
+   "claim": "Dark energy may be weakening over time.",
+   "other_view": "DESI's combined data show hints at 2.8 to 4.2 sigma, below the 5 sigma discovery bar. DESI alone fits the standard model, and a July 2026 DESI result moved toward the standard model. It may mean the hints fade, or that a more complex model is needed.",
+   "cite": [
+    "s9",
+    "s10"
+   ]
+  },
+  {
+   "claim": "We can say which emissions future is most likely.",
+   "other_view": "The IPCC deliberately gives no probabilities for its scenarios, so choosing which to plan for falls to policymakers. A survey paper notes the IPCC community has indicated the very highest-emission scenario has become implausible. Experts do not all weigh the scenarios the same way.",
+   "cite": [
+    "s12",
+    "s15"
+   ]
+  }
+ ]
+}

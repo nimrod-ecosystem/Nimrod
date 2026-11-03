@@ -1,0 +1,857 @@
+{
+ "about": {
+  "title": "What do we mean by 'consciousness'?",
+  "course": "consciousness",
+  "class_n": 1,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 25,
+  "length_note": "About 25 minutes. The class teaches three ideas (awake, aware, inner experience), then three ways of testing for consciousness, then three real-life cases. Each step has a short check question, so cutting it would mean rushing. Pause as long as you need on the questions."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Consciousness (Stanford Encyclopedia of Philosophy)",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "undated (revised periodically)",
+   "link": "https://plato.stanford.edu/entries/consciousness/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Consciousness (Stanford Encyclopedia of Philosophy), Spring 2026 edition",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "Spring 2026",
+   "link": "https://plato.stanford.edu/archives/spr2026/entries/consciousness/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Consciousness (Stanford Encyclopedia of Philosophy), Fall 2010 edition",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "Fall 2010",
+   "link": "https://plato.stanford.edu/archives/fall2010/entries/consciousness/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Psychology, section 4.1: What Is Consciousness?",
+   "publisher": "OpenStax (Rice University)",
+   "date": "undated",
+   "link": "https://openstax.org/books/psychology/pages/4-1-what-is-consciousness",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "What Is It Like to Be a Bat? (Thomas Nagel)",
+   "publisher": "The Philosophical Review (copy hosted by the University of Colorado)",
+   "date": "1974",
+   "link": "https://rintintin.colorado.edu/~vancecd/phil201/Nagel.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Ethics Explainer: What is it like to be a bat?",
+   "publisher": "The Ethics Centre",
+   "date": "undated",
+   "link": "https://ethics.org.au/ethics-explainer-what-is-it-like-to-be-a-bat/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Consciousness: A Neurological Perspective (Cavanna et al.)",
+   "publisher": "Behavioural Neurology, via PubMed Central",
+   "date": "2011-03-29",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5378000/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Disorders of Consciousness: Coma, Vegetative and Minimally Conscious States (Gosseries et al.)",
+   "publisher": "Springer (The Frontiers Collection)",
+   "date": "2011",
+   "link": "https://link.springer.com/chapter/10.1007/978-3-642-18047-7_2",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Assessing sleep consciousness within subjects using a serial awakening paradigm",
+   "publisher": "University of Wisconsin-Madison researchers, via PubMed Central",
+   "date": "undated",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3747360/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Detecting Awareness in the Vegetative State (Owen et al.)",
+   "publisher": "Science, via ResearchGate",
+   "date": "2006-09-08",
+   "link": "https://www.researchgate.net/publication/6830402_Detecting_Awareness_in_the_Vegetative_State",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Functional MRI Detects Residual Awareness in Vegetative Patients",
+   "publisher": "Medscape",
+   "date": "2007-08-17",
+   "link": "https://www.medscape.com/viewarticle/561570",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Neurocritical Care Society curing coma campaign symposium summary (disorders of consciousness)",
+   "publisher": "Neurocritical Care (Springer)",
+   "date": "undated",
+   "link": "https://link.springer.com/article/10.1007/s12028-022-01505-3",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "A Theoretically Based Index of Consciousness Independent of Sensory Processing and Behavior (Casali et al.)",
+   "publisher": "Science Translational Medicine",
+   "date": "2013",
+   "link": "https://www.science.org/doi/10.1126/scitranslmed.3006294",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Detecting the Potential for Consciousness in Unresponsive Patients Using the Perturbational Complexity Index",
+   "publisher": "Brain Sciences, via PubMed Central",
+   "date": "2020",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7760168/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Vegetative State and Minimally Conscious State",
+   "publisher": "Merck Manual Professional Edition",
+   "date": "undated",
+   "link": "https://www.merckmanuals.com/professional/neurologic-disorders/coma-and-impaired-consciousness/vegetative-state-and-minimally-conscious-state",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Disorders of Consciousness",
+   "publisher": "American Academy of Physical Medicine and Rehabilitation (AAPM&R)",
+   "date": "undated",
+   "link": "https://www.aapmr.org/about-physiatry/conditions-treatments/rehabilitation-of-central-nervous-system-disorders/disorders-of-consciousness",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "General Anesthesia: A Probe to Explore Consciousness",
+   "publisher": "Frontiers in Systems Neuroscience (University of Liège)",
+   "date": "2019",
+   "link": "https://www.frontiersin.org/journals/systems-neuroscience/articles/10.3389/fnsys.2019.00036/full",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Disorders of consciousness",
+   "publisher": "MedLink Neurology",
+   "date": "undated",
+   "link": "https://www.medlink.com/articles/disorders-of-consciousness",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Comment on 'Detecting Awareness in the Vegetative State'",
+   "publisher": "Science, via ResearchGate",
+   "date": "2007",
+   "link": "https://www.researchgate.net/publication/6475067_Comment_on_Detecting_Awareness_in_the_Vegetative_State",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome. Today's question sounds simple: what do we mean by 'consciousness'? People use that one word for many different things."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "What do we mean by 'consciousness'?"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "By the end, you will be able to tell apart three ideas: being awake, being aware of something, and having an inner experience. We'll take them one at a time."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "star",
+    "count": 3,
+    "layout": "row",
+    "text": "Three ideas: awake, aware, inner experience"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First idea: awake. This is about alertness. Doctors call it arousal or wakefulness. Your brain is switched on, not in sleep."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Awake = how alert you are"
+   },
+   "cite": [
+    "s4",
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "An example: your alarm rings, your eyes open, and your alertness goes up. That change is what we mean by 'awake'."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A person in bed, eyes opening, morning light through the window"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "In this lesson, what does 'awake' mean?",
+    "right": "How alert you are, switched on rather than asleep.",
+    "wrong": [
+     "Knowing who you are.",
+     "Being able to describe what you see.",
+     "Having a rich inner life."
+    ],
+    "why": "Awake is about alertness, which doctors call arousal. The other ideas are different, and we'll meet them next."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Second idea: aware. Being aware means being aware of something: a pain, a voice, the warmth of a room, a thought."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Inside: pain, hunger, thirst, thoughts, feelings; Outside: sunlight, warmth, a friend's voice"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Awake and aware can come apart. Have you ever driven a familiar route, daydreaming, and barely noticed the road?"
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A driver on a quiet road, eyes open, a thought bubble full of daydreams"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "You drive a familiar road while daydreaming and later can't recall the trip. Which fits best?",
+    "right": "Awake, but not very aware of the road.",
+    "wrong": [
+     "Asleep the whole time.",
+     "Fully aware of everything.",
+     "Not awake and not aware."
+    ],
+    "why": "The textbook notes that we are often not completely aware of our surroundings, even when fully awake."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So picture two dials. One is how alert you are. The other is what you are aware of. Usually they move together, but not always."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Dial 1, arousal: how alert you are; Dial 2, awareness: what you are aware of"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A stricter meaning is self-aware: not only aware, but aware that you are aware. 'I'm hungry, and I notice I'm getting grumpy.'"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Self-aware = aware that you are aware"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which is an example of being self-aware?",
+    "right": "Noticing 'I am feeling nervous right now.'",
+    "wrong": [
+     "Jumping at a sudden loud noise.",
+     "Being woken by an alarm clock.",
+     "Hearing a friend's voice."
+    ],
+    "why": "Self-aware means being aware of your own awareness or state, not only of the world around you."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Third idea: inner experience. Beyond taking in information, there is how it feels to you. The taste of coffee. The red of a stop sign."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Inner experience = how it feels from the inside"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In 1974 the philosopher Thomas Nagel put it this way: a creature has conscious states if there is something it is like to be that creature."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "We may call this the subjective character of experience."
+   },
+   "cite": [
+    "s1",
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "'Subjective' just means from the inside, from one point of view. Your taste of coffee is yours alone."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Subjective = from the inside, from one point of view"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Nagel's example was a bat. Bats find their way by sonar, a sense unlike any of ours. So we cannot picture what it is like for them."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A bat hanging upside down in a cave at dusk, sound waves rippling outward"
+   },
+   "cite": [
+    "s5",
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why did Nagel use a bat as his example?",
+    "right": "Bat senses like sonar are so unlike ours that it is hard to picture their experience.",
+    "wrong": [
+     "Because bats have been proven to have no experience.",
+     "Because bats are the smartest animals.",
+     "Because scientists are not allowed to study bats."
+    ],
+    "why": "Nagel pointed out that bat sonar is not like any sense we have, so we can't imagine what it is like."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Even among people we cannot check. Is your blue the same as your friend's blue? We have no direct way to compare."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Experience is private"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's gather the three. Awake: how alert. Aware: aware of something. Inner experience: something it is like for you."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Awake: how alert you are; Aware: aware of something; Inner experience: there is something it is like for you"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which sentence uses 'inner experience' the way we mean it?",
+    "right": "There is something it is like for me to taste a lemon.",
+    "wrong": [
+     "I woke up at seven o'clock.",
+     "I can name the capital of France.",
+     "The lamp is switched on."
+    ],
+    "why": "Inner experience means there is something it is like, from the inside, to have that moment. The other sentences are about waking, knowing a fact, or a switch."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the catch. You can see someone's face and hear their words. You cannot see their experience. That is why the question is hard."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Why is this hard?"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So how can we tell if someone else is conscious? Scientists and doctors use three tools: reports, behaviour, and brain signs."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Tool 1: reports; Tool 2: behaviour; Tool 3: brain signs"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Tool one: reports. You ask. Sleep researchers woke volunteers at set times and asked what was going through their minds."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Reports: ask the person"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Tool two: behaviour. Doctors watch for clear signs of awareness, such as following a request. It can take repeated, careful observation."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Behaviour: watch what the person does"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "But behaviour can miss things. In locked-in syndrome the body is paralysed, so the person may seem unable to react. It is not a disorder of consciousness."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A person in a hospital bed, eyes open and alert, unable to move"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does locked-in syndrome teach us about testing for consciousness?",
+    "right": "Someone can be conscious even when their body shows almost no response.",
+    "wrong": [
+     "Paralysed people are never aware.",
+     "Behaviour is always a perfect guide.",
+     "Consciousness lives in the muscles."
+    ],
+    "why": "Locked-in syndrome is not a disorder of consciousness, yet the person can appear unable to react. Behaviour alone can miss awareness."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Tool three: brain signs. In 2006 a team scanned a woman diagnosed as vegetative. They asked her to imagine playing tennis."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Brain signs: look at the brain itself"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Her brain activity looked like that of healthy volunteers doing the same thing. Her body gave no sign, yet her brain followed the request."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A brain scan with a highlighted area near the top of the brain"
+   },
+   "cite": [
+    "s10",
+    "s11"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What did the 2006 scan show?",
+    "right": "Her brain responded to the 'imagine tennis' request much like healthy volunteers' brains did.",
+    "wrong": [
+     "She woke up and began to talk.",
+     "Her brain showed no activity at all.",
+     "She got up and walked around the room."
+    ],
+    "why": "The researchers reported her brain activity was indistinguishable from healthy volunteers' when she was asked to imagine playing tennis."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Later work suggests this is not rare. One review of over 1,000 patients estimated that some apparently unresponsive patients still have awareness. Doctors call it cognitive motor dissociation."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "about 15% of apparently unresponsive patients"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Another brain sign: give the brain a gentle magnetic tap and record the echo with EEG sensors. A rich echo that spreads widely is linked to the capacity for consciousness."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A head wearing an EEG cap; a ripple of activity spreads across the brain after a magnetic tap"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In one small study of 11 unresponsive patients, 7 had a simple echo. Four had a rich one, which might suggest a hidden capacity for consciousness."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1",
+    "text": "11 unresponsive patients: simple echo vs rich echo"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "What might a rich echo suggest about an unresponsive patient?",
+    "right": "The brain may be capable of consciousness, even though the person cannot respond.",
+    "wrong": [
+     "The person is definitely fully conscious.",
+     "The person is dreaming.",
+     "The test has failed."
+    ],
+    "why": "The authors say high complexity might suggest a covert capacity for consciousness. It is a clue, not proof."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "None of the three tools is perfect. When behaviour is unclear, doctors add brain-based tests. Think of them as clues, not proof."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Clues, not proof"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now three real-life cases where awake, aware and inner experience come apart. First: sleep."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Real-life cases"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Sleep is not simply 'off'. Experience can fade in deep sleep, then return as vivid, story-like dreams in REM sleep. Alertness and awareness usually travel together, but REM is the exception."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Deep slow-wave sleep: experience often fades; REM sleep: vivid, story-like dreams"
+   },
+   "cite": [
+    "s9",
+    "s7"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which describes a vivid dream?",
+    "right": "Asleep, yet having an inner experience.",
+    "wrong": [
+     "Awake and aware of the room.",
+     "Asleep with no experience at all.",
+     "Awake with no experience at all."
+    ],
+    "why": "In dreaming the person is asleep and not aware of the room, yet there is still an experience. That shows experience can be present when we are not alert."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Second case: anaesthesia. It changes consciousness reversibly without shutting down the whole brain. Depending on drug and dose, there are three possibilities."
+   },
+   "show": {
+    "kind": "list",
+    "text": "No experience at all; Experience cut off from the surroundings, like a dream; Awareness of the surroundings"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Under anaesthesia, what is 'disconnected consciousness'?",
+    "right": "Having an experience, like a dream, cut off from the surroundings.",
+    "wrong": [
+     "Being fully aware of the operating room.",
+     "Having no experience of any kind.",
+     "Being awake and chatting."
+    ],
+    "why": "The researchers describe disconnected consciousness as conscious experience without perception of the environment, like dreaming."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Third case: brain injury. These are real people and families, so words matter. Doctors describe three main states using our two dials: alert and aware."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Coma; Unresponsive wakefulness syndrome; Minimally conscious state"
+   },
+   "cite": [
+    "s8",
+    "s18"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Coma: not alert, no awareness. Unresponsive wakefulness: alert, but no sign of awareness. Minimally conscious: alert, with signs of awareness that come and go."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Alert? Coma: no; Unresponsive wakefulness: yes; Minimally conscious: yes. Signs of awareness? Coma: none; Unresponsive wakefulness: none seen; Minimally conscious: some, fluctuating"
+   },
+   "cite": [
+    "s8",
+    "s18"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which state is alert, with sleep-wake cycles, but shows no sign of awareness?",
+    "right": "Unresponsive wakefulness syndrome (once called vegetative state).",
+    "wrong": [
+     "Coma.",
+     "Minimally conscious state.",
+     "Locked-in syndrome."
+    ],
+    "why": "Coma lacks alertness. Minimally conscious patients show some awareness. Locked-in patients are not disordered in consciousness. Unresponsive wakefulness is alert without signs of awareness."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "These ideas are fairly recent. Doctors named the vegetative state in 1972 and the minimally conscious state in 2002. Nagel's bat paper came in 1974. The tennis scan came in 2006."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1972: vegetative state named; 1974: Nagel's bat paper; 2002: minimally conscious state defined; 2006: tennis scan study"
+   },
+   "cite": [
+    "s18",
+    "s6",
+    "s10"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So why is it hard? Experience is private. The word means many things. Our tools give clues, not proof. And one puzzle sits underneath: how brain activity gives rise to feeling at all."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Experience is private; one word, many meanings; tests give clues; how does brain activity become feeling?"
+   },
+   "cite": [
+    "s3",
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why can't a brain scan simply settle whether someone is conscious?",
+    "right": "Scans show brain activity, but experience is first-person, so scans give clues rather than a direct view.",
+    "wrong": [
+     "Scans cannot be used on people.",
+     "Brain activity has nothing to do with consciousness.",
+     "Only philosophers are allowed to read scans."
+    ],
+    "why": "Nagel argued that physical descriptions don't capture what it is like to have an experience. Brain tests are useful clues, but they are not a direct view of it."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That last puzzle is called the hard problem, and it is our next class. Here is the map. After it comes looking for consciousness in the brain, then four scientific theories."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Class 2: The hard problem; Class 3: Looking for consciousness in the brain; Classes 4 to 7: global workspace, higher-order, integrated information, predictive processing"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Then strange loops and the self, idealism and panpsychism, animal minds and machine minds. Class 12 puts it together. For each view we'll give its best case and its critics."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Class 8: Strange loops and the self; Class 9: Idealism and panpsychism; Class 10: Animal minds; Class 11: Machine minds; Class 12: Where do we stand?"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Before you go, try this. For one minute, notice what you are aware of right now: a sound, a feeling, a thought. There are no wrong answers. See you next class."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Notice what you are aware of, for one minute"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "pie",
+   "title": "Brain echo after a magnetic tap in 11 unresponsive patients (one small study)",
+   "rows": [
+    {
+     "label": "Simple, slow echo (low complexity)",
+     "value": 7,
+     "source": "s14"
+    },
+    {
+     "label": "Rich, complex echo (high complexity)",
+     "value": 4,
+     "source": "s14"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Awake, aware, inner experience",
+   "links": [
+    "[[The hard problem]]",
+    "[[Nagel's bat]]",
+    "[[Self-awareness]]"
+   ]
+  },
+  {
+   "topic": "How we test for consciousness",
+   "links": [
+    "[[Disorders of consciousness]]",
+    "[[Looking for consciousness in the brain]]"
+   ]
+  },
+  {
+   "topic": "Sleep, dreams and anaesthesia",
+   "links": [
+    "[[Disorders of consciousness]]",
+    "[[Integrated information theory]]"
+   ]
+  },
+  {
+   "topic": "Disorders of consciousness",
+   "links": [
+    "[[How we test for consciousness]]",
+    "[[Global workspace theory]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "The 2006 tennis scan showed that a patient diagnosed as vegetative was aware.",
+   "other_view": "A published comment argued that the brain activity could be an automatic reaction to the word 'tennis' without conscious imagining. Owen's team later reported several more patients with similar results. Owen also said this is very unlikely to apply to most long-term vegetative cases.",
+   "cite": [
+    "s10",
+    "s19",
+    "s11"
+   ]
+  },
+  {
+   "claim": "Anaesthesia simply switches consciousness off.",
+   "other_view": "Researchers say anaesthesia can produce different states depending on drug and dose. These include no experience at all, dream-like experience cut off from the room, and awareness of the surroundings.",
+   "cite": [
+    "s17"
+   ]
+  },
+  {
+   "claim": "Awake, aware and inner experience are three clearly separate things.",
+   "other_view": "Philosophers say the different senses of 'conscious' can be told apart but are linked, and they do not cover every option. The encyclopedia lists many varieties, so experts do not all draw the lines in the same place.",
+   "cite": [
+    "s3",
+    "s1"
+   ]
+  },
+  {
+   "claim": "A rich brain echo after a magnetic tap shows hidden consciousness.",
+   "other_view": "The authors of the small study say it might suggest a covert capacity for consciousness. They recommend brain-based tests as a complement when bedside behaviour is ambiguous, not as a replacement.",
+   "cite": [
+    "s14"
+   ]
+  }
+ ]
+}

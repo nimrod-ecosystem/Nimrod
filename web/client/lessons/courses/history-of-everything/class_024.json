@@ -1,0 +1,1006 @@
+{
+ "about": {
+  "title": "Mauryan India, Qin and Han China",
+  "course": "history-of-everything",
+  "class_n": 24,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. There are 34 short beats and 10 check questions, so there is time to pause after each idea. Four topics plus a comparison with Rome fit in half an hour. Rome gets only a short comparison here because Classes 23 and 25 cover it in full."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Maurya Empire",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Maurya_Empire",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "The Maurya Empire (History textbook chapter)",
+   "publisher": "Colorado Community College Online (Pressbooks)",
+   "date": "n.d.",
+   "link": "https://pressbooks.ccconline.org/his111ppcc/chapter/the-maurya-empire/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "Edicts of Ashoka",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Edicts_of_Ashoka",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "Seleucid–Mauryan War",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Seleucid%E2%80%93Mauryan_War",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "Ashoka's policy of Dhamma",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Ashoka's_policy_of_Dhamma",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "Qin dynasty",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Qin-dynasty",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "Qin Shi Huangdi—facts and information",
+   "publisher": "National Geographic",
+   "date": "n.d.",
+   "link": "https://www.nationalgeographic.com/culture/article/qin-shi-huangdi",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "Burning of books and burying of scholars",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Burning_of_books_and_burying_of_scholars",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "Chinese civil service",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Chinese-civil-service",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "Cai Lun",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/biography/Cai-Lun",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "Cai Lun",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Cai_Lun",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "Han Dynasty",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/Han_Dynasty/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "Han dynasty",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Han_dynasty",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "A comparison of income inequality in the Roman and Chinese Han empires",
+   "publisher": "Nature Communications",
+   "date": "2025",
+   "link": "https://www.nature.com/articles/s41467-025-58581-0",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "Roman Republic",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/place/Roman-Republic",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "Ancient Rome",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/place/ancient-Rome",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "Chandragupta Maurya",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Chandragupta_Maurya",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "Han Dynasty",
+   "publisher": "New World Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.newworldencyclopedia.org/entry/Han_Dynasty",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "Economy of the Han dynasty",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Economy_of_the_Han_dynasty",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "Major Pillar Edicts",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Major_Pillar_Edicts",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "Qin dynasty",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Qin_dynasty",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "About Emperor Qin's Terra Cotta Army",
+   "publisher": "National Geographic",
+   "date": "n.d.",
+   "link": "https://www.nationalgeographic.com/history/article/emperor-qin",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "Timeline: Roman Empire",
+   "publisher": "World History Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.worldhistory.org/timeline/Roman_Empire/",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Today we compare how India and China built their first very large empires. We will go one step at a time."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Two first empires: India and China"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a word. An empire is one government ruling many peoples across a big area. Keep that meaning in mind."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Empire"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the order. India's Maurya Empire comes first, then Qin unifies China, then the Han last for more than four centuries."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "c. 321 BCE: Chandragupta founds the Maurya Empire | 221 BCE: Qin unifies China | 202 BCE: Han dynasty begins | 220 CE: Han dynasty ends"
+   },
+   "cite": [
+    "s1",
+    "s6",
+    "s12"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "India first. Around 321 BCE, Chandragupta Maurya founded the Maurya Empire. Its capital was Pataliputra, near today's Patna."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map of northern India with the city of Pataliputra marked, near today's Patna in Bihar."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Chandragupta then met Seleucus, a successor of Alexander the Great, in a clash between 305 and 303 BCE. Seleucus gave up land, and Chandragupta sent war elephants. They agreed a marriage alliance."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Chandragupta Maurya, founder"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Who founded the Maurya Empire?",
+    "right": "Chandragupta Maurya",
+    "wrong": [
+     "Ashoka",
+     "Qin Shi Huang",
+     "Seleucus"
+    ],
+    "why": "Chandragupta founded it around 321 BCE. Ashoka was his grandson, and Qin Shi Huang ruled China."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "How do we know all this? Two main clues: Ashoka's stone edicts, and pieces of a lost book by Megasthenes. Writers living centuries later copied parts of it."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Clue 1: Ashoka's stone edicts | Clue 2: fragments of Megasthenes, kept in later Roman-era writing"
+   },
+   "cite": [
+    "s1",
+    "s17"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Chandragupta's grandson was Ashoka. He ruled from about 268 to 232 BCE, and the empire reached its peak under him."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ashoka, c. 268–232 BCE"
+   },
+   "cite": [
+    "s1",
+    "s17"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "How many people lived in his world? Historians estimate between 15 and 30 million in South Asia in Mauryan times. That is a wide range because it is an estimate."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "15–30 million"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 261 BCE Ashoka conquered Kalinga. His own edict says he felt remorse, because conquest means slaughter, death and captives."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "felt remorse on account of the conquest of Kalinga"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which source tells us Ashoka felt remorse after Kalinga?",
+    "right": "Ashoka's own edicts, carved in stone",
+    "wrong": [
+     "Han dynasty paper records",
+     "The Terracotta Army",
+     "A Roman history of the Punic Wars"
+    ],
+    "why": "The remorse comes from Ashoka's own edicts. The other sources belong to China or Rome."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Ashoka had his messages carved on rocks and on pillars across the empire. More than thirty of these inscriptions are known."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A tall polished stone pillar standing in open ground, with writing carved near the top."
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The edicts promote 'dhamma', a way of living well. It means compassion, generosity, truthfulness and purity. It was not one particular religion."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Dhamma: living well, for everyone"
+   },
+   "cite": [
+    "s20",
+    "s5"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "What did Ashoka's edicts mainly promote?",
+    "right": "A way of living well called dhamma, including compassion and truthfulness",
+    "wrong": [
+     "How to build a Great Wall",
+     "How to pass Confucian exams",
+     "Roman law"
+    ],
+    "why": "The edicts set out dhamma, an ethical way of living, in public writing."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The edicts also name four provincial capitals. Tosali in the east, Ujjain in the west, Suvarnagiri in the south and Taxila in the north."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map of the Maurya Empire with the centre at Pataliputra and four provincial capitals marked: Tosali (east), Ujjain (west), Suvarnagiri (south), Taxila (north)."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Ashoka died in 232 BCE, and the Maurya dynasty ended about 180 BCE. Eleven years after Ashoka died, China was unified."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "232 BCE: Ashoka dies | 221 BCE: China unified by Qin | c. 180 BCE: Maurya dynasty ends"
+   },
+   "cite": [
+    "s1",
+    "s17",
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now China. It had been split. In the Warring States period, at least seven kingdoms fought for control. The state of Qin won in 221 BCE."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "China: the Qin unification"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Ying Zheng became king of Qin in 246 BCE. With his minister Li Si he finished the conquests. He took the title Qin Shi Huang, meaning First Sovereign Emperor."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Qin Shi Huang: First Sovereign Emperor"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "He built a centralized government. That means one ruler at the top, with power from the centre. He divided the country into 36 military districts."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "36 districts"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "He also standardized things. To standardize is to make them the same everywhere: coins, weights and measures, writing, even wagon axle widths."
+   },
+   "show": {
+    "kind": "list",
+    "text": "One currency | One system of weights and measures | One writing system | One axle width for wagons"
+   },
+   "cite": [
+    "s7",
+    "s6"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why did Qin standardize coins, weights and writing?",
+    "right": "So trade and government orders worked the same way across the whole empire",
+    "wrong": [
+     "To spread Buddhism",
+     "To pay for the Terracotta Army",
+     "Because Rome demanded it"
+    ],
+    "why": "Common measures helped trade and commerce, and one writing system helped the empire run as one."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Qin also linked states with roads and canals, and is credited with the first version of the Great Wall. His tomb was guarded by the Terracotta Army, buried to protect him in the afterlife."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Rows of life-sized clay soldiers standing in formation in an underground pit."
+   },
+   "cite": [
+    "s22",
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "But Qin rule was harsh, with heavy taxes. After the emperor died in 210 BCE, rebellion spread. The dynasty was over by 206 BCE, only about fifteen years."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 15 years"
+   },
+   "cite": [
+    "s6",
+    "s21"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "About how long did the Qin dynasty last?",
+    "right": "About 15 years",
+    "wrong": [
+     "About 150 years",
+     "About 500 years",
+     "About 1,500 years"
+    ],
+    "why": "It ran from 221 to about 206 BCE, so it was short-lived."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Qin also burned books it considered subversive. Modern scholars agree on that. The famous story of burying scholars alive is doubted. See the 'other side' notes."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Book burning: yes. Live burial: doubted"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "After years of fighting, a commoner named Liu Bang beat the rival general Xiang Yu. In 202 BCE he was proclaimed emperor. His Han dynasty lasted until 220 CE."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "China: the Han dynasty, 202 BCE – 220 CE"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Han did not throw away Qin's system. They first adopted the civil service, the officials who run a government, that began under Qin."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Civil service: officials who run the government"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "But they changed the ideas behind it. Legalism means strict laws and harsh punishment. Confucianism, from Class 20, means ruling by moral example and learning. Under Emperor Wu, Confucianism replaced Legalism."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Legalism: strict laws and harsh punishment (Qin) | Confucianism: moral example and learning (Han under Emperor Wu, 141–87 BCE)"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A bureaucracy is a body of officials running a government by written rules. In 124 BCE Emperor Wu set up an imperial university to train and test officials in Confucian government."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Imperial university, 124 BCE"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "Which emperor set up the imperial university in 124 BCE to train officials?",
+    "right": "Emperor Wu of Han",
+    "wrong": [
+     "Qin Shi Huang",
+     "Ashoka",
+     "Liu Bang"
+    ],
+    "why": "Britannica credits Han Emperor Wu with this university. Qin and Ashoka came before it, and Liu Bang founded the dynasty earlier."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Before that, Qin picked officials by recommendation from local officials. Han tested Confucian texts. The full exam system came to dominate education only from the Song dynasty, 960 to 1279."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Qin: officials recommended by local officials | 124 BCE: Han imperial university | 960–1279 CE: exams dominate education (Song)"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now paper. About 105 CE, Cai Lun, a court official under Emperor He, made paper from tree bark, hemp waste, old rags and fishnets. It wrote well and cost less than silk."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Tree bark | Hemp waste | Old rags | Fishnets"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which of these did Cai Lun use to make paper?",
+    "right": "Old rags and fishnets",
+    "wrong": [
+     "Bamboo slips only",
+     "Baked clay",
+     "Gold leaf"
+    ],
+    "why": "The sources list bark, hemp waste, old rags and fishnets. Bamboo slips were what writers used before paper."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Before paper, writers used bamboo and wooden slips. A government that runs on written records gains a lot from a cheap writing surface."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A bundle of narrow bamboo slips tied together with cord to form a scroll."
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Han also pushed outward. Emperor Wu fought the Xiongnu to the north. His campaigns won the Hexi Corridor and the Tarim Basin, which helped set up the Silk Road."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map of Han China showing the Hexi Corridor and Tarim Basin leading west, with the Silk Road drawn as a line."
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Han also counted people. A tax census in 2 CE recorded about 58 million people in about 12.4 million households."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 58 million people, 2 CE"
+   },
+   "cite": [
+    "s19",
+    "s14"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Time to compare. Ashoka spread a shared ethical message in stone. Qin and Han used standard measures, one writing system and trained officials."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "India (Maurya): dhamma edicts on rocks and pillars; provincial capitals | China (Qin and Han): standard coins, measures and writing; 36 districts; trained officials"
+   },
+   "cite": [
+    "s3",
+    "s5",
+    "s6",
+    "s7",
+    "s9"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which tool did Ashoka use to speak to people across his empire?",
+    "right": "Edicts carved on rocks and pillars",
+    "wrong": [
+     "The Terracotta Army",
+     "A Confucian exam",
+     "Paper made from rags"
+    ],
+    "why": "Ashoka's messages were carved in stone across the empire. The other three belong to China."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now Rome, in the same centuries. When Qin unified China, Rome was a republic. The Punic Wars against Carthage ran from 264 to 146 BCE in three rounds."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "509 BCE: Roman Republic begins | 264–146 BCE: Punic Wars | 27 BCE: Octavian becomes Augustus, first emperor"
+   },
+   "cite": [
+    "s15",
+    "s16"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Republic ended in 27 BCE, when Octavian was made princeps and became Augustus. China's first emperor, Qin Shi Huang, took power in 221 BCE, about 194 years earlier."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "221 BCE vs 27 BCE"
+   },
+   "cite": [
+    "s15",
+    "s6"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Which empire had a first emperor earlier: China or Rome?",
+    "right": "China, by about 194 years",
+    "wrong": [
+     "Rome, by about 194 years",
+     "They began in the same year",
+     "India, because Ashoka was Rome's first emperor"
+    ],
+    "why": "Qin Shi Huang took the title in 221 BCE. Augustus took power in 27 BCE. Ashoka ruled India, not Rome."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Size matters too. Estimates put the Han Empire near 58 million people in 2 CE, and Rome near 75 million around 165 CE. The dates differ, so treat them as rough pictures."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1",
+    "text": "Estimated populations in millions"
+   },
+   "cite": [
+    "s14",
+    "s1"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "In this chart, which empire has the biggest estimate?",
+    "right": "The Roman Empire, about 75 million around 165 CE",
+    "wrong": [
+     "Mauryan South Asia, about 30 million at most",
+     "The Han Empire, about 58 million in 2 CE",
+     "They are all equal"
+    ],
+    "why": "The Roman bar is tallest. The dates differ, so this compares rough sizes, not one exact year."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To sum up. India built its empire with conquest and then a moral message. China built its empire with unification, standard rules and trained officials. Next, Class 25 covers the Roman Empire, the Silk Roads and early Christianity."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Maurya: conquest, then dhamma in stone | Qin: unify and standardize | Han: Confucian officials, paper, Silk Road"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Estimated population of big ancient states (millions of people)",
+   "rows": [
+    {
+     "label": "Mauryan South Asia, low estimate",
+     "value": 15,
+     "source": "s1"
+    },
+    {
+     "label": "Mauryan South Asia, high estimate",
+     "value": 30,
+     "source": "s1"
+    },
+    {
+     "label": "Han Empire, 2 CE",
+     "value": 57.7,
+     "source": "s14"
+    },
+    {
+     "label": "Roman Empire, c. 165 CE",
+     "value": 75,
+     "source": "s14"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Empire",
+   "links": [
+    "[[Centralized government]]",
+    "[[Standardization]]"
+   ]
+  },
+  {
+   "topic": "Dhamma",
+   "links": [
+    "[[Thinkers and Teachers: Buddha, Confucius, the Greeks and the Prophets]]",
+    "[[Edicts of Ashoka]]"
+   ]
+  },
+  {
+   "topic": "Legalism and Confucianism",
+   "links": [
+    "[[Thinkers and Teachers: Buddha, Confucius, the Greeks and the Prophets]]",
+    "[[Bureaucracy]]"
+   ]
+  },
+  {
+   "topic": "Bureaucracy and civil service",
+   "links": [
+    "[[Imperial examinations]]",
+    "[[Han dynasty]]"
+   ]
+  },
+  {
+   "topic": "Paper and writing surfaces",
+   "links": [
+    "[[Cai Lun]]",
+    "[[Bamboo slips]]"
+   ]
+  },
+  {
+   "topic": "Silk Road",
+   "links": [
+    "[[The Roman Empire, the Silk Roads and Early Christianity]]"
+   ]
+  },
+  {
+   "topic": "Rome in the same centuries",
+   "links": [
+    "[[The Rise of Rome]]",
+    "[[The Roman Empire, the Silk Roads and Early Christianity]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "323 BCE",
+   "elsewhere": "Alexander the Great died. Chandragupta's rise in India is dated to the years just after, though historians still debate the exact order of events.",
+   "cite": [
+    "s17"
+   ]
+  },
+  {
+   "when": "305–303 BCE",
+   "elsewhere": "Chandragupta and Seleucus, a successor of Alexander, made peace after a clash on India's north-west frontier.",
+   "cite": [
+    "s4"
+   ]
+  },
+  {
+   "when": "264–241 BCE",
+   "elsewhere": "Rome and Carthage fought the First Punic War. Ashoka's reign began around 268 BCE, and he conquered Kalinga in 261 BCE.",
+   "cite": [
+    "s16",
+    "s1"
+   ]
+  },
+  {
+   "when": "221 BCE",
+   "elsewhere": "Qin unified China. Rome and Carthage were about to begin the Second Punic War, in 218 BCE.",
+   "cite": [
+    "s6",
+    "s16"
+   ]
+  },
+  {
+   "when": "202 BCE",
+   "elsewhere": "Liu Bang founded the Han dynasty. The Second Punic War between Rome and Carthage ended the next year, in 201 BCE.",
+   "cite": [
+    "s12",
+    "s16"
+   ]
+  },
+  {
+   "when": "146 BCE",
+   "elsewhere": "The Third Punic War ended. China's Han historian Sima Qian was born about a year later, in 145 BCE.",
+   "cite": [
+    "s16",
+    "s18"
+   ]
+  },
+  {
+   "when": "141–87 BCE",
+   "elsewhere": "Han Emperor Wu reigned. Zhang Qian travelled to Central Asia for him, and the Silk Road took shape.",
+   "cite": [
+    "s12"
+   ]
+  },
+  {
+   "when": "44 BCE",
+   "elsewhere": "Julius Caesar was assassinated in Rome.",
+   "cite": [
+    "s15"
+   ]
+  },
+  {
+   "when": "27 BCE",
+   "elsewhere": "Octavian was named Augustus and the Roman Republic ended. Han China was already about 175 years old.",
+   "cite": [
+    "s15",
+    "s12"
+   ]
+  },
+  {
+   "when": "2 CE",
+   "elsewhere": "The Han tax census counted about 58 million people. Augustus was still ruling Rome, until 14 CE.",
+   "cite": [
+    "s19",
+    "s23"
+   ]
+  },
+  {
+   "when": "c. 105 CE",
+   "elsewhere": "Cai Lun presented his paper to the Han court. The Roman Empire reached its greatest extent around 117 CE.",
+   "cite": [
+    "s10",
+    "s23"
+   ]
+  },
+  {
+   "when": "220 CE",
+   "elsewhere": "The Han dynasty ended after more than four centuries.",
+   "cite": [
+    "s12"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Ashoka's 'dhamma' was Buddhism spread by a Buddhist king.",
+   "other_view": "Some historians, such as Bhandarkar, say dhamma was original Buddhism. Others, including Romila Thapar and Nayanjot Lahiri, say it stands apart from Buddhist ideas, even though it was informed by them. They see a civic ethic for a diverse empire, and the edicts themselves read as largely non-sectarian.",
+   "cite": [
+    "s5",
+    "s3"
+   ]
+  },
+  {
+   "claim": "Qin Shi Huang buried 460 scholars alive and burned all books.",
+   "other_view": "Modern scholars agree he gathered and destroyed many works he saw as subversive. The live-burial story first appears over a century later in Sima Qian's Han-era history, and modern historians doubt its details. Li Kaiyuan argues it is a half-faked history. Sima Qian wrote under a dynasty that had reason to blacken Qin.",
+   "cite": [
+    "s8"
+   ]
+  },
+  {
+   "claim": "Cai Lun invented paper in 105 CE.",
+   "other_view": "He is traditionally credited, and Britannica gives about 105 CE. But earlier forms of paper existed from the 3rd century BCE, so many see his work as an improvement rather than an invention from nothing.",
+   "cite": [
+    "s10",
+    "s11"
+   ]
+  },
+  {
+   "claim": "The Han invented the Chinese civil service examinations.",
+   "other_view": "Britannica says the civil service began under Qin. The Han adopted it, then added an imperial university in 124 BCE to train and test officials. The exams are rooted in the Han, but they dominated education only from the Song dynasty (960–1279).",
+   "cite": [
+    "s9"
+   ]
+  },
+  {
+   "claim": "The dates of the Mauryan and Qin dynasties are fixed.",
+   "other_view": "Sources differ by a few years. Chandragupta is dated to 321 or 322 BCE, and Ashoka's accession to 268 or 272 BCE. Wikipedia's Chandragupta article says the exact chronology of events remains debated. Qin's end is given as 207 BCE by Britannica and 206 BCE elsewhere. This lesson uses approximate dates.",
+   "cite": [
+    "s1",
+    "s2",
+    "s17",
+    "s6",
+    "s21"
+   ]
+  }
+ ]
+}

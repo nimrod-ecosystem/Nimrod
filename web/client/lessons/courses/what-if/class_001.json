@@ -1,0 +1,715 @@
+{
+ "about": {
+  "title": "How to play 'What if?': the five tiers and the evidence toolkit",
+  "course": "what-if",
+  "class_n": 1,
+  "audience": [
+   "adult"
+  ],
+  "minutes": 20,
+  "length_note": "About 20 minutes. This class teaches five tiers, three questions and a few supporting ideas, so it has many short beats. You can pause after any beat. The class stays at about 20 minutes because each beat covers only one idea."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Science works with testable ideas",
+   "publisher": "Understanding Science, University of California Museum of Paleontology, Berkeley",
+   "date": "n.d.",
+   "link": "https://undsci.berkeley.edu/understanding-science-101/what-is-science/science-works-with-testable-ideas/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Testing scientific ideas",
+   "publisher": "Understanding Science, University of California Museum of Paleontology, Berkeley",
+   "date": "n.d.",
+   "link": "https://undsci.berkeley.edu/understanding-science-101/how-science-works/testing-scientific-ideas/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Summing up scientific arguments",
+   "publisher": "Understanding Science, University of California Museum of Paleontology, Berkeley",
+   "date": "n.d.",
+   "link": "https://undsci.berkeley.edu/understanding-science-101/the-core-of-science-relating-evidence-and-ideas/summing-up-scientific-arguments/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "The core of science: Relating evidence and ideas",
+   "publisher": "Understanding Science, University of California Museum of Paleontology, Berkeley",
+   "date": "n.d.",
+   "link": "https://undsci.berkeley.edu/understanding-science-101/the-core-of-science-relating-evidence-and-ideas/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Identifying your learning goals (What is science: concepts for 9-12)",
+   "publisher": "Understanding Science, University of California Museum of Paleontology, Berkeley",
+   "date": "n.d.",
+   "link": "https://undsci.berkeley.edu/for-educators/teaching-guides/9-12-teaching-guide/identifying-your-learning-goals/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Definitions of Fact, Theory, and Law in Scientific Work",
+   "publisher": "National Center for Science Education",
+   "date": "n.d.",
+   "link": "https://ncse.ngo/definitions-fact-theory-and-law-scientific-work",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "1.1 The Science of Biology (Biology 2e)",
+   "publisher": "OpenStax",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/biology-2e/pages/1-1-the-science-of-biology",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Quote Origin: Extraordinary Claims Require Extraordinary Evidence",
+   "publisher": "Quote Investigator",
+   "date": "2021-12-05",
+   "link": "https://quoteinvestigator.com/2021/12/05/extraordinary/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Carl Sagan was wrong: ordinary evidence is enough",
+   "publisher": "IAI News (essay by Sean McMahon)",
+   "date": "n.d.",
+   "link": "https://iai.tv/articles/carl-sagan-was-wrong-ordinary-evidence-is-enough-auid-2348",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Younger Dryas",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/science/Younger-Dryas-climate-interval",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Multiple causes of the Younger Dryas cold period",
+   "publisher": "Nature Geoscience",
+   "date": "2015",
+   "link": "https://www.nature.com/articles/ngeo2557",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "The Younger Dryas impact hypothesis: a critical review",
+   "publisher": "ScienceDirect (Elsevier)",
+   "date": "n.d.",
+   "link": "https://www.sciencedirect.com/science/article/abs/pii/S0277379113004332",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "The Younger Dryas impact hypothesis: A requiem (Pinter and colleagues)",
+   "publisher": "ScienceDirect (Elsevier)",
+   "date": "2011",
+   "link": "https://www.sciencedirect.com/science/article/abs/pii/S0012825211000262",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Rejection of Holliday et al.'s alleged refutation of the Younger Dryas impact hypothesis (Sweatman, Powell and West)",
+   "publisher": "ScienceDirect (Elsevier)",
+   "date": "2024",
+   "link": "https://www.sciencedirect.com/science/article/pii/S0012825224002885",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "The Younger Dryas Impact: A Failed Hypothesis",
+   "publisher": "Skeptical Inquirer",
+   "date": "2025-06",
+   "link": "https://skepticalinquirer.org/2025/06/the-younger-dryas-impact-a-failed-hypothesis/",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Where this idea stands: mainstream consensus. Today's big idea is a way to test any claim, and it is how science itself works."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Where this idea stands: Mainstream consensus"
+   },
+   "cite": [
+    "s3",
+    "s1"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to 'What if?' I'm the contrary voice. I bring you ideas outside the mainstream and make the best fair case for them."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The contrary voice"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "And I'm the devil's advocate. I push back, kindly, and keep asking one thing: where is the evidence?"
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Contrary voice: presents the idea | Devil's advocate: asks for the evidence"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What does the devil's advocate do in this course?",
+    "right": "Pushes back kindly and asks for evidence.",
+    "wrong": [
+     "Tells you the idea is silly.",
+     "Decides what you must believe.",
+     "Reads out the quiz answers."
+    ],
+    "why": "Pushing back is a job, not an insult. A fair challenge helps an idea show what it is made of."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Every class, we also tell you the accepted view. That is what most experts in the field agree on today. It earned that place by surviving tests."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Accepted view"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "'Accepted' does not mean 'forever'. In science, a theory is a well-tested explanation, and even the best can be revised if new evidence comes in."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Theory = a well-tested explanation"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "In science, what does the word 'theory' mean?",
+    "right": "A well-tested explanation of some part of the natural world.",
+    "wrong": [
+     "A hunch or wild guess.",
+     "An idea nobody has tried to test.",
+     "A story told for fun."
+    ],
+    "why": "In everyday talk, 'theory' can mean a hunch. In science it means an explanation that has been tested."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So what is evidence? It is what we actually observe: a measurement, an ice core, a rock layer. A good story is lovely, but a story is not evidence."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Evidence = what we actually observe"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Not all evidence weighs the same. One clue can mislead us. Several different kinds of evidence pointing the same way is much stronger."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Weaker: one clue on its own | Stronger: several different clues that agree"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which is the stronger kind of evidence?",
+    "right": "Several different kinds of measurement that agree with each other.",
+    "wrong": [
+     "One exciting story that many people repeat.",
+     "A very confident speaker.",
+     "One clue, checked once."
+    ],
+    "why": "When separate kinds of evidence agree, it is harder for a single mistake to fool us."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more helper. The stranger the claim, the stronger the evidence we should ask for. The phrase is linked to Carl Sagan in 1977, but older versions exist."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Extraordinary claims require extraordinary evidence."
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A claim is very surprising. What should we ask for?",
+    "right": "Stronger evidence than we would ask for an ordinary claim.",
+    "wrong": [
+     "Less evidence, because it is exciting.",
+     "No evidence, just a confident speaker.",
+     "Evidence only from people who already agree."
+    ],
+    "why": "A surprising claim would overturn a lot of what we already know, so it needs more support."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now we can sort ideas. There are five 'where this idea stands' tiers. Each one answers: how much testing has this survived, and who backs it?"
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Mainstream consensus | 2. Active research debate | 3. Minority scholarly view | 4. Popular speculation | 5. Fiction"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Tier one: mainstream consensus. Most experts agree, because the idea has passed many tests. Example: the Younger Dryas, a cold snap near the end of the Ice Age, really happened. Ice cores suggest central Greenland was nearly 14 degrees Celsius colder than today."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Tier 1: Mainstream consensus"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Tier two: active research debate. Experts are still arguing, with real evidence on more than one side. Example: what caused that cold snap. Britannica says the cause is still debated, and one study found no single mechanism explains it alone."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Tier 2: Active research debate"
+   },
+   "cite": [
+    "s10",
+    "s11"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Researchers disagree, and each side has real evidence. Which tier is this?",
+    "right": "Active research debate.",
+    "wrong": [
+     "Mainstream consensus.",
+     "Popular speculation.",
+     "Fiction."
+    ],
+    "why": "When qualified experts are still weighing real evidence on more than one side, the question is still open."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Tier three: minority scholarly view. A small number of qualified researchers hold the idea and publish it. Most experts in the field are not yet persuaded. It deserves a fair hearing, and the evidence decides."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Tier 3: Minority scholarly view"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Tier four: popular speculation. The idea is loved in books, videos and conversation, but there is little or no research behind it. Many are fun to think about. We just label them honestly."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Tier 4: Popular speculation"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Tier five: fiction. Stories that never claim to be true. They are a wonderful home for 'What if?', and we never mistake them for evidence."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Tier 5: Fiction"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A novel imagines aliens building a city. It says openly that it is made up. Which tier?",
+    "right": "Fiction.",
+    "wrong": [
+     "Minority scholarly view.",
+     "Active research debate.",
+     "Mainstream consensus."
+    ],
+    "why": "Fiction makes no claim to be true, so it is its own tier."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's place one real idea on the ladder. Where this idea stands: the comet-impact idea for the Younger Dryas. The idea: one or more space objects exploded in the air or hit Earth about 12,900 years ago, and caused cooling, fires and extinctions. It was first published in 2007."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Where this idea stands: the Younger Dryas comet idea"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, the accepted view. The cold snap was real. The leading explanation is a huge pulse of fresh meltwater into the North Atlantic, which disturbed the ocean currents."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Accepted view: meltwater and ocean currents"
+   },
+   "cite": [
+    "s10",
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the supporters, fairly. They are working scientists. They say dozens of peer-reviewed papers support the idea and that key evidence has been replicated. They call the remaining differences a normal part of science."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Supporters: 'part and parcel of science'"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "And the critics, fairly. A 2011 review found that none of the original signatures was confirmed by independent tests. Another review found site dates that differ by up to two centuries. No crater has been found."
+   },
+   "show": {
+    "kind": "list",
+    "text": "No independent confirmation (2011 review) | Site dates differ by up to 200 years | No crater found"
+   },
+   "cite": [
+    "s13",
+    "s12",
+    "s15"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Our honest tier: minority scholarly view. These are real researchers with real papers, but most experts are not persuaded. If new evidence arrives, the tier can move."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Tier 3: Minority scholarly view"
+   },
+   "cite": [
+    "s15",
+    "s14"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which tier did we give the comet-impact idea?",
+    "right": "Minority scholarly view.",
+    "wrong": [
+     "Mainstream consensus.",
+     "Popular speculation.",
+     "Fiction."
+    ],
+    "why": "Qualified researchers publish and defend it, but most relevant experts are not persuaded. That is a minority scholarly view."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the toolkit: three questions you can ask of any claim. One: what would we expect to see? Two: what do we actually see? Three: what else could explain it?"
+   },
+   "show": {
+    "kind": "objects",
+    "object": "dot",
+    "count": 3,
+    "layout": "row",
+    "text": "Three questions"
+   },
+   "cite": [
+    "s3",
+    "s2"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Question one: what would we expect to see if the claim is true? Try a small claim: my hallway clock runs five minutes fast. Then it should show five minutes ahead of my phone."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "1. What would we expect to see?"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "My phone says 9:00. If the clock really is five minutes fast, what should the clock show?",
+    "right": "9:05",
+    "wrong": [
+     "8:55",
+     "9:00",
+     "9:50"
+    ],
+    "why": "Fast means ahead of the true time, so it shows a later time."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Question two: what do we actually see? We look. At 9:00 the clock says 9:05. At noon it says 12:05. That matches what we expected, so the claim is supported."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "2. What do we actually see?"
+   },
+   "cite": [
+    "s3",
+    "s7"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "The clock matched our expectation twice. What can we fairly say?",
+    "right": "The claim is supported, but we stay open to new evidence.",
+    "wrong": [
+     "It is proven forever.",
+     "It is disproved.",
+     "The test told us nothing."
+    ],
+    "why": "A match supports an idea. Science does not claim to prove things, because understanding can change with new information."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Question three: what else could explain it? Maybe the clock is fast. Or maybe the phone is five minutes slow. Good thinkers list the rivals before they decide."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "3. What else could explain it?"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Besides 'the clock is fast', which other explanation fits the same observation?",
+    "right": "The phone is five minutes slow.",
+    "wrong": [
+     "The clock is five minutes fast.",
+     "Nobody can set a clock wrong.",
+     "The hour is different on Tuesdays."
+    ],
+    "why": "If the clock reads 9:05 when the phone reads 9:00, a slow phone gives the same reading. We need another check to tell the two apart."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now try all three on the comet idea. Expect: signs of impact with matching dates at many sites. See: critics report dates that differ, and signs that other processes could explain. Else: the meltwater explanation. Supporters answer these points, so the debate is open."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Expect: matching impact signs | See: dates differ, other explanations possible | Else: meltwater"
+   },
+   "cite": [
+    "s12",
+    "s13",
+    "s10",
+    "s14"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Your first thought experiment: pick something you believe, like the clock. Ask yourself, what would change my mind? An idea that nothing could ever count against cannot be tested."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "What would change your mind?"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which of these beliefs can be tested?",
+    "right": "My clock is five minutes fast, and I can compare it to my phone.",
+    "wrong": [
+     "My clock is right, whatever any other clock or phone ever shows.",
+     "My clock is wrong in a way no one could ever measure.",
+     "My clock is right because it feels right."
+    ],
+    "why": "A testable idea says what we would see if it were true and what would count against it."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One more thing, said plainly. This course leaves out any theory that targets a group of people, or that could lead someone to harm their health. Those ideas hurt real people, and a thought experiment should not."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Left out: ideas that target a group of people | Left out: ideas that could harm your health"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which idea would this course leave out?",
+    "right": "An idea that blames a group of people for a problem.",
+    "wrong": [
+     "Whether a civilization could have existed before the end of the Ice Age.",
+     "Whether the Big Bang had a rival theory.",
+     "Whether the Moon landings can be checked against evidence."
+    ],
+    "why": "The other three can be tested against evidence. The first targets people, so it is not part of this course."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's gather it up. Five tiers: mainstream consensus, active research debate, minority scholarly view, popular speculation, fiction. Three questions: what would we expect, what do we see, what else could explain it. Well done."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Tiers: Mainstream consensus | Active research debate | Minority scholarly view | Popular speculation | Fiction. Questions: Expect? See? Else?"
+   },
+   "cite": [],
+   "move": "title-rise",
+   "ask": {
+    "q": "Which are the three questions to ask of any claim?",
+    "right": "What would we expect to see? What do we actually see? What else could explain it?",
+    "wrong": [
+     "Who said it? How loudly? How many people shared it?",
+     "Is it old? Is it popular? Is it famous?",
+     "Do I like it? Does it feel right? Can I prove it forever?"
+    ],
+    "why": "The three questions compare what an idea predicts with what we observe, and ask us to consider rivals."
+   }
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Where this idea stands: the five tiers",
+   "links": [
+    "[[accepted view]]",
+    "[[Younger Dryas]]"
+   ]
+  },
+  {
+   "topic": "Accepted view",
+   "links": [
+    "[[scientific theory]]",
+    "[[five tiers]]"
+   ]
+  },
+  {
+   "topic": "Evidence toolkit: expect, see, else",
+   "links": [
+    "[[testable ideas]]",
+    "[[what would change your mind]]"
+   ]
+  },
+  {
+   "topic": "Testable ideas and what would change your mind",
+   "links": [
+    "[[evidence toolkit]]",
+    "[[Sagan standard]]"
+   ]
+  },
+  {
+   "topic": "The Younger Dryas comet idea (preview of class 2)",
+   "links": [
+    "[[Younger Dryas]]",
+    "[[minority scholarly view]]"
+   ]
+  },
+  {
+   "topic": "What this course leaves out",
+   "links": [
+    "[[five tiers]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "The Younger Dryas comet-impact idea is a minority scholarly view.",
+   "other_view": "Supporters say many peer-reviewed papers from many researchers have replicated the key evidence, and that the remaining differences are normal science. Critics say there is no unambiguous evidence and that none of the original signatures was independently confirmed. Because supporters keep publishing and critics keep replying, some people would place it in active research debate. We chose minority scholarly view because the sources we read say most relevant experts reject it. One of those sources is a skeptics' magazine, so it is worth reading both sides.",
+   "cite": [
+    "s14",
+    "s12",
+    "s13",
+    "s15"
+   ]
+  },
+  {
+   "claim": "The cause of the Younger Dryas cold snap was meltwater disturbing ocean currents.",
+   "other_view": "Meltwater is the leading explanation, but Britannica notes the cause is still debated. One study found that no single mechanism explains the cooling alone, and that a combination of processes fits the evidence best.",
+   "cite": [
+    "s10",
+    "s11"
+   ]
+  },
+  {
+   "claim": "Extraordinary claims require extraordinary evidence.",
+   "other_view": "Defenders point to a long history of this idea, with versions older than Sagan. Some critics ask what counts as 'extraordinary', and argue that ordinary evidence can be enough for some surprising claims.",
+   "cite": [
+    "s8",
+    "s9"
+   ]
+  }
+ ]
+}

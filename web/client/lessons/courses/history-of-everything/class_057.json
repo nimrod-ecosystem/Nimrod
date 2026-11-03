@@ -1,0 +1,1511 @@
+{
+ "about": {
+  "title": "The 1950s and early 1960s: Space, Nuclear Fear and Civil Rights",
+  "course": "history-of-everything",
+  "class_n": 57,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. This class covers seven topics, so each one is taught in short steps with a check question. The Moon landing itself and the later civil rights marches are only previewed, because the next classes cover the late 1960s."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Korean War Armistice turns 60 July 27",
+   "publisher": "U.S. Army (army.mil)",
+   "date": "2013",
+   "link": "https://www.army.mil/article/107980/korean_war_armistice_turns_60_july_27",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "Korean War (Research Starters)",
+   "publisher": "EBSCO",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/history/korean-war",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "Korean War",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Korean_War",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "Super Bombs (The Price of Freedom exhibition)",
+   "publisher": "Smithsonian National Museum of American History",
+   "date": "n.d.",
+   "link": "https://americanhistory.si.edu/explore/exhibitions/price-of-freedom/online/cold-war/super-bombs",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "Hydrogen bomb (Research Starters)",
+   "publisher": "EBSCO",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/history/hydrogen-bomb",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "Manhattan Project: The Cold War, 1945-1990",
+   "publisher": "U.S. Department of Energy, OSTI OpenNet",
+   "date": "n.d.",
+   "link": "https://www.osti.gov/opennet/manhattan-project-history/Events/1945-present/cold_war.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "Dawn of the Space Age",
+   "publisher": "NASA History",
+   "date": "n.d.",
+   "link": "https://www.nasa.gov/history/dawn-of-the-space-age/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "What was Sputnik and why was it important? The Space Age begins",
+   "publisher": "Smithsonian National Air and Space Museum",
+   "date": "n.d.",
+   "link": "https://airandspace.si.edu/stories/editorial/what-was-sputnik-and-why-was-it-important-space-age-begins",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "Sputnik I (Research Starters)",
+   "publisher": "EBSCO",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/history/sputnik-i",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "Sputnik and the Origins of the Space Age",
+   "publisher": "NASA History",
+   "date": "n.d.",
+   "link": "https://www.nasa.gov/history/sputnik/sputorig.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "Apollo 11",
+   "publisher": "NASA",
+   "date": "n.d.",
+   "link": "https://www.nasa.gov/mission/apollo-11/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "Apollo 11 Moon Landing",
+   "publisher": "Smithsonian National Air and Space Museum",
+   "date": "n.d.",
+   "link": "https://airandspace.si.edu/apollo-missions/apollo-11-moon-landing",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "Apollo 11",
+   "publisher": "The Planetary Society",
+   "date": "n.d.",
+   "link": "https://www.planetary.org/space-missions/apollo-11",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "The Cuban Missile Crisis, October 1962 (Milestones)",
+   "publisher": "U.S. Department of State, Office of the Historian",
+   "date": "n.d.",
+   "link": "https://history.state.gov/milestones/1961-1968/cuban-missile-crisis",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "Cuban Missile Crisis",
+   "publisher": "John F. Kennedy Presidential Library and Museum",
+   "date": "n.d.",
+   "link": "https://www.jfklibrary.org/learn/about-jfk/jfk-in-history/cuban-missile-crisis",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "The Cuban Missile Crisis @ 60: Nuclear Crisis Lasted 59 Days, Not Just 13",
+   "publisher": "National Security Archive, George Washington University",
+   "date": "2022-10-27",
+   "link": "https://nsarchive.gwu.edu/briefing-book-special-exhibit/cuba-cuban-missile-crisis-russia-programs/2022-10-04/cuban-missile",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "The Montgomery Bus Boycott",
+   "publisher": "U.S. National Park Service",
+   "date": "n.d.",
+   "link": "https://www.nps.gov/articles/montgomery-bus-boycott.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "The Civil Rights Era (NAACP: A Century in the Fight for Freedom)",
+   "publisher": "Library of Congress",
+   "date": "n.d.",
+   "link": "https://www.loc.gov/exhibits/naacp/the-civil-rights-era.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "The Civil Rights Movement (Post-War United States, 1945-1968)",
+   "publisher": "Library of Congress",
+   "date": "n.d.",
+   "link": "https://www.loc.gov/classroom-materials/united-states-history-primary-source-timeline/post-war-united-states-1945-1968/civil-rights-movement/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "American Civil Rights Movement and Everett Tilson Timeline",
+   "publisher": "Otterbein University",
+   "date": "n.d.",
+   "link": "https://www.otterbein.edu/alumni/wp-content/uploads/sites/4/2021/10/Civil-Rights-Timeline.pdf",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "Teaching the Civil Rights Movement: Summary Objective 4",
+   "publisher": "Learning for Justice (Southern Poverty Law Center)",
+   "date": "n.d.",
+   "link": "https://www.splcenter.org/learning-for-justice/frameworks/teaching-the-civil-rights-movement/summary-objective-4/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "Brown v. Board of Education: Impact, Facts and Legacy",
+   "publisher": "HISTORY",
+   "date": "n.d.",
+   "link": "https://www.history.com/articles/brown-v-board-of-education-of-topeka",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "Television, 1950s (The Social History of the American Family: An Encyclopedia)",
+   "publisher": "SAGE Reference",
+   "date": "n.d.",
+   "link": "https://sk.sagepub.com/ency/edvol/the-social-history-of-the-american-family/chpt/television-1950s",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "Television in the United States: The Golden Age, 1948-59",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/art/television-in-the-United-States/The-late-Golden-Age",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "The Television (1950s lesson)",
+   "publisher": "WGBH",
+   "date": "n.d.",
+   "link": "https://lsintspl3.wgbh.org/en-us/lesson/1950s/9",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "The End of the Golden Age and the Rise of Television",
+   "publisher": "Digital Public Library of America",
+   "date": "n.d.",
+   "link": "https://dp.la/exhibitions/radio-golden-age/radio-tv",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "Television (American Women: Resources from the Moving Image Collections)",
+   "publisher": "Library of Congress Research Guides",
+   "date": "n.d.",
+   "link": "https://guides.loc.gov/american-women-moving-image/television",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "Rock and roll",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/art/rock-and-roll-early-style-of-rock-music",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s29",
+   "title": "Rock and roll in the 1950s (Research Starters)",
+   "publisher": "EBSCO",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/music/rock-and-roll-1950s/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s30",
+   "title": "Berry's 'Maybellene' Popularizes Rock and Roll (Research Starters)",
+   "publisher": "EBSCO",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/music/berrys-maybellene-popularizes-rock-and-roll",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s31",
+   "title": "Chuck Berry's influence on rock 'n roll was incalculable",
+   "publisher": "The Christian Science Monitor",
+   "date": "2017-03-19",
+   "link": "https://www.csmonitor.com/Arts-Culture/Music/2017/0319/Chuck-Berry-s-influence-on-rock-n-roll-was-incalculable",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s32",
+   "title": "When Pop Turned the Art World Upside Down",
+   "publisher": "American Heritage",
+   "date": "n.d.",
+   "link": "https://www.americanheritage.com/when-pop-turned-art-world-upside-down",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s33",
+   "title": "Looking at the Collection: Celebrating the 1960s",
+   "publisher": "Huntsville Museum of Art",
+   "date": "2019",
+   "link": "https://hsvmuseum.org/looking-at-the-collection-art-of-the-60s/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s34",
+   "title": "Pop Art Movement Overview",
+   "publisher": "The Art Story",
+   "date": "n.d.",
+   "link": "https://www.theartstory.org/movement/pop-art/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s35",
+   "title": "Campbell's Soup Cans",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Campbell%27s_Soup_Cans",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s36",
+   "title": "Ghana's policy at home and abroad: text of speech given in the Ghana Parliament, August 29, 1957",
+   "publisher": "Library of Congress",
+   "date": "n.d.",
+   "link": "https://www.loc.gov/item/2008700222/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s37",
+   "title": "1960: The 'Year of Africa' and the Remaking of the Global Order",
+   "publisher": "Explaining History",
+   "date": "2025-11-20",
+   "link": "https://explaininghistory.org/2025/11/20/1960-the-year-of-africa-and-the-remaking-of-the-global-order/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s38",
+   "title": "Abstract Expressionism (Library guide)",
+   "publisher": "Salvador Dalí Museum",
+   "date": "n.d.",
+   "link": "https://thedali.org/dali-library-guide-1/abstract-expressionism/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s39",
+   "title": "The Cuban Missile Crisis",
+   "publisher": "Center for Arms Control and Non-Proliferation",
+   "date": "n.d.",
+   "link": "https://armscontrolcenter.org/the-cuban-missile-crisis/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s40",
+   "title": "Cuban Missile Crisis",
+   "publisher": "U.S. National Archives",
+   "date": "n.d.",
+   "link": "https://www.archives.gov/news/topics/cuban-missile-crisis",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome back. Last time we met the Cold War, the long rivalry between the United States and the Soviet Union. Today we cover about fifteen years, from 1950 to 1962."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The 1950s and early 1960s"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Seven things today: Korea, the nuclear arms race, Sputnik and the Moon race, the Cuban Missile Crisis, civil rights, television and music, and new art. We will take them one at a time."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Korea  2. The arms race  3. Sputnik and the Moon race  4. Cuban Missile Crisis  5. Civil rights  6. Television and rock 'n' roll  7. New art"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, Korea. After World War II the country was split into two zones, run by the Soviet Union and the United States. The dividing line was the 38th parallel."
+   },
+   "show": {
+    "kind": "map",
+    "text": "The Korean peninsula with a line across the middle at the 38th parallel. North Korea is above the line, South Korea below."
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In June 1950, North Korea invaded South Korea. United Nations forces, with many Americans, came to help the South. Later China joined in to help the North."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1950: North Korea invades the South. UN forces, with many Americans, defend the South. China later joins to support the North."
+   },
+   "cite": [
+    "s3",
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "After years of hard fighting, neither side was winning. On July 27, 1953, an armistice was signed, and a border zone called the DMZ was set up."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Armistice"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "An armistice is an agreement to stop fighting. It is not a peace treaty. Officially, a state of war carried on into this century. Let's check that idea."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Armistice = an agreement to stop fighting, not a peace treaty"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is an armistice?",
+    "right": "An agreement to stop fighting, which is not the same as a peace treaty",
+    "wrong": [
+     "A peace treaty that settles every disagreement",
+     "A surrender by one side",
+     "A new weapon used in the Korean War"
+    ],
+    "why": "The Korean armistice of July 27, 1953 stopped the fighting and set up the DMZ, but it was not a peace treaty. Officially the war did not end."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The cost was huge. About 36,940 Americans died, and South Korea lost 137,899 soldiers. One estimate puts civilians dead or injured, on both sides, at 2.5 million."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "2.5 million civilians dead or injured (one estimate)"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Korea was fought with ordinary weapons. But a far worse kind hung over everything. In August 1949 the Soviet Union tested its first atomic bomb, years before U.S. officials expected it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "August 29, 1949: first Soviet atomic bomb test"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That began a nuclear arms race. Each side kept building more and more powerful weapons, so the other side would not fall behind."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Arms race"
+   },
+   "cite": [
+    "s4",
+    "s5"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The United States wanted something far bigger. In January 1950 President Truman approved building a hydrogen bomb, often called the H-bomb or 'superbomb.'"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Hydrogen bomb"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The U.S. tested the first one on November 1, 1952. It was about 700 times as powerful as the bomb dropped on Hiroshima. The Soviets tested a hydrogen bomb in 1953."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Power of the first U.S. H-bomb test compared with the Hiroshima bomb",
+    "chart": "c2"
+   },
+   "cite": [
+    "s6",
+    "s4"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The race was speeding up. The Soviets were four years behind on the atomic bomb, but only one year behind on the hydrogen bomb."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Atomic bomb: Soviets about 4 years behind | Hydrogen bomb: Soviets about 1 year behind"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why did the United States push to build the hydrogen bomb in 1950?",
+    "right": "The Soviets had just tested an atomic bomb, and the U.S. wanted to keep its lead",
+    "wrong": [
+     "Because the Korean War had just ended",
+     "Because Sputnik had just been launched",
+     "Because every scientist asked for it"
+    ],
+    "why": "The superbomb was given priority after the Soviet atomic test of August 1949. Truman approved it in January 1950, before the Korean War began and years before Sputnik. Not all scientists agreed: Robert Oppenheimer thought it was unlikely and unnecessary."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Ordinary people felt this fear. Worry about nuclear war grew, and in the United States it led to civil defense measures."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Civil defense: planning to protect people"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That fear is the key to the next story. On October 4, 1957, the Soviet Union launched Sputnik 1, the world's first artificial satellite."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "October 4, 1957: Sputnik 1"
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Sputnik weighed 83.6 kilograms. Its radio sent back a 'beep-beep' that people around the world could hear. The name means 'fellow traveler.'"
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A shiny metal ball with four long antennas swept back, circling the Earth"
+   },
+   "cite": [
+    "s7",
+    "s8",
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why did a small ball frighten people? The rocket that could lift a satellite might also carry a nuclear warhead across an ocean."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Satellite rocket = possible missile"
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why did Sputnik frighten many Americans?",
+    "right": "The same kind of rocket could carry nuclear weapons",
+    "wrong": [
+     "Sputnik was carrying a bomb",
+     "Sputnik crashed into a city",
+     "Sputnik blocked all radio signals"
+    ],
+    "why": "Sputnik carried a radio transmitter, not a bomb. The fear was that the Soviets could now launch missiles that carried nuclear weapons to the United States."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Soviets struck again. On November 3, 1957, Sputnik 2 carried a dog named Laika into orbit."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sputnik 2 and Laika, Nov 3, 1957"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "America answered by creating NASA. Congress passed the Space Act in July 1958, and NASA opened for business on October 1, 1958."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Oct 1957 Sputnik -> Jul 1958 Space Act -> Oct 1, 1958 NASA opens"
+   },
+   "cite": [
+    "s7",
+    "s10"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Not everyone thought Sputnik was a disaster. President Eisenhower admitted U.S. scientists were surprised. But he said the Soviets' main gain was psychological."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Eisenhower: mostly a psychological advantage"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Soviets were first again. On April 12, 1961, Yuri Gagarin became the first human in space."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "April 12, 1961: Yuri Gagarin"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Soon after, on May 25, 1961, President Kennedy set a national goal: land a person on the Moon and bring them home safely before the decade ended."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "May 25, 1961: Kennedy's Moon goal"
+   },
+   "cite": [
+    "s11",
+    "s12"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What goal did President Kennedy set on May 25, 1961?",
+    "right": "To land a person on the Moon and return them safely before the decade ended",
+    "wrong": [
+     "To launch the world's first satellite",
+     "To build the first hydrogen bomb",
+     "To end the Korean War"
+    ],
+    "why": "Kennedy's challenge was a crewed Moon landing with a safe return. The Soviets had launched the first satellite and the first human into space."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The goal was met on July 20, 1969, with Apollo 11. We will return to it later. Armstrong's words were watched live by about 530 million people on television."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "'That's one small step for [a] man, one giant leap for mankind.' (Neil Armstrong, 1969)"
+   },
+   "cite": [
+    "s11",
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Rockets also made the danger feel close to home. In October 1962 the United States and the Soviet Union came closer to nuclear conflict than at any other time in the Cold War."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Cuban Missile Crisis, October 1962"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A U.S. spy plane, the U-2, photographed Soviet nuclear missile sites being built on the island of Cuba. Kennedy kept it secret for several days while he met his advisors."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A high-altitude black-and-white photograph of a field in Cuba with missile equipment marked by analysts"
+   },
+   "cite": [
+    "s15",
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "On October 22, Kennedy told the nation on radio and television. He ordered a naval 'quarantine,' a ring of ships around Cuba to stop more military supplies from arriving."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Cuba in the Caribbean, just south of Florida, ringed by ships"
+   },
+   "cite": [
+    "s15",
+    "s14"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why 'quarantine' and not 'blockade'? A blockade assumes a state of war already exists. The new word also helped win the support of the Organization of American States."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Blockade = assumes war | Quarantine = a limited step, with allies' support"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why did the U.S. call its action a 'quarantine' instead of a 'blockade'?",
+    "right": "A blockade assumes a state of war exists, and 'quarantine' helped win allied support",
+    "wrong": [
+     "Cuba had a disease outbreak",
+     "The ships were medical ships",
+     "Soviet leaders demanded the word"
+    ],
+    "why": "The wording made the action legally different from a blockade. It also let the U.S. gain the support of the Organization of American States."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "October 27 was the most dangerous day. Cuban anti-aircraft crews fired on U.S. reconnaissance planes. Kennedy and his advisors prepared for an attack on Cuba within days."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "October 27, 1962: the most dangerous day"
+   },
+   "cite": [
+    "s16",
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That night the two sides found a deal. The Soviets would remove their missiles. The U.S. promised not to invade Cuba, and to remove its own Jupiter missiles from Turkey. Both leaders announced it the next day."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Soviet Union: removes missiles from Cuba | United States: no invasion of Cuba, and removes Jupiter missiles from Turkey"
+   },
+   "cite": [
+    "s39"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "People call it the Thirteen Days, from October 16 to October 28, 1962. The U.S. quarantine stayed in place until November 20."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "tally-mark",
+    "count": 13,
+    "layout": "row",
+    "text": "13 days: October 16 to 28, 1962"
+   },
+   "cite": [
+    "s40",
+    "s14"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Some historians count differently. Soviet nuclear warheads arrived in Cuba on October 4 and did not leave until December 1. That makes 59 days, not 13."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "13 days: highest-level tension in Washington | 59 days: warheads in Cuba"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now let's come home. While leaders argued abroad, many Black Americans were demanding equal rights. The civil rights movement was a nationwide push for equal rights and an end to segregation."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The U.S. civil rights movement"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Segregation meant keeping people apart by race in schools, buses and public places. In the South, Jim Crow laws required it. An 1896 Supreme Court case, Plessy v. Ferguson, had allowed 'separate but equal.'"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Segregation: separate facilities by race"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The NAACP's legal team, led by Thurgood Marshall, spent decades fighting school segregation. On May 17, 1954, in Brown v. Board of Education, the Supreme Court ruled it unconstitutional."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "May 17, 1954: Brown v. Board of Education"
+   },
+   "cite": [
+    "s19",
+    "s20"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The vote was unanimous. The ruling applied only to schools, but it implied that segregation in other public places was also wrong. Let's check."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Unanimous ruling: segregated public schools are unconstitutional"
+   },
+   "cite": [
+    "s22",
+    "s20"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What did the Supreme Court decide in Brown v. Board of Education?",
+    "right": "Racial segregation in public schools was unconstitutional",
+    "wrong": [
+     "Segregation on buses was illegal",
+     "All segregation laws ended the next day",
+     "Black Americans were given the right to vote"
+    ],
+    "why": "Brown dealt with public schools. It overturned 'separate but equal' in principle, but it did not end every kind of segregation at once."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Change was slow. A 1955 follow-up ruling asked for desegregation 'with all deliberate speed.' Many Southern states used tactics to avoid it, and the Little Rock school crisis followed."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1954 Brown ruling -> 1955 'all deliberate speed' -> resistance in Southern states -> Little Rock crisis"
+   },
+   "cite": [
+    "s22",
+    "s18",
+    "s19"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "On December 1, 1955, in Montgomery, Alabama, Rosa Parks was arrested. She had refused to give up her bus seat to a white passenger. She was fined fourteen dollars."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "December 1, 1955: Rosa Parks arrested"
+   },
+   "cite": [
+    "s18",
+    "s20"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Black residents began a bus boycott on December 5, 1955. It was led by a young minister, Dr. Martin Luther King Jr. A boycott means refusing to use something as a protest."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Boycott: refusing to use something as a protest"
+   },
+   "cite": [
+    "s20",
+    "s19"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "For nearly a year the buses were almost empty. The bus company lost between 30,000 and 40,000 fares every day."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "30,000 to 40,000 fares lost every day"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "How did the boycott put pressure on the city?",
+    "right": "Riders stayed off the buses, so the bus company lost money every day",
+    "wrong": [
+     "Soldiers closed the bus company",
+     "Everyone paid double fares",
+     "The Supreme Court stopped the buses on day one"
+    ],
+    "why": "The boycott worked because thousands of people stayed away. The bus company lost 30,000 to 40,000 fares a day."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Many people made it work. Black women were key organizers. And fifteen-year-old Claudette Colvin had refused to give up her seat nine months before Parks."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Black women organizers. Claudette Colvin, age 15, March 1955. Rosa Parks, Dec 1955."
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The boycott lasted more than a year. It is often called the start of the modern civil rights movement, and it made King widely known. The story continues in our next class."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The modern civil rights movement"
+   },
+   "cite": [
+    "s20",
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Many Americans saw events like these on a new window into the world: television. In 1950, about 9 of every 100 homes had a TV."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Share of U.S. homes with a TV set",
+    "chart": "c1"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Look at the bars. By 1955 about 64 of every 100 homes had one. By 1960, about 87 of every 100."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Share of U.S. homes with a TV set",
+    "chart": "c1"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "About how many of every 100 U.S. homes had a TV by 1960?",
+    "right": "About 87",
+    "wrong": [
+     "About 9",
+     "About 30",
+     "About 50"
+    ],
+    "why": "One source counts 87.1 percent of U.S. homes with a TV in 1960, up from 9 percent in 1950."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why so fast? Sets got cheaper, and hundreds of new stations opened. A set had once cost several weeks of an average worker's pay."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Cheaper sets + new stations"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "TV brought comedies, westerns, quiz shows, and police and medical dramas. In 1953, 80 percent of network TV was live. By 1960, only 36 percent was."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "1953: 80% live | 1960: 36% live"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "TV also shaped what seemed normal. Shows often pictured an ideal family: white, middle-class and suburban. People of other backgrounds were largely missing."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "TV's 'ideal family': a narrow picture"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now music. In the mid-1950s, rock and roll emerged in the United States. It blended country music with rhythm and blues, a style rooted in African American music."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Country music + Rhythm and blues = Rock and roll"
+   },
+   "cite": [
+    "s28",
+    "s29"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Radio DJs like Alan Freed in Cleveland played rhythm-and-blues records for wider audiences. That helped carry the sound to more people."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "DJs bring R&B to wider audiences"
+   },
+   "cite": [
+    "s28"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Chuck Berry's 1955 song 'Maybellene' reworked an old country tune. It reached the pop top ten, which was rare for a Black artist at that time."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Chuck Berry, 1955"
+   },
+   "cite": [
+    "s31"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 1954, Elvis Presley's sound brought Black and white styles together. He became known as the 'King of Rock and Roll.'"
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Elvis Presley"
+   },
+   "cite": [
+    "s28"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "It was music for teenagers, with transistor radios in their hands and money in their pockets. Some conservative adults pushed back. TV helped spread it. Let's check."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Teen audience. Transistor radios. Backlash from some adults. TV spreads the sound."
+   },
+   "cite": [
+    "s31",
+    "s29"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which two kinds of music blended to make early rock and roll?",
+    "right": "Country music and rhythm and blues",
+    "wrong": [
+     "Opera and polka",
+     "Classical and marching band",
+     "Disco and hip-hop"
+    ],
+    "why": "Early rock and roll emerged in the mid-1950s from country music and rhythm and blues."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Art changed too. After World War II, New York painters called Abstract Expressionists made big, emotional works. Jackson Pollock poured and trailed paint onto a canvas on the floor."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A huge canvas covered in swirling lines of poured and dripped paint, no recognizable objects"
+   },
+   "cite": [
+    "s38",
+    "s32"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "By the mid-1950s these American painters were recognized as the leading force in art around the world. Then a younger group rebelled."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Abstract Expressionism: Pollock, de Kooning, Rothko"
+   },
+   "cite": [
+    "s32",
+    "s33"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Pop artists painted familiar things like comic strips and supermarket products. In July 1962, Andy Warhol showed his Campbell's Soup Cans in Los Angeles."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Rows of canvases, each showing the same soup can in a different flavor"
+   },
+   "cite": [
+    "s33",
+    "s35"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One history says Pop's big breakthrough came on October 31, 1962. That was just days after the Cuban Missile Crisis ended. In December, the Museum of Modern Art held a symposium on 'pop art.'"
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Jul 1962 soup cans in LA -> Oct 28 missile crisis ends -> Oct 31 Pop breakthrough -> Dec 13 MoMA symposium"
+   },
+   "cite": [
+    "s32",
+    "s40"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What did Pop artists like Andy Warhol paint?",
+    "right": "Everyday things from popular culture, like soup cans and comic strips",
+    "wrong": [
+     "Only paint-drip abstracts like Pollock's",
+     "Only portraits of kings and queens",
+     "Only quiet landscapes of nature"
+    ],
+    "why": "Pop art borrowed from mass culture, such as comics and supermarket products. Many Pop artists reacted against the emotional style of Abstract Expressionism."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The world was bigger than the two superpowers. On March 6, 1957, Ghana became the first country in sub-Saharan Africa to gain independence from a European colonial power. In 1960, many more followed."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Mar 6, 1957 Ghana independent -> Oct 4, 1957 Sputnik -> 1960 'Year of Africa'"
+   },
+   "cite": [
+    "s36",
+    "s37",
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's put it together. Korea and the arms race brought fear. Sputnik started a race to the Moon. Cuba was the brink. Civil rights, television, rock and new art changed daily life."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Korea and the arms race. Sputnik and the Moon race. Cuba 1962. Civil rights. Television. Rock 'n' roll. Pop art."
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next time: the late 1960s and 1970s, when protest, war and oil shaped the world. Well done today."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: The Late 1960s and 1970s"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Share of U.S. homes with a television set (percent)",
+   "rows": [
+    {
+     "label": "1950",
+     "value": 9,
+     "source": "s23"
+    },
+    {
+     "label": "1955",
+     "value": 64.5,
+     "source": "s23"
+    },
+    {
+     "label": "1960",
+     "value": 87.1,
+     "source": "s23"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "First U.S. hydrogen bomb test (1952) compared with the Hiroshima bomb (about how many times as powerful)",
+   "rows": [
+    {
+     "label": "Hiroshima bomb (1945)",
+     "value": 1,
+     "source": "s6"
+    },
+    {
+     "label": "First U.S. H-bomb test (1952)",
+     "value": 700,
+     "source": "s6"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Korean War",
+   "links": [
+    "[[Cold War]]",
+    "[[United Nations]]",
+    "[[Decolonization]]"
+   ]
+  },
+  {
+   "topic": "Nuclear arms race",
+   "links": [
+    "[[Hiroshima and Nagasaki]]",
+    "[[Cold War]]",
+    "[[Cuban Missile Crisis]]"
+   ]
+  },
+  {
+   "topic": "Sputnik and the Space Race",
+   "links": [
+    "[[NASA]]",
+    "[[Apollo 11]]",
+    "[[Nuclear arms race]]"
+   ]
+  },
+  {
+   "topic": "Cuban Missile Crisis",
+   "links": [
+    "[[Nuclear arms race]]",
+    "[[Cold War]]"
+   ]
+  },
+  {
+   "topic": "U.S. civil rights movement",
+   "links": [
+    "[[Brown v. Board of Education]]",
+    "[[Montgomery bus boycott]]",
+    "[[Martin Luther King Jr.]]"
+   ]
+  },
+  {
+   "topic": "Television in the 1950s",
+   "links": [
+    "[[Rock and roll]]",
+    "[[Civil rights movement]]"
+   ]
+  },
+  {
+   "topic": "Rock and roll",
+   "links": [
+    "[[Rhythm and blues]]",
+    "[[Television in the 1950s]]"
+   ]
+  },
+  {
+   "topic": "Pop Art",
+   "links": [
+    "[[Abstract Expressionism]]",
+    "[[Andy Warhol]]"
+   ]
+  },
+  {
+   "topic": "Ghana's independence and the Year of Africa",
+   "links": [
+    "[[Decolonization]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "1952-1953",
+   "elsewhere": "The U.S. tested the first hydrogen bomb on November 1, 1952. The Korean War armistice was signed on July 27, 1953. The Soviet Union announced its own hydrogen-bomb test in August 1953.",
+   "cite": [
+    "s6",
+    "s2",
+    "s5"
+   ]
+  },
+  {
+   "when": "1954",
+   "elsewhere": "The Supreme Court decided Brown v. Board of Education on May 17. In the same year, Elvis Presley's sound came together, blending Black and white musical styles.",
+   "cite": [
+    "s20",
+    "s28"
+   ]
+  },
+  {
+   "when": "1955",
+   "elsewhere": "Rosa Parks was arrested on December 1. Chuck Berry's first hit, 'Maybellene,' came out the same year. About 64 of every 100 U.S. homes had a TV set.",
+   "cite": [
+    "s18",
+    "s30",
+    "s23"
+   ]
+  },
+  {
+   "when": "1957",
+   "elsewhere": "Ghana became independent on March 6. The Soviet Union launched Sputnik 1 on October 4 and Sputnik 2 with the dog Laika on November 3.",
+   "cite": [
+    "s36",
+    "s7"
+   ]
+  },
+  {
+   "when": "1958",
+   "elsewhere": "NASA began work on October 1.",
+   "cite": [
+    "s10"
+   ]
+  },
+  {
+   "when": "1960",
+   "elsewhere": "Called the 'Year of Africa,' a wave of African countries became independent.",
+   "cite": [
+    "s37"
+   ]
+  },
+  {
+   "when": "1961",
+   "elsewhere": "Yuri Gagarin became the first human in space on April 12. Kennedy set the Moon goal on May 25.",
+   "cite": [
+    "s12",
+    "s11"
+   ]
+  },
+  {
+   "when": "1962",
+   "elsewhere": "In July, Andy Warhol showed his soup cans in Los Angeles. The Cuban Missile Crisis ran from October 16 to 28. Pop art had its big breakthrough on October 31.",
+   "cite": [
+    "s35",
+    "s40",
+    "s32"
+   ]
+  },
+  {
+   "when": "1969 (a look ahead)",
+   "elsewhere": "Apollo 11 landed on the Moon on July 20. About 530 million people watched on television.",
+   "cite": [
+    "s11",
+    "s13"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The Korean War killed about 2.5 million civilians (dead and injured).",
+   "other_view": "Totals differ by source. U.S. Forces Korea figures put civilian dead and injured at 2.5 million. Another summary says probably at least one million Korean civilians were killed, with several million more made refugees. Treat all numbers as estimates.",
+   "cite": [
+    "s1",
+    "s2"
+   ]
+  },
+  {
+   "claim": "The Soviets tested their first hydrogen bomb in 1953.",
+   "other_view": "One source says the Soviet test of August 12, 1953 was a hydrogen bomb. The U.S. Department of Energy history calls it a 'boosted fission weapon' that used thermonuclear burning to add power. It dates the first true Soviet thermonuclear weapon to November 1955.",
+   "cite": [
+    "s5",
+    "s6"
+   ]
+  },
+  {
+   "claim": "Sputnik was a shocking threat to the United States.",
+   "other_view": "The public feared the Soviets could now launch nuclear missiles, and the satellite became a symbol of that fear. But President Eisenhower admitted surprise and said the Soviets' advantage was mostly psychological. A NASA history also calls Sputnik 1 'unspectacular' and suggests the reaction was bigger than the satellite itself.",
+   "cite": [
+    "s7",
+    "s8",
+    "s9",
+    "s10"
+   ]
+  },
+  {
+   "claim": "The Cuban Missile Crisis lasted 13 days.",
+   "other_view": "The National Archives and others count October 16 to 28, 1962. The National Security Archive argues the crisis really lasted 59 days, because Soviet warheads were in Cuba from October 4 to December 1. The U.S. quarantine also lasted until November 20.",
+   "cite": [
+    "s40",
+    "s16",
+    "s14"
+   ]
+  },
+  {
+   "claim": "Rosa Parks's arrest sparked the modern civil rights movement.",
+   "other_view": "The Library of Congress and National Park Service credit Parks and the boycott with starting the modern movement. Learning for Justice stresses that Black women organized the boycott and that Claudette Colvin had refused her seat nine months earlier. The NAACP's decades of legal work, including Brown v. Board, also came first.",
+   "cite": [
+    "s18",
+    "s17",
+    "s21",
+    "s19"
+   ]
+  },
+  {
+   "claim": "Elvis Presley was the 'King of Rock and Roll,' the face of the new music.",
+   "other_view": "Britannica gives Elvis the title and says he merged Black and white culture. Another account argues Chuck Berry was arguably the most important early reference point in rock and roll history, despite Presley's fame.",
+   "cite": [
+    "s28",
+    "s30"
+   ]
+  },
+  {
+   "claim": "In 1950, 9 percent of U.S. homes had a television.",
+   "other_view": "Britannica, SAGE and the Library of Congress give 9 percent for 1950. A WGBH lesson says about 20 percent of homes had one by 1950. Sources count in different ways, so early TV ownership figures are approximate.",
+   "cite": [
+    "s24",
+    "s23",
+    "s27",
+    "s25"
+   ]
+  }
+ ]
+}

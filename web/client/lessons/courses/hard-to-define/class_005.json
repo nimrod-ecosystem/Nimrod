@@ -1,0 +1,941 @@
+{
+ "about": {
+  "title": "Life: a word for a pattern, not a clear line",
+  "course": "hard-to-define",
+  "class_n": 5,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. This class has six topic areas and several edge cases. I split them into short steps with a check after each idea. Origin of life, life elsewhere and synthetic life are only touched on at the end, so the class stays near 30 minutes. A learner who wants more time can pause at the virus, mule and seed steps."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "OpenStax Biology 2e: Themes and Concepts of Biology (section summary)",
+   "publisher": "OpenStax, via OER Commons (OhioLINK)",
+   "date": "n.d.",
+   "link": "https://ohiolink.oercommons.org/courseware/lesson/1473/student/?section=6",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Properties of Life (OpenStax CNX text)",
+   "publisher": "Lumen Learning",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/wm-nmbiology2/chapter/properties-of-life/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Properties of Life (adapted from OpenStax, Concepts of Biology)",
+   "publisher": "Open Oregon Educational Resources",
+   "date": "n.d.",
+   "link": "https://openoregon.pressbooks.pub/mhccbiology101/chapter/properties-of-life/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Definition of Life",
+   "publisher": "University of Minnesota Libraries, open textbook (Introductory Biology)",
+   "date": "n.d.",
+   "link": "https://open.lib.umn.edu/introbio2/chapter/definition-of-life/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Life on Other Planets: What is Life and What Does It Need?",
+   "publisher": "NASA Science",
+   "date": "n.d.",
+   "link": "https://science.nasa.gov/universe/search-for-life/life-on-other-planets-what-is-life-and-what-does-it-need/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Forming a Definition for Life (interview with Gerald Joyce)",
+   "publisher": "NASA Astrobiology",
+   "date": "n.d.",
+   "link": "https://astrobiology.nasa.gov/news/forming-a-definition-for-life/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "The Astrobiology Primer: An Outline of General Knowledge, Version 1",
+   "publisher": "arXiv (astro-ph/0610926)",
+   "date": "2006",
+   "link": "https://arxiv.org/pdf/astro-ph/0610926",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Evolution, reproduction and definition of life",
+   "publisher": "PubMed Central (journal article)",
+   "date": "n.d.",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3937540/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Are viruses alive? And why does it matter?",
+   "publisher": "Science News",
+   "date": "n.d.",
+   "link": "https://www.sciencenews.org/article/viruses-alive-coronavirus-definition",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Are viruses alive?",
+   "publisher": "PubMed Central (journal article)",
+   "date": "n.d.",
+   "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC5406846",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Virus-Infecting Virus Fuels Definition of Life Debate",
+   "publisher": "National Geographic",
+   "date": "n.d.",
+   "link": "https://www.nationalgeographic.com/science/article/news-virus-infecting-definition-life",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "About Prion Diseases",
+   "publisher": "U.S. Centers for Disease Control and Prevention",
+   "date": "n.d.",
+   "link": "https://www.cdc.gov/prions/about/index.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "What are Prions?",
+   "publisher": "Virginia Department of Wildlife Resources",
+   "date": "n.d.",
+   "link": "https://dwr.virginia.gov/wildlife/diseases/cwd/what-are-prions/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "The Seed and the Metabolism Regulation",
+   "publisher": "PubMed Central (journal review)",
+   "date": "n.d.",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8869448/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Is Fire Alive? Properties and Stages of Fire and Flames",
+   "publisher": "Firefighter Insider (general-audience site)",
+   "date": "n.d.",
+   "link": "https://firefighterinsider.com/is-fire-alive-properties-and-stages-of-fire-and-flames/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "First Minimal Synthetic Bacterial Cell Designed and Constructed by Scientists at Venter Institute and Synthetic Genomics, Inc.",
+   "publisher": "J. Craig Venter Institute",
+   "date": "n.d.",
+   "link": "https://www.jcvi.org/media-center/first-minimal-synthetic-bacterial-cell-designed-and-constructed-scientists-venter",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Scientists Create Bacteria with the Smallest Known Genome",
+   "publisher": "Smithsonian Magazine",
+   "date": "n.d.",
+   "link": "https://www.smithsonianmag.com/air-space-magazine/scientists-create-organism-smallest-known-genome-180958563/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Abiogenesis",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/science/abiogenesis",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Undefining life's biochemistry: implications for abiogenesis",
+   "publisher": "PubMed Central (journal article)",
+   "date": "n.d.",
+   "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8867283/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "About Life Detection",
+   "publisher": "NASA Astrobiology",
+   "date": "n.d.",
+   "link": "https://astrobiology.nasa.gov/research/life-detection/about/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Chapter 9: Life as We Don't Know It (Astrobiology Primer 3.0)",
+   "publisher": "Astrobiology journal, Mary Ann Liebert",
+   "date": "n.d.",
+   "link": "https://www.liebertpub.com/doi/full/10.1089/ast.2021.0103",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "The Search for Extraterrestrial Life as We Don't Know It",
+   "publisher": "Scientific American",
+   "date": "n.d.",
+   "link": "https://www.scientificamerican.com/article/the-search-for-extraterrestrial-life-as-we-dont-know-it/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Why can't mules breed? (Ask a Geneticist, with editor's note dated 10/21/23)",
+   "publisher": "The Tech Interactive",
+   "date": "2023 (editor's note)",
+   "link": "https://www.thetech.org/ask-a-geneticist/articles/2007/ask225/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "How viruses blur the boundaries of life",
+   "publisher": "The Conversation",
+   "date": "n.d.",
+   "link": "https://theconversation.com/how-viruses-blur-the-boundaries-of-life-230802",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Properties of Living Things",
+   "publisher": "Open Oregon Educational Resources",
+   "date": "n.d.",
+   "link": "https://openoregon.pressbooks.pub/mhccbiology112/part/properties-of-life/",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class five. Today's word is life. Everyone is sure a dog is alive and a stone is not. The hard part is the edge between them."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Life: a word for a pattern, not a clear line"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "By the end you will be able to give a common working definition of life, test it on a virus, and say why scientists still disagree."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Goal: 1. Give a working definition. 2. Test it on borderline cases. 3. Explain why experts still disagree."
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The first way to define life is a checklist of what living things do. One open textbook names seven things."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "star",
+    "count": 7,
+    "layout": "group",
+    "text": "Seven properties of life in one open textbook"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Number one is order. Living things are built from cells, and the cell is the basic unit of life. Number two is response: living things react to signals from their surroundings."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Order (cells) 2. Response to surroundings"
+   },
+   "cite": [
+    "s4",
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Number three is reproduction. DNA is passed to the young. Number four is growth and development, which follows instructions carried in the genes."
+   },
+   "show": {
+    "kind": "list",
+    "text": "3. Reproduction (DNA passed on) 4. Growth and development"
+   },
+   "cite": [
+    "s3",
+    "s25"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Number five is energy processing, also called metabolism. All living things use an energy source. Plants capture sunlight. Animals use chemical energy from food. This is class two's energy, at work inside a body."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Energy processing (metabolism)"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Numbers six and seven are regulation and homeostasis. Homeostasis means keeping the inside steady. People sweat to shed heat, and polar bears have bodies that hold heat in."
+   },
+   "show": {
+    "kind": "list",
+    "text": "6. Regulation 7. Homeostasis (keeping the inside steady)"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which property on the list is about using food or sunlight for energy?",
+    "right": "Energy processing (metabolism)",
+    "wrong": [
+     "Order",
+     "Reproduction",
+     "Response to surroundings"
+    ],
+    "why": "Energy processing means using an energy source, such as sunlight or food, to power life's chemical activity."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Notice that a checklist describes life but does not explain it. Lists also differ. A related textbook names eight properties. One review counts more than 120 definitions of life, and most of them require metabolism."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "120+ definitions of life"
+   },
+   "cite": [
+    "s3",
+    "s9"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "About how many definitions of life does one review say exist?",
+    "right": "More than 120",
+    "wrong": [
+     "Exactly one",
+     "About three",
+     "Fewer than ten"
+    ],
+    "why": "Science News reports that more than 120 definitions exist, so there is no single agreed one."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The second way is a short working definition. NASA's is in the middle of the screen. It is informal and non-binding, and a NASA group came up with it in the 1990s."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "\"Life is a self-sustaining system capable of Darwinian evolution.\" (NASA working definition, as quoted by Gerald Joyce)"
+   },
+   "cite": [
+    "s6",
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's unpack it. Darwinian evolution means traits are passed on across generations, and over time the group changes. Self-sustaining means the system carries what it needs for that evolving."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Chemical system = made of matter. Self-sustaining = carries what it needs. Darwinian evolution = traits pass on and change."
+   },
+   "cite": [
+    "s5",
+    "s6"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which part of the NASA definition is about traits passing on and changing over generations?",
+    "right": "Capable of Darwinian evolution",
+    "wrong": [
+     "Chemical system",
+     "Self-sustaining",
+     "Capable of being alive"
+    ],
+    "why": "Darwinian evolution is the part about characteristics being preserved across generations, leading to change over time."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Gerald Joyce helped make this definition. He puts it in one line, as you can see."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "\"Biology is chemistry with history.\" (Gerald Joyce)"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That line ties together three earlier classes. Energy: metabolism is implied in the definition. Information: genes pass traits from parent to young. Time: life's diversity grew from earlier ancestors over billions of years."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Class 2: energy (metabolism). Class 3: information (genes). Class 4: time (change over generations)."
+   },
+   "cite": [
+    "s6",
+    "s3",
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which earlier class idea matches genes passing traits from parent to young?",
+    "right": "Information (class 3)",
+    "wrong": [
+     "Energy (class 2)",
+     "Time (class 4)",
+     "What it means to define something (class 1)"
+    ],
+    "why": "Genes are the instructions that carry traits from one generation to the next, and that is information being passed on."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now we test the tools on edge cases. First, viruses. A virus is a package of DNA or RNA. It cannot copy itself without a host cell."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Virus: genes in a package, needs a host cell"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Test one, the checklist. A virus has no cells of its own and does not metabolize. So by the checklist, most scientists say it is not alive."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Checklist result: Cells: no. Metabolism: no. Needs host to copy: yes. Verdict: usually 'not alive'."
+   },
+   "cite": [
+    "s11",
+    "s9"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why does a virus fail the checklist?",
+    "right": "It has no metabolism and needs a host cell to copy itself",
+    "wrong": [
+     "It cannot be seen with any microscope",
+     "It has no genetic material at all",
+     "It is too large to be a cell"
+    ],
+    "why": "Viruses do not metabolize and cannot replicate without a host cell, so they miss key checklist items."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Test two, the NASA definition. Joyce says a virus can undergo Darwinian evolution, but on its own it is not self-sustaining. So the answer hangs on one word."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "NASA test: Darwinian evolution: yes. Self-sustaining: no. Verdict: depends on how you read 'self-sustaining'."
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So experts split. Patrick Forterre suggested a virus alternates between an inactive state and a living, active state inside a cell. Others have proposed viruses be seen as capsid-encoding organisms. And one virologist says the answer depends on how you define life."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "\"It all depends on how you define life.\" (virologist Edward Holmes)"
+   },
+   "cite": [
+    "s9",
+    "s11"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why do scientists still disagree about whether viruses are alive?",
+    "right": "The answer changes depending on which definition of life you use",
+    "wrong": [
+     "Nobody has ever studied viruses closely",
+     "Viruses were only found last year",
+     "Viruses are known to be made of cells"
+    ],
+    "why": "Under a metabolism-based definition viruses fail, and under an evolution-based definition they can pass, so the definition decides the answer."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next, prions. A prion is a misfolded protein that causes fatal brain illness in people and animals. It has no DNA or RNA."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A normally folded protein next to a twisted, misfolded copy of the same protein"
+   },
+   "cite": [
+    "s12",
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the odd part. A prion spreads by making normal proteins refold into its wrong shape. That looks a bit like copying, but there are no genes involved, so it is far from the checklist's reproduction."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Copying a shape, not genes"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What does a prion do that looks like copying?",
+    "right": "It makes normal proteins refold into its misfolded shape",
+    "wrong": [
+     "It divides into two cells",
+     "It builds a new protein from its own DNA",
+     "It eats food to make energy"
+    ],
+    "why": "Prions lack DNA and spread by causing other proteins to change shape."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now fire. It needs fuel and oxygen, it grows, it moves, and it spreads. Class two taught that fire releases energy, so energy use alone is not enough."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Fire: energy use without stored instructions"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Biologists say fire is not alive. Its growth has no instruction set like DNA behind it. And it has no system to keep itself steady: it burns when it has fuel and oxygen and stops when they run out."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Fire: grows and spreads, yes. Instructions to copy, no. Keeps itself steady, no."
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is the main thing fire lacks, even though it uses energy?",
+    "right": "Stored instructions to copy, and a way to keep itself steady",
+    "wrong": [
+     "Any fuel to burn",
+     "The ability to spread",
+     "Any heat at all"
+    ],
+    "why": "Fire grows and spreads but has no DNA-like instructions and no regulation to keep itself steady."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The mule is our fourth edge case, and it is gentle but important. A mule is the young of a female horse and a male donkey. Most mules are sterile and cannot make eggs or sperm."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Mule: clearly alive, almost always sterile"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A few female mules have given birth, but that is rare. A mule's cells divide fine, and it grew from one cell to trillions. It is plainly alive. Yet it adds nothing to evolution, and that is called the mule's problem."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "The mule's problem: a clearly living animal that cannot pass anything on."
+   },
+   "cite": [
+    "s23",
+    "s8",
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is one reply. A person with no children is still alive, because they belong to a family line that did reproduce. So some say judge life at the level of the whole line, not each single animal."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Judge the single animal: mule fails. Judge the whole lineage: mule belongs to living lines."
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "How can defenders of an evolution-based definition answer the mule's problem?",
+    "right": "By judging life across the whole family line, not one animal alone",
+    "wrong": [
+     "By saying mules are not animals",
+     "By saying mules are made of rock",
+     "By saying mules reproduce quickly"
+    ],
+    "why": "The reply is that an individual counts as alive because it belongs to a lineage that reproduces."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The fifth edge case is the seed. A dry seed looks like a pebble. It keeps only a low level of metabolic activity, and it can stay viable for years or even centuries."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A dry seed resting in an open hand beside a small pebble of the same size"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One review says dry seeds can hardly be called alive, yet they carry life in the embryo. That is energy use turned almost off. It fits the title of this class: life is a pattern that can sit at nearly zero."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Seed: life on pause"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why is a dry seed a borderline case?",
+    "right": "It uses almost no energy, yet it can grow later",
+    "wrong": [
+     "It has no genes",
+     "It is made of metal",
+     "It cannot ever grow"
+    ],
+    "why": "A dry seed shows only very low metabolic activity, but its embryo can grow again with water."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The sixth edge case is the artificial cell. In 2016 a team announced JCVI-syn3.0, with a genome of just 473 genes. That is smaller than any organism that can be grown in a lab."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "473 genes"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "For comparison, most bacteria have 4,000 to 5,000 genes. And the team did not start from nothing. They used genes from an earlier synthetic cell and took the cell's working environment from an existing natural organism."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "The 473 genes of JCVI-syn3.0: known job versus unknown",
+    "chart": "c1"
+   },
+   "cite": [
+    "s17",
+    "s16"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the deeper problem. We have only one example of life: life on Earth. NASA says it can only list the characteristics of that one example."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A sample of one"
+   },
+   "cite": [
+    "s20",
+    "s21"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It is like defining 'bird' after seeing one sparrow. You cannot tell which features are essential and which are just history. Astrobiologists say recognizing unfamiliar life means separating universal features from Earth's historical ones."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Universal features of life? Or accidents of Earth's history?"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why is it hard to extend a definition of life from Earth to other worlds?",
+    "right": "We have only one example, so we cannot tell essential features from accidents of history",
+    "wrong": [
+     "Other planets have no chemistry",
+     "Earth life is known to be unrelated to everything",
+     "Definitions only work on other planets"
+    ],
+    "why": "With one example, what looks essential may be only a historical accident of Earth."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Open question one: where did life come from? Abiogenesis is the idea that life arose from nonliving matter more than 3.5 billion years ago. Many questions about how remain unanswered."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "More than 3.5 billion years ago: the idea of life arising from nonliving matter (abiogenesis). Details: unresolved."
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "This links straight back to our title. If life began gradually, was there ever one moment when non-life turned into life? Researchers ask whether any single point deserves the label 'origin', or whether life unfolds smoothly from non-life."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A line, or a slope?"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is the open question about the origin of life and the idea of a 'line'?",
+    "right": "Whether any single moment can be called the start of life, or whether it was gradual",
+    "wrong": [
+     "Whether life began last week",
+     "Whether rocks can vote",
+     "Whether the word 'life' has no letters"
+    ],
+    "why": "Researchers are still working out whether there was a discrete point of origin or a smooth path from non-life."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Open question two: life elsewhere. All known life seems to need liquid water. But if life elsewhere differs, searching only for Earth-like chemical signs could miss it. NASA's definition tries to ignore chemistry for that reason."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Looking for life we might not recognize"
+   },
+   "cite": [
+    "s5",
+    "s22",
+    "s21"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Open question three: synthetic life. The 2016 cell borrowed its working parts from nature. Nobody has yet built a cell from simple chemicals alone. If someone does, our definitions will face a new test."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Building life from scratch"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's pull it together. Life is better seen as a pattern than a line. It is energy used, information passed on, and change over time. The edge cases sit where the pattern thins out."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Life as a pattern: energy use, information passing on, change over time. Edges: viruses, prions, fire, mules, seeds, built cells."
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which sentence best sums up this class?",
+    "right": "Life is hard to define because it is a pattern with fuzzy edges, and definitions disagree about where to draw them",
+    "wrong": [
+     "Life has one agreed definition that every scientist uses",
+     "Anything that moves is alive",
+     "Only things with DNA have ever been called alive"
+    ],
+    "why": "Checklists and the NASA definition each give different answers on edge cases such as viruses, so experts still disagree."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Well done. It is fine that the edges feel fuzzy, because scientists feel that too. Next class is the hardest word of all: consciousness."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Consciousness, the hardest word of all"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "pie",
+   "title": "The 473 genes of JCVI-syn3.0: known job versus unknown function",
+   "rows": [
+    {
+     "label": "Genes with a known job (473 minus 149)",
+     "value": 324,
+     "source": "s17"
+    },
+    {
+     "label": "Genes with unknown function",
+     "value": 149,
+     "source": "s17"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Metabolism and energy processing",
+   "links": [
+    "[[Energy: precise to calculate, slippery to explain]]"
+   ]
+  },
+  {
+   "topic": "Genes as information passed on",
+   "links": [
+    "[[Information: from yes/no questions to meaning]]"
+   ]
+  },
+  {
+   "topic": "Darwinian evolution and change over generations",
+   "links": [
+    "[[Time: the clock on the wall and the time we feel]]"
+   ]
+  },
+  {
+   "topic": "Working definitions versus checklists",
+   "links": [
+    "[[What does it mean to define something?]]"
+   ]
+  },
+  {
+   "topic": "Viruses and prions as edge cases",
+   "links": [
+    "[[Working definitions versus checklists]]"
+   ]
+  },
+  {
+   "topic": "Next class",
+   "links": [
+    "[[Consciousness: the hardest word of all]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Viruses are not alive, because they lack cells and metabolism and need a host.",
+   "other_view": "Some scientists say viruses can count as alive. Forterre proposed they are active and living inside a cell, and others have proposed calling them capsid-encoding organisms. Another view says the question is pointless because the answer depends on how life is defined.",
+   "cite": [
+    "s9",
+    "s11"
+   ]
+  },
+  {
+   "claim": "The NASA working definition is a good, broad definition of life.",
+   "other_view": "Critics say it is still too limiting. Reviewers point out that Darwinian evolution works at the level of populations, so it leaves out a single individual, and that the 'mule's problem' is a major objection. Others note that it fails to cover forms we cannot yet imagine.",
+   "cite": [
+    "s7",
+    "s8"
+   ]
+  },
+  {
+   "claim": "NASA uses its definition to design life-detection missions.",
+   "other_view": "NASA Science says the definition is non-binding and is not used to design missions or research projects. Scientific American says NASA still uses it to design astrobiology studies. The two sources disagree.",
+   "cite": [
+    "s5",
+    "s22"
+   ]
+  },
+  {
+   "claim": "We need one agreed definition of life.",
+   "other_view": "Some researchers argue that such a definition is neither feasible nor needed, and one review says the question 'are viruses alive?' has no real substance because the answer depends on an arbitrary definition. NASA's own astrobiology pages note that the concept of 'definition' is itself difficult to define.",
+   "cite": [
+    "s10",
+    "s20"
+   ]
+  }
+ ]
+}

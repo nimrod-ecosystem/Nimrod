@@ -1,0 +1,956 @@
+{
+ "about": {
+  "title": "Logistics: Keeping a Community Going",
+  "course": "science-fiction-thought-experiments",
+  "class_n": 4,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 40,
+  "length_note": "About 40 minutes: roughly 25 minutes of short teaching beats and 12 to 15 minutes for the plan-building activity. Five needs plus three new ideas is a lot, so the class is built to pause after any beat. Learners can split the activity over two sittings."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "The Sphere Handbook, interactive edition: water supply guidance",
+   "publisher": "Sphere",
+   "date": "2018 edition (page itself undated)",
+   "link": "https://handbook.spherestandards.org/en/sphere/#ch006_004",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Introduction to Sphere Centre Humanitarian Studies",
+   "publisher": "Sphere",
+   "date": "2023-03-08",
+   "link": "https://www.spherestandards.org/wp-content/uploads/2023-03-08-Introduction-to-Sphere-Centre-Humanitarian-Studies.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Technical Notes on Drinking-water, Sanitation and Hygiene in Emergencies: How much water is needed in emergencies (Note 9)",
+   "publisher": "World Health Organization",
+   "date": "undated in the copy read",
+   "link": "https://cdn.who.int/media/docs/default-source/wash-documents/who-tn-09-how-much-water-is-needed.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Domestic Water Quantity, Service Level and Health",
+   "publisher": "World Health Organization",
+   "date": "undated in the copy read",
+   "link": "https://iris.who.int/server/api/core/bitstreams/c1461987-2c3f-4e63-8f4c-7e44498e5644/content",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Emergency Supply List",
+   "publisher": "Ready.gov (U.S. Department of Homeland Security)",
+   "date": "undated",
+   "link": "https://www.ready.gov/sites/default/files/documents/files/checklist3.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Preparing Makes Sense for People with Disabilities and Special Needs",
+   "publisher": "Ready.gov (U.S. Department of Homeland Security)",
+   "date": "undated (file path shows 2020-04)",
+   "link": "https://www.ready.gov/sites/default/files/2020-04/disabilities-special-needs_printer-friendly.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "Food and Nutrition Needs in Emergencies",
+   "publisher": "UNHCR, UNICEF, WFP and WHO (via WHO IRIS)",
+   "date": "undated in the copy read",
+   "link": "https://iris.who.int/bitstream/handle/10665/68660/a83743.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Harmonised Training Package, Module 11: Part 2 Technical Notes",
+   "publisher": "ENN (Emergency Nutrition Network)",
+   "date": "undated in the copy read",
+   "link": "https://www.ennonline.net/sites/default/files/HTP-v2-module-11-technical-notes.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Emergency Shelter Solutions and Standards",
+   "publisher": "UNHCR Emergency Handbook",
+   "date": "2026-01-21",
+   "link": "https://emergency.unhcr.org/print/pdf/node/538",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Minimum Standards in Shelter, Settlement and Non-Food Items (Sphere Handbook 2011)",
+   "publisher": "The Sphere Project (hosted by shelterprojects.org)",
+   "date": "2011",
+   "link": "http://shelterprojects.org/other/siteplanning/site-planning-references/Sphere%20Project%20Handbook%202011%20-%20Shelter%20and%20Settlements.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "The Sphere Handbook, interactive edition: excreta management (toilets)",
+   "publisher": "Sphere",
+   "date": "2018 edition (page itself undated)",
+   "link": "https://handbook.spherestandards.org/?handbook=Sphere&lang=english&chapter_id=ch006&section_id=ch006_005&match=toilet",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Water Supply, Sanitation and Hygiene Promotion (Sphere Handbook 2018 chapter, copy)",
+   "publisher": "Sphere (copy hosted by ksrpmi.uns.ac.id)",
+   "date": "2018",
+   "link": "https://ksrpmi.uns.ac.id/wp-content/uploads/2019/09/Sphere-Handbook-2018-WATER-SUPPLY.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "START Adult Triage Algorithm: Text Version",
+   "publisher": "REMM, U.S. Department of Health and Human Services",
+   "date": "undated",
+   "link": "https://remm.hhs.gov/startalgotext.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "START Adult Triage Algorithm",
+   "publisher": "CHEMM, U.S. National Library of Medicine / HHS",
+   "date": "undated",
+   "link": "https://chemm.nlm.nih.gov/startadult.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "The Sphere Handbook, interactive edition: health systems standards",
+   "publisher": "Sphere",
+   "date": "2018 edition (page itself undated)",
+   "link": "https://handbook.spherestandards.org/en/sphere/#ch009_006",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Safety Stock: A Contingency Plan to Keep Supply Chains Flying High",
+   "publisher": "ASCM (Association for Supply Chain Management)",
+   "date": "undated",
+   "link": "https://www.ascm.org/ascm-insights/safety-stock-a-contingency-plan-to-keep-supply-chains-flying-high/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Single point of failure",
+   "publisher": "Wikipedia",
+   "date": "undated (live article)",
+   "link": "https://en.wikipedia.org/wiki/Single_point_of_failure",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Preparing Makes Sense for Older Americans",
+   "publisher": "Ready.gov (U.S. Department of Homeland Security)",
+   "date": "undated (file path shows 2020-04)",
+   "link": "https://www.ready.gov/sites/default/files/2020-04/older-americans_printer-friendly.pdf",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 4. Last time we looked at slowing an outbreak. Now we ask: how does a small group keep going, day after day?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Class 4: Keeping a Community Going"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "By the end, you will build a one-page supply plan for a small group. It covers water, food, power, shelter and medical care. Then you will test it against a surprise."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Your goal today: 1. Water 2. Food 3. Power 4. Shelter 5. Medical care. Then: test it against a surprise."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One promise, as in class 1. I will say which parts are real guidance and which parts are our invented story."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "REAL: numbers from humanitarian and emergency-planning guidance | INVENTED: the village, its map, its stores and its problems"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the invented part. Kestrel Ridge is a made-up hill village of 24 people. A landslide has closed the only road, and help cannot reach us for 14 days."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A hill village called Kestrel Ridge (invented). One road in, blocked by a landslide. A well with a hand pump near the hall. A hall and one cabin. One outhouse by the garden. A small clinic cupboard in the hall."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First idea: a supply chain. For this class, it is the path that gets a thing from where it comes from to where it is used."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Source → Store → Use. Example: Well → Tank → Cup. With the road blocked, our chain is short: only what is on the ridge."
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In this class, what do we mean by a supply chain?",
+    "right": "The path a thing takes from where it comes from to where it is used.",
+    "wrong": [
+     "A rope that ties two storehouses together.",
+     "The list of everyone who lives in a village.",
+     "A rule about how much each person may eat."
+    ],
+    "why": "A supply chain is the route from source to store to use. Our village has a very short one."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Second idea: a stock level. It is how much of something you have right now. Divide it by what you use each day and you get days of supply."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Days of supply = stock ÷ use per day. Example: 300 litres ÷ 100 litres a day = 3 days."
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "A store holds 600 litres. The group uses 100 litres a day. How many days of supply is that?",
+    "right": "6 days",
+    "wrong": [
+     "60 days",
+     "600 days",
+     "5 days"
+    ],
+    "why": "600 ÷ 100 = 6. Days of supply is the stock divided by the daily use."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Planners rarely stop at the expected need. They keep extra, called safety stock, to protect against surprises such as shortfalls or changes in demand."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Safety stock: extra kept to protect against surprises. Also called buffer stock."
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Third idea: a single point of failure. It is one part that, if it breaks, stops the whole system, because there is no backup."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Single point of failure: one part with no backup. If it fails, everything it feeds fails."
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Kestrel Ridge, invented, has exactly one hand pump on its well, and no spare parts. Safety stock and backups are how we guard against that."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A hand pump over a well, with a gap on the shelf beside it where spare parts should be (invented)."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which of these is a single point of failure?",
+    "right": "A village's only hand pump, with no spare and no other water source.",
+    "wrong": [
+     "A village with a pump, a spring and a rain tank.",
+     "Two pumps on two separate wells.",
+     "A pump with a full set of spare parts on the shelf."
+    ],
+    "why": "A single point of failure has no backup. Anything with a second route or spare parts is not one."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the five needs, starting with water. Real guidance says some water uses matter more than others. A few litres to drink beat water for laundry."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Water priority, most urgent first: 1. Drinking 2. Cooking 3. Hand and body washing 4. Laundry"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So how much? Humanitarian practice sets a minimum of 15 litres per person per day, for drinking, cooking and basic hygiene. Real number."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "15 litres per person per day"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Guidance varies. A short-term US emergency kit uses one gallon, about 3.8 litres. A WHO note says 20 litres. And 15 is a floor, not a goal."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Water per person per day, from different guidance (litres)",
+    "chart": "c1"
+   },
+   "cite": [
+    "s1",
+    "s2",
+    "s3",
+    "s5"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "In Sphere guidance, what does 15 litres per person per day mean?",
+    "right": "A minimum. It is never a maximum.",
+    "wrong": [
+     "The most a person should ever use.",
+     "What a typical city household uses.",
+     "The amount needed for drinking alone."
+    ],
+    "why": "Sphere calls 15 litres established practice and says it is never a maximum. It covers drinking, cooking and hygiene, not just drinking."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's use it. Kestrel Ridge has 24 people. At 15 litres each, that is 24 × 15 = 360 litres every day."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Illustration: 24 people, 15 litres each = 360 litres a day"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "At 20 litres per person per day, how much water do 24 people need each day?",
+    "right": "480 litres",
+    "wrong": [
+     "360 litres",
+     "44 litres",
+     "4,800 litres"
+    ],
+    "why": "24 × 20 = 480. Same method, different rate."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Story time. If the pump fails, we have only a 2,000-litre tank (invented). That lasts about 5.6 days at 15 litres, or 11 days at 7.5."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Days the 2,000-litre tank lasts for 24 people (our calculation)",
+    "chart": "c2"
+   },
+   "cite": [
+    "s1",
+    "s2",
+    "s3"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why not just use 7.5 litres? Real guidance says 7.5 may fit only a short time, such as the acute phase of a drought. It is the bottom of the basic range."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "7.5 litres: tank lasts about 11 days, but only suits a short time | 15 litres: tank lasts about 5.6 days, but covers drinking, cooking and hygiene"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is the trade-off of cutting water from 15 to 7.5 litres per person per day?",
+    "right": "The water lasts about twice as long, but 7.5 litres only suits a short time and leaves little for hygiene.",
+    "wrong": [
+     "There is no trade-off, because people need less in a drought.",
+     "The water lasts half as long.",
+     "The pump gets repaired faster."
+    ],
+    "why": "Halving the daily amount doubles the days, but guidance says 7.5 litres suits only a short time. The basic range of 7.5 to 15 covers drinking, cooking and hygiene together."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Water also needs safe toilets. Sphere's medium-term guide is one toilet per 20 people, no more than 50 metres from homes. Real."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1 toilet per 20 people, within 50 metres"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "For 24 people, 24 ÷ 20 is 1.2. You cannot build 1.2 toilets, so round up. Kestrel Ridge has one outhouse, so we are one short."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "house",
+    "count": 1,
+    "layout": "row",
+    "text": "Kestrel Ridge has 1 outhouse. We need 2."
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "At one toilet per 20 people, what is the fewest toilets for 24 people?",
+    "right": "2",
+    "wrong": [
+     "1",
+     "4",
+     "24"
+    ],
+    "why": "24 ÷ 20 = 1.2, and you round up to the next whole toilet, which is 2."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "For the first days after a crisis, Sphere allows communal toilets at one per 50 people, then improving. That is a trade-off between speed and comfort."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Early emergency: 1 toilet per 50 people. Then improve toward 1 per 20."
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next, food. Agencies use 2,100 kilocalories (kcal), a unit of food energy, per person per day as an initial planning figure. Real."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "2,100 kcal per person per day (starting figure)"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The word is starting. It is an average to adjust. Some groups, such as pregnant or breastfeeding women, need more."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Adjust the figure for: pregnancy and breastfeeding, illness or malnutrition, climate and workload."
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Kestrel Ridge, invented, has 600,000 kcal in store. Needs: 24 × 2,100 = 50,400 kcal a day. So 600,000 ÷ 50,400 is about 11.9 days."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "600,000 ÷ 50,400 ≈ 11.9 days (we need 14)"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "The group needs 50,400 kcal a day and has 600,000 kcal. About how many days does the food last?",
+    "right": "About 12 days",
+    "wrong": [
+     "About 1 day",
+     "About 120 days",
+     "About 6 days"
+    ],
+    "why": "600,000 ÷ 50,400 is about 11.9, so almost 12 days. That is about 2 days short of the 14 we need."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We are two days short. If everyone eats a little less, about 1,790 kcal a day, the store lasts 14 days. But the planning figure does not meet everyone's needs."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Full 2,100 kcal: lasts ~12 days, runs out 2 days early | About 1,790 kcal: lasts 14 days, but those with higher needs may go short"
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which choice is a real trade-off for Kestrel Ridge's food?",
+    "right": "Spread the food thinner to last 14 days, while protecting people who need more.",
+    "wrong": [
+     "Eat the full amount now and hope the road opens early.",
+     "Give out nothing for the last two days.",
+     "Stop counting kcal, since it is only a guess."
+    ],
+    "why": "Spreading the food covers the whole 14 days. Guidance says special groups need more, so a fair plan protects them."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now power: light, radio, cooking fuel, anything that needs energy. Real emergency lists include a flashlight and a battery or hand-crank radio."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Real kit items: flashlight and spare batteries, battery or hand-crank radio, first aid kit"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Power also sets limits. A solar cooker only works where the sun is strong enough. Our invented village has two small solar panels, one battery and a stack of firewood."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Kestrel Ridge power (invented): 2 small solar panels, 1 battery, firewood. Real caution: solar cookers need enough sun."
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "With little power, we must rank who gets it first, just like water. In our story, the clinic cold box keeps medicine safe. Spoiled medicine cannot be replaced."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Power ranking (our story): 1. Clinic cold box 2. Radio 3. Night lamps 4. Phone charging"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "The battery can only run one thing tonight. In our story, which should come first?",
+    "right": "The clinic cold box, because spoiled medicine cannot be replaced.",
+    "wrong": [
+     "Phone charging, so people can play games.",
+     "Extra lamps in the barn.",
+     "Nothing, so the battery stays full."
+    ],
+    "why": "We rank by what cannot wait or be undone. In our story the medicine is irreplaceable."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Shelter. In warm climates, guidance gives at least 3.5 square metres of covered living space per person. Cold climates need 4.5 to 5.5. Real."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Warm climate: at least 3.5 m² per person | Cold climate: 4.5 to 5.5 m² per person"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Our hall is 50 m² and the cabin 20 m² (invented): 70 m² in all. For 24 people at 3.5 m², we need 84. That is 14 m² short."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Need: 24 × 3.5 = 84 m². Have: 70 m². Short by 14 m²."
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "At 3.5 m² each, how much covered space do 24 people need?",
+    "right": "84 m²",
+    "wrong": [
+     "70 m²",
+     "27.5 m²",
+     "24 m²"
+    ],
+    "why": "24 × 3.5 = 84. Our 70 m² falls 14 m² short."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Real guidance covers this. If you cannot reach 3.5, say so, think about the cost to dignity, health and privacy, and aim to reach it as soon as possible."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "If you fall short: write it down, count the cost to dignity, health and privacy, and fix it soon."
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last need: medical care. Real emergency lists include a first aid kit. And people who use medicines or devices should keep extra of both."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Medical basics: first aid kit; extra medicines, glasses and batteries for any devices; a plan for at least three days, maybe longer"
+   },
+   "cite": [
+    "s6",
+    "s18"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Sphere suggests 1 to 2 community health workers per 1,000 people. That is for big populations. For 24 people it works out to a tiny fraction, so ask: who is trained, and what do they have?"
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Real guide: 1–2 community health workers per 1,000 people. For 24 people: under 0.05 of a worker."
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "When there is more need than help, we triage: sort by urgency. A real system is START. It checks if someone can walk, is breathing, their breathing rate, circulation, and whether they follow commands."
+   },
+   "show": {
+    "kind": "list",
+    "text": "START checks: walking, breathing, breathing rate over 30 a minute, circulation, obeying commands"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "It sorts people into four groups: Minor green, Delayed yellow, Immediate red, and Expectant black. Black is the hardest group, and comfort and pain relief are still given."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Green: minor, can wait. Yellow: serious but can wait several hours. | Red: needs help now and can be helped. Black: not expected to survive; comfort and pain relief."
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "In START, which colour means the person needs help right away and can be helped by it?",
+    "right": "Red (Immediate)",
+    "wrong": [
+     "Green (Minor)",
+     "Yellow (Delayed)",
+     "Black (Expectant)"
+    ],
+    "why": "Red means immediate help can make a difference. Green and yellow can wait, and black is for people not expected to survive."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A safety note: this is not first aid training. START is used by trained responders in mass-casualty events. We borrow the idea of ranking by urgency, which also ranks water, power and space."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Triage and prioritisation: rank by what cannot wait. Not a substitute for a real first aid course."
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Time to build your plan. One page, five headings. Under each, write the need per person, how many people, days to cover, what you have, and the gap."
+   },
+   "show": {
+    "kind": "list",
+    "text": "One-page plan, for each of Water / Food / Power / Shelter / Medical: need per person per day, people, days, stock, gap, backup, who is responsible. Label every number REAL or STORY."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Use Kestrel Ridge. Start with 24 people, 14 days, and our numbers: 2,000 L tank, 600,000 kcal, 70 m² covered space, 1 outhouse. Take about 12 minutes."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Kestrel Ridge facts (invented): 24 people, 14 days. Water: pump plus 2,000 L tank. Food: 600,000 kcal. Power: 2 panels, 1 battery, firewood. Shelter: 70 m². Toilets: 1 outhouse. Medical: kit, cold box, one person with first aid training. Real rates: 15 L, 2,100 kcal, 3.5 m², 1 toilet per 20."
+   },
+   "cite": [
+    "s1",
+    "s7",
+    "s9",
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the surprise. Pick one card and rework your numbers: A. The pump seizes on day 3. B. A cold snap arrives. C. Heavy rain floods the only outhouse."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Surprise A: the pump seizes on day 3. Surprise B: a cold snap (cold-climate space: 4.5 to 5.5 m² each). Surprise C: rain floods the only outhouse."
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "After a surprise hits, what should you check first?",
+    "right": "Which stock will run out first, and how many days of supply are left.",
+    "wrong": [
+     "Which neighbour caused the problem.",
+     "Whether the original plan looked tidy.",
+     "Nothing, because a good plan never needs changing."
+    ],
+    "why": "Days of supply shows which need is most urgent. A plan is meant to be changed when facts change."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Finish with trade-offs. Every plan gives something up. Less water buys days. Less food buys days. Less space costs privacy. A good plan says what it gives up."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Trade-offs: less water for more days; less food for more days; less space for more people; power for the most urgent thing"
+   },
+   "cite": [
+    "s1",
+    "s2",
+    "s7",
+    "s10"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Real versus invented, one last time. The village and its stores are made up. The guidance numbers are real, but they are minimums and starting points, not magic."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "REAL: 15 L water, 2,100 kcal, 3.5 m², 1 toilet per 20, START triage ideas, safety stock, single points of failure | INVENTED: Kestrel Ridge, its 24 people, tank, store, hall, cabin, panels, landslide"
+   },
+   "cite": [
+    "s1",
+    "s7",
+    "s9",
+    "s11",
+    "s13",
+    "s16",
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Well done. Next class, we move from keeping a community alive to dealing with other worlds: Diplomacy, the Intergalactic Model UN."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Class 5, Diplomacy: The Intergalactic Model UN"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Water per person per day in different guidance (litres)",
+   "rows": [
+    {
+     "label": "US 3-day emergency kit (1 US gallon, about 3.8 L)",
+     "value": 3.8,
+     "source": "s5"
+    },
+    {
+     "label": "Short-term drought phase (Sphere)",
+     "value": 7.5,
+     "source": "s2"
+    },
+    {
+     "label": "Sphere minimum",
+     "value": 15,
+     "source": "s1"
+    },
+    {
+     "label": "WHO minimum for essential health and hygiene",
+     "value": 20,
+     "source": "s3"
+    },
+    {
+     "label": "Urban middle-income minimum (Sphere)",
+     "value": 50,
+     "source": "s1"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Days a 2,000-litre tank lasts for 24 people (our calculation, invented tank)",
+   "rows": [
+    {
+     "label": "At 20 L per person per day (480 L a day)",
+     "value": 4.2,
+     "source": "s3"
+    },
+    {
+     "label": "At 15 L per person per day (360 L a day)",
+     "value": 5.6,
+     "source": "s1"
+    },
+    {
+     "label": "At 7.5 L per person per day (180 L a day)",
+     "value": 11.1,
+     "source": "s2"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Supply chain, stock level and days of supply",
+   "links": [
+    "[[Safety stock]]",
+    "[[Single point of failure]]",
+    "[[Economics: Scarcity, Trade and Fair Shares]]"
+   ]
+  },
+  {
+   "topic": "Water, sanitation and hygiene needs",
+   "links": [
+    "[[Outbreak, Part 2: Slowing It Down]]",
+    "[[Terraforming, Part 1: What Makes a World Livable]]"
+   ]
+  },
+  {
+   "topic": "Triage and prioritisation",
+   "links": [
+    "[[Outbreak, Part 2: Slowing It Down]]",
+    "[[Single point of failure]]"
+   ]
+  },
+  {
+   "topic": "Real versus invented in a thought experiment",
+   "links": [
+    "[[What a Thought Experiment Is, and How to Tell Fact from Story]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "15 litres per person per day is the minimum water to plan for.",
+   "other_view": "Sphere itself calls 15 litres a floor that may not suit every phase. For example, it is not right where people are displaced for years. A WHO note says 20 litres is the minimum for essential health and hygiene. A WHO review says the level of service seems more closely tied to health than the exact quantity. So the right number depends on the setting.",
+   "cite": [
+    "s2",
+    "s3",
+    "s4"
+   ]
+  },
+  {
+   "claim": "2,100 kcal per person per day is the right amount of food to plan for.",
+   "other_view": "It is an average starting figure, and it does not meet the needs of special groups such as pregnant and breastfeeding women or malnourished children. One agency, the ICRC, plans on 2,400 kcal. Planners adjust the figure as they learn more.",
+   "cite": [
+    "s7",
+    "s8"
+   ]
+  },
+  {
+   "claim": "START is the right way to sort injured people in an emergency.",
+   "other_view": "START is the most commonly used mass-casualty triage method in the US, but it has had limited rigorous scientific review. Newer methods have been proposed and have not been tested in the field.",
+   "cite": [
+    "s14"
+   ]
+  }
+ ]
+}

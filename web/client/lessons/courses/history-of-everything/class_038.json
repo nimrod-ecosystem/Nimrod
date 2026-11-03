@@ -1,0 +1,1331 @@
+{
+ "about": {
+  "title": "Contact and the Columbian Exchange",
+  "course": "history-of-everything",
+  "class_n": 38,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes if read slowly. It has 49 short beats and 13 check questions, and each beat teaches one idea. The five topics are covered at a steady pace. The death-toll debates are noted but not settled, because experts disagree and the sources do not settle them."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "2.4 New Worlds in the Americas: Labor, Commerce, and the Columbian Exchange (U.S. History)",
+   "publisher": "OpenStax, Rice University",
+   "date": "2014-12-30",
+   "link": "https://openstax.org/books/us-history/pages/2-4-new-worlds-in-the-americas-labor-commerce-and-the-columbian-exchange",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "New Worlds in the Americas: Labor, Commerce, and the Columbian Exchange (OpenStax text)",
+   "publisher": "Lumen Learning",
+   "date": "undated (OpenStax U.S. History, 2014)",
+   "link": "https://courses.lumenlearning.com/ushistory1/chapter/new-worlds-in-the-americas-labor-commerce-and-the-columbian-exchange/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "Columbian Exchange (essay by Mark Christensen, text from OpenStax)",
+   "publisher": "Bill of Rights Institute",
+   "date": "undated",
+   "link": "https://billofrightsinstitute.org/essays/columbian-exchange/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "The Columbian Exchange",
+   "publisher": "Gilder Lehrman Institute of American History",
+   "date": "undated",
+   "link": "https://www.gilderlehrman.org/history-resources/essays/columbian-exchange",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "Columbus's voyages",
+   "publisher": "EBSCO Research Starters",
+   "date": "undated",
+   "link": "https://www.ebsco.com/research-starters/history/columbuss-voyages/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "Discovery Labels for Kids (Exploring the Early Americas)",
+   "publisher": "Library of Congress",
+   "date": "undated",
+   "link": "https://www.loc.gov/exhibits/exploring-the-early-americas/discover_11.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "Infinity of Nations: Mesoamerica/Caribbean",
+   "publisher": "Smithsonian National Museum of the American Indian",
+   "date": "undated",
+   "link": "https://americanindian.si.edu/exhibitions/infinityofnations/mesoamerica-caribbean.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "Caribbean Indigenous Resistance / Resistencia indígena del Caribe ¡Taíno Vive!",
+   "publisher": "Mattatuck Museum (Smithsonian Institution Traveling Exhibition Service exhibition)",
+   "date": "undated",
+   "link": "https://www.mattmuseum.org/exhibition/taino-vive/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "Who Were the Taíno, the Original Inhabitants of Columbus' Island Colonies?",
+   "publisher": "Smithsonian Magazine",
+   "date": "undated",
+   "link": "https://www.smithsonianmag.com/history/who-were-taino-original-inhabitants-columbus-island-73824867/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "The Spanish Conquest of the Aztecs, 1519–21",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/event/The-Spanish-Conquest-of-the-Aztecs-1519-21",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "Battle of Tenochtitlan",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/event/Battle-of-Tenochtitlan",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "Atahuallpa",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "undated",
+   "link": "https://www.britannica.com/biography/Atahuallpa",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "Pizarro Conquers the Incas in Peru",
+   "publisher": "EBSCO Research Starters",
+   "date": "undated",
+   "link": "https://www.ebsco.com/research-starters/history/pizarro-conquers-incas-peru/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "Reading between the Lines at Cajamarca",
+   "publisher": "Portal magazine, LLILAS Benson, University of Texas at Austin",
+   "date": "2019-08-20",
+   "link": "https://sites.utexas.edu/llilas-benson-magazine/2019/08/20/reading-between-the-lines-at-cajamarca/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "Journal article on the decline of Indigenous populations in the Americas after European contact (PMC8285907; keywords: epidemics, paleodemography, Indigenous California)",
+   "publisher": "National Library of Medicine, PubMed Central",
+   "date": "undated in the page read",
+   "link": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8285907",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "The Plague Apocalypse Is Us: After First Contact, Societal Collapse May Have Been Deadlier than the Microbes",
+   "publisher": "American Indian Magazine, Smithsonian National Museum of the American Indian",
+   "date": "undated (written during the COVID-19 pandemic)",
+   "link": "https://www.americanindianmagazine.org/story/the-plague-apocalypse-is-us",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "Population history of American indigenous peoples (Wikipedia schools selection)",
+   "publisher": "Wikispeedia, EPFL (copy of Wikipedia text)",
+   "date": "undated",
+   "link": "https://dlab.epfl.ch/wikispeedia/wpcd/wp/p/Population_history_of_American_indigenous_peoples.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "Crash and rebound of indigenous populations in lowland South America",
+   "publisher": "National Library of Medicine, PubMed Central (PMC3971478)",
+   "date": "undated in the page read",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3971478/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "Henry F. Dobyns",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Henry_F._Dobyns",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "Silver, Sovereignty, and the Global Economy: The Role of Potosí in Shaping Spanish Imperial Finance, 1550–1700",
+   "publisher": "Writesides of History",
+   "date": "undated",
+   "link": "https://writesidesofhistory.com/potosi-silver-spanish-imperial-finance/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "Cerro Rico",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Cerro_Rico",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "Episode 81: The Trans-Pacific Silver Trade and Early-Modern Globalization",
+   "publisher": "15-Minute History podcast",
+   "date": "undated",
+   "link": "https://15minutehistory.org/podcast/episode-81-the-trans-pacific-silver-trade-and-early-modern-globalization/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "Medieval Technology and American History - Timelines",
+   "publisher": "Penn State College of Engineering",
+   "date": "undated",
+   "link": "https://www.engr.psu.edu/mtah/timelines/timeline1.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "Timeline of world history",
+   "publisher": "Q-files",
+   "date": "undated",
+   "link": "https://www.q-files.com/history/world-history/timeline-of-world-history",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "Martin Luther's Early Years: Christian History Timeline",
+   "publisher": "Christian History Institute",
+   "date": "undated",
+   "link": "https://christianhistoryinstitute.org/magazine/article/martin-luthers-early-years-timeline",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "How the Columbian Exchange Brought Globalization—And Disease",
+   "publisher": "History.com",
+   "date": "undated",
+   "link": "https://www.history.com/articles/columbian-exchange-impact-diseases",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "Columbian Exchange: Crops & Global Trade",
+   "publisher": "OER Project",
+   "date": "undated",
+   "link": "https://www.oerproject.com/OER-Materials/OER-Media/HTML-Articles/Origins/Unit6/Crops-that-Grew-the-World",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "La Navidad",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/La_Navidad",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s29",
+   "title": "Yuegang",
+   "publisher": "Wikipedia",
+   "date": "undated",
+   "link": "https://en.wikipedia.org/wiki/Yuegang",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s30",
+   "title": "The Columbian Exchange, Spanish Exploration, and Conquest: An AP US History Study Guide",
+   "publisher": "Albert.io",
+   "date": "undated",
+   "link": "https://www.albert.io/blog/the-columbian-exchange-spanish-exploration-and-conquest-an-ap-us-history-study-guide/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s31",
+   "title": "The Columbian Exchange: AP World History Review",
+   "publisher": "Albert.io",
+   "date": "undated",
+   "link": "https://www.albert.io/blog/columbian-exchange-ap-world-history/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s32",
+   "title": "The Columbian Exchange (OpenStax text)",
+   "publisher": "Lumen Learning",
+   "date": "undated (OpenStax U.S. History)",
+   "link": "https://courses.lumenlearning.com/wm-ushistory1/chapter/new-worlds-in-the-americas-labor-commerce-and-the-columbian-exchange/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s33",
+   "title": "History of the World - By Date (1500 to 1700)",
+   "publisher": "Luke Mastin, Physics/History reference site",
+   "date": "undated",
+   "link": "http://www.lukemastin.com/history/by_date_4.html",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome. Today we ask what happened when the Americas and the rest of the world met after 1492. We will take five pieces, one at a time."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Contact and the Columbian Exchange"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a key term. The Columbian Exchange is the movement of plants, animals and diseases across the Atlantic after Europeans reached the Americas. It went in both directions."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Columbian Exchange: plants, animals and diseases crossing the Atlantic"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does 'the Columbian Exchange' mean?",
+    "right": "The movement of plants, animals and diseases across the Atlantic after 1492",
+    "wrong": [
+     "A trade treaty between Spain and Portugal",
+     "A market where Columbus sold his ships",
+     "A list of the islands Columbus visited"
+    ],
+    "why": "It is the two-way movement of plants, animals and diseases between the Americas and Europe and Africa."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The historian Alfred Crosby gave it that name in the 1970s. It is named for Columbus, but the story began long before him."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Alfred Crosby named it in the 1970s"
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So let us start before 1492. Native sailors reached the Caribbean thousands of years before Columbus. By 1492 the islands were home to many peoples."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A carved Taíno zemí, a spirit figure, from the National Museum of the American Indian collection, made by people living in the Caribbean around the time of Columbus."
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the voyage. Spain's rulers backed Columbus, an Italian sailor, to find a western route to the East Indies. Three ships left Spain on August 3, 1492."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "boat",
+    "count": 3,
+    "layout": "row",
+    "text": "Three ships: Niña, Pinta, Santa María"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "On October 12 he landed on an island he named San Salvador. He thought he had reached Asia. The island is also called Guanahani, and the people there were Taíno."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map: Spain, across the Atlantic to the Bahamas (Guanahani), then Cuba and Hispaniola"
+   },
+   "cite": [
+    "s5",
+    "s6"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "When Columbus landed in October 1492, where did he believe he was?",
+    "right": "In Asia, near the East Indies",
+    "wrong": [
+     "On a brand-new continent",
+     "In Africa",
+     "Back in Spain"
+    ],
+    "why": "He was looking for a western route to the East Indies and mistakenly believed he had reached Asia."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Who were the Taíno? They were the most numerous Indigenous people of the Caribbean then. Their chiefdoms spread over Hispaniola, Puerto Rico and most of Cuba."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Taíno: the most numerous people of the Caribbean in 1492"
+   },
+   "cite": [
+    "s6",
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now their side. A Smithsonian exhibition turns the usual story around, as you can see on screen."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "In 1492, the Taíno discovered Christopher Columbus."
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Colonial officials said the Taíno were extinct by the 1550s. But the Taíno and their culture survived, and they are still here today."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Taíno people and culture survived"
+   },
+   "cite": [
+    "s8",
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "You may even speak Taíno. The word canoe is Taíno. So are hammock, barbecue, tobacco and hurricane."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Taíno words: canoe, hammock, barbecue, tobacco, hurricane"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which of these English words comes from the Taíno?",
+    "right": "Hammock",
+    "wrong": [
+     "Pizza",
+     "Piano",
+     "Tsunami"
+    ],
+    "why": "Hammock is one of the Taíno words, along with canoe, barbecue, tobacco and hurricane."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "On that first trip the Santa María wrecked on Hispaniola. Columbus left dozens of men in a fort called La Navidad. By the next year Indigenous people had destroyed it."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Dec 1492: Santa María wrecked, La Navidad built. 1493: La Navidad destroyed."
+   },
+   "cite": [
+    "s5",
+    "s28"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Columbus sailed home with some birds and plants, and also six Taíno people. People were part of the exchange from the very start."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Return, 1493: birds, plants and six Taíno people"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "His second voyage in 1493 was far bigger: 17 ships and more than 1,000 men. This time Spain meant to settle."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "boat",
+    "count": 17,
+    "layout": "group",
+    "text": "17 ships on the second voyage"
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Those ships carried more than people. They carried wheat, melons, chickpeas and sugar cane, plus pigs, horses, cows and chickens. The exchange had begun."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Brought to the Caribbean: wheat, radishes, melons, chickpeas, sugar cane, pigs, horses, cows, chickens"
+   },
+   "cite": [
+    "s3",
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which animals did Columbus bring to the Caribbean on his second voyage?",
+    "right": "Pigs, horses, cows and chickens",
+    "wrong": [
+     "Llamas, bison and turkeys",
+     "Elephants, camels and lions",
+     "Kangaroos, koalas and emus"
+    ],
+    "why": "Pigs, horses, cows and chickens came from the Old World on that voyage."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Topic two: conquest. In 1519 a Spaniard, Hernán Cortés, led an expedition into Mexico. It was the start of the end of the Aztec Empire."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Conquest of the Aztec Empire, 1519–1521"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Cortés was not alone. Many peoples ruled by the Aztecs resented that rule. The Tlaxcalans, old rivals of the Aztecs, became his main allies."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Allies: the Tlaxcalans and others who resented Aztec rule"
+   },
+   "cite": [
+    "s11",
+    "s10"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which people were key allies of Cortés and old rivals of the Aztecs?",
+    "right": "The Tlaxcalans",
+    "wrong": [
+     "The Taíno",
+     "The Vikings",
+     "The Ottomans"
+    ],
+    "why": "The Tlaxcalans, old rivals of the Aztecs, joined Cortés."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "There was a third force: smallpox, which the Spanish introduced. It killed many Aztecs, including their emperor Cuitláhuac, and weakened their ability to resist."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Smallpox weakens the Aztecs"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In May 1521 Cortés and his allies besieged the Aztec capital, Tenochtitlán. After 93 days it fell, on August 13, 1521."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1519: Cortés enters Mexico. May 1521: siege begins. Aug 13, 1521: Tenochtitlán falls."
+   },
+   "cite": [
+    "s10",
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now South America and the Inca. Just before the Spanish came, Atahuallpa won a civil war against his half-brother Huáscar. That war ravaged cities and killed many people."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Inca: a civil war, then Pizarro"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In November 1532 Francisco Pizarro and his men captured Atahuallpa at Cajamarca. He was held for ransom, then executed."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1532: civil war won, then Atahuallpa captured at Cajamarca. 1533: Atahuallpa executed."
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What had weakened the Inca Empire just before Pizarro arrived?",
+    "right": "A civil war between two half-brothers",
+    "wrong": [
+     "A volcanic eruption",
+     "A Viking raid",
+     "A war with China"
+    ],
+    "why": "The war between Atahuallpa and Huáscar damaged Inca cities and the population."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Historians argue about how much Spanish weapons mattered. One article says popular tellings exaggerate the Spanish advantage at Cajamarca, and that Pizarro built alliances."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Debate: weapons, or alliances and timing?"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Inca also fought back. Manco Inca led a great rebellion against the Spanish. The conquest was not quick or simple."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Resistance: the rebellion of Manco Inca"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Topic three: disease. Smallpox, measles and influenza came from the Old World. They reached people who had no previous exposure and no immunity."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Disease"
+   },
+   "cite": [
+    "s30",
+    "s3"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One early example: pigs on Columbus's 1493 ships spread swine flu. It sickened Columbus and others, and proved deadly to the Taíno."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "1493: swine flu on Hispaniola"
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Native population probably fell by as much as 90 percent in the 150 years after Columbus's first voyage."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Up to 90% in about 150 years"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "By about how much did the Native population of the Americas probably fall in 150 years?",
+    "right": "As much as 90 percent, or nine in ten",
+    "wrong": [
+     "About 10 percent",
+     "About 25 percent",
+     "About half"
+    ],
+    "why": "The estimate is that the population fell by as much as 90 percent in the 150 years after 1492."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "But 90 percent of what? Nobody counted in 1492. Twentieth-century scholars estimated the population from about 8.4 million to 112.5 million."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Estimates of the Americas' population in 1492",
+    "chart": "c1"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Experts still disagree about the timing and size of the collapse. The debate has often had political overtones. This is why you will see different numbers in different books."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The numbers are disputed"
+   },
+   "cite": [
+    "s15",
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Were germs the whole story? Many scholars say no. Societies in crisis could not care for their sick, and violence and forced labor made things worse."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Beyond germs: social collapse, violence, forced labor"
+   },
+   "cite": [
+    "s16",
+    "s15"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Brazil gives one example. A study of Indigenous societies found that after colonization began in the 1500s, about 75 percent of known societies went extinct, and over 95 percent of people were lost."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Brazil: over 95% of the population lost"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What do many scholars now say about why so many Indigenous people died?",
+    "right": "Disease was a major cause, but violence, forced labor and social collapse made it worse",
+    "wrong": [
+     "Only warfare caused the deaths, not disease",
+     "Nobody really died; the records are all wrong",
+     "The weather alone caused the deaths"
+    ],
+    "why": "Researchers say introduced germs alone do not give a full explanation; the wider crisis made the losses worse."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Diseases may have travelled the other way too. According to one theory, Columbus's crew brought syphilis from Hispaniola to Europe. It is only one theory."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Syphilis: one theory of an American origin"
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Topic four: food and animals. Many foods you know came from the Americas, including maize, potatoes, sweet potatoes, tomatoes and chiles."
+   },
+   "show": {
+    "kind": "list",
+    "text": "From the Americas: maize, white potatoes, sweet potatoes, tomatoes, chiles, peanuts, squash"
+   },
+   "cite": [
+    "s3",
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Going the other way: wheat, barley, rice and sugar cane. There were also horses, cattle, sheep and goats, which the Americas did not have before."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "From the Americas: maize, potatoes, tomatoes, chiles | From the Old World: wheat, barley, rice, sugar cane, horses, cattle, sheep, goats"
+   },
+   "cite": [
+    "s4",
+    "s2"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which of these crops came from the Americas?",
+    "right": "Potatoes",
+    "wrong": [
+     "Wheat",
+     "Rice",
+     "Sugar cane"
+    ],
+    "why": "Potatoes are from the Americas. Wheat, rice and sugar cane came from the Old World."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why did potatoes and maize matter so much? They had more calories than the old grains. Peasants across Europe ate better, and population grew."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "More calories from the same land"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why did potatoes and maize help populations grow?",
+    "right": "They gave more calories from the same land",
+    "wrong": [
+     "They could be kept for a hundred years",
+     "They were free to everyone",
+     "They stopped people from catching diseases"
+    ],
+    "why": "Their higher calorie value improved diets, and that led to population growth in Europe."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One teaching resource repeats a claim that a potato field can feed three times as many people as a wheat field. It adds that world population rose after 1500, despite the millions of Indigenous deaths."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 3 times: potato field versus wheat field (a claim repeated by the OER Project)"
+   },
+   "cite": [
+    "s27"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "These crops travelled far: maize to China, white potatoes to Ireland. Today hundreds of millions of people in Europe, Africa and Asia rely on them."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map: arrows from the Americas to Ireland and to China, carrying potatoes and maize"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now sugar. Columbus brought sugar cane to Hispaniola in 1493. In the early 1500s the Spanish were building sugar mills, and Caribbean islands became sugar centres."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1493: sugar cane brought to Hispaniola. Early 1500s: sugar mills built."
+   },
+   "cite": [
+    "s2",
+    "s32"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Sugar plantations needed huge numbers of workers, and sugar drove the Atlantic slave trade. We will return to that in class 41."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sugar and the demand for enslaved labor"
+   },
+   "cite": [
+    "s30"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Horses changed life too. Native peoples of the Plains adopted them and built new ways of life. Pigs, cattle and horses also went feral and multiplied."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Horses reshape Plains cultures"
+   },
+   "cite": [
+    "s30",
+    "s31"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Topic five: silver. In 1545 silver was struck at Potosí, in modern Bolivia. Its mountain, Cerro Rico, became the richest source of silver in history."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Silver: the mountain at Potosí, 1545"
+   },
+   "cite": [
+    "s20",
+    "s21"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To mine it, Spain used forced labor. In the 1570s the Spanish revived the mita, a yearly forced-labor system used earlier by the Inca. Mercury poisoning was common."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Mita: forced labor in the mines"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was the mita?",
+    "right": "A forced-labor system the Spanish adapted from an Inca practice",
+    "wrong": [
+     "A silver coin",
+     "A kind of ship",
+     "A Taíno word for chief"
+    ],
+    "why": "The mita was an annual forced-labor system used by the Inca, revived by the Spanish for the Potosí mines."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "How many miners died? One figure says about eight million. Other sources say hundreds of thousands, and that eight million was the death total for the whole Viceroyalty of Peru."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Death toll at Potosí: disputed"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The silver then crossed two oceans. One route ran across the Atlantic to Seville. The other crossed the Pacific on the Manila galleons from Acapulco, a route opened in 1565."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map: Potosí to Lima, then Seville across the Atlantic; Acapulco to Manila across the Pacific; Manila to China"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why China? Silver underpinned the tax system and money of Ming and later Qing China. So Spain paid with silver and got silk, porcelain and spices."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Silver to China; silk, porcelain and spices in return"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why did China want so much American silver?",
+    "right": "Silver underpinned China's tax system and money",
+    "wrong": [
+     "To build Spanish ships",
+     "To make Chinese swords",
+     "To pay the Pope"
+    ],
+    "why": "Demand was huge because silver underpinned the tax system and monetary exchange of Ming and Qing China."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Crops rode the same trade routes. Sweet potato, maize and tomato first reached China through the Yuegang trade, which ran on Manila's silver."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sweet potato, maize and tomato reach China"
+   },
+   "cite": [
+    "s29"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In the mid-1500s Spain and China had not yet met directly. That changed in the 1570s, when Spain made Manila a trade base."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "1570s: Manila links Spain and China"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Look how fast it all happened. Within about 70 years of Columbus's landfall, an empire had fallen, another had been seized, and a silver trade spanned the Pacific."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Years after 1492 landfall",
+    "chart": "c2"
+   },
+   "cite": [
+    "s11",
+    "s12",
+    "s20"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "What else was happening? In 1492 Granada, the last Moorish stronghold, fell. Martin Luther, born in 1483, was a schoolboy. Michelangelo, born in 1475, was a teenager."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1492: Granada falls; Luther (b. 1483) at school; Michelangelo (1475–1564) alive. 1497–98: da Gama sails to India."
+   },
+   "cite": [
+    "s5",
+    "s25",
+    "s23"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Then the 1510s and 1520s. Luther posted his theses in 1517, Magellan's fleet set out in 1519, and Suleiman became sultan in 1520. Babur founded the Mughal Empire in 1526."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1517: Luther's 95 theses. 1519: Magellan sets out; Leonardo dies. 1520: Suleiman becomes sultan. 1526: Babur founds Mughal Empire."
+   },
+   "cite": [
+    "s24",
+    "s23",
+    "s33"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To sum up: Columbus's voyages began contact. Two empires fell. Disease and collapse took a huge toll. Crops and animals changed every continent. Silver linked the world."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Voyages. Conquests. Disease. Crops and animals. Silver."
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Estimates of the Americas' population in 1492 (millions of people)",
+   "rows": [
+    {
+     "label": "Lowest 20th-century estimate",
+     "value": 8.4,
+     "source": "s17"
+    },
+    {
+     "label": "Highest 20th-century estimate",
+     "value": 112.5,
+     "source": "s17"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "Years after Columbus's 1492 landfall",
+   "rows": [
+    {
+     "label": "Tenochtitlán falls (1521)",
+     "value": 29,
+     "source": "s11"
+    },
+    {
+     "label": "Atahuallpa captured (1532)",
+     "value": 40,
+     "source": "s12"
+    },
+    {
+     "label": "Silver struck at Potosí (1545)",
+     "value": 53,
+     "source": "s20"
+    },
+    {
+     "label": "Manila galleon route opens (1565)",
+     "value": 73,
+     "source": "s20"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Columbian Exchange",
+   "links": [
+    "[[Ottomans, Ming China and the Age of Exploration]]",
+    "[[The Atlantic Slave Trade]]",
+    "[[The Reformation and the Wars of Religion]]"
+   ]
+  },
+  {
+   "topic": "Taíno and Caribbean peoples",
+   "links": [
+    "[[The Americas and Pacific Before 1492]]"
+   ]
+  },
+  {
+   "topic": "Aztec and Inca conquests",
+   "links": [
+    "[[The Americas and Pacific Before 1492]]"
+   ]
+  },
+  {
+   "topic": "Population estimates and evidence",
+   "links": [
+    "[[How Do We Know? Reading the Evidence and Telling Time]]"
+   ]
+  },
+  {
+   "topic": "Sugar and forced labor",
+   "links": [
+    "[[The Atlantic Slave Trade]]"
+   ]
+  },
+  {
+   "topic": "Silver and Asian trade",
+   "links": [
+    "[[Ottomans, Ming China and the Age of Exploration]]",
+    "[[Mughal, Safavid, Qing and Tokugawa: Early Modern Asia]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "1492",
+   "elsewhere": "Granada, the last Moorish stronghold in Spain, fell in January. Martin Luther (born 1483) was a schoolboy in Mansfeld. Michelangelo (1475–1564) was in his teens.",
+   "cite": [
+    "s5",
+    "s25",
+    "s23"
+   ]
+  },
+  {
+   "when": "1497–1498",
+   "elsewhere": "Vasco da Gama sailed around Africa and found a sea route to India.",
+   "cite": [
+    "s23"
+   ]
+  },
+  {
+   "when": "1517",
+   "elsewhere": "Martin Luther posted his 95 theses in Wittenberg, which began the Reformation in Germany.",
+   "cite": [
+    "s23",
+    "s24"
+   ]
+  },
+  {
+   "when": "1519",
+   "elsewhere": "Charles I of Spain was elected Holy Roman Emperor (as Charles V). Ferdinand Magellan set out to sail around the world. Leonardo da Vinci died. Cortés entered Tenochtitlán.",
+   "cite": [
+    "s25",
+    "s24",
+    "s33"
+   ]
+  },
+  {
+   "when": "1520–1521",
+   "elsewhere": "Suleiman I became Ottoman sultan in 1520. Raphael died in 1520. Luther refused to take back his writings at the Diet of Worms in April 1521. Magellan was killed in the Philippines in 1521, and one of his ships finished the voyage around the world in 1522.",
+   "cite": [
+    "s24",
+    "s33",
+    "s25",
+    "s23"
+   ]
+  },
+  {
+   "when": "1526",
+   "elsewhere": "Babur founded the Mughal Empire in northern India after his conquest of the Delhi Sultanate.",
+   "cite": [
+    "s24"
+   ]
+  },
+  {
+   "when": "1532–1533",
+   "elsewhere": "Suleiman's long reign (1520–1566) was under way and Michelangelo was still alive, while Pizarro captured and executed Atahuallpa.",
+   "cite": [
+    "s24",
+    "s23",
+    "s12"
+   ]
+  },
+  {
+   "when": "1545 and 1565",
+   "elsewhere": "Silver was struck at Potosí in 1545. The Manila galleon route linking Acapulco and the Philippines opened in 1565.",
+   "cite": [
+    "s20"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The Native population of the Americas fell by about 90 percent, mainly because of disease.",
+   "other_view": "The 90 percent figure depends on how many people lived there in 1492, and scholarly estimates ranged from about 8.4 million to 112.5 million. Henry Dobyns argued for very large populations and early continent-wide epidemics. Later scholars accepted that older estimates were too low but found little evidence the 1500s epidemics were continent-wide. The debate has often had political overtones, and the 1492 population may not have been a peak. Most agree the collapse was catastrophic.",
+   "cite": [
+    "s3",
+    "s17",
+    "s19",
+    "s15"
+   ]
+  },
+  {
+   "claim": "Native peoples died because they lacked immunity to Old World diseases.",
+   "other_view": "Some recent medically based analyses challenge that broad claim. They stress that social collapse, violence, hunger and forced labor made epidemics deadlier. A study of Brazil found large losses from disease, slavery and violence together.",
+   "cite": [
+    "s16",
+    "s15",
+    "s18"
+   ]
+  },
+  {
+   "claim": "The Spanish won because of superior weapons and skill.",
+   "other_view": "Britannica stresses Indigenous allies such as the Tlaxcalans, disease and political divisions in the Aztec empire, though Cortés's leadership and diplomacy also helped him win allies. A University of Texas article argues that popular accounts exaggerate the Spanish advantage at Cajamarca. It says Pizarro built alliances and that the conquest of Peru was drawn out, with later resistance such as Manco Inca's rebellion.",
+   "cite": [
+    "s10",
+    "s11",
+    "s14",
+    "s13"
+   ]
+  },
+  {
+   "claim": "Columbus discovered the Americas.",
+   "other_view": "Native peoples had lived in the Americas, and Native mariners had reached the Caribbean, thousands of years earlier. The Vikings also made contact around the year 1000, though their impact was limited. A Smithsonian exhibition flips the story with the line that the Taíno discovered Columbus.",
+   "cite": [
+    "s7",
+    "s3",
+    "s8"
+   ]
+  },
+  {
+   "claim": "The Taíno died out soon after 1492.",
+   "other_view": "The Library of Congress says the Taíno were close to extinction by 1550, and colonial officials declared them extinct in the 1550s. Smithsonian exhibitions say the Taíno resisted and survived, and that their culture and descendants continue today.",
+   "cite": [
+    "s6",
+    "s8",
+    "s9"
+   ]
+  },
+  {
+   "claim": "Eight million people died in the Potosí silver mines.",
+   "other_view": "Some sources say about eight million died. Others estimate hundreds of thousands, and say the eight million was the death total for the whole Viceroyalty of Peru, not only Potosí.",
+   "cite": [
+    "s21"
+   ]
+  },
+  {
+   "claim": "Syphilis came to Europe from the Americas with Columbus's crew.",
+   "other_view": "The source describes this as one theory. This class does not cover the rival explanations, so treat the origin of syphilis as an open question.",
+   "cite": [
+    "s26"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,1316 @@
+{
+ "about": {
+  "title": "Buddhism",
+  "course": "religions-of-the-world",
+  "class_n": 4,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 38,
+  "length_note": "This runs about eight minutes over the 30-minute aim. The class covers six topics, including three traditions. Each idea gets its own short beat and a check question, because earlier lessons felt rushed. Pause after any question if you need to."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Countries with the most Buddhists & global Buddhist population change, 2010-2020",
+   "publisher": "Pew Research Center",
+   "date": "2025-06-09",
+   "link": "https://www.pewresearch.org/religion/2025/06/09/buddhist-population-change/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Buddhists (Global Religious Landscape)",
+   "publisher": "Pew Research Center",
+   "date": "2012-12-18",
+   "link": "https://www.pewresearch.org/religion/2012/12/18/global-religious-landscape-buddhist/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "How the Global Religious Landscape Changed (report)",
+   "publisher": "Pew Research Center",
+   "date": "2025-06-09",
+   "link": "https://www.pewresearch.org/wp-content/uploads/sites/20/2025/06/PR_2025.06.09_global-religious-change_report.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "Vesak Day",
+   "publisher": "United Nations",
+   "date": "n.d.",
+   "link": "https://www.un.org/en/observances/vesak-day",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Four Noble Truths",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Four-Noble-Truths",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Eightfold Path",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Eightfold-Path",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "The Noble Eightfold Path: The Way to the End of Suffering (Bhikkhu Bodhi)",
+   "publisher": "Access to Insight",
+   "date": "n.d.",
+   "link": "https://accesstoinsight.org/lib/authors/bodhi/waytoend.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "date of the Buddha",
+   "publisher": "Oxford Reference",
+   "date": "n.d.",
+   "link": "https://www.oxfordreference.com/display/10.1093/oi/authority.20110803095701614",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "The Dates of the Buddha",
+   "publisher": "The Open University (OpenLearn)",
+   "date": "n.d.",
+   "link": "https://www.open.edu/openlearn/history-the-arts/culture/religious-studies/the-dates-the-buddha",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Becoming a Buddhist Lay Disciple",
+   "publisher": "Bodhi Monastery",
+   "date": "n.d.",
+   "link": "https://bodhimonastery.org/becoming-a-buddhist-lay-disciple.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "The Precepts: A Special Practice Section",
+   "publisher": "Tricycle: The Buddhist Review",
+   "date": "n.d.",
+   "link": "https://tricycle.org/magazine/precepts-special-practice-section/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Five precepts",
+   "publisher": "Encyclopedia of Buddhism",
+   "date": "n.d.",
+   "link": "https://www.encyclopediaofbuddhism.org/wiki/Five_Precepts",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Buddhist meditation",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Buddhist_meditation",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Who Was the Buddha? The Life Story of Siddhartha Gautama",
+   "publisher": "e-buddhism.com",
+   "date": "n.d.",
+   "link": "https://e-buddhism.com/who-was-the-buddha/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "The Making of a Pilgrimage: Locations of the Buddha's Life",
+   "publisher": "AIMS exhibition site (aims.vmis.in)",
+   "date": "n.d.",
+   "link": "https://aims.vmis.in/caa-exhibitions/exhibition/from-place-to-site-location-of-buddhas-life/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Four sights",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Four_sights",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "3 Branches of Buddhism: Theravada, Mahayana & Vajrayana",
+   "publisher": "Centre of Excellence",
+   "date": "n.d.",
+   "link": "https://www.centreofexcellence.com/branches-schools-of-buddhism/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Main Traditions - Theravada, Mahayana and Vajrayana",
+   "publisher": "Maitreya Institute (maitreya.nl)",
+   "date": "n.d.",
+   "link": "https://www.maitreya.nl/en/main-traditions-theravada-mahayana-and-vajrayana",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "The Three Schools of Buddhism Explained: Theravada, Mahayana, and Vajrayana",
+   "publisher": "Vajraicon",
+   "date": "n.d.",
+   "link": "https://vajraicon.com/blogs/buddhism/the-three-schools-of-buddhism-explained-theravada-mahayana-and-vajrayana",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "World History Timeline: 5th Century BCE (500 to 401)",
+   "publisher": "fsmitha.com",
+   "date": "n.d.",
+   "link": "http://www.fsmitha.com/time/bc4.htm",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "The Buddha",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/The_Buddha",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Five Styles of Meditation in the Buddhist Tradition",
+   "publisher": "Interfaith America",
+   "date": "n.d.",
+   "link": "https://www.interfaithamerica.org/article/five-styles-of-buddhist-meditation/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "The Three Different Paths of Buddhism",
+   "publisher": "Namchak (Tibetan Buddhist lineage)",
+   "date": "n.d.",
+   "link": "https://www.namchak.org/community/blog/three-different-paths-theravada-mahayana-and-vajrayana/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "Buddhist ethics",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Buddhist_ethics",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "The Four Sights of the Buddha Explained",
+   "publisher": "e-buddhism.com",
+   "date": "n.d.",
+   "link": "https://e-buddhism.com/four-sights/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Gautam Buddha, Life, Teachings, Philosophy, Buddhism, Contribution",
+   "publisher": "Vajiram & Ravi",
+   "date": "n.d.",
+   "link": "https://vajiramandravi.com/current-affairs/gautam-buddha/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "Vesak Day: celebrating enlightenment",
+   "publisher": "UN Today",
+   "date": "n.d.",
+   "link": "https://untoday.org/vesak-day-celebrating-enlightenment/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "Vesak Day 2022 (UN in Nepal)",
+   "publisher": "United Nations in Nepal",
+   "date": "2022-05-16",
+   "link": "https://nepal.un.org/en/184800-vesak-day-2022",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s29",
+   "title": "What Is Buddha's Birthday? Meaning & How to Observe",
+   "publisher": "PotalaStore",
+   "date": "n.d.",
+   "link": "https://www.potalastore.com/blog/what-is-buddhas-birthday/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s30",
+   "title": "Noble Eightfold Path",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Noble_Eightfold_Path",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s31",
+   "title": "Bhavana: An Introduction to Buddhist Meditation",
+   "publisher": "Learn Religions",
+   "date": "n.d.",
+   "link": "https://www.learnreligions.com/introduction-to-buddhist-meditation-449925",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s32",
+   "title": "Samatha and vipassana meditation",
+   "publisher": "Meditation Circle (UK)",
+   "date": "n.d.",
+   "link": "https://meditationcircle.org.uk/meditation/samatha-and-vipassana-meditation/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s33",
+   "title": "Zen meditation, Vipassana meditation: Similar paths, different orientations",
+   "publisher": "Taos News",
+   "date": "n.d.",
+   "link": "https://www.taosnews.com/opinion/columns/zen-meditation-vipassana-meditation-similar-paths-different-orientations/article_c48a8d46-bdb8-5dee-a7b4-04ea37d0a381.html",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 4. Today we meet Buddhism. We'll look at the Buddha's life, his core teachings, the main traditions, daily practice, a festival, and where Buddhists live."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. The life of the Buddha\n2. The Four Noble Truths and the Eightfold Path\n3. Three traditions: Theravada, Mahayana, Vajrayana\n4. Monks, nuns, lay people and meditation\n5. Vesak\n6. Where Buddhists live today"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a name. 'Buddha' is a title, and it means 'Awakened One'. The man himself was born Siddhartha Gautama."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Buddha = Awakened One"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "What does the title 'Buddha' mean?",
+    "right": "Awakened One",
+    "wrong": [
+     "Great King",
+     "Wandering Monk",
+     "Teacher of the Gods"
+    ],
+    "why": "It is a title meaning 'Awakened One'. His given name was Siddhartha Gautama."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the story, as Buddhists tell it. Tradition says he was born at Lumbini, in what is now Nepal. His family were the Shakya clan, and his parents were Suddhodana and Maya."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A quiet garden at Lumbini with the Maya Devi Temple, the place tradition marks as his birthplace."
+   },
+   "cite": [
+    "s14",
+    "s15"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Where does Buddhist tradition say Siddhartha was born?",
+    "right": "Lumbini, in present-day Nepal",
+    "wrong": [
+     "Bodh Gaya, in Bihar, India",
+     "Sri Lanka",
+     "Tibet"
+    ],
+    "why": "Tradition names Lumbini, in present-day Nepal, as his birthplace."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In the traditional story, Siddhartha grew up sheltered. Then, on trips outside, he met four sights: an old man, a sick man, a corpse, and a calm wandering ascetic."
+   },
+   "show": {
+    "kind": "list",
+    "text": "The Four Sights\n1. An old man\n2. A sick man\n3. A corpse\n4. A calm wandering ascetic"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which of these was NOT one of the Four Sights?",
+    "right": "A victorious soldier",
+    "wrong": [
+     "A sick man",
+     "A corpse",
+     "A calm wandering ascetic"
+    ],
+    "why": "The sights were an old man, a sick man, a corpse and an ascetic."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The first three showed him aging, sickness and death. The fourth showed him someone seeking freedom from them. Scholars add that this exact story comes from later biographies, not the earliest texts."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "First three sights: aging, sickness, death | Fourth sight: a way to seek freedom"
+   },
+   "cite": [
+    "s25",
+    "s16"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What did the fourth sight, the ascetic, show him?",
+    "right": "That there might be a way to seek freedom from suffering",
+    "wrong": [
+     "That palaces are unsafe",
+     "That he should become a king",
+     "That old age can be avoided"
+    ],
+    "why": "The first three sights showed suffering. The fourth showed a way to seek freedom from it."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In the traditional account he left home at 29, leaving his palace, wife and newborn son. He lived as a wanderer and tried harsh self-denial. Then he taught a Middle Way, between indulgence and self-torture."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The Middle Way: not indulgence, not self-torture"
+   },
+   "cite": [
+    "s26",
+    "s25",
+    "s21",
+    "s6"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "What does the 'Middle Way' mean?",
+    "right": "A path between self-indulgence and extreme self-denial",
+    "wrong": [
+     "Living only in the middle of a city",
+     "Meditating for exactly half the day",
+     "Choosing the middle child as a teacher"
+    ],
+    "why": "The Middle Way avoids both sensual indulgence and extreme asceticism."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Tradition says that around age 35 he sat under a tree at Bodh Gaya and became awake. That tree is called the Bodhi tree, the 'awakening tree'. From then on he is called the Buddha."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A large pipal tree beside a river, with a seated figure beneath it, at Bodh Gaya in Bihar, India."
+   },
+   "cite": [
+    "s26",
+    "s14",
+    "s21"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Where does tradition say the Buddha's awakening happened?",
+    "right": "Bodh Gaya, under the Bodhi tree",
+    "wrong": [
+     "Lumbini, in a garden",
+     "Inside the royal palace",
+     "On a mountain in Tibet"
+    ],
+    "why": "The awakening is placed at Bodh Gaya, under the Bodhi tree."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "After awakening, he gave his first sermon at the Deer Park in Sarnath, near Varanasi. Tradition says he lived to the age of 80."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A stone sculpture of the Buddha teaching his first sermon at Sarnath."
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Where did the Buddha give his first sermon?",
+    "right": "The Deer Park at Sarnath, near Varanasi",
+    "wrong": [
+     "Lumbini, where he was born",
+     "Bodh Gaya, under the Bodhi tree",
+     "Inside the royal palace"
+    ],
+    "why": "Sarnath is the place of his first teaching."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Tradition says he died at Kushinagar, lying between two sal trees. Buddhists call this his parinirvana, his final release."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Northern India and Nepal. Four marked places: Lumbini (birth), Bodh Gaya (awakening), Sarnath near Varanasi (first teaching), Kushinagar (passing away)."
+   },
+   "cite": [
+    "s14",
+    "s21"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which of the four pilgrimage places marks the end of his life?",
+    "right": "Kushinagar",
+    "wrong": [
+     "Lumbini",
+     "Sarnath",
+     "Bodh Gaya"
+    ],
+    "why": "Lumbini is birth, Bodh Gaya is awakening, Sarnath is first teaching and Kushinagar is where he passed away. Together they are the four main pilgrimage places."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "When did all this happen? Nobody knows exactly. Sri Lanka and Southeast Asia often date his life 624 to 544 BCE. East Asia accepts later dates, and many Western scholars say he died around 410 to 400 BCE."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "624–544 BCE: dates often used in Sri Lanka and Southeast Asia | 448–368 BCE: dates accepted in East Asia | died c. 410–400 BCE: current consensus among many Western scholars"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Which statement is best?",
+    "right": "The dates are uncertain, and different Buddhist regions and scholars give different ones",
+    "wrong": [
+     "Everyone agrees he was born in exactly 563 BCE",
+     "Nobody has ever tried to work out his dates",
+     "He lived in the 5th century CE"
+    ],
+    "why": "Indian sources lack systematic dating, so different dates became established in different places."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the teachings. Buddhists say the Buddha announced the Four Noble Truths in his first sermon. Britannica says all schools of Buddhism accept them."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "dot",
+    "count": 4,
+    "layout": "row",
+    "text": "Four Noble Truths"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Which Buddhists accept the Four Noble Truths?",
+    "right": "All schools of Buddhism",
+    "wrong": [
+     "Only monks",
+     "Only one tradition, Theravada",
+     "Only Buddhists in Tibet"
+    ],
+    "why": "The truths are accepted by all schools of Buddhism."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Truth one: existence includes suffering, or dissatisfaction. The Pali word is dukkha. Truth two: suffering has a cause, and Buddhist teaching points to craving."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. There is suffering (dukkha)\n2. Suffering has a cause: craving"
+   },
+   "cite": [
+    "s5",
+    "s7",
+    "s24"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is the second Noble Truth about?",
+    "right": "The cause of suffering",
+    "wrong": [
+     "The end of suffering",
+     "The path to follow",
+     "The birth of the Buddha"
+    ],
+    "why": "Truth one names suffering and truth two names its cause."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Truth three: suffering can end. That state is called nirvana. Truth four: there is a path that leads there, the Eightfold Path."
+   },
+   "show": {
+    "kind": "list",
+    "text": "3. Suffering can end (nirvana)\n4. A path leads there (the Eightfold Path)"
+   },
+   "cite": [
+    "s5",
+    "s30"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is the fourth Noble Truth?",
+    "right": "The path that leads to the end of suffering",
+    "wrong": [
+     "The fact that suffering exists",
+     "The cause of suffering",
+     "Rules written only for monks"
+    ],
+    "why": "The fourth truth is the path, called the Eightfold Path."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Eightfold Path is a middle way between self-indulgence and self-torture. It is often drawn as a wheel with eight spokes."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "dot",
+    "count": 8,
+    "layout": "group",
+    "text": "Eight practices, eight spokes"
+   },
+   "cite": [
+    "s6",
+    "s30"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What shape often stands for the Eightfold Path?",
+    "right": "A wheel with eight spokes",
+    "wrong": [
+     "A ladder with eight rungs",
+     "A wheel with four spokes",
+     "A tree with eight roots"
+    ],
+    "why": "The dharma wheel has eight spokes for the eight parts of the path."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The first four: right view, which is understanding the Four Noble Truths. Right intention, which is avoiding harmful thoughts. Right speech, which is avoiding lying and harsh words. Right action, which is avoiding harmful deeds."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Right view\n2. Right intention\n3. Right speech\n4. Right action"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What does 'right speech' mean?",
+    "right": "Refraining from lying and harsh language",
+    "wrong": [
+     "Speaking only in Pali",
+     "Never speaking at all",
+     "Giving long sermons"
+    ],
+    "why": "Right speech means refraining from lying and harsh language."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The last four: right livelihood, which is avoiding harmful work. Right effort, which is letting go of harmful states of mind. Right mindfulness, which is awareness of body, feelings and thoughts. Right concentration, which is single-mindedness."
+   },
+   "show": {
+    "kind": "list",
+    "text": "5. Right livelihood\n6. Right effort\n7. Right mindfulness\n8. Right concentration"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What does 'right mindfulness' mean?",
+    "right": "Awareness of body, feelings, thoughts and what is happening",
+    "wrong": [
+     "Memorising scriptures",
+     "Avoiding harmful jobs",
+     "Fasting for a day"
+    ],
+    "why": "Right mindfulness is awareness of body, feelings, thought and phenomena."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The eight are not steps to climb one after another. The monk Bhikkhu Bodhi says the truths and the path contain each other. Right view, the first part, is understanding the Four Noble Truths."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Four Noble Truths: the fourth truth is the path | Eightfold Path: the first part is understanding the truths"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Right view means understanding what?",
+    "right": "The Four Noble Truths",
+    "wrong": [
+     "The names of every Buddha",
+     "The history of India",
+     "The rules of the monastic code"
+    ],
+    "why": "Right view is understanding suffering, its origin, its end and the way to its end."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the traditions. Pew names three major branches today: Mahayana, Theravada and Vajrayana."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Theravada\nMahayana\nVajrayana"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "How many major branches of Buddhism does Pew name?",
+    "right": "Three",
+    "wrong": [
+     "One",
+     "Seven",
+     "Twelve"
+    ],
+    "why": "Pew names three: Mahayana, Theravada and Vajrayana."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Theravada means 'Teaching of the Elders'. It is the oldest surviving school, and its scriptures are in Pali. It is dominant in Sri Lanka, Thailand, Myanmar, Cambodia and Laos."
+   },
+   "show": {
+    "kind": "map",
+    "text": "South and Southeast Asia: Sri Lanka, Myanmar, Thailand, Cambodia and Laos highlighted as Theravada lands."
+   },
+   "cite": [
+    "s19",
+    "s17"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In which countries is Theravada dominant?",
+    "right": "Sri Lanka, Thailand, Myanmar, Cambodia and Laos",
+    "wrong": [
+     "China, Japan and Korea",
+     "Tibet, Bhutan and Mongolia",
+     "Vietnam and Singapore"
+    ],
+    "why": "Theravada is dominant in Sri Lanka, Thailand, Cambodia, Laos and Myanmar."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Mahayana means 'Great Vehicle'. It appeared in India around the first century CE. Both traditions value compassion, but Mahayana stresses it even more, and it adds its own sutras."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Mahayana = Great Vehicle"
+   },
+   "cite": [
+    "s18",
+    "s19",
+    "s17"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "What does 'Mahayana' mean?",
+    "right": "Great Vehicle",
+    "wrong": [
+     "Teaching of the Elders",
+     "Diamond Vehicle",
+     "Middle Way"
+    ],
+    "why": "Mahayana means 'Great Vehicle'. Theravada means 'Teaching of the Elders'."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Mahayana is common in China, Japan, Korea and Vietnam. Its schools include Zen, Pure Land and Tiantai. Pew says it is widely believed to be the largest branch."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Mahayana lands: China, Japan, Korea, Vietnam\nSchools: Zen, Pure Land, Tiantai (Tendai in Japan)"
+   },
+   "cite": [
+    "s2",
+    "s17",
+    "s13"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which branch is widely believed to be the largest?",
+    "right": "Mahayana",
+    "wrong": [
+     "Theravada",
+     "Vajrayana",
+     "They are all exactly equal"
+    ],
+    "why": "Pew says Mahayana is widely believed to be the largest. Branch affiliation is rarely measured, so this is an estimate."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Vajrayana means 'Diamond Vehicle'. Its tantric teachings appeared around the sixth century CE. Some followers see it as part of Mahayana. It is found in Tibet, Bhutan, Nepal, Mongolia and parts of Japan."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Vajrayana = Diamond Vehicle"
+   },
+   "cite": [
+    "s18",
+    "s23",
+    "s19"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "Which tradition is called the 'Diamond Vehicle'?",
+    "right": "Vajrayana",
+    "wrong": [
+     "Theravada",
+     "Mahayana",
+     "Zen"
+    ],
+    "why": "Vajrayana means 'Diamond Vehicle'."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Real life is less tidy than the three boxes. Censuses rarely record which branch a person follows. In India, the three were often practised side by side."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Branch counts are estimates: affiliation with a branch is not measured in most censuses and surveys."
+   },
+   "cite": [
+    "s2",
+    "s18"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why are the numbers for each branch only estimates?",
+    "right": "Most censuses and surveys don't ask which branch people follow",
+    "wrong": [
+     "Buddhists are not allowed to be counted",
+     "Only monks have ever been counted",
+     "The branches were invented last year"
+    ],
+    "why": "Pew explains that branch affiliation is not measured in most censuses and surveys."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now daily practice. A person becomes a Buddhist lay disciple by going for refuge to the Three Jewels and taking the Five Precepts. The Jewels are the Buddha, the Dharma (his teaching) and the Sangha (the community of monks and nuns). It is usually done in a ceremony at a temple."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Three Jewels: the Buddha, the Dharma (teaching), the Sangha (community)\nPlus the Five Precepts"
+   },
+   "cite": [
+    "s10",
+    "s24",
+    "s19"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "How does someone become a Buddhist lay disciple?",
+    "right": "By going for refuge to the Three Jewels and undertaking the Five Precepts",
+    "wrong": [
+     "By being born in a Buddhist country",
+     "By meditating for ten years",
+     "By visiting all four pilgrimage places"
+    ],
+    "why": "Refuge and the Five Precepts are the two steps."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Monks and nuns follow a longer code called the Vinaya. It helps them live together in harmony. Traditionally they accept food, clothing, shelter and medicine only when offered."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Vinaya = the monastic code"
+   },
+   "cite": [
+    "s11",
+    "s19"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "What is the Vinaya?",
+    "right": "The code of conduct for monks and nuns",
+    "wrong": [
+     "A festival in May",
+     "A type of meditation",
+     "A sacred tree"
+    ],
+    "why": "The monastic precepts help monks and nuns live together in harmony."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Lay Buddhists take five precepts: not to kill, steal, engage in improper sexual relations, lie, or take intoxicants. On Buddhist holidays, many take stricter eight precepts. Teachers describe them as training rules a person chooses to take on, not commandments."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Five Precepts\n1. Not killing\n2. Not stealing\n3. No improper sexual relations\n4. No lying\n5. No intoxicants"
+   },
+   "cite": [
+    "s11",
+    "s10"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "How do Buddhist teachers describe the precepts?",
+    "right": "As training rules a person takes on voluntarily, a promise to oneself",
+    "wrong": [
+     "As commandments handed down from outside",
+     "As laws enforced by the government",
+     "As rules only for monks"
+    ],
+    "why": "Each precept is a training rule, a promise to oneself, not a commandment from outside."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now meditation. Buddhist meditation trains the mind. One basic split is samatha, which calms the mind, and vipassana, which builds insight. A common calming method is watching the breath. You don't have to try it. Just learn what it is."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Samatha: calm and concentration | Vipassana: insight"
+   },
+   "cite": [
+    "s13",
+    "s22"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What does samatha aim to do?",
+    "right": "Calm and steady the mind through concentration",
+    "wrong": [
+     "Build a temple",
+     "Memorise the Eightfold Path",
+     "Count the number of Buddhists"
+    ],
+    "why": "Samatha is concentration meditation for calm and tranquility. Vipassana is insight."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Traditions emphasise different methods. Zazen, seated meditation, is at the core of Zen, a Mahayana school. Mahayana generally stresses uniting calm and insight. Vipassana comes mainly from Theravada."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Zen: zazen (seated meditation)\nTheravada: vipassana (insight)\nMahayana: calm and insight united"
+   },
+   "cite": [
+    "s22",
+    "s33",
+    "s13"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Zazen is the core meditation of which school?",
+    "right": "Zen",
+    "wrong": [
+     "Theravada's monastic code",
+     "The Vesak festival",
+     "Tibetan chanting only"
+    ],
+    "why": "Zazen is seated meditation at the core of Zen, which developed in Mahayana China and Japan."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a festival. Vesak falls on the full moon day of May, the UN says. It is the most sacred day to millions of Buddhists. They remember the Buddha's birth, enlightenment and passing away."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Vesak: birth, awakening, passing away"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "What does Vesak remember?",
+    "right": "The Buddha's birth, enlightenment and passing away",
+    "wrong": [
+     "Only the Buddha's birth",
+     "The first harvest of the year",
+     "The founding of the Sangha only"
+    ],
+    "why": "The UN says Vesak commemorates all three events."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The date follows the lunar calendar, so it moves each year. Temples are lit with lamps, flowers are offered, and charity events are held. It is called Buddha Purnima in India and Nepal, and Saga Dawa in Tibetan Buddhism."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Lamps, flowers, charity\nBuddha Purnima: India and Nepal\nSaga Dawa: Tibetan Buddhism"
+   },
+   "cite": [
+    "s27",
+    "s29"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why does the date of Vesak change each year?",
+    "right": "It follows the lunar calendar",
+    "wrong": [
+     "It is set by a vote each year",
+     "It moves with the school calendar",
+     "It follows the Christian calendar"
+    ],
+    "why": "Vesak is observed on the full moon, so it shifts with the lunar calendar."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Where do Buddhists live today? Pew says 98% are in the Asia-Pacific region. About 2% are in North America and 1% in Europe. Worldwide there were about 324 million in 2020."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "98% of Buddhists live in Asia-Pacific"
+   },
+   "cite": [
+    "s1",
+    "s3"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Roughly what share of Buddhists live in the Asia-Pacific region?",
+    "right": "About 98%",
+    "wrong": [
+     "About 50%",
+     "About 20%",
+     "About 5%"
+    ],
+    "why": "Pew puts the Asia-Pacific share at 98% as of 2020."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In 2010, Pew counted half the world's Buddhists in China. Thailand was next. Counting in East Asia is hard, because the usual survey question fits less well there."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Share of the world's Buddhists by country, 2010",
+    "chart": "c1"
+   },
+   "cite": [
+    "s2",
+    "s1"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "In Pew's 2010 count, which country had about half of all Buddhists?",
+    "right": "China",
+    "wrong": [
+     "Thailand",
+     "Japan",
+     "India"
+    ],
+    "why": "Pew found 50% of the world's Buddhists in China."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Seven countries have Buddhist majorities: Cambodia, Thailand, Myanmar, Bhutan, Sri Lanka, Laos and Mongolia. Of these, Thailand has the most Buddhists, about 94% of its people. India has about 10 million, under 1% of its people."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Buddhist-majority countries: Cambodia, Thailand, Myanmar, Bhutan, Sri Lanka, Laos, Mongolia\nThailand: 68 million (94%)\nIndia: about 10 million (under 1%)"
+   },
+   "cite": [
+    "s3",
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "India is near where Buddhism began. What did Pew find there?",
+    "right": "About 10 million Buddhists, less than 1% of the population",
+    "wrong": [
+     "A Buddhist majority",
+     "The most Buddhists of any country",
+     "No Buddhists at all"
+    ],
+    "why": "Pew puts India's Buddhists at roughly 10 million, under 1% of the population."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's review. One Buddha, a title meaning 'Awakened One'. Four Truths and an Eightfold Path. Three branches: Theravada, Mahayana and Vajrayana. Precepts and meditation. Vesak. Next class: Sikhism."
+   },
+   "show": {
+    "kind": "list",
+    "text": "The Buddha: born, awoke, taught, passed away\nFour Noble Truths and the Eightfold Path\nTheravada, Mahayana, Vajrayana\nPrecepts, monastic life, meditation\nVesak\nMostly in Asia"
+   },
+   "cite": [
+    "s19",
+    "s17"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which pairing is correct?",
+    "right": "Theravada: 'Teaching of the Elders', Pali scriptures, Sri Lanka and Thailand",
+    "wrong": [
+     "Mahayana: 'Teaching of the Elders', Pali scriptures",
+     "Vajrayana: 'Great Vehicle', mainly Thailand",
+     "Theravada: 'Diamond Vehicle', mainly Tibet"
+    ],
+    "why": "Theravada is the 'Teaching of the Elders', with Pali scriptures, dominant in Sri Lanka, Thailand and nearby countries."
+   }
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Where the world's Buddhists lived in 2010 (% of all Buddhists, ten largest countries)",
+   "rows": [
+    {
+     "label": "China",
+     "value": 50,
+     "source": "s2"
+    },
+    {
+     "label": "Thailand",
+     "value": 13,
+     "source": "s2"
+    },
+    {
+     "label": "Japan",
+     "value": 9,
+     "source": "s2"
+    },
+    {
+     "label": "Myanmar (Burma)",
+     "value": 8,
+     "source": "s2"
+    },
+    {
+     "label": "Sri Lanka",
+     "value": 3,
+     "source": "s2"
+    },
+    {
+     "label": "Vietnam",
+     "value": 3,
+     "source": "s2"
+    },
+    {
+     "label": "Cambodia",
+     "value": 3,
+     "source": "s2"
+    },
+    {
+     "label": "South Korea",
+     "value": 2,
+     "source": "s2"
+    },
+    {
+     "label": "India",
+     "value": 2,
+     "source": "s2"
+    },
+    {
+     "label": "Malaysia",
+     "value": 1,
+     "source": "s2"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Buddha",
+   "links": [
+    "[[Four Noble Truths]]",
+    "[[Eightfold Path]]",
+    "[[Vesak]]"
+   ]
+  },
+  {
+   "topic": "Four Noble Truths",
+   "links": [
+    "[[Eightfold Path]]",
+    "[[dukkha]]",
+    "[[nirvana]]"
+   ]
+  },
+  {
+   "topic": "Eightfold Path",
+   "links": [
+    "[[Four Noble Truths]]",
+    "[[Middle Way]]"
+   ]
+  },
+  {
+   "topic": "Theravada",
+   "links": [
+    "[[Mahayana]]",
+    "[[Vajrayana]]",
+    "[[Sangha]]"
+   ]
+  },
+  {
+   "topic": "Mahayana",
+   "links": [
+    "[[Zen]]",
+    "[[Theravada]]",
+    "[[Vajrayana]]"
+   ]
+  },
+  {
+   "topic": "Vajrayana",
+   "links": [
+    "[[Mahayana]]",
+    "[[Saga Dawa]]"
+   ]
+  },
+  {
+   "topic": "Precepts",
+   "links": [
+    "[[Vinaya]]",
+    "[[Sangha]]",
+    "[[Three Jewels]]"
+   ]
+  },
+  {
+   "topic": "Meditation",
+   "links": [
+    "[[samatha]]",
+    "[[vipassana]]",
+    "[[zazen]]"
+   ]
+  },
+  {
+   "topic": "Vesak",
+   "links": [
+    "[[Buddha]]",
+    "[[Saga Dawa]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About 480 BCE, during the Buddha's later life by traditional dating",
+   "elsewhere": "In 480 BCE the Persian king Xerxes marched an army into mainland Greece.",
+   "cite": [
+    "s20",
+    "s8"
+   ]
+  },
+  {
+   "when": "About 410–400 BCE, when many Western scholars say the Buddha died",
+   "elsewhere": "The Peloponnesian War between Athens and Sparta ended in 404 BCE with defeat for Athens.",
+   "cite": [
+    "s20",
+    "s8"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The Buddha lived about 563–483 BCE (traditional long chronology), and the UN's Vesak page gives his birth as 623 BCE.",
+   "other_view": "Many scholars think this chronology is wrong. The Sri Lankan chronicles' dates for the emperor Ashoka are off by about 60 to 70 years. Many Western scholars now place his death around 410–400 BCE, and East Asia accepts dates of 448–368 BCE.",
+   "cite": [
+    "s4",
+    "s8",
+    "s9"
+   ]
+  },
+  {
+   "claim": "The Four Sights (an old man, a sick man, a corpse and an ascetic) are a central part of the Buddha's life story.",
+   "other_view": "Scholars note that the vivid story of four chariot rides comes from later biographical literature. In the early Pali texts the four sights are not told of Gautama as separate encounters.",
+   "cite": [
+    "s16",
+    "s25"
+   ]
+  },
+  {
+   "claim": "Mahayana can be seen as an extension of the Theravada teachings.",
+   "other_view": "Mahayana teachers treat some teachings preserved in the Theravada tradition as needing interpretation rather than literal reading, and this has caused friction. Others say the differences are matters of emphasis, and that depending on who you ask they can be great or quite small.",
+   "cite": [
+    "s18",
+    "s23"
+   ]
+  },
+  {
+   "claim": "Samatha and vipassana are two separate kinds of meditation.",
+   "other_view": "One Theravada scholar, Dr. Rahula, wrote that samatha is not a Buddhist practice and is not considered necessary. Others say the Buddha described the two as qualities of mind to be developed together, and most Zen schools treat them as aspects of one practice.",
+   "cite": [
+    "s31",
+    "s32",
+    "s13"
+   ]
+  },
+  {
+   "claim": "Mahayana is the largest branch of Buddhism.",
+   "other_view": "This is a widely held belief, not a measured fact. Branch affiliation is not recorded in most censuses and surveys. Pew also says counting Buddhists in East Asia is hard because its standard question works less well there.",
+   "cite": [
+    "s2",
+    "s1"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,1346 @@
+{
+ "about": {
+  "title": "20th-Century Science and Technology",
+  "course": "history-of-everything",
+  "class_n": 59,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. There are six topics, taught one idea at a time, with 12 questions. Reading the script aloud takes roughly 12 to 15 minutes. The rest is for pictures, questions and pauses. A group that needs longer can stop after the DNA beats and finish next sitting."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "General Relativity and the 1919 Solar Eclipse",
+   "publisher": "Royal Observatory Greenwich",
+   "date": "n.d.",
+   "link": "https://www.royalobservatorygreenwich.org/articles.php?article=1283",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "100 Years of General Relativity",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/story/100-years-of-general-relativity",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "Max Planck",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/biography/Max-Planck",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "Max Planck Sets Forth the Tenets of Quantum Theory",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/history/max-planck-sets-forth-tenets-quantum-theory/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "Rise and fall of the old quantum theory",
+   "publisher": "arXiv",
+   "date": "n.d.",
+   "link": "https://arxiv.org/pdf/0802.1366",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "Introduction, HPS 2532 History of Quantum Mechanics",
+   "publisher": "University of Pittsburgh (John D. Norton)",
+   "date": "n.d.",
+   "link": "https://sites.pitt.edu/~jdnorton/teaching/History_QM/intro.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "Penicillin",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/science/penicillin",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "Alexander Fleming",
+   "publisher": "Science History Institute",
+   "date": "n.d.",
+   "link": "https://www.sciencehistory.org/education/scientific-biographies/alexander-fleming/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "A Brief History of Vaccination",
+   "publisher": "World Health Organization",
+   "date": "n.d.",
+   "link": "https://www.who.int/news-room/spotlight/history-of-vaccination/a-brief-history-of-vaccination",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "Vaccination",
+   "publisher": "Our World in Data",
+   "date": "n.d.",
+   "link": "https://ourworldindata.org/vaccination",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "Jonas Salk and Albert Bruce Sabin",
+   "publisher": "Science History Institute",
+   "date": "n.d.",
+   "link": "https://www.sciencehistory.org/education/scientific-biographies/jonas-salk-and-albert-bruce-sabin/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "Meet the Heroes and Villains of Vaccine History",
+   "publisher": "TIME",
+   "date": "n.d.",
+   "link": "https://time.com/3977055/vaccine-heroes-villains/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "Francis Crick, Rosalind Franklin, James Watson, and Maurice Wilkins",
+   "publisher": "Science History Institute",
+   "date": "n.d.",
+   "link": "https://www.sciencehistory.org/education/scientific-biographies/francis-crick-rosalind-franklin-james-watson-and-maurice-wilkins/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "The story behind Photograph 51",
+   "publisher": "King's College London",
+   "date": "n.d.",
+   "link": "https://www.kcl.ac.uk/the-story-behind-photograph-51",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "How Rosalind Franklin's 'Photo 51' Revealed DNA's Structure",
+   "publisher": "HISTORY",
+   "date": "n.d.",
+   "link": "https://www.history.com/articles/rosalind-franklin-photo-51-dna",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "ENIAC",
+   "publisher": "Engineering and Technology History Wiki (ETHW)",
+   "date": "n.d.",
+   "link": "https://ethw.org/ENIAC",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "ENIAC, the First General-Purpose Digital Computer, Turns 80",
+   "publisher": "IEEE Spectrum",
+   "date": "n.d.",
+   "link": "https://spectrum.ieee.org/eniac-80-ieee-milestone",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "ARPANET",
+   "publisher": "DARPA",
+   "date": "n.d.",
+   "link": "https://www.darpa.mil/news/features/arpanet",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "ARPANET",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/ARPANET",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "The First Message Transmission",
+   "publisher": "ICANN (guest post by Leonard Kleinrock)",
+   "date": "2019-10-29",
+   "link": "https://www.icann.org/en/blogs/details/the-first-message-transmission-29-10-2019-en",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "Norman Borlaug, Nobel Peace Prize Lecture",
+   "publisher": "The Nobel Prize",
+   "date": "1970",
+   "link": "https://www.nobelprize.org/prizes/peace/1970/borlaug/lecture/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "Why You Should Know the Name Norman Borlaug",
+   "publisher": "U.S. Department of Agriculture",
+   "date": "n.d.",
+   "link": "https://www.usda.gov/about-usda/news/blog/why-you-should-know-name-norman-borlaug",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "Borlaug Wheat and the Green Revolution",
+   "publisher": "University of Michigan, Ford School (Technology Assessment Project)",
+   "date": "n.d.",
+   "link": "https://stpp.fordschool.umich.edu/tap-case-study-library/borlaug-wheat-and-green-revolution",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "Norman Ernest Borlaug",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/biography/Norman-Borlaug",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "Georges Lemaitre and the Foundations of Big Bang Cosmology",
+   "publisher": "arXiv",
+   "date": "n.d.",
+   "link": "https://arxiv.org/pdf/2007.09459",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "May 1931: Georges Lemaitre proposes that the universe has a beginning",
+   "publisher": "American Physical Society (APS News)",
+   "date": "2026-05-18",
+   "link": "https://www.aps.org/apsnews/2026/05/lemaitre-proposes-universe-beginning",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "Relic Radiation",
+   "publisher": "American Institute of Physics (AIP Student Programs)",
+   "date": "n.d.",
+   "link": "https://students.aip.org/radiations/relic-radiation",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "The establishment of the Standard Cosmological Model through observations",
+   "publisher": "arXiv",
+   "date": "n.d.",
+   "link": "https://arxiv.org/pdf/2001.08297",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s29",
+   "title": "A Year in History: 1953 Timeline",
+   "publisher": "Historic Newspapers",
+   "date": "n.d.",
+   "link": "https://www.historic-newspapers.com/blogs/article/a-year-in-history-1953-timeline",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s30",
+   "title": "1953 British Mount Everest expedition",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/1953_British_Mount_Everest_expedition",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s31",
+   "title": "Norman Borlaug",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Norman_Borlaug",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s32",
+   "title": "Cosmology and Philosophy",
+   "publisher": "arXiv",
+   "date": "n.d.",
+   "link": "https://arxiv.org/pdf/2510.24296",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s33",
+   "title": "Eckert and Mauchly Develop the ENIAC",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/computer-science/eckert-and-mauchly-develop-eniac/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s34",
+   "title": "First electronic message is sent via internet precursor ARPANET",
+   "publisher": "HISTORY",
+   "date": "n.d.",
+   "link": "https://www.history.com/this-day-in-history/october-29/first-electronic-message-sent-arpanet-internet-precursor",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s35",
+   "title": "The 1919 solar eclipse that proved Einstein right",
+   "publisher": "EarthSky",
+   "date": "n.d.",
+   "link": "https://earthsky.org/human-world/may-29-1919-solar-eclipse-einstein-relativity/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s36",
+   "title": "Dr. Rosalind Franklin",
+   "publisher": "Rosalind Franklin University",
+   "date": "n.d.",
+   "link": "https://www.rosalindfranklin.edu/about/facts-figures/dr-rosalind-franklin/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s37",
+   "title": "Rosalind Franklin's Role in the Discovery of DNA's Structure",
+   "publisher": "HISTORY",
+   "date": "n.d.",
+   "link": "https://www.history.com/articles/rosalind-franklin-dna-discovery",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s38",
+   "title": "First general-purpose electronic digital computer",
+   "publisher": "Guinness World Records",
+   "date": "n.d.",
+   "link": "https://www.guinnessworldrecords.com/world-records/first-electronic-digital-computer",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s39",
+   "title": "Penn's ENIAC, the world's first electronic computer, turns 80",
+   "publisher": "Penn Today, University of Pennsylvania",
+   "date": "n.d.",
+   "link": "https://penntoday.upenn.edu/news/penns-eniac-worlds-first-electronic-computer-turns-80",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s40",
+   "title": "Norman Borlaug: Wheat breeder who averted famine with a 'Green Revolution'",
+   "publisher": "Scientific American",
+   "date": "2009-09-14",
+   "link": "https://www.scientificamerican.com/blog/news-blog/norman-borlaug-wheat-breeder-who-av-2009-09-14/",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to Class 59. Today we look at the big ideas and inventions that changed the 1900s. We will take them one at a time, and slowly."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "20th-Century Science and Technology"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Six topics: quantum theory and relativity, antibiotics and vaccines, the shape of DNA, computers and networks, the Green Revolution, and how we learned the Big Bang story."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Quantum theory and relativity\n2. Antibiotics and vaccines\n3. The shape of DNA\n4. Computers and early networks\n5. The Green Revolution\n6. Back to the Big Bang"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, quantum theory. Picture a staircase, not a smooth ramp. In 1900 Max Planck proposed that energy is given off in small units called quanta."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Quantum: a tiny packet of energy"
+   },
+   "cite": [
+    "s3",
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Five years later Einstein used Planck's idea to explain the photoelectric effect, an odd experimental result. He went further than Planck and treated light itself as coming in packets."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A staircase drawn next to a smooth ramp. Energy moves in steps, like the staircase."
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which picture matches the quantum idea?",
+    "right": "A staircase: energy comes in small steps.",
+    "wrong": [
+     "A smooth ramp: energy changes by any tiny amount.",
+     "A circle: energy goes round and round.",
+     "A mirror: energy bounces back."
+    ],
+    "why": "Planck proposed that energy is given off in small units called quanta, so it changes in steps, like a staircase."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Quantum theory soon reached the atom itself. By then it was no longer a side issue in physics. It was becoming the main story."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Quantum theory and the atom"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now relativity, from the same Einstein. He published special relativity in 1905 and general relativity in 1915."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1905: special relativity\n1915: general relativity\n1919: the eclipse test"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Special relativity could not handle gravity. General relativity could. Its big idea: the Sun's mass curves space around it, so starlight passing close by bends."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A heavy ball on a stretched sheet makes a dip. A marble rolls around the dip."
+   },
+   "cite": [
+    "s2",
+    "s35"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A good theory must predict something new. In May 1919, British expeditions watched a total solar eclipse. They checked whether stars near the Sun seemed to move."
+   },
+   "show": {
+    "kind": "map",
+    "text": "The 1919 eclipse path crossed the equator from South America to Uganda."
+   },
+   "cite": [
+    "s2",
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The stars had shifted just as Einstein predicted. He became world-famous almost at once."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "1919: starlight bends near the Sun"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What did the 1919 eclipse test?",
+    "right": "Whether the Sun's gravity bends starlight.",
+    "wrong": [
+     "How old the Sun is.",
+     "Whether energy comes in steps called quanta.",
+     "How far away the stars are."
+    ],
+    "why": "General relativity predicted that light bends in a gravitational field. The eclipse let astronomers photograph stars near the Sun and check."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next, medicine. An antibiotic is a medicine that fights bacteria. The first widely used one was penicillin, which comes from a mould."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Antibiotic: a medicine against bacteria"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In September 1928 Alexander Fleming came back from holiday. He found that bacteria had failed to grow around a mould that had landed on one of his dishes."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A round dish of bacteria with a clear ring around a patch of green mould."
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Fleming did not see how important it was. Howard Florey and Ernst Chain showed in 1940 that it could treat many diseases. By 1941 an injectable form was available."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1928: Fleming sees the mould\n1940: Florey and Chain show it works\n1941: injectable form\n1945: Nobel Prize for all three"
+   },
+   "cite": [
+    "s8",
+    "s7"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Who showed that penicillin could work as a medicine?",
+    "right": "Florey and Chain, in 1940.",
+    "wrong": [
+     "Fleming alone, on the day he saw the mould.",
+     "Nobody. It was never used as a medicine.",
+     "The astronomers of the 1919 eclipse."
+    ],
+    "why": "Fleming noticed the mould in 1928, but Florey and Chain showed in 1940 that penicillin could treat many bacterial diseases."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One caution. Some bacteria have since become resistant to penicillin. A medicine that works is not a medicine that works forever."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Resistance: some bacteria survive the drug"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now vaccines. Before them, the only protection against many diseases was surviving the infection. A vaccine trains the body ahead of time, safely."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Vaccine: practice for the body's defences"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Polio was feared. Jonas Salk made a vaccine from killed virus, which cannot cause the disease. In April 1955 a trial reported it safe and about 90 percent effective against paralysis."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "April 12, 1955: Salk vaccine reported safe and 90% effective"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Albert Sabin took another path: a live but weakened virus. It was easier to give, especially in poorer countries, and it followed in the early 1960s."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Salk: killed virus, injected | Sabin: live weakened virus, easier to give"
+   },
+   "cite": [
+    "s12",
+    "s10"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which vaccine used a live, weakened virus?",
+    "right": "Sabin's vaccine.",
+    "wrong": [
+     "Salk's vaccine.",
+     "Fleming's penicillin.",
+     "Neither used a virus."
+    ],
+    "why": "Salk used killed virus. Sabin used a live but weakened virus, which is why it was easier to give."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Vaccines' greatest win was smallpox. The World Health Organization began an intensified campaign in 1967, and in 1980 smallpox was declared eradicated."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1967: intensified campaign begins\n1980: smallpox declared eradicated\n1988: polio campaign begins"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Eradication means more than clearing one town. The WHO defines it as a permanent reduction to zero, with no risk of the disease coming back."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Eradication: permanently zero"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does eradication of a disease mean?",
+    "right": "Permanent reduction to zero by deliberate effort, with no risk of its return.",
+    "wrong": [
+     "The disease is gone from one town for a year.",
+     "Everyone has been vaccinated once.",
+     "Cases have fallen by half."
+    ],
+    "why": "The WHO defines eradication as permanent reduction to zero, with no more risk of reintroduction. That is more than clearing it from one area."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Smallpox was a good target for three reasons. It only infected humans, its symptoms were easy to spot, and its vaccine was cheap and effective."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Only infected humans\nEasy to recognise\nCheap, effective vaccine"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now DNA. It is the molecule that helps pass life's instructions from parents to children. Its shape was the great puzzle of the early 1950s."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "DNA: the molecule of inheritance"
+   },
+   "cite": [
+    "s36"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The answer was a double helix: two strands wound round each other, like a twisted ladder."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A twisted ladder: two long spiral strands joined by rungs."
+   },
+   "cite": [
+    "s37"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The clue was an X-ray picture. In May 1952 Rosalind Franklin and her student Raymond Gosling took Photograph 51 at King's College London. Its pattern of spots strongly suggests a helix."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A grey X-ray image with a dark X shape of spots, known as Photograph 51."
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In April 1953 Watson and Crick published their model in the journal Nature. Franklin and Gosling's paper, with the photograph, appeared in the same issue."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "May 1952: Photograph 51\nApril 1953: Watson and Crick's model; Franklin and Gosling's paper\n1962: Nobel Prize to Watson, Crick and Wilkins"
+   },
+   "cite": [
+    "s14",
+    "s13"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What did Photograph 51 suggest about DNA?",
+    "right": "That DNA has a helical shape.",
+    "wrong": [
+     "That DNA is a flat sheet.",
+     "That DNA is a single straight line.",
+     "That DNA is a closed ring."
+    ],
+    "why": "The pattern of spots in the X-ray image strongly suggests a helix, which led to the double-helix model."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Franklin died in 1958, and the 1962 Nobel Prize went to Watson, Crick and Maurice Wilkins. How credit was shared is still discussed, and we come back to it at the end."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Credit: see 'The other side'"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A frame of reference. In 1953 Stalin died in March, Everest was first climbed on 29 May, Elizabeth II was crowned on 2 June, and the Korean War armistice came in July."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "March 1953: Stalin dies\n29 May: Everest first climbed\n2 June: Elizabeth II crowned\n27 July: Korean armistice"
+   },
+   "cite": [
+    "s29",
+    "s30"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now computers. A computer follows a list of instructions, a program, to calculate automatically. A famous early one was ENIAC at the University of Pennsylvania."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "ENIAC: early electronic computer"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The US Army needed ENIAC to work out artillery firing tables. It was finished too late for the war. Its first big job, in December 1945, was a problem for the hydrogen bomb."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Built 1943 to 1946 for the US Army"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "It was huge. The machine had 40 panels, each nine feet tall. Technicians set it up for a job by rewiring its connections."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "40 panels, each nine feet tall"
+   },
+   "cite": [
+    "s39",
+    "s38"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What was ENIAC built to do?",
+    "right": "Calculate artillery firing tables for the US Army.",
+    "wrong": [
+     "Send messages between universities.",
+     "Cure bacterial infections.",
+     "Measure the bending of starlight."
+    ],
+    "why": "The military needed ENIAC to calculate ballistic tables, which are the firing tables used by artillery crews."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A frame of reference. In 1945 penicillin's three pioneers won their Nobel Prize and ENIAC did its first big job. In 1955 the Salk vaccine arrived, and ENIAC's long run ended that October."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1945: Nobel for penicillin; ENIAC's first big job\n1955: Salk vaccine; ENIAC retired"
+   },
+   "cite": [
+    "s8",
+    "s16",
+    "s33",
+    "s11"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Computers became more useful when joined together. ARPANET was a network funded by the US Defense Department. Its key idea was packet switching."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Packet switching"
+   },
+   "cite": [
+    "s34"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Packet switching breaks information into small bundles. They travel separately and are put back together at the other end."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A long letter cut into small cards, sent in separate envelopes, then reassembled."
+   },
+   "cite": [
+    "s34"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is packet switching?",
+    "right": "Breaking information into small bundles that are sent and put back together.",
+    "wrong": [
+     "Sending a whole message down one unbroken wire.",
+     "Writing messages on paper and posting them.",
+     "Switching a computer off and on."
+    ],
+    "why": "Packet switching breaks information into smaller bundles that are easier to transmit and are reassembled at the receiving end."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "On 29 October 1969, at 10:30 at night, a UCLA student tried to log in to a computer at Stanford Research Institute. Only the first two letters got through before it crashed."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "First message: lo"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That was three months after people first walked on the Moon. ARPANET began with four computers. It grew over two decades and was folded into the wider internet."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "July 1969: Moon landing\nOct 1969: first ARPANET message\n1989: ARPANET shut down"
+   },
+   "cite": [
+    "s20",
+    "s18",
+    "s19"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The internet gets its own story in Class 61. For now, on to food and the Green Revolution."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Green Revolution"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Norman Borlaug worked in Mexico from 1944. A fungus disease called rust was ruining wheat crops. He crossbred wheat to make types that resisted rust and gave more grain."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A wheat field with tall, thin stalks beside shorter, sturdier ones."
+   },
+   "cite": [
+    "s24",
+    "s23"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "He crossed his wheat with a Japanese dwarf wheat. The result was shorter, so it would not tip over under heavy grain, and it responded well to fertiliser."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Semi-dwarf wheat"
+   },
+   "cite": [
+    "s40"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why did shorter wheat help?",
+    "right": "It was less likely to tip over under heavy grain.",
+    "wrong": [
+     "It needed no water at all.",
+     "It could grow in the dark.",
+     "It was bred to feed insects."
+    ],
+    "why": "Shorter plants did not tip over under the extra grain at the top, and the new wheat was disease-resistant and responded well to fertiliser."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 1966 India imported 18,000 tons of the Mexican dwarf wheat seed. India's wheat harvest rose from 12.3 million tons in 1965 to 20 million in 1970."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Wheat harvests, 1965 and 1970",
+    "chart": "c1"
+   },
+   "cite": [
+    "s23",
+    "s22"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Pakistan's wheat also nearly doubled in those years. Borlaug won the Nobel Peace Prize in 1970. One estimate says his work saved about a billion people from starvation."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Estimated: 1 billion lives"
+   },
+   "cite": [
+    "s22",
+    "s31",
+    "s24"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A frame of reference: Borlaug was born in 1914, the same year as Jonas Salk. Two people from that one year changed how the world fights hunger and disease."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Born in 1914: Salk and Borlaug"
+   },
+   "cite": [
+    "s31",
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last, we return to Class 2. How do we know the universe had a beginning? Einstein's relativity gave scientists the tools."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Back to the Big Bang"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 1927 Georges Lemaitre, a Belgian scientist and priest, showed that an expanding universe fits Einstein's equations. In 1931 he suggested it began from a single 'primeval atom'."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1922: Friedmann's expanding solutions\n1927: Lemaitre\n1931: 'primeval atom'"
+   },
+   "cite": [
+    "s28",
+    "s27",
+    "s26"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In 1929 Edwin Hubble showed that galaxies are moving away from us, and the farther away, the faster. Run that backwards and everything was once closer together."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Dots on a balloon move apart as it is blown up. Farther dots move apart faster."
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What did Hubble find in 1929?",
+    "right": "Galaxies are moving away, and farther ones move faster.",
+    "wrong": [
+     "All galaxies are moving toward us.",
+     "All galaxies move at the same speed.",
+     "Galaxies never move."
+    ],
+    "why": "Hubble showed that galaxies seemed to recede at speeds proportional to their distance. That fits an expanding universe."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A rival idea, the Steady State, said matter was created continuously so the universe stayed the same. The two ideas made different predictions."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Big Bang: hot, dense start | Steady State: unchanging, new matter always appearing"
+   },
+   "cite": [
+    "s28",
+    "s27"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Big Bang predicted a faint glow left over from the hot early universe. In 1964, Penzias and Wilson at Bell Labs found unexplained radio noise from every direction."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Cosmic microwave background"
+   },
+   "cite": [
+    "s28",
+    "s27"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A Princeton team had been searching for just that glow. Both groups published in 1965. The Steady State idea could not explain it, and the Big Bang became the leading model."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "1965: the glow is explained"
+   },
+   "cite": [
+    "s27",
+    "s26",
+    "s28"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is the cosmic microwave background?",
+    "right": "A faint glow from every direction, left over from the hot early universe.",
+    "wrong": [
+     "Light from one very bright star.",
+     "Radio signals from a nearby planet.",
+     "The sound of the Sun."
+    ],
+    "why": "The Big Bang predicted leftover heat from a hot, dense beginning, and Penzias and Wilson found it as faint radiation coming from all directions."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Lemaitre died in 1966, three days after hearing of the discovery. In 2018 the International Astronomical Union recommended calling the law of expansion the Hubble-Lemaitre law."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Hubble-Lemaitre law"
+   },
+   "cite": [
+    "s25",
+    "s26"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Three pillars now support the Big Bang story: the universe's expansion, the amounts of light elements, and the microwave glow. That is the evidence behind Class 2."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. The universe is expanding\n2. The amounts of light elements\n3. The cosmic microwave background"
+   },
+   "cite": [
+    "s28"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let us put the century on one line. Each date is one idea from today."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1900 Planck's quanta\n1905/1915 relativity\n1928 penicillin noticed\n1929 galaxies receding\n1945 ENIAC\n1953 DNA double helix\n1955 Salk vaccine\n1965 cosmic glow\n1969 first ARPANET message\n1980 smallpox eradicated"
+   },
+   "cite": [
+    "s4",
+    "s1",
+    "s8",
+    "s26",
+    "s16",
+    "s14",
+    "s11",
+    "s27",
+    "s20",
+    "s9"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which of these happened in 1953?",
+    "right": "The DNA double helix was announced.",
+    "wrong": [
+     "The first ARPANET message was sent.",
+     "Smallpox was declared eradicated.",
+     "Penicillin was first noticed."
+    ],
+    "why": "Watson and Crick published the double helix in April 1953. The ARPANET message was in 1969, smallpox eradication in 1980, and penicillin was noticed in 1928."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next time, Class 60: the end of the Cold War, and how the world changed afterwards. Well done for staying with six big ideas."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Class 60, The End of the Cold War"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Wheat harvests in India and Pakistan (million tons)",
+   "rows": [
+    {
+     "label": "India 1965",
+     "value": 12.3,
+     "source": "s22"
+    },
+    {
+     "label": "India 1970",
+     "value": 20,
+     "source": "s22"
+    },
+    {
+     "label": "Pakistan 1965",
+     "value": 4.6,
+     "source": "s22"
+    },
+    {
+     "label": "Pakistan 1970",
+     "value": 8.4,
+     "source": "s22"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Relativity and quantum theory",
+   "links": [
+    "[[The Big Bang and the First Minutes]]",
+    "[[World War I]]"
+   ]
+  },
+  {
+   "topic": "Antibiotics and vaccines",
+   "links": [
+    "[[World War II]]",
+    "[[The Black Death and the Crisis of the 1300s]]"
+   ]
+  },
+  {
+   "topic": "DNA's structure",
+   "links": [
+    "[[The Origin of Life]]",
+    "[[The 1950s and early 1960s: Space, Nuclear Fear and Civil Rights]]"
+   ]
+  },
+  {
+   "topic": "Computers and early networks",
+   "links": [
+    "[[World War II]]",
+    "[[Globalization, the Internet and a New Century]]"
+   ]
+  },
+  {
+   "topic": "Green Revolution",
+   "links": [
+    "[[A New World Order: The UN, the Cold War and Decolonization]]",
+    "[[The Farming Revolution]]"
+   ]
+  },
+  {
+   "topic": "Return to the Big Bang",
+   "links": [
+    "[[How Do We Know? Reading the Evidence and Telling Time]]",
+    "[[The Big Bang and the First Minutes]]",
+    "[[First Stars, Galaxies and the Making of the Elements]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "1953 (DNA double helix announced, April)",
+   "elsewhere": "Stalin died on 5 March. Hillary and Tenzing reached the top of Everest on 29 May, and the news reached London on the morning of the coronation. Elizabeth II was crowned on 2 June, in the first coronation broadcast live on television. The Korean War armistice was signed on 27 July.",
+   "cite": [
+    "s29",
+    "s30",
+    "s14"
+   ]
+  },
+  {
+   "when": "1945 (penicillin Nobel Prize; ENIAC's first big job)",
+   "elsewhere": "The Second World War was ending. ENIAC was finished too late for the war, and its first big job was a hydrogen-bomb problem.",
+   "cite": [
+    "s8",
+    "s16"
+   ]
+  },
+  {
+   "when": "1955 (Salk vaccine approved; ENIAC retired)",
+   "elsewhere": "Salk's polio vaccine was reported safe on 12 April. Alexander Fleming died that year. ENIAC's long run ended in October.",
+   "cite": [
+    "s11",
+    "s8",
+    "s33"
+   ]
+  },
+  {
+   "when": "1969 (first ARPANET message, 29 October)",
+   "elsewhere": "The message came three months after a human first set foot on the Moon.",
+   "cite": [
+    "s20"
+   ]
+  },
+  {
+   "when": "1914 (births of Jonas Salk and Norman Borlaug)",
+   "elsewhere": "Salk (1914 to 1995), who made the first polio vaccine, and Borlaug (born 25 March 1914), who bred the Green Revolution wheat, were born in the same year.",
+   "cite": [
+    "s11",
+    "s31"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Max Planck started the quantum revolution in 1900.",
+   "other_view": "Historians debate whether Planck saw his 1900 step as the beginning of the end of classical physics. Some argue he treated it as a temporary calculating trick. Einstein's 1905 work treated light itself as quantised, which Planck did not.",
+   "cite": [
+    "s6",
+    "s3",
+    "s5"
+   ]
+  },
+  {
+   "claim": "Watson and Crick discovered the structure of DNA.",
+   "other_view": "Watson and Crick built the model and shared the 1962 Nobel Prize with Wilkins. But Franklin's Photograph 51 pushed their work forward, and she was unaware it had been shown to Watson. Some recent biographers argue the scientists at the time may have seen the work as collaborative, not as one team's achievement.",
+   "cite": [
+    "s13",
+    "s14",
+    "s15"
+   ]
+  },
+  {
+   "claim": "Salk's vaccine was the right way to beat polio.",
+   "other_view": "Sabin believed only a live, weakened virus would work. Salk believed a killed virus was safer. Sabin's vaccine was easier to give in poorer countries but can, rarely, cause vaccine-induced polio.",
+   "cite": [
+    "s12",
+    "s11"
+   ]
+  },
+  {
+   "claim": "ENIAC was the first electronic digital computer.",
+   "other_view": "ENIAC is widely called the first general-purpose electronic digital computer. A legal ruling, though, gave John Atanasoff recognition as the inventor of the first electronic digital computer.",
+   "cite": [
+    "s16",
+    "s17"
+   ]
+  },
+  {
+   "claim": "The Green Revolution was an unqualified success.",
+   "other_view": "Yields in India and Pakistan rose sharply. Some analysts, including a University of Michigan case study, point to costs: reduced crop diversity, more vulnerability to pests and disease, and the loss of local knowledge. Higher yields also depended on fertiliser.",
+   "cite": [
+    "s22",
+    "s23",
+    "s40"
+   ]
+  },
+  {
+   "claim": "Hubble discovered that the universe is expanding.",
+   "other_view": "Lemaitre reached the same conclusion in 1927, two years before Hubble's 1929 paper. Hubble read the redshifts as real motion, while Lemaitre saw expanding space itself. In 2018 the IAU recommended the name Hubble-Lemaitre law.",
+   "cite": [
+    "s25",
+    "s28"
+   ]
+  },
+  {
+   "claim": "The speed of the universe's expansion is settled.",
+   "other_view": "The Big Bang itself is now the leading model, but a detailed number is still argued over. One source notes that finding the Hubble constant is the remaining problem, and that values from the microwave background, around 67, differ from other values.",
+   "cite": [
+    "s32"
+   ]
+  }
+ ]
+}

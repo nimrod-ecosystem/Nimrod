@@ -1,0 +1,1098 @@
+{
+ "about": {
+  "title": "Mughal, Safavid, Qing and Tokugawa: Early Modern Asia",
+  "course": "history-of-everything",
+  "class_n": 42,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 33,
+  "length_note": "This class is a little over 30 minutes. It has 33 short beats of about a minute each. Four states plus a debate need that room, and each state gets one idea at a time with a check question. The Ottomans and Ming China were covered in class 37, so they are left out. The frame of reference is well sourced for 1600 to 1616. I did not find sourced world events for the 1640s to 1700s, so that part is left for later."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Akbar",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/biography/Akbar",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "Mughal dynasty - Akbar, Consolidation, Empire",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/Mughal-dynasty/Akbar",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "500 Years of the Mughal Empire",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/500-Years-of-the-Mughal-Empire",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "Shah Jahan",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/biography/Shah-Jahan",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "Akbar: The Making of the Mughal Empire",
+   "publisher": "Pragyesh IAS",
+   "date": "n.d.",
+   "link": "https://pragyesh.org/akbar/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "Notes on Policy of Sulh-i kul",
+   "publisher": "Unacademy",
+   "date": "n.d.",
+   "link": "https://unacademy.com/content/upsc/study-material/medieval-india/policy-of-sulh-i-kul/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "Safavid Iran",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Safavid_Iran",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "Safavid Conversion of Iran to Shiism",
+   "publisher": "Persian Heritage",
+   "date": "n.d.",
+   "link": "https://persianheritage.org/articles/en/safavid-shia-conversion",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "Safavid Dynasty (1501-1736): History, Religion & Art",
+   "publisher": "SurfIran",
+   "date": "n.d.",
+   "link": "https://surfiran.com/mag/safavid-dynasty/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "Abbas I, Shah (1571-1629)",
+   "publisher": "Encyclopedia.com",
+   "date": "n.d.",
+   "link": "https://www.encyclopedia.com/religion/encyclopedias-almanacs-transcripts-and-maps/abbas-i-shah-1571-1629",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "Shah Abbas I (1587-1629) 'The Great'",
+   "publisher": "the-persians.co.uk",
+   "date": "n.d.",
+   "link": "https://www.the-persians.co.uk/safavids3.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "History of China - The early Qing dynasty",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/history-of-China/The-early-Qing-dynasty",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "Timeline of the Qing dynasty",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Timeline_of_the_Qing_dynasty",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "The Manchu and the Qing dynasty",
+   "publisher": "Alpha History",
+   "date": "n.d.",
+   "link": "https://alphahistory.com/chineserevolution/manchu-qing-dynasty/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "Military of the Qing dynasty",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Military_of_the_Qing_dynasty",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "Kangxi",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/biography/Kangxi",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "The Qing Dynasty: the Last Imperial Throne of China",
+   "publisher": "CountryReports.org",
+   "date": "n.d.",
+   "link": "https://www.countryreports.org/articles/the-qing-dynasty",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "Political Events and Developments During the Qing Dynasty (1644-1912)",
+   "publisher": "University of Oregon (HIST 487 course page)",
+   "date": "2006",
+   "link": "https://pages.uoregon.edu/inaasim/Hist%20487/Spring%2006/Qing%20Dynasty.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "Tokugawa shogunate",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Tokugawa_shogunate",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "Edo period",
+   "publisher": "New World Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.newworldencyclopedia.org/entry/Edo_period",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "Sakoku",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/sakoku",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "Shimabara Rebellion",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/event/Shimabara-Rebellion",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "Japan's Edo Period: 250 Years of Enforced Peace, Controlled Isolation, and a Culture That Exploded Anyway",
+   "publisher": "Book of World History",
+   "date": "n.d.",
+   "link": "https://bookofworldhistory.com/blog/edo-period-japan-tokugawa-shogunate-history-culture-economy",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "Gunpowder empires",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/gunpowder-empires",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "Gunpowder empires",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Gunpowder_empires",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "Gunpowder Empires, Islam, and Bureaucracy",
+   "publisher": "OER Project",
+   "date": "n.d.",
+   "link": "https://www.oerproject.com/OER-Materials/OER-Media/HTML-Articles/Origins/Unit6/Gunpowder-Empires",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "Great Events from History: The 17th Century (table of contents)",
+   "publisher": "Salem Press",
+   "date": "n.d.",
+   "link": "https://salempress.com/Media/SalemPress/samples/gevents_17_toc%5B1%5D.pdf",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "Timelines",
+   "publisher": "Chicago Shakespeare Theater",
+   "date": "n.d.",
+   "link": "https://www.chicagoshakes.com/education/teaching_resources/shakespeare_and_our_theater/timelines",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s29",
+   "title": "Timelines: 1600-1700 Historical Events",
+   "publisher": "Designing With Type",
+   "date": "n.d.",
+   "link": "https://www.designingwithtype.com/timelines.php?year=1600&id=6",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s30",
+   "title": "Tokugawa Shogunate Timeline",
+   "publisher": "Preceden",
+   "date": "n.d.",
+   "link": "https://www.preceden.com/timeline/tokugawa-shogunate",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s31",
+   "title": "The Most Important Emperors of the Mughal Empire",
+   "publisher": "TheCollector",
+   "date": "n.d.",
+   "link": "https://www.thecollector.com/emperors-mughal-empire/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s32",
+   "title": "Mughal Empire (Kids)",
+   "publisher": "Encyclopaedia Britannica Kids",
+   "date": "n.d.",
+   "link": "https://kids.britannica.com/kids/article/Mughal-Empire/353501",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s33",
+   "title": "Tokugawa Shogunate: Rise, Rule and Fall",
+   "publisher": "Trip To Japan",
+   "date": "n.d.",
+   "link": "https://www.triptojapan.com/blog/tokugawa-shogunate-a-pivotal-part-of-japanese-history",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 42. Earlier in the course we met the Ottomans and Ming China. Today we put four more big Asian states side by side and compare them."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Four Asian States, 1500s to 1700s"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "For each state we will ask three things. Who ruled it? How did they keep control? And what changed or lasted afterwards?"
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Who ruled?\n2. How did they keep control?\n3. What lasted?"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here are our four states, one block each: Mughal India, Safavid Iran, Qing China and Tokugawa Japan. We will visit them in that order."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "block",
+    "count": 4,
+    "layout": "row",
+    "text": "Mughal India, Safavid Iran, Qing China, Tokugawa Japan"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a frame of reference. In 1605 the Mughal emperor Akbar died. That same year Cervantes published Don Quixote and England had the Gunpowder Plot. In 1603 Elizabeth I died in England, and Tokugawa Ieyasu became shogun in Japan."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1600 East India Company founded | 1603 Elizabeth I dies; Ieyasu becomes shogun | 1605 Akbar dies; Don Quixote; Gunpowder Plot | 1607 Jamestown founded"
+   },
+   "cite": [
+    "s1",
+    "s27",
+    "s28",
+    "s29",
+    "s30"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which year did the Mughal emperor Akbar die, the same year Don Quixote was published?",
+    "right": "1605",
+    "wrong": [
+     "1556",
+     "1600",
+     "1683"
+    ],
+    "why": "Akbar died in 1605, and Cervantes published Don Quixote that year too."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now Mughal India. 'Mughal' names a family of rulers who governed much of India. The emperors were Muslim, but most of the people they ruled were Hindu."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Mughal"
+   },
+   "cite": [
+    "s32"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Akbar was the third Mughal emperor. He was about thirteen when his father Humayun died in 1556. That November the Mughals beat a rival, Hemu, at the Second Battle of Panipat. That secured his throne. He reigned until 1605."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Akbar, ruled 1556 to 1605"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "How did Akbar keep control? He built a system called mansabdari. It tied a person's rank, pay and military duty to serving the emperor. He also split the empire into provinces."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Mansabdari = rank + pay + military duty, all tied to imperial service\nProvinces (subas)"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What did the mansabdari system tie together?",
+    "right": "A person's rank, pay and military duty, all linked to serving the emperor",
+    "wrong": [
+     "The price of grain and the size of the harvest",
+     "A person's religion and their tax rate",
+     "The length of a reign and the size of the army"
+    ],
+    "why": "Mansabdari linked rank, salary and military obligation directly to imperial service."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Akbar's idea of government was called sulh-i kul, which means 'peace with all'. He brought Rajput and other regional leaders into the government. He also married a Hindu princess."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sulh-i kul = peace with all"
+   },
+   "cite": [
+    "s5",
+    "s32"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What does sulh-i kul mean?",
+    "right": "Peace with all, or universal peace",
+    "wrong": [
+     "One empire, one faith",
+     "Tax for every household",
+     "Rule by the army"
+    ],
+    "why": "Sulh-i kul was the principle of peace with all communities, which Akbar used as a basis for governing."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is something historians argue about. Some books say Akbar founded a new religion called Din-i Ilahi. Others say it was only a small circle of devoted followers. We will look at both."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "A new religion (some textbooks) | A small circle of followers (other historians)"
+   },
+   "cite": [
+    "s6",
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Akbar's grandson Shah Jahan ruled from 1628 to 1658. He built the Taj Mahal for his wife Mumtaz Mahal. Then Aurangzeb ruled from 1658 to 1707, and the empire reached its biggest size."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The Taj Mahal: a white marble tomb in Agra, India, built for Mumtaz Mahal"
+   },
+   "cite": [
+    "s4",
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Who built the Taj Mahal, and for whom?",
+    "right": "Shah Jahan built it for his wife Mumtaz Mahal",
+    "wrong": [
+     "Akbar built it for his father Humayun",
+     "Aurangzeb built it for his mother",
+     "Ismail I built it for his teacher"
+    ],
+    "why": "The Taj Mahal is Shah Jahan's masterpiece, built in memory of his wife Mumtaz Mahal."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "After Aurangzeb the empire weakened. By the middle of the 1700s the Mughals ruled only a small area around Delhi. Why it weakened is another place where historians give different answers."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Decline: why?"
+   },
+   "cite": [
+    "s32",
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now we move west to Iran. In 1501 a young leader named Ismail took the city of Tabriz and declared himself shah, meaning king. He was about fourteen. He founded the Safavid dynasty."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map: Iran, with the city of Tabriz in the north-west marked 1501"
+   },
+   "cite": [
+    "s8",
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Ismail made Twelver Shia Islam the official religion. Shia and Sunni are the two big branches of Islam. Iran was then mostly Sunni, so this was a big change."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Twelver Shia Islam: official religion of the Safavid state"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "What religion did Shah Ismail make official in Safavid Iran?",
+    "right": "Twelver Shia Islam",
+    "wrong": [
+     "Sunni Islam",
+     "Buddhism",
+     "Christianity"
+    ],
+    "why": "In 1501 Ismail declared Twelver Shia Islam the state religion of a mostly Sunni land."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Did the whole country change in 1501? No. One source says becoming mainly Shia was a gradual process, not a single event in 1501."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Gradual, not overnight"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Shah Abbas I ruled from 1587 to 1629. Tribal forces were strong in his day. He built a standing army of slave soldiers called ghulams. They were mostly Armenians and Georgians captured in raids, and they were loyal only to him."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ghulam = military slave"
+   },
+   "cite": [
+    "s10",
+    "s11"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why did Shah Abbas build an army of ghulams?",
+    "right": "They were loyal only to him, which cut the military power of the tribes",
+    "wrong": [
+     "They were cheaper than muskets",
+     "They were all Safavid princes",
+     "Islamic law required it"
+    ],
+    "why": "A standing army loyal only to the shah reduced the power of the tribal forces."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In 1598 Abbas made Isfahan his main capital. It became an important political and trading centre. The Safavid dynasty ruled until 1736."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1598: Isfahan becomes the capital"
+   },
+   "cite": [
+    "s9",
+    "s7"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "On to China. The Qing were Manchu, a people from the north-east. In spring 1644 a Manchu army crossed the Great Wall. A general named Wu Sangui let them through the Shanhai Pass. That November the Shunzhi Emperor was enthroned in Beijing."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map: the Great Wall, Shanhai Pass on the north-east coast, Beijing to the south-west"
+   },
+   "cite": [
+    "s13",
+    "s14"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The conquest of all China did not finish in 1644. It took the Manchu several decades. A big revolt by three generals was put down in 1681. In 1683 the Qing took Taiwan, the last Ming loyalist stronghold."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1644 Beijing | 1673 revolt of three generals | 1681 revolt ends | 1683 Taiwan taken"
+   },
+   "cite": [
+    "s12",
+    "s16"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "In which year did the Qing take Taiwan, the last Ming loyalist stronghold?",
+    "right": "1683",
+    "wrong": [
+     "1644",
+     "1673",
+     "1722"
+    ],
+    "why": "1683 is when the Qing eliminated the last Ming loyalist base on Taiwan."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Who actually fought? The Manchu banner troops were the best fighters. But one source says most of the fighting was done by Chinese banner units and Green Standard troops."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Manchu banners: most effective force | Chinese banners and Green Standard troops: most of the fighting"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "According to this source, who did most of the fighting in the Qing conquest?",
+    "right": "Chinese banner units and Green Standard troops",
+    "wrong": [
+     "Only Manchu cavalry",
+     "Dutch soldiers",
+     "Japanese samurai"
+    ],
+    "why": "The source says the Manchu banners were the most effective, but most fighting was done by Chinese banner and Green Standard troops."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Qing also made a rule about hair. Men had to shave the front of the head and wear a long braid called a queue. In 1645 men were given ten days to obey or face death. It was a sign of submission, and it was resisted."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A man with a shaved forehead and a long braid at the back: the queue"
+   },
+   "cite": [
+    "s14",
+    "s13"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was the queue order?",
+    "right": "A rule that Chinese men wear the Manchu hairstyle, as a sign of submission",
+    "wrong": [
+     "A tax paid in silk",
+     "A rule for building city walls",
+     "A ban on foreign trade"
+    ],
+    "why": "The queue, a shaved forehead and long braid, was a visible sign of obedience, and not wearing it was defiance."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Qing grew huge. The Kangxi emperor ruled from 1661 to 1722. Under the later Qianlong emperor the empire covered about 13 million square kilometres. That included Manchuria, Mongolia, Xinjiang and Tibet. It also cost a lot of money."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 13 million square kilometres"
+   },
+   "cite": [
+    "s16",
+    "s17"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "About how big was the Qing empire at its height?",
+    "right": "About 13 million square kilometres",
+    "wrong": [
+     "About 1 million square kilometres",
+     "About 3 million square kilometres",
+     "About 30 million square kilometres"
+    ],
+    "why": "The source gives about 13 million square kilometres under the Qianlong emperor."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One famous line is from this proud empire. The Qianlong emperor is said to have told King George of England the words in the quote on screen. He rejected British trade."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "We possess all things"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last stop is Japan. Japan had a long period of civil war. Tokugawa Ieyasu won the Battle of Sekigahara in 1600, and in 1603 he became shogun, a military ruler. The emperor stayed in Kyoto as a ceremonial figure."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Shogun = military ruler"
+   },
+   "cite": [
+    "s19",
+    "s30",
+    "s33"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "How did the Tokugawa keep the regional lords, the daimyo, in check? With sankin-kotai, meaning alternate attendance. Lords spent alternate years in Edo, and their wives and children stayed there as hostages."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sankin-kotai = alternate attendance"
+   },
+   "cite": [
+    "s19",
+    "s20"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What did sankin-kotai require of the daimyo?",
+    "right": "To spend alternate years in Edo, with their families kept there",
+    "wrong": [
+     "To pay all their taxes in rice",
+     "To give up their swords to the emperor",
+     "To live permanently in Kyoto"
+    ],
+    "why": "It kept the lords close and their families as hostages, to reduce the chance of rebellion."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Edo grew into a giant city. By the middle of the 1700s it had more than a million people. One source says it was likely the largest city in the world then."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Edo: more than 1,000,000 people"
+   },
+   "cite": [
+    "s20",
+    "s23"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the policy called sakoku, or closed country. In 1635 Japanese people were forbidden to travel abroad. In 1636 the Dutch were limited to Dejima, a small artificial island in Nagasaki harbour. A Catholic uprising at Shimabara in 1637 and 1638 hardened the government's fear of foreign influence."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1635 Japanese forbidden to leave\n1636 Dutch confined to Dejima\n1637-38 Shimabara Rebellion"
+   },
+   "cite": [
+    "s20",
+    "s21",
+    "s22"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What was Dejima?",
+    "right": "A small artificial island in Nagasaki harbour where Dutch trade was confined",
+    "wrong": [
+     "The shogun's castle in Edo",
+     "A Portuguese colony",
+     "A battlefield where the Tokugawa won in 1600"
+    ],
+    "why": "The Dutch were allowed to stay in Japan, but only on the walled island of Dejima."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Was Japan really shut tight? Not completely. The Dutch and Chinese still traded. Each Dutch captain had to hand over a report on world events. Sakoku ended in 1854 with the Treaty of Kanagawa."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Closed, but not sealed"
+   },
+   "cite": [
+    "s21",
+    "s23"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now let's compare. This chart shows how long each state's rule lasted, from the start year to the end year. I did the subtraction myself from the dates in the sources."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1",
+    "text": "Years each state lasted"
+   },
+   "cite": [
+    "s31",
+    "s7",
+    "s14",
+    "s30"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Which of the four states had the shortest formal rule on this chart?",
+    "right": "Safavid Iran, about 235 years",
+    "wrong": [
+     "Qing China",
+     "Tokugawa Japan",
+     "Mughal India"
+    ],
+    "why": "Safavid rule ran from 1501 to 1736, about 235 years. The Mughal bar counts the nominal dynasty, which was weak long before it ended."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Each state found its own way to keep control. The Mughals used a rank system and brought in regional leaders. The Safavids used slave soldiers. The Qing used the banner armies and the queue. The Tokugawa used alternate attendance and limits on foreign contact."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Mughal: mansabdari + regional leaders\nSafavid: ghulam army\nQing: banners + queue order\nTokugawa: sankin-kotai + sakoku"
+   },
+   "cite": [
+    "s3",
+    "s5",
+    "s10",
+    "s14",
+    "s19",
+    "s21"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which state used alternate attendance to keep its regional lords under control?",
+    "right": "Tokugawa Japan",
+    "wrong": [
+     "Safavid Iran",
+     "Mughal India",
+     "Qing China"
+    ],
+    "why": "Sankin-kotai, alternate years in Edo with families kept as hostages, was a Tokugawa policy."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the debate. Two historians, Marshall Hodgson and William McNeill, came up with the term 'gunpowder empires'. It names the Ottoman, Safavid and Mughal empires. Their idea was that gunpowder weapons helped rulers gather power over large lands."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Gunpowder empires: Ottoman, Safavid, Mughal"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "Which three empires does the term 'gunpowder empires' name?",
+    "right": "The Ottoman, Safavid and Mughal empires",
+    "wrong": [
+     "Qing, Tokugawa and Ming",
+     "Roman, Persian and Mongol",
+     "Byzantine, Mughal and Qing"
+    ],
+    "why": "Hodgson and McNeill used the term for those three Islamic empires."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Other historians push back. One problem is timing. For two of the three empires, the Ottomans and the Safavids, guns came after their first big territorial gains. Only for the Mughals did guns come first."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Claim: guns built the empires | Problem: guns often came after the first conquests"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What is one criticism of the gunpowder empires idea?",
+    "right": "Firearms often came after the empires' first big territorial gains",
+    "wrong": [
+     "Gunpowder was never used in Asia",
+     "The three empires were not Islamic",
+     "Cannons were only invented in 1800"
+    ],
+    "why": "The source says guns did not come first for the Ottomans and Safavids, so the idea is not seen as a full explanation."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Others say gunpowder was only part of the story. Strong government and bureaucracy mattered too. And Russia and Qing China also used gunpowder weapons to build central power. So the term may be too narrow."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Gunpowder + bureaucracy\nQing China and Russia too\nMaybe 'empires in the age of gunpowder'"
+   },
+   "cite": [
+    "s26",
+    "s24"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's finish with a quick recap. Four big states grew in the 1500s to 1700s. Each found its own way to keep control. And historians still argue about how much gunpowder explains."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Mughal India: Akbar, mansabdari\nSafavid Iran: Shia state, ghulams\nQing China: conquest, queue order\nTokugawa Japan: shogun, alternate attendance\nDebate: gunpowder empires"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "How long each state's rule lasted (years, calculated from start and end dates)",
+   "rows": [
+    {
+     "label": "Mughal India (1526-1857)",
+     "value": 331,
+     "source": "s31"
+    },
+    {
+     "label": "Qing China (1644-1912)",
+     "value": 268,
+     "source": "s14"
+    },
+    {
+     "label": "Tokugawa Japan (1603-1868)",
+     "value": 265,
+     "source": "s30"
+    },
+    {
+     "label": "Safavid Iran (1501-1736)",
+     "value": 235,
+     "source": "s7"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Mughal India and Akbar",
+   "links": [
+    "[[The Ottomans and the Age of Exploration]]",
+    "[[Enlightenment and Absolute Monarchy]]"
+   ]
+  },
+  {
+   "topic": "Safavid Iran and Shia Islam",
+   "links": [
+    "[[The Rise of Islam and the Caliphates]]"
+   ]
+  },
+  {
+   "topic": "Qing conquest and the Manchu",
+   "links": [
+    "[[Ottomans, Ming China and the Age of Exploration]]",
+    "[[Imperialism: Africa, India, China and Japan]]"
+   ]
+  },
+  {
+   "topic": "Tokugawa Japan and sakoku",
+   "links": [
+    "[[Japan, Korea, Southeast Asia and Medieval India]]",
+    "[[Imperialism: Africa, India, China and Japan]]"
+   ]
+  },
+  {
+   "topic": "The gunpowder empires debate",
+   "links": [
+    "[[The Scientific Revolution]]"
+   ]
+  },
+  {
+   "topic": "Frame of reference still to add for the 1640s to 1700s",
+   "links": [
+    "[[Enlightenment and Absolute Monarchy]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "1600",
+   "elsewhere": "The East India Company was founded in England, and Tokugawa Ieyasu won the Battle of Sekigahara in Japan. Kepler calculated the elliptical paths of the planets.",
+   "cite": [
+    "s29",
+    "s19"
+   ]
+  },
+  {
+   "when": "1603",
+   "elsewhere": "Queen Elizabeth I died and James I took the English throne. The same year Tokugawa Ieyasu was appointed shogun in Japan.",
+   "cite": [
+    "s28",
+    "s30"
+   ]
+  },
+  {
+   "when": "1605",
+   "elsewhere": "Akbar died. Cervantes published Don Quixote, England had the Gunpowder Plot, and Jahangir took the Mughal throne.",
+   "cite": [
+    "s1",
+    "s27"
+   ]
+  },
+  {
+   "when": "1607",
+   "elsewhere": "The English founded Jamestown in Virginia, and Monteverdi composed the first opera, Orfeo.",
+   "cite": [
+    "s27",
+    "s29"
+   ]
+  },
+  {
+   "when": "1608 to 1610",
+   "elsewhere": "The telescope was invented in 1608, and Galileo confirmed the heliocentric model of the solar system in 1610.",
+   "cite": [
+    "s27"
+   ]
+  },
+  {
+   "when": "1616",
+   "elsewhere": "Shakespeare and Cervantes both died. Shah Abbas I was ruling Safavid Iran.",
+   "cite": [
+    "s29",
+    "s10"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Akbar founded a new religion, Din-i Ilahi, based on sulh-i kul.",
+   "other_view": "Some sources describe Din-i Ilahi as a small circle of disciples who promised loyalty and ethical conduct to Akbar, with the name added later. Sulh-i kul itself is described as a principle of government.",
+   "cite": [
+    "s6",
+    "s5"
+   ]
+  },
+  {
+   "claim": "The Mughal Empire declined mainly because of Aurangzeb's religious policies.",
+   "other_view": "Britannica says his orthodoxy likely cost the empire its stability. It also says his long reign strained the empire's administration and finances, so decline may have had economic causes too.",
+   "cite": [
+    "s3"
+   ]
+  },
+  {
+   "claim": "Iran became Shia when Ismail declared it in 1501.",
+   "other_view": "Other accounts say becoming mainly Twelver Shia was a gradual process, not a single event in 1501.",
+   "cite": [
+    "s8",
+    "s9"
+   ]
+  },
+  {
+   "claim": "The Qing conquest was a conquest of China by the Manchu.",
+   "other_view": "The invading army included Mongol and Han Chinese banners. Most of the fighting, especially in the south, was done by Chinese banners and Green Standard troops.",
+   "cite": [
+    "s15"
+   ]
+  },
+  {
+   "claim": "Tokugawa Japan was a closed country.",
+   "other_view": "Sakoku strictly limited contact but did not end it. The Dutch and Chinese still traded at Nagasaki, and Dutch captains reported world events to the shogunate.",
+   "cite": [
+    "s21",
+    "s23"
+   ]
+  },
+  {
+   "claim": "Gunpowder weapons explain why the Ottoman, Safavid and Mughal empires rose.",
+   "other_view": "Critics say firearms often came after the first big conquests, so the idea is not seen as adequate or accurate. Others say the label only means empires of the gunpowder age, and that Qing China and Russia fit the pattern too.",
+   "cite": [
+    "s25",
+    "s24",
+    "s26"
+   ]
+  }
+ ]
+}

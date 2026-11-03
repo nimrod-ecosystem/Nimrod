@@ -1,0 +1,1350 @@
+{
+ "about": {
+  "title": "Printing and Schools: Copying at Scale",
+  "course": "cumulative-culture",
+  "class_n": 5,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 40,
+  "length_note": "About 40 minutes. The class has five topics, and each is taught in short steps with a check question. The historians' debate over whether print fixed texts is kept short in the lesson and set out in full in other_side, so the pace stays steady."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "The world's earliest dated printed book: The Diamond Sutra, 868 CE",
+   "publisher": "University of Oxford, Cabinet",
+   "date": "n.d.",
+   "link": "https://www.cabinet.ox.ac.uk/worlds-earliest-dated-printed-book-diamond-sutra-868-ce",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "The Diamond Sutra",
+   "publisher": "International Dunhuang Programme (British Library)",
+   "date": "n.d.",
+   "link": "https://idp.bl.uk/blog/the-diamond-sutra/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "The First Moveable Type Printing Press (Science, Technology and Society, ch. 32)",
+   "publisher": "Clemson University open textbook",
+   "date": "n.d.",
+   "link": "https://opentextbooks.clemson.edu/sciencetechnologyandsociety/chapter/the-first-moveable-type-printing-press/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "East Asian typography",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/East_Asian_typography",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Bi Sheng (Research Starters)",
+   "publisher": "EBSCO",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/history/bi-sheng/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Early Asian Movable Type, History of Text Technologies research guide",
+   "publisher": "Florida State University Libraries",
+   "date": "n.d.",
+   "link": "https://guides.lib.fsu.edu/hott/printing/earlyasian",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "History of publishing: the age of early printing, 1450-1550",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/publishing/The-age-of-early-printing-1450-1550",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Incunabula",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/incunabula",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "Charting the 'Rise of the West': Manuscripts and Printed Books in Europe, A Long-Term Perspective from the Sixth through Eighteenth Centuries (abstract page)",
+   "publisher": "Journal of Economic History, via Semantic Scholar (Buringh and van Zanden)",
+   "date": "2009-06",
+   "link": "https://www.semanticscholar.org/paper/Charting-the-%E2%80%9CRise-of-the-West%E2%80%9D:-Manuscripts-and-in-Buringh-Zanden/5ced62a27845716cee61b67bc48a4c2fc17ed5b3",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "The printing works",
+   "publisher": "Museum Plantin-Moretus, Antwerp",
+   "date": "n.d.",
+   "link": "https://museumplantinmoretus.be/en/page/printing-works",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Plantin-Moretus House-Workshops-Museum Complex, Belgium",
+   "publisher": "Google Arts & Culture (UNESCO World Heritage content)",
+   "date": "n.d.",
+   "link": "https://artsandculture.google.com/story/plantin-moretus-house-workshops-museum-complex-belgium-unesco/qgXxWnOI--kkPg?hl=en",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "The printing workshop",
+   "publisher": "Museum Plantin-Moretus, Antwerp",
+   "date": "n.d.",
+   "link": "https://museumplantinmoretus.be/en/seeing-doing/museum/printing-workshop",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Museum Plantin-Moretus: From writer to reader",
+   "publisher": "Mad'in Europe",
+   "date": "n.d.",
+   "link": "https://www.madineurope.eu/en/museum-plantin-moretus-from-writer-to-reader/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Plantin-Moretus museum",
+   "publisher": "prepressure.com",
+   "date": "n.d.",
+   "link": "https://www.prepressure.com/printing/museum/plantin-moretus",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Bologna as the Law School Model in Medieval Europe",
+   "publisher": "Brewminate",
+   "date": "n.d.",
+   "link": "https://brewminate.com/bologna-as-the-law-school-model-in-medieval-europe/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "The Pecia System and the Medieval University Book Trade, ca. 1200-1340",
+   "publisher": "University of Pennsylvania Libraries (Sims event series)",
+   "date": "n.d.",
+   "link": "https://www.library.upenn.edu/sims/event-series/pecia-system",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "History of European universities",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/History_of_European_universities",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Being the educational world leader helped Prussia catch up in the Industrial Revolution",
+   "publisher": "CEPR VoxEU",
+   "date": "n.d.",
+   "link": "https://cepr.org/voxeu/columns/being-educational-world-leader-helped-prussia-catch-industrial-revolution",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "Mass Primary Education in the Nineteenth Century",
+   "publisher": "Globalistics and Globalization Studies (sociostudies.org)",
+   "date": "2016",
+   "link": "https://www.sociostudies.org/almanac/articles/mass_primary_education_in_the_nineteenth_century/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Education in the Enlightenment",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Education_in_the_Enlightenment",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "The short history of global living conditions and why it matters that we know it",
+   "publisher": "Our World in Data",
+   "date": "n.d.",
+   "link": "https://ourworldindata.org/a-history-of-global-living-conditions",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Global literacy since 1800 (OWID based on OECD and UNESCO), data table",
+   "publisher": "Wikimedia Commons (Our World in Data data)",
+   "date": "n.d.",
+   "link": "https://commons.wikimedia.org/wiki/Data:Global_literacy_since_1800_(OWID_based_on_OECD_and_UNESCO_(2019))_(OWID_2982).tab",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Medieval Book Production and Monastic Life",
+   "publisher": "Dartmouth College, Ancient Books",
+   "date": "2016-05-24",
+   "link": "https://sites.dartmouth.edu/ancientbooks/2016/05/24/medieval-book-production-and-monastic-life/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "Two Reasons There Are Variants in Our Copies of the Bible",
+   "publisher": "Text & Canon",
+   "date": "n.d.",
+   "link": "https://textandcanon.org/why-there-are-variants-in-our-copies-of-the-bible/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Adrian Johns's History of the Book (review)",
+   "publisher": "H-Net Reviews",
+   "date": "n.d.",
+   "link": "https://www.h-net.org/reviews/showrev.php?id=3359",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "The Nature of the Book: Print and Knowledge in the Making (review)",
+   "publisher": "Project MUSE",
+   "date": "n.d.",
+   "link": "https://muse.jhu.edu/article/10872/summary",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "Elizabeth Eisenstein",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Elizabeth_Eisenstein",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "Studium generale",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Studium_generale",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class five. Today's question is simple. How did knowledge get cheaper to copy, and how did more people get to learn it?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Printing and Schools: Copying at Scale"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Remember the ratchet from class one? A ratchet clicks forward and does not slip back. Culture works like that when each generation keeps what the last one learned."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ratchet: gains are kept"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A ratchet only holds if knowledge can be copied. Copying is the click. Today we follow how copying got faster, cheaper and wider, in five steps."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Hand copying | 2. Printing in Asia and Europe | 3. The printing house | 4. Schools and literacy | 5. Standard texts, good and bad"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step one. Before printing in Europe, one scribe copied one book at a time. One pen, one page, one book."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "book",
+    "count": 1,
+    "layout": "row",
+    "text": "One scribe, one book at a time"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "People who copy by hand slip. They skip a line, misspell a word, or misread one. The next scribe may then copy that slip as if it were right."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Copying slips"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Quick check on that idea."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Check: a slip in the source"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A scribe copies a book that already has a slip in it. What may happen to the slip?",
+    "right": "It can be copied into the new book too.",
+    "wrong": [
+     "It always fixes itself.",
+     "It can never be copied.",
+     "It turns into a new chapter."
+    ],
+    "why": "The scribe works from the copy in front of them, so a slip in the source can travel on."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To be fair, scribes also noticed and fixed mistakes. Errors did not simply pile up forever. Hand copying was careful work. It was just slow and costly."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Hand copying: slow, one book at a time, slips can travel | But: scribes also spotted and corrected errors"
+   },
+   "cite": [
+    "s24",
+    "s15"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "How slow? Before printing, Europe's manuscript books could be counted in thousands. By 1500, after about fifty years of printing, there were more than nine million."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "More than 9,000,000 books in Europe by 1500"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Prices fell too. One study finds that book production rose after the mid-1400s probably because books got cheaper and more people could read."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Cheaper books + more readers"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's check the size of that change."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Thousands before printing; over 9 million by 1500"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "How did the number of books in Europe change between the time before printing and 1500?",
+    "right": "From thousands to more than nine million.",
+    "wrong": [
+     "From millions to slightly more millions.",
+     "It stayed about the same.",
+     "It fell, because books became rare."
+    ],
+    "why": "Britannica says manuscript books were counted in thousands before printing, and there were more than 9,000,000 books by 1500."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step two. Printing began in East Asia. In woodblock printing, a whole page is carved into a block of wood, inked and pressed onto paper. One block makes many copies."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Woodblock printing"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The oldest dated printed book we know is the Diamond Sutra, a Buddhist text from China. Its date is 11 May 868."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "the earliest, dated, printed book in the world"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It was found by accident in a hidden cave at Dunhuang, in northwest China, along with tens of thousands of other scrolls. Today it is kept at the British Library."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A long paper scroll. At its start, a carved black-ink picture of the Buddha teaching. It lay in a sealed cave near Dunhuang until about 1900."
+   },
+   "cite": [
+    "s2",
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Time to check that."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Check: the Diamond Sutra"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is the Diamond Sutra known for?",
+    "right": "It is the oldest dated printed book we know, from 868.",
+    "wrong": [
+     "It was the first book ever written.",
+     "It was the first book printed with metal type.",
+     "It was the first book printed in Europe."
+    ],
+    "why": "Its date of 11 May 868 makes it the earliest dated printed book known, and it was made in China."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next idea: movable type. Instead of carving a whole page, you make separate pieces, one for each character, and rearrange them for every page. Then you reuse the pieces."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Movable type: reusable pieces"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Around 1041, in Song China, an artisan named Bi Sheng made movable type from clay pieces. They could be arranged to print one page, then rearranged for another."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Bi Sheng, about 1041: clay type"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Movable type did not take over in China. Chinese writing uses thousands of different characters, so printers needed a huge set of pieces. Woodblock stayed popular for East Asian text."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Many characters = many pieces"
+   },
+   "cite": [
+    "s4",
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Check that reason."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Check: why woodblock stayed popular"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why did woodblock printing often stay more popular than movable type for Chinese text?",
+    "right": "Chinese needs thousands of different characters, so a huge set of pieces was required.",
+    "wrong": [
+     "Movable type was against the law.",
+     "Ink had not been invented yet.",
+     "Nobody could make clay pieces."
+    ],
+    "why": "Movable type needs reusable pieces for each character, and Chinese has thousands of them."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Korea took movable type further. By the 13th century Korean printers had movable metal type. The oldest surviving book printed with metal type is the Jikji, from Korea in 1377."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Jikji, Korea, 1377: metal type"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So when Johannes Gutenberg worked in Mainz, Germany, in the 1450s, he did not invent printing with movable type. He built on earlier ideas."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Gutenberg, Mainz, 1450s"
+   },
+   "cite": [
+    "s3",
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "What he did was combine parts into one working system. He used a goldsmith's skill to make a casting metal, molds for even letters, and a modified screw press."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Casting metal for type | Molds for even letters | A modified screw press"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a number check. The Diamond Sutra is from 868. Gutenberg's press in Europe is from the 1450s."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Diamond Sutra: 868 | Gutenberg, Mainz: 1450s"
+   },
+   "cite": [
+    "s1",
+    "s8"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "About how many years came between the 868 Diamond Sutra and Gutenberg's press in the 1450s?",
+    "right": "About 580 years.",
+    "wrong": [
+     "About 60 years.",
+     "About 1,000 years.",
+     "About 6,000 years."
+    ],
+    "why": "1450 minus 868 is 582, so printing existed in Asia roughly six centuries before Gutenberg."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Printing spread, but not everywhere at once. It reached England in 1476. In 1500 England still had only five printers, all in London and all foreigners."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "England: printing arrives 1476"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step three. Step inside a printing house. Plantin's, in Antwerp, is a museum today, and the 16th-century workshop is almost completely intact."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The printing house"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 1575 it had 56 men. There were 32 printers, 20 compositors, three proofreaders and one unskilled labourer. The museum says it was the largest business of its kind in the world then."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Plantin's workforce, 1575",
+    "chart": "c2"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A compositor is the person who sets the type. They placed lead letters into a composing stick to make a line. A compositor could usually prepare one forme a day, a frame of type ready for the press."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A worker at a wooden stand of type cases, picking small lead letters into a hand-held stick to build a line of text."
+   },
+   "cite": [
+    "s10",
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Correctors were scholars who spoke several languages. They read the proofs between typesetting and printing, helped by a reader who read aloud."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Corrector: checks the proof"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's check the roles."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Check: roles in the printing house"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In Plantin's printing house, what did a corrector do?",
+    "right": "Read the proofs and checked for mistakes between typesetting and printing.",
+    "wrong": [
+     "Carved the woodblocks.",
+     "Worked the presses all day.",
+     "Sold the finished books in the shop."
+    ],
+    "why": "Correctors sat by the window and carefully read the proofs made after typesetting and before the actual printing."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The shop was busy. Day after day, 1,250 sheets rolled off the presses, and more than 50 workers kept everything running."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1,250 sheets a day"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A printing house was also a trade network. Papermakers, bookbinders, engravers and booksellers outside the shop all took part. Plantin printed bibles, humanist works and scientific books."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Papermakers | Bookbinders | Engravers | Booksellers | Editors, typesetters, printers, proofreaders"
+   },
+   "cite": [
+    "s13",
+    "s14"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Even here, printed copies could differ. Corrections were made while pressmen kept printing, so some books ended up with more than one text variant."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Printed copies can still differ"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step four. A school is a system for handing learning to many people on a regular plan. Printing made books cheaper. Schools made readers."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "School: learning handed to many"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Universities grew out of church schools. Bologna, founded in 1088, is called the mother of European universities. Its exact founding date is uncertain."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Bologna, 1088 (date uncertain)"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Universities needed many copies of the same textbooks, long before printing. Their answer was the pecia system. An approved master copy was split into sections of about four leaves and rented out to be copied."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Pecia: a master copy rented out in pieces"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Committees of teachers checked the master copies and posted lists of approved texts. Bologna had about 119 legal texts on its list in the early 1300s. That is an early standard text."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 119 approved legal texts, Bologna, early 1300s"
+   },
+   "cite": [
+    "s15",
+    "s16"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Check what pecia means."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Check: the pecia system"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was the pecia system?",
+    "right": "A way of renting out sections of an approved master copy so many copies could be made.",
+    "wrong": [
+     "A kind of university exam.",
+     "An early printing press.",
+     "A type of student housing."
+    ],
+    "why": "A master copy, or exemplar, was divided into sections and rented to students or scribes to copy."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Reading is the key that opens written knowledge. Early demand for books came mostly from monasteries. Later it came from universities and ordinary readers."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Literacy: the key to written knowledge"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Schooling for nearly everyone came much later. Prussia issued a school regulation in 1763, and by 1816 it led the world in primary schooling."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Prussia: schools from 1763"
+   },
+   "cite": [
+    "s18",
+    "s19"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "By 1816 about 58 in every 100 children aged 6 to 14 were enrolled, on average. By 1849 it was about 80. In 1871 adult literacy averaged 84 percent."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Prussia: schooling and literacy (different measures)",
+    "chart": "c3"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Prussia was among the first places with tax-funded, generally compulsory primary schooling. France and Britain did not manage it until the 1880s."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "France and Britain: 1880s"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the whole world. In 1820 only about one adult in ten could read. Today about 87 in every 100 can."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Share of the world's adults who can read and write",
+    "chart": "c1"
+   },
+   "cite": [
+    "s21",
+    "s22"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Check that number."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Check: reading in 1820"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Around 1820, about what share of the world's adults could read and write?",
+    "right": "About 1 in 10.",
+    "wrong": [
+     "About half.",
+     "About 9 in 10.",
+     "Nearly everyone."
+    ],
+    "why": "Our World in Data estimates that only about every tenth adult was literate in 1820, compared with about 87% today."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step five. A standard text is one version that many people share. Everyone can read, quote and check the same words."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Standard text: one shared version"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Historian Elizabeth Eisenstein argued that print gave writing a fixity. People could compare texts, correct them, and share a common standard. That suits a ratchet. Many people can build on, check and fix the same text."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Compare, correct, share"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "But a press copies anything. In the 1500s Netherlands, printed media was a much-feared weapon, and about 8 percent of Plantin's output was ordered by political authorities."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Good: shared, checkable texts | Bad: copies mistakes and persuasion too"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Early printing was a restless, competitive free-for-all. It only began to be regulated and controlled after about 1550."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Free-for-all, then control after about 1550"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Schools could shape loyalty too. One study says Prussia used mass schooling to build a more unified citizenry and strengthen the state."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Schools can shape loyalty"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Check both sides."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Check: a fair summary"
+   },
+   "cite": [
+    "s11",
+    "s19"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which statement is fair?",
+    "right": "Printing and schools spread knowledge, and they can also spread mistakes or shape what people believe.",
+    "wrong": [
+     "Printing only ever spread the truth.",
+     "Schools never affect what people believe.",
+     "Printing ended all copying errors."
+    ],
+    "why": "The same tools that copy knowledge can copy errors and persuasion, and states have used schools to build loyalty."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Historians still argue about this. Eisenstein calls print an agent of change, not the only one. Adrian Johns says fixity and standardization were built by people over time and were not built into print."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Eisenstein: print gave fixity and standard texts | Johns: fixity was achieved by people, not automatic"
+   },
+   "cite": [
+    "s27",
+    "s26"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's put the story in order on the timeline."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "868 Diamond Sutra printed, China | about 1041 Bi Sheng's clay type | 1088 Bologna university | 1377 Jikji, metal type, Korea | 1450s Gutenberg, Mainz | 1476 printing reaches England | 1500 over 9 million books in Europe | 1575 Plantin's house: 56 men | 1763 Prussian school regulation | 1816 Prussia: 58% of children enrolled | 1880s compulsory schooling in France and Britain"
+   },
+   "cite": [
+    "s1",
+    "s3",
+    "s17",
+    "s8",
+    "s7",
+    "s10",
+    "s19",
+    "s18",
+    "s20"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Use the timeline to answer this one."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Check: order on the timeline"
+   },
+   "cite": [
+    "s3",
+    "s8"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which came first: the Korean Jikji, or Gutenberg's press in Europe?",
+    "right": "The Jikji, in 1377.",
+    "wrong": [
+     "Gutenberg's press, in the 1450s.",
+     "They came in the same year.",
+     "Neither of them was before 1500."
+    ],
+    "why": "The Jikji was printed in 1377. Gutenberg worked in the 1450s, so the Korean book came about 78 years earlier."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's gather it up. Copying by hand was slow and slips could travel. Printing made copies faster and cheaper. Schools and literacy made more readers. Standard texts let people share and check the same words."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Hand copying: slow, slips can travel | Printing: faster, cheaper copies | Schools: more readers | Standard texts: shared and checkable | Both good and bad uses"
+   },
+   "cite": [
+    "s23",
+    "s7",
+    "s9",
+    "s25"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One last check, back to the ratchet."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Check: copying and the ratchet"
+   },
+   "cite": [
+    "s9",
+    "s25"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "How does cheaper, wider copying help the ratchet?",
+    "right": "Knowledge reaches more people in a more checkable form, so fewer gains slip back.",
+    "wrong": [
+     "It makes people invent new things automatically.",
+     "It stops anyone from ever making a mistake.",
+     "It means nobody needs to learn to read."
+    ],
+    "why": "Cheaper books and more readers mean more people hold the same knowledge and can check it, so it is less likely to be lost."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next class is science, a method that improves the methods. Thanks for working through this one with us."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Science, a Method That Improves the Methods"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "line",
+   "title": "Share of the world's adults (15 and over) who can read and write, rounded percent",
+   "rows": [
+    {
+     "label": "1820",
+     "value": 12,
+     "source": "s22"
+    },
+    {
+     "label": "1870",
+     "value": 19,
+     "source": "s22"
+    },
+    {
+     "label": "1900",
+     "value": 21,
+     "source": "s22"
+    },
+    {
+     "label": "1950",
+     "value": 56,
+     "source": "s22"
+    },
+    {
+     "label": "1980",
+     "value": 70,
+     "source": "s22"
+    },
+    {
+     "label": "Today (about)",
+     "value": 87,
+     "source": "s21"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "pie",
+   "title": "Who worked at Plantin's printing house in 1575 (56 men)",
+   "rows": [
+    {
+     "label": "Printers",
+     "value": 32,
+     "source": "s10"
+    },
+    {
+     "label": "Compositors",
+     "value": 20,
+     "source": "s10"
+    },
+    {
+     "label": "Proofreaders",
+     "value": 3,
+     "source": "s10"
+    },
+    {
+     "label": "Unskilled labourer",
+     "value": 1,
+     "source": "s10"
+    }
+   ]
+  },
+  {
+   "id": "c3",
+   "kind": "bar",
+   "title": "Prussia: percent (two different measures: school enrolment and adult literacy)",
+   "rows": [
+    {
+     "label": "1816 school enrolment, ages 6 to 14",
+     "value": 58,
+     "source": "s18"
+    },
+    {
+     "label": "1849 school enrolment",
+     "value": 80,
+     "source": "s18"
+    },
+    {
+     "label": "1871 adult literacy",
+     "value": 84,
+     "source": "s18"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "TO CHECK: link to the earlier Blake printing-house class. I have not read that class, so this lesson makes no claim about what it covered. A person should confirm the link before publishing.",
+   "links": [
+    "[[Blake's printing house]]"
+   ]
+  },
+  {
+   "topic": "The ratchet idea, recapped from class one",
+   "links": [
+    "[[The Ratchet: What Cumulative Culture Is]]"
+   ]
+  },
+  {
+   "topic": "Memory outside the head: how writing came before printing",
+   "links": [
+    "[[Writing: Memory Outside the Head]]"
+   ]
+  },
+  {
+   "topic": "A method that improves the methods: where standard texts lead next",
+   "links": [
+    "[[Science: A Method That Improves the Methods]]"
+   ]
+  },
+  {
+   "topic": "Fast copying and new learners, continuing the story into the internet and AI",
+   "links": [
+    "[[The Internet and AI: Fast Copying, New Learners]]"
+   ]
+  },
+  {
+   "topic": "How knowledge gets lost, the other side of the ratchet",
+   "links": [
+    "[[How Knowledge Gets Lost]]"
+   ]
+  },
+  {
+   "topic": "History-of-everything timeline: 868 to the 1880s on this class's timeline beat",
+   "links": [
+    "[[history of everything timeline]]"
+   ]
+  },
+  {
+   "topic": "Source choice: estimates of early book numbers differ between sources. This class uses Britannica's figure of more than 9 million books by 1500.",
+   "links": []
+  },
+  {
+   "topic": "Source choice: sources describe Prussia's 1763 regulation differently, as obligatory for rural Protestants or as a general invitation to attend school. The lesson says only 'school regulation'.",
+   "links": []
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "About 1041 to 1088",
+   "elsewhere": "While Bi Sheng was making clay movable type in Song China, the University of Bologna, the 'mother of European universities', was forming. Its exact founding date is uncertain.",
+   "cite": [
+    "s3",
+    "s17"
+   ]
+  },
+  {
+   "when": "1100s to 1200s",
+   "elsewhere": "European universities multiplied. Oxford is dated 1167, Cambridge 1209, Paris 1215 and Padua 1222. In Korea, printers developed movable metal type by the 13th century.",
+   "cite": [
+    "s28",
+    "s3"
+   ]
+  },
+  {
+   "when": "1377",
+   "elsewhere": "Korea printed the Jikji with metal type. In Europe, universities were still supplied by hand copying, since they were founded before the printing press.",
+   "cite": [
+    "s3",
+    "s15"
+   ]
+  },
+  {
+   "when": "1450s to 1500",
+   "elsewhere": "Gutenberg worked in Mainz, and printing reached England in 1476. By 1500 Europe had more than 9 million books.",
+   "cite": [
+    "s8",
+    "s7"
+   ]
+  },
+  {
+   "when": "1763 to 1816",
+   "elsewhere": "Prussia built an early system of primary schooling. Around 1820 only about one adult in ten in the world could read.",
+   "cite": [
+    "s19",
+    "s18",
+    "s21"
+   ]
+  },
+  {
+   "when": "1880s",
+   "elsewhere": "France and Britain finally enacted compulsory schooling, about a century after Prussia's first steps.",
+   "cite": [
+    "s20"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Print gave texts fixity and a shared standard, which made knowledge more reliable and cumulative.",
+   "other_view": "Elizabeth Eisenstein argued that print let people compare and correct texts and gave a common standard. Adrian Johns replied that fixity and standardization were not built into print. Early modern people had to achieve them through social effort, and early printed copies varied. Eisenstein herself called print an agent of change, not the only agent. Plantin's own shop produced books with variant texts.",
+   "cite": [
+    "s25",
+    "s26",
+    "s27",
+    "s13"
+   ]
+  },
+  {
+   "claim": "Gutenberg invented printing.",
+   "other_view": "Woodblock printing and movable type, including Korean metal type, came earlier in East Asia. Gutenberg combined and improved existing methods. How printing knowledge reached Europe is uncertain.",
+   "cite": [
+    "s3",
+    "s6"
+   ]
+  },
+  {
+   "claim": "Hand copying was hopeless, because errors piled up with each copy.",
+   "other_view": "Slips did happen and could be copied on. But scribes also noticed and corrected errors, so errors did not simply pile up with each copy. Monasteries also had rules to limit corruption.",
+   "cite": [
+    "s23",
+    "s24"
+   ]
+  },
+  {
+   "claim": "Mass schooling was simply a gift of knowledge to everyone.",
+   "other_view": "Schooling brought reading and basic skills. But one study says Prussia also used mass schooling to build a unified citizenry and strengthen state power. The Prussian schools also stressed duty and discipline.",
+   "cite": [
+    "s19",
+    "s20"
+   ]
+  }
+ ]
+}

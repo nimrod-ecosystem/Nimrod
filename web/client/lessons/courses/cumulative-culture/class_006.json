@@ -1,0 +1,1061 @@
+{
+ "about": {
+  "title": "Science: A Method That Improves the Methods",
+  "course": "cumulative-culture",
+  "class_n": 6,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 45,
+  "length_note": "About 45 minutes. There are nine short checks, and the study-method section (spacing, practice testing, teaching others) needs time to try out. Gap to fix before release: I could not read sources for the Industrial Revolution, microscopes or computers, so this class does not teach them with dates or numbers. The telescope is the worked example of a tool that helps us learn. Those three topics should be added in a later pass once sourced."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "History of Philosophical Transactions",
+   "publisher": "The Royal Society",
+   "date": "n.d.",
+   "link": "https://royalsociety.org/journals/publishing-activities/publishing350/history-philosophical-transactions/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Philosophical Transactions of the Royal Society of London",
+   "publisher": "The Royal Society",
+   "date": "n.d.",
+   "link": "https://royalsocietypublishing.org/rstl",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Reviewing the review",
+   "publisher": "PubMed Central (journal editorial)",
+   "date": "n.d.",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC12817008/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "History of Peer Review: 1665–Today",
+   "publisher": "CASRAI",
+   "date": "n.d.",
+   "link": "https://casrai.org/guides/history-of-peer-review",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Manuscript reviews—an evolving challenge",
+   "publisher": "PubMed Central (journal article)",
+   "date": "n.d.",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC12712976/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "Improving Students' Learning With Effective Learning Techniques (Dunlosky et al.)",
+   "publisher": "Psychological Science in the Public Interest, SAGE",
+   "date": "2013",
+   "link": "https://journals.sagepub.com/doi/abs/10.1177/1529100612453266",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "All Study Strategies Not Created Equal, According to Kent State Researchers",
+   "publisher": "Kent State University",
+   "date": "n.d.",
+   "link": "https://www.kent.edu/psychology/all-study-strategies-not-created-equal-according-kent-state-researchers",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "A Meta-Analysis of Ten Learning Techniques",
+   "publisher": "Frontiers in Education",
+   "date": "2021",
+   "link": "https://www.frontiersin.org/journals/education/articles/10.3389/feduc.2021.581216/full",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "1.1 The Science of Biology, Biology 2e",
+   "publisher": "OpenStax, Rice University",
+   "date": "n.d.",
+   "link": "https://openstax.org/books/biology-2e/pages/1-1-the-science-of-biology",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "Reproducibility Project: Psychology, Estimating the Reproducibility of Psychological Science",
+   "publisher": "Open Science Framework / Center for Open Science",
+   "date": "2015 (paper in Science 349)",
+   "link": "https://osf.io/ezcuj/overview",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Comment on 'Estimating the reproducibility of psychological science'",
+   "publisher": "Science",
+   "date": "n.d.",
+   "link": "https://www.science.org/doi/10.1126/science.aad7243",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Estimating The Reproducibility of Psychological Science in 2021",
+   "publisher": "Replicability-Index (blog)",
+   "date": "2022-01-20",
+   "link": "https://replicationindex.com/2022/01/20/estimating-the-reproducibility-of-psychological-science-in-2021/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "Galileo and the Telescope",
+   "publisher": "Australia Telescope National Facility, CSIRO",
+   "date": "n.d.",
+   "link": "https://www.atnf.csiro.au/resources/education/senior-astrophysics/observing/galileo/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Telescope by Galileo (replica)",
+   "publisher": "Science Museum Group",
+   "date": "n.d.",
+   "link": "https://collection.sciencemuseumgroup.org.uk/objects/co56202/telescope-by-galileo-replica",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "Jupiter's four Galilean moons",
+   "publisher": "Science Museum Blog",
+   "date": "2010-01-07",
+   "link": "https://blog.sciencemuseum.org.uk/jupiters-four-galilean-moons/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Jupiter's moons (satellites)",
+   "publisher": "Museo Galileo",
+   "date": "n.d.",
+   "link": "https://catalogue.museogalileo.it/indepth/JupitersMoonsSatellites.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Sidereus Nuncius",
+   "publisher": "The Huntington Library, Art Museum, and Botanical Gardens",
+   "date": "n.d.",
+   "link": "https://www.huntington.org/sidereus-nuncius",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Learning by Teaching (Logan Fiorella)",
+   "publisher": "University of New Hampshire, Teaching and Learning Resource Hub",
+   "date": "n.d.",
+   "link": "https://www.unh.edu/teaching-learning-resource-hub/sites/default/files/media/2023-06/itow-learning-by-teaching-fiorella.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s19",
+   "title": "The learning benefits of teaching: A retrieval practice hypothesis (Koh, Lee, Lim)",
+   "publisher": "Applied Cognitive Psychology, Wiley",
+   "date": "2018",
+   "link": "https://onlinelibrary.wiley.com/doi/abs/10.1002/acp.3410",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s20",
+   "title": "Students learn more if they'll need to teach others",
+   "publisher": "Futurity",
+   "date": "n.d.",
+   "link": "http://www.futurity.org/learning-students-teaching-741342/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s21",
+   "title": "Improving Students' Learning With Effective Learning Techniques (full text PDF)",
+   "publisher": "Psychological Science in the Public Interest, hosted by Hochschule Zittau/Görlitz",
+   "date": "2013",
+   "link": "https://www.whz.de/fileadmin/lehre/hochschuldidaktik/docs/dunloskiimprovingstudentlearning.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s22",
+   "title": "Improving Students' Learning With Effective Learning Techniques (summary)",
+   "publisher": "Association for Psychological Science",
+   "date": "n.d.",
+   "link": "https://www.psychologicalscience.org/publications/journals/pspi/learning-techniques.html",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s23",
+   "title": "Massive Collaboration Testing Reproducibility of Psychology Studies Publishes Findings",
+   "publisher": "Center for Open Science",
+   "date": "2015",
+   "link": "https://www.cos.io/about/news/massive-collaboration-testing-reproducibility-psychology-studies-publishes-findings",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s24",
+   "title": "The Retrieval Practice Hypothesis in Research on Learning by Teaching: Current Status and Challenges",
+   "publisher": "Frontiers in Psychology via PubMed Central",
+   "date": "2022",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9130926/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s25",
+   "title": "Reproducibility: The New Frontier in AI Governance",
+   "publisher": "arXiv",
+   "date": "2025",
+   "link": "https://arxiv.org/pdf/2510.11595",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s26",
+   "title": "Estimating the reproducibility of psychological science (Tilburg University record)",
+   "publisher": "Tilburg University Research Portal",
+   "date": "n.d.",
+   "link": "https://research.tilburguniversity.edu/en/publications/estimating-the-reproducibility-of-psychological-science/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s27",
+   "title": "About Philosophical Transactions A",
+   "publisher": "The Royal Society",
+   "date": "n.d.",
+   "link": "https://royalsocietypublishing.org/rsta/pages/about",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s28",
+   "title": "Role of expectations and explanations in learning by teaching",
+   "publisher": "ScienceDirect (Contemporary Educational Psychology)",
+   "date": "n.d.",
+   "link": "https://www.sciencedirect.com/science/article/abs/pii/S0361476X14000022",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Last time, printing let us copy knowledge at huge scale. But copies can carry mistakes. Today: how people check and correct what they know."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Class 6: Science, a method that improves the methods"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The word science comes from the Latin for knowledge. Science is knowledge that has been tested."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Science = tested knowledge"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The core move is simple. Make a testable guess, called a hypothesis. Test it. If the data do not fit, drop it and try a new one."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Make a testable guess (hypothesis). 2. Test it. 3. Data don't fit? Reject it or change it. 4. Share the result."
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Quick check on that idea before we go on."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Check"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In science, what happens to a hypothesis that does not fit the experimental data?",
+    "right": "It is rejected or changed, and a new hypothesis can be tried.",
+    "wrong": [
+     "It is kept anyway, because it came first.",
+     "It is hidden so nobody sees it failed.",
+     "It is turned into a fact by voting."
+    ],
+    "why": "Hypotheses that are inconsistent with the data are rejected, and if one is not supported a new one can be proposed."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's watch that loop in a real case. January 1610: Galileo points a telescope at Jupiter and sees what look like three small stars beside it."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "star",
+    "count": 3,
+    "layout": "row",
+    "text": "Three 'stars' near Jupiter"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The next night the little stars had moved. Within a week he worked out that there were four, and that they were moons circling Jupiter."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "moon",
+    "count": 4,
+    "layout": "row",
+    "text": "Four moons of Jupiter"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why did that matter? Moons circling something other than Earth did not fit the leading view of the time."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Evidence tested an old idea"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "His tool was the telescope. He did not invent it. He learned of it in 1608, then improved it, from 8 times magnification to about 20."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1",
+    "text": "Galileo's telescope: before and after improving it"
+   },
+   "cite": [
+    "s13",
+    "s14"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A better tool let him look harder at the sky. That is a tool helping us learn. Let's check that."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Better tool, better evidence"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why did Galileo's improved telescope matter for his work?",
+    "right": "The stronger version, about 20 times magnification, was the one he used for his observations, including Jupiter's moons.",
+    "wrong": [
+     "He invented the telescope in 1610.",
+     "It made the Moon bigger in the sky.",
+     "It meant nobody could ever question his claims."
+    ],
+    "why": "He did not invent the telescope. His first version magnified about 8 times and was refined to the 20 times he used for his observations."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Seeing is not enough. Others must be able to check. He watched Jupiter on almost every night from 7 January to 6 March 1610, then published a small book, the Starry Messenger."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A small printed book, the Starry Messenger, with pages showing Jupiter and its moons in different positions night by night"
+   },
+   "cite": [
+    "s17",
+    "s15"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "And anyone can repeat the looking today. Jupiter's four big moons can be seen with binoculars or a small telescope."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Anyone can check"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why is it useful that other people can repeat an observation or experiment?",
+    "right": "A claim that others can repeat is harder to get wrong without someone noticing.",
+    "wrong": [
+     "It makes the first person more famous.",
+     "It means the claim no longer needs any evidence.",
+     "It lets people skip testing and just trust the author."
+    ],
+    "why": "Testing by repeatable experiments is central to the scientific method, and Jupiter's moons can still be seen by anyone with binoculars."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Galileo used a book. Science also built something regular: the journal. Philosophical Transactions, launched in March 1665, is the world's first and longest-running scientific journal."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1665"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It was started by Henry Oldenburg, who used his network of European contacts to circulate the latest findings. It came out monthly and cost one shilling."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A monthly pamphlet of letters and reports from correspondents across Europe, priced at one shilling"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Think of a journal as shared memory. It keeps findings where later people can find them. The Royal Society has digital scans of its journals from 1665 to 1996."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Journal = shared memory"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is a scientific journal for?",
+    "right": "Publishing new findings so others can read, check and build on them.",
+    "wrong": [
+     "Hiding findings until they are patented.",
+     "Replacing experiments with opinions.",
+     "Keeping findings secret inside one lab."
+    ],
+    "why": "Philosophical Transactions was launched to circulate the latest information from correspondents around the world."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A citation is a note in a paper saying 'I built on that work.' Follow the citations back and you can see who learned from whom. That is the ratchet from class 1, written down."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Citation = a trail of who built on whom"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Before a paper is printed, it can be checked. Peer review means colleagues in the same field read it, usually without knowing who wrote it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Peer review"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The aim is to help make sure the work is original, significant, logical and thorough."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Original. Significant. Logical. Thorough."
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is peer review?",
+    "right": "Colleagues in the field read and judge a paper before it is published.",
+    "wrong": [
+     "Readers vote on a paper after it is printed.",
+     "The author checks their own work.",
+     "A journal prints everything it receives."
+    ],
+    "why": "Peer-reviewed manuscripts are reviewed by a scientist's colleagues, or peers, to check the work is original, significant, logical and thorough."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Peer review grew slowly. An Edinburgh editor sent essays to suitable reviewers in 1731. The Royal Society set up a review committee in 1752. The Lancet only treated it as important in 1976."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1665 first journals. 1731 Edinburgh editor uses reviewers. 1752 Royal Society review committee. 1976 The Lancet takes it seriously."
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Even the 1731 journal said review did not guarantee the work was true. Review is a filter, not a promise. So science adds a second check: replication."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A filter, not a guarantee"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Replication means repeating a study as closely as you can, to see whether the same result appears again."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Replication"
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So peer review checks before printing, and replication checks after. Now a big real test of it."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Before printing: peer review. After printing: replication."
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In 2015, a team of 270 researchers reported on repeating 100 studies from three psychology journals."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "100 studies repeated"
+   },
+   "cite": [
+    "s10",
+    "s23"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Of 97 original studies that had a significant result, 36 of the repeats found one too. One way of counting, and not the only way."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c2",
+    "text": "Psychology replication project, 2015"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Some experts disagreed with how it was read. They said the repeats sometimes used different groups of people, and the data could fit high reproducibility."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Experts disagreed on the reading"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why did researchers repeat 100 published studies?",
+    "right": "To find out how often published results hold up when others repeat them.",
+    "wrong": [
+     "To prove that every study was wrong.",
+     "To avoid peer review.",
+     "To publish the originals faster."
+    ],
+    "why": "The team wrote that reproducibility is a defining feature of science, but how well it holds in current research was unknown."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The checking led to changes. Journals have since adopted guidelines to promote openness and reproducibility. Science tested itself, found weak spots, and changed its methods."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Test, find weak spots, change the method"
+   },
+   "cite": [
+    "s25",
+    "s23"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a new word: recursive. In everyday terms, it means using a process to improve that same process, then using the improved version again."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Recursive = improving the improver"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Think of a runner who tests different warm-ups to see which gives faster laps, then uses the best warm-up to train. The method of getting better gets better."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Level 1: learn things. Level 2: learn better ways to learn. Level 3: check the checking."
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A real case of level 2. In 2013, five psychologists reviewed 10 common study techniques to see which ones work."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "10 study techniques tested"
+   },
+   "cite": [
+    "s22",
+    "s7"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Which is an example of 'recursive' improvement?",
+    "right": "Researchers test which study methods work best, then people use the winners to learn.",
+    "wrong": [
+     "Rereading the same page again and again.",
+     "Buying more books than you can read.",
+     "Copying a friend's notes word for word."
+    ],
+    "why": "Recursive means using a process to improve that same process. Here, science is used to improve how we learn."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Study method one: practice testing. That means quizzing yourself, with flashcards or end-of-chapter questions, instead of only reading."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Practice testing = quiz yourself"
+   },
+   "cite": [
+    "s21",
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Study method two: spacing, also called distributed practice. Instead of cramming, you spread study out over days or weeks."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Cramming: all in one night. Spacing: short sessions over days."
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The review rated both high. They helped learners of different ages and abilities, across many kinds of tasks."
+   },
+   "show": {
+    "kind": "list",
+    "text": "High utility: practice testing. High utility: distributed practice (spacing)."
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A 2021 meta-analysis found the same two on top. Bigger numbers mean a bigger boost to learning."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c3",
+    "text": "Effect size for two study methods (higher means a bigger boost)"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Rereading and highlighting are popular, but they did not consistently boost performance. The review suggests practice testing instead of rereading."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Swap rereading for self-quizzing"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What swap does the review suggest?",
+    "right": "Use practice testing instead of rereading.",
+    "wrong": [
+     "Use highlighting instead of practice testing.",
+     "Cram everything into one night instead of spacing.",
+     "Skip studying and only reread the summary."
+    ],
+    "why": "Rereading and highlighting do not consistently boost performance, so practice testing is suggested in their place."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Study method three: teaching. People who expected to teach a passage recalled more, and organised it better, than people who expected a test."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Learning by teaching"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Part of the reason may be retrieval, pulling ideas out of memory. Teaching helps most when you prepare to teach and then explain out loud."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Prepare as if you will teach. Explain from memory. Say it out loud."
+   },
+   "cite": [
+    "s19",
+    "s18"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "According to the research, which way of teaching helps your own learning most?",
+    "right": "Prepare to teach, then explain it out loud from memory.",
+    "wrong": [
+     "Read your notes aloud without looking away.",
+     "Copy the textbook neatly.",
+     "Highlight the page and hand it to a friend."
+    ],
+    "why": "Explaining to others works best when you prepare expecting to teach, explain as a retrieval activity, and give oral explanations."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A kind note. These findings are averages from groups, and the authors said the methods are not a cure-all. If you are relearning after an injury, try one method at a time and go at your own pace."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Try one at a time. Your pace."
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now put it on the history-of-everything timeline. Galileo's book of 1610 began what Huntington Library calls a scientific revolution, and the first journal followed in 1665."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1608 telescope known to Galileo. 1610 Starry Messenger. 1665 Philosophical Transactions. 1731 and 1752 early peer review. 2013 study-methods review. 2015 replication project."
+   },
+   "cite": [
+    "s14",
+    "s17",
+    "s1",
+    "s3",
+    "s7",
+    "s10"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That is about four centuries from the telescope to now, a tiny slice of the whole timeline. In it, people built habits to check, share and correct, and then used them on learning itself."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Check, share, correct, repeat"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next time: the internet and AI. Copying gets very fast. The question is whether checking can keep up."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: class 7, The Internet and AI"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Galileo's telescope magnification (times)",
+   "rows": [
+    {
+     "label": "First version",
+     "value": 8,
+     "source": "s13"
+    },
+    {
+     "label": "Version used for the Starry Messenger",
+     "value": 20,
+     "source": "s13"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "2015 psychology replication project (original studies with a significant result: 97)",
+   "rows": [
+    {
+     "label": "Original studies with a significant result",
+     "value": 97,
+     "source": "s12"
+    },
+    {
+     "label": "Repeats that also found a significant result",
+     "value": 36,
+     "source": "s12"
+    }
+   ]
+  },
+  {
+   "id": "c3",
+   "kind": "bar",
+   "title": "Effect size (d) of two study methods, 2021 meta-analysis",
+   "rows": [
+    {
+     "label": "Distributed practice (spacing)",
+     "value": 0.85,
+     "source": "s8"
+    },
+    {
+     "label": "Practice testing",
+     "value": 0.74,
+     "source": "s8"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "peer review",
+   "links": [
+    "[[replication]]",
+    "[[journals as shared memory]]",
+    "[[how knowledge gets lost]]"
+   ]
+  },
+  {
+   "topic": "replication",
+   "links": [
+    "[[peer review]]",
+    "[[the internet and AI]]"
+   ]
+  },
+  {
+   "topic": "Galileo's telescope as a tool that makes new knowledge",
+   "links": [
+    "[[the extended mind]]",
+    "[[printing and schools]]"
+   ]
+  },
+  {
+   "topic": "recursive improvement (improving the improver)",
+   "links": [
+    "[[the cultural ratchet]]",
+    "[[spacing and practice testing]]"
+   ]
+  },
+  {
+   "topic": "spacing, practice testing and teaching others",
+   "links": [
+    "[[the extended mind]]",
+    "[[writing as memory outside the head]]"
+   ]
+  },
+  {
+   "topic": "Gap for later: Industrial Revolution, microscopes, computers (not sourced in this draft)",
+   "links": [
+    "[[the internet and AI]]",
+    "[[the extended mind]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "1608 to 1610",
+   "elsewhere": "Galileo learned of the telescope in 1608. In 1610, Cosimo II de' Medici, Grand Duke of Tuscany since 1609, was honoured by Galileo, who named Jupiter's moons the Medicean Stars.",
+   "cite": [
+    "s14",
+    "s16"
+   ]
+  },
+  {
+   "when": "January to March 1665",
+   "elsewhere": "In France, Denis de Sallo published the first issue of the Journal des sçavans on 5 January 1665. Henry Oldenburg in London was inspired by it and launched Philosophical Transactions in March.",
+   "cite": [
+    "s5",
+    "s1"
+   ]
+  },
+  {
+   "when": "1672",
+   "elsewhere": "Isaac Newton's first paper, on light and colours, appeared in Philosophical Transactions and helped launch his scientific career.",
+   "cite": [
+    "s27"
+   ]
+  },
+  {
+   "when": "1731 and 1752",
+   "elsewhere": "An Edinburgh medical journal began sending essays to chosen reviewers in 1731. The Royal Society set up a review committee in 1752.",
+   "cite": [
+    "s3"
+   ]
+  },
+  {
+   "when": "2013 to 2015",
+   "elsewhere": "In 2013 psychologists reviewed 10 study techniques. In 2015 a team of 270 researchers published a project repeating 100 psychology studies.",
+   "cite": [
+    "s22",
+    "s23"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Peer review began with the first journal in 1665.",
+   "other_view": "Sources differ. One says the first journals of 1665 had no peer review and that pre-publication review began in 1731. Another says Oldenburg sent submissions to trusted experts, but only informally. A history guide says there is no single start date: 1665, 1731, 1752 and 1832 are all defensible depending on what counts as peer review.",
+   "cite": [
+    "s3",
+    "s5",
+    "s4"
+   ]
+  },
+  {
+   "claim": "The 2015 replication project shows that many psychology findings do not hold up.",
+   "other_view": "Critics argued the data are consistent with high reproducibility, and that many replications drew on different groups of people than the originals. Another reviewer noted that the project covered only three journals that mostly publish experimental cognitive and social psychology.",
+   "cite": [
+    "s11",
+    "s12"
+   ]
+  },
+  {
+   "claim": "Teaching others is the best way to learn.",
+   "other_view": "Researchers disagree about why it helps. One camp says the benefit comes entirely from retrieval practice. Another says explaining adds something more, and the evidence is mixed. Stress about teaching can also remove the benefit, so how you teach matters.",
+   "cite": [
+    "s24",
+    "s28",
+    "s18"
+   ]
+  },
+  {
+   "claim": "Spacing and practice testing are the best methods for everyone.",
+   "other_view": "The review's authors said these techniques are not a cure-all and benefit only students who are motivated and able to use them. A meta-analysis also warned that finding practice testing effective is not a reason for more high-stakes testing.",
+   "cite": [
+    "s7",
+    "s8"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,154 @@
+{
+ "course_id": "prehistory",
+ "title": "Prehistory: from the first humans to the first farms",
+ "audience": [
+  "high school",
+  "adult"
+ ],
+ "length_note": "Ten classes. The story has ten parts that each need the one before: how we know, early ancestors, tools, fire, first migrations, our own species, art and symbols, the Ice Age, first farms, and first villages. Fewer classes would squash the debates, which you asked to keep. More would repeat material. Most classes run 25 minutes. The densest ones run 30, and the lightest runs 20. Each class has one main idea and can be done in a single sitting, with a short recap at the start. That suits people relearning after a brain injury as well as teenagers. Every class marks where scientists disagree and gives both sides. Dates and species names change as new finds come in, so every class is flagged for research with sources before it is written.",
+ "classes": [
+  {
+   "n": 1,
+   "title": "How we know: reading the deep past without writing",
+   "goal": "Explain what 'prehistory' means, name the main kinds of evidence (bones, tools, DNA, dating methods), and say why dates and stories are sometimes revised.",
+   "minutes": 25,
+   "topics": [
+    "What prehistory means and why there are no written records",
+    "Fossils, tools, hearths, and ancient DNA",
+    "Basic dating ideas: radiocarbon and other methods, and why each has a limit",
+    "Why evidence is patchy, and how new finds change the story",
+    "Timeline overview of the whole course"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 2,
+   "title": "Walking upright: the first human relatives",
+   "goal": "Describe what hominins are, why walking on two legs matters, and name two or three early hominins and what we know about them.",
+   "minutes": 30,
+   "topics": [
+    "Our place among the apes",
+    "Early hominins and Australopithecus",
+    "Bipedalism: the evidence and the competing explanations for why it began",
+    "Disagreement: how to arrange the family tree, and which species are direct ancestors versus cousins"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 3,
+   "title": "The first stone tools",
+   "goal": "Tell apart the main early stone-tool traditions, say what they were used for, and explain the debate over who made the very first tools.",
+   "minutes": 25,
+   "topics": [
+    "What counts as a tool, and how archaeologists tell a made tool from a broken rock",
+    "Oldowan chopping and flaking tools",
+    "Acheulean hand axes and what they suggest about planning",
+    "Cut-marked bones and early meat-eating",
+    "Disagreement: which species made the earliest tools, and how early tool use began"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 4,
+   "title": "Fire and the changing body",
+   "goal": "Explain how fire changed daily life, and describe the debate over when people first controlled it.",
+   "minutes": 25,
+   "topics": [
+    "Using fire versus making and keeping fire",
+    "What the early evidence for hearths looks like, and why it is hard to read",
+    "Warmth, protection, light, and cooked food",
+    "Disagreement: when regular fire use began, and how much cooking drove bigger brains",
+    "Homo erectus and changes in body and brain"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 5,
+   "title": "Leaving Africa the first time",
+   "goal": "Describe the early spread of Homo beyond Africa, and name the main sites and species involved.",
+   "minutes": 30,
+   "topics": [
+    "Why Africa is the starting point",
+    "Early dispersals of Homo erectus and related groups into Asia and Europe",
+    "Key sites and what they show",
+    "Other human species, such as the 'hobbit' of Flores and Homo naledi, and what is still debated",
+    "Disagreement: how many dispersals there were, and how species should be named and divided"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 6,
+   "title": "Our species, our cousins: Homo sapiens, Neanderthals and Denisovans",
+   "goal": "Explain where Homo sapiens came from, what ancient DNA shows about mixing with other humans, and how the two main models of origin differ.",
+   "minutes": 30,
+   "topics": [
+    "Neanderthals: life, tools, and range",
+    "Denisovans and what DNA reveals",
+    "Where and when Homo sapiens appeared",
+    "Disagreement: a single African origin versus a wider 'pan-African' or multiregional picture",
+    "Interbreeding and the DNA many people carry today",
+    "Disagreement: why Neanderthals disappeared"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 7,
+   "title": "Spreading across the world",
+   "goal": "Trace the main routes by which Homo sapiens reached Asia, Australia, Europe and the Americas, and explain why the dates are argued over.",
+   "minutes": 25,
+   "topics": [
+    "Routes and timing of the main migrations",
+    "Crossing water to Australia",
+    "Europe and the arrival of Homo sapiens",
+    "Peopling of the Americas: the coastal route, the ice-free corridor, and newer finds",
+    "Disagreement: how early people reached the Americas, with old and new evidence"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 8,
+   "title": "Art, symbols and the mind: cave paintings and beyond",
+   "goal": "Describe the main forms of early symbolic behaviour and weigh the debate on when and by whom it began.",
+   "minutes": 30,
+   "topics": [
+    "Cave art in Europe, Indonesia and elsewhere",
+    "Ornaments, pigments, carved figures, and music",
+    "Dating art and the problems with it",
+    "Disagreement: did Neanderthals make art, and did symbolic thinking appear suddenly or slowly?",
+    "Possible meanings of the art, and why we cannot be sure"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 9,
+   "title": "The Ice Age world",
+   "goal": "Explain how Ice Age climate shaped where and how people lived, and describe the two main explanations for the loss of large animals.",
+   "minutes": 25,
+   "topics": [
+    "Glacial and warmer periods, and the coldest stretch of the last Ice Age",
+    "Hunter-gatherer life: food, shelter, clothing, and travel",
+    "Tools and technology of the period",
+    "Large Ice Age animals",
+    "Disagreement: were big animals lost mainly to climate change, to human hunting, or to both?"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 10,
+   "title": "The first farms and villages",
+   "goal": "Describe where and how farming began, why scientists disagree about the causes, and what changed when people settled in villages.",
+   "minutes": 30,
+   "topics": [
+    "The end of the Ice Age and a warmer, wetter world",
+    "Early settled people before farming",
+    "The Fertile Crescent and the first crops and animals",
+    "Independent starts to farming in other regions",
+    "Disagreement: why farming began (climate, population pressure, feasting and ritual, gradual experiment)",
+    "Early villages and towns: houses, food storage, health, and inequality",
+    "Disagreement: did farming spread by moving people or by spreading ideas?",
+    "Where prehistory ends and written history begins"
+   ],
+   "needs_research": true
+  }
+ ]
+}

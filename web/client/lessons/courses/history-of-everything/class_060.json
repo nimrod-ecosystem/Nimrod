@@ -1,0 +1,1551 @@
+{
+ "about": {
+  "title": "The End of the Cold War",
+  "course": "history-of-everything",
+  "class_n": 60,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 35,
+  "length_note": "This class runs about 35 minutes, not 30. It covers six topics: Gorbachev and reform, Reagan, the 1989 revolutions and the Berlin Wall, the end of the USSR, the debate over causes, and South Africa. Each one is taught slowly with a check question. The teacher can pause after any beat, or split the class at the debate beat if a shorter session is needed."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "1981-1988: The Presidency of Ronald W. Reagan (Milestones in the History of U.S. Foreign Relations)",
+   "publisher": "U.S. Department of State, Office of the Historian",
+   "date": "n.d.",
+   "link": "https://history.state.gov/milestones/1981-1988/foreword",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "Mikhail Gorbachev, Nobel Peace Prize 1990 (Speed read)",
+   "publisher": "NobelPrize.org",
+   "date": "n.d.",
+   "link": "https://www.nobelprize.org/prizes/peace/1990/gorbachev/speedread/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "Mikhail Gorbachev",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/biography/Mikhail-Gorbachev",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "Reagan and Gorbachev: Shutting the Cold War Down (Strobe Talbott)",
+   "publisher": "Brookings Institution",
+   "date": "n.d.",
+   "link": "https://www.brookings.edu/articles/reagan-and-gorbachev-shutting-the-cold-war-down/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "The Soviet Collapse (David Hoffmann)",
+   "publisher": "Origins, Ohio State University",
+   "date": "n.d.",
+   "link": "https://origins.osu.edu/article/soviet-collapse-yeltsin-putin-gorbachev-russia",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "The Chernobyl Nuclear Accident (Lewis Siegelbaum), 17 Moments in Soviet History",
+   "publisher": "Michigan State University",
+   "date": "n.d.",
+   "link": "https://soviethistory.msu.edu/1985/meltdown-in-chernobyl/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "Fall of Communism in Eastern Europe, 1989",
+   "publisher": "U.S. Department of State (archived, 2001-2009)",
+   "date": "n.d.",
+   "link": "https://2001-2009.state.gov/r/pa/ho/time/rd/17672.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "Revolutions of 1989",
+   "publisher": "New World Encyclopedia",
+   "date": "n.d.",
+   "link": "https://www.newworldencyclopedia.org/entry/Revolutions_of_1989",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "What was the Berlin Wall and how did it fall?",
+   "publisher": "Imperial War Museums",
+   "date": "n.d.",
+   "link": "https://www.iwm.org.uk/history/cold-war/germany/berlin-wall",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "Fall of the Berlin Wall (NATO declassified)",
+   "publisher": "NATO",
+   "date": "n.d.",
+   "link": "https://www.nato.int/cps/fr/natohq/declassified_136297.htm",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "East Germany opens the Berlin Wall",
+   "publisher": "HISTORY",
+   "date": "n.d.",
+   "link": "https://www.history.com/this-day-in-history/november-9/east-germany-opens-the-berlin-wall",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "Collapse of the Soviet Union: The rise of Yeltsin and the foundation of post-Soviet Russia",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/event/the-collapse-of-the-Soviet-Union/The-rise-of-Yeltsin-and-the-foundation-of-post-Soviet-Russia",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "The End of the Soviet Union 1991",
+   "publisher": "National Security Archive, George Washington University",
+   "date": "2021-12-21",
+   "link": "https://nsarchive.gwu.edu/briefing-book/russia-programs/2021-12-21/end-soviet-union-1991",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "Dissolution of the USSR (World History course text)",
+   "publisher": "Lumen Learning (SUNY)",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/suny-worldhistory/chapter/37-2-5-dissolution-of-the-ussr/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "1991 Soviet coup attempt",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://britannica.com:443/topic/1991-Soviet-coup-attempt",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "Soviet hard-liners launch coup against Gorbachev",
+   "publisher": "HISTORY",
+   "date": "n.d.",
+   "link": "https://www.history.com/this-day-in-history/august-18/soviet-hard-liners-launch-coup-against-gorbachev",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "Nelson Mandela released from prison",
+   "publisher": "HISTORY",
+   "date": "n.d.",
+   "link": "https://www.history.com/this-day-in-history/february-11/nelson-mandela-released-from-prison",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "Who was Nelson Mandela? Why his work for equality is not complete",
+   "publisher": "National Geographic",
+   "date": "n.d.",
+   "link": "https://www.nationalgeographic.com/history/article/nelson-mandela-fought-apartheid-work-not-complete",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "What Happened at the First Post-Apartheid Elections?",
+   "publisher": "Google Arts & Culture (Africa Media Online)",
+   "date": "n.d.",
+   "link": "https://artsandculture.google.com/story/what-happened-at-the-first-post-apartheid-elections-africa-media-online/KgVh_XHoNHEWJw?hl=en",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "What's the context? The release of Nelson Mandela, 11 February 1990",
+   "publisher": "UK Government History blog (Foreign, Commonwealth & Development Office historians)",
+   "date": "2020-02-11",
+   "link": "https://history.blog.gov.uk/2020/02/11/whats-the-context-the-release-of-nelson-mandela-11-february-1990",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "Ronald Reagan: Impact and Legacy",
+   "publisher": "Miller Center, University of Virginia",
+   "date": "n.d.",
+   "link": "https://millercenter.org/president/reagan/impact-and-legacy",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "The End of the Cold War: Historiographical Debates",
+   "publisher": "Explaining History",
+   "date": "n.d.",
+   "link": "https://explaininghistory.org/historiography/end-of-cold-war/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "Did Reagan End the Cold War?",
+   "publisher": "History News Network",
+   "date": "n.d.",
+   "link": "https://www.hnn.us/article/did-reagan-end-the-cold-war",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "How Ronald Reagan ended the Cold War, with William Inboden",
+   "publisher": "Niskanen Center",
+   "date": "n.d.",
+   "link": "https://www.niskanencenter.org/how-ronald-reagan-ended-cold-war-william-inboden/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "Ronald Reagan and the End of the Cold War (review essay)",
+   "publisher": "Journal of Cold War Studies, MIT Press",
+   "date": "n.d.",
+   "link": "https://direct.mit.edu/jcws/article/28/2/194/137448/Ronald-Reagan-and-the-End-of-the-Cold-War",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "Tiananmen Square incident",
+   "publisher": "Britannica Kids",
+   "date": "n.d.",
+   "link": "https://kids.britannica.com/students/article/Tiananmen-Square-incident/609276",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "A short history of the Web",
+   "publisher": "CERN",
+   "date": "n.d.",
+   "link": "https://home.cern/science/computing/the-birth-of-the-web/short-history-web/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "The World's First Web Site",
+   "publisher": "HISTORY",
+   "date": "n.d.",
+   "link": "https://www.history.com/articles/the-worlds-first-web-site",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s29",
+   "title": "Mikhail Gorbachev, former Soviet leader who paved way for end of Cold War, dead at 91",
+   "publisher": "Yahoo News",
+   "date": "2022",
+   "link": "https://news.yahoo.com/mikhail-gorbachev-former-soviet-leader-212032702.html?fr=sycsrp_catchall",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s30",
+   "title": "The Cold War Ends (US History course text)",
+   "publisher": "Lumen Learning",
+   "date": "n.d.",
+   "link": "https://courses.lumenlearning.com/wm-ushistory2/chapter/the-cold-war-ends/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s31",
+   "title": "Revolutions of 1989: A Detailed Summary",
+   "publisher": "History Crunch",
+   "date": "n.d.",
+   "link": "https://historycrunch.com/revolutions-of-1989/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s32",
+   "title": "The Fall Of Communism And The Revolutions Of 1989",
+   "publisher": "WorldAtlas",
+   "date": "n.d.",
+   "link": "https://www.worldatlas.com/history/the-fall-of-communism-and-the-revolutions-of-1989.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s33",
+   "title": "The dramatic series of events that led to the fall of the Berlin Wall",
+   "publisher": "History Skills",
+   "date": "n.d.",
+   "link": "https://www.historyskills.com/classroom/year-10/fall-of-the-berlin-wall/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s34",
+   "title": "The End of Apartheid South Africa: New Beginnings and Lingering Challenges",
+   "publisher": "NCHE Teach",
+   "date": "n.d.",
+   "link": "https://ncheteach.org/resource/complex-world-the-end-of-apartheid-south-africa-new-beginnings-and-lingering-challenges/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s35",
+   "title": "The birth of the World Wide Web",
+   "publisher": "Google Arts & Culture (CERN)",
+   "date": "n.d.",
+   "link": "https://artsandculture.google.com/story/the-birth-of-the-world-wide-web-cern/5AVhmV4JkYtgJw?hl=en",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s36",
+   "title": "World Wide Web at 35",
+   "publisher": "CERN Alumni",
+   "date": "2024-03-27",
+   "link": "https://alumni.cern/news/2080454",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s37",
+   "title": "Mikhail Gorbachev: what did former Soviet Union leader say about Chernobyl Disaster and the fall of the USSR?",
+   "publisher": "National World",
+   "date": "n.d.",
+   "link": "https://www.nationalworld.com/news/people/mikhail-gorbachev-former-soviet-leader-1986-chernobyl-disaster-3825682",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s38",
+   "title": "The 'astonishing news' of the fall of the Berlin Wall in 1989",
+   "publisher": "CBC News",
+   "date": "n.d.",
+   "link": "https://www.cbc.ca/1.5334293",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s39",
+   "title": "A time to heal: Mandela elected South Africa's first black President",
+   "publisher": "The Sunday Post (via PressReader)",
+   "date": "n.d.",
+   "link": "https://www.pressreader.com/uk/the-sunday-post-dundee/20210509/282604560721827",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class sixty. Today we ask a big question: how and why did the Cold War end?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The End of the Cold War"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a reminder. The Cold War was a rivalry between the United States and the Soviet Union. It dominated world politics for about forty years."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Cold War"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What was the Cold War?",
+    "right": "A rivalry between the United States and the Soviet Union that dominated world politics for about forty years.",
+    "wrong": [
+     "A forty-year trade deal between two companies.",
+     "A war fought only in the Arctic.",
+     "A quarrel between two cities in Germany."
+    ],
+    "why": "It was a long rivalry between two superpowers, the US and the Soviet Union, and it shaped world politics for about four decades."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now look at how things seemed in 1985."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "In 1985, it seemed the Soviet Union would last forever."
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Six years later, in December 1991, it was gone. Its empire had broken into fifteen independent countries."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "star",
+    "count": 15,
+    "layout": "group",
+    "text": "Fifteen new countries"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is our plan. Reform in the USSR, then Reagan, then the revolutions of 1989 and the Berlin Wall. After that, the end of the USSR, the big debate, and South Africa."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Gorbachev's reforms | Reagan | 1989 revolutions and the Wall | The USSR ends | The debate | South Africa"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Start with one man. Mikhail Gorbachev became Soviet leader in 1985. The Nobel Committee says he came to see that the country could not keep up with the US arms race or give people a decent standard of living."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Portrait of Mikhail Gorbachev, born 1931, Soviet leader from 1985 to 1991."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Notice what he wanted. He aimed to reform communism, not to end it. He used two Russian words for his plan."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Reform, not end"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The first word is glasnost. It means openness. People got more freedom to speak, and access to foreign media."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Glasnost = openness"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The second word is perestroika, meaning restructuring. Some elections now had several candidates and a secret ballot. A few free-market tools entered the economy. Many officials resisted, because they did not want to lose control."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Perestroika = restructuring"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's put the two words side by side."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Glasnost: openness, free speech, foreign news | Perestroika: restructuring, new elections, limited markets"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which of Gorbachev's words means openness?",
+    "right": "Glasnost",
+    "wrong": [
+     "Perestroika",
+     "Both words mean openness",
+     "Neither; both mean secrecy"
+    ],
+    "why": "Glasnost means openness. Perestroika means restructuring."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Openness was tested early. On 26 April 1986 a reactor exploded at Chernobyl, in northern Ukraine. It was the world's worst nuclear accident."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The damaged Chernobyl power station in northern Ukraine, April 1986."
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Kremlin stayed silent at first. Gorbachev spoke on television almost three weeks later. Historian Lewis Siegelbaum says Chernobyl was a watershed, because glasnost had been little more than a slogan until then."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Chernobyl: a test for glasnost"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why was Chernobyl a test for glasnost?",
+    "right": "The government had promised openness, but at first it stayed silent about the accident.",
+    "wrong": [
+     "The accident happened inside a newspaper office.",
+     "Glasnost meant hiding bad news, and it worked.",
+     "The accident happened in the United States."
+    ],
+    "why": "Glasnost promised openness. The first silence showed how far the government still had to go, and the accident pushed it to take openness more seriously."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now to the other superpower. Ronald Reagan became US president in 1981. His foreign policy rejected simply accepting the Cold War as it was."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Ronald Reagan, US president 1981 to 1989"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In 1983 he called the Soviet Union an 'evil empire'. Yet in 1982 he had also floated big cuts to nuclear weapons. That idea led to the START treaty."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1982: proposes cutting nuclear stockpiles | 1983: 'evil empire' speech | Later: START treaty"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 1985 Reagan and Gorbachev met in Geneva to talk about reducing weapons and military budgets."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Geneva, 1985"
+   },
+   "cite": [
+    "s30"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Reagan's plan, as described by Strobe Talbott, was to look for common interests, be frank about disagreements, and support Gorbachev's reforms. He would not demand regime change."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Find common interests | Be candid about disagreements | Support reforms | No demand for regime change"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Talks produced results. The two leaders agreed that their countries would destroy all their intermediate-range nuclear missiles."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Missiles to be destroyed"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Reagan still spoke bluntly. In 1987, at the Berlin Wall, he challenged Gorbachev to tear it down."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Tear down this wall"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Gorbachev also withdrew Soviet troops from Afghanistan and pushed for demilitarization in Eastern Europe. Both moves counted for what came next."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Troops leave Afghanistan | Arms reduction talks | Fewer forces in Eastern Europe"
+   },
+   "cite": [
+    "s30",
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "By 1989 Moscow had dropped the old Brezhnev Doctrine, which said it could step into its allies' affairs. It chose non-intervention instead. People joked that this was the 'Sinatra Doctrine'."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Non-intervention"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What did dropping the Brezhnev Doctrine mean for Eastern Europe?",
+    "right": "Moscow would no longer step in to control its allies' internal affairs.",
+    "wrong": [
+     "Moscow would send more troops into its allies.",
+     "Eastern Europe would have to leave the Soviet Union.",
+     "Nothing changed at all."
+    ],
+    "why": "The change to non-intervention in allies' internal affairs gave Eastern European peoples room to act."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "With that door open, 1989 became a year of revolutions. Communist governments in Eastern Europe fell one after another, mostly peacefully."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "June: Poland votes | May to Sept: Hungary opens border | Nov 9: Berlin Wall opens | Nov 17: Czechoslovakia | Dec: Romania"
+   },
+   "cite": [
+    "s31",
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Poland came first. An independent trade union called Solidarity had forced the communist government to recognise it back in 1980, through waves of strikes."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Solidarity"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 1989 the Communists held talks with Solidarity. Partly free elections were held on 4 June. Solidarity won, and led the first non-Communist government in the Soviet bloc since 1948."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "4 June 1989"
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next, Hungary. In May 1989 its government began removing the border fence with Austria. That opened a gap in the Iron Curtain."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map of central Europe: Hungary's western border with Austria marked open."
+   },
+   "cite": [
+    "s32",
+    "s31"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "East Germans could holiday in Hungary, then cross into Austria and on to West Germany. By the end of September more than 30,000 had left this way."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "30,000+ East Germans escaped by September 1989"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Why did Hungary's open border matter to East Germany?",
+    "right": "East Germans could travel to Hungary and slip across into Austria and the West.",
+    "wrong": [
+     "It stopped East Germans from travelling at all.",
+     "It closed the Berlin Wall.",
+     "It made Hungary part of East Germany."
+    ],
+    "why": "Hungary was a route around East Germany's own barriers. Thousands used it to leave."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Back home, East Germans marched for change. By November the marches had swelled to nearly half a million people."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Nearly 500,000 marchers"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is a key choice. Moscow refused to use military force to prop up East Germany's leader, Erich Honecker. He was replaced and reforms began."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Moscow chose not to use force"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To see what happened next, we need to know what the Berlin Wall was. It went up in August 1961, built by East Germany's communist government to stop its people fleeing to the West."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Photo: East German workers building the wall in Berlin, August 1961."
+   },
+   "cite": [
+    "s38",
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It stood for 28 years and was over 155 kilometres long. By 1989 it had 302 watchtowers, and more than 100 people died trying to cross it."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "28 years"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "On the evening of 9 November 1989, East German spokesman Günter Schabowski told a live press conference that East Germans could travel west, effective immediately."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "9 November 1989"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It was a slip. The plan had been easier travel permits starting the next day. But people heard 'now'."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "The plan: easier travel permits from 10 November | What was said: open, effective immediately"
+   },
+   "cite": [
+    "s33",
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Crowds gathered at the checkpoints and asked for the gates to open. They crossed, and some climbed on top of the Wall, joined by West Germans."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Crowds of East and West Berliners standing on the Berlin Wall at night."
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "How did the Berlin Wall open on 9 November 1989?",
+    "right": "A spokesman announced new travel rules at a press conference, crowds gathered at the checkpoints, and the gates were opened.",
+    "wrong": [
+     "Soviet tanks knocked it down.",
+     "West Germany's army broke through it.",
+     "A peace treaty was signed that morning."
+    ],
+    "why": "No army opened it. A press-conference announcement, a mix-up about timing, and huge crowds led to the gates opening."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The next day, Germans began tearing the Wall down, and souvenir hunters took the rubble. Germany was reunited on 3 October 1990, eleven months later."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "3 October 1990: Germany reunited"
+   },
+   "cite": [
+    "s11",
+    "s9"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Czechoslovakia was next. On 17 November riot police broke up a peaceful student protest in Prague. Huge protests followed, and the Communists handed rule to reformers led by Václav Havel. People called it the Velvet Revolution."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Velvet Revolution"
+   },
+   "cite": [
+    "s31",
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Romania was the exception. Its hardline ruler, Nicolae Ceaușescu, was overthrown in December by protest and force of arms. It was the only violent revolution that year."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Romania: violent"
+   },
+   "cite": [
+    "s7",
+    "s31"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now compare China. In spring 1989 students protested in Tiananmen Square. On the night of 3 to 4 June, tanks and heavily armed troops moved in and opened fire."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Tiananmen Square, Beijing, June 1989, with troops and tanks."
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What was different in Eastern Europe compared with Beijing?",
+    "right": "Moscow had chosen not to use force to keep the governments in power.",
+    "wrong": [
+     "Eastern European governments had no armies.",
+     "Protesters in Eastern Europe were all violent.",
+     "Nobody in Eastern Europe protested."
+    ],
+    "why": "In Beijing the army was used against protesters. In Eastern Europe, Moscow's choice not to step in let change happen."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the Soviet Union itself. Its fifteen republics wanted more independence. Gorbachev won the Nobel Peace Prize in October 1990, but his reforms and the backlash against them were weakening the state."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Oct 1990: Nobel Peace Prize | Republics push for independence | Reforms and backlash weaken the state"
+   },
+   "cite": [
+    "s2",
+    "s12",
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "On 18 August 1991, hardliners from Gorbachev's own government, army and KGB put him under house arrest. They tried to seize power."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "August coup, 1991"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Boris Yeltsin, leader of Russia, climbed on a tank and called for a general strike. Some tank units joined the defenders. The coup failed within days."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Boris Yeltsin speaking from a tank outside the Russian parliament building, Moscow, 19 August 1991."
+   },
+   "cite": [
+    "s15",
+    "s16"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The coup was meant to save the Soviet Union. Instead it fatally weakened Gorbachev and sped up the collapse."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Coup failed, USSR weaker"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why did a coup meant to save the USSR speed up its end?",
+    "right": "It badly damaged Gorbachev's standing and made the collapse come faster.",
+    "wrong": [
+     "It made every republic want to stay in the USSR.",
+     "It made Gorbachev stronger than ever.",
+     "It ended the Cold War on the same day."
+    ],
+    "why": "The coup failed, it undermined Gorbachev, and the union was breaking up within months."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Then came December. On 1 December Ukraine voted overwhelmingly for independence. On 8 December the leaders of Russia, Ukraine and Belarus met in Belarus and declared the Soviet Union no longer existed."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "8 December 1991"
+   },
+   "cite": [
+    "s12",
+    "s13"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "On 25 December Gorbachev resigned on television. His powers, including control of the nuclear weapons, passed to Yeltsin. The hammer-and-sickle flag came down."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "25 December 1991"
+   },
+   "cite": [
+    "s12",
+    "s14",
+    "s5"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Which three republics' leaders met on 8 December 1991 and declared the Soviet Union over?",
+    "right": "Russia, Ukraine and Belarus",
+    "wrong": [
+     "Poland, Hungary and Romania",
+     "Georgia, Armenia and Azerbaijan",
+     "East Germany, West Germany and Austria"
+    ],
+    "why": "Yeltsin of Russia, Kravchuk of Ukraine and Shushkevich of Belarus signed the agreement that declared the Soviet Union ended."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the whole story in order."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1985 Gorbachev leads | 1987 Reagan at the Wall | 1989 revolutions | 9 Nov 1989 Wall opens | 3 Oct 1990 Germany reunited | Aug 1991 coup | Dec 1991 USSR ends"
+   },
+   "cite": [
+    "s2",
+    "s1",
+    "s9",
+    "s16",
+    "s12"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So what mattered most? Historians still disagree. Three main answers are pressure, reform and economics."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Pressure | Reform | Economics"
+   },
+   "cite": [
+    "s1",
+    "s21"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Pressure: some say Reagan's military buildup forced the Soviets into a costly arms race."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Pressure"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Reform: others stress Gorbachev's choices. Oxford historian Archie Brown calls him the most important factor, though he says Reagan made ending the Cold War easier."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Reform"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Economics: still others point to Soviet overreach in Afghanistan, restless Eastern Europe, and a Soviet economy that was falling apart."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Economics and weakness"
+   },
+   "cite": [
+    "s21",
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Where does the debate stand now? One review says most professional historians reject 'Reagan won' as too simple. It favours a mix of Soviet weaknesses, Western pressure, Gorbachev's decisions and pressure from below."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Soviet weaknesses | Western pressure | Gorbachev's decisions | Pressure from below"
+   },
+   "cite": [
+    "s22"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What do most professional historians say today?",
+    "right": "Several things combined: Soviet weaknesses, Western pressure, Gorbachev's decisions and pressure from below.",
+    "wrong": [
+     "Only Reagan's arms spending mattered.",
+     "Only a mistake at a press conference mattered.",
+     "Only the Chernobyl accident mattered."
+    ],
+    "why": "The review says that the best-supported view is a mix of causes, though it notes the debate continues."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more thing. Gorbachev won a Nobel Prize abroad. At home many blamed him for the Soviet collapse, and in 1996 he got less than one percent of the vote for president."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Under 1% in 1996"
+   },
+   "cite": [
+    "s29",
+    "s2"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now, in the same years, to South Africa. There, a system of racial separation called apartheid ended. The word means 'apartness' in Afrikaans."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Apartheid = apartness"
+   },
+   "cite": [
+    "s39"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Pressure came from outside. From the 1960s some UN members called for sanctions, and South Africa became an international pariah."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Sanctions"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Pressure also came from inside. Protest was growing in the 1980s, and a British government history blog says South Africa was becoming ungovernable."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Protest at home"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 1989 F. W. de Klerk became president. He lifted the ban on the African National Congress, or ANC, and in February 1990 ordered Nelson Mandela's release."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "F. W. de Klerk"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Mandela walked free on 11 February 1990. He had spent 27 years in prison."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Illustration: 27 years in prison"
+   },
+   "cite": [
+    "s17"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Freedom did not arrive that day. Apartheid did not end with his release. Negotiations took four years, and the laws were repealed in 1991."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1990 Mandela freed | 1991 apartheid laws repealed | 1994 first free election"
+   },
+   "cite": [
+    "s18",
+    "s17"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Did apartheid end the day Mandela walked free?",
+    "right": "No. Negotiations went on for four years, and the first free election came in 1994.",
+    "wrong": [
+     "Yes, it ended the same day.",
+     "No, it ended before he was released.",
+     "It ended in 1961."
+    ],
+    "why": "His release was a turning point, but apartheid was dismantled between 1990 and 1994."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "On 27 April 1994 South Africa held its first election in which people of all races could vote. The ANC won, and Mandela became president."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "27 April 1994"
+   },
+   "cite": [
+    "s19",
+    "s18"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What was special about South Africa's election on 27 April 1994?",
+    "right": "It was the first national election in which South Africans of all races could vote.",
+    "wrong": [
+     "It was the first election ever held in Africa.",
+     "Only de Klerk's party could take part.",
+     "It was held outside the country."
+    ],
+    "why": "For the first time all South Africans could vote, which marked the end of apartheid rule."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Mandela and de Klerk shared the 1993 Nobel Peace Prize. After 1994, the Truth and Reconciliation Commission, led by Archbishop Desmond Tutu, let victims and former officials tell their stories."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1993: shared Nobel Peace Prize | Truth and Reconciliation Commission"
+   },
+   "cite": [
+    "s17",
+    "s34"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Science did not stop for politics. In March 1989 a 33-year-old computer scientist, Tim Berners-Lee, proposed the idea of the Web at CERN. The first website went up on 6 August 1991."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "March 1989 Web proposed | 1991 first website | 1993 Web released free"
+   },
+   "cite": [
+    "s35",
+    "s28",
+    "s36"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Look at how long things lasted, and how fast they ended."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1",
+    "text": "Years: long stretches, fast endings"
+   },
+   "cite": [
+    "s5",
+    "s9",
+    "s17"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To sum up: a reforming leader, a choice not to use force, and crowds in the streets. The Cold War ended through all of these, not through one cause. Next time: globalization and the internet."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Gorbachev's reforms | Moscow's choice not to use force | Crowds and revolutions | The USSR ends in 1991 | South Africa's free election in 1994"
+   },
+   "cite": [
+    "s22",
+    "s7"
+   ],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Years: long stretches, fast endings",
+   "rows": [
+    {
+     "label": "Cold War (about)",
+     "value": 40,
+     "source": "s5"
+    },
+    {
+     "label": "Berlin Wall standing",
+     "value": 28,
+     "source": "s9"
+    },
+    {
+     "label": "Mandela in prison",
+     "value": 27,
+     "source": "s17"
+    },
+    {
+     "label": "Gorbachev era, 1985 to 1991",
+     "value": 6,
+     "source": "s5"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Cold War",
+   "links": [
+    "[[Class 56: A New World Order]]",
+    "[[Superpower rivalry]]"
+   ]
+  },
+  {
+   "topic": "Glasnost and perestroika",
+   "links": [
+    "[[Mikhail Gorbachev]]",
+    "[[Soviet economy]]"
+   ]
+  },
+  {
+   "topic": "Chernobyl disaster",
+   "links": [
+    "[[Nuclear power]]",
+    "[[Soviet Union]]"
+   ]
+  },
+  {
+   "topic": "Reagan and Gorbachev summits",
+   "links": [
+    "[[Nuclear arms control]]",
+    "[[INF Treaty]]"
+   ]
+  },
+  {
+   "topic": "Revolutions of 1989",
+   "links": [
+    "[[Solidarity]]",
+    "[[Velvet Revolution]]",
+    "[[Berlin Wall]]"
+   ]
+  },
+  {
+   "topic": "Berlin Wall",
+   "links": [
+    "[[Germany reunification]]",
+    "[[Iron Curtain]]"
+   ]
+  },
+  {
+   "topic": "Dissolution of the Soviet Union",
+   "links": [
+    "[[Boris Yeltsin]]",
+    "[[Commonwealth of Independent States]]"
+   ]
+  },
+  {
+   "topic": "Apartheid and its end",
+   "links": [
+    "[[Nelson Mandela]]",
+    "[[F. W. de Klerk]]",
+    "[[Truth and Reconciliation Commission]]"
+   ]
+  },
+  {
+   "topic": "World Wide Web",
+   "links": [
+    "[[Class 61: Globalization and the Internet]]",
+    "[[Tim Berners-Lee]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "26 April 1986",
+   "elsewhere": "The Chernobyl reactor exploded in northern Ukraine, in the first year of Gorbachev's leadership.",
+   "cite": [
+    "s6"
+   ]
+  },
+  {
+   "when": "March 1989",
+   "elsewhere": "At CERN, 33-year-old computer scientist Tim Berners-Lee proposed the information system that became the World Wide Web.",
+   "cite": [
+    "s35",
+    "s27"
+   ]
+  },
+  {
+   "when": "3-4 June 1989",
+   "elsewhere": "Troops cleared Tiananmen Square in Beijing with force. Poland held its partly free election on 4 June.",
+   "cite": [
+    "s26",
+    "s8"
+   ]
+  },
+  {
+   "when": "11 February 1990",
+   "elsewhere": "Nelson Mandela was freed in South Africa, the same year Germany reunited on 3 October.",
+   "cite": [
+    "s17",
+    "s9"
+   ]
+  },
+  {
+   "when": "15 October 1990",
+   "elsewhere": "Mikhail Gorbachev was awarded the Nobel Peace Prize.",
+   "cite": [
+    "s2"
+   ]
+  },
+  {
+   "when": "6 August 1991",
+   "elsewhere": "Tim Berners-Lee published the first website, about two weeks before the Moscow coup began on 18 August.",
+   "cite": [
+    "s28",
+    "s16"
+   ]
+  },
+  {
+   "when": "30 April 1993",
+   "elsewhere": "CERN released the World Wide Web software into the public domain.",
+   "cite": [
+    "s36"
+   ]
+  },
+  {
+   "when": "27 April 1994",
+   "elsewhere": "South Africa held its first election open to all races.",
+   "cite": [
+    "s19"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "Reagan's pressure (arms buildup and tough rhetoric) ended the Cold War.",
+   "other_view": "Historian William Inboden argues Reagan's strategy shaped the world in which the Politburo picked a reformer. Many others say internal Soviet politics and Gorbachev's choices explain more. A Journal of Cold War Studies review says internal politics and failed policies explain the timing better than anything Reagan did. One survey says few prominent academics accept the claim that Reagan simply spent the USSR into collapse.",
+   "cite": [
+    "s24",
+    "s25",
+    "s23",
+    "s22"
+   ]
+  },
+  {
+   "claim": "Gorbachev's reforms were the main cause of the end.",
+   "other_view": "Archie Brown rates Gorbachev as the most important factor, but other scholars stress economic failure, nationalism and Western pressure. Some say reform, not pressure, would have happened anyway. Others argue Reagan's firmness and willingness to deal were part of what made reform possible.",
+   "cite": [
+    "s23",
+    "s21",
+    "s22"
+   ]
+  },
+  {
+   "claim": "Chernobyl was a key cause of the Soviet collapse.",
+   "other_view": "Gorbachev wrote in 2006 that Chernobyl was perhaps the real cause, even more than perestroika. Other accounts treat it as one catalyst among many, not the cause.",
+   "cite": [
+    "s37",
+    "s6"
+   ]
+  },
+  {
+   "claim": "The Berlin Wall fell by accident.",
+   "other_view": "The press-conference mistake started the night's events. But the crowds, the Hungarian border route, and Moscow's refusal to use force had already put the East German government under great pressure.",
+   "cite": [
+    "s9",
+    "s33",
+    "s11",
+    "s7"
+   ]
+  },
+  {
+   "claim": "The Cold War ended in 1989.",
+   "other_view": "The Nobel Committee dates the end to 1989. The US Office of the Historian ties it to the fall of the Wall and to the Soviet collapse by the end of 1991. A US history text says it officially ended under President George H. W. Bush.",
+   "cite": [
+    "s2",
+    "s1",
+    "s30"
+   ]
+  },
+  {
+   "claim": "The Soviet Union ended on 25 December 1991.",
+   "other_view": "Gorbachev resigned on 25 December. The Soviet upper chamber voted itself and the USSR out of existence on 26 December. Britannica says it was formally dissolved at midnight on 31 December. The date depends on what you count.",
+   "cite": [
+    "s12",
+    "s14"
+   ]
+  },
+  {
+   "claim": "Gorbachev is mainly a hero for ending the Cold War peacefully.",
+   "other_view": "The Nobel Committee honoured him for it. Many in Russia blamed him for the collapse of the USSR, and he won under 1% of the vote in 1996.",
+   "cite": [
+    "s2",
+    "s29"
+   ]
+  },
+  {
+   "claim": "International sanctions ended apartheid.",
+   "other_view": "National Geographic says de Klerk acted because of international pressure and the threat of civil war. UK government historians stress growing internal unrest. They also say Britain was wary of risking its large economic stake in South Africa. De Klerk's own choices also mattered.",
+   "cite": [
+    "s18",
+    "s20",
+    "s17"
+   ]
+  }
+ ]
+}

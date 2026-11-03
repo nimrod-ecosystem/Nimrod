@@ -1,0 +1,670 @@
+{
+ "about": {
+  "title": "Global workspace theory: the brain's broadcast",
+  "course": "consciousness",
+  "class_n": 4,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. There are 22 short beats and 9 questions, with one idea per beat. The critics get extra time because Mike asked for each view's best case and its critics."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Global workspace theory",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Global_workspace_theory",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s2",
+   "title": "Consciousness (Fall 2025 Edition)",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "2025",
+   "link": "https://plato.stanford.edu/archives/fall2025/entries/consciousness/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s3",
+   "title": "Conscious Processing and the Global Neuronal Workspace Hypothesis",
+   "publisher": "Neuron (Cell Press)",
+   "date": "2020",
+   "link": "https://www.cell.com/neuron/fulltext/S0896-6273(20)30052-0",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s4",
+   "title": "The global neuronal workspace as a broadcasting network",
+   "publisher": "Network Neuroscience (MIT Press)",
+   "date": "2022",
+   "link": "https://direct.mit.edu/netn/article/6/4/1186/111960/The-global-neuronal-workspace-as-a-broadcasting",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s5",
+   "title": "Adversarial testing of global neuronal workspace and integrated information theories of consciousness",
+   "publisher": "Nature (via PubMed)",
+   "date": "2025-04-30",
+   "link": "https://pubmed.ncbi.nlm.nih.gov/40307561/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s6",
+   "title": "How Does Consciousness Work? Dueling Scientists Tested Two Big Theories but Found No Winner",
+   "publisher": "Singularity Hub (reprint of an article by consciousness researchers)",
+   "date": "2025-05-06",
+   "link": "https://singularityhub.com/2025/05/06/how-does-consciousness-work-dueling-scientists-tested-two-big-theories-but-found-no-winner/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s7",
+   "title": "The Neuroscience of Consciousness",
+   "publisher": "Stanford Encyclopedia of Philosophy",
+   "date": "n.d.",
+   "link": "https://plato.stanford.edu/entries/consciousness-neuroscience/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s8",
+   "title": "Global Workspace Theory (GWT) and Prefrontal Cortex: Recent Developments",
+   "publisher": "Frontiers in Psychology (via PubMed Central)",
+   "date": "2021",
+   "link": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8660103/",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s9",
+   "title": "The predictive global neuronal workspace: A formal active inference model of visual consciousness",
+   "publisher": "Progress in Neurobiology (ScienceDirect)",
+   "date": "n.d.",
+   "link": "https://www.sciencedirect.com/science/article/abs/pii/S0301008220301738",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s10",
+   "title": "The Global Neuronal Workspace Model of Conscious Access: From Neuronal Architectures to Clinical Applications",
+   "publisher": "Dehaene, Changeux and Naccache (book chapter)",
+   "date": "2011",
+   "link": "https://www.antoniocasella.eu/dnlaw/Dehaene_Changeaux_Naccache_2011.pdf",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s11",
+   "title": "Consciousness and the Brain (book summary)",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Consciousness_and_the_Brain",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s12",
+   "title": "Landmark experiment sheds new light on the origins of consciousness",
+   "publisher": "Allen Institute (via EurekAlert)",
+   "date": "2025-04-30",
+   "link": "https://www.eurekalert.org/news-releases/1082009",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s13",
+   "title": "On the utility of toy models for theories of consciousness",
+   "publisher": "arXiv (preprint)",
+   "date": "2025",
+   "link": "https://arxiv.org/pdf/2508.00190",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s14",
+   "title": "Deep Learning and the Global Workspace Theory",
+   "publisher": "arXiv (preprint)",
+   "date": "2020",
+   "link": "https://arxiv.org/pdf/2012.10390",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s15",
+   "title": "On the link between conscious function and general intelligence in humans and machines",
+   "publisher": "arXiv (preprint)",
+   "date": "2022",
+   "link": "https://arxiv.org/pdf/2204.05133",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s16",
+   "title": "Consciousness and Automated Reasoning",
+   "publisher": "arXiv (preprint)",
+   "date": "2020",
+   "link": "https://arxiv.org/pdf/2001.09442",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s17",
+   "title": "Early and late electrophysiological correlates of gradual perceptual awareness in- and outside the Attentional Blink window",
+   "publisher": "NeuroImage (ScienceDirect)",
+   "date": "n.d.",
+   "link": "https://www.sciencedirect.com/science/article/pii/S1053811922007674",
+   "read": "2026-11-03"
+  },
+  {
+   "id": "s18",
+   "title": "Fame in the Brain—Global Workspace Theories of Consciousness",
+   "publisher": "Psychology Today",
+   "date": "2023-10",
+   "link": "https://www.psychologytoday.com/us/blog/finding-purpose/202310/fame-in-the-brain-global-workspace-theories-of-consciousness",
+   "read": "2026-11-03"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 4. Last time we went looking for consciousness in the brain. Today we meet one of the major scientific theories of it: global workspace theory."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Class 4: Global workspace theory"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The big idea fits in one word: broadcast. The theory says information becomes conscious when it is shared widely across the brain."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Broadcast"
+   },
+   "cite": [
+    "s2",
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Shared with whom? Think of the brain as many specialists: one for seeing, one for hearing, one for memory, one for planning. Most of their work happens out of sight."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Specialists: seeing, hearing, remembering, planning, moving"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Bernard Baars pictured this as a theatre. What is conscious is what is lit up on the stage. Attention is the spotlight."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A dark theatre. One bright circle of light on the stage. Rows of people sitting in the dark."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "In Baars's theatre picture, what does the spotlight stand for?",
+    "right": "Attention",
+    "wrong": [
+     "Memory",
+     "Sleep",
+     "The brain's blood supply"
+    ],
+    "why": "The spotlight is attention. It picks which material is lit up on the stage and so enters awareness."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the audience. It is all the specialists sitting in the dark. When something is lit on stage, they all get it at once. That is the broadcast."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "On stage (lit): the broadcast content | In the audience (dark): specialists that receive it"
+   },
+   "cite": [
+    "s1",
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Not everything fits on the stage. Things compete for attention, and the winners get broadcast. Right now, was your chair in the spotlight? Probably not, until I asked."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Competition for the spotlight"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "In this picture, what happens to information that loses the competition?",
+    "right": "It stays in the dark, outside conscious awareness.",
+    "wrong": [
+     "It is broadcast anyway, but more quietly.",
+     "It is deleted from the brain at once.",
+     "It is sent to the audience first."
+    ],
+    "why": "Only what wins the spotlight is brought into awareness. The rest of the activity stays unconscious."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A warning: this is a picture, not a map. One reading of Baars's picture is that the whole system acts as the theatre, with no tiny viewer and no special seat."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "The theatre is a way of thinking. It is not a room inside the head."
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Baars first set out the theory in 1988 and wrote his theatre book in 1997. Stanislas Dehaene and Jean-Pierre Changeux then built a brain version, called the global neuronal workspace."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1988: Baars sets out global workspace theory | 1997: Baars's theatre book | 1998: Dehaene and Changeux's neuronal workspace"
+   },
+   "cite": [
+    "s2",
+    "s1",
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Their workspace is made of cortical neurons with long-range connections. Those long wires let one specialist's information reach distant areas of the brain."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A brain outline with long arcs linking front, middle and back regions."
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Their key term is ignition: a sudden, all-or-none surge of activity across a wide network. Dehaene compares it to an audience that starts with a few claps and then erupts into applause."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ignition"
+   },
+   "cite": [
+    "s3",
+    "s11"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What does 'ignition' mean in this theory?",
+    "right": "A sudden, non-linear surge of activity that spreads across many brain areas.",
+    "wrong": [
+     "A slow warm-up inside one sensory area.",
+     "The moment a person falls asleep.",
+     "The spotlight switching off."
+    ],
+    "why": "Ignition is the sudden, non-linear activation of a broad network. It is like a few claps turning into applause."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It is quick. The model predicts a surge toward prefrontal and parietal areas about 200 to 300 milliseconds after a thing appears, but only when it is consciously seen. Early sensory signals appear either way."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "0 ms: stimulus appears | early: sensory signals (seen or unseen) | about 200–300 ms: ignition if consciously seen"
+   },
+   "cite": [
+    "s4",
+    "s3",
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "How do we test it? Flash a word very briefly, then cover it with a mask so people can't see it. Dehaene's team found that readable words lit up wide areas of the brain. Masked words stayed in sensory regions."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Word seen: widespread activity in front, side and top of the brain | Word masked: activity stays in sensory areas"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "In the masking experiment, what happened when the word was invisible?",
+    "right": "The activity stayed within sensory regions.",
+    "wrong": [
+     "It spread across the whole brain anyway.",
+     "There was no brain activity at all.",
+     "Only the prefrontal cortex responded."
+    ],
+    "why": "Words that people could report produced widespread activity. Masked words stayed within sensory regions."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A second way to miss something is when your attention is busy with another task. The attentional blink is a case of this. This and masking are the two main routes to non-conscious processing."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Masking: the signal is too weak | Attentional blink: attention is busy"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In blink experiments, early brain signals did not track seeing, or only changed gradually. A late brain wave, the P3 or P3b, jumped sharply once the target was clearly visible. The P3b is a wide wave that can be recorded from the scalp."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A late, sudden jump = seen"
+   },
+   "cite": [
+    "s9",
+    "s10"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Which signal best separated 'seen' from 'unseen' in these experiments?",
+    "right": "A late, sudden jump in activity (the P3).",
+    "wrong": [
+     "The very earliest sensory signal.",
+     "A steady hum that never changed.",
+     "The size of the person's pupils."
+    ],
+    "why": "Early signals did not vary with visibility, or varied only gradually. The late P3 rose sharply when the target was clearly seen, which fits ignition."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the links to attention and memory. Attention can be seen as the rule for what gets into the workspace. Working memory is the ability to keep it there and work with it."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Attention: lets in what matters | Working memory: holds and manipulates it"
+   },
+   "cite": [
+    "s15",
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In this picture, what job does working memory do?",
+    "right": "It keeps information in the workspace for a while so we can use it.",
+    "wrong": [
+     "It decides what is allowed in.",
+     "It switches the spotlight off.",
+     "It stores facts from long ago in the dark."
+    ],
+    "why": "Attention decides what gets in. Working memory maintains the content and lets us work with it."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So how good is the evidence? In 2025 a large team ran a landmark test. It pitted this theory against a rival, integrated information theory, which we meet in class 6. They scanned 256 people."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "256 people tested"
+   },
+   "cite": [
+    "s5",
+    "s12"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The result was mixed. Some predictions of both theories held up. But the study substantially challenged key tenets of both. Neither theory came out on top."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Mixed result: neither theory won"
+   },
+   "cite": [
+    "s5",
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "For the workspace theory in particular, researchers reported that not every kind of conscious content could be read from the prefrontal cortex. They also found no ignition when the stimulus first appeared."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Challenges for the workspace: content not found in prefrontal cortex | no ignition at stimulus start"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That brings us to the critics. First we need two terms. Phenomenal consciousness is the raw experience of sensations, thoughts and feelings. Access consciousness is information being available for reasoning, control and report."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Phenomenal: what it feels like | Access: available for reasoning, report and action"
+   },
+   "cite": [
+    "s14",
+    "s7"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which of these describes access consciousness?",
+    "right": "Information that is available for reasoning, report and control of action.",
+    "wrong": [
+     "The raw feel of a colour or a taste.",
+     "A person being awake rather than asleep.",
+     "Knowing your own name."
+    ],
+    "why": "Access consciousness is about availability to reasoning, report and control. The raw feel is phenomenal consciousness."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Criticism one: the theory explains access, not experience. It tells us which information is available for report and control. It does not say why any of that feels like something. Dehaene replies that the split is misleading."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Criticism 1: access is explained. Is experience?"
+   },
+   "cite": [
+    "s7",
+    "s11",
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is the first criticism?",
+    "right": "It may explain what information is available, but not why it feels like anything.",
+    "wrong": [
+     "It says the brain does nothing unconsciously.",
+     "It says consciousness lives outside the brain.",
+     "It cannot be tested at all."
+    ],
+    "why": "Critics say the theory accounts for access: report, control and reasoning. They say it leaves open the question of phenomenal experience."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Criticism two: where is the workspace? Dehaene's version stresses prefrontal and parietal cortex, with a special place for prefrontal. But that test found limited prefrontal content. Baars replies that the theory does not claim prefrontal cortex is essential."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Critics: evidence for the front of the brain is limited | Baars: a dynamic workspace, not tied to one region"
+   },
+   "cite": [
+    "s13",
+    "s6",
+    "s8"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which region does the neuronal version emphasise, without making it the only one?",
+    "right": "The prefrontal cortex, along with parietal areas.",
+    "wrong": [
+     "The cerebellum",
+     "The brainstem only",
+     "The visual cortex only"
+    ],
+    "why": "The neuronal workspace stresses higher-order areas, especially the prefrontal cortex, but not exclusively."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Criticism three: is the theory too broad or too narrow? One analysis found a tiny network of a few neurons could meet its functional criteria, which seems too broad. Meanwhile it is unclear what it predicts for infants, patients, animals and AI."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Too broad: even tiny networks might count | Too narrow or unclear: infants, animals, AI"
+   },
+   "cite": [
+    "s13",
+    "s18"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What does 'too broad' mean for this theory?",
+    "right": "Even very simple systems might seem to qualify as conscious.",
+    "wrong": [
+     "Only humans could ever qualify.",
+     "It covers every theory of consciousness.",
+     "It cannot be written down as a model."
+    ],
+    "why": "Critics worry that if broadcast between modules is enough, very simple systems could count, which seems too generous."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's pull it together. Information is conscious when it wins the spotlight and is broadcast to the whole system. Evidence includes late, sudden ignition for seen words. The worries are experience, location and breadth. Next class we look at higher-order theories."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Broadcast | Spotlight and competition | Ignition | Evidence: seen vs unseen | Critics: experience, location, breadth"
+   },
+   "cite": [
+    "s2",
+    "s9",
+    "s7",
+    "s13"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which is the best one-sentence summary of global workspace theory?",
+    "right": "Information becomes conscious when it is broadcast widely to many brain systems.",
+    "wrong": [
+     "Consciousness is a single spot in the brain that watches everything.",
+     "Consciousness is the amount of information a brain integrates.",
+     "Only words and speech can be conscious."
+    ],
+    "why": "The theory says information becomes conscious when it is broadcast widely so that many systems can use it. The integration idea belongs to a rival theory."
+   }
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Global workspace theory",
+   "links": [
+    "[[the hard problem]]",
+    "[[looking for consciousness in the brain]]",
+    "[[higher-order theories]]",
+    "[[integrated information theory]]"
+   ]
+  },
+  {
+   "topic": "Access and phenomenal consciousness",
+   "links": [
+    "[[the hard problem]]",
+    "[[what do we mean by consciousness]]"
+   ]
+  },
+  {
+   "topic": "Attention and working memory",
+   "links": [
+    "[[looking for consciousness in the brain]]"
+   ]
+  },
+  {
+   "topic": "Adversarial collaboration (Cogitate)",
+   "links": [
+    "[[integrated information theory]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Consciousness is conscious access: information being globally available for report and control.",
+   "other_view": "Some researchers argue phenomenal experience can exist without access, or can overflow it. Recurrent processing theories say local activity may be enough. Dehaene calls the access/phenomenal split misleading. Scientists do not agree on the answer.",
+   "cite": [
+    "s7",
+    "s11"
+   ]
+  },
+  {
+   "claim": "The prefrontal cortex plays a key role in the workspace.",
+   "other_view": "A 2025 test found only some conscious content in prefrontal cortex. Baars and colleagues say the theory does not claim the prefrontal cortex is essential, and describe a dynamic workspace involving prefrontal and posterior regions.",
+   "cite": [
+    "s6",
+    "s8"
+   ]
+  },
+  {
+   "claim": "Ignition is all-or-none: a target is either seen or not.",
+   "other_view": "Another study found that several brain signals for seen versus unseen faces scaled smoothly with subjective visibility. That fits a gradual picture better.",
+   "cite": [
+    "s17"
+   ]
+  }
+ ]
+}

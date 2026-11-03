@@ -1,0 +1,1897 @@
+{
+ "about": {
+  "title": "The Late 1960s and 1970s: Protest, War and Oil",
+  "course": "history-of-everything",
+  "class_n": 58,
+  "audience": [
+   "high school",
+   "adult"
+  ],
+  "minutes": 30,
+  "length_note": "About 30 minutes. Seven topics fit in a half-hour class because each idea gets short steps and a quick check. The Cultural Revolution debate gets the most time, since the course asks for the other side to be heard. The feminist and environmental sections follow US-focused sources, and the lesson says so. The frame of reference only lists events I could confirm in the sources I read, so some famous events are left out for now."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Fall of Saigon (1975)",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/event/Fall-of-Saigon",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s2",
+   "title": "The Fall of Saigon",
+   "publisher": "Miller Center, University of Virginia",
+   "date": "n.d.",
+   "link": "https://millercenter.org/fall-saigon",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s3",
+   "title": "Vietnam War: Dates, Causes & Facts",
+   "publisher": "HISTORY",
+   "date": "n.d.",
+   "link": "https://www.history.com/articles/vietnam-war-history",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s4",
+   "title": "The Vietnam War: An Overview",
+   "publisher": "Vassar College, The Wars for Viet Nam",
+   "date": "n.d.",
+   "link": "https://www.vassar.edu/the-wars-for-vietnam/vietnam-war-overview",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s5",
+   "title": "Vietnam: The Final Act",
+   "publisher": "Vietnam Veterans Memorial Fund",
+   "date": "n.d.",
+   "link": "https://www.vvmf.org/Vietnam-The-Final-Act/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s6",
+   "title": "The May Events: All Power to the Imagination",
+   "publisher": "Google Arts & Culture (May Events Archive)",
+   "date": "n.d.",
+   "link": "https://artsandculture.google.com/story/the-may-events-may-events-archive/GwXRACIyLBUA8A?hl=en",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s7",
+   "title": "Political Protest 1968: Paris and Berkeley (pamphlet)",
+   "publisher": "Yale University, Whitney Humanities Center",
+   "date": "2018",
+   "link": "https://whc.yale.edu/sites/default/files/files/PoliticalProtest1968Pamphlet.pdf",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s8",
+   "title": "Context: 1968 (European History module)",
+   "publisher": "Virginia Tech, Digital History Reader",
+   "date": "n.d.",
+   "link": "https://www.dhr.history.vt.edu/modules/eu/mod05_1968/context.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s9",
+   "title": "Back to the barricades (again): What 1968 can teach students today",
+   "publisher": "OER Project",
+   "date": "n.d.",
+   "link": "https://www.oerproject.com/blog/1968-protests",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s10",
+   "title": "A Brief Overview of China's Cultural Revolution",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/story/chinas-cultural-revolution",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s11",
+   "title": "History of China: The Cultural Revolution, 1966-76",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/history-of-China/The-Cultural-Revolution-1966-76",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s12",
+   "title": "Cultural Revolution: Final years (1972-76) and Assessment",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/event/Cultural-Revolution/Rise-and-fall-of-Lin-Biao-1969-71",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s13",
+   "title": "Cultural Revolution summary",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/summary/Cultural-Revolution",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s14",
+   "title": "Cultural Revolution (Kids)",
+   "publisher": "Britannica Kids",
+   "date": "n.d.",
+   "link": "https://kids.britannica.com/kids/article/Cultural-Revolution/353025",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s15",
+   "title": "China's Cultural Revolution was a power grab from within the government, Stanford sociologist finds",
+   "publisher": "Stanford News",
+   "date": "2019-10",
+   "link": "https://news.stanford.edu/stories/2019/10/violence-unfolded-chinas-cultural-revolution",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s16",
+   "title": "Chronology of Mass Killings during the Chinese Cultural Revolution (1966-1976)",
+   "publisher": "Sciences Po Mass Violence and Resistance Research Network",
+   "date": "n.d.",
+   "link": "https://www.sciencespo.fr/mass-violence-war-massacre-resistance/en/document/chronology-mass-killings-during-chinese-cultural-revolution-1966-1976.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s17",
+   "title": "Who Killed More: Hitler, Stalin, or Mao?",
+   "publisher": "The New York Review of Books",
+   "date": "2018-02-05",
+   "link": "https://www.nybooks.com/online/2018/02/05/who-killed-more-hitler-stalin-or-mao/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s18",
+   "title": "Gang of Four",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Gang_of_Four",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s19",
+   "title": "Jiang Qing",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/biography/Jiang-Qing",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s20",
+   "title": "Six-Day War",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/event/Six-Day-War",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s21",
+   "title": "Six-Day War",
+   "publisher": "HISTORY",
+   "date": "n.d.",
+   "link": "https://www.history.com/topics/middle-east/six-day-war",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s22",
+   "title": "The 1967 Arab-Israeli War (Milestones)",
+   "publisher": "U.S. Department of State, Office of the Historian",
+   "date": "n.d.",
+   "link": "https://history.state.gov/milestones/1961-1968/arab-israeli-war-1967",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s23",
+   "title": "Controversies relating to the Six-Day War",
+   "publisher": "Wikipedia",
+   "date": "n.d.",
+   "link": "https://en.wikipedia.org/wiki/Controversies_relating_to_the_Six-Day_War",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s24",
+   "title": "The Yom Kippur War and the OPEC Oil Embargo",
+   "publisher": "Origins, The Ohio State University",
+   "date": "n.d.",
+   "link": "https://origins.osu.edu/read/yom-kippur-war-and-opec-oil-embargo",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s25",
+   "title": "Arab oil embargo",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/event/Arab-oil-embargo",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s26",
+   "title": "OPEC enacts oil embargo",
+   "publisher": "HISTORY",
+   "date": "n.d.",
+   "link": "https://www.history.com/this-day-in-history/october-17/opec-enacts-oil-embargo",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s27",
+   "title": "Arab Oil Embargo",
+   "publisher": "Springer (reference work entry)",
+   "date": "n.d.",
+   "link": "https://link.springer.com/rwe/10.1007/978-3-030-93703-4_443-1",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s28",
+   "title": "Oil embargo and energy crises of 1973 and 1979",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/history/oil-embargo-and-energy-crises-1973-and-1979/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s29",
+   "title": "Arab oil embargo of 1973",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/history/arab-oil-embargo-1973/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s30",
+   "title": "Iranian Revolution: Oil Crises, Historical Perspective",
+   "publisher": "ScienceDirect Topics",
+   "date": "n.d.",
+   "link": "https://www.sciencedirect.com/topics/social-sciences/iranian-revolution",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s31",
+   "title": "Camp David Accords and the Arab-Israeli Peace Process (Milestones)",
+   "publisher": "U.S. Department of State, Office of the Historian",
+   "date": "n.d.",
+   "link": "https://history.state.gov/milestones/1977-1980/camp-david",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s32",
+   "title": "Camp David Accords",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/event/Camp-David-Accords",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s33",
+   "title": "How Jimmy Carter Brokered a Hard-Won Peace Deal Between Israel and Egypt",
+   "publisher": "HISTORY",
+   "date": "n.d.",
+   "link": "https://www.history.com/articles/jimmy-carter-camp-david-accords-egypt-israel",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s34",
+   "title": "EPA History: Earth Day",
+   "publisher": "U.S. Environmental Protection Agency",
+   "date": "n.d.",
+   "link": "https://www.epa.gov/history/epa-history-earth-day",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s35",
+   "title": "The Birth of EPA",
+   "publisher": "U.S. Environmental Protection Agency (EPA Journal)",
+   "date": "1985-11",
+   "link": "https://www.epa.gov/archive/epa/aboutepa/birth-epa.html",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s36",
+   "title": "Celebrating 50 Years of Earth Day",
+   "publisher": "Resources for the Future",
+   "date": "n.d.",
+   "link": "https://www.resources.org/common-resources/celebrating-50-years-earth-day/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s37",
+   "title": "April 22, 1970: First Earth Day",
+   "publisher": "Zinn Education Project",
+   "date": "n.d.",
+   "link": "https://www.zinnedproject.org/news/tdih/first-earth-day/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s38",
+   "title": "Object lessons from the modern environmental movement",
+   "publisher": "JSTOR Daily",
+   "date": "n.d.",
+   "link": "https://daily.jstor.org/object-lessons-from-the-modern-environmental-movement",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s39",
+   "title": "Second wave of feminism",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/topic/second-wave-feminism",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s40",
+   "title": "Women's rights movement",
+   "publisher": "Encyclopaedia Britannica",
+   "date": "n.d.",
+   "link": "https://www.britannica.com/event/womens-movement",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s41",
+   "title": "Feminism, Anti-Feminism, and Social Activism from the 1960s to the 1980s",
+   "publisher": "American Archive of Public Broadcasting",
+   "date": "n.d.",
+   "link": "https://americanarchive.org/primary_source_sets/feminism-and-anti-feminism",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s42",
+   "title": "History of Women's Movements: Part II",
+   "publisher": "womensmuseum.wordpress.com",
+   "date": "2017-08-16",
+   "link": "https://womensmuseum.wordpress.com/2017/08/16/history-of-womens-movements-part-ii/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s43",
+   "title": "Second wave feminism (Reacting to the Past library guide)",
+   "publisher": "Central Methodist University Libraries",
+   "date": "n.d.",
+   "link": "https://centralmethodist.libguides.com/en111_reacting-to-the-past/second-wave-feminism",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s44",
+   "title": "U.S. Withdrawal from Vietnam",
+   "publisher": "EBSCO Research Starters",
+   "date": "n.d.",
+   "link": "https://www.ebsco.com/research-starters/history/us-withdrawal-vietnam/",
+   "read": "2026-11-02"
+  },
+  {
+   "id": "s45",
+   "title": "Camp David Accords",
+   "publisher": "HISTORY",
+   "date": "n.d.",
+   "link": "https://www.history.com/articles/camp-david-accords",
+   "read": "2026-11-02"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 58. Last time we looked at the 1950s and early 1960s. Today we cover about fifteen restless years, from 1966 to 1979."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Late 1960s and 1970s: Protest, War and Oil"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "We will take five stories, one at a time. There is no rush, and I will check in with a question now and then."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. The Vietnam War; 2. The protests of 1968; 3. China's Cultural Revolution; 4. Middle East wars and the oil shock; 5. Environmental and women's movements"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, the Vietnam War. Vietnam was split into North and South in 1954. American involvement lasted about 25 years, from 1950 to 1975."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Vietnam War"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The war was between North and South Vietnam, and the United States backed the South. In the end, communist forces won, in 1975."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "North Vietnam: communist-led | South Vietnam: backed by the United States"
+   },
+   "cite": [
+    "s3",
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "On January 31, 1968, about 70,000 northern troops began the Tet Offensive. Tet is the lunar new year."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "70,000"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Tet was a wave of coordinated attacks on more than 100 cities and towns in South Vietnam."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "100+ cities and towns"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What was the Tet Offensive?",
+    "right": "A coordinated series of attacks on more than 100 cities and towns in South Vietnam",
+    "wrong": [
+     "A peace treaty signed in Paris",
+     "A United States invasion of North Vietnam",
+     "A naval blockade of Saigon"
+    ],
+    "why": "Tet began on January 31, 1968, when about 70,000 northern troops attacked more than 100 cities and towns."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The North hoped Tet would push the United States to the bargaining table. Most of its predictions did not come true."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Hopes for Tet"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Even so, peace talks between the US and North Vietnam opened in Paris that May. They went on for years."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1968 January: Tet Offensive; 1968 May: talks open in Paris"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Paris Peace Accords were signed on January 27, 1973. They ended the American military role in the war."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Paris Peace Accords, 1973"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "But the war between North and South went on. On April 30, 1975, northern forces captured Saigon, the southern capital."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1973: Paris Peace Accords; 1975 April 30: Saigon captured"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "After the Paris Peace Accords, did the fighting between North and South Vietnam stop at once?",
+    "right": "No. It continued until Saigon was captured on April 30, 1975.",
+    "wrong": [
+     "Yes. The war ended in 1973 and nothing more happened.",
+     "Yes. Saigon was captured the same day the accords were signed.",
+     "No. The fighting stopped in 1968, before the accords."
+    ],
+    "why": "The accords ended the American military role, but North and South kept fighting until Saigon fell in 1975."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Afterwards Vietnam was reunited, and Saigon was renamed Ho Chi Minh City. Ho himself had died in 1969."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A famous 1975 photograph: people on a Saigon rooftop climbing a ladder to a helicopter, April 29, 1975"
+   },
+   "cite": [
+    "s1",
+    "s2",
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "At home, opposition to the war bitterly divided Americans. And the war was lighting fires far from Vietnam."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "1968: A Year of Protest"
+   },
+   "cite": [
+    "s3",
+    "s6"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 1968, waves of protest rolled through many countries. They included Brazil, Czechoslovakia, France, Mexico, Poland, South Africa and the US."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Brazil; Czechoslovakia; France; Mexico; Northern Ireland; Poland; Senegal; South Africa; Spain; United States"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The causes varied: civil rights, racial and economic justice, and an end to rule without freedom."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Many causes, one year"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why students? In the 1960s, mass university education arrived. A radical youth culture came with it, and Vietnam became a trigger."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "New: huge universities, youth culture | Trigger: the war in Vietnam"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In France, protests began at Nanterre, a university near Paris. On May 3, 1968 they spilled into the Sorbonne in Paris."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Paris, May 1968"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One famous slogan of those weeks was 'it is forbidden to forbid'."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Il est interdit d'interdire! ('it is forbidden to forbid')"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Then workers joined in. By May 22, nine million were on strike. It was France's largest general strike of the 20th century."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "9 million strikers"
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Which group joined the students in Paris and turned the protests into a general strike?",
+    "right": "Workers",
+    "wrong": [
+     "Foreign tourists",
+     "Judges",
+     "Retired soldiers"
+    ],
+    "why": "About nine million workers were on strike by May 22, making it France's largest general strike of the century."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now to Czechoslovakia. On January 5, 1968, Alexander Dubcek became head of the Communist Party there."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Prague Spring"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "He offered 'socialism with a human face'. That meant looser censorship and more open debate."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Looser censorship; more debate; reform from inside the Communist Party"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What did Dubcek's Prague Spring offer people?",
+    "right": "Looser censorship and more open debate",
+    "wrong": [
+     "Stricter censorship",
+     "An end to all government",
+     "A new Soviet army base"
+    ],
+    "why": "Dubcek loosened censorship and expanded debate, and called it socialism with a human face."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It did not last. Soviet and allied armies invaded and crushed the resistance with force."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Prague Spring crushed by foreign armies"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In Paris, Chicago, Berlin, Mexico City and Tokyo, forces of order also put down the budding revolts. In the US, 1968 deeply divided the public."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Paris; Chicago; Berlin; Mexico City; Tokyo"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now to China. There, young people were not protesting against the country's leader. The leader mobilized them. Warning: this part includes violence, and we will keep it calm and factual."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "China: The Cultural Revolution"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "It is officially called the Great Proletarian Cultural Revolution. It ran from 1966 to 1976. Mao Zedong launched it to renew the spirit of revolution."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Cultural Revolution, 1966-1976"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It was declared on May 16, 1966 and formally launched that August, with a first focus on schools and universities."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1966 May 16: declared; 1966 August: formally launched"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why? Mao feared a new elite forming in China. He also thought his colleagues lacked commitment after the failed Great Leap Forward."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Mao's fear: a new elite | Mao's doubt: colleagues not committed"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Mao organized young city people into groups called Red Guards. He shut the schools and urged them to attack traditional values."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Red Guards"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "They were told to root out anyone not 'sufficiently revolutionary', or suspected of being 'bourgeois'. There may have been as many as 11 million Red Guards."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Up to 11 million Red Guards"
+   },
+   "cite": [
+    "s10",
+    "s14"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Who were the Red Guards?",
+    "right": "Groups of young people mobilized by Mao to attack traditional values and 'suspect' people",
+    "wrong": [
+     "Mao's foreign allies",
+     "A secret police force run by teachers",
+     "Soldiers sent to Vietnam"
+    ],
+    "why": "Mao organized urban youths into Red Guards, shut schools, and urged them to attack traditional values."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Teachers, educators, intellectuals and traditionalists were persecuted. Many were killed."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Persecution of 'suspect' people"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Red Guards then split into factions. Each claimed to be the true voice of Mao."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Factions"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "By early 1967 top leaders wanted a halt. The army took over schools, factories and offices. Millions of Red Guards were sent out of the cities."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The army steps in"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Red Guard phase is dated from mid-1966 to early 1969. But the Cultural Revolution did not end there."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Mid-1966 to early 1969: Red Guard phase"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "From mid-1973 to Mao's death, politics swung between two groups. One was Jiang Qing's, later called the Gang of Four. The other was Zhou Enlai and Deng Xiaoping's."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Gang of Four (Jiang Qing and allies) | Zhou Enlai and Deng Xiaoping"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Mao died on September 9, 1976. The Gang of Four was arrested in October. The Party officially declared it over in August 1977."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1976 Sept 9: Mao dies; 1976 Oct: Gang of Four purged; 1977 Aug: officially over"
+   },
+   "cite": [
+    "s11",
+    "s12"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "When did the Cultural Revolution really come to an end?",
+    "right": "In 1976, with Mao's death and the fall of the Gang of Four. It was officially declared over in 1977.",
+    "wrong": [
+     "In 1949, when the Communists won",
+     "In 1969, when the Red Guard phase ended",
+     "In 1989, with the 1989 protests"
+    ],
+    "why": "The Red Guard phase ended around 1969, but the upheaval continued until Mao died and the Gang of Four fell in 1976."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the debate: how should we assess the toll? Experts agree that many people died. They disagree about how many."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Debate: How Do We Count the Toll?"
+   },
+   "cite": [
+    "s10",
+    "s16"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One reason is that records are hard to reach. Scholars struggle to get access to 'state secrets'."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Hard-to-reach records"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Published estimates run from about 40,000 up to 8 million. Sociologist Andrew Walder says the low ones came from official party statements. He says the high ones were guesses by people angered by the politics."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c1",
+    "text": "Estimates of Cultural Revolution deaths, in millions"
+   },
+   "cite": [
+    "s15",
+    "s16"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Careful studies narrow it. Walder used about 1,500 Chinese county records. He estimates 1.6 million deaths, but only for 1966 to 1969."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1.6 million (1966-1969)"
+   },
+   "cite": [
+    "s15",
+    "s16"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Other historians, such as Song Yongyi, say probably 2 to 3 million. Britannica gives a range of 500,000 to 2 million."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Walder: 1.6 million (1966-69); Song and others: about 2-3 million; Britannica: 0.5-2 million"
+   },
+   "cite": [
+    "s15",
+    "s17",
+    "s10"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why can't historians give one single number for the deaths?",
+    "right": "Records are hard to reach, and researchers use different methods and cover different years.",
+    "wrong": [
+     "Because historians refuse to count deaths",
+     "Because one office published every number on the same day",
+     "Because nobody has ever studied it"
+    ],
+    "why": "Records are state secrets, and studies differ in method and years covered. Walder's number, for example, only covers 1966 to 1969."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Deaths are not the whole toll. Millions were displaced, and the economy was badly disrupted."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Displaced millions; disrupted economy"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "After 1976, nearly three million party members, and many others wrongly purged, waited to be reinstated."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Nearly 3 million purged party members"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Who was responsible? Jiang Qing was arrested after Mao died and convicted in 1981."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Who was responsible?"
+   },
+   "cite": [
+    "s19"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Yet it remains unclear which big decisions were Mao's and which came from the Gang's own planning. That is another open question."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Mao or the Gang?"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the Middle East. Let's go back to 1967 first."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The Middle East: Wars and Oil"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Six-Day War was fought from June 5 to 10, 1967, between Israel and Egypt, Jordan and Syria."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "sun",
+    "count": 6,
+    "layout": "row",
+    "text": "Six days of war"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Tension had been rising. Egypt's Nasser used harsh words and mobilized troops. Israel then struck the Egyptian and Syrian air forces first, a 'preemptive' attack."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Preemptive: striking first"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A UN-brokered ceasefire took effect on June 10. By then Israel held a lot of new land."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Ceasefire, June 10, 1967"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Israel took the Sinai and Gaza from Egypt. It took the West Bank and East Jerusalem from Jordan, and the Golan Heights from Syria."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Map of Israel and neighbours showing Sinai and Gaza (from Egypt), West Bank and East Jerusalem (from Jordan), Golan Heights (from Syria)"
+   },
+   "cite": [
+    "s21"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which territory did Israel take from Egypt in 1967?",
+    "right": "The Sinai Peninsula and the Gaza Strip",
+    "wrong": [
+     "The Golan Heights",
+     "The West Bank",
+     "The Straits of Hormuz"
+    ],
+    "why": "Israel took the Sinai and Gaza from Egypt. The Golan Heights came from Syria and the West Bank from Jordan."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Who was to blame for the war? Historians differ. Many accounts call Israel's strike preemptive."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Who started it?"
+   },
+   "cite": [
+    "s20",
+    "s23"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Abba Eban, Israel's own foreign minister, later wrote that Nasser did not want war. Historian Martin van Creveld argued that Israel's forces were ready to provoke one."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Preemptive strike against rising threat | Israel's side also pushed toward war"
+   },
+   "cite": [
+    "s23"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Six years later, on October 6, 1973, Egypt under Sadat and Syria under Assad attacked Israel together. That was the Yom Kippur War."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Yom Kippur War, October 1973"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The war lasted twenty days. But an oil embargo that grew out of it lasted five months."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "War: 20 days | Embargo: 5 months"
+   },
+   "cite": [
+    "s29"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "OPEC is the Organization of Petroleum Exporting Countries. Its Arab members used oil as a political weapon."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "OPEC"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "An embargo means refusing to ship to certain countries. These Arab states stopped oil shipments as payback for support of Israel."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Embargo: refusing to ship"
+   },
+   "cite": [
+    "s25"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "On October 17, 1973, Arab oil producers cut production by five percent. The same day they began an embargo against the United States."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1973 Oct 17: production cut 5%, embargo on US begins"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The embargo also targeted Canada, Japan, the Netherlands, Portugal, Rhodesia, South Africa and the United Kingdom. It lasted until March 1974."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Canada; Japan; Netherlands; Portugal; Rhodesia; South Africa; United Kingdom; United States"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why did Arab OPEC members cut off oil to the United States and others in 1973?",
+    "right": "To pressure countries that supported Israel in the Yom Kippur War",
+    "wrong": [
+     "To stop pollution",
+     "To help Vietnam win its war",
+     "To protect their oil wells from storms"
+    ],
+    "why": "The embargo was a response to support for Israel during the Yom Kippur War."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Oil prices shot up: 70 percent in October, then another 130 percent in December."
+   },
+   "show": {
+    "kind": "chart",
+    "chart": "c2",
+    "text": "OPEC price rises, late 1973 (percent)"
+   },
+   "cite": [
+    "s26"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One source puts the total jump near 300 percent. There were shortages, and some refineries and industries shut down."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "About 300% price rise"
+   },
+   "cite": [
+    "s27"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The shock showed how much industrial countries relied on imported oil. America responded by producing more at home and developing energy-saving technology."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Problem: heavy reliance on imported oil | Response: more domestic oil, energy efficiency"
+   },
+   "cite": [
+    "s28",
+    "s27"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Did the war cause the oil crisis? One account says the war shaped its timing more than its cause. OPEC already wanted higher prices, because the dollar was losing value."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "The war shaped the timing more than the cause"
+   },
+   "cite": [
+    "s28",
+    "s29"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A second oil shock came in 1979. In Iran, the Shah left on January 16, and Ayatollah Khomeini landed in Tehran on February 1."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1979 Jan 16: Shah leaves Iran; 1979 Feb 1: Khomeini returns"
+   },
+   "cite": [
+    "s30"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Iranian revolution was at the heart of that second crisis."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Second oil shock, 1979"
+   },
+   "cite": [
+    "s30"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "There was one big peace deal too. President Carter hosted Egypt's Sadat and Israel's Begin at Camp David for 13 days."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Camp David Accords, 1978"
+   },
+   "cite": [
+    "s33"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "They signed frameworks on September 17, 1978. The Egypt-Israel peace treaty followed on March 26, 1979. It was the first peace treaty between Israel and any Arab neighbor."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1978 Sept 17: frameworks signed; 1979 March 26: peace treaty"
+   },
+   "cite": [
+    "s31",
+    "s32"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why is the 1979 Egypt-Israel treaty considered historic?",
+    "right": "It was the first peace treaty between Israel and any of its Arab neighbors",
+    "wrong": [
+     "It ended the Cold War",
+     "It created OPEC",
+     "It reunited Vietnam"
+    ],
+    "why": "The treaty followed the 1978 Camp David Accords and was the first of its kind between Israel and an Arab neighbor."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Sadat and Begin shared the 1978 Nobel Peace Prize. Yet the accords did not bring an immediate end to hostilities, and their legacy is debated."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "A breakthrough, with limits"
+   },
+   "cite": [
+    "s33",
+    "s45"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Not all change came from wars. The last story is about two movements. The sources we use tell the American story, so we will too."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Movements: Environment and Women's Rights"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "In 1962, Rachel Carson published Silent Spring. It described the harm pesticides like DDT did to birds."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Silent Spring, 1962"
+   },
+   "cite": [
+    "s38"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Before 1970 a factory could legally dump pollution. There was no EPA, no Clean Air Act and no Clean Water Act."
+   },
+   "show": {
+    "kind": "list",
+    "text": "No EPA; no Clean Air Act; no Clean Water Act"
+   },
+   "cite": [
+    "s34"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Senator Gaylord Nelson saw that the anti-war protests had shown the public could mobilize in huge numbers. So he organized Earth Day."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Earth Day, April 22, 1970"
+   },
+   "cite": [
+    "s36"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "About 20 million Americans took part. That was roughly 10 percent of the whole population."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "20 million Americans"
+   },
+   "cite": [
+    "s36"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Congress then created a new agency, the Environmental Protection Agency. Its official birthday is December 2, 1970."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1970 April 22: first Earth Day; 1970 Dec 2: EPA established"
+   },
+   "cite": [
+    "s34",
+    "s35"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What came shortly after the first Earth Day in 1970?",
+    "right": "The US Environmental Protection Agency was created",
+    "wrong": [
+     "The Paris Peace Accords were signed",
+     "Mao died",
+     "The Six-Day War began"
+    ],
+    "why": "After the first Earth Day in April 1970, the EPA was established that December."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Some environmental justice activists add another view. They say the Earth Day movement was largely led by white people focused on conserving wild areas. The civil rights movement had already faced environmental unfairness for years."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Another view of Earth Day"
+   },
+   "cite": [
+    "s37"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Meanwhile, second-wave feminism grew in the US from the 1960s through the 1970s. It sought equal rights and more freedom in politics, work, family and sexuality."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Second-wave feminism"
+   },
+   "cite": [
+    "s39",
+    "s40"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The National Organization for Women formed in 1966. Wins included the Equal Pay Act of 1963, Title IX in 1972, and Roe v. Wade in 1973."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1963: Equal Pay Act; 1966: NOW formed; 1972: Title IX; 1973: Roe v. Wade"
+   },
+   "cite": [
+    "s39"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Title IX banned sex discrimination in education programs that receive federal funding."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Title IX, 1972"
+   },
+   "cite": [
+    "s40"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What did Title IX do?",
+    "right": "It banned sex discrimination in education programs that receive federal funding",
+    "wrong": [
+     "It created the EPA",
+     "It ended the Vietnam War",
+     "It set oil prices"
+    ],
+    "why": "Title IX of 1972 banned sex-based discrimination in federally funded education programs."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Equal Rights Amendment passed Congress on March 22, 1972, but was never ratified. The movement also argued over issues like abortion."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "ERA: passed Congress, never ratified"
+   },
+   "cite": [
+    "s42",
+    "s40"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Women of color played major roles in the civil rights movement. But they were not offered the same opportunities as their white counterparts."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Who got the opportunities?"
+   },
+   "cite": [
+    "s41"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is what else was happening, year by year, as a frame of reference."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "1966: Cultural Revolution launched; NOW formed. 1967: Six-Day War. 1968: Tet; Prague Spring; Paris May. 1970: Earth Day; EPA. 1972: Title IX. 1973: Paris Accords; Yom Kippur War; oil embargo. 1975: Saigon falls. 1976: Mao dies. 1978-79: Camp David; Iranian revolution"
+   },
+   "cite": [
+    "s10",
+    "s39",
+    "s20",
+    "s3",
+    "s8",
+    "s36",
+    "s35",
+    "s40",
+    "s2",
+    "s24",
+    "s11",
+    "s31",
+    "s30"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One last check, to pull it together."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Quick review"
+   },
+   "cite": [],
+   "move": "title-rise",
+   "ask": {
+    "q": "Which pair of events happened in 1973?",
+    "right": "The Yom Kippur War and the Arab oil embargo",
+    "wrong": [
+     "The Tet Offensive and the Prague Spring",
+     "The first Earth Day and the creation of the EPA",
+     "The Camp David Accords and the Egypt-Israel peace treaty"
+    ],
+    "why": "The Yom Kippur War and the embargo were in October 1973. Tet and Prague were 1968, Earth Day and the EPA 1970, and Camp David 1978 to 1979."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "These years brought war, protest, oil shocks and new movements. Next time, class 59: 20th-century science and technology."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: 20th-Century Science and Technology"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Estimated deaths in the Cultural Revolution (millions of people)",
+   "rows": [
+    {
+     "label": "Lowest published estimate",
+     "value": 0.04,
+     "source": "s15"
+    },
+    {
+     "label": "Britannica, low end",
+     "value": 0.5,
+     "source": "s10"
+    },
+    {
+     "label": "Walder (1966-69 only)",
+     "value": 1.6,
+     "source": "s15"
+    },
+    {
+     "label": "Britannica, high end",
+     "value": 2.0,
+     "source": "s10"
+    },
+    {
+     "label": "Average of six investigators",
+     "value": 2.95,
+     "source": "s16"
+    },
+    {
+     "label": "Highest published (Rummel, 1991)",
+     "value": 7.73,
+     "source": "s16"
+    }
+   ]
+  },
+  {
+   "id": "c2",
+   "kind": "bar",
+   "title": "OPEC oil price rises announced in late 1973 (percent)",
+   "rows": [
+    {
+     "label": "October 1973 rise",
+     "value": 70,
+     "source": "s26"
+    },
+    {
+     "label": "December 1973 further rise",
+     "value": 130,
+     "source": "s26"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Vietnam War",
+   "links": [
+    "[[A New World Order: The UN, the Cold War and Decolonization]]",
+    "[[The 1950s and early 1960s: Space, Nuclear Fear and Civil Rights]]"
+   ]
+  },
+  {
+   "topic": "1968 protests",
+   "links": [
+    "[[The Late 1960s and 1970s: Protest, War and Oil]]",
+    "[[The End of the Cold War]]"
+   ]
+  },
+  {
+   "topic": "Cultural Revolution",
+   "links": [
+    "[[Tang and Song China and the Islamic Golden Age]]",
+    "[[The End of the Cold War]]"
+   ]
+  },
+  {
+   "topic": "Six-Day War and Yom Kippur War",
+   "links": [
+    "[[Imperialism: Africa, India, China and Japan]]",
+    "[[A New World Order: The UN, the Cold War and Decolonization]]"
+   ]
+  },
+  {
+   "topic": "1973 and 1979 oil shocks",
+   "links": [
+    "[[The Industrial Revolution]]",
+    "[[Globalization, the Internet and a New Century]]"
+   ]
+  },
+  {
+   "topic": "Environmental movement",
+   "links": [
+    "[[The Industrial Revolution]]",
+    "[[Looking Ahead: The Future of Earth and the Universe]]"
+   ]
+  },
+  {
+   "topic": "Second-wave feminism",
+   "links": [
+    "[[Nations, Reform and Civil War in the 1800s]]",
+    "[[2008 to Today]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [
+  {
+   "when": "1966",
+   "elsewhere": "Mao launched the Cultural Revolution in China, and the National Organization for Women formed in the United States.",
+   "cite": [
+    "s10",
+    "s39"
+   ]
+  },
+  {
+   "when": "1967",
+   "elsewhere": "The Six-Day War was fought June 5-10, while China's Red Guard phase was under way.",
+   "cite": [
+    "s20",
+    "s11"
+   ]
+  },
+  {
+   "when": "1968",
+   "elsewhere": "Tet began January 31. Dubcek took over Czechoslovakia's Communist Party on January 5. Paris protests started in May, and the US Civil Rights Act of 1968 was signed.",
+   "cite": [
+    "s3",
+    "s8",
+    "s7"
+   ]
+  },
+  {
+   "when": "1969",
+   "elsewhere": "Ho Chi Minh died.",
+   "cite": [
+    "s3"
+   ]
+  },
+  {
+   "when": "1970",
+   "elsewhere": "The National Environmental Policy Act was signed January 1. The first Earth Day was April 22. The EPA was established December 2.",
+   "cite": [
+    "s35",
+    "s36"
+   ]
+  },
+  {
+   "when": "1972",
+   "elsewhere": "Title IX became law, and Congress passed the Equal Rights Amendment on March 22.",
+   "cite": [
+    "s40",
+    "s42"
+   ]
+  },
+  {
+   "when": "1973",
+   "elsewhere": "The Paris Peace Accords were signed January 27, and Roe v. Wade was decided. The Yom Kippur War began October 6, and the oil embargo began October 17. Kissinger and Le Duc Tho won the Nobel Peace Prize.",
+   "cite": [
+    "s2",
+    "s39",
+    "s24",
+    "s44"
+   ]
+  },
+  {
+   "when": "1975",
+   "elsewhere": "Saigon fell on April 30. Hubert van Es photographed the helicopter evacuation on April 29.",
+   "cite": [
+    "s2",
+    "s3"
+   ]
+  },
+  {
+   "when": "1976",
+   "elsewhere": "Mao died September 9, and the Gang of Four was arrested in October. TIME magazine named American women its 'Women of the Year'.",
+   "cite": [
+    "s11",
+    "s43"
+   ]
+  },
+  {
+   "when": "1978-1979",
+   "elsewhere": "Camp David Accords were signed September 17, 1978. The Shah left Iran January 16, 1979, and Khomeini returned February 1. The Egypt-Israel treaty was signed March 26, 1979.",
+   "cite": [
+    "s31",
+    "s30"
+   ]
+  }
+ ],
+ "other_side": [
+  {
+   "claim": "The Cultural Revolution killed about 1.6 million people (Walder's estimate, for 1966-1969).",
+   "other_view": "Published estimates range from about 40,000 to 8 million. Walder says the low ones come from official party statements, and the high ones from angry guesses. Other historians such as Song Yongyi say probably 2 to 3 million. Britannica gives 500,000 to 2 million. Exact numbers are uncertain because scholars cannot freely reach state records.",
+   "cite": [
+    "s15",
+    "s16",
+    "s17",
+    "s10"
+   ]
+  },
+  {
+   "claim": "The Gang of Four was responsible for the Cultural Revolution's excesses.",
+   "other_view": "After Mao's death the Gang was blamed and Jiang Qing was convicted. But it remains unclear which major decisions came from Mao and which from the Gang's own planning. Britannica says Mao launched the movement.",
+   "cite": [
+    "s19",
+    "s18",
+    "s13"
+   ]
+  },
+  {
+   "claim": "Israel's 1967 strike was a preemptive defence against an approaching Arab attack.",
+   "other_view": "Israel's foreign minister Abba Eban later wrote that Nasser did not want war. Military historian Martin van Creveld argued that Israel's forces were ready to provoke one.",
+   "cite": [
+    "s20",
+    "s23"
+   ]
+  },
+  {
+   "claim": "The Yom Kippur War caused the 1973 oil crisis.",
+   "other_view": "One account says the war shaped the timing of the crisis more than its cause. OPEC had already wanted higher prices, because the dollar was losing value.",
+   "cite": [
+    "s28",
+    "s29"
+   ]
+  },
+  {
+   "claim": "Earth Day launched the modern environmental movement in the US.",
+   "other_view": "Some environmental justice activists say the early movement was largely led by white people focused on conserving wild areas. They say the civil rights movement had faced environmental unfairness for years.",
+   "cite": [
+    "s37"
+   ]
+  },
+  {
+   "claim": "The Camp David Accords were a lasting breakthrough for Middle East peace.",
+   "other_view": "The accords did not bring an immediate end to hostilities, and historians debate their long-term impact. The Office of the Historian calls the 1979 treaty the high-water mark of the peace process under Carter.",
+   "cite": [
+    "s33",
+    "s45",
+    "s31"
+   ]
+  }
+ ]
+}
