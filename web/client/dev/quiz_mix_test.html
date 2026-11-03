@@ -270,6 +270,29 @@ try {
   }
 
   // =====================================================================================
+  // (row 2.173, note EO, 2026-11-02) Mike: "Trivia is still only giving me the same question every time." Each sitting
+  // started with an empty history, and the draw favours the best fit for the player, so the same seed opened on the same
+  // question every time. The memory Trivia keeps (asked_memory.js) now carries over.
+  section('*** a new sitting does not open on the question the last one did (row 2.173, note EO) ***');
+  {
+    const people = peopleRows();
+    const firsts = [];
+    for (let s = 0; s < 4; s++) {
+      const r = M({ players: [{ kind: 'self' }], ...ONLY('brain') }, { rand: mulberry32(7), extra: { personId: 'pat', makePersonState: people.make } });
+      await sleep(30);
+      const c = cur(r);
+      firsts.push(c ? `${c.game}|${c.id ?? JSON.stringify(c.item)}` : null);
+      r.inst.destroy();
+      await sleep(10);
+    }
+    check('*** four sittings, the same seed: four different first questions (it was the same one every time) ***',
+      firsts.every(Boolean) && new Set(firsts).size === 4, JSON.stringify(firsts));
+    check('...remembered on the person\'s own row, as Trivia\'s are',
+      /quiz_mix/.test(JSON.stringify(people.row('pat', 'asked')?.get?.() || people.asked.filter((x) => x.key === 'asked'))),
+      JSON.stringify(people.asked.map((x) => `${x.pid}:${x.key}`)));
+  }
+
+  // =====================================================================================
   section('*** where players start (row 2.174: "Can I adjust my starting level on quiz mix, so it\'s not asking me kids messages") ***');
   {
     const people = peopleRows({ 'pat:ratings': { start: 'medium', startMark: 'm0' } });

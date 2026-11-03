@@ -65,6 +65,7 @@ import { flowSettings, answerByField, fill, esc } from '../quiz_flow.js';
 import { quizModule } from '../quiz_view.js';
 import { autostartFields, START_VOICE } from '../game_start.js';
 import { pick, record as rngRecord } from '../rng.js';
+import { createAskedMemory } from '../asked_memory.js';
 import { ladderChooser, turnPoints } from '../question_pick.js';
 import { resolvePlayers, MAX_PLAYERS, openUsualStart, usualStartField, START_WORDS } from '../adaptive_play.js';
 import { packsFor } from '../pack_library.js';
@@ -321,6 +322,14 @@ registerModule(
       if (!hist.has(k)) hist.set(k, { stats: {}, recent: [] });
       return hist.get(k);
     };
+    // *** NOTHING DEALT AGAIN ACROSS SITTINGS (row 2.173, chat's note EO, 2026-11-02). *** `hist` lives only as long as the
+    // panel, and the draw favours the question that best fits a player's level, so a fresh panel (a reload, a dashboard
+    // switch, a deploy) tended to open on the same question every time: Mike, "Trivia is still only giving me the same
+    // question every time." Each player's dealt questions now also go into the memory Trivia keeps (../asked_memory.js),
+    // as 'quiz_mix', keyed by game and question, so they follow the person to their other screens. The draw leaves them
+    // out while anything else is left; once everything has been dealt, the older half is forgotten and comes round first.
+    const asked = (() => { try { return createAskedMemory(ctx, { game: 'quiz_mix' }); } catch { return null; } })();
+    const askedKey = (game, id) => `${game}|${id}`;
     const phase = () => { try { return api?.engine.snapshot().phase || 'idle'; } catch { return 'idle'; } };
     const host = {
       ctx, ladderCtx: rows.ctx, rand, now, contests,
@@ -341,13 +350,23 @@ registerModule(
         try { if (['loading', 'empty'].includes(phase()) && api?.begun?.()) api.engine.refresh(); } catch { /* next time */ }
         api?.render();
       },
-      chooser: (pid, game) => ladderChooser({ statsFor: () => histOf(pid, game).stats, now, rand }),
+      chooser: (pid, game) => {
+        const base = ladderChooser({ statsFor: () => histOf(pid, game).stats, now, rand });
+        return (pool, o) => {
+          if (!asked || !Array.isArray(pool) || !pool.length) return base(pool, o);
+          const freshOf = () => pool.filter((q) => !asked.has(pid, askedKey(game, q?.id)));
+          let fresh = freshOf();
+          for (let i = 0; i < 12 && !fresh.length && asked.size(pid); i++) { asked.forgetOldest(pid); fresh = freshOf(); }
+          return base(fresh.length ? fresh : pool, o);
+        };
+      },
       stats: (pid, game) => histOf(pid, game).stats,
       recent: (pid, game) => histOf(pid, game).recent.slice(),
       noteDeal(pid, game, id) {
         const h = histOf(pid, game);
         h.stats = rngRecord(h.stats, id, now());
         h.recent = [...h.recent, id].slice(-20);
+        try { asked?.add(pid, askedKey(game, id)); } catch (err) { console.error('quiz mix: asked', err); }
       },
     };
     const sources = new Map();    // id -> source, made when that game is first in the mix
@@ -847,6 +866,7 @@ registerModule(
         together.destroy();
         for (const s of sources.values()) { try { s.destroy(); } catch { /* gone */ } }
         sources.clear();
+        try { asked?.destroy(); } catch { /* gone */ }
         try { usual?.destroy(); } catch { /* gone */ }
         rows.close();
         try { contests?.destroy?.(); } catch { /* gone */ }
