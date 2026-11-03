@@ -1974,6 +1974,25 @@ Shared Q | Shared A` });
       }
     }
 
+    // *** "ONLY COUNT IT AS CORRECT IF YOU GET IT ON THE FIRST TRY" (Mike, 2026-11-02) ***
+    {
+      const r = rig({ bankText: null, saved: { contentSource: 'all' }, personId: 'pat', rand: rnd,
+        ladderRow: liveRow(), makePersonState: peopleRows().make });
+      await sleep(250);
+      const w2 = r.probe().worth;
+      answerWrong(r);
+      const w1 = r.probe().worth;
+      answerRight(r);
+      const afterMiss = r.inst.impl.__score().right;
+      next(r);
+      answerRight(r);
+      check('*** a right answer after a miss is not counted as right; a first-try one is ***',
+        afterMiss === 0 && r.inst.impl.__score().right === 1, `${afterMiss} ${r.inst.impl.__score().right}`);
+      check('...and its points are still quartered by guess: 1 on the first try, 0.75 after one miss',
+        w2 === 1 && w1 === 0.75, `${w2} ${w1}`);
+      r.inst.destroy();
+    }
+
     // *** THE BANK READ AGAIN MID-ROUND (Mike's screenshots, 2026-11-02: "2 of 10", "3 of 10", the same question) ***
     // A re-read of the same size keeps the round dealt from the OLD rows; their ids must still be found, or nothing is
     // recorded and the question just answered comes straight back.

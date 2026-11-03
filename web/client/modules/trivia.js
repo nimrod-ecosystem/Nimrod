@@ -1562,7 +1562,10 @@ registerModule(
       }
 
       answered = chosen;
-      rightCount += 1;
+      // (Mike, 2026-11-02) "I think it should only count it as correct if you get it on the first try." The tally ("3 of
+      // 10 · 2 right") counts first-try answers only; one found after misses still pays its quarter-stepped points
+      // (worth, below: 1, 0.75, 0.5, 0.25), and the ladder still hears it as found with help.
+      if (!misses.length) rightCount += 1;
       // A first-guess answer extends the streak; one found after a miss does not, because
       // `streak` was already reset above on the press that missed.
       if (!misses.length) streak += 1;
