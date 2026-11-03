@@ -372,6 +372,19 @@ export const PANEL_GAP_FIELD = Object.freeze({ key: 'panelGap', label: 'Space be
   level: 'standard', default: PANEL_GAP_DEFAULT,
   options: [{ value: 'none', label: 'None: each panel takes its full share' }, { value: 'thin', label: 'Thin' },
     { value: 'roomy', label: 'Roomy' }] });
+// *** "MOVING THEME SCENE" (2026-11-02), the screen's: the motion ladder livescene.js already takes (gentle | calm | still). ***
+// Measured on a Pi 400 at 1920x1080 with the fall scene: Chromium at 238% CPU (of 400) moving, 27% with nothing in the
+// scene moving, and most of it is the few large layers that cross the whole screen (canopy, haze, light), not the leaves:
+// 178% with the leaves hidden. A screen that runs all day has nothing spare for a call at that rate. FOR a setting: the
+// place's own choice, and the only lever before a scene is redrawn cheaper. Default `gentle`, unchanged for everybody:
+// most screens are not a Pi 400. 'calm' only slows each layer, so it saves almost nothing; the label says which one does.
+// The person's or the device's "less movement" still wins over it (`sceneMotion`).
+export const SCENE_MOTION_KEY = 'sceneMotion';
+export const SCENE_MOTIONS = Object.freeze(['gentle', 'calm', 'still']);
+export const SCENE_MOTION_FIELD = Object.freeze({ key: SCENE_MOTION_KEY, label: 'Moving theme scene', kind: 'choice',
+  level: 'standard', default: 'gentle',
+  options: [{ value: 'gentle', label: 'Moving, as designed' }, { value: 'calm', label: 'Slower' },
+    { value: 'still', label: 'Still (far less work for a small computer)' }] });
 /** Which path a real screen boots on, from its settings row and the default. Pure; exported for suites. */
 export function dashboardPathFor(row, fallback = DASHBOARD_MODULE_DEFAULT) {
   const v = row && row[DASHBOARD_MODULE_KEY];
@@ -753,8 +766,13 @@ export async function mountKiosk(root, {
   }
   /** 'still' when this screen or its person asks for less movement (avatarContextNow), else 'gentle'. Early in boot, before
    *  those rows exist, 'gentle': the device's own reduce-motion still applies inside the scene. */
+  // (2026-11-02) ...and the screen's own "Moving theme scene" (SCENE_MOTION_KEY below), which can only make it move LESS
+  // than the rules above allow, never more. Read in a try: early in boot `settings` does not exist yet.
   function sceneMotion() {
-    try { const a = avatarContextNow(); return a && (a.reduceMotion || a.deviceReduced) ? 'still' : 'gentle'; } catch { return 'gentle'; }
+    let chosen = 'gentle';
+    try { const v = settings.get()?.[SCENE_MOTION_KEY]; if (SCENE_MOTIONS.includes(v)) chosen = v; } catch { chosen = 'gentle'; }
+    try { const a = avatarContextNow(); if (a && (a.reduceMotion || a.deviceReduced)) return 'still'; } catch { /* not resolved yet */ }
+    return chosen;
   }
   // (seasons, 2026-10-05) `fade`: the date changed the look by itself (sky.js) - the scene fades (livescene FADE_MS).
   function applyKioskTheme(id, { fade = false } = {}) {
@@ -4066,6 +4084,7 @@ export async function mountKiosk(root, {
     [PANEL_RING_FIELD.key]: ['display', 0],   // panel ring: "How it looks", with the panels' framing
     [PANEL_CORNERS_FIELD.key]: ['display', 0],   // row 2.191: the corner buttons, beside the ring
     [HOLIDAYS_KEY]: ['theme', 0], [SKY_FOLLOW_KEY]: ['theme', 0],   // seasons and the sky (sky.js); themes: on Theme
+    [SCENE_MOTION_KEY]: ['theme', 0],   // (2026-11-02) the scene's movement, with the scene
     ...Object.fromEntries(HOLIDAY_FIELDS.map((f) => [f.key, ['theme', 0]])),   // seasons: one row per holiday; themes: on Theme
     plainBarHoldMs: ['devices', 1], hideAskTimeoutMs: ['audio', 2],
     // bar toggle (2026-10-06): the bar's key and whether it comes up by itself, under "The bar" on Devices.
@@ -4611,6 +4630,8 @@ export async function mountKiosk(root, {
       default: readScreen()[HOLIDAYS_KEY] === false ? false : f.default,
       label: (() => { try { return holidayRowLabel(f.holiday); } catch { return f.label; } })() })) : []),
     ...(sceneTakesSky(paintedTheme(shownTheme()).scene) ? [{ ...SKY_FIELD, options: SKY_FIELD.options.map((o) => ({ ...o })) }] : []),
+    // (2026-11-02) "Moving theme scene": only while the theme on screen has a scene to move.
+    ...(paintedTheme(shownTheme())?.scene ? [{ ...SCENE_MOTION_FIELD, options: SCENE_MOTION_FIELD.options.map((o) => ({ ...o })) }] : []),
     // Space between panels (2026-10-02 evening): none by default, so four up is four quarters.
     { ...PANEL_GAP_FIELD, options: PANEL_GAP_FIELD.options.map((o) => ({ ...o })) },
     // panel ring (2026-10-09; panel_ring.js argues it): "Show which panel is selected" -- always, for a while after a

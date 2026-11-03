@@ -4747,6 +4747,18 @@ const toTab = (m, id) => {
           JSON.stringify(still().map((e) => e.className)));
         mk.destroy();
         mroot.remove();
+        // (2026-11-02) The screen's own "Moving theme scene: Still", with nobody asking for less movement: a Pi 400 spent
+        // about two cores on the fall scene's moving layers, and this is the one setting that stops it.
+        const S2 = await profiles.create('TEST-still-scene-setting');
+        await profiles.addModule(S2.id, 'clock');
+        await remote(S2.id, () => ({ theme: 'fall', sceneMotion: 'still' }));
+        const sroot = box();
+        const sk = await mountKiosk(sroot, { user: USER, profileId: S2.id, profiles, bus: createBus() });
+        check('*** "Moving theme scene: Still" on the screen: the fall scene stands still ***',
+          await settled(() => still().length > 0 && still().every((e) => e.classList.contains('ls-still')), 6000),
+          JSON.stringify(still().map((e) => e.className)));
+        sk.destroy();
+        sroot.remove();
         try { (await import('../theme.js')).applyTheme(document.documentElement, 'default'); } catch { /* the suite's own page */ }
       }
       root.remove();
