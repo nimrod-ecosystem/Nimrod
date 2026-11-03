@@ -382,6 +382,15 @@ const DEFAULTS = {
   themedPictures: true,
   movingPictures: 'auto',
 
+  // SAY IT WITH A CHARACTER (big ideas 2 and 4, Mike 2026-11-02: yes; Design's sayIt.js, ../say_it.js). A pressed word is
+  // also shown by a character acting it: on the card ('symbol', idea 2), beside the board with the word in a big speech
+  // bubble for somebody across the room ('avatar', idea 4), or both. OFF to start, Mike's ruling: "Boards with
+  // animations will just be one option." Care words (pain, bedpan, suction ...) show in the bubble without a mime unless
+  // "Act the care words too" is on (Design's argument, both sides, in say_it.js); help raises a hand.
+  sayIt: 'off',
+  sayItCareWords: false,
+  sayItShowMs: 4000,
+
   // How long the choice card stays if nobody answers it. See the SETTINGS row.
   choiceCardMs: CHOICE_TIMEOUT_MS,
 };
@@ -553,6 +562,24 @@ export const SETTINGS = [
     ],
     note: 'The themed pictures move slowly, and an animated GIF a card was given plays (row 2.184). Kept still, a GIF shows its '
       + 'first frame. "Reduce motion" on the device always keeps them still.' },
+  // SAY IT WITH A CHARACTER (big ideas 2 and 4; DEFAULTS argues it).
+  { key: 'sayIt', label: 'A character acts the word you press', kind: 'choice', default: 'off', level: 'standard',
+    options: [
+      { value: 'off', label: 'No' },
+      { value: 'symbol', label: 'On the card' },
+      { value: 'avatar', label: 'Beside the board, with the word in a big bubble' },
+      { value: 'both', label: 'Both' },
+    ],
+    note: 'The person’s own character does it once, then the board is as it was. Where the pictures may not move, it stands '
+      + 'still and only the bubble shows the word.' },
+  { key: 'sayItCareWords', label: 'Act the care words too (pain, bedpan, hot, cold …)', kind: 'toggle', default: false,
+    level: 'advanced', onLabel: 'Yes', offLabel: 'No, just show the word',
+    appliesWhen: (v) => !!v && v.sayIt != null && v.sayIt !== 'off',
+    note: 'Off: those words show in the bubble with the character standing; “help” still raises a hand, as a request.' },
+  { key: 'sayItShowMs', label: 'How long the character stays', kind: 'choice', default: 4000, level: 'advanced',
+    appliesWhen: (v) => !!v && v.sayIt != null && v.sayIt !== 'off',
+    options: [{ value: 3000, label: '3 seconds' }, { value: 4000, label: '4 seconds' }, { value: 6000, label: '6 seconds' },
+      { value: 10000, label: '10 seconds' }] },
   // *** THE CHOICE CARD GOES BY ITSELF, AND THIS IS HOW SOON. ***
   //
   // Thirty seconds by default: long enough to close a settings menu, look at the board and read
@@ -1177,6 +1204,7 @@ registerModule(
             ...(clips.length ? { data: { clips: clips.map((c) => c.url), ...(own ? { ownClip: own } : {}) } } : {}) });
         } else speak(text);
       } catch (err) { console.error('board: say', err); }
+      sayItShow(i, cell, text);   // (big ideas 2 and 4) a character acts the word, where the board is set to
 
       // board into call (2026-10-08): and to the person on a call that is LIVE now, as text. The
       // transport refuses when there is no call, so nothing is sent outside one. See the header.
@@ -1237,6 +1265,83 @@ registerModule(
       pressEl = b;
       b.classList.add('ab-press');
       pressTimer = setTimer(() => { pressTimer = null; b.classList.remove('ab-press'); }, PRESS_RING_MS);
+    }
+
+    // *** SAY IT WITH A CHARACTER (big ideas 2 and 4; DEFAULTS). *** Drawn by Design's ../say_it.js, loaded the first time
+    // it is used (it brings the character kit). 'avatar': the person's character beside the board, the word in a big
+    // bubble, over the board's corner and never taking a press (pointer-events none). 'symbol': the pressed card's
+    // picture gives way to the character acting the word, then comes back. Each goes after "How long the character
+    // stays"; a second press replaces the first. Where the pictures may not move (picturesMove: reduce motion, a slow
+    // screen, the needs) the character stands still, so the bubble still says the word. Hidden from a screen reader:
+    // the word is already spoken and on the card.
+    let sayItEl = null, sayItTimer = null, sayItCard = null, sayItCardTimer = null;
+    const SAY_IT_ASSETS = '/design-assets/';
+    function sayItClear(which = 'all') {
+      if (which !== 'card') {
+        if (sayItTimer != null) { clearTimer(sayItTimer); sayItTimer = null; }
+        try { sayItEl?.remove(); } catch { /* gone */ }
+        sayItEl = null;
+      }
+      if (which !== 'avatar') {
+        if (sayItCardTimer != null) { clearTimer(sayItCardTimer); sayItCardTimer = null; }
+        if (sayItCard) {
+          try { sayItCard.fig.remove(); } catch { /* gone */ }
+          for (const k of sayItCard.kids) {
+            try {
+              k.style.visibility = k.dataset.sayItWas || '';
+              delete k.dataset.sayItWas;
+              if (!k.getAttribute('style')) k.removeAttribute('style');   // exactly as it was, not style=""
+            } catch { /* gone */ }
+          }
+          sayItCard = null;
+        }
+      }
+    }
+    function sayItShow(i, cell, text) {
+      const mode = cfg.sayIt || 'off';
+      if (destroyed || !['symbol', 'avatar', 'both'].includes(mode)) return;
+      const key = String(cell.word || text || '').toLowerCase().trim().replace(/\s+/g, '_');
+      const label = String(text || cell.word || '');
+      const ms = Math.max(1000, Number(cfg.sayItShowMs) || DEFAULTS.sayItShowMs);
+      const settings = { actCareWords: cfg.sayItCareWords === true };
+      let moving = false;
+      try { moving = picturesMove(); } catch { moving = false; }
+      Promise.all([import('../say_it.js'), import('../cast.js')]).then(([S, C]) => {
+        if (destroyed) return;
+        if (mode === 'avatar' || mode === 'both') {
+          sayItClear('avatar');
+          const el = document.createElement('div');
+          el.className = 'ab-sayit';
+          el.setAttribute('aria-hidden', 'true');
+          el.style.cssText = 'position:absolute;right:2%;bottom:2%;width:min(44%,420px);aspect-ratio:380/320;'
+            + 'pointer-events:none;z-index:5';
+          el.innerHTML = S.sayItSvg(key, { who: 'player', settings, label, animated: moving, assetBase: SAY_IT_ASSETS });
+          const svg = el.firstElementChild;
+          if (svg) svg.style.cssText = 'width:100%;height:100%;display:block';
+          mount.append(el);
+          sayItEl = el;
+          sayItTimer = setTimer(() => { sayItTimer = null; sayItClear('avatar'); }, ms);
+        }
+        if (mode === 'symbol' || mode === 'both') {
+          sayItClear('card');
+          const sym = cardEls[i]?.querySelector('.ab-sym');
+          if (!sym) return;
+          const act = S.actionFor(key, settings);
+          const kids = [...sym.children];
+          for (const k of kids) { k.dataset.sayItWas = k.style.visibility || ''; k.style.visibility = 'hidden'; }
+          const fig = document.createElement('span');
+          fig.className = 'ab-sayit-card';
+          fig.setAttribute('aria-hidden', 'true');
+          fig.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none';
+          fig.innerHTML = C.castSvg('player', { pose: act ? 'stand' : 'talk', motion: act || undefined, animated: moving, assetBase: SAY_IT_ASSETS });
+          const svg = fig.firstElementChild;
+          if (svg) svg.style.cssText = 'height:100%;width:auto;display:block';
+          if (getComputedStyle(sym).position === 'static') sym.style.position = 'relative';
+          sym.append(fig);
+          sayItCard = { fig, kids };
+          sayItCardTimer = setTimer(() => { sayItCardTimer = null; sayItClear('card'); }, ms);
+        }
+      }).catch((err) => console.error('board: say it', err));
     }
 
     // ------------------------------------------------------------------------------------
@@ -2180,6 +2285,7 @@ registerModule(
         stopScan();
         try { ro?.disconnect(); } catch { /* already gone */ } ro = null;
         if (pressTimer != null) { clearTimer(pressTimer); pressTimer = null; }
+        sayItClear();   // (big ideas 2 and 4) a character still showing goes with the board
         releaseImages();
         closeEditor();
         // own board clips: the cards' sound URLs go with the board.

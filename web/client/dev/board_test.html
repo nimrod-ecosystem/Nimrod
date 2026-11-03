@@ -1812,6 +1812,64 @@ try {
     check('the ring is shorter than the shortest flash period', PRESS_RING_MS < 339);
   }
 
+  // =====================================================================================
+  // (big ideas 2 and 4, Mike 2026-11-02: yes; "Boards with animations will just be one option") A character acts the
+  // pressed word: on the card, or beside the board with the word in a big bubble. OFF to start.
+  section('*** say it with a character: off to start; on the card, beside the board, or both ***');
+  {
+    const rows = getManifest('board').settings;
+    const row = rows.find((f) => f.key === 'sayIt');
+    check('*** the setting is there and OFF by default ***', row?.default === 'off'
+      && JSON.stringify(row.options.map((o) => o.value)) === '["off","symbol","avatar","both"]', JSON.stringify(row));
+    const mk = async (sayIt) => {
+      const h = document.createElement('div');
+      h.style.cssText = 'position:relative;width:700px;height:420px';
+      document.body.append(h);
+      const clock = fakeClock();
+      const inst = mountModule('board', { mount: h, bus: createBus(), events: fakeEvents(),
+        state: fakeState({ boardId: 'yesno', ...(sayIt ? { sayIt } : {}) }),
+        output: { say: () => {}, notify: () => {}, alert: () => {} },
+        setTimer: clock.setTimer, clearTimer: clock.clearTimer, now: clock.now });
+      inst.init();
+      await sleep(20);
+      return { h, inst, clock, press: async (i) => { h.querySelectorAll('.ab-card')[i].dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); } };
+    };
+    const until = async (fn, ms = 4000) => { const end = Date.now() + ms; while (Date.now() < end) { if (fn()) return true; await sleep(25); } return !!fn(); };
+    {
+      const b = await mk(null);
+      await b.press(0);
+      await sleep(400);
+      check('off (the default): a press shows no character', !b.h.querySelector('.ab-sayit, .ab-sayit-card'));
+      b.inst.destroy(); b.h.remove();
+    }
+    {
+      const b = await mk('avatar');
+      await b.press(0);
+      check('*** beside the board: a press on Yes shows the character with "Yes" in its bubble ***',
+        await until(() => /Yes/.test(b.h.querySelector('.ab-sayit')?.textContent || '')), b.h.querySelector('.ab-sayit')?.outerHTML?.slice(0, 120));
+      const s = b.h.querySelector('.ab-sayit');
+      check('...it never takes a press, and a screen reader is not told twice', s && getComputedStyle(s).pointerEvents === 'none'
+        && s.getAttribute('aria-hidden') === 'true');
+      b.clock.advance(4100);
+      check('*** ...and it goes by itself after its time (4 s) ***', !b.h.querySelector('.ab-sayit'));
+      b.inst.destroy(); b.h.remove();
+    }
+    {
+      const b = await mk('symbol');
+      const sym = () => b.h.querySelectorAll('.ab-card')[1].querySelector('.ab-sym');
+      const before = [...(sym()?.children || [])];
+      await b.press(1);
+      check('*** on the card: the pressed card\'s picture gives way to the character ***',
+        await until(() => !!sym()?.querySelector('.ab-sayit-card svg')), sym()?.innerHTML?.slice(0, 120));
+      b.clock.advance(4100);
+      const after = [...(sym()?.children || [])];
+      check('...and its own picture is back afterwards, as it was (the same elements, none hidden)',
+        !sym()?.querySelector('.ab-sayit-card') && after.length === before.length && after.every((k, n) => k === before[n])
+        && after.every((k) => getComputedStyle(k).visibility !== 'hidden'), `${before.length} ${after.length}`);
+      b.inst.destroy(); b.h.remove();
+    }
+  }
+
 } catch (e) {
   check('unexpected error', false, String((e && e.stack) || e));
 }
