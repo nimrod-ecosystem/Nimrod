@@ -870,6 +870,13 @@ registerModule(
     let roundPool = [];
     let ladderBank = [];
     let idOf = new Map();
+    // *** A QUESTION'S ID, EVEN AFTER THE BANK WAS READ AGAIN (row 2.173, Mike's screenshots 2026-11-02). *** `applyBank`
+    // rebuilds `idOf` from the NEW rows, but a re-read of the same size (a reviews poll, a pack arriving) keeps the round
+    // already dealt, whose rows are the OLD objects. `idOf.get(old)` was then undefined: the answer was never recorded,
+    // the ladder never told what was dealt, and "already in this round" was empty, so the question just answered could
+    // come straight back ("2 of 10", "3 of 10", the same question). The id is the question and its answer (triviaId),
+    // so it is read from the row itself when the map has no entry for it.
+    const idFor = (b) => (b ? idOf.get(b) || triviaId(b) : null);
     const seenBy = {};
     let asked = null;            // what each player was asked in earlier sittings (../asked_memory.js), made in init()
     // THE LEVEL FOLLOWS THE PERSON (above). `splitStore`: the screen's row plus the person's own, as one row to
@@ -1365,7 +1372,7 @@ registerModule(
     function pickNext() {
       const p = ladder.currentPlayer();
       const win = ladder.windowFor(p.id, GAME);
-      const never = new Set(deck.filter(Boolean).map((b) => idOf.get(b)));
+      const never = new Set(deck.filter(Boolean).map((b) => idFor(b)));
       const cands = candidates(roundPool, win.maxLevel);
       const sitting = seenBy[p.id] || new Set();
       const avoid = { has: (id) => sitting.has(id) || !!asked?.has(p.id, id) };
@@ -1381,7 +1388,7 @@ registerModule(
     }
     // Tells the ladder which question is up and for whom (its `deal`, handed the id: "deal THIS question").
     function dealToLadder(row) {
-      const id = idOf.get(row);
+      const id = idFor(row);
       if (id) ladder.deal(GAME, { again: id });
     }
     // One finished question: a right answer (clean, or after misses: "helped"), or a skip (counted as missed,
@@ -1390,7 +1397,7 @@ registerModule(
     // touched it (a round rebuilt as the screen's rows arrive) was not asked.
     function recordToLadder(result) {
       if (!levelled || !ladder) return;
-      const id = idOf.get(deck[at]);
+      const id = idFor(deck[at]);
       const pid = ladder.dealt()?.player?.id;
       if (!id || ladder.dealt()?.id !== id) return;
       if (pid) (seenBy[pid] ||= new Set()).add(id);
@@ -1750,6 +1757,8 @@ registerModule(
                         question: q ? { ...q } : null, bank: bank.length,
                         levelled, level: levelled && deck[at] ? itemLevel(deck[at]) : null }),
       __reviews: () => reviews,
+      // The bank read again mid-round, as a reviews poll or a late pack does (row 2.173's stale-id repeat).
+      __reread: () => readBank(),
       __ladder: () => ladder,
       // THE LIVE "WHICH PACK" LIST (settings_fields.js `fieldsFor` reads this when the menu opens): the
       // built-in and loaded packs, then this ACCOUNT's review packs — only those with passed questions while

@@ -1974,6 +1974,24 @@ Shared Q | Shared A` });
       }
     }
 
+    // *** THE BANK READ AGAIN MID-ROUND (Mike's screenshots, 2026-11-02: "2 of 10", "3 of 10", the same question) ***
+    // A re-read of the same size keeps the round dealt from the OLD rows; their ids must still be found, or nothing is
+    // recorded and the question just answered comes straight back.
+    {
+      // rand fixed at 0: the draw takes the first question it may, so a question that was not recorded is dealt again at
+      // once, as on Mike's screen, rather than by chance.
+      const r = rig({ bankText: null, saved: { contentSource: 'all' }, personId: 'pat', rand: () => 0,
+        ladderRow: liveRow(), makePersonState: peopleRows().make });
+      await sleep(250);
+      const qs = asked(r, 3, (x) => answerRight(x));
+      await r.inst.impl.__reread();
+      await sleep(50);
+      qs.push(...asked(r, 25, (x) => answerRight(x)));
+      check('*** the bank read again mid-round (same size): twenty-eight questions after it, none asked twice ***',
+        dupes(qs).length === 0 && qs.every(Boolean), JSON.stringify(dupes(qs).slice(0, 5)));
+      r.inst.destroy();
+    }
+
     // *** THE PANEL RESTARTING (a dashboard switch, a reload, a deploy) DOES NOT FORGET (../asked_memory.js) ***
     {
       const people = peopleRows();
