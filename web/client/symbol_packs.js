@@ -19,8 +19,13 @@
 // READ, NEVER PROMPTS (lessons_folder.js's rule): with no folder on this device, or its permission lapsed after a
 // restart, there are simply no packs until somebody allows it again on the folders page, and a board set to a pack draws
 // Nimrod's own drawings meanwhile.
+//
+// A ZIP IS A PACK TOO (the proposal's step 4): a set downloaded as a .zip can be dropped in the Symbols folder as it came.
+// It is read in place (zip_read.js, one picture at a time, never unpacked onto the disk), with its pack file at its top or
+// one folder down, which is how a downloaded set's zip usually holds it.
 import { kindFolder, listFiles, listFolders, handleStore } from './user_folders.js';
 import { resolveSymbol, PACK_DEFAULTS } from './symbol_pack.js';
+import { zipEntries, zipEntryBlob, zipEntryHandle } from './zip_read.js';
 
 export const SYMBOLS_KIND = 'symbols';
 export const SYMBOLS_FORMAT = 'nimrod.symbols.v1';
@@ -104,6 +109,35 @@ async function readPackFolder(dir, folderName, max) {
     problems: r.problems, pictures: new Map(listed.map((f) => [f.name, f.handle])) } };
 }
 
+const PICTURE_MIME = Object.freeze({ svg: 'image/svg+xml', png: 'image/png', webp: 'image/webp', jpg: 'image/jpeg', jpeg: 'image/jpeg' });
+
+/** One zip file as a pack, or why not; null when it holds no pack file at all. */
+async function readPackZip(handle, zipName, max) {
+  const file = await handle.getFile();
+  const { entries, problem } = await zipEntries(file);
+  if (problem) return { why: problem };
+  const depth = (n) => (n.match(/\//g) || []).length;
+  let raw = null, base = '', fileName = '';
+  for (const e of entries.filter((x) => /\.json$/i.test(x.name) && depth(x.name) <= 1 && x.size <= max)) {
+    try {
+      const parsed = JSON.parse(await (await zipEntryBlob(file, e)).text());
+      if (parsed && parsed.format === SYMBOLS_FORMAT) { raw = parsed; fileName = e.name; base = e.name.includes('/') ? e.name.replace(/[^/]*$/, '') : ''; break; }
+    } catch { /* not this one */ }
+  }
+  if (!raw) return null;
+  const parts = String(raw.files || '').split('/').filter(Boolean);
+  if (parts.some((s) => s === '.' || s === '..')) return { why: `its pictures folder "${raw.files}" is not there` };
+  const dir = base + parts.map((s) => `${s}/`).join('');
+  const pics = entries.filter((e) => e.name.startsWith(dir) && !e.name.slice(dir.length).includes('/')
+    && PICTURE_TYPES.includes(extOf(e.name)));
+  if (!pics.length && parts.length && !entries.some((e) => e.name.startsWith(dir))) return { why: `its pictures folder "${raw.files}" is not there` };
+  const names = pics.map((e) => e.name.slice(dir.length));
+  const r = checkSymbolPack(raw, names);
+  if (!r.pack) return { why: r.problems[0] };
+  return { entry: { id: packId(zipName), label: r.pack.name, folder: zipName, file: fileName, pack: r.pack, problems: r.problems,
+    pictures: new Map(pics.map((e) => [e.name.slice(dir.length), zipEntryHandle(file, e, PICTURE_MIME[extOf(e.name)] || '')])) } };
+}
+
 /**
  * The symbol packs on this device: `{ packs: [{ id, label, folder, pack, problems, pictures }], skipped: [{ folder, why }],
  * where }`. `pictures` maps a picture's file name to its handle. Never prompts, never throws.
@@ -127,6 +161,16 @@ export async function readSymbolPacks({ store = handleStore(), find = kindFolder
   try { folders = await listFolders(k.dir); } catch { folders = []; }
   for (const f of folders.slice(0, folderMax)) await take(f.handle, f.name);
   if (folders.length > folderMax) out.skipped.push({ folder: '', why: `only the first ${folderMax} folders were looked in` });
+  // Zips beside the folders, under the same cap.
+  let zips = [];
+  try { zips = await listFiles(k.dir, ['zip']); } catch { zips = []; }
+  for (const z of zips.slice(0, Math.max(0, folderMax - Math.min(folders.length, folderMax)))) {
+    try {
+      const r = await readPackZip(z.handle, z.name, max);
+      if (r?.entry) out.packs.push(r.entry);
+      else if (r?.why) out.skipped.push({ folder: z.name, why: r.why });
+    } catch { out.skipped.push({ folder: z.name, why: 'it could not be read' }); }
+  }
   // Two packs with one name would read the same in the Symbols list: the second says which folder it is in.
   const seen = new Map();
   for (const p of out.packs) {

@@ -33,6 +33,8 @@ import { checkSymbolPack, readSymbolPacks, packPicture, packLabel, packId, isPac
 import { resolveSymbol, PACK_DEFAULTS } from '../symbol_pack.js';
 import { SUBFOLDERS, README, POINTER_KINDS, FOLDER_KINDS } from '../user_folders.js';
 import { KIND_WORDS, SAVE_WORDS } from '../user_folders_page.js';
+import { zipBytes, crc32 } from '../zip_store.js';
+import { zipEntries, zipEntryBlob } from '../zip_read.js';
 import { createBus } from '../bus.js';
 import { mountModule, getManifest } from '../module.js';
 import '../modules/board.js';
@@ -158,6 +160,54 @@ try {
     const lots = await readSymbolPacks({ find: findIn(fakeDir('Pictures', many)) });
     check(`...a folder of hundreds is looked in only ${PACK_FOLDERS_MAX} folders deep, and says so`, lots.packs.length === PACK_FOLDERS_MAX
       && lots.skipped.some((s) => /only the first/.test(s.why)), `${lots.packs.length}`);
+  }
+
+  // =====================================================================================
+  // (the proposal's step 4) A set downloaded as a zip is a pack where it lies: read in place, one picture at a time.
+  section('*** a zip is a pack too, read in place ***');
+  {
+    const enc = new TextEncoder();
+    // One deflated entry, made by hand (the site's writer only stores): the shape a downloaded zip usually has.
+    const deflateZip = async (name, text) => {
+      const data = enc.encode(text);
+      const packed = new Uint8Array(await new Response(new Blob([data]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer());
+      const n = enc.encode(name), crc = crc32(data);
+      const loc = new Uint8Array(30 + n.length), lv = new DataView(loc.buffer);
+      lv.setUint32(0, 0x04034b50, true); lv.setUint16(4, 20, true); lv.setUint16(8, 8, true); lv.setUint32(14, crc, true);
+      lv.setUint32(18, packed.length, true); lv.setUint32(22, data.length, true); lv.setUint16(26, n.length, true); loc.set(n, 30);
+      const cen = new Uint8Array(46 + n.length), cv = new DataView(cen.buffer);
+      cv.setUint32(0, 0x02014b50, true); cv.setUint16(4, 20, true); cv.setUint16(6, 20, true); cv.setUint16(10, 8, true);
+      cv.setUint32(16, crc, true); cv.setUint32(20, packed.length, true); cv.setUint32(24, data.length, true);
+      cv.setUint16(28, n.length, true); cv.setUint32(42, 0, true); cen.set(n, 46);
+      const end = new Uint8Array(22), ev = new DataView(end.buffer);
+      ev.setUint32(0, 0x06054b50, true); ev.setUint16(8, 1, true); ev.setUint16(10, 1, true);
+      ev.setUint32(12, cen.length, true); ev.setUint32(16, loc.length + packed.length, true);
+      return new Blob([loc, packed, cen, end]);
+    };
+    const big = 'The quick brown fox. '.repeat(400);
+    const dz = await deflateZip('notes.txt', big);
+    const de = await zipEntries(dz);
+    check('*** the zip reader lists a zip\'s files, and unpacks a deflated one with the browser\'s own stream ***',
+      !de.problem && de.entries.length === 1 && (await (await zipEntryBlob(dz, de.entries[0])).text()) === big, J(de));
+    check('...a file that is not a zip says so, and nothing throws', (await zipEntries(new Blob(['just text']))).problem === 'it is not a zip file');
+    const zipFile = (name, entries) => ({ __file: true, text: new Blob([zipBytes(entries)], { type: 'application/zip' }), type: 'application/zip' });
+    const root = fakeDir('Symbols', {
+      'mulberry.zip': zipFile('mulberry.zip', [{ name: 'Mulberry/' }, { name: 'Mulberry/symbols.json', text: json({ ...MULBERRY, name: 'Mulberry from a zip' }) },
+        { name: 'Mulberry/EN/' }, { name: 'Mulberry/EN/yes.svg', text: svg('#2a7a3a') }, { name: 'Mulberry/EN/drink_,_to.svg', text: svg('#1f4a7a') },
+        { name: 'Mulberry/EN/deep/no.svg', text: svg('#000000') }]),
+      'photos.zip': zipFile('photos.zip', [{ name: 'cup.jpg', text: 'jpeg' }]),
+      'notazip.zip': 'plain text, not a zip',
+    });
+    const r = await readSymbolPacks({ find: findIn(root) });
+    const z = r.packs.find((p) => p.id === 'pack:mulberry.zip');
+    check('*** a set in a zip, its pack file one folder down, is offered by its own name ***', z?.label === 'Mulberry from a zip'
+      && J([...z.pictures.keys()].sort()) === J(['drink_,_to.svg', 'yes.svg']), J(r));
+    const yes = await packPicture(z, 'yes')?.handle.getFile();
+    check('...its pictures come out of the zip as pictures (an svg is an svg)', yes?.type === 'image/svg+xml'
+      && /<svg/.test(await yes.text()));
+    check('...a zip with no pack file is not a pack and is not complained about; a broken one says why',
+      !r.skipped.some((s) => s.folder === 'photos.zip') && /not a zip/.test(r.skipped.find((s) => s.folder === 'notazip.zip')?.why || ''),
+      J(r.skipped));
   }
 
   // =====================================================================================
