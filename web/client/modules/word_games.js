@@ -88,6 +88,9 @@ import {
 import { createAdaptiveSession, adaptiveSettings, ADAPTIVE_DEFAULTS, openPersonLadder } from '../adaptive_play.js';
 import { ensureQuizStyle, afterAnswerHtml, verdictLine } from '../quiz_view.js';
 import { createPlayWatch } from '../game_start.js';
+import { createGameMusic } from '../game_music.js';
+import { createGameMusicHost, gameMusicFields } from '../game_music_host.js';
+import { followPanelSpeaker } from '../speakers.js';
 // *** THE PURE HELPERS LIVE IN quiz_flow.js NOW (row 2.45), and are re-exported below. *** Three
 // more answer games arrived with "the same miss flow as row 2.31", so the wording, `reasonFor`
 // (Y only ever a true signal), the chime and the stars have one home instead of four. Moved, not
@@ -155,6 +158,9 @@ export const DEFAULTS = Object.freeze({
   // One point per right answer: points.js's atom is "roughly a minute of effort", and one short
   // question is less than that — the same one trivia pays for a first-guess answer.
   correctPoints: 1,
+  // *** MUSIC (row 2.107, 2026-11-02). *** The same rows every game has (game_music_host.js). DEFAULT 'off', as for every
+  // quiz game: these games listen for spoken answers and read their questions aloud, and music under that costs both.
+  music: 'off', musicSourceId: '', musicAlbum: '', musicFavourite: '', musicVolume: 0.3,
   // THE WAIT AFTER AN ANSWER (row 2.66): quiz_flow.js's three, and its argument for each.
   afterAnswer: FLOW_DEFAULTS.afterAnswer,
   afterBeatMs: FLOW_DEFAULTS.afterBeatMs,
@@ -234,6 +240,7 @@ const SETTINGS = [
   ...adaptiveSettings({ ai: false, startLevels: 4 }),
   ...Object.keys(LINES).map((key) => ({ key, label: LINE_LABELS[key] || key, kind: 'text',
     default: LINES[key], level: 'advanced' })),
+  ...gameMusicFields({ defaultMode: 'off' }),   // row 2.107: the same music rows every game has (DEFAULTS argues off)
 ];
 
 // ---------------------------------------------------------------------------------------
@@ -1116,7 +1123,16 @@ registerModule(
 
     // BEING PLAYED (2026-10-07, game_start.js createPlayWatch): no Start button here, so from a press or an answer
     // until nobody has pressed for GAME_IDLE_MS, or the sitting ends. Never merely for being open.
-    const plays = createPlayWatch(bus, ctx);
+    // Row 2.107: the music, on the speaker arbiter (media tier, music group), as every game's; on while being played.
+    let musicHost = null;
+    let unSpeaker = null;
+    try {
+      musicHost = createGameMusicHost(ctx, { audio: ctx.audio || null, audioId: `${GAME}-music:${ctx.instanceId || 'wg'}`,
+        cfg: () => cfg, defaultMode: 'off',
+        make: (o) => createGameMusic({ ...o, ...(ctx.makeAudioContext ? { makeContext: ctx.makeAudioContext, fx: null } : {}) }) });
+      unSpeaker = followPanelSpeaker(state, () => [musicHost?.music]);
+    } catch (err) { musicHost = null; console.error('word games: music', err); }
+    const plays = createPlayWatch(bus, ctx, { onChange: (s) => { musicHost?.follow(s === 'play' && !dead); } });
     const pressCounts = () => !dead && engine.snapshot().phase !== 'done';
 
     const pic = picHtml;
@@ -1255,7 +1271,9 @@ registerModule(
         if (state?.subscribe) {
           state.subscribe((snap) => {
             const prevGame = cfg.game;
+            const was = cfg;
             cfg = { ...DEFAULTS, ...(snap || {}) };
+            try { musicHost?.apply(cfg, was); } catch (err) { console.error('word games: music', err); }   // row 2.107
             if (!GAMES.includes(cfg.game)) cfg.game = DEFAULTS.game;
             ladderRows.onConfig(cfg);
             if (!started) { started = true; engine.start(); }
@@ -1266,11 +1284,15 @@ registerModule(
         if (!started) { started = true; engine.start(); }
       },
       onResize() {},
-      onHide() { hidden = true; plays.rest(); reannounce(); state?.flush?.(); },
+      onHide() { hidden = true; plays.rest(); musicHost?.follow(false); reannounce(); state?.flush?.(); },
       onShow() { hidden = false; reannounce(); },
+      // Row 2.107: the live "Music from", "Music folder" and "Which favorite" choices (game_music_host.js).
+      settingsChoices: () => { try { return musicHost?.settingsChoices?.() || {}; } catch { return {}; } },
       destroy() {
         dead = true;
         plays.destroy();
+        try { unSpeaker?.(); } catch { /* gone */ } unSpeaker = null;
+        try { musicHost?.destroy(); } catch { /* gone */ } musicHost = null;
         reannounce();
         engine.destroy();
         speech.destroy();

@@ -91,6 +91,9 @@ import { createPackReviews, isReviewPackId, playableBank, REVIEW_STATUS, REVIEW_
 import { linksOpenHere } from '../page_links.js';
 import { spellPaceField, spellPace, spellsAloud, spellAloud, spelledOptions, SPELL_PACE_DEFAULT } from '../spell_aloud.js';
 import { createPlayWatch } from '../game_start.js';
+import { createGameMusic } from '../game_music.js';
+import { createGameMusicHost, gameMusicFields } from '../game_music_host.js';
+import { followPanelSpeaker } from '../speakers.js';
 import { createAskedMemory, ASKED_CAP_DEFAULT } from '../asked_memory.js';
 
 export const GAME = 'trivia';
@@ -123,6 +126,11 @@ export const DEFAULTS = {
   // separate number nobody could relate to the first one. A saved settings row may still carry
   // the old key; nothing reads it, so it is inert rather than migrated.
   quarterFloor: 0.25,     // never worth nothing — attempting always pays something
+  // *** MUSIC (row 2.107, 2026-11-02). *** The same rows every game has (game_music_host.js), the last quiz game without
+  // them. Played only while somebody is playing (`plays`). DEFAULT 'off', as for every quiz game (quiz_flow.js
+  // QUIZ_MUSIC_DEFAULT, written out here so this file imports no quiz engine): Trivia reads its questions aloud and a bed
+  // under them costs words somebody needs. One row turns it on.
+  music: 'off', musicSourceId: '', musicAlbum: '', musicFavourite: '', musicVolume: 0.3,
   choices: 4,
   // *** DRAW ON THE WORD BANK TOO (Mike, 2026-08-31: "I could see word forge and trivia drawing
   // from the same pool for a lot of people"). *** A vocabulary row already contains everything a
@@ -760,7 +768,7 @@ const SETTINGS = [
   //
   // *** 2026-09-30, row 2.40: `showScore` (on/off) became `ownScore` (auto/always/off). *** See
   // DEFAULTS. Same label, same level, so the row is where it always was.
-  ownScoreField({ note: 'How many trivia answers were right — never anything about how somebody '
+  ownScoreField({ note: 'How many trivia questions were answered right on the first try — never anything about how somebody '
     + 'spoke. A Scoreboard on the same screen can show it instead.' }),
   { key: 'correctPoints', label: 'Points for a first-guess answer', kind: 'number', default: 1,
     level: 'advanced', min: 0, max: 10, step: 1,
@@ -768,6 +776,7 @@ const SETTINGS = [
   // The `tryingPoints` row is gone with the value it set -- see DEFAULTS. What it bought is now
   // the floor of the quartering, which is one number a caregiver can reason about instead of two
   // that had to be held in the right order.'
+  ...gameMusicFields({ defaultMode: 'off' }),   // row 2.107: the same music rows every game has (DEFAULTS argues off)
 ];
 
 registerModule(
@@ -859,6 +868,8 @@ registerModule(
     let dead = false;
     let onClick = null;
     let plays = null;            // being played: from a press until nobody presses for a while (game_start.js createPlayWatch)
+    let musicHost = null;        // row 2.107: the music, on exactly while `plays` says being played
+    let unSpeaker = null;        // ...and on the speaker this panel is set to (speakers.js)
     // *** THE LADDER (QUESTIONS AT EVERY LEVEL, above). *** `ladder` is made in init(). `levelled`: this round
     // is dealt by level (the bank has levels and nobody is reviewing). Then `deck` is the round's SLOTS, each
     // filled as it goes up for whoever's turn it is (pickNext), from `roundPool`. `ladderBank` is what the
@@ -1768,10 +1779,13 @@ registerModule(
       // the setting is off, every one while it is on. Nothing until the reviews have loaded (the declared
       // list stands meanwhile).
       settingsChoices() {
-        if (!reviews || !TRIVIA_PACKS.length) return {};
+        // Row 2.107: the live "Music from", "Music folder" and "Which favorite" choices (game_music_host.js).
+        let music = {};
+        try { music = musicHost?.settingsChoices?.() || {}; } catch { music = {}; }
+        if (!reviews || !TRIVIA_PACKS.length) return music;
         const extra = reviews.options({ includeUnreviewed: !!cfg.includeUnreviewed });
-        if (!extra.length) return {};
-        return { packId: [...TRIVIA_PACKS.map((p) => ({ value: p.id, label: p.label })), ...extra] };
+        if (!extra.length) return music;
+        return { ...music, packId: [...TRIVIA_PACKS.map((p) => ({ value: p.id, label: p.label })), ...extra] };
       },
       init() {
         // THE LADDER, FIRST (QUESTIONS AT EVERY LEVEL, above), so the first round can be dealt by level. Its
@@ -1911,7 +1925,14 @@ registerModule(
         // BEING PLAYED (2026-10-07): Trivia has no Start button, so it says it is being played from a press on it (a
         // tap, a switch's next / select / skip) until nobody has pressed for GAME_IDLE_MS. Never merely for being open:
         // a Trivia panel left open must not keep the bar away, or hold a new version, for ever.
-        plays = createPlayWatch(bus, ctx);
+        // Row 2.107: the music, on the speaker arbiter (media tier, music group), as every game's.
+        try {
+          musicHost = createGameMusicHost(ctx, { audio: ctx.audio || null, audioId: `trivia-music:${ctx.instanceId || 'tv'}`,
+            cfg: () => cfg, defaultMode: 'off',
+            make: (o) => createGameMusic({ ...o, ...(ctx.makeAudioContext ? { makeContext: ctx.makeAudioContext, fx: null } : {}) }) });
+          unSpeaker = followPanelSpeaker(state, () => [musicHost?.music]);
+        } catch (err) { musicHost = null; console.error('trivia: music', err); }
+        plays = createPlayWatch(bus, ctx, { onChange: (s) => { musicHost?.follow(s === 'play' && !dead); } });
         plays.watch({ topics: ['trivia/next', 'trivia/prev', 'trivia/select', 'trivia/skip'], mount, when: () => !dead });
 
         // THE SHARED ROW, opened by name — the same document the Questions module edits and
@@ -1942,7 +1963,9 @@ registerModule(
 
         state?.subscribe?.((s) => {
           const snap = s || {};
+          const was = cfg;
           cfg = { ...DEFAULTS, ...snap };
+          try { musicHost?.apply(cfg, was); } catch (err) { console.error('trivia: music', err); }   // row 2.107
           // "Start trivia at", changed in the menu (not the first read, and not the copy syncStartToPanel wrote).
           const rs = snap[PERSON_START_KEY];
           if (!seenRawStart) { seenRawStart = true; rawPersonStart = rs; }
@@ -1997,10 +2020,12 @@ registerModule(
         } catch (err) { lessons = null; mode = null; console.error('trivia: no lessons handle', err); }
       },
       onResize() {},
-      onHide() { plays?.rest(); state?.flush?.(); },
+      onHide() { plays?.rest(); musicHost?.follow(false); state?.flush?.(); },
       destroy() {
         dead = true;
         if (plays) { plays.destroy(); plays = null; }
+        try { unSpeaker?.(); } catch { /* gone */ } unSpeaker = null;
+        try { musicHost?.destroy(); } catch { /* gone */ } musicHost = null;
         recorder = null;
         // A line still queued or being said goes with the panel.
         try { if (lastSpeech && typeof ctx.output?.cancel === 'function') ctx.output.cancel(lastSpeech); } catch { /* gone */ }

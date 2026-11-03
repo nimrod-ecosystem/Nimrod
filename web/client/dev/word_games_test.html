@@ -176,6 +176,10 @@ try {
       ['afterAnswer', 'afterBeatMs', 'readWpm'].every((k) => getManifest('word_games').settings.some((s) => s.key === k && s.kind === 'choice'))
       && !getManifest('word_games').settings.some((s) => s.key === 'answerMs' || s.key === 'celebrateMs')
       && DEFAULTS.afterAnswer === 'read' && !('celebrateMs' in DEFAULTS));
+    // Row 2.107 (2026-11-02): the music rows every game has, OFF here (it listens for spoken answers).
+    check('*** the music rows every game has, with Music OFF by default ***',
+      ['music', 'musicSourceId', 'musicVolume'].every((k) => getManifest('word_games').settings.some((s) => s.key === k))
+      && getManifest('word_games').settings.find((s) => s.key === 'music')?.default === 'off' && DEFAULTS.music === 'off');
     const m = getManifest('word_games');
     const keys = (m.settings || []).map((s) => s.key);
     const missing = Object.keys(LINES).filter((k) => {

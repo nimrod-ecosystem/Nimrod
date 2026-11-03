@@ -188,6 +188,10 @@ try {
     // (auto / always / off, score_source.js) so a Scoreboard can take the score over.
     check('*** a score is at least available now ***', keys.includes('ownScore') && !keys.includes('showScore'),
       JSON.stringify(keys));
+    // Row 2.107 (2026-11-02): the music rows every game has, OFF here (it reads its questions aloud).
+    check('*** the music rows every game has, with Music OFF by default ***',
+      ['music', 'musicSourceId', 'musicVolume'].every((k) => keys.includes(k))
+      && (getManifest('trivia').settings || []).find((f) => f.key === 'music')?.default === 'off', JSON.stringify(keys));
     // *** ON BY DEFAULT, REVERSED 2026-09-22 — Mike: "Why should a screen someone can't walk
     // away from not show a score? Games have scores. That's pretty standard." *** `comet` gets
     // the identical reversal, for the identical reason — still matching each other, just at
