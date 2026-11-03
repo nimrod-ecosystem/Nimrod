@@ -1595,6 +1595,17 @@ registerModule(
       packUrls.set(key, got);
       return got;
     }
+    // (the proposal's step 3) What fell back, said in the editor: "3 of 12 words use the board's own picture, because Mulberry
+    // has none for them: pain, suction, bedpan." Each is one press away from "Picture" (a card's own photo). Ten words at
+    // most are named, so a long board's line stays a line. Empty when no pack is in use, or every word matched.
+    function packFallbackLine() {
+      const pack = activePack();
+      if (!pack || !packMissed.length) return '';
+      const total = (board?.cells || []).filter(Boolean).length;
+      const named = packMissed.slice(0, 10).join(', ') + (packMissed.length > 10 ? ', …' : '');
+      return `${packMissed.length} of ${total} words use the board’s own picture, because ${pack.label} has none for them: ${named}. `
+        + 'Press a card, then Picture, to give it one of your own.';
+    }
     function releasePackUrls() {
       for (const g of packUrls.values()) { try { if (g) URL.revokeObjectURL(g.url); } catch { /* gone */ } }
       packUrls.clear();
@@ -1976,7 +1987,8 @@ registerModule(
       const grid = el('[data-grid]');
       out.push({
         id: 'board', label: d.name || 'This board', el: grid, whole: true, redraws: true,
-        help: drafting.note || 'The board being made. Press a card to change it. Nothing reaches the board until Use this board.',
+        help: [drafting.note || 'The board being made. Press a card to change it. Nothing reaches the board until Use this board.',
+          packFallbackLine()].filter(Boolean).join(' '),
         fields: [
           { key: 'name', label: 'Name', kind: 'text', default: '' },
           { key: 'cols', label: 'Columns', kind: 'number', min: 1, max: DRAFT_MAX_DIM, step: 1, default: cols },

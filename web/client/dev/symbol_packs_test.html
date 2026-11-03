@@ -195,6 +195,12 @@ try {
       check('*** "Symbols" lists the person\'s sets after Nimrod\'s own, by name and licence ***',
         choices.some((o) => o.value === 'pack:Mulberry' && o.label === 'Mulberry (your own, CC BY-SA)')
         && choices[0].value === 'own' && choices.some((o) => o.value === 'theme'), J(choices.map((o) => o.value)));
+      host.dataset.editing = '1';                       // what edit mode does to the panel being edited
+      const boardTarget = (inst.impl.editTargets() || []).find((t) => t.id === 'board');
+      delete host.dataset.editing;
+      check('*** the editor says which words use the board\'s own picture, and how to give one their own ***',
+        /words use the board’s own picture, because Mulberry has none for them: [^.]*No/.test(boardTarget?.help || '')
+        && /Press a card, then Picture/.test(boardTarget.help), boardTarget?.help);
       inst.destroy();
     }
     {
