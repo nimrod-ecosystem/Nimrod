@@ -54,7 +54,42 @@
 //                         together, and the next tap renews both. AGAINST: 3 s is not long for somebody slow to
 //                         find a 44px button; they tap again. A separate setting is the way if that bites.
 //
+// *** THE CORNERS RETIRE, BY DEFAULT (row 2.191, Mike 2026-11-02). *** "I think edit and promote could maybe just go on
+// the bar. Mouse users will use the bar. It's not just a switch thing. It's for everyone." So ✎ Edit panel, ⤢ Bigger,
+// ⤡ Smaller and ▾ Hide are all on both bars, and the corner buttons are OFF unless a screen turns them on ("Buttons in a
+// panel's corner", the screen's, beside "Show which panel is selected"). Argued: FOR removing them outright -- one place
+// for each press, less code. AGAINST, and it wins: somebody who learned the corner on a desk keeps one setting's worth of
+// way back to it, and the watcher costs nothing while they are hidden. Hidden by display, not by the watcher: the rules
+// above still decide WHEN a corner shows on a screen that has them on.
+//   A BAR PUT AWAY: the corner's ▾ was a mouse's way to bring a hidden bar back. With corners off, that is the quiet
+// period ending (30 s by default, bar_toggle.js) and the pointer coming near, or T, or a swipe up -- the same as before
+// row 2.171 added the corner. "Until I show it" with a mouse and no keyboard is the case left; turning the corners on
+// is its answer.
+//
 // Pure DOM, no imports: the CSS rule both corner files use (`cornerShowCss`) and the watcher kiosk.js runs.
+export const PANEL_CORNERS_KEY = 'panelCorners';
+export const PANEL_CORNERS_FIELD = Object.freeze({
+  key: PANEL_CORNERS_KEY, label: 'Buttons in a panel’s corner (edit, bigger, hide the bar)', kind: 'toggle',
+  level: 'standard', default: false, onLabel: 'Shown', offLabel: 'Off (they are on the bar)',
+});
+export const CORNERS_OFF_ATTR = 'data-corners-off';
+const CORNERS_OFF_CSS_ID = 'nimrod-corners-off';
+/** Whether a settings row has the corners on: its own choice, else `dflt` (the field's default, or a host's). */
+export function cornersOnFrom(row, dflt = PANEL_CORNERS_FIELD.default) {
+  const v = row ? row[PANEL_CORNERS_KEY] : undefined;
+  return typeof v === 'boolean' ? v : !!dflt;
+}
+/** Mark `el` (the screen's root) with the setting, and put the one rule that hides the corners into the page once. */
+export function applyPanelCorners(el, on, doc = el?.ownerDocument) {
+  if (!el) return;
+  if (doc && !doc.getElementById(CORNERS_OFF_CSS_ID)) {
+    const st = doc.createElement('style');
+    st.id = CORNERS_OFF_CSS_ID;
+    st.textContent = `[${CORNERS_OFF_ATTR}] ${CORNER_BUTTONS.split(',').map((s) => s.trim()).join(`,[${CORNERS_OFF_ATTR}] `)}{display:none!important}`;
+    (doc.head || doc.documentElement).append(st);
+  }
+  if (on) el.removeAttribute(CORNERS_OFF_ATTR); else el.setAttribute(CORNERS_OFF_ATTR, '');
+}
 
 export const CORNER_BOXES = Object.freeze(['.k-cell', '.k-pcell', '.k-stage', '.k-room']);
 export const CORNER_BUTTONS = '.k-promote, .k-editc, .k-barc';   // .k-barc: hide or show the bar (row 2.171, 2026-11-02)

@@ -427,7 +427,10 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
     const profiles = createProfilesClient({ user: USER });
     let kiosk = null;
     const reloads = [];
-    const seams = (storage) => ({ storage, session: fakeStorage(), navigate: () => {}, reloadPage: () => reloads.push(1), recoveryTick: 0 });
+    // panelCornersDefault (row 2.191, 2026-11-02): the corners retired to the bar and are off unless a screen turns them on.
+    // This suite is about how corners BEHAVE where they are on, so every screen it mounts has them.
+    const seams = (storage) => ({ storage, session: fakeStorage(), navigate: () => {}, reloadPage: () => reloads.push(1), recoveryTick: 0,
+      panelCornersDefault: true });
 
     section('*** (1) on the real screen: "Settings for" steps the levels ***');
     {
@@ -1123,6 +1126,21 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
       check('*** ...a real press on it: back down, and it dims ***', ps.click === psmall() && !kiosk.promoted().dashboard && psmall().disabled,
         `${ps.click?.className} ${J(kiosk.promoted())}`);
       kiosk.holdBar(false);
+      // ✎ EDIT PANEL ON THE PLACED BAR (row 2.191, 2026-11-02), and Mirror off it.
+      {
+        const pep = () => root.querySelector('.tb-bar .tb-actions:not(.tb-host) [data-act="editpanel"]');
+        const pmir = root.querySelector('.tb-bar .tb-actions:not(.tb-host) [data-act="mirror"]');
+        check('*** (row 2.191) the placed bar has ✎ Edit panel, lit for the picked panel, and no Mirror ***',
+          !!pep() && !pep().hidden && !pep().disabled && (!pmir || pmir.hidden), `${pep()?.outerHTML} ${pmir?.hidden}`);
+        pep()?.click();
+        let on = false;
+        for (let i = 0; i < 40 && !on; i += 1) { await sleep(25); on = !!root.querySelector('[data-editing]') && pep()?.textContent === '✎ Stop editing'; }
+        check('...pressed, the picked panel is being edited and it reads Stop editing', on, `${!!root.querySelector('[data-editing]')} ${pep()?.textContent}`);
+        pep()?.click();
+        let off = false;
+        for (let i = 0; i < 40 && !off; i += 1) { await sleep(25); off = !root.querySelector('[data-editing]') && pep()?.textContent === '✎ Edit panel'; }
+        check('...pressed again, editing stops', off, `${!!root.querySelector('[data-editing]')} ${pep()?.textContent}`);
+      }
       // SAVE AND ⇄ SWAP ON THE PLACED BAR (row 2.109, 2026-10-21): the plain bar has had them since 10-18.
       const psave = () => root.querySelector('.tb-bar .tb-actions:not(.tb-host) [data-act="save"]');
       const pswap = () => root.querySelector('.tb-bar .tb-actions:not(.tb-host) [data-act="swap"]');

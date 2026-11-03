@@ -42,14 +42,14 @@
 import { registerModule } from '../module.js';
 import {
   barModel, drawChips, drawHelpButton, helpOn, paintPlayPause, paintBigger, paintSmaller, drawCallControls, pieceOf, paintPieceInert, PIECE_SWITCH_TITLE,
-  sitOutWakePress, paintSave, paintSwap, paintMirror,
+  sitOutWakePress, paintSave, paintSwap, paintMirror, paintEditPanel,
 } from '../transport_bar.js';
 import {
   SHELL_NEXT, SHELL_PREV, SHELL_PANEL, SHELL_HUSH, SHELL_MENU, SHELL_FULLSCREEN, SHELL_HOME, SHELL_GO_HOME,
   SHELL_MIRROR, SHELL_STATE, SHELL_HELP, SHELL_HOST, FULLSCREEN_BAR_HIDE_DEFAULT_MS, SHELL_SWITCH_MODULE,
   SHELL_PLAY_PAUSE, SHELL_PROMOTE, SHELL_DEMOTE, SHELL_SAVE, SHELL_PAGE_NEXT, SHELL_PAGE_PREV,
 } from '../shell_verbs.js';
-import { CALL_CONTROL_TOPIC, CALL_CONTROLS_TOPIC, CALL_HANGUP_TOPIC, QUICK_SWAP_TOPIC } from '../actions.js';
+import { CALL_CONTROL_TOPIC, CALL_CONTROLS_TOPIC, CALL_HANGUP_TOPIC, QUICK_SWAP_TOPIC, EDIT_PANEL_TOPIC } from '../actions.js';
 import { EDGE_TOPIC } from '../input.js';
 import { BAR_KEY_HIDDEN, BAR_TOGGLE_TOPIC, onModuleControl } from '../bar_toggle.js';
 
@@ -90,7 +90,10 @@ const BUTTONS = [
   { act: 'bigger', verb: SHELL_PROMOTE, label: '⤢ Bigger', title: 'make the panel you picked bigger, one step at a time' },
   // Smaller (2026-10-03, "no way to demote it"): one level down, live while anything is bigger (paintSmaller).
   { act: 'smaller', verb: SHELL_DEMOTE, label: '⤡ Smaller', title: 'nothing is bigger now' },
-  { act: 'mirror', verb: SHELL_MIRROR, label: 'Mirror', title: 'the camera, full screen', embed: false },
+  // ✎ Edit panel (row 2.191, Mike 2026-11-02: edit and promote on the bar, for everyone): the corner's pencil for the picked panel.
+  { act: 'editpanel', verb: EDIT_PANEL_TOPIC, label: '✎ Edit panel', title: 'no panel is picked' },
+  // Mirror is off the bar (row 2.191): the settings menu, the C key and a switch still reach it. Drawn hidden, for the editable bar.
+  { act: 'mirror', verb: SHELL_MIRROR, label: 'Mirror', title: 'the camera, full screen', embed: false, hidden: true },
   { act: 'hush', verb: SHELL_HUSH, label: 'Hush',
     title: 'pause the music and video so you can talk (voices and speech are still heard)' },
   { act: 'settings', verb: SHELL_MENU, label: '⚙', title: 'settings' },
@@ -125,6 +128,8 @@ registerModule(
     let mirrorS = (() => { try { return ctx.shell?.mirror?.() || null; } catch { return null; } })();
     // Bigger / Smaller (2026-10-02 evening): the same, for the selected panel's corner press.
     let bigger = (() => { try { return ctx.shell?.bigger?.() || null; } catch { return null; } })();
+    // (row 2.191) ✎ Edit panel: the same, and whether a panel is being edited now.
+    let editS = (() => { try { return ctx.shell?.editPanel?.() || null; } catch { return null; } })();
     // Save and ⇄ Swap (row 2.109): the same.
     let saveS = (() => { try { return ctx.shell?.save?.() || null; } catch { return null; } })();
     let swapS = (() => { try { return ctx.shell?.swap?.() || null; } catch { return null; } })();
@@ -156,7 +161,7 @@ registerModule(
     // HIDDEN, not dimmed, ARGUED against D16's "dimmed, never hidden": that rule is about a control that can act on
     // this screen and cannot right now; these never act on this page, and a row of grey panel words is exactly the
     // building vocabulary the page is meant to keep out of the way. Edit (the host's first button) brings all of it back.
-    const PLAIN_HIDES = Object.freeze(['back', 'playpause', 'next', 'panel', 'switch', 'save', 'swap', 'bigger', 'smaller']);
+    const PLAIN_HIDES = Object.freeze(['back', 'playpause', 'next', 'panel', 'switch', 'save', 'swap', 'bigger', 'smaller', 'editpanel']);
     const plainHost = () => { try { return typeof host?.plainBar === 'function' && !!host.plainBar(); } catch { return false; } };
 
     // THE HOST PAGE FLOATS THIS BAR OVER THE PANELS (Home's dashboard filling the window, 2026-10-02 late:
@@ -325,6 +330,7 @@ registerModule(
       paintSmaller(root.querySelector('.tb-actions:not(.tb-host) [data-act="smaller"]'), bigger || {});
       paintSave(shell?.querySelector('[data-act="save"]'), saveS || {});
       paintSwap(shell?.querySelector('[data-act="swap"]'), swapS || {});
+      paintEditPanel(shell?.querySelector('[data-act="editpanel"]'), editS || {});
       // With no word from the shell (a preview, a host with no shell) Mirror stays as it was drawn.
       if (mirrorS) paintMirror(shell?.querySelector('[data-act="mirror"]'), mirrorS);
       const sv = shell?.querySelector('[data-act="save"]');
@@ -375,6 +381,7 @@ registerModule(
           el.dataset.act = b.act;
           el.textContent = b.label;
           el.title = b.title;
+          if (b.hidden) el.hidden = true;
           el.addEventListener('click', () => say?.publish(b.verb, { from: 'transport_bar' }));
           actions.append(el);
         }
@@ -406,8 +413,9 @@ registerModule(
           if ('swap' in s) swapS = s.swap || null;
           if ('pages' in s) pages = s.pages || null;
           if ('mirror' in s) mirrorS = s.mirror || null;
+          if ('editPanel' in s) editS = s.editPanel || null;
           if ('hushed' in s || 'help' in s || 'menuOpen' in s || 'playPause' in s || 'bigger' in s || 'save' in s || 'swap' in s
-            || 'pages' in s || 'mirror' in s) draw();
+            || 'pages' in s || 'mirror' in s || 'editPanel' in s) draw();
           if ('barHeld' in s) { held = !!s.barHeld; reveal(); }
           // bar toggle: the key put the bar away (tucked, whether or not in full screen) or brought it back.
           if (BAR_KEY_HIDDEN in s) {

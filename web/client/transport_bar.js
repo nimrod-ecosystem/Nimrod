@@ -150,6 +150,24 @@ export function paintMirror(btn, s = {}) {
     : 'there is no camera on this dashboard';
 }
 
+// *** ✎ EDIT PANEL ON BOTH BARS (row 2.191, 2026-11-02). *** Mike: "I think edit and promote could maybe just go on the
+// bar. Mouse users will use the bar. It's not just a switch thing. It's for everyone." The panel corner's ✎, for the
+// picked panel. State { can, on, name } (kiosk.js `editPanelState`): dimmed with no panel picked (D16); while a panel is
+// being edited it reads "Stop editing" and is pressed (aria-pressed), as the corner's ✎ does. Fixed width, so the words
+// changing never moves a button after it.
+export const EDIT_PANEL_ACT = 'editpanel';
+export function paintEditPanel(btn, s = {}) {
+  if (!btn) return;
+  const on = !!(s && s.on);
+  const can = on || !!(s && s.can);
+  const name = (s && s.name) || 'the panel you picked';
+  btn.disabled = !can;
+  btn.textContent = on ? '✎ Stop editing' : '✎ Edit panel';
+  btn.style.minWidth = '8.4em';
+  btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+  btn.title = on ? 'stop editing' : can ? `edit ${name}, right where it is` : 'no panel is picked';
+}
+
 // ---------------------------------------------------------------------------------------------------
 // *** SAVE AND ⇄ SWAP, ON BOTH BARS (row 2.109). *** The shell's state says what they can do (kiosk.js `saveState`,
 // `swapState`): Save is dimmed until a panel was switched since the dashboard was saved, and then reads "Save •";

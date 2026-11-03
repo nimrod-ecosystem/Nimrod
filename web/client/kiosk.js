@@ -46,7 +46,7 @@ import { createArrangement, classifyLayoutChange as layoutChange, ROOM_PANEL_ID,
   PLACE_REQUEST_TOPIC, SMALL_CLOCK_FIELD, SMALL_CLOCK_KEY, CLOCK_CORNERS, clockCornerOf } from './arrangement.js';
 import {
   barModel, drawChips, drawHelpButton, mountBarHelp, helpOn, paintPlayPause, paintBigger, paintSmaller, drawCallControls, paintPieceInert, PIECE_SWITCH_TITLE,
-  paintMirror,
+  paintMirror, paintEditPanel,
   paintSave as paintSaveBtn, paintSwap as paintSwapBtn,
   sitOutWakePress,
   createBarScan, barScanModeOf, BAR_SCAN_FIELD, BAR_SCAN_KEY,
@@ -112,7 +112,7 @@ import {
   trailAfter, crumbName, createBreadcrumb, EDIT_IDLE_FIELD, editIdleMsFrom,
 } from './dashboard_nest.js';
 // corner on hover (2026-10-09): when a panel's ⤢ / ✎ corner shows (the panel under the mouse, the one tapped).
-import { watchCorners } from './panel_corners.js';
+import { watchCorners, PANEL_CORNERS_FIELD, applyPanelCorners, cornersOnFrom } from './panel_corners.js';
 // Row 2.38, the map editor: the edit view on a screen the kiosk mounts itself, and the map window.
 import { openDashboardEditor } from './dashboard_editor.js';
 import { openSceneEditor, SCENE_EDITOR_KIND } from './editor.js';   // row 2.145 step 1: the one editor (openEditView('scene'))
@@ -490,6 +490,9 @@ export async function mountKiosk(root, {
   // the bench soak says otherwise, so a deploy changes no screen that has not opted in. A seam, so a
   // suite can prove the default-ON world without writing a row.
   dashboardDefault = DASHBOARD_MODULE_DEFAULT,
+  // (row 2.191) The panels' corner buttons when this screen has not chosen (panel_corners.js: off). A seam, as above, so a
+  // suite about how corners behave can run on a screen that has them without writing a row per mount.
+  panelCornersDefault = PANEL_CORNERS_FIELD.default,
   // STEP 6 STAGE 3b -- both read only on the dashboard path (`embedded` + `dashboardModule`).
   // `dashboardChrome`: what the dashboard PLACES besides its panels -- by default the transport bar
   // along the bottom and the settings menu down the side (Mike, 2.33: the default dashboard "will
@@ -648,7 +651,12 @@ export async function mountKiosk(root, {
           <button data-act="bigger" title="make the panel you picked bigger, one step at a time">⤢ Bigger</button>
           <!-- SMALLER (2026-10-03): the way back down, one level a press, dimmed while nothing is bigger - see demotePanel. -->
           <button data-act="smaller" title="nothing is bigger now" disabled>⤡ Smaller</button>
-          <button data-act="mirror" title="mirror mode (C) — camera full screen">Mirror</button>
+          <!-- EDIT PANEL (row 2.191, Mike 2026-11-02: edit and promote go on the bar, "It's for everyone"): the panel
+               corner's pencil, for the picked panel; pressed again, Stop editing. See paintEditPanel. -->
+          <button data-act="editpanel" title="no panel is picked" disabled>✎ Edit panel</button>
+          <!-- MIRROR is off the bar (row 2.191, Mike 2026-11-02): it stays in the settings menu while there is a camera,
+               on the C key, and bindable to a switch. Kept here, hidden, for the editable bar to put back. -->
+          <button data-act="mirror" title="mirror mode (C) — camera full screen" hidden>Mirror</button>
           <!-- PLAY/PAUSE: the reason it was once left out is gone. NO BACKTICKS IN THIS COMMENT
                (it is inside the root.innerHTML template literal; see the BACK comment above).
                It was left out because there was no shared capability for a bar button to use.
@@ -2684,6 +2692,8 @@ export async function mountKiosk(root, {
     panelRing = createPanelRing({ el: kioskEl, root, keyTarget: embedded ? root : window, bus, timers: ringTimers });
     panelRing.apply(settings.get()?.[PANEL_RING_FIELD.key]);
   } catch (err) { console.error('kiosk: panel ring', err); }
+  // (row 2.191) The panels' corner buttons: off unless this screen turns them on (panel_corners.js argues it).
+  try { applyPanelCorners(kioskEl, cornersOnFrom(settings.get(), panelCornersDefault)); } catch (err) { console.error('kiosk: corners', err); }
   // The listening cue starts on its defaults (the visual cue on, the tone off, duck): the person's own
   // row replaces them once whoever this screen is for has been resolved (below).
   attachListen({});
@@ -2693,6 +2703,7 @@ export async function mountKiosk(root, {
     applyPanelSurface(s);
     try { applyZoomFocus(kioskEl, s?.zoomFocus); } catch (err) { console.error('kiosk: zoom on focus', err); }
     try { panelRing?.apply(s?.[PANEL_RING_FIELD.key]); } catch (err) { console.error('kiosk: panel ring', err); }   // panel ring
+    try { applyPanelCorners(kioskEl, cornersOnFrom(s, panelCornersDefault)); } catch (err) { console.error('kiosk: corners', err); }   // row 2.191
     // A volume or a mix changed from the menu, or from another device, is heard now.
     try { master?.sync(); } catch (err) { console.error('kiosk: master volume', err); }
     try { mixer?.sync(); } catch (err) { console.error('kiosk: mixer', err); }
@@ -3862,6 +3873,9 @@ export async function mountKiosk(root, {
   controlsEl.querySelector('[data-act="save"]')?.addEventListener('click', () => { saveDashboard(); });
   controlsEl.querySelector('[data-act="swap"]')?.addEventListener('click', () => { quickSwap(); });
   controlsEl.querySelector('[data-act="smaller"]')?.addEventListener('click', () => { demotePanel(); });
+  // (row 2.191) The corner's ✎ for the picked panel: no id, so the arrangement edits the focused panel (or the room, with
+  // a piece of it picked), and a second press stops (EDIT_PANEL_TOPIC with no `on` toggles).
+  controlsEl.querySelector('[data-act="editpanel"]')?.addEventListener('click', () => { bus.publish(EDIT_PANEL_TOPIC, { from: 'bar' }); });
   controlsEl.querySelector('[data-act="fs"]').addEventListener('click', toggleFs);
 
   // *** NIMROD, ON THE BAR (row 2.37, 2026-09-30). *** Press him and the cat explains whatever is
@@ -4050,6 +4064,7 @@ export async function mountKiosk(root, {
     theme: ['theme', 0], burnIn: ['display', 0], panelSurface: ['display', 0], panelGap: ['display', 0],   // themes: theme on Theme
     [SMALL_CLOCK_KEY]: ['display', 0],
     [PANEL_RING_FIELD.key]: ['display', 0],   // panel ring: "How it looks", with the panels' framing
+    [PANEL_CORNERS_FIELD.key]: ['display', 0],   // row 2.191: the corner buttons, beside the ring
     [HOLIDAYS_KEY]: ['theme', 0], [SKY_FOLLOW_KEY]: ['theme', 0],   // seasons and the sky (sky.js); themes: on Theme
     ...Object.fromEntries(HOLIDAY_FIELDS.map((f) => [f.key, ['theme', 0]])),   // seasons: one row per holiday; themes: on Theme
     plainBarHoldMs: ['devices', 1], hideAskTimeoutMs: ['audio', 2],
@@ -4602,6 +4617,8 @@ export async function mountKiosk(root, {
     // press (the default), or never. Beside "Space between panels": both are about how the panels are framed. The
     // SCREEN's, as "Grow the panel the cursor is on" is: what a room's screen shows is the place's to choose.
     { ...PANEL_RING_FIELD, options: PANEL_RING_FIELD.options.map((o) => ({ ...o })) },
+    // (row 2.191, Mike 2026-11-02) The corner buttons retire to the bar; a screen may still have them.
+    { ...PANEL_CORNERS_FIELD, default: !!panelCornersDefault },
     // "Show a small clock" (2026-10-03; arrangement.js SMALL_CLOCK_FIELD argues it): off or a corner. Only where
     // it can act (`canOverlayHere`: Home, or a screen whose arrangement this menu may change).
     ...(hostHandles('smallclock') || canAddHere() ? [{ ...SMALL_CLOCK_FIELD, options: SMALL_CLOCK_FIELD.options.map((o) => ({ ...o })) }] : []),
@@ -5916,8 +5933,34 @@ export async function mountKiosk(root, {
       paintSmaller(controlsEl.querySelector('[data-act="smaller"]'), b);
     } catch { b = null; /* not built yet */ }
     if (useDashboard) { try { bus.publish(SHELL_STATE, b ? { playPause: s, bigger: b } : { playPause: s }); } catch { /* not load-bearing */ } }
+    // (row 2.191) ✎ Edit panel follows the same selection, and says when a panel is being edited.
+    let ep = null;
+    try { ep = editPanelState(); paintEditPanel(controlsEl.querySelector('[data-act="editpanel"]'), ep); } catch { ep = null; /* not built yet */ }
+    if (useDashboard && ep) { try { bus.publish(SHELL_STATE, { editPanel: ep }); } catch { /* not load-bearing */ } }
     return s;
   }
+  // What the bars' ✎ Edit panel says (row 2.191). `on`: a panel is being edited in place now (whichever arrangement shows
+  // the panels marks its box `data-editing`, edit_mode.js), so the press stops it; else the picked panel can be edited.
+  function editPanelState() {
+    let rec = null;
+    try { rec = panelSubject(); } catch { rec = null; }
+    let on = false;
+    try { on = !!kioskEl.querySelector('[data-editing]'); } catch { on = false; }
+    // A module opened by voice is not a panel of this dashboard, so there is nothing for the press to edit (Bigger's rule).
+    let voiceUp = false;
+    try { voiceUp = voiceOpen.isOpen(); } catch { voiceUp = false; }
+    return { can: on || (!!rec && !voiceUp), on, name: rec ? panelName(rec) : null };
+  }
+  // Editing starts and stops by many roads (the bar, the menu, a switch, a voice, the corner, a quiet while), and every
+  // one of them marks the panel's box. So the bars watch the mark rather than each road.
+  try {
+    let queued = false;
+    new MutationObserver(() => {
+      if (queued) return;
+      queued = true;
+      queueMicrotask(() => { queued = false; try { syncPlayPause(); } catch { /* not built yet */ } });
+    }).observe(kioskEl, { subtree: true, attributes: true, attributeFilter: ['data-editing'] });
+  } catch { /* no MutationObserver: the button follows the selection only */ }
   // What the bars' Bigger and Smaller say (2026-10-03, Mike: "no way to demote it"). Bigger: the selected
   // panel, one level up; dimmed at the top (it already fills the screen). Smaller: one level down, live
   // whenever ANYTHING is bigger -- before, the one button said Smaller only at the screen level, so a panel
@@ -9417,6 +9460,7 @@ export async function mountKiosk(root, {
           pages: () => pagesState(),   // row 2.190: Previous page / Next page at mount (then SHELL_STATE `pages`)
     mirror: () => mirrorState(), // row 2.191: Mirror dimmed with no camera, at mount (then SHELL_STATE `mirror`)
           bigger: () => biggerState(),
+          editPanel: () => editPanelState(), // row 2.191: ✎ Edit panel at mount (then SHELL_STATE `editPanel`)
           // row 2.109: what its Save and ⇄ Swap show at mount (then SHELL_STATE `save` / `swap`).
           save: () => saveState(), swap: () => swapState(),
           fullscreenElement: () => {

@@ -548,8 +548,11 @@ const toTab = (m, id) => {
       // camera, so the bar can lose Mirror without the screen losing it. This dashboard has one. 60.)
       // (row 2.187, 2026-11-02, DELIBERATELY: "A book opens its module", over the room or in its place, under "Books on a
       // shelf" beside "Asked for by voice". 61.)
-      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 15 stops (was every row: 61) ***',
-        lapStops.length === 15 && oldStops.length === 61 && oldStops.some((i) => i.id === 'mirror') /* Mirror */
+      // (row 2.191, 2026-11-02, DELIBERATELY: the corner buttons retired to the bar, so "Buttons in a panel's corner" joins
+      // How it looks, beside "Show which panel is selected", for a screen that wants them back. 62.)
+      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 15 stops (was every row: 62) ***',
+        lapStops.length === 15 && oldStops.length === 62 && oldStops.some((i) => i.id === 'mirror') /* Mirror */
+        && oldStops.some((i) => i.id === 'set:panelCorners') /* the corners */
         && oldStops.some((i) => i.id === 'set:booksOpen') /* books */
         && oldStops.some((i) => i.id === 'mic-test') /* which microphone */
         && oldStops.some((i) => i.id === 'set:callTheirCaptions') /* subtitles a caller sends */
@@ -2227,9 +2230,10 @@ const toTab = (m, id) => {
       const hidden = (sel) => getComputedStyle(eBox.querySelector(sel)).display === 'none';
       check('embedded: "Home" and "Mirror" are not offered (nowhere to go, nothing to mirror)',
         hidden('[data-act="home"]') && hidden('[data-act="mirror"]'));
-      check('default: both are still offered on the real kiosk',
+      // (row 2.191, Mike 2026-11-02) Mirror is off the bar everywhere now; Home stays on the real kiosk.
+      check('default: Home is still offered on the real kiosk, and Mirror is off its bar',
         getComputedStyle(nBox.querySelector('[data-act="home"]')).display !== 'none'
-        && getComputedStyle(nBox.querySelector('[data-act="mirror"]')).display !== 'none');
+        && getComputedStyle(nBox.querySelector('[data-act="mirror"]')).display === 'none');
 
       ek.menu.open(); await sleep(60);
       // `[data-settings]` scopes it to the KIOSK's menu: a module (youtube, here) can carry its own inline one.
@@ -5168,6 +5172,8 @@ const toTab = (m, id) => {
     check('*** ...the bar\'s Smaller is lit (the way back), Bigger dimmed ***',
       await settled(() => barBtn('smaller')?.disabled === false && barBtn('bigger')?.disabled === true, 2000),
       `${barBtn('smaller')?.disabled} ${barBtn('bigger')?.disabled}`);
+    check('(row 2.191) ...and the bar\'s ✎ Edit panel is dimmed: a module opened by voice is not a panel to edit',
+      barBtn('editpanel')?.disabled === true, `${barBtn('editpanel')?.disabled} ${barBtn('editpanel')?.title}`);
     check('...and the bar\'s Pause / the menu\'s panel tab are about it now (the selected panel is the one opened by voice)',
       vk.playPause()?.id === 'voice:trivia', JSON.stringify(vk.playPause()));
     check('*** NOTHING WAS SAVED: the dashboard\'s layout and modules are as they were ***',
@@ -5178,6 +5184,28 @@ const toTab = (m, id) => {
     check('*** the bar\'s Smaller takes it away: the dashboard is back, and the switch is on Photos again ***',
       await settled(() => !cur() && !box() && vk.routerFocus() === vPhotos.id && !kds().voiceOpen, 3000),
       `${JSON.stringify(cur())} ${vk.routerFocus()} ${kds().voiceOpen}`);
+    // (row 2.191, Mike 2026-11-02: edit and promote on the bar, for everyone) ✎ Edit panel edits the picked panel in place,
+    // and pressed again it stops.
+    {
+      const ep = barBtn('editpanel');
+      const editing = () => vroot.querySelector('[data-editing]');
+      check('*** (row 2.191) the bar has ✎ Edit panel, lit for the picked panel ***',
+        await settled(() => !!ep && !ep.hidden && !ep.disabled && ep.textContent === '✎ Edit panel', 2000),
+        ep ? `${ep.hidden} ${ep.disabled} ${ep.textContent}` : 'no button');
+      ep?.click();
+      check('...pressed, the picked panel is being edited, and the button reads Stop editing (pressed)',
+        await settled(() => !!editing() && ep.textContent === '✎ Stop editing' && ep.getAttribute('aria-pressed') === 'true', 2000),
+        `${!!editing()} ${ep?.textContent} ${ep?.getAttribute('aria-pressed')}`);
+      ep?.click();
+      check('...pressed again, editing stops and it reads Edit panel again',
+        await settled(() => !editing() && ep.textContent === '✎ Edit panel', 2000), `${!!editing()} ${ep?.textContent}`);
+      check('(row 2.191) Mirror is off the bar (the menu, the C key and a switch still reach it)',
+        barBtn('mirror')?.hidden === true, String(barBtn('mirror')?.hidden));
+      const cornerBtns = [...vroot.querySelectorAll('.k-promote, .k-editc, .k-barc')];
+      check('(row 2.191) the panels\' corner buttons are off by default: the screen is marked, and none is drawn',
+        vroot.querySelector('.kiosk')?.hasAttribute('data-corners-off') && cornerBtns.every((b) => getComputedStyle(b).display === 'none'),
+        `${vroot.querySelector('.kiosk')?.hasAttribute('data-corners-off')} ${cornerBtns.length} ${cornerBtns.map((b) => getComputedStyle(b).display).join(',')}`);
+    }
 
     // (3) "OPEN THE CALCULATOR IN THE BOTTOM RIGHT CORNER": the dashboard stays, the module sits in that quarter.
     vbus.publish(SPEECH_OPEN_TOPIC, { module: 'calculator', moduleHeard: 'calculator', place: 'br', verb: 'open' });
