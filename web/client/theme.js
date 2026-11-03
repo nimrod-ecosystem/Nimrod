@@ -259,12 +259,15 @@ export const THEMES = {
   // card deck (playing_cards.js `medieval`), a town (town.js: the Great Hall, the Solar, the Smithy, the Jester's Wagon),
   // the belted tunic and the kirtle (character_kit.js), the castle and village (village_kit.js). This theme wears them
   // all - deckFor, the town and the outfits key off its id. Its colours are Design's own medieval ones: the deck's
-  // parchment, ink and oxblood, the town's blue and gold. No moving scene yet: Design has been asked for every theme's
-  // backdrop as pieces (item 42.2, 2026-10-26), and the medieval one arrives with them. Every text role measured
+  // parchment, ink and oxblood, the town's blue and gold. Its moving scene is Design's village (2026-11-02, below and
+  // livescene.js SCENES.medieval), drawn from the village kit and loaded only when it shows. Every text role measured
   // against the worst of --bg, --surface and --surface-alt before it was written (theme_test measures again):
   // text 13.4, soft 9.0, muted 5.6, link 5.3, accent 7.3; border 3.2 (3:1, non-text).
   medieval: {
     label: 'Medieval — a castle and its village',
+    // (row 2.184, 2026-11-02) Its moving scene arrived: Design's village (livescene.js SCENES.medieval, medieval_theme.js).
+    scene: 'medieval',
+    overlays: [],
     vars: {
       ...BASE,
       '--bg': '#f4ecd8',
@@ -283,6 +286,21 @@ export const THEMES = {
       '--accent-warm': '#9a2c26',
       '--accent-warm-deep': '#6b2418',
       '--wallpaper-hue': '30',
+      // The board over the village, when its surface is veil or clear: Design's Medieval board tokens (medieval_theme.js
+      // MEDIEVAL_THEME.tokens, Design measured the lowest pair at 5.09:1 on the veil; Code confirmed 2026-11-02, row 2.184).
+      '--board-bg': '#1f1912',
+      '--board-card': '#2a2219',
+      '--board-text': '#f4ecd8',
+      '--board-border': '#c9a46a',
+      '--board-lit': '#e8b84a',
+      '--board-veil': 'rgba(31,25,18,.8)',
+      '--board-halo': '0 1px 2px rgba(0,0,0,.85), 0 0 6px rgba(0,0,0,.6)',
+      '--board-sym-yes': '#bfe0c4',
+      '--board-sym-no': '#e8c0c4',
+      '--board-sym-need': '#e8d6a0',
+      '--board-sym-hot': '#e8b394',
+      '--board-sym-cold': '#bfe0ee',
+      '--board-sym-love': '#e4b8cc',
     },
   },
   ...liveThemes(BASE),

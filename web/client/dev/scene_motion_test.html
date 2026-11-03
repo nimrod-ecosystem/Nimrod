@@ -186,6 +186,27 @@ if (!motionOn) {
       `${inside} of ${tops.length}`);
     s.destroy();
   }
+
+  // (row 2.184, 2026-11-02) MEDIEVAL: Design's village, drawn into its box once the kit has loaded; "still" pauses its
+  // own animations as every scene's are.
+  section('Medieval: the village, loaded when it shows, and still when asked');
+  {
+    const s = mountScene(box, { scene: 'medieval', overlays: [] });
+    let svg = null;
+    for (let i = 0; i < 60 && !svg; i++) { await new Promise((r) => setTimeout(r, 50)); svg = box.querySelector('.ls-medieval svg'); }
+    check('*** the Medieval scene draws Design\'s village into its box ***', !!svg && svg.querySelectorAll('*').length > 50,
+      svg ? String(svg.querySelectorAll('*').length) : 'nothing drawn');
+    const moving = box.getAnimations({ subtree: true }).filter((a) => a.playState === 'running').length;
+    s.destroy();
+    const st = mountScene(box, { scene: 'medieval', overlays: [], motion: 'still' });
+    let svg2 = null;
+    for (let i = 0; i < 60 && !svg2; i++) { await new Promise((r) => setTimeout(r, 50)); svg2 = box.querySelector('.ls-medieval svg'); }
+    await nextFrame();
+    const running = box.getAnimations({ subtree: true }).filter((a) => a.playState === 'running').length;
+    check('*** ...it moves, and with motion "still" nothing in it runs ***', moving > 0 && !!svg2 && running === 0,
+      `moving ${moving}, still ${running}`);
+    st.destroy();
+  }
 }
 
 // Overlays are opt-in and listed for completeness: the rare crossings (one element each) still

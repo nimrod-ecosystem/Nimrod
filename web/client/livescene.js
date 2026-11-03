@@ -3226,6 +3226,40 @@ const OVERLAYS = {
 // Exported as SCENES / SCENE_OVERLAYS rather than the design system's GROUND_THEMES / OVERLAYS, so
 // the repo's names describe what they are here and cannot collide with the design system's own.
 export const SCENES = GROUND_THEMES;
+// *** MEDIEVAL (row 2.184; Design's medievalTheme.js, 2026-11-02; Mike 2026-11-01: the village as Medieval's backdrop). ***
+// Hand-written here, not generated with the scenes above: Design drew it as a village RECIPE (village_kit.js sceneSvg), not
+// as __lsh scene bodies. Its kit is about 60 KB that no other scene needs, so it is LOADED ONLY WHEN THIS SCENE SHOWS: the
+// render returns its box at once and the village is drawn into it when the kit arrives. Its own animations sit inside
+// `.ng`, so "still" (the screen's "Moving theme scene", a slow screen, reduce motion) pauses them like every scene's.
+// Measured on a Pi 400 at 1080p (2026-11-02, cici1): moving, crafted with the frame, 57 fps at about two cores (the fall
+// scene's cost); MIRRORED BLEED (frame off) 21 fps, so the frame stays on, Design's default, and the bleed is its card.
+// Tokens: Design's own (MEDIEVAL_THEME.tokens, the --ab-* names every scene carries), copied rather than imported so this
+// file stays free of the kit until the scene is shown.
+if (!GROUND_THEMES.medieval) {
+  GROUND_THEMES.medieval = {
+    label: 'Medieval — the castle’s village',
+    ground: 'linear-gradient(180deg,#a8d4ec,#e6f2f0)',
+    tokens: {
+      '--ab-bg': '#1f1912', '--ab-card': '#2a2219', '--ab-ink': '#f4ecd8', '--ab-line': '#c9a46a', '--ab-lit': '#e8b84a',
+      '--ab-sym-yes': '#bfe0c4', '--ab-sym-no': '#e8c0c4', '--ab-sym-need': '#e8d6a0',
+      '--ab-sym-hot': '#e8b394', '--ab-sym-cold': '#bfe0ee', '--ab-sym-love': '#e4b8cc',
+      '--ab-veil': 'rgba(31,25,18,0.8)',
+    },
+    halo: 'dark',
+    render: ({ date } = {}) => {
+      const box = __lsh('div', { className: 'ls-medieval' });
+      box.style.cssText = 'position:absolute;inset:0;overflow:hidden';
+      const view = box.ownerDocument?.defaultView || (typeof window !== 'undefined' ? window : null);
+      const aspect = view && view.innerHeight ? view.innerWidth / view.innerHeight : 16 / 9;
+      Promise.all([import('./medieval_theme.js'), import('./cast.js')]).then(([m, c]) => {
+        box.innerHTML = m.medievalBackdropSvg({}, { date: date || new Date(), aspect, castSvg: c.castSvg, assetBase: '/design-assets/' });
+        const svg = box.firstElementChild;
+        if (svg) { svg.setAttribute('preserveAspectRatio', 'xMidYMid slice'); svg.style.cssText = 'width:100%;height:100%;display:block'; }
+      }).catch((err) => console.error('livescene: medieval', err));
+      return [box];
+    },
+  };
+}
 // NO WORLD (2026-10-18, row 2.104, modules/overlays.js): only the inhabitants and the weather, on a clear ground, for
 // laying over a dashboard or a module that has its own look. Not one of the scenes a person picks (listScenes).
 export const NO_WORLD = 'none';

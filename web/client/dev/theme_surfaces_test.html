@@ -66,7 +66,9 @@ const ADDED_SINCE = Object.freeze({
   // palette measured for contrast. Not yet: a moving scene (Design asked for every theme's backdrop, item 42.2) and
   // board tokens of its own (it uses the board's pinned colours, as the four undrawn still themes do; giving it its own
   // changes how its board looks, so they come from Design). The other three are gaps every theme has.
-  medieval: { added: '0f18a49, 2026-10-26', gaps: ['scene', 'tokens', 'bricks', 'marks', 'materials'] },
+  // (2026-11-02, row 2.184) Both came from Design and are in: the village as its moving scene (livescene.js
+  // SCENES.medieval) and its own board tokens (medieval_theme.js MEDIEVAL_THEME.tokens).
+  medieval: { added: '0f18a49, 2026-10-26', gaps: ['bricks', 'marks', 'materials'] },
 });
 const addedGaps = (row) => Object.keys(ADDED_SINCE).filter((id) => ADDED_SINCE[id].gaps.includes(row));
 
