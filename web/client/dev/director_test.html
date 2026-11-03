@@ -104,7 +104,12 @@ async function mountDirector({ host, hour, seed, timers, stub, extra = {}, preSt
     autoFinishMs: 1000,
   });
   instance.init();
-  await sleep(120);       // let the async child mount + machine.start settle
+  // Let the async child mount + machine.start settle. (2026-11-02) A fixed 120 ms was enough until the child modules grew:
+  // headless Chrome (not throttled) then read the slots before the first one showed, and six checks failed while the
+  // same page passed in a hidden tab, whose throttled timers waited about a second. Now it waits for a slot to show, up to
+  // 5 s, then the old settle.
+  for (let i = 0; i < 100 && !host.querySelector('.d-slot:not([hidden])'); i++) await sleep(50);
+  await sleep(120);
   return { instance, bus, host };
 }
 

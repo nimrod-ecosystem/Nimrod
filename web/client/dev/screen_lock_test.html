@@ -480,6 +480,10 @@ const pressChord = () => { chord('keydown'); chord('keyup'); };
       check('the bus heard it, by the chord', await until(() => s.heard.some((h) => h.locked && h.by === 'chord'), 2000), J(s.heard));
       check('the screen carries data-screen-locked', s.kiosk.hasAttribute('data-screen-locked'));
       const sw = s.kiosk.querySelector('.k-controls [data-act="switch"]');
+      // (row 2.191, 2026-11-02) Switch module sits in the bar's arrange group, folded behind "Arrange ▸" by default: it is
+      // opened first, so what is checked is that the LOCK does not hide it.
+      const openArrange = () => { const t = s.kiosk.querySelector('.k-controls [data-act="arrange"]'); if (t && t.getAttribute('aria-expanded') !== 'true') t.click(); };
+      openArrange();
       check('*** the bar\'s "Switch module" STAYS while locked (narrowed 2026-10-05) ***', sw && getComputedStyle(sw).display !== 'none');
       check('...and every other button of the bar is still there (Home, Pause, Next, Hush, ⚙, ⛶)',
         ['home', 'playpause', 'next', 'hush', 'settings', 'fs'].every((a) => getComputedStyle(s.kiosk.querySelector(`.k-controls [data-act="${a}"]`)).display !== 'none'));
@@ -561,6 +565,7 @@ const pressChord = () => { chord('keydown'); chord('keyup'); };
         && s.k.versionWatch.state().reason === 'unlocked', `${r2} ${J(s.k.versionWatch.state())}`);
       check('the menu is whole again', (s.k.menu.open(), await until(() => ids(s.k).includes('screen-lock'), 2000)) && s.k.menu.tabs().some((t) => t.id === 'devices'));
       s.k.menu.close();
+      openArrange();
       check('the bar\'s Switch module is back', getComputedStyle(sw).display !== 'none' && !s.kiosk.hasAttribute('data-screen-locked'));
       pressChord();
       await until(() => L.isLocked(), 3000);
