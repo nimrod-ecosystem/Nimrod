@@ -1821,6 +1821,11 @@ try {
     const row = rows.find((f) => f.key === 'sayIt');
     check('*** the setting is there and OFF by default ***', row?.default === 'off'
       && JSON.stringify(row.options.map((o) => o.value)) === '["off","symbol","avatar","both"]', JSON.stringify(row));
+    // (row 2.204, Mike 2026-11-03: "We don't want to be taking away options") once the character is on, care words act too;
+    // the row still turns it off.
+    const care = rows.find((f) => f.key === 'sayItCareWords');
+    check('*** care words act out by default, and the row can still turn that off ***', care?.default === true
+      && care.kind === 'toggle', JSON.stringify(care && { default: care.default, kind: care.kind }));
     const mk = async (sayIt) => {
       const h = document.createElement('div');
       h.style.cssText = 'position:relative;width:700px;height:420px';

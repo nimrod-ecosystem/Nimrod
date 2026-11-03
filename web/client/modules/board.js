@@ -385,10 +385,12 @@ const DEFAULTS = {
   // SAY IT WITH A CHARACTER (big ideas 2 and 4, Mike 2026-11-02: yes; Design's sayIt.js, ../say_it.js). A pressed word is
   // also shown by a character acting it: on the card ('symbol', idea 2), beside the board with the word in a big speech
   // bubble for somebody across the room ('avatar', idea 4), or both. OFF to start, Mike's ruling: "Boards with
-  // animations will just be one option." Care words (pain, bedpan, suction ...) show in the bubble without a mime unless
-  // "Act the care words too" is on (Design's argument, both sides, in say_it.js); help raises a hand.
+  // animations will just be one option." Care words (pain, bedpan, suction ...) act like every other word once the
+  // character is on: Mike, 2026-11-03 (row 2.204), "We don't want to be taking away options", Yes to "Should care words act
+  // out?". Design's default in say_it.js is the other way (its argument, both sides, is there); "Act the care words too: No"
+  // still shows them in the bubble with the character standing, and help raises a hand either way.
   sayIt: 'off',
-  sayItCareWords: false,
+  sayItCareWords: true,
   sayItShowMs: 4000,
 
   // How long the choice card stays if nobody answers it. See the SETTINGS row.
@@ -572,7 +574,7 @@ export const SETTINGS = [
     ],
     note: 'The person’s own character does it once, then the board is as it was. Where the pictures may not move, it stands '
       + 'still and only the bubble shows the word.' },
-  { key: 'sayItCareWords', label: 'Act the care words too (pain, bedpan, hot, cold …)', kind: 'toggle', default: false,
+  { key: 'sayItCareWords', label: 'Act the care words too (pain, bedpan, hot, cold …)', kind: 'toggle', default: true,
     level: 'advanced', onLabel: 'Yes', offLabel: 'No, just show the word',
     appliesWhen: (v) => !!v && v.sayIt != null && v.sayIt !== 'off',
     note: 'Off: those words show in the bubble with the character standing; “help” still raises a hand, as a request.' },
