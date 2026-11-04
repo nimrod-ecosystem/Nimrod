@@ -370,7 +370,7 @@
   {
    "say": {
     "who": "B",
-    "text": "Always finish by checking. Multiply (2y + 1)(2y + 3) and you get 4y² + 6y + 2y + 3, which is 4y² + 8y + 3. That matches what we started with."
+    "text": "Always finish by checking. Multiply (2y + 1)(2y + 3) and you get 4y² + 6y + 2y + 3, which is 4y² + 8y + 3. That matches the one you just factored."
    },
    "show": {
     "kind": "two_columns",

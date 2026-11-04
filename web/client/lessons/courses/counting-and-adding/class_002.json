@@ -129,7 +129,7 @@
   {
    "say": {
     "who": "B",
-    "text": "Touch each button once as you say its number. You may know the first ten rows are ten, so you can start there. Say ten, then touch the next button and say eleven, then twelve, thirteen, fourteen. That is called counting on."
+    "text": "Touch each button once as you say its number. You may know the first two rows make ten, so you can start there. Say ten, then touch the next button and say eleven, then twelve, thirteen, fourteen. That is called counting on."
    },
    "show": {
     "kind": "key_word",

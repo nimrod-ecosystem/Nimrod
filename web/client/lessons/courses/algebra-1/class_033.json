@@ -447,7 +447,7 @@
   {
    "say": {
     "who": "B",
-    "text": "Why does this always work out neatly? Add or subtract two polynomials and you get another polynomial. The family stays closed, like whole numbers under adding and subtracting."
+    "text": "Why does this always work out neatly? Add or subtract two polynomials and you get another polynomial. The family stays closed, like integers under adding and subtracting."
    },
    "show": {
     "kind": "key_word",

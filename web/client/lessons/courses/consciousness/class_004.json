@@ -469,11 +469,11 @@
   {
    "say": {
     "who": "B",
-    "text": "For the workspace theory in particular, researchers reported that not every kind of conscious content could be read from the prefrontal cortex. They also found no ignition when the stimulus first appeared."
+    "text": "For the workspace theory in particular, researchers reported that not every kind of conscious content could be read from the prefrontal cortex. They also found no ignition at the moment the stimulus ended."
    },
    "show": {
     "kind": "list",
-    "text": "Challenges for the workspace: content not found in prefrontal cortex | no ignition at stimulus start"
+    "text": "Challenges for the workspace: content not found in prefrontal cortex | no ignition at stimulus end"
    },
    "cite": [
     "s6"

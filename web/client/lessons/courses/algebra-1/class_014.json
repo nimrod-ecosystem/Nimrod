@@ -133,7 +133,7 @@
   {
    "say": {
     "who": "B",
-    "text": "Now we put slope and y-intercept into one equation: y = mx + b. The m is the slope. The b is the y-intercept. Some books call it the y-form."
+    "text": "Now we put slope and y-intercept into one equation: y = mx + b. The m is the slope. The b is the y-intercept. This is called slope-intercept form. Some books also call it the y-intercept form."
    },
    "show": {
     "kind": "key_word",

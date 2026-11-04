@@ -624,7 +624,7 @@
   {
    "say": {
     "who": "B",
-    "text": "Other early finds lie across Africa. Florisbad, in South Africa, is about 260,000 years old. Omo Kibish, in Ethiopia, is about 195,000."
+    "text": "Other early finds lie across Africa. Florisbad, in South Africa, is about 260,000 years old. Omo Kibish, in Ethiopia, is at least about 230,000."
    },
    "show": {
     "kind": "chart",
@@ -640,10 +640,10 @@
     "right": "Jebel Irhoud, Morocco",
     "wrong": [
      "Florisbad, South Africa",
-     "Omo Kibish, Ethiopia",
+     "Omo Kibish, Ethiopia (at least)",
      "They are all the same age"
     ],
-    "why": "Jebel Irhoud is about 300 thousand years old, Florisbad about 260 thousand, Omo Kibish about 195 thousand."
+    "why": "Jebel Irhoud is about 300 thousand years old, Florisbad about 260 thousand, Omo Kibish at least about 230 thousand."
    }
   },
   {
@@ -987,8 +987,8 @@
      "source": "s3"
     },
     {
-     "label": "Omo Kibish, Ethiopia",
-     "value": 195,
+     "label": "Omo Kibish, Ethiopia (at least)",
+     "value": 233,
      "source": "s3"
     }
    ]
@@ -1052,7 +1052,7 @@
   },
   {
    "when": "About 200,000 years ago",
-   "elsewhere": "Neanderthals had evolved in Europe by about this time and were enduring winter cold and ice ages. In Ethiopia, Omo Kibish is about 195,000 years old.",
+   "elsewhere": "Neanderthals had evolved in Europe by about this time and were enduring winter cold and ice ages. In Ethiopia, Omo Kibish is at least about 230,000 years old.",
    "cite": [
     "s10",
     "s3"

@@ -435,11 +435,11 @@
   {
    "say": {
     "who": "B",
-    "text": "Now Egypt in the New Kingdom, which you met last time. Ramesses III, one of its late pharaohs, reigned for over thirty years, from 1195 to 1164 BCE."
+    "text": "Now Egypt in the New Kingdom, which you met last time. Ramesses III, one of its late pharaohs, reigned for over thirty years, from about 1186 to 1155 BCE."
    },
    "show": {
     "kind": "big_number",
-    "text": "1195–1164 BCE: Ramesses III"
+    "text": "about 1186–1155 BCE: Ramesses III"
    },
    "cite": [
     "s6"
@@ -1150,7 +1150,7 @@
    ]
   },
   {
-   "when": "1195–1164 BCE",
+   "when": "about 1186–1155 BCE",
    "elsewhere": "Ramesses III ruled Egypt and faced the Sea Peoples.",
    "cite": [
     "s6"

@@ -407,7 +407,7 @@
   {
    "say": {
     "who": "A",
-    "text": "The rivers flow from the Zagros Mountains in the north to the Persian Gulf in the south. The southern part was called Sumer."
+    "text": "The rivers flow from the highlands of Turkey in the north to the Persian Gulf in the south. The southern part was called Sumer."
    },
    "show": {
     "kind": "map",
@@ -773,11 +773,11 @@
   {
    "say": {
     "who": "B",
-    "text": "Çatalhöyük, in central Turkey, was built about 7500 to 5600 BCE. Its mud-brick houses were packed together with rooftop entrances. The archaeologist James Mellaart found it and dug there from 1961 to 1964."
+    "text": "Çatalhöyük, in central Turkey, was built about 7500 to 5600 BCE. Its mud-brick houses were packed together with rooftop entrances. The archaeologist James Mellaart found it in 1958 and dug there from 1961 to 1965."
    },
    "show": {
     "kind": "two_columns",
-    "text": "Çatalhöyük, built: c. 7500–5600 BCE\nÇatalhöyük, found: Mellaart, 1961–1964"
+    "text": "Çatalhöyük, built: c. 7500–5600 BCE\nÇatalhöyük, found: Mellaart, 1958; dug 1961–1965"
    },
    "cite": [
     "s12",

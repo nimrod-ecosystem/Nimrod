@@ -181,7 +181,7 @@
   {
    "say": {
     "who": "A",
-    "text": "Droplets travel a short way, about one metre or less. Past one metre, we call it airborne."
+    "text": "Larger droplets fall within a metre or two. Smaller particles can hang in the air and travel farther, especially indoors. Scientists now treat this as a range, not a sharp one-metre line."
    },
    "show": {
     "kind": "picture",
@@ -196,10 +196,10 @@
     "right": "Droplet transmission",
     "wrong": [
      "Vector transmission, an animal carrying the germ",
-     "Airborne transmission, over more than one metre",
+     "Airborne transmission, by tiny particles that hang in the air",
      "It cannot spread this way"
     ],
-    "why": "Droplet transmission covers a distance of one metre or less. Airborne is further than that. A vector is an animal carrier."
+    "why": "Larger droplets land within a metre or two, so half a metre is droplet range. Airborne spread is by tiny particles that hang in the air and travel farther. A vector is an animal carrier."
    }
   },
   {

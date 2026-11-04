@@ -721,11 +721,11 @@
   {
    "say": {
     "who": "B",
-    "text": "Counting two bits per base, one human genome is roughly 1.5 gigabytes. That counts capacity, like counting letters in a book. It does not say what the genome means."
+    "text": "Counting two bits per base, one copy of the human genome (about 3 billion bases) is roughly 0.8 gigabytes, or about 1.5 gigabytes for the two copies in a cell. That counts capacity, like counting letters in a book. It does not say what the genome means."
    },
    "show": {
     "kind": "big_number",
-    "text": "about 1.5 gigabytes",
+    "text": "about 0.8 gigabytes (one copy)",
     "note": "rough capacity of a diploid human genome at 2 bits per base"
    },
    "cite": [

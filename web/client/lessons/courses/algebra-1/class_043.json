@@ -242,7 +242,7 @@
   {
    "say": {
     "who": "B",
-    "text": "Here's a game example. A square arena covers 144 square meters. How long is a side? x² = 144, so x = 12 or −12."
+    "text": "Here's a game example. A square arena covers 144 square meters. How long is a side? x² = 144 gives x = 12 or x = −12, but a length can't be negative, so the side is 12 m."
    },
    "show": {
     "kind": "picture",

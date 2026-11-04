@@ -517,11 +517,11 @@
   {
    "say": {
     "who": "A",
-    "text": "Why is oxygen so slow? Living things make it a little at a time. Mars's air today has only about 0.06 percent oxygen. One 2026 preprint says that if most of the oxygen gets buried or lost, the estimate stretches to millions of years."
+    "text": "Why is oxygen so slow? Living things make it a little at a time. Mars's air today has only about 0.16 percent oxygen. One 2026 preprint says that if most of the oxygen gets buried or lost, the estimate stretches to millions of years."
    },
    "show": {
     "kind": "big_number",
-    "text": "Mars's air today: about 0.06% oxygen"
+    "text": "Mars's air today: about 0.16% oxygen"
    },
    "cite": [
     "s10",

@@ -149,7 +149,7 @@
   {
    "say": {
     "who": "B",
-    "text": "Every word with three sounds has a vowel in the middle. Here is one word for each of the five vowels: cat has A, bed has E, sit has I, dog has O, and sun has U. Say each one slowly and hear how the middle sound changes."
+    "text": "Each of these three-sound words has a vowel sound in the middle. Here is one word for each of the five vowels: cat has A, bed has E, sit has I, dog has O, and sun has U. Say each one slowly and hear how the middle sound changes."
    },
    "show": {
     "kind": "list",

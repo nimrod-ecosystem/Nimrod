@@ -127,11 +127,11 @@
   {
    "say": {
     "who": "B",
-    "text": "Here are ducks in a five-frame. A full row of five, and some in the next row. Count the full row as 5, then add the rest."
+    "text": "Here are ducks in a ten-frame. A full row of five, and some in the next row. Count the full row as 5, then add the rest."
    },
    "show": {
     "kind": "picture",
-    "text": "A five-frame with two rows. The top row holds five yellow ducks, filling it. The bottom row holds two yellow ducks, with three empty spaces."
+    "text": "A ten-frame with two rows. The top row holds five yellow ducks, filling it. The bottom row holds two yellow ducks, with three empty spaces."
    },
    "cite": [],
    "move": "count-in",

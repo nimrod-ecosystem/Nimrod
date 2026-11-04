@@ -526,7 +526,7 @@
   {
    "say": {
     "who": "B",
-    "text": "One more check on the rule. Test it on one point, and if it works, it works for the whole shape. And since these three are rigid motions, the image is always the same size as the original."
+    "text": "One more check on the rule. Test it on every corner, or at least on three points that are not in a line. If it works for those, it works for the whole shape. And since these three are rigid motions, the image is always the same size as the original."
    },
    "show": {
     "kind": "key_word",

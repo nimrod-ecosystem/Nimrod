@@ -352,7 +352,7 @@
   {
    "say": {
     "who": "B",
-    "text": "His tool was the telescope. He did not invent it. He learned of it in 1608, then improved it, from 8 times magnification to about 20."
+    "text": "His tool was the telescope. He did not invent it. He learned of it in 1609, then improved it, from about 8 times magnification to about 20."
    },
    "show": {
     "kind": "chart",
@@ -847,7 +847,7 @@
    },
    "show": {
     "kind": "timeline",
-    "text": "1608 telescope known to Galileo. 1610 Starry Messenger. 1665 Philosophical Transactions. 1731 and 1752 early peer review. 2013 study-methods review. 2015 replication project."
+    "text": "1608 telescope made in the Netherlands. 1609 Galileo hears of it. 1610 Starry Messenger. 1665 Philosophical Transactions. 1731 and 1752 early peer review. 2013 study-methods review. 2015 replication project."
    },
    "cite": [
     "s14",
@@ -985,7 +985,7 @@
  "frame_of_reference": [
   {
    "when": "1608 to 1610",
-   "elsewhere": "Galileo learned of the telescope in 1608. In 1610, Cosimo II de' Medici, Grand Duke of Tuscany since 1609, was honoured by Galileo, who named Jupiter's moons the Medicean Stars.",
+   "elsewhere": "Galileo learned of the telescope in 1609. In 1610, Cosimo II de' Medici, Grand Duke of Tuscany since 1609, was honoured by Galileo, who named Jupiter's moons the Medicean Stars.",
    "cite": [
     "s14",
     "s16"

@@ -347,11 +347,11 @@
   {
    "say": {
     "who": "B",
-    "text": "These seals are old. The Mature stage of the Indus cities, when Harappa and Mohenjo-daro flourished, ran from about 4,500 to 3,900 years ago."
+    "text": "These seals are old. The Mature stage of the Indus cities, when Harappa and Mohenjo-daro flourished, ran from about 4,600 to 3,900 years ago."
    },
    "show": {
     "kind": "big_number",
-    "text": "4,500 to 3,900 years ago"
+    "text": "4,600 to 3,900 years ago"
    },
    "cite": [
     "s33"
@@ -696,7 +696,7 @@
    },
    "show": {
     "kind": "key_word",
-    "text": "Ur: built c. 2600 BCE, dug up 1920s–30s"
+    "text": "Ur's royal tombs: c. 2600 BCE, dug up 1922–34"
    },
    "cite": [
     "s13",

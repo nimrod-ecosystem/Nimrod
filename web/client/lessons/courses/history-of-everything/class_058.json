@@ -1429,7 +1429,7 @@
   {
    "say": {
     "who": "B",
-    "text": "Before 1970 a factory could legally dump pollution. There was no EPA, no Clean Air Act and no Clean Water Act."
+    "text": "Before 1970 a factory could legally dump pollution. There was no EPA, and the strong Clean Air and Clean Water laws of 1970 and 1972 did not yet exist."
    },
    "show": {
     "kind": "list",
@@ -1471,7 +1471,7 @@
   {
    "say": {
     "who": "A",
-    "text": "Congress then created a new agency, the Environmental Protection Agency. Its official birthday is December 2, 1970."
+    "text": "President Nixon proposed a new agency, the Environmental Protection Agency, and Congress let his plan take effect. Its official birthday is December 2, 1970."
    },
    "show": {
     "kind": "timeline",
