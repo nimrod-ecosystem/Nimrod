@@ -320,6 +320,24 @@ try {
       coins.querySelectorAll('.lp-obj.lp-pic svg').length === 3 && !coins.querySelector('.lp-obj small')
         && cats.querySelectorAll('.lp-obj i').length === 2 && cats.querySelector('.lp-obj small')?.textContent === 'cat', coins.innerHTML.slice(0, 200));
     check('*** the end of a class offers the next class, by name ***', !!c.q('[data-lp-act="nextclass"]') && /Next: class 2/.test(c.box.textContent) && /Next is class 2/.test(c.said.at(-1)));
+    // (2026-11-04, proposal_lesson_voice_clips) EVERY LINE THE PANEL SAID IS ONE `spokenLines` LISTS, word for word: a
+    // tool making recordings ahead of time reads that list, so a line it lacks would be one that never gets a recording.
+    {
+      const LP = await import('../modules/lesson_player.js');
+      const course = COURSES.find((x) => x.id === 'numbers-0-9');
+      const raw = await (await fetch('../lessons/courses/numbers-0-9/class_001.json')).json();
+      const next = course.classes.find((k) => k.n === 2);
+      const lines = LP.spokenLines(raw, { name: '', otherSide: course.otherSide, next: next && { n: next.n, title: next.title } });
+      const listed = new Set(lines.map((l) => l.text));
+      const missing = c.said.filter((t) => !listed.has(t));
+      check('*** every line the panel said in class 1 is in spokenLines(), word for word ***', c.said.length > 10 && !missing.length,
+        J({ said: c.said.length, missing: missing.slice(0, 3) }));
+      check('...which also lists each question\'s three answer lines, and the closing line', lines.some((l) => l.kind === 'right' && /^Yes, /.test(l.text))
+        && lines.some((l) => l.kind === 'wrong' && /^Not quite\. It is /.test(l.text)) && lines.at(-1).kind === 'end' && /Next is class 2/.test(lines.at(-1).text));
+      check('...and the learner\'s name filled in where a line greets them', LP.spokenLines({ format: 'nimrod.lesson.v1', about: { title: 'T' },
+        beats: [{ say: { text: 'Hello {name}.' }, show: { kind: 'heading', text: 'Hi' } }] }, { name: 'Sam' })[0]?.text === 'Hello Sam.',
+        J(LP.spokenLines({ format: 'nimrod.lesson.v1', about: { title: 'T' }, beats: [{ say: { text: 'Hello {name}.' }, show: { kind: 'heading', text: 'Hi' } }] }, { name: 'Sam' })));
+    }
     c.q('[data-lp-act="nextclass"]').click();
     check('*** "Next class": class 2, from its start, kept on the panel\'s row ***', await opened(() => c.probe().total > 5 && c.probe().at === 0 && /Class 2 ·/.test(c.q('.lp-top')?.textContent || ''))
       && st.get().classN === 2, J({ at: c.probe().at, classN: st.get().classN, top: c.q('.lp-top')?.textContent }));

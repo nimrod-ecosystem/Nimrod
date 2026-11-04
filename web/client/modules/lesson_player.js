@@ -94,6 +94,43 @@ const namedDeep = (v, name) => (typeof v === 'string' ? (v.includes('{name}') ? 
 // An answer as the end of a sentence: one full stop, whether or not the lesson's answer brought its own (an AI's often do).
 const ended = (s) => `${String(s == null ? '' : s).replace(/[.!?\s]+$/, '')}.`;
 
+// *** WHAT THE PLAYER SAYS, AS PURE FUNCTIONS (2026-11-04, proposal_lesson_voice_clips: recorded voices). *** Every line the
+// panel speaks is built by one of these three, and `spokenLines` lists them all for a class, so a tool making recordings
+// ahead of time reads exactly the words the panel will say (a recording found by its words, a line changed by a fact fix
+// no longer finding the old one). The panel itself calls these; nothing builds a spoken line anywhere else.
+/** A beat's words: its narration, then its question. */
+export const beatWords = (b) => [b?.say?.text, b?.ask ? b.ask.question : ''].filter(Boolean).join(' ');
+/** The answer said after a question: 'right' (Yes, ...), 'wrong' (Not quite. It is ...) or 'shown' (nobody answered). */
+export function verdictWords(b, how) {
+  const a = b?.ask || {};
+  const verdict = how === 'shown' ? `It is ${ended(a.answer)}` : how === 'right' ? `Yes, ${ended(a.answer)}` : `Not quite. It is ${ended(a.answer)}`;
+  return `${verdict}${a.why ? ` ${a.why}` : ''}`;
+}
+/** The line at the end of a class, naming the next one when there is one ({ n, title }). */
+export const endWords = (lesson, next = null) =>
+  `That is the end of ${lesson?.about?.title || 'the lesson'}.${next ? ` Next is class ${next.n}: ${next.title}.` : ''}`;
+/**
+ * Every line a class can say, in order: `[{ text, who, kind }]` (kind 'beat' | 'right' | 'wrong' | 'shown' | 'end'; who is
+ * the line's voice, 'a'/'b' as the lesson names them, or null for the learner's own). The same steps as the panel's own
+ * load: the lesson read (lesson_file.js checkLesson), the learner's name filled in, the closing beats added. PURE.
+ */
+export function spokenLines(raw, { name = '', otherSide = true, next = null } = {}) {
+  const r = checkLesson(raw);
+  if (!r.lesson) return [];
+  const lesson = namedDeep(r.lesson, name);
+  const all = [...beatsOf(lesson), ...closingBeats(lesson, { otherSide })];
+  const out = [];
+  for (const x of all) {
+    const b = x?.beat;
+    if (!b) continue;
+    const words = beatWords(b);
+    if (words) out.push({ text: words, who: b.say?.who || null, kind: 'beat' });
+    if (b.ask) for (const how of ['right', 'wrong', 'shown']) out.push({ text: verdictWords(b, how), who: null, kind: how });
+  }
+  out.push({ text: endWords(lesson, next), who: null, kind: 'end' });
+  return out;
+}
+
 const SETTINGS = [
   { key: 'lessonId', label: 'Which lesson', kind: 'choice', default: BUILTIN_LESSONS[0].id, level: 'essential',
     options: BUILTIN_LESSONS.map((l) => ({ value: l.id, label: l.label })) },
@@ -577,13 +614,12 @@ function lessonsModule(ctx) {
       const b = beats[at]?.beat;
       if (!b) {
         if (at >= beats.length) {
-          const nc = classNow()?.next;
-          say(`That is the end of ${lesson?.about.title || 'the lesson'}.${nc ? ` Next is class ${nc.n}: ${nc.title}.` : ''}`);
+          say(endWords(lesson, classNow()?.next || null));
         }
         return;
       }
       if (b.ask && picked != null) { sayResult(b); return; }
-      const words = [b.say?.text, b.ask ? b.ask.question : ''].filter(Boolean).join(' ');
+      const words = beatWords(b);
       const done = say(words, b.say?.who || null);
       if (!b.ask) { thenNext(words, done); return; }
       // The clock for an answer starts once the question has been said. Nobody answering in time: it is shown and said.
@@ -596,9 +632,7 @@ function lessonsModule(ctx) {
     }
     /** The answer to the question showing, said (with why), then in Watch on to the next. */
     function sayResult(b) {
-      const right = picked === b.ask.answer;
-      const verdict = picked === 'shown' ? `It is ${ended(b.ask.answer)}` : right ? `Yes, ${ended(b.ask.answer)}` : `Not quite. It is ${ended(b.ask.answer)}`;
-      const words = `${verdict}${b.ask.why ? ` ${b.ask.why}` : ''}`;
+      const words = verdictWords(b, picked === 'shown' ? 'shown' : picked === b.ask.answer ? 'right' : 'wrong');
       thenNext(words, say(words));
     }
     function pauseLesson() {
