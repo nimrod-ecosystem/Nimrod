@@ -1,0 +1,319 @@
+{
+ "about": {
+  "title": "Review: Find and Say Any Letter",
+  "course": "letters-a-z",
+  "class_n": 10,
+  "audience": [
+   "adult relearning reading",
+   "young child"
+  ],
+  "minutes": 12,
+  "length_note": "About 12 minutes: this class reviews all 26 letters in small groups, then looks at look-alike letters, real words and a self-check. Each practice step can be paused, so it can be split into two sittings if tired. The one-idea-at-a-time steps stay the same either way."
+ },
+ "sources": [],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Hello, and welcome to the last class. Today we use everything you have learned: find a letter, say its name and sound, and give a word for it."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Review: Find and Say Any Letter"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a reminder. Every letter has two looks: upper case, which is big, and lower case, which is small. They are the same letter with the same name."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Upper case: A  B  G  M  R | Lower case: a  b  g  m  r"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which pair shows the same letter in upper and lower case?",
+    "right": "G and g",
+    "wrong": [
+     "R and b",
+     "E and f",
+     "K and l"
+    ],
+    "why": "G and g are two looks of one letter. The other pairs are two different letters."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next, each letter has a name and a sound. The name is what we call it. The sound is what it says at the start of a word. B is called 'bee' and says 'buh', as in ball."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "B b: name 'bee', sound 'buh', word ball"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which sound do you hear at the start of the word ball?",
+    "right": "buh",
+    "wrong": [
+     "mm",
+     "kuh",
+     "sss"
+    ],
+    "why": "Ball starts with the 'buh' sound, which is the sound of the letter B."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So for any letter, we say three things: its name, its sound, and a familiar word. For A: 'ay', the sound 'a', and apple. Address works too."
+   },
+   "show": {
+    "kind": "list",
+    "text": "A a: name 'ay' | sound 'a' | words: apple, address"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let us try it with K. Its name is 'kay' and its sound is 'kuh'. Two grown-up words for K are keys and kitchen."
+   },
+   "show": {
+    "kind": "list",
+    "text": "K k: name 'kay' | sound 'kuh' | words: keys, kitchen"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which word starts with the 'kuh' sound of K?",
+    "right": "keys",
+    "wrong": [
+     "table",
+     "lamp",
+     "window"
+    ],
+    "why": "Keys starts with K. The other words start with different letters."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now random practice. Look at each letter, then say its name, its sound and a word. Pause the lesson and take your time."
+   },
+   "show": {
+    "kind": "list",
+    "text": "g   T   m   R   a   K"
+   },
+   "cite": [],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is one set of answers. Check yours. g is 'jee', 'guh', grapes. T is 'tee', 'tuh', table. m is 'em', 'mm', moon. R is 'ar', 'rr', rain. Your words may differ, and that is fine."
+   },
+   "show": {
+    "kind": "list",
+    "text": "g: grapes | T: table | m: moon | R: rain | a: apple | K: keys"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which word goes with the letter m?",
+    "right": "moon",
+    "wrong": [
+     "sun",
+     "tree",
+     "hat"
+    ],
+    "why": "Moon starts with the 'mm' sound, which is the sound of m."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Some letters look alike, so go slowly. Start with b and d. In b, you read the stick first, then the bump. In d, the bump comes first, then the stick."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "b: stick first, bump second, 'buh', ball | d: bump first, stick second, 'duh', dog"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "In the letter d, what comes first when you read left to right?",
+    "right": "The bump",
+    "wrong": [
+     "The stick",
+     "A dot",
+     "A tail"
+    ],
+    "why": "In d the bump is on the left, so it comes first. The stick is on the right."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Another pair is p and q. Both have a tail that goes down. In p the bump is on the right, and it says 'puh', as in pig. In q the bump is on the left. It says 'kwuh', as in queen."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "p: tail down, bump on the right, 'puh', pig | q: tail down, bump on the left, 'kwuh', queen"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which letter has a tail down and a bump on the right?",
+    "right": "p",
+    "wrong": [
+     "q",
+     "b",
+     "d"
+    ],
+    "why": "The letter p has its bump on the right. In q the bump is on the left."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The last look-alikes are capital I and small l. Capital I is 'eye' and says 'ih', as in ink. Small l is 'el' and says 'luh', as in lamp. In some print they look almost the same, so read the whole word."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "I: 'eye', 'ih', ink | l: 'el', 'luh', lamp"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which letter makes the 'luh' sound at the start of lamp?",
+    "right": "l, called 'el'",
+    "wrong": [
+     "I, called 'eye'",
+     "b, called 'bee'",
+     "d, called 'dee'"
+    ],
+    "why": "Lamp starts with l. The letter I makes a different sound, 'ih'."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now let us find letters in real words. Take the name Sam. It has three letters: a big S, then a and m. Say each sound: 'sss', 'a', 'mm'."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "S a m"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "What is the first letter of the name Sam?",
+    "right": "S",
+    "wrong": [
+     "a",
+     "m",
+     "d"
+    ],
+    "why": "Sam starts with a big S, which says 'sss'."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now a word you see on letters and forms: address. It starts with a, and some letters repeat. Touch each letter and say its name."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "a d d r e s s"
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "How many times does the letter d appear in the word address?",
+    "right": "Two",
+    "wrong": [
+     "One",
+     "Three",
+     "Four"
+    ],
+    "why": "Address is spelled a, d, d, r, e, s, s. The letter d is in the second and third places, so it appears twice."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last step: mark how you did. Put the letters that felt easy in one list, and the letters that need another go in a second list. That is how you learn what to practise."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Easy: letters I said quickly | Another go: letters I want to see again"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Is it all right to put a letter in the 'another go' list?",
+    "right": "Yes, it just means you will look at it again.",
+    "wrong": [
+     "No, every letter must be easy today.",
+     "Only if you got it wrong three times.",
+     "No, it means you cannot learn it."
+    ],
+    "why": "Everyone has letters that need more time. The list simply shows where to practise next."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Well done. You have met all 26 letters in upper and lower case, with names, sounds and words. Come back to your 'another go' list whenever you like."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "A to Z: you can find and say any letter"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Upper and lower case",
+   "links": [
+    "[[Letter names and sounds]]"
+   ]
+  },
+  {
+   "topic": "Letter names and sounds",
+   "links": [
+    "[[Familiar word for each letter]]"
+   ]
+  },
+  {
+   "topic": "Look-alike letters b/d, p/q, I/l",
+   "links": [
+    "[[Upper and lower case]]"
+   ]
+  },
+  {
+   "topic": "Finding letters in real words",
+   "links": [
+    "[[Letter names and sounds]]"
+   ]
+  },
+  {
+   "topic": "Marking easy letters and letters for another go",
+   "links": [
+    "[[Look-alike letters b/d, p/q, I/l]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

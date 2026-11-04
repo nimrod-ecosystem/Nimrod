@@ -1,0 +1,302 @@
+{
+ "about": {
+  "title": "V, W, X",
+  "course": "letters-a-z",
+  "class_n": 8,
+  "audience": [
+   "adult relearning reading",
+   "young child"
+  ],
+  "minutes": 10,
+  "length_note": "About 10 minutes. Three letters is a small amount, and the time covers a quick look back at A to U, a check after each letter, and a final matching round. Take a break between letters if you like."
+ },
+ "sources": [],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Hello, and welcome to class 8. Today we learn three letters: V, W and X."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "V, W, X"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a quick look back. Read these letters quietly: A B C D E F G H I J K L M N O P Q R S T U."
+   },
+   "show": {
+    "kind": "list",
+    "text": "A B C D E F G H I J K L M N O P Q R S T U"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "You know all of these. Today's letters come right after U."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "U … V W X"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which letter comes just before V in the alphabet?",
+    "right": "U",
+    "wrong": [
+     "T",
+     "W",
+     "X"
+    ],
+    "why": "The alphabet goes S, T, U, V. So U comes just before V."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's start with V. Its name is V. It looks like a pointed cup, or a check mark."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "V   v"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The sound of V is 'vvv'. Put your top teeth gently on your bottom lip and hum."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "V says 'vvv'"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A familiar word is van. Say it slowly: vvv-an. A grown-up word is vegetables."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A white delivery van parked at the roadside, with a big letter V beside it."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which word starts with the 'vvv' sound?",
+    "right": "van",
+    "wrong": [
+     "cat",
+     "sun",
+     "bed"
+    ],
+    "why": "Van begins with 'vvv'. The other words begin with other sounds."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next is W. Its name sounds like 'double-u'. Look at its shape: it is like two V's side by side."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "W   w"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The sound of W is 'wuh'. Make your lips small and round, then open them."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "W says 'wuh'"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A familiar word is window. Say it: wuh-indow. Another word is water."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "window",
+    "count": 1,
+    "layout": "row"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "What shape is the letter W like?",
+    "right": "Two V's side by side",
+    "wrong": [
+     "One tall line",
+     "A circle",
+     "Two lines that cross"
+    ],
+    "why": "W is made of two V shapes joined together. That is why its name is 'double-u'."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now X. Its name is 'ex'. It is two lines that cross, like a kiss at the end of a letter."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "X   x"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "X usually sounds like 'ks'. You hear it at the end of words, as in box."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "X says 'ks'  →  bo-x"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Say box slowly: b-o-ks. Other words with X are fox, six and taxi."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A cardboard box with a big letter X drawn on its side."
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Where do we most often hear the sound of X?",
+    "right": "At the end of a word, as in box",
+    "wrong": [
+     "Only in names",
+     "Only in long words",
+     "Never in any word"
+    ],
+    "why": "X is often heard at the end of words like box, fox and six."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One small extra: a few words start with X, like xylophone. There X sounds like 'z'. You will meet these rarely."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "xylophone: X says 'z'"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now let's match big and small letters. Each lowercase letter here looks like a smaller copy of its capital."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "V → v   |   W → w   |   X → x"
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which small letter matches the capital W?",
+    "right": "w",
+    "wrong": [
+     "v",
+     "x",
+     "u"
+    ],
+    "why": "The lowercase of W is w. It looks like two small v's joined."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more check. Think of the 'ks' sound at the end of box."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "bo_  ?"
+   },
+   "cite": [],
+   "move": "fade",
+   "ask": {
+    "q": "Which letter makes the 'ks' sound at the end of box?",
+    "right": "X",
+    "wrong": [
+     "V",
+     "W",
+     "U"
+    ],
+    "why": "X makes the 'ks' sound. V says 'vvv' and W says 'wuh'."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Well done. Today you met V for van, W for window and X for box. Next class is Y and Z, and the whole alphabet in order."
+   },
+   "show": {
+    "kind": "list",
+    "text": "V v: van\nW w: window\nX x: box"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "V, v: name, sound 'vvv', word van",
+   "links": [
+    "[[W, w: name, sound, word]]",
+    "[[Upper and lower case]]"
+   ]
+  },
+  {
+   "topic": "W, w: name 'double-u', sound 'wuh', word window",
+   "links": [
+    "[[V, v: name, sound, word]]",
+    "[[Upper and lower case]]"
+   ]
+  },
+  {
+   "topic": "X, x: name 'ex', sound 'ks', word box",
+   "links": [
+    "[[Y, Z and the whole alphabet in order]]",
+    "[[Upper and lower case]]"
+   ]
+  },
+  {
+   "topic": "Upper and lower case",
+   "links": [
+    "[[Review: find and say any letter]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": []
+}

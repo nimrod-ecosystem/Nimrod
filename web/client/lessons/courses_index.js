@@ -170,9 +170,19 @@ export const COURSES = [
     "file": "class_007.json"
    },
    {
+    "n": 8,
+    "title": "V, W, X",
+    "file": "class_008.json"
+   },
+   {
     "n": 9,
     "title": "Y, Z and the Whole Alphabet in Order",
     "file": "class_009.json"
+   },
+   {
+    "n": 10,
+    "title": "Review: Find and Say Any Letter",
+    "file": "class_010.json"
    }
   ]
  },

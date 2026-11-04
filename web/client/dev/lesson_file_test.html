@@ -211,8 +211,8 @@ try {
       if (!r.lesson || p.length) bad.push(`${c.id}/${k.file}: ${p[0] || 'no lesson'}`);
     }
     // (2026-11-03, note EQ: 240 classes in sixteen courses. Five faults the new History classes had were fixed at the
-    // source or are now read as described pictures: `map`. Note ER: the last 56 checked, 296 in seventeen courses.)
-    check('*** all 296 classes of the seventeen courses play, with nothing wrong in them ***', n === 296 && COURSES.length === 17 && !bad.length, J({ n, bad: bad.slice(0, 5) }));
+    // source or are now read as described pictures: `map`. Note ER: the last 56 checked, 296 in seventeen courses. Note EX: + letters 8 and 10.)
+    check('*** all 298 classes of the seventeen courses play, with nothing wrong in them ***', n === 298 && COURSES.length === 17 && !bad.length, J({ n, bad: bad.slice(0, 5) }));
   }
 
   console.log('GUESSES',J(Object.fromEntries(Object.entries(got).map(([k, r]) => [k, guessed(r)]))));
