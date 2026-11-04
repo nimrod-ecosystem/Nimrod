@@ -6,8 +6,8 @@
  * boxed. Nothing important goes in the bleed or near the stage edge.
  *
  *   STAGE_FIT_DEFAULTS = { fit, bleed, bleedArt, barColour }      all settings
- *     bleedArt  'mirror' (default): the stage's own edges mirrored outward, seamless at the edge;
- *               'none': the stage alone (if mirroring costs too much on the Pi 400; Code to measure)
+ *     bleedArt  'auto' (default): mirror at full detail, none below it; 'mirror': always the stage's own edges
+ *               mirrored outward; 'none': the stage alone, cropped or boxed (Pi 400: 55 fps against mirror's 21)
  *   fitStageSvg(svg, { aspect, fit, bleed, bleedArt, barColour }) → the same SVG, fitted to a screen
  *   fitBox(aspect, { fit, bleed }) → { x, y, w, h, viewBox, par }  the part of the drawing to show
  *
@@ -17,7 +17,12 @@
  *   letterbox  show the whole bled drawing, with bars in the backdrop's own edge colour
  */
 export const STAGE = [1600, 900];
-export const STAGE_FIT_DEFAULTS = { fit: 'crop', bleed: [320, 200], bleedArt: 'mirror', barColour: '#000000' };
+export const STAGE_FIT_DEFAULTS = { fit: 'crop', bleed: [320, 200], bleedArt: 'auto', barColour: '#000000' };
+/* Code measured on a Pi 400 at 1080p (2026-11-02): the village 55 fps with no mirrored bleed, 21 fps with it.
+   So 'auto' (the default) mirrors only on a screen at full detail; anywhere else the stage itself is cropped
+   (or boxed, with fit: 'letterbox'), which costs nothing. `detail` is the screen's detail level from Code's needs
+   and detail table: 'full' | 'reduced' | 'lowest' (no detail given counts as 'full'). */
+const mirrorOn = (bleedArt, detail) => bleedArt === 'mirror' || (bleedArt === 'auto' && (detail || 'full') === 'full');
 let UID = 0;
 
 export function fitBox(aspect, { fit = STAGE_FIT_DEFAULTS.fit, bleed = STAGE_FIT_DEFAULTS.bleed } = {}) {
@@ -56,15 +61,17 @@ export function mirrorBleed(id, bleed = STAGE_FIT_DEFAULTS.bleed, { bottom } = {
 }
 
 /* Fit any finished 1600×900 stage SVG (a village scene, a backdrop) to a screen's shape. */
-export function fitStageSvg(svg, { aspect, fit = STAGE_FIT_DEFAULTS.fit, bleed = STAGE_FIT_DEFAULTS.bleed, bleedArt = STAGE_FIT_DEFAULTS.bleedArt, barColour = STAGE_FIT_DEFAULTS.barColour, bleedBottom } = {}) {
+export function fitStageSvg(svg, { aspect, fit = STAGE_FIT_DEFAULTS.fit, bleed = STAGE_FIT_DEFAULTS.bleed, bleedArt = STAGE_FIT_DEFAULTS.bleedArt, barColour = STAGE_FIT_DEFAULTS.barColour, bleedBottom, detail } = {}) {
+  const mirror = mirrorOn(bleedArt, detail);
   if (!aspect) return svg;
   const m = svg.match(/^<svg([^>]*)>([\s\S]*)<\/svg>$/);
   if (!m) return svg;
-  const box = fitBox(aspect, { fit, bleed }), id = 'sf' + ++UID;
+  const box = fitBox(aspect, { fit, bleed: mirror ? bleed : [0, 0] }), id = 'sf' + ++UID;
   let attrs = m[1].replace(/\sviewBox="[^"]*"/, '').replace(/\spreserveAspectRatio="[^"]*"/, '').replace(/\sstyle="[^"]*"/, '');
-  const style = ` style="display:block;width:100%;height:100%;overflow:hidden;${fit === 'letterbox' || bleedArt !== 'mirror' ? `background:${barColour};` : ''}"`;
+  const style = ` style="display:block;width:100%;height:100%;overflow:hidden;${fit === 'letterbox' || !mirror ? `background:${barColour};` : ''}"`;
   /* keep <style> blocks at the top level so animations still apply inside <use> copies */
   const styles = (m[2].match(/<style>[\s\S]*?<\/style>/g) || []).join(''), inner = m[2].replace(/<style>[\s\S]*?<\/style>/g, '');
-  const body = bleedArt === 'mirror' ? `<defs><g id="${id}">${inner}</g></defs>` + mirrorBleed(id, bleed, { bottom: bleedBottom }) : inner;
+  /* without mirroring, the stage is clipped to its own edges so wide pieces don't spill into the bars */
+  const body = mirror ? `<defs><g id="${id}">${inner}</g></defs>` + mirrorBleed(id, bleed, { bottom: bleedBottom }) : `<clipPath id="${id}c"><rect width="1600" height="900"/></clipPath><g clip-path="url(#${id}c)">${inner}</g>`;
   return `<svg${attrs} viewBox="${box.viewBox}" preserveAspectRatio="${box.par}"${style}>${styles}${body}</svg>`;
 }

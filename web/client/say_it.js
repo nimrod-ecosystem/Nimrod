@@ -1,4 +1,4 @@
-/* say_it.js (Design's sayIt.js, copied 2026-11-02 with its imports renamed to the site's files): big ideas 2 and 4 (Mike, 2026-11-02: "I really like all your suggestions there").
+/* say_it.js (Design's sayIt.js, copied 2026-11-03 with its imports renamed to the site's files): big ideas 2 and 4 (Mike, 2026-11-02: "I really like all your suggestions there").
  *
  *   WORD_ACTIONS[word]   → { motion, face?, quiet? }   what a character does for a board word
  *   SAY_IT_DEFAULTS      → the settings, each with its starting value
@@ -10,7 +10,7 @@
  * character in the backdrop acts the word. Both read this one table, so a word acts the same everywhere.
  *
  * Choices here, each a setting (B1):
- * - CARE WORDS DON'T ACT by default (bedpan, suction, change, pain, hot, cold, tired, hungry, thirsty, help
+ * - CARE WORDS ACT by default since 2026-11-03 (Mike). Earlier Design default, kept for the record: CARE WORDS DON'T ACT (bedpan, suction, change, pain, hot, cold, tired, hungry, thirsty, help
  *   are marked `quiet`). For: a person asking for the bedpan may not want a character miming it across the
  *   room, and pain is not a performance. Against: a caregiver across the room is exactly who needs to see
  *   "help" or "pain". So `quiet` words still show the word in the bubble, with the character standing; and
@@ -30,7 +30,7 @@ export const SAY_IT_DEFAULTS = {
   /* how long the bubble stays, in ms */
   showFor: 4000,
   /* care words: mime them or not (see above) */
-  actCareWords: false,
+  actCareWords: true,   // Mike, 2026-11-03: "We don't want to be taking away options." Turn off to keep care words still
   helpRaisesHand: true,
   /* bubble text size relative to the character's height */
   bubbleScale: 1,
@@ -48,8 +48,13 @@ export const WORD_ACTIONS = {
   rephrase: { motion: 'think' }, different: { motion: 'shrug' }, other: { motion: 'pointLeft' },
   music: { motion: 'sway' }, up: { motion: 'jump' }, little: { motion: 'shrug' },
   help: { motion: 'help', care: true }, tired: { motion: 'yawn', care: true }, hungry: { motion: 'eat', care: true },
-  thirsty: { motion: 'drink', care: true }, pain: { care: true }, hot: { care: true }, cold: { care: true },
-  bedpan: { care: true }, suction: { care: true }, change: { care: true },
+  thirsty: { motion: 'drink', care: true }, pain: { motion: 'painWince', care: true }, hot: { motion: 'hotFan', care: true }, cold: { motion: 'coldShiver', care: true },
+  bedpan: { motion: 'askCare', care: true }, suction: { motion: 'askCare', care: true }, change: { motion: 'askCare', care: true },
+  /* from chat's round three, kept 2026-11-03 */
+  do: { motion: 'doIt' }, make: { motion: 'make' }, put: { motion: 'put' }, turn: { motion: 'turn' }, open: { motion: 'open' },
+  in: { motion: 'inside' }, out: { motion: 'out' }, on: { motion: 'on' }, off: { motion: 'off' }, down: { motion: 'down' }, some: { motion: 'some' },
+  my: { motion: 'my' }, i: { motion: 'i' }, mom: { motion: 'mom' }, dad: { motion: 'dad' }, keyboard: { motion: 'keyboard' },
+  pumpkin: { motion: 'pumpkin' }, ghost: { motion: 'ghost' }, bat: { motion: 'bat' }, candy: { motion: 'candy' }, witchHat: { motion: 'witchHat' }, treatPail: { motion: 'treatPail' },
 };
 
 export function actionFor(word, settings = {}) {
@@ -61,12 +66,14 @@ export function actionFor(word, settings = {}) {
 
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 /* a character beside a speech bubble, 380×320. The bubble's text is the word as it reads on the board. */
-// (Code, 2026-11-02) One change from Design's copy: `assetBase` is passed through to castSvg, whose own default
+// (Code) One change from Design's copy: `assetBase` is passed through to castSvg, whose own default
 // ('../../assets/') is the design system's folder; the site's is '/design-assets/' (modules/village.js ASSET_BASE).
 export function sayItSvg(word, { who = 'player', look, outfit, theme, settings = {}, label, animated = true, assetBase } = {}) {
   const s = { ...SAY_IT_DEFAULTS, ...settings }, m = actionFor(word, s);
   const text = label || String(word).replace(/_/g, ' ');
-  const fig = castSvg(who, { look, outfit, theme, motion: m || undefined, animated, pose: m ? 'stand' : 'talk', ...(assetBase ? { assetBase } : {}) })
+  /* a word with no action of its own: the character talks it (chat's 'talk' loop), or holds the talk pose if that is missing */
+  const play = m || (MOTIONS.talk ? { ...MOTIONS.talk, loop: s.loop } : null);
+  const fig = castSvg(who, { look, outfit, theme, motion: play || undefined, animated, pose: play ? 'stand' : 'talk' , ...(assetBase ? { assetBase } : {}) })
     .replace(/^<svg[^>]*>/, '').replace('</svg>', '');
   const fs = Math.round(Math.min(58, 300 / Math.max(3, text.length)) * s.bubbleScale);
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 320" role="img" aria-label="Says: ${esc(text)}"><title>Says: ${esc(text)}</title>`

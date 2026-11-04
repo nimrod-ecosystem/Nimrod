@@ -34,10 +34,11 @@ export const CAST_IDS = Object.keys(CAST);
 
 /* The player is drawn from their own avatar: pass `look` (and `outfit`) from the avatar maker, or
    the scene item carries them. Without one, a plain stand-in is drawn. */
-export function castSvg(id, { pose = 'stand', outfit, look, assetBase = '../../assets/', motion, animated = true } = {}) {
+export function castSvg(id, { pose = 'stand', outfit, look, assetBase = '../../assets/', motion, animated = true, theme } = {}) {
   const p = id === 'player' && look ? { ...CAST.player, look } : CAST[id];
   if (!p) return '';
-  if (p.cat && motion) return catSvg({ motion, animated });
+  /* Nimrod is drawn from parts (catKit.js) when he moves or wears something; his posed image files stay for the rest */
+  if (p.cat && (motion || (outfit && outfit !== 'none') || theme)) return catSvg({ motion, animated, outfit: outfit || 'none', theme });
   if (p.cat) {
     const file = { stand: 'idle', wave: 'wave', talk: 'talking', think: 'thinking', happy: 'happy', sleep: 'sleeping', point: 'point-right', listen: 'idle' }[pose] || 'idle';
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 320" role="img" aria-label="Nimrod the cat"><image href="${assetBase}nimrod-cat/${file}.svg" x="20" y="150" width="170" height="170"/></svg>`;

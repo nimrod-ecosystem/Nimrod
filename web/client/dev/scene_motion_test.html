@@ -240,7 +240,9 @@ if (!motionOn) {
       let svg = null;
       for (let i = 0; i < 60 && !svg; i++) { await new Promise((r) => setTimeout(r, 50)); svg = box.querySelector('.ls-medieval svg'); }
       // Ids are made fresh on every draw (two drawings of one village differ only there), so they are taken out first.
-      const html = svg ? svg.outerHTML.replace(/\b(id|href|xlink:href)="[^"]*"/g, '').replace(/url\(#[^)]*\)/g, '') : '';
+      // (2026-11-03) Design's version 16 also numbers each figure's keyframes (fg3-shoulderR, nc4-neck) and stage clips (sf2c).
+      const html = svg ? svg.outerHTML.replace(/\b(id|href|xlink:href)="[^"]*"/g, '').replace(/url\(#[^)]*\)/g, '')
+        .replace(/\b([a-z]{2})\d+(?=[-c"\s{])/g, '$1#') : '';
       sc.destroy();
       return html;
     };
@@ -257,6 +259,13 @@ if (!motionOn) {
     check('...the cartoon look and the edges each draw a different village', !!toon && !!edges && toon !== framedOn && edges !== framedOn
       && toon !== edges);
     check('...and a key the screen has no row for never reaches the kit', stray === framedOn);
+    // (2026-11-03, Design's version 16) The screen's detail level reaches stage_fit.js: to the edges, the mirrored bleed
+    // (the slow one on a Pi 400) is drawn only at full detail.
+    const mirrored = (h) => (h.match(/<use\b/g) || []).length;
+    const edgesFull = await drawWith({ look: 'crafted', frame: false, cast: true, detail: 'full' });
+    const edgesReduced = await drawWith({ look: 'crafted', frame: false, cast: true, detail: 'reduced' });
+    check('*** to the edges at full detail mirrors the village outward; at reduced detail it does not ***',
+      mirrored(edgesFull) > mirrored(edgesReduced), `${mirrored(edgesFull)} vs ${mirrored(edgesReduced)}`);
     const K = await import('../kiosk.js');
     check('the kiosk: no rows means Design\'s defaults', JSON.stringify(K.sceneSettingsFrom({}))
       === JSON.stringify({ medieval: { look: 'crafted', frame: true, cast: true } }), JSON.stringify(K.sceneSettingsFrom({})));

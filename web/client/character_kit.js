@@ -242,6 +242,11 @@ export const POSE_DATA = {
   listen: { joints: { shoulderL: { rot: 7 }, shoulderR: { rot: -157, len: 0.4 }, elbowR: { len: 0.4 } }, face: 'neutral', marks: ['arcs'] },
   puzzled: { joints: { shoulderL: { rot: 7 }, shoulderR: { rot: 178, len: 0.76 }, elbowR: { len: 0.76 } }, face: 'puzzled', marks: ['question'] },
 };
+/* things a hand can hold for a motion (motion.props: { wristR: 'cup' }), drawn at the wrist's rest position */
+export const PROPS = {
+  pail: (x, y) => `<g transform="translate(${x} ${y + 14})"><path d="M-12 -16Q0 -32 12 -16" fill="none" stroke="#4a3220" stroke-width="2.5"/><path d="M-12 -14H12L9 6H-9Z" fill="#e8833a"/><path d="M-6 -8l3-3 3 3zM2 -8l3-3 3 3z" fill="#3a1a08"/><path d="M-5 -1q5 4 10 0" stroke="#3a1a08" stroke-width="1.5" fill="none"/></g>`,
+  cup: (x, y) => `<g transform="translate(${x} ${y})"><path d="M-9 -16H9L7 4Q7 8 3 8H-3Q-7 8 -7 4Z" fill="#f4f1e8" stroke="#8a7a64" stroke-width="2"/><path d="M9 -11q7 0 7 6t-8 6" fill="none" stroke="#8a7a64" stroke-width="2.5"/><rect x="-8" y="-13" width="16" height="4" fill="#7fb8d0"/></g>`,
+};
 export const FACES = ['neutral', 'happy', 'talk', 'sleep', 'think', 'puzzled', 'frown'];
 const PARENT = { elbowL: 'shoulderL', wristL: 'elbowL', elbowR: 'shoulderR', wristR: 'elbowR' };
 /* outer group = the pose; inner group = the motion (CSS), so a motion adds to a pose */
@@ -297,12 +302,14 @@ export function figureBody(look = {}, opts = {}) {
   s.push(jointOpen('waist', pose, still));
   s.push(`<rect x="90" y="110" width="20" height="16" rx="5" fill="${toneD}"/>`);
   s.push(top(o.top, c, r));
-  s.push(arm('L', pose, still, sleeve, handFill));
+  const propR = opts.props && opts.props.wristR && PROPS[opts.props.wristR] ? PROPS[opts.props.wristR](145, 196) : '';
+  const propL = opts.props && opts.props.wristL && PROPS[opts.props.wristL] ? PROPS[opts.props.wristL](55, 196) : '';
+  s.push(arm('L', pose, still, sleeve, handFill, propL));
   /* the right hand: on a court card standing still, the role's held piece replaces the bare hand. It rides
      in the wrist, counter-turned by the stand angle, so it sits exactly where it always did and follows the arm. */
   const heldArt = role && onStand ? `<g transform="rotate(6 145 124)">${held(role, opts.suit, opts.suitColor, c.metal, opts.emblem, handFill)}</g>` : '';
   const finger = marks.includes('finger') ? `<rect x="141.5" y="${206 + 8}" width="7" height="13" rx="3.5" fill="${handFill}"/>` : '';
-  s.push(arm('R', pose, still, sleeve, role && onStand ? '' : handFill, heldArt + finger));
+  s.push(arm('R', pose, still, sleeve, role && onStand ? '' : handFill, heldArt + finger + propR));
   if (opts.suit && role && role !== 'joker' && o.top !== 'robe') s.push(shape(opts.suit, 72, 150, 14, opts.suitColor));
   s.push(neck(o));
   /* the head; the face slides inside it (faceX, faceY) to turn or tip */
@@ -346,7 +353,7 @@ export function figureSvg(look, opts = {}, label = 'Character') {
   if (!m) return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 320" role="img" aria-label="${label}"><title>${label}</title>${figureBody(look, opts)}</svg>`;
   const scope = 'fg' + ++RIG, animated = opts.animated !== false;
   const pose = m.pose && POSE_DATA[m.pose] ? m.pose : opts.pose;
-  const body = figureBody(look, { ...opts, pose, face: opts.face || m.face, still: stillAttrs(m, FIGURE_PIVOTS) });
+  const body = figureBody(look, { ...opts, pose, face: opts.face || m.face, props: opts.props || m.props, still: stillAttrs(m, FIGURE_PIVOTS) });
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 320" role="img" aria-label="${label}, ${m.name}" id="${scope}"><title>${label}, ${m.name}</title>${animated ? motionCss(scope, m, FIGURE_PIVOTS) : ''}${body}</svg>`;
 }
 

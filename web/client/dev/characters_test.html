@@ -103,14 +103,18 @@ try {
       // (2026-11-02, DELIBERATELY: Design's characters-that-move delivery (notes 58-60) replaced it - the 13-pivot skeleton,
       // the nine poses as data, the `frown` face, motions. Design's characterKit.js is 2c4ca7ba...; its one import renamed
       // from ./motionKit.js to this repo's ./motion_kit.js, and nothing else, gives this one.)
-      'character_kit.js': 'c27374b36084a75e8f076432e2a0e01b079825f3a80a565ed1dd1077110cee74',
+      // (2026-11-03, DELIBERATELY: Design's version 16 (note EV) - things held in a hand for a motion (PROPS: a cup, a pail).
+      // Copied by kit_sync with the same one import renamed, and nothing else.)
+      'character_kit.js': '6607c483d72ff82eb6153e58b4ef8008f22e5b6aa1cd68a4d58dd0ea236ce424',
       // (2026-10-31, DELIBERATELY: Design's builders handoff (System18, 2026-10-24) - 31 pieces for the fifteen newer
       // worlds, which System19's town.js furnishes its homes with. Marked "ships as it is"; missed until now.)
       'theme_kits.js': '4d5cd05a89914183de2adee802aae1e9f5b84efe7787ece6af5c2ef82a706022',
       // (2026-10-31, DELIBERATELY: Design's village handoff (System19) - a town for every theme, medieval among them -
       // with Mike's court names put in (Bram, Rosa, Theo, Pip -> Kenny, Rose, Jack, Robin; 57338e8, 6f92410). Design's
       // own file is 41d23a55...; that rename and nothing else gives this one.)
-      'town.js': '01ad9db46a0e21b6410df5c119207fa345bc44323a31222c9f5e1e8c857e6876',
+      // (2026-11-03, DELIBERATELY: Design's version 16 town.js (note EV): the Medieval town's windows look out on its village.
+      // Design's copy came back with the old court names; the same rename as before, and nothing else, gives this one.)
+      'town.js': 'f9cf51c22d98b4d18d4ae962660c85c95bf0008b8fdac48aca0642266dc98165',
     };
     const IMPORTS = { 'character_kit.js': './motion_kit.js', 'theme_kits.js': '', 'town.js': './theme_kits.js' };
     for (const [f, pin] of Object.entries(PINS)) {

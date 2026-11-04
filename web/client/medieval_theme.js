@@ -68,7 +68,7 @@ export const MEDIEVAL_THEME = {
   },
 };
 
-export function medievalBackdropSvg(settings = {}, { castSvg, assetBase, date = new Date(), aspect } = {}) {
+export function medievalBackdropSvg(settings = {}, { castSvg, assetBase, date = new Date(), aspect, detail } = {}) {
   const s = { ...MEDIEVAL_DEFAULTS, ...settings };
   const base = typeof s.recipe === 'string' ? (VILLAGE_SCENES[s.recipe] || VILLAGE_SCENES.village).recipe : s.recipe;
   const time = s.time === 'auto' ? lightAt(date, s.hours) : s.time;
@@ -77,5 +77,5 @@ export function medievalBackdropSvg(settings = {}, { castSvg, assetBase, date = 
   /* A screen that is not 16:9 (Mike, 2026-11-02): with the diorama frame on, the frame's card fills the
      extra space, like a box around a diorama; with it off, the village's edges are mirrored outward. */
   const framed = s.look === 'crafted' && s.frame !== false;
-  return fitStageSvg(svg, { aspect, fit: s.fit, bleed: s.bleed, bleedArt: framed ? 'none' : s.bleedArt, barColour: framed ? s.frameCard : s.barColour, bleedBottom: s.bleedBottom ?? (s.look === 'toon' ? '#58b244' : '#7fa35a') });
+  return fitStageSvg(svg, { aspect, fit: s.fit, bleed: s.bleed, bleedArt: framed ? 'none' : s.bleedArt, barColour: framed ? s.frameCard : s.barColour, bleedBottom: s.bleedBottom ?? (s.look === 'toon' ? '#58b244' : '#7fa35a'), detail });
 }

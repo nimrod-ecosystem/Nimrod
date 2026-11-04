@@ -25,6 +25,7 @@
  *   t        0..1, a fraction of the duration
  *   channel  rot | x | y on any joint; faceX | faceY on neck (the face slides inside the head, which
  *            is how a flat drawing turns or tips its head); scale | opacity on root
+ *   props    { joint: propId } things held for the motion (characterKit PROPS: cup), drawn in that joint
  *   still    the moment that reads on its own: drawn when animation is off, by a person's needs, the
  *            screen's detail level, or the device's own "reduce motion"
  *   pose     the pose the motion plays on top of (default: the body's stand)
@@ -36,6 +37,8 @@
  * The format is shaped like DragonBones' bones and keyframes (Code's note, 2026-11-02) so an importer
  * for that, or for side-view angles from motion-capture BVH files, can write it later.
  * --------------------------------------------------------------------------------------------- */
+
+import { MOTION_LIBRARY } from './motion_library.js';
 
 export const MOTION_FORMAT_VERSION = 1;
 
@@ -86,14 +89,18 @@ export const MOTIONS = {
   comeCloser: {
     id: 'comeCloser', name: 'Come closer', words: ['come', 'here', 'approach'], tags: ['move', 'piece', 'aac'],
     target: 'piece', duration: 2000, loop: false, still: 1,
-    tracks: { root: { scale: [[0, 0.6], [1, 1]], y: [[0, -60], [1, 0]], opacity: [[0, 0], [0.2, 1], [1, 1]] } },
+    tracks: { root: { scale: [[0, 0.72], [1, 1]], y: [[0, -56], [1, 0]] } },
   },
+  /* Mike, 2026-11-02: going away walks back into the scene and stays there; it does not vanish. comeCloser is its
+     exact reverse, so the two chain. To leave the stage for real, use exitLeft or exitRight (motionLibrary.js). */
   goAway: {
-    id: 'goAway', name: 'Go away (leave)', words: ['go', 'leave', 'bye'], tags: ['move', 'piece', 'aac'],
-    target: 'piece', duration: 2000, loop: false, still: 0,
-    tracks: { root: { scale: [[0, 1], [1, 0.6]], y: [[0, 0], [1, -60]], opacity: [[0, 1], [0.8, 1], [1, 0]] } },
+    id: 'goAway', name: 'Go away (step back)', words: ['go', 'away', 'back', 'bye'], tags: ['move', 'piece', 'aac'],
+    target: 'piece', duration: 2000, loop: false, still: 1,
+    tracks: { root: { scale: [[0, 1], [1, 0.72]], y: [[0, 0], [1, -56]] } },
   },
 };
+/* chat's drafts that Design kept (motionLibrary.js); the core seven above win on a clash */
+for (const [k, v] of Object.entries(MOTION_LIBRARY)) if (!MOTIONS[k]) MOTIONS[k] = v;
 
 /* ---- maths ---- */
 export function valueAt(keys, t) {

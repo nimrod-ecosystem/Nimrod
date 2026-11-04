@@ -3266,7 +3266,17 @@ if (!GROUND_THEMES.medieval) {
       const view = box.ownerDocument?.defaultView || (typeof window !== 'undefined' ? window : null);
       const aspect = view && view.innerHeight ? view.innerWidth / view.innerHeight : 16 / 9;
       const pinned = date && Math.abs(new Date(date).valueOf() - Date.now()) > 60000 ? new Date(date) : null;
-      Promise.all([import('./medieval_theme.js'), import('./cast.js'), import('./village_day.js')]).then(([m, c, v]) => {
+      // (2026-11-03, Design's version 16) THE SCREEN'S DETAIL LEVEL, for stage_fit.js's `bleedArt: 'auto'`: the mirrored
+      // edges (21 fps on a Pi 400, against 55 without) only at full detail. Design's levels are the needs table's
+      // ('full' | 'reduced' | 'lowest'); until that table exists they come from the device's own reading
+      // (theme_default.js): "Lowest 3D detail" ('proxy') is lowest, a screen that measures slow is reduced, else full.
+      // `settings.detail`, when a host passes one, wins.
+      Promise.all([import('./medieval_theme.js'), import('./cast.js'), import('./village_day.js'), import('./theme_default.js')]).then(([m, c, v, td]) => {
+        let detail = ['full', 'reduced', 'lowest'].includes(settings?.detail) ? settings.detail : null;
+        if (!detail) {
+          try { const s = td.readDeviceSignals(); detail = s.detail === 'proxy' ? 'lowest' : s.detail === 'full' ? 'full' : (s.cpu?.slow ? 'reduced' : 'full'); }
+          catch { detail = 'full'; }
+        }
         let drawnAt = '';
         const draw = () => {
           const now = pinned || new Date();
@@ -3274,10 +3284,11 @@ if (!GROUND_THEMES.medieval) {
           if (key === drawnAt) return;
           drawnAt = key;
           box.innerHTML = m.medievalBackdropSvg({ ...picked, recipe: v.villageAt(now) },
-            { date: now, aspect, castSvg: c.castSvg, assetBase: '/design-assets/' });
+            { date: now, aspect, castSvg: c.castSvg, assetBase: '/design-assets/', detail });
           const svg = box.firstElementChild;
           if (svg) { svg.setAttribute('preserveAspectRatio', 'xMidYMid slice'); svg.style.cssText = 'width:100%;height:100%;display:block'; }
           box.dataset.villageAt = key;
+          box.dataset.detail = detail;
         };
         draw();
         if (pinned || !view) return;
