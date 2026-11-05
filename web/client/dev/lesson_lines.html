@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>lesson lines - every line the Lessons panel says, for recordings made ahead</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  #summary{margin-top:14px;font-weight:700}
+  .note{margin:12px 0;padding:10px 12px;border-left:4px solid #839958;background:#fff;max-width:80ch;font-size:.92rem}
+</style>
+</head>
+<body>
+<h1>lesson lines</h1>
+<div class="note">
+  A page for a tool, not a person (web/tools/make_lesson_clips.py, proposal_lesson_voice_clips_20261104.md). It runs the
+  Lessons panel's own <code>spokenLines()</code> over every class that comes with the site, so a recording made ahead of
+  time is made for exactly the words the panel says. The tool calls <code>window.lessonLines(name)</code>; the learner's
+  name is handed in by the tool, never put in this page's address. Opened by hand, it lists the counts with no name.
+</div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { COURSES } from '../lessons/courses_index.js';
+import { spokenLines } from '../modules/lesson_player.js';
+
+/** Every class's lines: [{ course, n, lines: [{ text, who, kind }] }]. `who` is 'a' or 'b' (lower case) or null. */
+window.lessonLines = async (name = '') => {
+  const out = [];
+  for (const course of COURSES) {
+    for (const k of course.classes) {
+      const raw = await (await fetch(`../lessons/courses/${course.id}/${k.file}`)).json();
+      const next = course.classes.find((x) => x.n === k.n + 1) || null;
+      const lines = spokenLines(raw, { name, otherSide: course.otherSide, next: next && { n: next.n, title: next.title } })
+        .map((l) => ({ ...l, who: l.who ? String(l.who).toLowerCase() : null }));
+      out.push({ course: course.id, n: k.n, lines });
+    }
+  }
+  return out;
+};
+
+const all = await window.lessonLines('');
+const n = all.reduce((s, c) => s + c.lines.length, 0);
+const sum = document.getElementById('summary');
+sum.textContent = `${all.length} classes, ${n} lines`;
+sum.dataset.done = 'true';
+</script>
+</body>
+</html>
