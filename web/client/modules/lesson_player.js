@@ -209,6 +209,14 @@ export function countWords(n, thing = '') {
   return `${n} ${n === 1 ? t : `${t}s`}`;
 }
 /** What a show is, in words (the Read form, and a screen reader). PURE. */
+/**
+ * THE PAGE TO BE READ (Mike, 2026-11-05, row 2.207: "wait for the page to be read before starting the timer"): what a
+ * slide says AND what it shows in words (a list, a chart's rows, a quote). Watch's wait is never shorter than the time to
+ * read all of it, counted from when the slide arrives, so a busy slide waits longer and a plain one, read while it is
+ * said, does not. PURE.
+ */
+export const pageWords = (b, lesson, look = 'child') => [beatWords(b), showWords(showFor(b?.show, look), lesson)].filter(Boolean).join(' ');
+
 export function showWords(show, lesson) {
   if (!show) return '';
   if (show.kind === 'heading' || show.kind === 'word') return show.text;
@@ -626,7 +634,7 @@ function lessonsModule(ctx) {
       if (b.ask && picked != null) { sayResult(b); return; }
       const words = beatWords(b);
       const done = say(words, b.say?.who || null);
-      if (!b.ask) { thenNext(words, done); return; }
+      if (!b.ask) { thenNext(pageWords(b, lesson, look()), done); return; }
       // The clock for an answer starts once the question has been said. Nobody answering in time: it is shown and said.
       const ms = askWaitMs();
       if (ms == null) return;

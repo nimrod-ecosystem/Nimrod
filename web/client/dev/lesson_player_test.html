@@ -21,7 +21,8 @@
 import { mountModule, getManifest } from '../module.js';
 import { createBus } from '../bus.js';
 import { LESSON_FORMS, LESSON_SETTINGS, countWords, showWords, answersOf, readHTML, showHTML, WATCH_HOLD_MS, routedQuestions,
-  voiceFor, SECOND_VOICE_STEP, ASK_WAIT_MS, named } from '../modules/lesson_player.js';
+  voiceFor, SECOND_VOICE_STEP, ASK_WAIT_MS, named, pageWords, beatWords } from '../modules/lesson_player.js';
+import { readingMs } from '../quiz_flow.js';
 import { TRIVIA_LESSON_QUESTIONS, WORDFORGE_LESSON_QUESTIONS, unlockedFrom } from '../lessons.js';
 import { checkLesson, beatsOf } from '../lesson_file.js';
 import { NUMBERS_0_9, BUILTIN_LESSONS } from '../lessons_builtin.js';
@@ -87,6 +88,18 @@ try {
     /A picture of<\/small>a clock face/.test(showHTML({ kind: 'picture', of: 'a clock face' })) && showWords({ kind: 'picture', of: 'a clock face' }) === 'A picture of a clock face');
   const q = { question: 'How many are there?', answer: '3', wrong: ['2', '5'] };
   check('a question\'s answers in a fixed shuffled order (the same each time, so a switch can learn it)', J(answersOf(q)) === J(answersOf(q)) && answersOf(q).length === 3 && answersOf(q).includes('3'));
+
+  section('*** THE PAGE TO BE READ (Mike, 2026-11-05): Watch waits for what a slide shows, not only what it says ***');
+  {
+    const busy = { say: { text: 'Here is what happened.' }, show: { kind: 'lines', items: ['1798 the first vaccine is tested', '1885 rabies, by Pasteur', '1955 polio, by Salk', '1980 smallpox is gone'] } };
+    const plain = { say: { text: 'Three.' }, show: { kind: 'numeral', n: 3 } };
+    check('*** a list\'s lines count as words to read, with what is said ***', /1955 polio/.test(pageWords(busy, null)) && pageWords(busy, null).startsWith('Here is what happened.'));
+    check('*** ...so a busy slide is given longer than its spoken words alone ***', readingMs(pageWords(busy, null)) > readingMs(beatWords(busy)) + 3000,
+      `${readingMs(pageWords(busy, null))} vs ${readingMs(beatWords(busy))}`);
+    check('a plain slide adds a second or so at most (and that is read while it is said)', readingMs(pageWords(plain, null)) - readingMs(beatWords(plain)) <= 1500,
+      J(pageWords(plain, null)));
+    check('no show: just what is said', pageWords({ say: { text: 'Hello.' } }, null) === 'Hello.');
+  }
 
   section('*** WATCH: it plays by itself, and never waits on an answer ***');
   {
