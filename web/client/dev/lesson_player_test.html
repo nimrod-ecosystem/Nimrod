@@ -70,7 +70,7 @@ try {
   check('the old topic cards are not registered on this page (parked: modules/lesson_topics.js)', !getManifest('lesson_topics'));
   check('three forms: Watch, Slides, Read', J(LESSON_FORMS) === J(['watch', 'slides', 'read']));
   const F = Object.fromEntries(LESSON_SETTINGS.map((f) => [f.key, f]));
-  check('*** Watch is the default: a lesson left alone plays through, it never sits on its first slide ***', F.form.default === 'watch');
+  check('*** Slides is the default (Mike, 2026-11-05): a person moves a lesson on; Watch is one row away ***', F.form.default === 'slides');
   check('which lesson, the look, saying it aloud, and how long Watch holds each part (Rule 1: settings)',
     F.lessonId && F.speak.default === true && F.holdMs.default === WATCH_HOLD_MS);
   check('*** the look: a child\'s by default (Mike, 2026-10-17: "Child is fine") ***', F.look.default === 'child');

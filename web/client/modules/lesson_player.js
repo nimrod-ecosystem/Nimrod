@@ -19,9 +19,10 @@
 //   WATCH   the slides, moving on by themselves after each is said. A question is ASKED, then answered after a
 //           moment, never waited on: Watch is for a screen nobody may be pressing (CLAUDE.md, "a screen must never
 //           enter a state that only an input can leave, when the person in front of it cannot give that input").
-// DEFAULT: WATCH, argued. FOR Slides: a lesson is somebody learning, and pressing Next is part of it. AGAINST, and it
-// decides it: a lesson placed on a screen for somebody who cannot press anything would sit on its first slide for
-// good; Watch plays through, and anybody who can press switches to Slides in one row. A guess for Mike.
+// DEFAULT: SLIDES (Mike, 2026-11-05, row 2.207: "Sounds good"). It was Watch, argued: a lesson placed on a screen for
+// somebody who cannot press anything would sit on its first slide. Mike chose Slides: a lesson is somebody learning,
+// and pressing Next is part of it, like a game waiting for its press. A screen for somebody who cannot press sets
+// "How it is shown" to Watch in one row, and Watch then plays through exactly as before.
 //
 // DRAWN, NOT STORED (content-as-meaning): numerals, counted things, headings, rows and charts are drawn here in the
 // theme's own colours; a picture is DESCRIBED in the file ("a clock face") and shown as that description in a frame
@@ -48,6 +49,7 @@ import { afterAnswerHtml, ensureQuizStyle } from '../quiz_view.js';
 import { createSpeechWatch, createAfterWait } from '../quiz_flow.js';   // the pace (row 2.113): said to the end, then on
 
 export const LESSON_FORMS = Object.freeze(['watch', 'slides', 'read']);
+export const DEFAULT_LESSON_FORM = 'slides';   // the header, "DEFAULT"
 // THE PACE (row 2.113, Mike 2026-10-21 after taking lessons: "They just rush through things ... it didn't even finish
 // reading the slide before it went to the next one. It doesn't give you time to answer questions.")
 //   WATCH_HOLD_MS 3000   the pause after a part has been SAID (the voice's own "finished", below), before the next. Was 4 s
@@ -134,7 +136,7 @@ export function spokenLines(raw, { name = '', otherSide = true, next = null } = 
 const SETTINGS = [
   { key: 'lessonId', label: 'Which lesson', kind: 'choice', default: BUILTIN_LESSONS[0].id, level: 'essential',
     options: BUILTIN_LESSONS.map((l) => ({ value: l.id, label: l.label })) },
-  { key: 'form', label: 'How it is shown', kind: 'choice', default: 'watch', level: 'essential',
+  { key: 'form', label: 'How it is shown', kind: 'choice', default: DEFAULT_LESSON_FORM, level: 'essential',
     options: [{ value: 'watch', label: 'Watch: it plays by itself' }, { value: 'slides', label: 'Slides: press Next to go on' },
       { value: 'read', label: 'Read: all of it, as a page' }] },
   // THE LOOK (Mike, 2026-10-17): *"Child is fine. I don't feel like most lessons would need you to choose. The difficulty
@@ -172,10 +174,10 @@ const SETTINGS = [
   { key: 'holdMs', label: 'Pace: after each part is said, a pause of', kind: 'choice', default: WATCH_HOLD_MS, level: 'standard',
     options: [{ value: 1000, label: '1 second' }, { value: 2000, label: '2 seconds' }, { value: 3000, label: '3 seconds' },
       { value: 5000, label: '5 seconds' }, { value: 8000, label: '8 seconds' }, { value: 15000, label: '15 seconds' }],
-    appliesWhen: (v) => (v?.form || 'watch') === 'watch' },
+    appliesWhen: (v) => (v?.form || DEFAULT_LESSON_FORM) === 'watch' },
   // A QUESTION WAITS (row 2.113): Mike, "It doesn't give you time to answer questions." Argued at ASK_WAIT_MS.
   { key: 'askWait', label: 'A question waits', kind: 'choice', default: 'auto', level: 'standard',
-    appliesWhen: (v) => (v?.form || 'watch') !== 'read',
+    appliesWhen: (v) => (v?.form || DEFAULT_LESSON_FORM) !== 'read',
     options: [{ value: 'auto', label: 'Until it is answered in Slides; 30 seconds in Watch' }, { value: 'answer', label: 'Until it is answered' },
       { value: 15000, label: '15 seconds' }, { value: 30000, label: '30 seconds' }, { value: 60000, label: '1 minute' }, { value: 120000, label: '2 minutes' }] },
   // Carried from the old Lessons (same key, so a screen that chose already keeps its choice); "both" by default, as
@@ -438,7 +440,7 @@ function lessonsModule(ctx) {
     let prefRow = null;         // the profile's settings row: the person's own voice, for the second voice (row 2.111)
 
     const setting = (k, d) => (cfg[k] === undefined ? d : cfg[k]);
-    const form = () => (LESSON_FORMS.includes(cfg.form) ? cfg.form : 'watch');
+    const form = () => (LESSON_FORMS.includes(cfg.form) ? cfg.form : DEFAULT_LESSON_FORM);
     const look = () => (LOOKS.includes(cfg.look) ? cfg.look : 'child');
 
     // The courses (CK 3): one entry per course; its classes are fetched as they are played, and kept while the panel is up.
