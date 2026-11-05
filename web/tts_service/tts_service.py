@@ -40,6 +40,7 @@ from __future__ import annotations
 import argparse
 import io
 import json
+import os
 import re
 import sys
 import threading
@@ -224,7 +225,23 @@ def note(msg: str) -> None:
     print(f'tts_service: {msg}', file=sys.stderr, flush=True)
 
 
-def make_handler(speaker: Speaker, sites=DEFAULT_SITES, quiet: bool = False):
+# *** RECORDINGS MADE AHEAD OF TIME (2026-11-04, proposal_lesson_voice_clips). *** A voice too slow to speak live on this
+# computer (libritts-high on a Pi 400: about 2.3 times slower than speaking) is made ahead on a faster one
+# (web/tools/make_lesson_clips.py) and served from here, with --clips <folder>: GET /clips is its clips.json (which line is
+# which file), GET /clips/<file>.ogg one recording. Read only, the same allow-list as /speak, and nothing but a clip's own
+# name is ever opened: no path, no other file in the folder.
+CLIP_NAME = re.compile(r'^[0-9a-f]{20}\.ogg$')
+
+
+def clip_file(folder, name):
+    """The path of recording `name` in `folder`, or None (no folder, a name that is not a clip's, or no such file). Pure."""
+    if not folder or not CLIP_NAME.match(name or ''):
+        return None
+    p = os.path.join(folder, name)
+    return p if os.path.isfile(p) else None
+
+
+def make_handler(speaker: Speaker, sites=DEFAULT_SITES, quiet: bool = False, clips=None):
     class Handler(BaseHTTPRequestHandler):
         server_version = 'nimrod-tts'
         sys_version = ''
@@ -283,11 +300,28 @@ def make_handler(speaker: Speaker, sites=DEFAULT_SITES, quiet: bool = False):
         def do_GET(self):
             if not self._guard():
                 return
-            if self.path.split('?')[0] != '/health':
+            path = self.path.split('?')[0]
+            if path == '/clips':
+                index = os.path.join(clips, 'clips.json') if clips else ''
+                if not index or not os.path.isfile(index):
+                    self._json(404, {'ok': False, 'error': 'no recordings here'})
+                    return
+                with open(index, 'rb') as f:
+                    self._send(200, f.read(), 'application/json')
+                return
+            if path.startswith('/clips/'):
+                p = clip_file(clips, path[len('/clips/'):])
+                if not p:
+                    self._json(404, {'ok': False, 'error': 'no such recording'})
+                    return
+                with open(p, 'rb') as f:
+                    self._send(200, f.read(), 'audio/ogg')
+                return
+            if path != '/health':
                 self._json(404, {'ok': False, 'error': 'not found'})
                 return
             self._json(200, {'ok': True, 'engine': speaker.engine.name, 'voices': list(speaker.engine.voices),
-                             'protocol': PROTOCOL, 'maxText': MAX_TEXT})
+                             'protocol': PROTOCOL, 'maxText': MAX_TEXT, 'clips': bool(clips)})
 
         def do_POST(self):
             if not self._guard():
@@ -335,7 +369,8 @@ def make_handler(speaker: Speaker, sites=DEFAULT_SITES, quiet: bool = False):
     return Handler
 
 
-def create_server(engine, host: str = '127.0.0.1', port: int = DEFAULT_PORT, sites=DEFAULT_SITES, quiet: bool = False):
+def create_server(engine, host: str = '127.0.0.1', port: int = DEFAULT_PORT, sites=DEFAULT_SITES, quiet: bool = False,
+                  clips=None):
     """The server, bound and ready (serve_forever() to run it). Refuses any address that is not this computer."""
     if not is_loopback(host):
         raise ValueError(f'{host} is not this computer: the voice program listens on 127.0.0.1 or ::1 only')
@@ -345,7 +380,7 @@ def create_server(engine, host: str = '127.0.0.1', port: int = DEFAULT_PORT, sit
         allow_reuse_address = True
         address_family = __import__('socket').AF_INET6 if ':' in host else __import__('socket').AF_INET
 
-    return Server((host.strip('[]'), int(port)), make_handler(Speaker(engine), sites, quiet))
+    return Server((host.strip('[]'), int(port)), make_handler(Speaker(engine), sites, quiet, clips))
 
 
 def main(argv=None) -> int:
@@ -358,6 +393,7 @@ def main(argv=None) -> int:
     ap.add_argument('--allow-origin', action='append', default=None,
                     help=f'a website allowed to use the voice (default {", ".join(DEFAULT_SITES)}); repeatable')
     ap.add_argument('--quiet', action='store_true', help='no line per request')
+    ap.add_argument('--clips', default=None, help='a folder of recordings made ahead (make_lesson_clips.py), served read only')
     a = ap.parse_args(argv)
     if not is_loopback(a.host):
         note(f'refusing to listen on {a.host}: this computer only (127.0.0.1 or ::1)')
@@ -372,7 +408,7 @@ def main(argv=None) -> int:
         ap.error('give --model <voice.onnx> (or --fake)')
         return 2
     sites = site_list(a.allow_origin)
-    srv = create_server(engine, a.host, a.port, sites, a.quiet)
+    srv = create_server(engine, a.host, a.port, sites, a.quiet, a.clips)
     note(f'listening on http://{a.host}:{a.port} for {", ".join(sites) or "pages on this computer only"} ({engine.name})')
     try:
         srv.serve_forever()

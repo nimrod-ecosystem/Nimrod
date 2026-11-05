@@ -52,6 +52,10 @@ export function createSpeechChannel({
   // and then nothing is ever said again. Same disease as the input bus's stuck switch,
   // same cure: a watchdog with a generous ceiling.
   maxMs = 30000,
+  // Beyond a recording's own stated length (`data.clipMs`), how long it may run before the watchdog ends it. Five
+  // seconds, argued: a clip read from this computer starts within a second; the rest covers a slow start on a busy Pi.
+  // FOR longer: nothing is cut on a very slow machine. AGAINST: a stalled long line holds the next line back longer.
+  clipSlackMs = 5000,
   // Row 2.27: and a shorter way out than the watchdog. An engine that reports `speaking` is
   // watched; once it has been seen speaking and then goes quiet with nothing queued, the
   // utterance is over whether or not `onend` ever arrives. Never before it was seen speaking,
@@ -114,7 +118,11 @@ export function createSpeechChannel({
     let el = null;
     let handed = null;             // the voice's cancel, once this word went to the synthesiser
     const stopEl = () => { const a = el; el = null; if (a) { try { a.pause(); } catch { /* stopped */ } } };
-    const guard = setTimer(() => end(), maxMs);
+    // RECORDINGS MADE AHEAD (2026-11-04): a clip that says how long it is (`data.clipMs`, a lesson line's recording) is
+    // given that long plus clipSlackMs before the watchdog ends it, so a long line is never cut off at maxMs. Never less
+    // than maxMs: a short clip that stalls waits exactly as long as any other word does.
+    const clipMs = Number(item && item.data && item.data.clipMs);
+    const guard = setTimer(() => end(), Number.isFinite(clipMs) && clipMs > 0 ? Math.max(maxMs, clipMs + clipSlackMs) : maxMs);
     function end() { if (finished) return; finished = true; clearTimer(guard); stopEl(); quiet(); done(); }
     function toVoice() {
       if (finished) return;

@@ -139,6 +139,12 @@ export function splitForVoice(text, { join = JOIN_PIECE, max = MAX_PIECE } = {})
 export function createLocalVoice({ fetchImpl = (...a) => fetch(...a), storage = defaultStorage(), now = () => Date.now() } = {}) {
   const cfg = () => readLocalVoice(storage);
   let lastHealth = null;
+  // RECORDINGS MADE AHEAD (2026-11-04, proposal_lesson_voice_clips): the program's GET /clips, which line is which file.
+  // Read when first needed and again after CLIPS_FRESH_MS, so clips copied onto the computer are found within minutes
+  // without asking on every line. null: none there (or none asked for yet); a failed read is tried again next time.
+  let clipIndex = null;
+  let clipIndexAt = -Infinity;
+  let clipIndexAsk = null;
 
   async function call(path, init, { signal, timeoutMs } = {}) {
     const c = cfg();
@@ -194,8 +200,39 @@ export function createLocalVoice({ fetchImpl = (...a) => fetch(...a), storage = 
       if (!blob || !blob.size || (type && !/^audio\//i.test(type))) return { ok: false, reason: 'The voice program did not send a sound.' };
       return { ok: true, blob, type, ms: now() - t0 };
     },
+    /**
+     * A recording made ahead of exactly these words in this voice ('a' or 'b', the lesson's two teachers), when the program
+     * has one: `{ ok: true, blob, ms }` (ms: the recording's own length, from clips.json), else `{ ok: false }`. Never throws.
+     */
+    async clip(text, slot, { signal } = {}) {
+      if (!cfg().on || (slot !== 'a' && slot !== 'b')) return { ok: false };
+      if (now() - clipIndexAt > CLIPS_FRESH_MS) {
+        clipIndexAsk ||= (async () => {
+          const r = await call('/clips', { method: 'GET' }, { timeoutMs: Math.max(cfg().timeoutMs, 3000) });
+          let body = null;
+          if (r.ok) { try { body = await r.res.json(); } catch { body = null; } }
+          clipIndex = body && body.format === CLIPS_FORMAT && body.lines && typeof body.lines === 'object' ? body.lines : null;
+          clipIndexAt = now();
+        })().finally(() => { clipIndexAsk = null; });
+        await clipIndexAsk;
+      }
+      const lines = clipIndex?.[slot];
+      const entry = lines && (lines[String(text || '')] || lines[String(text || '').replace(/\s+/g, ' ').trim()]);
+      if (!entry || typeof entry.file !== 'string' || !/^[0-9a-f]{20}\.ogg$/.test(entry.file)) return { ok: false };
+      const r = await call(`/clips/${entry.file}`, { method: 'GET' }, { signal });
+      if (!r.ok) return { ok: false };
+      let blob;
+      try { blob = await r.res.blob(); } catch { return { ok: false }; }
+      if (!blob || !blob.size) return { ok: false };
+      return { ok: true, blob, ms: Number(entry.ms) > 0 ? Number(entry.ms) : null };
+    },
   };
 }
+export const CLIPS_FORMAT = 'nimrod.clips.v1';
+// Ten minutes, argued: clips are copied onto a screen rarely (after a night's run on the PC), and asking for the list on
+// every line would be a request per sentence for nothing. FOR shorter: a newly copied set is used sooner; it is still used
+// the same day either way. A restart of the page reads it at once.
+export const CLIPS_FRESH_MS = 10 * 60 * 1000;
 
 /**
  * The speech channel, with the local voice first. Returns a channel with the same contract (output_channels.js):
@@ -209,6 +246,41 @@ export function withLocalVoice(channel, voice, { createURL = (b) => URL.createOb
     present(item, { done }) {
       const own = item && item.data && Array.isArray(item.data.clips) && item.data.clips.length;
       if (own || !voice.enabled?.()) return channel.present(item, { done });
+      // RECORDINGS MADE AHEAD (2026-11-04): a line that names its voice (`data.clipVoice`, the Lessons panel's 'a' or 'b')
+      // is played from its recording when the program has one, whole, with the recording's length (`clipMs`) so the
+      // channel's watchdog ends a stalled one after its own length rather than 30 s. Without one, the line goes on below,
+      // spoken live as before.
+      const slot = item && item.data && item.data.clipVoice;
+      if ((slot === 'a' || slot === 'b') && typeof voice.clip === 'function') {
+        const ctl0 = new AbortController();
+        let cancelled0 = false;
+        let inner0 = null;
+        let url0 = null;
+        const release0 = () => { if (url0) { revokeURL(url0); url0 = null; } };
+        const live = () => {
+          const c = presentLive(item, done);
+          inner0 = typeof c === 'function' ? c : null;
+        };
+        Promise.resolve(voice.clip(item.text, slot, { signal: ctl0.signal })).catch(() => ({ ok: false })).then((r) => {
+          if (cancelled0) return;
+          if (r && r.ok && r.blob) { try { url0 = createURL(r.blob); } catch { url0 = null; } }
+          if (!url0) { live(); return; }
+          const piece = { ...item, data: { ...(item.data || {}), clips: [url0], ...(r.ms ? { clipMs: r.ms } : {}) } };
+          const c = channel.present(piece, { done: () => { release0(); done(); } });
+          inner0 = typeof c === 'function' ? c : null;
+        });
+        return () => {
+          cancelled0 = true;
+          try { ctl0.abort(); } catch { /* done */ }
+          if (inner0) { try { inner0(); } catch { /* gone */ } }
+          release0();
+        };
+      }
+      return presentLive(item, done);
+    },
+  };
+  function presentLive(item, done) {
+    {
       const parts = splitForVoice(item && item.text);
       if (!parts.length) return channel.present(item, { done });
       const ctl = new AbortController();
@@ -248,6 +320,6 @@ export function withLocalVoice(channel, voice, { createURL = (b) => URL.createOb
         if (inner) { try { inner(); } catch { /* gone */ } }
         release();
       };
-    },
-  };
+    }
+  }
 }

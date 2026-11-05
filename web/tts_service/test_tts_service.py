@@ -212,6 +212,44 @@ finally:
     sys.stderr = old
 check('the log never has the words, only how many', 'secret' not in buf.getvalue() and '18 characters' in buf.getvalue(), buf.getvalue())
 
+# ---- recordings made ahead (--clips, 2026-11-04) ---------------------------------------------------------------------------
+import tempfile, os
+check('no folder: /clips is a 404, and /health says there are none',
+      req('GET', '/clips', headers={'Origin': SITE})[0] == 404 and json.loads(req('GET', '/health')[2])['clips'] is False)
+cdir = tempfile.mkdtemp(prefix='tts_clips_')
+good = 'a' * 20 + '.ogg'
+with open(os.path.join(cdir, good), 'wb') as f:
+    f.write(b'OggS-fake')
+with open(os.path.join(cdir, 'clips.json'), 'w', encoding='utf-8') as f:
+    json.dump({'format': 'nimrod.clips.v1', 'lines': {'a': {'Hello.': {'file': good, 'ms': 900}}}}, f)
+with open(os.path.join(cdir, 'secret.txt'), 'w') as f:
+    f.write('not a clip')
+srv4 = T.create_server(T.FakeEngine(), '127.0.0.1', 0, quiet=True, clips=cdir)
+p4 = srv4.server_address[1]
+threading.Thread(target=srv4.serve_forever, daemon=True).start()
+
+
+def req4(path, origin=SITE):
+    c = http.client.HTTPConnection('127.0.0.1', p4, timeout=10)
+    c.request('GET', path, headers={'Host': f'127.0.0.1:{p4}', **({'Origin': origin} if origin else {})})
+    r = c.getresponse()
+    out = (r.status, {k.lower(): v for k, v in r.getheaders()}, r.read())
+    c.close()
+    return out
+
+
+s, h, b = req4('/clips')
+check('*** /clips is the folder\'s clips.json, to the site, with CORS ***', s == 200 and json.loads(b)['lines']['a']['Hello.']['file'] == good
+      and h.get('access-control-allow-origin') == SITE)
+s, h, b = req4(f'/clips/{good}')
+check('*** /clips/<file>.ogg is that recording, as audio/ogg ***', s == 200 and b == b'OggS-fake' and h.get('content-type') == 'audio/ogg')
+check('...nothing but a clip\'s own name is opened: no other file, no path, no climbing out',
+      req4('/clips/secret.txt')[0] == 404 and req4('/clips/..%2Fclips.json')[0] == 404 and req4('/clips/../clips.json')[0] == 404
+      and req4('/clips/' + 'b' * 20 + '.ogg')[0] == 404)
+check('...and another site gets neither', req4('/clips', 'https://evil.example')[0] == 403 and req4(f'/clips/{good}', 'https://evil.example')[0] == 403)
+check('clip_file is pure and strict', T.clip_file(cdir, good) and T.clip_file(None, good) is None and T.clip_file(cdir, 'A' * 20 + '.ogg') is None)
+srv4.shutdown()
+
 srv.shutdown()
 print(f'\n{passed} passed, {failed} failed')
 sys.exit(1 if failed else 0)

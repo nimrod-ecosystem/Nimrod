@@ -235,6 +235,66 @@ section('*** end to end through the real speech channel: the sound plays, the vo
   check('*** the local voice\'s sound is played by the speech channel itself (ducking, one at a time, the watchdog) ***',
     played[0] === 'blob:e2e' && spoken.length === 0, JSON.stringify({ played, spoken }));
 }
+section('*** recordings made ahead: a lesson line with a recording is played from it ***');
+{
+  const mem = memStore();
+  writeLocalVoice({ on: true }, mem);
+  const ogg = () => new Blob([new Uint8Array([79, 103, 103, 83])], { type: 'audio/ogg' });
+  const index = { format: 'nimrod.clips.v1', model: 'm', voices: { a: 552 }, lines: { a: { 'Hello class.': { file: '0123456789abcdef0123.ogg', ms: 42000 } }, b: {} } };
+  const clipProg = (how = {}) => {
+    const calls = [];
+    const f = async (url, init = {}) => {
+      calls.push(url);
+      if (url.endsWith('/clips')) return how.noIndex ? new Response('no', { status: 404 }) : new Response(JSON.stringify(index), { headers: { 'Content-Type': 'application/json' } });
+      if (url.includes('/clips/')) return how.noFile ? new Response('no', { status: 404 }) : new Response(ogg(), { headers: { 'Content-Type': 'audio/ogg' } });
+      if (url.endsWith('/speak')) return new Response(wav(), { headers: { 'Content-Type': 'audio/wav' } });
+      return new Response('?', { status: 404 });
+    };
+    f.calls = calls;
+    return f;
+  };
+  const p0 = clipProg();
+  const v = createLocalVoice({ fetchImpl: p0, storage: mem });
+  const hit = await v.clip('Hello class.', 'a');
+  check('*** a line in the list comes back as its recording, with its length ***', hit.ok && hit.blob.size === 4 && hit.ms === 42000, JSON.stringify(hit));
+  const spaced = await v.clip('Hello  class. ', 'a');
+  const miss = await v.clip('Not there.', 'a');
+  check('...the list is asked for once, not per line (and spacing does not matter)', spaced.ok && miss.ok === false
+    && p0.calls.filter((u) => u.endsWith('/clips')).length === 1, JSON.stringify(p0.calls));
+  check('a line not in the list, or the other teacher\'s, or no teacher: none', (await v.clip('Hello class.', 'b')).ok === false && (await v.clip('Hello class.', 'x')).ok === false);
+  const presented = [];
+  const inner = { name: 'speech', concurrency: 1, present(item, { done }) { presented.push(item); setTimeout(done, 0); return () => {}; } };
+  const make = (f) => withLocalVoice(inner, createLocalVoice({ fetchImpl: f, storage: mem }), { createURL: () => 'blob:clip', revokeURL: () => {} });
+  const prog = clipProg();
+  await new Promise((res) => make(prog).present({ id: 'c1', text: 'Hello class.', data: { clipVoice: 'a' } }, { done: res }));
+  check('*** the channel is handed the recording, whole, with clipMs; the program is not asked to speak ***',
+    presented[0].data.clips[0] === 'blob:clip' && presented[0].data.clipMs === 42000 && presented[0].text === 'Hello class.'
+    && !prog.calls.some((u) => u.endsWith('/speak')) && prog.calls.filter((u) => u.endsWith('/clips')).length === 1, JSON.stringify(prog.calls));
+  const prog2 = clipProg();
+  await new Promise((res) => make(prog2).present({ id: 'c2', text: 'Something new.', data: { clipVoice: 'a' } }, { done: res }));
+  check('*** no recording for these words: spoken live, as before ***', prog2.calls.some((u) => u.endsWith('/speak')) && !presented[1].data.clipMs);
+  const prog3 = clipProg({ noIndex: true });
+  await new Promise((res) => make(prog3).present({ id: 'c3', text: 'Hello class.', data: { clipVoice: 'a' } }, { done: res }));
+  check('no list on this computer: spoken live', prog3.calls.some((u) => u.endsWith('/speak')));
+  const prog4 = clipProg({ noFile: true });
+  await new Promise((res) => make(prog4).present({ id: 'c4', text: 'Hello class.', data: { clipVoice: 'a' } }, { done: res }));
+  check('a listed recording whose file is missing: spoken live', prog4.calls.some((u) => u.endsWith('/speak')));
+  const prog5 = clipProg();
+  await new Promise((res) => make(prog5).present({ id: 'c5', text: 'Hello class.', data: null }, { done: res }));
+  check('a line that names no teacher never looks for a recording', !prog5.calls.some((u) => u.includes('/clips')));
+  const memOff = memStore();
+  check('turned off: no recording is looked for', (await createLocalVoice({ fetchImpl: clipProg(), storage: memOff }).clip('Hello class.', 'a')).ok === false);
+
+  // The watchdog: a 42 s recording is not cut off at 30 s; a short one keeps the usual ceiling.
+  const timers = [];
+  const real = createSpeechChannel({ synth: { speaking: false, pending: false, speak() {}, cancel() {}, getVoices: () => [] }, Utterance: function (t) { this.text = t; },
+    makeAudio: () => ({ volume: 1, pause() {}, addEventListener() {}, play() { return Promise.resolve(); } }), pollMs: 0,
+    setTimer: (fn, ms) => { timers.push(ms); return timers.length; }, clearTimer: () => {} });
+  real.present({ id: 'w1', text: 'long', data: { clips: ['blob:a'], clipMs: 42000 } }, { done: () => {} });
+  real.present({ id: 'w2', text: 'short', data: { clips: ['blob:b'], clipMs: 2000 } }, { done: () => {} });
+  real.present({ id: 'w3', text: 'board', data: { clips: ['blob:c'] } }, { done: () => {} });
+  check('*** a recording longer than the watchdog gets its own length plus the slack ***', timers[0] === 47000 && timers[1] === 30000 && timers[2] === 30000, JSON.stringify(timers));
+}
 } catch (e) {
   check('unexpected error', false, String((e && e.stack) || e));
 }

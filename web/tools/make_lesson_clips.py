@@ -42,7 +42,7 @@ def wanted_lines(classes, speaker_b):
     seen = set()
     for c in classes:
         for line in c['lines']:
-            voice = 'b' if line.get('who') == 'b' else 'a'
+            voice = 'b' if str(line.get('who') or '').lower() == 'b' else 'a'
             if voice == 'b' and speaker_b is None:
                 continue
             key = (voice, line['text'])

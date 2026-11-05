@@ -531,7 +531,10 @@ function lessonsModule(ctx) {
       try { voice = voiceFor(who, prefRow?.get?.()?.voice || {}, setting('secondVoice', 'higher')); } catch { voice = null; }
       try {
         if (ctx.output?.say) {
-          const r = speech.say(text, { source: 'lesson', ...(voice ? { data: { voice } } : {}) });
+          // clipVoice: which teacher's recording made ahead (local_voice.js clip) may say this line, when one exists for
+          // exactly these words. Teacher B is 'b'; teacher A and the learner's own lines are 'a', as make_lesson_clips.py makes them.
+          const clipVoice = who === 'b' || who === 'B' ? 'b' : 'a';
+          const r = speech.say(text, { source: 'lesson', data: { clipVoice, ...(voice ? { voice } : {}) } });
           speechId = r.id;
           // Said to the end: nothing left to stop.
           r.done?.then?.(() => { if (speechId === r.id) speechId = null; }, () => {});
