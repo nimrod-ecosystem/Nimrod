@@ -72,8 +72,12 @@ export const MAKE_TIMEOUT_MS = 15 * 60 * 1000;
 // same person, 0.4 as a second speaker, 0.6 starts to sound like a cartoon. A browser that ignores pitch reads both alike.
 export const SECOND_VOICE_STEP = 0.4;
 /** The voice a line is read in: null (the person's own, as everything else) for A or the teacher; for B, the second voice. PURE. */
+// THE TWO-VOICE CAST (row 2.208; the default, and the only one until the screen has distinct voices): every role is said
+// as teacher A or teacher B. The debate's philosophical voice is B, the technical one A - what "the other side" sounded
+// like before there were four roles. PURE.
+export const voiceSlot = (who) => { const w = String(who || '').toLowerCase(); return w === 'b' || w === 'philosophical' ? 'b' : 'a'; };
 export function voiceFor(who, pref = {}, choice = 'higher') {
-  if (who !== 'b') return null;
+  if (voiceSlot(who) !== 'b') return null;
   const p = pref && typeof pref === 'object' ? pref : {};
   const pitch = Number.isFinite(Number(p.pitch)) ? Number(p.pitch) : 1;
   const c = String(choice || 'higher');
@@ -543,7 +547,7 @@ function lessonsModule(ctx) {
         if (ctx.output?.say) {
           // clipVoice: which teacher's recording made ahead (local_voice.js clip) may say this line, when one exists for
           // exactly these words. Teacher B is 'b'; teacher A and the learner's own lines are 'a', as make_lesson_clips.py makes them.
-          const clipVoice = who === 'b' || who === 'B' ? 'b' : 'a';
+          const clipVoice = voiceSlot(who);
           const r = speech.say(text, { source: 'lesson', data: { clipVoice, ...(voice ? { voice } : {}) } });
           speechId = r.id;
           // Said to the end: nothing left to stop.

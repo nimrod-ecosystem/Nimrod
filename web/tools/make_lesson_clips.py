@@ -42,7 +42,8 @@ def wanted_lines(classes, speaker_b):
     seen = set()
     for c in classes:
         for line in c['lines']:
-            voice = 'b' if str(line.get('who') or '').lower() == 'b' else 'a'
+            # the two-voice cast (lesson_player.js voiceSlot): the debate's philosophical voice is B, the technical one A
+            voice = 'b' if str(line.get('who') or '').lower() in ('b', 'philosophical') else 'a'
             if voice == 'b' and speaker_b is None:
                 continue
             key = (voice, line['text'])

@@ -19,7 +19,7 @@
 // questions, notes with [[topic]] links, charts. Chat's draft also asked for a two-voice script and a teacher's script;
 // those forms are not built, so they are not offered yet (a box that changes nothing would be a lie). [Guess, listed.]
 
-import { MOVES, SHOW_KINDS, CHART_KINDS, SAY_WHO, checkLesson } from './lesson_file.js';
+import { MOVES, SHOW_KINDS, CHART_KINDS, PROMPT_WHO, checkLesson } from './lesson_file.js';
 
 export const LESSON_PARTS = Object.freeze([
   Object.freeze({ id: 'questions', label: 'Review questions', default: true,
@@ -55,7 +55,7 @@ export function draftLessonPrompt({ topic = '', learner = '', minutes = 0, parts
       ? 'Sources: you cannot look anything up, so write only what you are sure of. Cite a source only if you are sure it exists and says this; leave a fact out rather than invent a source for it. Every fact you keep carries the ids of its sources. Narration and jokes need no citation.'
       : 'Research: use current, reliable sources. Every fact carries the ids of its sources. Narration and jokes need no citation. Prefer primary sources (laws, official reports, the makers\' own statements) and say when sources disagree. Record each source\'s title, author or publisher, date, link, and the date you read it.',
     'Each class is a list of beats. A beat is one thing on screen and/or said:',
-    `  "say": the words said (a string, or { "text": "...", "who": one of ${SAY_WHO.map((w) => `"${w}"`).join(', ')} });`,
+    `  "say": the words said (a string, or { "text": "...", "who": one of ${PROMPT_WHO.map((w) => `"${w}"`).join(', ')} });`,
     `  "show": what appears, one of: ${showKindsLine()};`,
     '  "cite": a list of source ids behind any fact in the beat;',
     `  "move": one animation name from this list, or none: ${MOVES.join(', ')};`,

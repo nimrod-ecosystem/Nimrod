@@ -67,7 +67,23 @@ export function lessonHasLooks(lesson) {
   for (const c of lesson?.classes || []) for (const b of c?.beats || []) if (b?.show?.looks && Object.keys(b.show.looks).length) return true;
   return false;
 }
-export const SAY_WHO = Object.freeze(['teacher', 'a', 'b']);
+// WHO SAYS IT. A ROLE, never a person (content-as-meaning): which voice and name each role gets is the screen's cast.
+// FOUR SPEAKERS (Mike, 2026-11-05, row 2.208): teacher A the learner's assistant, teacher B Nimrod, and "the other side" a
+// debate between a TECHNICAL voice and a PHILOSOPHICAL one (the cast calls them Jack and Robin; a class never does).
+// The AI that writes a lesson is offered the two teachers only (PROMPT_WHO), on purpose: the debate is for courses.
+export const DEBATE_WHO = Object.freeze(['technical', 'philosophical']);
+export const PROMPT_WHO = Object.freeze(['teacher', 'a', 'b']);
+export const SAY_WHO = Object.freeze([...PROMPT_WHO, ...DEBATE_WHO]);
+// A debate is two to six lines, argued (not a setting): it follows one claim at the end of a class, where a minute is
+// plenty; LIMITS-style bound, so a runaway file cannot turn the closing into a second class.
+export const DEBATE_MAX = 6;
+// The debate roles, read forgivingly ("tech", "philosopher"); anything else is not a debate voice.
+function debateWho(x) {
+  const w = String(x || '').trim().toLowerCase();
+  if (w === 'technical' || w === 'tech') return 'technical';
+  if (w === 'philosophical' || w === 'philosopher' || w === 'philosophy') return 'philosophical';
+  return null;
+}
 export const CHART_KINDS = Object.freeze(['bar', 'line', 'pie', 'stacked']);
 // Bounds, so a runaway answer cannot fill a screen's memory. Argued, not settings: a "one hour" course is a few
 // hundred beats at most; these are an order of magnitude past that.
@@ -286,7 +302,7 @@ export function forgiveLesson(raw) {
     delete r.frame_of_reference;
   }
   if (Array.isArray(r.other_side) && !r.otherSide) {
-    r.otherSide = r.other_side.map((x) => (isObj(x) ? { claim: x.claim, view: x.other_view ?? x.view, cite: x.cite } : x));
+    r.otherSide = r.other_side.map((x) => (isObj(x) ? { claim: x.claim, view: x.other_view ?? x.view, cite: x.cite, ...(x.debate != null ? { debate: x.debate } : {}) } : x));
     delete r.other_side;
   }
   // about: a topic where a title belongs.
@@ -360,7 +376,7 @@ export function forgiveLesson(raw) {
         const o = { ...b };
         // who says it, and what
         const who = o.who_says_it || (isObj(o.say) ? o.say.who : null);
-        const whoKey = (w) => { const x = lc(w); return x === 'a' || x === 'voice a' ? 'a' : x === 'b' || x === 'voice b' ? 'b' : x ? 'teacher' : null; };
+        const whoKey = (w) => { const x = lc(w); return x === 'a' || x === 'voice a' ? 'a' : x === 'b' || x === 'voice b' ? 'b' : debateWho(x) || (x ? 'teacher' : null); };
         if (isObj(o.say) && o.say.who && !SAY_WHO.includes(o.say.who)) o.say = { ...o.say, who: whoKey(o.say.who) };
         // show
         if (typeof o.show === 'string') o.show = showFromText(o.show, charts, guess, at);
@@ -487,9 +503,23 @@ export function checkLesson(input) {
   }).filter(Boolean);
   const otherSide = (Array.isArray(raw.otherSide) ? raw.otherSide : []).slice(0, LIMITS.classes).map((x, i) => {
     const claim = str(x?.claim), view = str(x?.view);
-    if (!claim || !view) { problems.push(`The other side ${i + 1}: needs the claim and the other view.`); return null; }
+    // THE DEBATE (row 2.208): optional lines between the two debate voices. A line naming anybody else, or saying nothing,
+    // is reported and left out; past DEBATE_MAX the rest is reported and left out.
+    const debate = [];
+    if (x?.debate != null) {
+      const lines = Array.isArray(x.debate) ? x.debate : [];
+      if (!Array.isArray(x.debate)) problems.push(`The other side ${i + 1}: its debate is not a list of lines.`);
+      lines.forEach((d, j) => {
+        const who = debateWho(lc(d?.who)), text = str(d?.text);
+        if (!who || !text) { problems.push(`The other side ${i + 1}, debate line ${j + 1}: needs who (${DEBATE_WHO.join(' or ')}) and the words.`); return; }
+        if (debate.length >= DEBATE_MAX) { problems.push(`The other side ${i + 1}: a debate has at most ${DEBATE_MAX} lines; the rest are left out.`); return; }
+        const dc = cites(d.cite, `The other side ${i + 1}, debate line ${j + 1}`);
+        debate.push({ who, text, ...(dc.length ? { cite: dc } : {}) });
+      });
+    }
+    if (!claim || (!view && !debate.length)) { problems.push(`The other side ${i + 1}: needs the claim and the other view.`); return null; }
     const c = cites(x.cite, `The other side ${i + 1}`);
-    return { claim, view, ...(c.length ? { cite: c } : {}) };
+    return { claim, ...(view ? { view } : {}), ...(debate.length ? { debate } : {}), ...(c.length ? { cite: c } : {}) };
   }).filter(Boolean);
   if (!title || !classes.length) return { lesson: null, problems };
   return {
@@ -515,11 +545,19 @@ export function closingBeats(lesson, { otherSide = false } = {}) {
     out.push({ klass: same, beat: { say: { text: `At the same time, ${f.when}: ${f.text}` }, show: { kind: 'heading', text: f.when },
       move: 'fade', ...(f.cite ? { cite: f.cite } : {}) } });
   }
+  // FOUR SPEAKERS (row 2.208): with a debate, teacher A says the claim and each line is said by its debate voice. Without
+  // one (every class so far), the claim is the technical voice's and the view the philosophical one's - which a screen
+  // with two voices (the default) says exactly as before: the technical as A, the philosophical as B.
   if (otherSide) {
     for (const x of lesson?.otherSide || []) {
-      out.push({ klass: other, beat: { say: { text: `Most sources say: ${x.claim}` }, show: { kind: 'heading', text: 'Where experts disagree' }, move: 'fade' } });
-      out.push({ klass: other, beat: { say: { text: x.view, who: 'b' }, show: { kind: 'heading', text: 'The other side' }, move: 'fade',
-        ...(x.cite ? { cite: x.cite } : {}) } });
+      const debate = Array.isArray(x.debate) && x.debate.length ? x.debate : null;
+      out.push({ klass: other, beat: { say: { text: `Most sources say: ${x.claim}`, ...(debate ? {} : { who: 'technical' }) },
+        show: { kind: 'heading', text: 'Where experts disagree' }, move: 'fade' } });
+      const lines = debate || [{ who: 'philosophical', text: x.view, cite: x.cite }];
+      for (const d of lines) {
+        out.push({ klass: other, beat: { say: { text: d.text, who: d.who }, show: { kind: 'heading', text: 'The other side' }, move: 'fade',
+          ...(d.cite ? { cite: d.cite } : {}) } });
+      }
     }
   }
   return out;

@@ -165,10 +165,38 @@ try {
     check('*** the course shape is not a guess: no "Read as" for any of it but the counted picture ***',
       one.problems.filter((p) => p.startsWith('Read as')).every((p) => /picture|Notes|publisher/.test(p)), J(one.problems));
     const close = closingBeats(L1, { otherSide: true });
-    check('*** a class closes with "At the same time", then the other side: the claim, then the other view in the SECOND voice ***',
+    check('*** a class closes with "At the same time", then the other side: the claim (technical), then the other view (philosophical) ***',
       close.length === 3 && close[0].klass.title === 'At the same time' && /At the same time, 1929/.test(close[0].beat.say.text)
-        && close[2].klass.title === 'The other side' && close[2].beat.say.who === 'b' && close[2].beat.say.text === 'The expansion rate is debated.');
+        && close[1].beat.say.who === 'technical' && close[2].klass.title === 'The other side' && close[2].beat.say.who === 'philosophical'
+        && close[2].beat.say.text === 'The expansion rate is debated.', J(close.map((c) => c.beat.say)));
     check('...the other side off: only "At the same time"', closingBeats(L1, { otherSide: false }).length === 1);
+    // FOUR SPEAKERS (row 2.208): the debate roles are read, kept and checked; a debate replaces the single view.
+    {
+      const { SAY_WHO, PROMPT_WHO, DEBATE_WHO, DEBATE_MAX } = await import('../lesson_file.js');
+      check('*** four roles: the two teachers and the two debate voices; the AI prompt is offered the teachers only ***',
+        J(DEBATE_WHO) === J(['technical', 'philosophical']) && SAY_WHO.includes('technical') && SAY_WHO.includes('philosophical')
+          && !PROMPT_WHO.includes('technical') && DEBATE_MAX === 6);
+      const d = checkLesson({ about: { title: 'Debate' }, sources: [{ id: 's1', title: 'A' }], beats: [
+        { say: { who: 'Technical', text: 'How it works.' } }, { say: { who: 'philosopher', text: 'Why it matters.' } }, { say: { who: 'Robin', text: 'Who?' } }],
+        other_side: [{ claim: 'Most think X.', debate: [{ who: 'technical', text: 'The data say X.' }, { who: 'philosophical', text: 'But what is X for?', cite: ['s1'] },
+          { who: 'teacher', text: 'Not a debate voice.' }] }] });
+      const b = d.lesson.classes[0].beats;
+      check('*** "Technical" and "philosopher" are read as the debate voices, never turned into "teacher" ***',
+        b[0].say.who === 'technical' && b[1].say.who === 'philosophical' && b[2].say.who === 'teacher', J(b.map((x) => x.say)));
+      const os = d.lesson.otherSide[0];
+      check('*** a debate is kept through the class file\'s other_side; a line by anybody else is reported and left out ***',
+        os.debate.length === 2 && os.debate[1].who === 'philosophical' && J(os.debate[1].cite) === J(['s1']) && !os.view
+          && d.problems.some((p) => /debate line 3: needs who/.test(p)), J([os, d.problems]));
+      const dc = closingBeats(d.lesson, { otherSide: true });
+      check('*** with a debate: teacher A says the claim, then each line in its own voice ***',
+        dc.length === 3 && !dc[0].beat.say.who && /Most sources say: Most think X\./.test(dc[0].beat.say.text)
+          && dc[1].beat.say.who === 'technical' && dc[2].beat.say.who === 'philosophical' && J(dc[2].beat.cite) === J(['s1']), J(dc.map((c) => c.beat)));
+      const many = checkLesson({ about: { title: 'M' }, sources: [], beats: [{ say: 'x' }],
+        other_side: [{ claim: 'C', debate: Array.from({ length: 8 }, (_, i) => ({ who: i % 2 ? 'philosophical' : 'technical', text: `Line ${i + 1}` })) }] });
+      check('a debate past six lines keeps six and says so', many.lesson.otherSide[0].debate.length === 6 && many.problems.some((p) => /at most 6 lines/.test(p)));
+      const none = checkLesson({ about: { title: 'N' }, sources: [], beats: [{ say: 'x' }], other_side: [{ claim: 'C' }] });
+      check('a claim with neither a view nor a debate is still a problem', !none.lesson.otherSide && none.problems.some((p) => /needs the claim and the other view/.test(p)));
+    }
     // (row 2.181, 2026-11-02) Steps written as one paragraph, or joined by " | ", are read one line per step.
     {
       const run = checkLesson({ about: { title: 'T' }, sources: [], beats: [
