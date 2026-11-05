@@ -277,6 +277,10 @@ export const SUITES = [
   // 2026-10-12: talk with the town and a free-form adventure (story_ai.js, stubbed model; the Adventure module), and the
   // seam for a voice program on this computer (local_voice.js, a stub program).
   'story_ai', 'adventure', 'local_voice',
+  // row 2.210 (2026-11-05): the shared groups of settings a module can take, each checked by the settings audit.
+  'setting_kits',
+  // Design's symbol packs for the talk board (2026-11-03; added here late - suite_list caught it on 2026-11-05).
+  'symbol_packs',
   // 2026-10-25: Design's castle and village (item 45), edited with the room's handles (one editor, note CP).
   'village',
   // 2026-10-25 (row 2.123): change the site's words where they are, `?wording=1`; copied for --apply-page-edits.

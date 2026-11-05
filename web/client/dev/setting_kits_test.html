@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>setting_kits — the shared settings a module can take — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>setting_kits — every shared group of settings, checked by the settings audit</h1>
+<div id="results"></div>
+<div id="summary">running…</div>
+
+<script type="module">
+import { SETTING_KITS, settingKit } from '../setting_kits.js';
+import { normalizeField } from '../settings_fields.js';
+import { auditFields } from '../settings_audit.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+const J = (v) => JSON.stringify(v);
+
+try {
+  check('the list holds the shared groups, each with an id, a title and what it adds', SETTING_KITS.length >= 10
+    && SETTING_KITS.every((k) => /^[a-z][a-z-]*$/.test(k.id) && k.title && k.what && typeof k.rows === 'function'));
+  check('ids are unique', new Set(SETTING_KITS.map((k) => k.id)).size === SETTING_KITS.length);
+  check('a kit is found by its id; an unknown one is null', settingKit('music')?.title === 'Music' && settingKit('nope') === null);
+  for (const k of SETTING_KITS) {
+    let rows = null, err = null;
+    try { rows = await k.rows(); } catch (e) { err = e; }
+    check(`${k.id}: its rows load`, Array.isArray(rows) && rows.length > 0, String(err && (err.stack || err)));
+    if (!Array.isArray(rows)) continue;
+    const fields = rows.map((r) => normalizeField(r)).filter(Boolean);
+    check(`${k.id}: no row is dropped by the menu`, fields.length === rows.length, `${fields.length} of ${rows.length}`);
+    const errors = auditFields(fields, { type: k.id, declared: rows }).filter((f) => f.severity === 'error' || f.level === 'error');
+    check(`*** ${k.id}: the settings audit finds no error ***`, errors.length === 0, J(errors));
+    check(`${k.id}: every row has a label of its own`, fields.every((f) => f.label && f.label !== f.key), J(fields.filter((f) => f.label === f.key).map((f) => f.key)));
+  }
+  const all = [];
+  for (const k of SETTING_KITS) { try { for (const r of await k.rows()) all.push(`${k.id}:${r.key}`); } catch { /* reported above */ } }
+  check('loading the kits again gives the same rows (nothing is shared mutable state)', all.length > 0
+    && J((await settingKit('advance').rows()).map((r) => r.key)) === J(['afterAnswer', 'afterBeatMs', 'readWpm']));
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+const s = document.getElementById('summary');
+s.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+s.className = failed ? 'fail' : 'pass';
+s.dataset.done = 'true'; s.dataset.failed = String(failed);
+</script>
+</body>
+</html>
