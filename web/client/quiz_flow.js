@@ -108,6 +108,8 @@
 
 import { YES_WORDS, NO_WORDS } from './word_games_words.js';
 import { gameMusicFields } from './game_music_host.js';
+import { ADVANCE_DEFAULTS, readingMs, speechBackstopMs, waitsForNext, createAfterWait } from './advance.js';
+export { readingMs, speechBackstopMs, waitsForNext, createAfterWait };   // THE WAIT AFTER AN ANSWER: advance.js (row 2.207)
 
 export const ANSWER_TOPIC = 'speech/answer';
 export const GRAMMAR_TOPIC = 'speech/grammar';
@@ -190,9 +192,9 @@ export const FLOW_DEFAULTS = Object.freeze({
   //   readWpm      the reading pace when nothing is said aloud. 160 words a minute, argued: an easy pace
   //                for reading aloud to oneself, slower than an adult's silent 200-250, because the people
   //                this is for include slow readers; Slow (100) and Quick (220) are a setting away.
-  afterAnswer: 'read',
-  afterBeatMs: 2000,
-  readWpm: 160,
+  afterAnswer: ADVANCE_DEFAULTS.afterAnswer,
+  afterBeatMs: ADVANCE_DEFAULTS.afterBeatMs,
+  readWpm: ADVANCE_DEFAULTS.readWpm,
   // Ask "Would you like to do another one?" between questions. OFF (Mike, 2026-10-02: "Skip asking
   // as default"); THE FLOW, item 4.
   askAnother: false,
@@ -375,63 +377,8 @@ export function reasonFor(result = {}, heard = '', lines = FLOW_LINES) {
 // THE WAIT AFTER AN ANSWER (the header; row 2.66) - one function, used by every engine
 // ---------------------------------------------------------------------------------------
 
-/** How long `text` takes to read at `wpm` words a minute (0 for no words). */
-export function readingMs(text, wpm = FLOW_DEFAULTS.readWpm) {
-  const n = String(text == null ? '' : text).trim().split(/\s+/).filter(Boolean).length;
-  const w = Number(wpm) > 0 ? Number(wpm) : FLOW_DEFAULTS.readWpm;
-  return n ? Math.round((n / w) * 60000) : 0;
-}
-
-/**
- * THE BACKSTOP, for a voice that never says it has finished: the words at a slow speaking pace (100 a
- * minute) plus 10 s. Not a setting, argued: it is reached only when the speech channel's own report never
- * arrives, which output_channels.js's 30 s watchdog already prevents on a real screen; it only keeps a
- * broken voice from holding an answer up for ever.
- */
-export const speechBackstopMs = (text) => readingMs(text, 100) + 10000;
-
-export const waitsForNext = (cfg) => !!cfg && cfg.afterAnswer === 'press';
-const beatOf = (cfg) => { const n = Number(cfg?.afterBeatMs); return Number.isFinite(n) && n >= 0 ? n : FLOW_DEFAULTS.afterBeatMs; };
-
-/**
- * THE ONE RULE (the header). `start({ cfg, text, spoken, holdMs, onDone })` after a celebration or a shown
- * answer: `text` is what was said (or would have been), `spoken` a promise for the end of saying it (or
- * null when nothing is being said, or the end cannot be known), `holdMs` an adapter's least time, if any.
- *   'press'   nothing is started: the screen waits for Next.
- *   no voice  onDone after the reading time + the beat.
- *   a voice   onDone the beat after the voice finishes, never before the reading time; the backstop if the
- *             voice never reports.
- * `stop()` cancels (a press, a new question); a voice finishing after that is ignored.
- */
-export function createAfterWait({ setTimer = (fn, ms) => setTimeout(fn, ms), clearTimer = (id) => clearTimeout(id),
-  now = () => Date.now() } = {}) {
-  let t = null;
-  let token = 0;
-  const clear = () => { if (t !== null) { try { clearTimer(t); } catch { /* gone */ } t = null; } };
-  return {
-    start({ cfg = {}, text = '', spoken = null, holdMs = 0, onDone = () => {} } = {}) {
-      token += 1;
-      clear();
-      if (waitsForNext(cfg)) return 'press';
-      const mine = token;
-      const readMs = Math.max(readingMs(text, cfg.readWpm), Number(holdMs) > 0 ? Number(holdMs) : 0);
-      const beat = beatOf(cfg);
-      const go = () => { if (mine !== token) return; t = null; onDone(); };
-      if (!spoken || typeof spoken.then !== 'function') { t = setTimer(go, readMs + beat); return 'read'; }
-      const began = now();
-      t = setTimer(go, Math.max(readMs, speechBackstopMs(text)) + beat);
-      const heard = () => {
-        if (mine !== token) return;
-        clear();
-        t = setTimer(go, Math.max(0, readMs - (now() - began)) + beat);
-      };
-      spoken.then(heard, heard);
-      return 'speech';
-    },
-    stop() { token += 1; clear(); },
-    pending: () => t !== null,
-  };
-}
+// The functions that were here (readingMs, speechBackstopMs, waitsForNext, createAfterWait) are advance.js now, its own
+// piece (Mike, 2026-11-05, row 2.207); re-exported above under the same names.
 
 /**
  * WHEN A SAID LINE HAS FINISHED: the output bus tells a message's own `onReport` every outcome of it (output.js
