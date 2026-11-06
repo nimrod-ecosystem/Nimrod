@@ -221,6 +221,36 @@ try {
   }
 
   // ============================================================================================
+  // NOTE FC 2 (2026-11-06): the site's own words, from the edit card. A press on words no part claims chooses them; keeping
+  // new words records a suggestion (the one list the editor's Words use) and shows them in place; live words are not words.
+  section('*** the site’s own words: pressed in edit mode, changed as a suggestion, shown in place ***');
+  {
+    const { readChanges, CHANGES_KEY } = await import('../wording_edit.js');
+    const keep = localStorage.getItem(CHANGES_KEY);
+    localStorage.removeItem(CHANGES_KEY);
+    const cell = document.createElement('div'); cell.className = 'cell';
+    cell.innerHTML = '<div class="w-panel"><h3 data-w-head>Start the game</h3><span data-w-live aria-live="polite">3:00 left</span></div>';
+    document.getElementById('host').append(cell);
+    const rec = { id: 'w1', type: 'no-such-module', title: 'A game', el: cell.firstElementChild, instance: {}, state: memState({}) };
+    const emw = createEditMode({ bus, recs: () => [rec], boxOf: () => cell });
+    emw.enter('w1');
+    cell.querySelector('[data-w-head]').click();
+    const s = emw.selection();
+    check('*** a press on words no part claims chooses those words ***', s?.target?.id === 'words:site' && s.fields[0]?.key === 'words'
+      && s.values().words === 'Start the game', J({ t: s?.target, f: s?.fields?.map((f) => f.key), v: s?.values?.() }));
+    check('...with a way back to the whole panel', (s?.actions || []).some((a) => a.id === 'whole-panel'));
+    s.set('words', 'Begin the game');
+    check('*** keeping new words shows them in place ***', cell.querySelector('[data-w-head]').textContent === 'Begin the game');
+    check('*** ...and records a suggestion in the one list (nothing is written anywhere else) ***',
+      readChanges().some((c) => c.old === 'Start the game' && c.new === 'Begin the game'), J(readChanges()));
+    cell.querySelector('[data-w-live]').click();
+    check('live words (a countdown) are not offered as the site’s words', emw.selection()?.target?.id !== 'words:site', J(emw.selection()?.target));
+    emw.leave();
+    cell.remove();
+    if (keep == null) localStorage.removeItem(CHANGES_KEY); else localStorage.setItem(CHANGES_KEY, keep);
+  }
+
+  // ============================================================================================
   section('*** the clock opts in: its time and its date (it is a digital clock: no face or hands) ***');
   {
     const clock = mountPanel('clock', 'c2', bus);

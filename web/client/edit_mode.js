@@ -66,6 +66,7 @@ import { explainModule, selectionAt, explain } from './cat_help.js';
 import { cornerShowCss } from './panel_corners.js';   // corner on hover (2026-10-09): when the ✎ corner shows
 import { stageOf } from './modules_catalog.js';      // live and beta (2026-10-14): the Beta tag beside Done
 import { BETA_WORDS } from './beta.js';
+import { wordsElementAt, recordChange, showWordsInPlace, norm, LINE_MAX } from './wording_edit.js';   // the site's words (note FC 2)
 
 export const EDIT_PANEL_TOPIC = 'shell/edit-panel';   // { id?, on?: true|false } -- absent `on` toggles
 export const EDIT_SELECTED_TOPIC = 'edit/selected';   // the selection (below), with claim()
@@ -576,6 +577,40 @@ export function createEditMode({ bus = null, recs = () => [], boxOf = () => null
     }
   }
 
+  // *** THE SITE'S WORDS, FROM THE EDIT CARD (note FC 2, 2026-11-06: Mike, "I still don't see how I'm supposed to edit text"). ***
+  // A press on words in a panel that none of its parts claims (a heading, a button's "Start") chooses THOSE WORDS: the card
+  // shows them in a box, and keeping new words records a SUGGESTION in the one list the editor's Words already use
+  // (wording_edit.js recordChange: kept in this browser, copied for the site's next update; an owner's "Save as the site
+  // default" is the editor's), and shows them in place. Nothing is written to the site, the server or anybody's screen.
+  // Not words: a clock's time and other live words, boxes people type in, anything without a letter (editor_words.js's rules).
+  // "The whole panel" on the card goes back to the panel's own settings, which a press on words used to choose.
+  function siteWordsTarget(a, node) {
+    let el = null;
+    try { el = wordsElementAt(node); } catch { el = null; }
+    if (!el || !a.box.contains(el) || el.closest('.em-card, .em-bar, [contenteditable], [data-live-words], [role="timer"], [aria-live]')) return null;
+    const old = norm(el.textContent);
+    if (!old || !/\p{L}/u.test(old) || old.length > LINE_MAX) return null;
+    let shown = old;
+    let putBack = null;
+    const page = (() => { try { return doc?.defaultView?.location?.pathname || ''; } catch { return ''; } })();
+    return {
+      id: 'words:site', label: 'These words', el,
+      help: 'The site’s own words. New words are kept as a suggestion in this browser and copied for the site’s next update; they show here straight away.',
+      fields: [{ key: 'words', label: 'Words', kind: 'text', default: old, maxLength: LINE_MAX }],
+      values: () => ({ words: shown }),
+      set: (patch) => {
+        const now = norm(patch?.words);
+        if (!now) return;
+        try { recordChange({ page, old, now }); } catch (err) { console.error('edit mode: words', err); }
+        try { putBack?.(); } catch { /* gone */ }
+        putBack = now === old ? null : showWordsInPlace(el, now);
+        shown = now;
+      },
+      actions: [{ id: 'whole-panel', label: 'The whole panel', run: () => setTimer(() => { if (active === a) select(null); }, 0),
+        note: 'Its own settings, instead of these words.' }],
+    };
+  }
+
   /** Choose `targetId` (null: the whole panel) and publish it; draw the in-panel card if nobody claims it. */
   function select(targetId = null, pressed = null) {
     if (!active) return null;
@@ -585,7 +620,11 @@ export function createEditMode({ bus = null, recs = () => [], boxOf = () => null
     active.targets = targetsOf(active.rec);
     markTargets();
     // Nothing named: the panel's `whole` target if it has one (a room's walls and floor), else the panel.
-    const t = (targetId ? active.targets.find((x) => x.id === targetId) : active.targets.find((x) => x.whole)) || null;
+    // (note FC 2, 2026-11-06) ...unless the press was on the site's own words that no part of the panel claims: then those.
+    const site = !targetId && pressed && !active.targets.some((x) => !x.whole && x.el?.contains?.(pressed))
+      ? siteWordsTarget(active, pressed) : null;
+    if (site) active.targets.push(site);
+    const t = (site || (targetId ? active.targets.find((x) => x.id === targetId) : active.targets.find((x) => x.whole))) || null;
     active.chosen = t ? t.id : null;
     const sel = selectionFor(active.rec, t, { pressed });
     active.sel = sel;
