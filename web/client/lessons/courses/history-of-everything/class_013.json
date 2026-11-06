@@ -879,11 +879,11 @@
   {
    "say": {
     "who": "A",
-    "text": "Here is the whole journey in one chart: the earliest evidence in each region, in thousands of years ago. Each place came later. Australia and the Americas are still debated."
+    "text": "Here is the whole journey in one chart: well-known early evidence in each region, in thousands of years ago. Some places have older finds that are still debated. Each place came later. Australia and the Americas are still debated."
    },
    "show": {
     "kind": "chart",
-    "text": "Earliest evidence of people, thousands of years ago",
+    "text": "Well-known early evidence of people, thousands of years ago",
     "chart": "c1"
    },
    "cite": [
@@ -920,7 +920,7 @@
   {
    "id": "c1",
    "kind": "bar",
-   "title": "Earliest evidence of people in each place (thousands of years ago)",
+   "title": "Well-known early evidence of people in each place (thousands of years ago)",
    "rows": [
     {
      "label": "Israel (Qafzeh)",

@@ -747,7 +747,7 @@
   {
    "say": {
     "who": "A",
-    "text": "The finer points of the faith are kept secret, even from many Druze. They are held by religious leaders called uqqal, 'knowers'. Only about five percent of Druze are uqqal."
+    "text": "The finer points of the faith are kept secret, even from many Druze. They are held by religious leaders called uqqal, 'knowers'. Only a minority of Druze are uqqal, perhaps 5 to 20 percent by different estimates."
    },
    "show": {
     "kind": "key_word",
@@ -766,7 +766,7 @@
      "Pilgrims who visit Lalish",
      "Rulers of the Druze mountains"
     ],
-    "why": "The uqqal keep the finer points of the faith. Only about five percent of Druze are uqqal."
+    "why": "The uqqal keep the finer points of the faith. Only a minority of Druze are uqqal, perhaps 5 to 20 percent by different estimates."
    }
   },
   {
@@ -1059,11 +1059,11 @@
   {
    "say": {
     "who": "A",
-    "text": "Here is their history in brief. A Samaritan shrine was built on Gerizim around the 4th century BCE. The temple was destroyed in 112 to 111 BCE. Revolts and repression in the 5th and 6th centuries CE cut their numbers sharply."
+    "text": "Here is their history in brief. A Samaritan temple was built on Gerizim in the 5th or 4th century BCE; the excavations point to the 5th. The temple was destroyed in 112 to 111 BCE. Revolts and repression in the 5th and 6th centuries CE cut their numbers sharply."
    },
    "show": {
     "kind": "timeline",
-    "text": "4th century BCE: shrine on Gerizim • 112–111 BCE: temple destroyed • 5th–6th centuries CE: revolts and repression"
+    "text": "5th–4th centuries BCE: shrine on Gerizim • 112–111 BCE: temple destroyed • 5th–6th centuries CE: revolts and repression"
    },
    "cite": [
     "s30",

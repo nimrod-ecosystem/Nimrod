@@ -460,11 +460,11 @@
   {
    "say": {
     "who": "B",
-    "text": "Notice this site has two dates. One is when people used it, about 790,000 years ago. The other is when archaeologists found it, in 2004. We'll give both for every site."
+    "text": "Notice this site has two dates. One is when people used it, about 790,000 years ago. The other is when archaeologists found it, in the early 1930s. We'll give both for every site."
    },
    "show": {
     "kind": "two_columns",
-    "text": "Gesher Benot Ya'aqov, Israel\nUsed: about 790,000 years ago | Found: 2004"
+    "text": "Gesher Benot Ya'aqov, Israel\nUsed: about 790,000 years ago | Found: early 1930s"
    },
    "cite": [
     "s27"
@@ -472,13 +472,13 @@
    "move": "light-in-turn",
    "ask": {
     "q": "When did archaeologists find Gesher Benot Ya'aqov?",
-    "right": "In 2004",
+    "right": "In the early 1930s",
     "wrong": [
      "About 790,000 years ago",
      "In the year 1790",
      "Nobody has found it yet"
     ],
-    "why": "790,000 years ago is when people used the site. 2004 is when archaeologists found it. They are two different events."
+    "why": "790,000 years ago is when people used the site. The early 1930s is when archaeologists found it. They are two different events."
    }
   },
   {
@@ -640,11 +640,11 @@
   {
    "say": {
     "who": "A",
-    "text": "Limit three: contamination. Say a 50,000-year-old sample picks up just 1% modern carbon from glue or soil. It would be dated to around 40,000 years. So samples are cleaned very carefully."
+    "text": "Limit three: contamination. Say a 50,000-year-old sample picks up just 1% modern carbon from glue or soil. It would be dated to around 35,000 years. So samples are cleaned very carefully."
    },
    "show": {
     "kind": "big_number",
-    "text": "1% modern carbon can make 50,000 look like about 40,000"
+    "text": "1% modern carbon can make 50,000 look like about 35,000"
    },
    "cite": [
     "s1"
@@ -654,11 +654,11 @@
   {
    "say": {
     "who": "B",
-    "text": "One more step. Raw results are corrected using a calibration curve, built from things of known age such as tree rings. In 2008 that curve reached only 26,000 years. Now it tentatively reaches 50,000."
+    "text": "One more step. Raw results are corrected using a calibration curve, built from things of known age such as tree rings. In 2008 that curve reached only 26,000 years. Now it reaches about 55,000, though the oldest part is less certain."
    },
    "show": {
     "kind": "timeline",
-    "text": "2008: calibration reaches about 26,000 years\nNow: tentatively about 50,000 years"
+    "text": "2008: calibration reaches about 26,000 years\nNow: about 55,000 years, the oldest part less certain"
    },
    "cite": [
     "s2",

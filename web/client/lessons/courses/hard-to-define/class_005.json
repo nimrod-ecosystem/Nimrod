@@ -691,7 +691,7 @@
   {
    "say": {
     "who": "A",
-    "text": "For comparison, most bacteria have 4,000 to 5,000 genes. And the team did not start from nothing. They used genes from an earlier synthetic cell and took the cell's working environment from an existing natural organism."
+    "text": "For comparison, well-known bacteria such as E. coli have about 4,000 to 5,000 genes. And the team did not start from nothing. They used genes from an earlier synthetic cell and took the cell's working environment from an existing natural organism."
    },
    "show": {
     "kind": "chart",
@@ -784,7 +784,7 @@
   {
    "say": {
     "who": "B",
-    "text": "Open question two: life elsewhere. All known life seems to need liquid water. But if life elsewhere differs, searching only for Earth-like chemical signs could miss it. NASA's definition tries to ignore chemistry for that reason."
+    "text": "Open question two: life elsewhere. All known life seems to need liquid water. But if life elsewhere differs, searching only for Earth-like chemical signs could miss it. NASA's definition still calls life a chemical system, but it does not name water, DNA or any other particular chemistry."
    },
    "show": {
     "kind": "key_word",

@@ -87,7 +87,7 @@
   {
    "say": {
     "who": "A",
-    "text": "Say Sam starts a game day with 20 coins and earns 15 more each day. His coins at the end of each day are 20, 35, 50, 65."
+    "text": "Say Sam starts a game day with 20 coins and earns 15 more each day. His coins at the start of each day are 20, 35, 50, 65."
    },
    "show": {
     "kind": "objects",

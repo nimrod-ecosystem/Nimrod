@@ -412,7 +412,7 @@
   {
    "say": {
     "who": "A",
-    "text": "Here is the whole recipe. It works for every kind of clue, so you only need to learn it once."
+    "text": "Here is the whole recipe. It works for every kind of clue about a line that is not straight up and down, so you only need to learn it once."
    },
    "show": {
     "kind": "list",

@@ -296,7 +296,7 @@
   {
    "say": {
     "who": "B",
-    "text": "When did this happen? NASA says the Sun formed about 4.6 billion years ago. Radioactive dating of the oldest meteorites gives ages near 4.5 billion. Those are the same story, rounded a little differently."
+    "text": "When did this happen? NASA says the Sun formed about 4.6 billion years ago. Radioactive dating of the oldest meteorite grains gives about 4.57 billion. Those are the same story, rounded a little differently."
    },
    "show": {
     "kind": "big_number",

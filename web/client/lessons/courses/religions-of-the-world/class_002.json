@@ -1261,7 +1261,7 @@
   {
    "say": {
     "who": "A",
-    "text": "Nearly all of them live in one country: India. About 95 in every 100 Hindus live there."
+    "text": "Nearly all of them live in one country: India. About 94 in every 100 Hindus live there."
    },
    "show": {
     "kind": "chart",
@@ -1274,7 +1274,7 @@
    "move": "bars-grow",
    "ask": {
     "q": "About what share of the world's Hindus live in India?",
-    "right": "About 95%",
+    "right": "About 94%",
     "wrong": [
      "About 50%",
      "About 25%",
@@ -1358,12 +1358,12 @@
    "rows": [
     {
      "label": "India",
-     "value": 95,
+     "value": 94,
      "source": "s28"
     },
     {
-     "label": "All other countries (100 minus 95)",
-     "value": 5,
+     "label": "All other countries (100 minus 94)",
+     "value": 6,
      "source": "s28"
     }
    ]

@@ -560,7 +560,7 @@
   {
    "say": {
     "who": "B",
-    "text": "The baked bricks followed a set shape: thickness 1, width 2, length 4. That is the ratio 1:2:4. It was chosen because bricks in that shape lock together well."
+    "text": "The baked bricks followed a set shape: thickness 1, width 2, length 4. That is the ratio 1:2:4. It may have been chosen because bricks in that shape lock together well, but the builders left no record of why."
    },
    "show": {
     "kind": "big_number",
@@ -692,7 +692,7 @@
   {
    "say": {
     "who": "A",
-    "text": "Now weights. The Indus people cut small cubes of hard stone, called chert, to use as weights. They follow a pattern of doubling and then a decimal system. The basic unit is about 13 grams."
+    "text": "Now weights. The Indus people cut small cubes of hard stone, called chert, to use as weights. They follow a pattern of doubling and then a decimal system. The most common weight is about 13.7 grams. We will call it one unit."
    },
    "show": {
     "kind": "heading",
@@ -710,7 +710,7 @@
    },
    "show": {
     "kind": "chart",
-    "text": "Weights double at each step (about 13 g per unit)",
+    "text": "Weights double at each step (about 13.7 g per unit)",
     "chart": "c1"
    },
    "cite": [
@@ -718,14 +718,14 @@
    ],
    "move": "bars-grow",
    "ask": {
-    "q": "A 2-unit weight is about 26 g. About how much is a 4-unit weight?",
-    "right": "About 52 g",
+    "q": "A 2-unit weight is about 27 g. About how much is a 4-unit weight?",
+    "right": "About 55 g",
     "wrong": [
      "About 28 g",
      "About 39 g",
      "About 104 g"
     ],
-    "why": "The weights double at each step, so 4 units is twice 2 units, about 52 g."
+    "why": "The weights double at each step, so 4 units is twice 2 units, about 55 g."
    }
   },
   {
@@ -854,31 +854,31 @@
   {
    "id": "c1",
    "kind": "bar",
-   "title": "Indus weights double each step (approximate grams, using about 13 g per unit)",
+   "title": "Indus weights double each step (approximate grams, using about 13.7 g per unit)",
    "rows": [
     {
      "label": "1 unit",
-     "value": 13,
+     "value": 14,
      "source": "s8"
     },
     {
      "label": "2 units",
-     "value": 26,
+     "value": 27,
      "source": "s8"
     },
     {
      "label": "4 units",
-     "value": 52,
+     "value": 55,
      "source": "s8"
     },
     {
      "label": "8 units",
-     "value": 104,
+     "value": 110,
      "source": "s8"
     },
     {
      "label": "16 units",
-     "value": 208,
+     "value": 219,
      "source": "s8"
     }
    ]

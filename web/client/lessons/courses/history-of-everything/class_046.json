@@ -647,7 +647,7 @@
    },
    "show": {
     "kind": "list",
-    "text": "Under 9: not allowed to work in textile mills | 9 to 12: 8 hours | 13 to 17: 12 hours | Under 13: 2 hours of school a day"
+    "text": "Under 9: not allowed to work in textile mills | 9 to 12: 9 hours | 13 to 17: 12 hours | Under 13: 2 hours of school a day"
    },
    "cite": [
     "s14",
@@ -801,7 +801,7 @@
   {
    "say": {
     "who": "A",
-    "text": "As early as 1835, the inventor Charles Babbage noticed that burning coal released huge amounts of carbon dioxide. He did not know the long-term effects. Scientists began theorizing about a greenhouse effect near the end of that century."
+    "text": "As early as 1835, the inventor Charles Babbage noticed that burning coal released huge amounts of carbon dioxide. He did not know the long-term effects. Scientists had been theorizing about a greenhouse effect since the 1820s, and near the end of that century one of them worked out how much carbon dioxide could warm the planet."
    },
    "show": {
     "kind": "key_word",
@@ -989,7 +989,7 @@
    "rows": [
     {
      "label": "Ages 9 to 12",
-     "value": 8,
+     "value": 9,
      "source": "s14"
     },
     {

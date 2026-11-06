@@ -557,9 +557,9 @@
     "wrong": [
      "Maize in Mexico, about 9,000 years ago",
      "Full pigs in the Fertile Crescent, about 9,000 years ago",
-     "Cereals in Syria, about 9,000 years ago"
+     "Cereals in Syria, about 10,500 years ago"
     ],
-    "why": "The longest bar is the fig trees, at about 11,300 years ago. The other three are all around 9,000 years ago."
+    "why": "The longest bar is the fig trees, at about 11,300 years ago. The other three are younger, from about 9,000 to 10,500 years ago."
    }
   },
   {
@@ -1043,7 +1043,7 @@
     },
     {
      "label": "Cereals grown, Syria",
-     "value": 9000,
+     "value": 10500,
      "source": "s8"
     },
     {

@@ -513,14 +513,14 @@
   {
    "say": {
     "who": "A",
-    "text": "The office grew. Tribunes started as two, and by 459 BCE the Senate raised the number to ten."
+    "text": "The office grew. Tribunes started as two, and by 457 BCE the number had grown to ten."
    },
    "show": {
     "kind": "objects",
     "object": "dot",
     "count": 10,
     "layout": "ten-frame",
-    "text": "Ten tribunes by 459 BCE"
+    "text": "Ten tribunes by 457 BCE"
    },
    "cite": [
     "s31"
@@ -680,7 +680,7 @@
   {
    "say": {
     "who": "A",
-    "text": "Rome's answer was to threaten Carthage itself. The Roman general Scipio invaded North Africa in 205 BCE, and Hannibal was called home to defend his city."
+    "text": "Rome's answer was to threaten Carthage itself. The Roman general Scipio invaded North Africa in 204 BCE, and Hannibal was called home to defend his city."
    },
    "show": {
     "kind": "map",

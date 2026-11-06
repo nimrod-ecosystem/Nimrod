@@ -360,7 +360,7 @@
   {
    "say": {
     "who": "B",
-    "text": "Pressure one: alliances. An alliance is a promise between countries to help each other. In the later 1800s, Germany's leader Bismarck built a web of alliances to keep France and Russia in check."
+    "text": "Pressure one: alliances. An alliance is a promise between countries to help each other. In the later 1800s, Germany's leader Bismarck built a web of alliances to keep France isolated and Russia friendly."
    },
    "show": {
     "kind": "key_word",
@@ -445,7 +445,7 @@
    },
    "show": {
     "kind": "big_number",
-    "text": "1,000,000+ soldiers in each great power's forces by 1914"
+    "text": "1,000,000+ soldiers in each continental great power's forces by 1914, once reserves were called up"
    },
    "cite": [
     "s4",
@@ -874,7 +874,7 @@
   {
    "say": {
     "who": "B",
-    "text": "Step three: Russia backed Serbia. To mobilise means to call up soldiers and get an army ready for war. Russia began partial mobilisation on 26 July. On 30 July the Tsar ordered general mobilisation."
+    "text": "Step three: Russia backed Serbia. To mobilise means to call up soldiers and get an army ready for war. Russia began preparing for war on 26 July and ordered partial mobilisation on 29 July. On 30 July the Tsar ordered general mobilisation."
    },
    "show": {
     "kind": "key_word",

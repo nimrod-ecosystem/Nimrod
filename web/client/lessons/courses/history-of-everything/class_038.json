@@ -362,7 +362,7 @@
   {
    "say": {
     "who": "B",
-    "text": "On October 12 he landed on an island he named San Salvador. He thought he had reached Asia. The island is also called Guanahani, and the people there were Taíno."
+    "text": "On October 12 he landed on an island he named San Salvador. He thought he had reached Asia. Its people, the Lucayan Taíno, called it Guanahani. Historians still debate which modern island it was."
    },
    "show": {
     "kind": "map",
@@ -675,11 +675,11 @@
   {
    "say": {
     "who": "B",
-    "text": "One early example: pigs on Columbus's 1493 ships spread swine flu. It sickened Columbus and others, and proved deadly to the Taíno."
+    "text": "One possible early example: some historians think pigs on Columbus's 1493 ships spread swine flu. An illness sickened Columbus and others, and may have been deadly to the Taíno, but the evidence is debated."
    },
    "show": {
     "kind": "key_word",
-    "text": "1493: swine flu on Hispaniola"
+    "text": "1493: possible swine flu on Hispaniola"
    },
    "cite": [
     "s26"

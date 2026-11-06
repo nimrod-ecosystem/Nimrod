@@ -372,11 +372,11 @@
   {
    "say": {
     "who": "B",
-    "text": "The rule also gives a payoff. Once every number is in the agreed form, the exponent tells you the size first. 10^8 is in the hundreds of millions, and 10^9 is in the billions. And the first factor must have exactly one non-zero digit before the decimal point. So 0.5 × 10^4 and 25 × 10^4 do not count, and neither does 10 × 10^3. Write 10 × 10^3 as 1 × 10^4."
+    "text": "The rule also gives a payoff. Once every number is in the agreed form, the exponent tells you the size first. 10^8 is in the hundreds of millions, and 10^9 is in the billions. And the first factor must be at least 1 and less than 10. That means exactly one digit before the decimal point, and that digit is not zero. So 0.5 × 10^4 and 25 × 10^4 do not count, and neither does 10 × 10^3. Write 10 × 10^3 as 1 × 10^4."
    },
    "show": {
     "kind": "key_word",
-    "text": "One non-zero digit before the decimal point: 1 ≤ a < 10"
+    "text": "One digit before the decimal point, and not zero: 1 ≤ a < 10"
    },
    "cite": [
     "s6",

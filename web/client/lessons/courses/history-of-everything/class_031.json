@@ -479,7 +479,7 @@
   {
    "say": {
     "who": "A",
-    "text": "You can still see this today. Tuareg caravans carry salt slabs from Taoudenni, each about 90 kilograms. But the salt sellers no longer get gold dust for it."
+    "text": "You can still see this today. Tuareg caravans carry salt slabs from Taoudenni, each about 30 kilograms. But the salt sellers no longer get gold dust for it."
    },
    "show": {
     "kind": "big_number",
@@ -533,11 +533,11 @@
   {
    "say": {
     "who": "A",
-    "text": "Ghana did not last forever. It is dated to about the 6th to the 13th century. After its collapse in 1235, the Mali Empire was founded under a ruler named Sundiata."
+    "text": "Ghana did not last forever. It is dated to about the 6th to the 13th century. It declined slowly from the 11th century, and around 1235 to 1240 a ruler named Sundiata founded the Mali Empire and took in what was left of it."
    },
    "show": {
     "kind": "timeline",
-    "text": "6th to 13th century: Ghana Empire | 1235: Ghana collapses; Mali begins under Sundiata"
+    "text": "6th to 13th century: Ghana Empire | About 1235 to 1240: Sundiata founds Mali and takes in what is left of Ghana"
    },
    "cite": [
     "s2",
@@ -1286,7 +1286,7 @@
   },
   {
    "when": "1270 and the late 1200s",
-   "elsewhere": "Yekuno Amlak overthrows the Zagwe in Ethiopia in 1270. Mali has been a new empire for a few decades, founded after Ghana collapsed in 1235. Between 1294 and 1302 Kilwa's Great Mosque is extended southward.",
+   "elsewhere": "Yekuno Amlak overthrows the Zagwe in Ethiopia in 1270. Mali has been a new empire for a few decades, founded around 1235 as it took in what was left of Ghana. Between 1294 and 1302 Kilwa's Great Mosque is extended southward.",
    "cite": [
     "s32",
     "s4",

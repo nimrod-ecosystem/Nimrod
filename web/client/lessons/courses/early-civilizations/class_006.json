@@ -740,7 +740,7 @@
   {
    "say": {
     "who": "A",
-    "text": "Corvée first shows up in the Old Kingdom, though the evidence is thin. It was used for quarries, roads and water works, not for the pyramids."
+    "text": "Corvée first shows up in the Old Kingdom, though the evidence is thin. It was used for quarries, roads and water works, and it probably supplied much of the rotating labour on the pyramids too, beside skilled, well-fed craftsmen."
    },
    "show": {
     "kind": "list",
@@ -779,11 +779,11 @@
   {
    "say": {
     "who": "A",
-    "text": "Their complaints were written on pottery pieces and speak of hunger and thirst. Even a pharaoh's projects depended on keeping workers fed."
+    "text": "Their complaints were written down by a scribe on papyrus and speak of hunger and thirst. Even a pharaoh's projects depended on keeping workers fed."
    },
    "show": {
     "kind": "picture",
-    "text": "A flat pottery fragment covered in short lines of black ink writing."
+    "text": "A sheet of papyrus covered in lines of black ink writing."
    },
    "cite": [
     "s41",
@@ -1518,7 +1518,7 @@
   },
   {
    "claim": "Egypt's big building projects were done by slaves.",
-   "other_view": "Evidence points to forced labour as a tax (corvée), not the pyramids. Historians also say the line between slave and forced labourer was often blurred, so a simple label does not fit.",
+   "other_view": "Evidence points to forced labour as a tax (corvée), probably including much of the pyramid labour, beside skilled workers. Historians also say the line between slave and forced labourer was often blurred, so a simple label does not fit.",
    "cite": [
     "s8",
     "s6"

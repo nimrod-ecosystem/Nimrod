@@ -557,7 +557,7 @@
   {
    "say": {
     "who": "B",
-    "text": "The same logbook says that once the flood ebbed, moving heavy loads by boat to Giza was no longer practical. The river's seasons shaped the work as well as the farming."
+    "text": "Scholars infer from the logbook that this heavy transport depended on the high water of the flood. The river's seasons shaped the work as well as the farming."
    },
    "show": {
     "kind": "key_word",
@@ -1034,7 +1034,7 @@
   {
    "say": {
     "who": "A",
-    "text": "Egypt was joined again in the Middle Kingdom, about 2055 to 1795 BCE. Thebes was the capital for most of the Middle and New Kingdoms."
+    "text": "Egypt was joined again in the Middle Kingdom, about 2055 to 1795 BCE. Thebes was the capital early in the Middle Kingdom, until Amenemhat I moved it north to Itjtawy, and again for much of the New Kingdom."
    },
    "show": {
     "kind": "key_word",
@@ -1053,7 +1053,7 @@
    },
    "show": {
     "kind": "timeline",
-    "text": "about 1640-1540 BCE: Second Intermediate Period, with the Delta ruled by Asiatics. about 1550 BCE: Ahmose begins the New Kingdom."
+    "text": "about 1640-1550 BCE: Second Intermediate Period, with the Delta ruled by Asiatics. about 1550 BCE: Ahmose begins the New Kingdom."
    },
    "cite": [
     "s14",
@@ -1165,7 +1165,7 @@
   {
    "say": {
     "who": "B",
-    "text": "This idea took shape at Nekhen, the Hierakonpolis we met earlier. It became accepted everywhere once kings from Nekhen had united the land."
+    "text": "This idea took shape at Nekhen, the Hierakonpolis we met earlier. It became accepted everywhere once Egypt's early kings had united the land."
    },
    "show": {
     "kind": "key_word",
@@ -1304,11 +1304,11 @@
   {
    "say": {
     "who": "A",
-    "text": "Memphis was the capital of the Old Kingdom and an administrative centre for most of ancient history. Thebes was the capital for most of the Middle and New Kingdoms."
+    "text": "Memphis was the capital of the Old Kingdom and an administrative centre for most of ancient history. Thebes was the capital early in the Middle Kingdom, until Amenemhat I moved it north to Itjtawy, and again for much of the New Kingdom."
    },
    "show": {
     "kind": "two_columns",
-    "text": "Memphis: Old Kingdom capital, at the join of the Two Lands. Thebes: capital of the Middle and New Kingdoms."
+    "text": "Memphis: Old Kingdom capital, at the join of the Two Lands. Thebes: capital early in the Middle Kingdom and for much of the New Kingdom."
    },
    "cite": [
     "s27",

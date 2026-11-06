@@ -555,7 +555,7 @@
   {
    "say": {
     "who": "B",
-    "text": "The fleet was huge. A history compiled in 1739 says that on the 1413 voyage there were over 200 ships and about 27,800 people. A famous European fleet of 1492 had three ships and about 90 people."
+    "text": "The fleet was huge. A history compiled in 1739 says that on the first voyage, in 1405, there were 62 great treasure ships and about 27,800 people. Other records count over 200 ships in all, including smaller ones. A famous European fleet of 1492 had three ships and about 90 people."
    },
    "show": {
     "kind": "big_number",
@@ -1028,7 +1028,7 @@
   {
    "say": {
     "who": "A",
-    "text": "The Ottomans return to the story. In 1517 they conquered Egypt and met the Indian Ocean world. Then they challenged Portugal there. After the Battle of Diu, Turks and Egyptians withdrew their navies from India."
+    "text": "The Ottomans return to the story. In 1517 they conquered Egypt and met the Indian Ocean world. Portugal had already beaten an Egyptian and Gujarati fleet at Diu in 1509. The Ottomans took up the challenge, but their siege of Diu in 1538 failed."
    },
    "show": {
     "kind": "key_word",

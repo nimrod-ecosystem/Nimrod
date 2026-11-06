@@ -1060,11 +1060,11 @@
   {
    "say": {
     "who": "B",
-    "text": "Who built them? Many people picture slaves. The Greek writer Herodotus, centuries later, mentioned some 100,000 slaves."
+    "text": "Who built them? Many people picture slaves. The Greek writer Herodotus, about 2,000 years later, wrote of gangs of 100,000 men forced to work in turns. Later retellings turned them into slaves."
    },
    "show": {
     "kind": "key_word",
-    "text": "Herodotus: 100,000 slaves?"
+    "text": "Herodotus: gangs of 100,000 forced workers?"
    },
    "cite": [
     "s15"
@@ -1450,7 +1450,7 @@
    "title": "Workforce figures given for the Great Pyramid (people)",
    "rows": [
     {
-     "label": "Herodotus, centuries later (slaves)",
+     "label": "Herodotus, about 2,000 years later (forced gangs)",
      "value": 100000,
      "source": "s15"
     },
@@ -1533,7 +1533,7 @@
  "other_side": [
   {
    "claim": "The Giza pyramids were built by paid, well-fed Egyptian workers, not slaves.",
-   "other_view": "The 'slave' idea comes from the Greek writer Herodotus, who wrote centuries later and mentioned some 100,000 slaves. Modern archaeology has not confirmed that picture. Estimates of the workforce also vary: 20,000 to 30,000 workers by one Egyptologists' count, and 'a few thousand' skilled craftsmen plus manual labourers by another description. Experts agree the builders were Egyptians but not on the exact numbers.",
+   "other_view": "The 'slave' idea comes from the Greek writer Herodotus, who wrote about 2,000 years later of gangs of 100,000 forced workers, which later retellings turned into slaves. Modern archaeology has not confirmed that picture. Estimates of the workforce also vary: 20,000 to 30,000 workers by one Egyptologists' count, and 'a few thousand' skilled craftsmen plus manual labourers by another description. Experts agree the builders were Egyptians but not on the exact numbers.",
    "cite": [
     "s15",
     "s16",

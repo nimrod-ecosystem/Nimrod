@@ -188,7 +188,7 @@
    "cite": [],
    "move": "fade",
    "ask": {
-    "q": "Where do we most often hear the sound of X?",
+    "q": "Where do we hear the sound of X in the word box?",
     "right": "At the end of a word, as in box",
     "wrong": [
      "Only in names",

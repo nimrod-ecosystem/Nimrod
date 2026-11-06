@@ -516,7 +516,7 @@
   {
    "say": {
     "who": "A",
-    "text": "Russia paid dearly. The failed June offensive weakened the tsar's government, and it was overthrown in February 1917. Communist revolutionaries took over in October 1917."
+    "text": "Russia paid dearly. The war's huge losses weakened the tsar's government, and it was overthrown in February 1917. Communist revolutionaries took over in October 1917."
    },
    "show": {
     "kind": "timeline",
@@ -786,7 +786,7 @@
   {
    "say": {
     "who": "B",
-    "text": "Hunger stalked civilians in all the warring nations. Blockades cut food imports. Britain's blockade of Germany ran from 1914 to the war's end."
+    "text": "Hunger stalked civilians in all the warring nations. Blockades cut food imports. Britain's blockade of Germany ran from 1914 until July 1919, months after the fighting stopped."
    },
    "show": {
     "kind": "picture",

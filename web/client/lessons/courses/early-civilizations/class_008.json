@@ -676,7 +676,7 @@
   {
    "say": {
     "who": "B",
-    "text": "The famous find is the etched carnelian bead, with white patterns. Indus beads were in Ur tombs dated about 2600 to 2450 BCE. Queen Puabi's bead cloak is probably largely Indian beads."
+    "text": "The famous find is the etched carnelian bead, with white patterns. Indus beads were in Ur tombs dated about 2600 to 2450 BCE. Queen Puabi's bead cloak mixed carnelian, agate, lapis, gold and silver, and some of its carnelian beads may have come from the Indus."
    },
    "show": {
     "kind": "picture",
@@ -813,7 +813,7 @@
   {
    "say": {
     "who": "B",
-    "text": "Now the big question: why did the cities fade? By about 1700 BCE the main cities, Harappa and Mohenjo-daro among them, were abandoned, and long-distance trade dropped."
+    "text": "Now the big question: why did the cities fade? By about 1700 BCE the great cities had declined: Mohenjo-daro was abandoned, Harappa shrank to a much smaller town, and long-distance trade dropped."
    },
    "show": {
     "kind": "heading",
@@ -1108,7 +1108,7 @@
   },
   {
    "when": "c. 1900–1700 BCE",
-   "elsewhere": "Indus cities such as Harappa and Mohenjo-daro are abandoned by about 1700 BCE. Mentions of Meluhha in Mesopotamian texts are not known after 1760 BCE.",
+   "elsewhere": "By about 1700 BCE the Indus cities have declined: Mohenjo-daro is abandoned and Harappa has shrunk. Mentions of Meluhha in Mesopotamian texts are not known after 1760 BCE.",
    "cite": [
     "s23",
     "s15"

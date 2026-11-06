@@ -819,7 +819,7 @@
   {
    "say": {
     "who": "B",
-    "text": "The bones were traced back to Xiaotun near Anyang. In 1928 a team began digging, led by Li Chi. They made 15 digs by 1937. Local people had been digging illegally and selling bones for years."
+    "text": "The bones were traced back to Xiaotun near Anyang. In 1928 a team began digging, and from 1929 it was led by Li Chi. They made 15 digs by 1937. Local people had been digging illegally and selling bones for years."
    },
    "show": {
     "kind": "timeline",
@@ -866,7 +866,7 @@
   {
    "say": {
     "who": "B",
-    "text": "She was buried at Yinxu around 1200 BCE with great wealth. Her tomb held hundreds of bronzes and jades, over a thousand bone artefacts, and more than 7,000 seashells. It also held 16 human sacrifices."
+    "text": "She was buried at Yinxu around 1200 BCE with great wealth. Her tomb held hundreds of bronzes and jades, over 500 bone artefacts, mostly hairpins, and more than 7,000 seashells. It also held 16 human sacrifices."
    },
    "show": {
     "kind": "chart",
@@ -914,7 +914,7 @@
    },
    "show": {
     "kind": "key_word",
-    "text": "Bronze casting began at Erlitou"
+    "text": "Casting bronze vessels began at Erlitou"
    },
    "cite": [
     "s14",
@@ -1041,12 +1041,12 @@
     },
     {
      "label": "Jade objects",
-     "value": 590,
+     "value": 755,
      "source": "s36"
     },
     {
      "label": "Bone artefacts",
-     "value": 1928,
+     "value": 564,
      "source": "s35"
     }
    ]

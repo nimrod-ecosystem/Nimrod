@@ -557,7 +557,7 @@
   {
    "say": {
     "who": "A",
-    "text": "Snow proposed that cholera spread through contaminated water. Local officials removed the pump's handle, and the outbreak was contained."
+    "text": "Snow proposed that cholera spread through contaminated water. Local officials removed the pump's handle. The outbreak was already fading by then, so historians debate how much that helped."
    },
    "show": {
     "kind": "key_word",
@@ -669,11 +669,11 @@
   {
    "say": {
     "who": "B",
-    "text": "At first some surgeons found it excessive, because they did not accept that germs cause infection. By 1875, scrubbing hands and sterilizing instruments were widely practised."
+    "text": "At first some surgeons found it excessive, because they did not accept that germs cause infection. By the 1880s, scrubbing hands and sterilizing instruments were widely practised."
    },
    "show": {
     "kind": "key_word",
-    "text": "Widely practised by 1875"
+    "text": "Widely practised by the 1880s"
    },
    "cite": [
     "s13",

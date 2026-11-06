@@ -418,11 +418,11 @@
   {
    "say": {
     "who": "B",
-    "text": "That gives you a way to tell the moves apart. Same way round means slide. Mirror image means flip. Turned on its side means turn."
+    "text": "That gives you a way to tell the moves apart. Same way round means slide. Mirror image means flip. Turned to face a different way means turn."
    },
    "show": {
     "kind": "list",
-    "text": "Same orientation: translation | Mirror image: reflection | Turned: rotation"
+    "text": "Facing the same way: translation | Mirror image: reflection | Turned: rotation"
    },
    "cite": [
     "s6"

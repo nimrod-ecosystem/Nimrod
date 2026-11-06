@@ -574,11 +574,11 @@
   {
    "say": {
     "who": "B",
-    "text": "The beetle's spray is much hotter than other insects' sprays, and it shoots out five times faster. The beetle itself is not harmed."
+    "text": "The beetle's spray is much hotter than the sprays of other insects that use the same chemical, and it shoots out five times faster. The beetle itself is not harmed."
    },
    "show": {
     "kind": "big_number",
-    "text": "5×: how much faster the beetle's jet is than other insects' sprays"
+    "text": "5×: how much faster the beetle's jet is than the sprays of other insects that use the same chemical"
    },
    "cite": [
     "s1"

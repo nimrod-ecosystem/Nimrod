@@ -597,7 +597,7 @@
   {
    "say": {
     "who": "A",
-    "text": "Look at the sizes. Alexandria's population reached about a million. Antioch, the biggest Seleucid city, had about half a million."
+    "text": "Look at the sizes. These are rough estimates. Alexandria's population may have reached a million. Antioch, a great Seleucid capital, may have had half a million at its largest."
    },
    "show": {
     "kind": "chart",
@@ -750,7 +750,7 @@
   {
    "say": {
     "who": "B",
-    "text": "The Roman poet Lucan wrote about this darker side three hundred years later. He described Alexander's looting and killing in harsh words, which one modern reviewer quotes."
+    "text": "The Roman poet Lucan wrote about this darker side nearly four hundred years later. He described Alexander's looting and killing in harsh words, which one modern reviewer quotes."
    },
    "show": {
     "kind": "quote",
@@ -874,15 +874,15 @@
   {
    "id": "c1",
    "kind": "bar",
-   "title": "Population of two big Hellenistic cities (people)",
+   "title": "Rough estimates of the largest population of two big Hellenistic cities (people)",
    "rows": [
     {
-     "label": "Alexandria (Ptolemaic Egypt), population reached",
+     "label": "Alexandria (Ptolemaic Egypt), perhaps up to",
      "value": 1000000,
      "source": "s1"
     },
     {
-     "label": "Antioch (Seleucid kingdom)",
+     "label": "Antioch (Seleucid kingdom), perhaps up to",
      "value": 500000,
      "source": "s1"
     }

@@ -392,7 +392,7 @@
   {
    "say": {
     "who": "B",
-    "text": "Seeing is not enough. Others must be able to check. He watched Jupiter on almost every night from 7 January to 6 March 1610, then published a small book, the Starry Messenger."
+    "text": "Seeing is not enough. Others must be able to check. He watched Jupiter on almost every night from 7 January to 2 March 1610, then published a small book, the Starry Messenger."
    },
    "show": {
     "kind": "picture",
@@ -496,7 +496,7 @@
   {
    "say": {
     "who": "B",
-    "text": "Before a paper is printed, it can be checked. Peer review means colleagues in the same field read it, usually without knowing who wrote it."
+    "text": "Before a paper is printed, it can be checked. Peer review means colleagues in the same field read it, and they usually stay unnamed to the author."
    },
    "show": {
     "kind": "key_word",

@@ -448,7 +448,7 @@
   {
    "say": {
     "who": "A",
-    "text": "Predictable means redundant. In longer text, nearly all of a message can be guessed from a small random sample. That is why you can often read with letters missing."
+    "text": "Predictable means redundant. In longer text, about three quarters of the letters are predictable, so many missing letters can be filled in from the rest. That is why you can often read with letters missing."
    },
    "show": {
     "kind": "key_word",

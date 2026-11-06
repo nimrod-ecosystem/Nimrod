@@ -608,7 +608,7 @@
   {
    "say": {
     "who": "A",
-    "text": "After gold was found in 1875, the Hills were taken for white settlement. That dispute is still contested today."
+    "text": "After gold was found in 1874, the Hills were taken for white settlement. That dispute is still contested today."
    },
    "show": {
     "kind": "key_word",
@@ -712,11 +712,11 @@
   {
    "say": {
     "who": "A",
-    "text": "Even this figure varies by place. Greenland's Arnakuagsak and Alaska's Nerrivik are described as equivalents of Sedna. Near the Coronation Gulf, Arnapkapfaaluk is described as feared, withholding animals when a taboo was broken."
+    "text": "Even this figure varies by place. Greenland's Arnakuagsak and Nerrivik are described as equivalents of Sedna. Near the Coronation Gulf, Arnapkapfaaluk is described as feared, withholding animals when a taboo was broken."
    },
    "show": {
     "kind": "two_columns",
-    "text": "Sedna (Canada), Arnakuagsak (Greenland), Nerrivik (Alaska) | Arnapkapfaaluk (Coronation Gulf): feared, withholds animals"
+    "text": "Sedna (Canada), Arnakuagsak (Greenland), Nerrivik (Greenland) | Arnapkapfaaluk (Coronation Gulf): feared, withholds animals"
    },
    "cite": [
     "s22",
@@ -850,7 +850,7 @@
   {
    "say": {
     "who": "A",
-    "text": "Now the hard part of this history: restrictions. In the United States in 1883, an official wrote that Native dances, ceremonies and healers held people back from adopting white customs. That led to the Code of Indian Offenses, rules against Native religious practices."
+    "text": "Now the hard part of this history: restrictions. In the United States in 1882, an official wrote that Native dances, ceremonies and healers held people back from adopting white customs. That led to the Code of Indian Offenses in 1883, rules against Native religious practices."
    },
    "show": {
     "kind": "heading",
@@ -883,7 +883,7 @@
    },
    "show": {
     "kind": "timeline",
-    "text": "1884: Indian Act amended | 1885: ban in force | 1951: ban removed | 1952: first public potlatch"
+    "text": "1884: Indian Act amended | 1885: ban in force | 1951: ban removed | 1953: first public potlatch"
    },
    "cite": [
     "s14",
@@ -895,7 +895,7 @@
   {
    "say": {
     "who": "B",
-    "text": "Yet the ban did not end the potlatch. It went underground and was held in secret. In 1952, Chief Mungo Martin of the Kwakwaka’wakw hosted the first public potlatch, in Victoria. Many seized treasures are now at the U'mista Cultural Centre."
+    "text": "Yet the ban did not end the potlatch. It went underground and was held in secret. In 1953, Chief Mungo Martin of the Kwakwaka’wakw hosted the first public potlatch, in Victoria. Many seized treasures are now at the U'mista Cultural Centre."
    },
    "show": {
     "kind": "key_word",
@@ -911,10 +911,10 @@
     "right": "Communities kept holding it in secret, and held public potlatches again after 1951.",
     "wrong": [
      "It was moved to another country.",
-     "It stopped completely and was invented again in 1952.",
+     "It stopped completely and was invented again in 1953.",
      "Museums performed it on behalf of the nations."
     ],
-    "why": "Sources say potlatches went underground during the ban, and the first public one followed in 1952."
+    "why": "Sources say potlatches went underground during the ban, and the first public one followed in 1953."
    }
   },
   {

@@ -450,11 +450,11 @@
   {
    "say": {
     "who": "A",
-    "text": "A heads-up for later. With lines you get one answer when you solve. With curved graphs, different inputs can give the same output, so there can be more than one."
+    "text": "A heads-up for later. With lines that slope, you get one answer when you solve. With curved graphs, different inputs can give the same output, so there can be more than one."
    },
    "show": {
     "kind": "key_word",
-    "text": "Lines: one answer. Curves: sometimes more than one."
+    "text": "Sloped lines: one answer. Curves: sometimes more than one."
    },
    "cite": [
     "s2"

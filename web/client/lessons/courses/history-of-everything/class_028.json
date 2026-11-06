@@ -494,7 +494,7 @@
   {
    "say": {
     "who": "B",
-    "text": "It was fast work. An earlier code had taken nine years, and Justinian's took thirteen months. Its ideas still shape the civil-law tradition of Europe."
+    "text": "It was fast work. An earlier code had taken nine years, and Justinian's took about fourteen months. Its ideas still shape the civil-law tradition of Europe."
    },
    "show": {
     "kind": "big_number",
@@ -683,7 +683,7 @@
   {
    "say": {
     "who": "A",
-    "text": "The pope did this in return for political protection, and he ignored Byzantium's claim to be the one Roman Empire. In 813, Byzantium's Emperor Michael I accepted Charlemagne's title."
+    "text": "The pope did this in return for political protection, and he ignored Byzantium's claim to be the one Roman Empire. In 812, Byzantium's Emperor Michael I accepted Charlemagne's title."
    },
    "show": {
     "kind": "two_columns",
@@ -1319,7 +1319,7 @@
   },
   {
    "claim": "Charlemagne's coronation in 800 created a legitimate new Roman emperor.",
-   "other_view": "From Byzantium's view, there already was a Roman emperor, and its people saw themselves as the Romans. Charlemagne's title was not accepted by Byzantium until 813, and after 800 the West began calling the Byzantines 'Greeks'.",
+   "other_view": "From Byzantium's view, there already was a Roman emperor, and its people saw themselves as the Romans. Charlemagne's title was not accepted by Byzantium until 812, and after 800 the West began calling the Byzantines 'Greeks'.",
    "cite": [
     "s12",
     "s13",

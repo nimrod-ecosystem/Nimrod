@@ -503,7 +503,7 @@
   {
    "say": {
     "who": "B",
-    "text": "Archaeologists found it first. In 1891 Eugene Dubois dug up a skull cap and a thigh bone at Trinil on Java."
+    "text": "Archaeologists found it first. In 1891 Eugene Dubois's team dug up a skull cap at Trinil on Java, and a thigh bone nearby in 1892."
    },
    "show": {
     "kind": "two_columns",
@@ -576,11 +576,11 @@
   {
    "say": {
     "who": "A",
-    "text": "Nearby is Gran Dolina. About 80 fossils from there were named Homo antecessor in the mid-1990s. They are about 900,000 to 800,000 years old."
+    "text": "Nearby is Gran Dolina. About 80 fossils were found there in the mid-1990s and named Homo antecessor in 1997. They are about 900,000 to 800,000 years old."
    },
    "show": {
     "kind": "two_columns",
-    "text": "Gran Dolina lived: about 900,000 to 800,000 years ago | Found and named: mid-1990s"
+    "text": "Gran Dolina lived: about 900,000 to 800,000 years ago | Found: mid-1990s, named: 1997"
    },
    "cite": [
     "s15",

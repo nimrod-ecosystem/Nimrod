@@ -219,7 +219,7 @@
    },
    "show": {
     "kind": "key_word",
-    "text": "Prediction error = guess minus signal"
+    "text": "Prediction error = signal minus guess"
    },
    "cite": [
     "s19"
@@ -480,7 +480,7 @@
    },
    "show": {
     "kind": "quote",
-    "text": "Selfhood may arise because we are 'beast machines', not despite it (Seth and Friston, 2016)"
+    "text": "Selfhood may arise because we are 'beast machines', not despite it (Seth and Tsakiris, 2018)"
    },
    "cite": [
     "s3",

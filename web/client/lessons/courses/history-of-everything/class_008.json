@@ -749,11 +749,11 @@
   {
    "say": {
     "who": "B",
-    "text": "The fossil that made this vivid is Tiktaalik, found on Ellesmere Island in northern Canada. It was found by a team from Chicago, Harvard and Philadelphia. It was perhaps three feet long."
+    "text": "The fossil that made this vivid is Tiktaalik, found on Ellesmere Island in northern Canada. It was found by a team from Chicago, Harvard and Philadelphia. It was big, perhaps four to nine feet long."
    },
    "show": {
     "kind": "picture",
-    "text": "Tiktaalik: a flat-headed fish about three feet long, with eyes on top of its head and sturdy front fins"
+    "text": "Tiktaalik: a flat-headed fish up to about nine feet long, with eyes on top of its head and sturdy front fins"
    },
    "cite": [
     "s25",
@@ -903,7 +903,7 @@
   {
    "say": {
     "who": "A",
-    "text": "Plants then grew taller. By the Late Devonian, trees like Archaeopteris stood about ten metres tall. It is not the bird Archaeopteryx, just a confusingly similar name. Together with other early trees, it formed the first forests."
+    "text": "Plants then grew taller. By the Late Devonian, trees like Archaeopteris stood 20 metres tall or more. It is not the bird Archaeopteryx, just a confusingly similar name. Together with other early trees, it formed the first forests."
    },
    "show": {
     "kind": "picture",
@@ -1146,7 +1146,7 @@
   {
    "say": {
     "who": "A",
-    "text": "Now the frame of reference: what else was going on? There were no people, politics or art yet. Instead, think of the planet: shifting continents, no polar ice, and new life in the seas and on the land."
+    "text": "Now the frame of reference: what else was going on? There were no people, politics or art yet. Instead, think of the planet: shifting continents, a mostly warm climate broken by ice ages near the end of the Ordovician and again in the Carboniferous, and new life in the seas and on the land."
    },
    "show": {
     "kind": "timeline",

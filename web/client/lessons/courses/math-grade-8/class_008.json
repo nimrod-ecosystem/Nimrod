@@ -455,7 +455,7 @@
    },
    "show": {
     "kind": "two_columns",
-    "text": "Earth to Sun: about 1.497 × 10^8 km\nEarth to Moon: about 3.844 × 10^5 km"
+    "text": "Earth to Sun: about 1.496 × 10^8 km\nEarth to Moon: about 3.844 × 10^5 km"
    },
    "cite": [
     "s11",
@@ -471,7 +471,7 @@
      "About 3,900 times",
      "About 0.0026 times"
     ],
-    "why": "Divide the front numbers: 1.497 ÷ 3.844 is about 0.39. Subtract the exponents: 8 - 5 = 3. That gives 0.39 × 10^3. The front number is under 1, so shift it: 3.9 × 10^2, about 390. 39 and 3,900 are off by one power of 10, which is why you fix the front number carefully. 0.0026 divides the wrong way round."
+    "why": "Divide the front numbers: 1.496 ÷ 3.844 is about 0.39. Subtract the exponents: 8 - 5 = 3. That gives 0.39 × 10^3. The front number is under 1, so shift it: 3.9 × 10^2, about 390. 39 and 3,900 are off by one power of 10, which is why you fix the front number carefully. 0.0026 divides the wrong way round."
    }
   },
   {

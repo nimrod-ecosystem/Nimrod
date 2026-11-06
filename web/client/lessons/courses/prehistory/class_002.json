@@ -365,11 +365,11 @@
   {
    "say": {
     "who": "A",
-    "text": "Laetoli has two dates. The prints were made about 3.66 million years ago. Erosion later uncovered them, and Mary Leakey's team found them in 1976. They were fully excavated by 1978."
+    "text": "Laetoli has two dates. The prints were made about 3.66 million years ago. Erosion later uncovered them, and Mary Leakey's team found them in 1976. They were excavated over 1978 and 1979."
    },
    "show": {
     "kind": "timeline",
-    "text": "About 3.66 million years ago: prints made in wet ash | 1976: found by Mary Leakey's team | 1978: fully excavated"
+    "text": "About 3.66 million years ago: prints made in wet ash | 1976: found by Mary Leakey's team | 1978 to 1979: excavated"
    },
    "cite": [
     "s7",

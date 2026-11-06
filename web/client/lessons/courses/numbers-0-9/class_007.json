@@ -28,7 +28,7 @@
   {
    "say": {
     "who": "B",
-    "text": "Here is a number line. It has ten big steps, one for each number. We start at 0 on the left and end at 9 on the right. Each number sits one step after the one before it."
+    "text": "Here is a number line. It has ten numbers, one after another. We start at 0 on the left and end at 9 on the right. Each number sits one step after the one before it."
    },
    "show": {
     "kind": "list",

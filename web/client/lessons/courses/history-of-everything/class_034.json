@@ -453,7 +453,7 @@
   {
    "say": {
     "who": "A",
-    "text": "In 1210 Genghis Khan marched against the Jin dynasty in northern China. By 1220 his armies had taken the big Central Asian cities of Samarkand and Bukhara."
+    "text": "In 1211 Genghis Khan marched against the Jin dynasty in northern China. By 1220 his armies had taken the big Central Asian cities of Samarkand and Bukhara."
    },
    "show": {
     "kind": "map",
@@ -535,11 +535,11 @@
   {
    "say": {
     "who": "B",
-    "text": "His son Ogedei expanded the empire to make a Eurasia-wide system of trade and taxes. But he left no clear plan for who would rule next. Under his nephew Mongke, the united empire came to an end."
+    "text": "His son Ogedei expanded the empire to make a Eurasia-wide system of trade and taxes. But he left no clear plan for who would rule next. After his nephew Mongke died in 1259, the united empire broke apart."
    },
    "show": {
     "kind": "list",
-    "text": "Ogedei: expand, trade, collect taxes | No clear plan for succession | Mongke: the end of a united empire"
+    "text": "Ogedei: expand, trade, collect taxes | No clear plan for succession | After Mongke: the end of a united empire"
    },
    "cite": [
     "s5"

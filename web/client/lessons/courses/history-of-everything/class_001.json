@@ -532,7 +532,7 @@
   {
    "say": {
     "who": "A",
-    "text": "One more thing: how years are labeled. In this course you will see BCE and CE, short for Before Common Era and Common Era. They are the same year numbers as BC and AD. The label is different, not the date. Either set is acceptable by the international standard for dates, and scientific writing leans towards BCE and CE. A monk named Dionysius invented the system around the year 525, and the English writer Bede later counted the years before year 1 backwards. There is no year zero. 1 BCE is followed straight by 1 CE. So from the start of 500 BCE to the start of 500 CE is 999 years, not 1,000. For very old events, we will say 'years ago', like 13.8 billion years ago.",
+    "text": "One more thing: how years are labeled. In this course you will see BCE and CE, short for Before Common Era and Common Era. They are the same year numbers as BC and AD. The label is different, not the date. Both sets are widely used, and scientific writing leans towards BCE and CE. A monk named Dionysius invented the system around the year 525, and the English writer Bede later counted the years before year 1 backwards. There is no year zero. 1 BCE is followed straight by 1 CE. So from the start of 500 BCE to the start of 500 CE is 999 years, not 1,000. For very old events, we will say 'years ago', like 13.8 billion years ago.",
     "ask": {
      "q": "In the BCE/CE system, which year comes right after 1 BCE?",
      "right": "1 CE",
@@ -698,7 +698,7 @@
   },
   {
    "claim": "Years should be labeled BCE and CE.",
-   "other_view": "BC and AD are the older labels for the same year numbers. The international standard accepts either, so the choice is about wording and tradition, not about the dates themselves. Science and history writing tends to prefer BCE and CE, and many other writers still use BC and AD.",
+   "other_view": "BC and AD are the older labels for the same year numbers. Both are in wide use, so the choice is about wording and tradition, not about the dates themselves. Science and history writing tends to prefer BCE and CE, and many other writers still use BC and AD.",
    "cite": [
     "s19"
    ]

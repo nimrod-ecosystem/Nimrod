@@ -774,11 +774,11 @@
   {
    "say": {
     "who": "B",
-    "text": "That night the two sides found a deal. The Soviets would remove their missiles. The U.S. promised not to invade Cuba, and to remove its own Jupiter missiles from Turkey. Both leaders announced it the next day."
+    "text": "That night the two sides found a deal. The Soviets would remove their missiles. The U.S. publicly promised not to invade Cuba, and privately agreed to remove its own Jupiter missiles from Turkey, a part kept secret for decades. The next day Khrushchev announced the Soviet withdrawal."
    },
    "show": {
     "kind": "two_columns",
-    "text": "Soviet Union: removes missiles from Cuba | United States: no invasion of Cuba, and removes Jupiter missiles from Turkey"
+    "text": "Soviet Union: removes missiles from Cuba | United States: no invasion of Cuba, and, in secret, removes Jupiter missiles from Turkey"
    },
    "cite": [
     "s39"

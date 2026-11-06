@@ -596,7 +596,7 @@
   {
    "say": {
     "who": "A",
-    "text": "Writing appears only about 6,000 years ago. Our species is about 300,000 years old. So for roughly 98 out of every 100 of those years, voice and memory were the only way to hand knowledge down."
+    "text": "Writing appears only about 5,300 years ago. Our species is about 300,000 years old. So for roughly 98 out of every 100 of those years, voice and memory were the only way to hand knowledge down."
    },
    "show": {
     "kind": "big_number",
@@ -659,7 +659,7 @@
     },
     {
      "label": "Writing appears (about)",
-     "value": 6000,
+     "value": 5300,
      "source": "s1"
     }
    ]
@@ -751,7 +751,7 @@
    ]
   },
   {
-   "when": "About 6,000 years ago",
+   "when": "About 5,300 years ago",
    "elsewhere": "Writing appears, ending the long era when voice and memory were the only way to hand knowledge down.",
    "cite": [
     "s1"

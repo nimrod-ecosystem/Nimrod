@@ -530,7 +530,7 @@
    },
    "show": {
     "kind": "map",
-    "text": "A map of Africa with three pins: Jebel Irhoud, Morocco (300,000 years); Florisbad, South Africa (260,000); Omo Kibish, Ethiopia (195,000)."
+    "text": "A map of Africa with three pins: Jebel Irhoud, Morocco (300,000 years); Florisbad, South Africa (260,000); Omo Kibish, Ethiopia (at least 233,000)."
    },
    "cite": [
     "s8",
@@ -541,7 +541,7 @@
     "q": "Which site has the oldest known Homo sapiens fossils?",
     "right": "Jebel Irhoud in Morocco, about 300,000 years old",
     "wrong": [
-     "Omo Kibish in Ethiopia, about 195,000 years old",
+     "Omo Kibish in Ethiopia, at least 233,000 years old",
      "Florisbad in South Africa, about 260,000 years old",
      "Dmanisi in Georgia, about 1.77 million years old"
     ],

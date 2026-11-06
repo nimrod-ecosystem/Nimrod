@@ -413,11 +413,11 @@
   {
    "say": {
     "who": "A",
-    "text": "The Natufians of the Levant did this, roughly 13,000 to 10,000 years ago. Sources give slightly different dates."
+    "text": "The Natufians of the Levant did this, roughly 14,500 to 11,500 years ago. Sources give slightly different dates."
    },
    "show": {
     "kind": "timeline",
-    "text": "About 13,000 to 10,000 years ago: the Natufians, settled hunter-gatherers"
+    "text": "About 14,500 to 11,500 years ago: the Natufians, settled hunter-gatherers"
    },
    "cite": [
     "s3",
@@ -1253,7 +1253,7 @@
    },
    "show": {
     "kind": "timeline",
-    "text": "About 13,000 to 10,000 years ago: Natufians | 9500 BCE: Göbekli Tepe | 8000 BCE: Jericho tower | 7100 BCE: Çatalhöyük | 3400 BCE: writing"
+    "text": "About 14,500 to 11,500 years ago: Natufians | 9500 BCE: Göbekli Tepe | 8000 BCE: Jericho tower | 7100 BCE: Çatalhöyük | 3400 BCE: writing"
    },
    "cite": [
     "s3",

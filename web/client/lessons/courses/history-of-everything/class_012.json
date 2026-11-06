@@ -501,7 +501,7 @@
   {
    "say": {
     "who": "A",
-    "text": "Be careful, though. No fire-lighting tools have been found at Barnham yet. Reports also differ on who lit the fires: most likely Neanderthals, or perhaps Homo heidelbergensis."
+    "text": "Be careful, though. No full fire-lighting kit has been found at Barnham, only the two pieces of pyrite, and some experts think the case for fire-making stretches the evidence. Reports also differ on who lit the fires: most likely Neanderthals, or perhaps Homo heidelbergensis."
    },
    "show": {
     "kind": "two_columns",
@@ -1205,7 +1205,7 @@
   },
   {
    "claim": "Early humans learned to make fire about 400,000 years ago, at Barnham.",
-   "other_view": "Barnham may be the oldest deliberate fire-making, but no fire-lighting tools have been found there yet, and reports differ on whether Neanderthals or Homo heidelbergensis lit the fires.",
+   "other_view": "Barnham may be the oldest deliberate fire-making, but the only fire-making evidence is two pieces of pyrite, and some experts think that stretches the evidence, and reports differ on whether Neanderthals or Homo heidelbergensis lit the fires.",
    "cite": [
     "s6",
     "s7"
