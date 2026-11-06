@@ -219,7 +219,28 @@ export const DEFAULTS = Object.freeze({
   label: 'Your words', imageFrom: '', image: '', frame: 'none', font: 'theme', style: 'plain',
   color: DEFAULT_INK, background: DEFAULT_GROUND, whenPressed: 'nothing',
   inkHue: 0, inkSaturation: 0, inkLightness: 0,
+  wordsAlign: 'center', wordsSize: 'auto', wordsEmphasis: 'bold',
 });
+
+// WORDS AS TEXT (note FD 3): plain words only. The SIZES, argued (Rule 1): steps of the panel's own short side (cqmin),
+// as the face already sizes itself, so a size reads the same on a small panel and a whole screen. `auto` is the face's
+// own size (12cqmin, between 14 and 170 px). Every step keeps the face's floor of 14 px: no step makes words a person
+// at a bed cannot read (the fitted signs' 8 px floor is theirs, not this). small 7, medium 9, large 14, huge 20.
+export const WORDS_ALIGN = Object.freeze([
+  { value: 'center', label: 'In the middle' }, { value: 'left', label: 'On the left' }, { value: 'right', label: 'On the right' },
+]);
+export const WORDS_SIZES = Object.freeze([
+  { value: 'auto', label: 'As big as the button allows' }, { value: 'small', label: 'Small' },
+  { value: 'medium', label: 'Medium' }, { value: 'large', label: 'Large' }, { value: 'huge', label: 'Huge' },
+]);
+export const WORDS_EMPHASIS = Object.freeze([
+  { value: 'bold', label: 'Bold' }, { value: 'regular', label: 'Not bold' }, { value: 'italic', label: 'Slanted' },
+]);
+/** Whether the words are PLAIN words (no designed sign, no frame, no picture): only then do the text rows apply. */
+export function plainWords(row) {
+  const r = row || {};
+  return (r.style == null || r.style === 'plain') && (r.frame == null || r.frame === 'none') && !r.image;
+}
 
 // ---------------------------------------------------------------------------------------
 // *** HUE, SATURATION AND LIGHTNESS OF THE WORDS, AS NUMBERS (row 2.41, 2026-09-30). ***
@@ -371,6 +392,18 @@ export const SETTINGS = [
   { key: 'background', label: 'Background color', kind: 'color', default: DEFAULTS.background,
     level: 'standard',
     appliesWhen: (row) => { const c = configFrom(row); return c.style === 'plain' || c.frame !== 'none'; } },
+  // *** WORDS AS TEXT (note FD 3, gated; Mike, row 2.218: "a text box whose style, colour and font can be changed"). ***
+  // Three rows for PLAIN words only (no sign, no frame, no picture): a designed sign sizes its own words to fit it (fitWords),
+  // and a caption under a picture follows the picture. Each one's DEFAULT is today's look, so no sign or picture already on
+  // a screen changes: centred, the size the plain face has always had, bold.
+  { key: 'wordsAlign', label: 'Line up the words', kind: 'choice', default: DEFAULTS.wordsAlign, level: 'standard',
+    options: WORDS_ALIGN.map(({ value, label }) => ({ value, label })), appliesWhen: plainWords },
+  { key: 'wordsSize', label: 'Size of the words', kind: 'choice', default: DEFAULTS.wordsSize, level: 'standard',
+    options: WORDS_SIZES.map(({ value, label }) => ({ value, label })), appliesWhen: plainWords },
+  // ADVANCED, argued (the gate on FD 3): the standard menu already shows up to eight rows to walk on one switch; emphasis is
+  // the one a person sets up once, if at all.
+  { key: 'wordsEmphasis', label: 'Words: bold or not', kind: 'choice', default: DEFAULTS.wordsEmphasis, level: 'advanced',
+    options: WORDS_EMPHASIS.map(({ value, label }) => ({ value, label })), appliesWhen: plainWords },
   { key: 'whenPressed', label: 'When pressed', kind: 'choice', default: DEFAULTS.whenPressed,
     level: 'standard', options: WHEN_PRESSED.map(({ value, label }) => ({ value, label })) },
   // The three offsets (see "HUE, SATURATION AND LIGHTNESS" above). Steps: 10 points / 30 degrees,
@@ -396,6 +429,9 @@ export function configFrom(row = {}) {
   if (!STYLES.some((x) => x.value === cfg.style)) cfg.style = DEFAULTS.style;
   if (!FRAMES.some((x) => x.value === cfg.frame)) cfg.frame = DEFAULTS.frame;
   if (cfg.whenPressed !== 'say') cfg.whenPressed = 'nothing';
+  if (!WORDS_ALIGN.some((x) => x.value === cfg.wordsAlign)) cfg.wordsAlign = DEFAULTS.wordsAlign;
+  if (!WORDS_SIZES.some((x) => x.value === cfg.wordsSize)) cfg.wordsSize = DEFAULTS.wordsSize;
+  if (!WORDS_EMPHASIS.some((x) => x.value === cfg.wordsEmphasis)) cfg.wordsEmphasis = DEFAULTS.wordsEmphasis;
   cfg.label = String(cfg.label ?? '');
   // Whether the colour in force is the person's or the look's suggestion (see "THE WORDS' COLOUR").
   cfg.inkChosen = !!normalizeHex(row?.color);
@@ -596,6 +632,12 @@ registerModule(
       faceEl.setAttribute('aria-label', words || (ref ? 'Picture' : 'Button'));
       faceEl.dataset.style = cfg.style;
       faceEl.dataset.frame = cfg.frame;
+      // WORDS AS TEXT (note FD 3): only on plain words; a default is no attribute at all, so today's face is unchanged.
+      const plain = plainWords({ style: cfg.style, frame: cfg.frame, image: cfg.image });
+      const textFlag = (k, v, dflt) => { if (plain && v !== dflt) faceEl.dataset[k] = v; else delete faceEl.dataset[k]; };
+      textFlag('wordsAlign', cfg.wordsAlign, DEFAULTS.wordsAlign);
+      textFlag('wordsSize', cfg.wordsSize, DEFAULTS.wordsSize);
+      textFlag('wordsEmphasis', cfg.wordsEmphasis, DEFAULTS.wordsEmphasis);
       flag('inkChosen', cfg.inkChosen);
       faceEl.style.setProperty('--nb-ink', inkInForce(cfg));
       faceEl.style.setProperty('--nb-bg', cfg.background);

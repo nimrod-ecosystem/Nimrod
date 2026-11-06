@@ -251,7 +251,26 @@ export function pageItems({ pages = AI_PAGES } = {}) {
 export const openable = (it) => !!it && (it.kind !== 'page' || !!it.path);
 export function libraryItems(opts = {}) {
   // bricks module (row 2.76): no card per published part any more -- the Bricks module (a module item) is all of them.
-  return [...moduleItems(opts), ...sceneItems(opts), ...pageItems(opts), ...furnitureItems(opts)].filter(openable);
+  return [...moduleItems(opts), ...sceneItems(opts), ...presetItems(opts), ...pageItems(opts), ...furnitureItems(opts)].filter(openable);
+}
+
+// *** TEXT (note FD 3, gated: a preset of Button, not a second module; Mike, row 2.218). *** A module listed again with the
+// settings it starts with, as the rooms are (sceneItems). "Text" is a Button with plain words, lined up on the left, at
+// medium size: everything else about it is the Button's own settings, and a fix to one is a fix to both.
+export const TEXT_PRESET = Object.freeze({ style: 'plain', frame: 'none', image: '', wordsAlign: 'left', wordsSize: 'medium',
+  label: 'Your words here' });
+export function presetItems({ manifests = listManifests() } = {}) {
+  const has = (t) => (manifests || []).some((m) => m && m.type === t);
+  const out = [];
+  if (has('button')) {
+    out.push({ key: 'preset:button:text', kind: 'preset', id: 'button:text', type: 'button', title: 'Text',
+      lead: 'Words on the screen: a note, a heading, a reminder.',
+      why: 'A Button set up as plain words. Change the words, their size, where they line up, the font and the colors in its '
+        + 'settings, or press them in Edit to change them where they are.',
+      needs: 'Nothing.', note: '', use: 'touch', group: 'comfort', cats: ['visual'],
+      settings: { ...TEXT_PRESET }, placeable: true, whyNot: '', link: '', lockKey: 'module:button', stage: stageOf('button') });
+  }
+  return out;
 }
 
 // ---------------------------------------------------------------------------------------------------

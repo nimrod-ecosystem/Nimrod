@@ -89,6 +89,11 @@ try {
       scenes.length === Object.keys(ROOM_PRESETS).length
       && scenes.every((s) => s.type === 'room' && s.settings.preset) && !scenes.some((s) => s.type === 'scene'), String(scenes.length));
     check('...and none without its module registered', sceneItems({ manifests: [] }).length === 0);
+    // NOTE FD 3 (2026-11-06): "Text" is a Button with its starting settings, listed as the rooms are.
+    const text = its.find((i) => i.key === 'preset:button:text');
+    check('*** "Text" is listed: a Button that starts as plain words on the left, at medium size ***', !!text && text.type === 'button'
+      && text.title === 'Text' && text.settings.style === 'plain' && text.settings.wordsAlign === 'left' && text.settings.wordsSize === 'medium'
+      && text.placeable === true, JSON.stringify(text));
     const furn = furnitureItems();
     check('*** furniture: every piece the rooms are built from ***', furn.length === Object.keys(FURNITURE).length && furn.every((f) => f.cats.includes('furniture')));
     check('*** ...shown and explained, never put in a panel’s place (it says why) ***', furn.every((f) => f.placeable === false && /room/.test(f.whyNot)));

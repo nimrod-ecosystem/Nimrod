@@ -115,7 +115,7 @@ export const DECLARED_TARGETS = Object.freeze({
   // modules/button.js: a sign, a framed picture, or both. Smallest first (the words sit on the face).
   button: Object.freeze([
     Object.freeze({ id: 'words', label: 'The words', selector: '.ab-word',
-      keys: ['label', 'font', 'color', 'style', 'inkLightness', 'inkSaturation', 'inkHue'],
+      keys: ['label', 'font', 'color', 'wordsSize', 'wordsAlign', 'wordsEmphasis', 'style', 'inkLightness', 'inkSaturation', 'inkHue'],
       help: 'The words on it: what they say, their font and their color.' }),
     Object.freeze({ id: 'picture', label: 'The picture', selector: '.ab-img',
       keys: ['image', 'frame'], help: 'The picture on it, and the frame around it.' }),

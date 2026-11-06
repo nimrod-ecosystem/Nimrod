@@ -1678,6 +1678,18 @@ html[data-live-scene] body{background:transparent}
 /* WITH A PICTURE the face takes a picture's shape and the words become its caption. */
 .nbtn[data-has-img]{height:min(86cqh,120cqw);aspect-ratio:4/5;padding:3cqmin}
 .nbtn[data-has-img] .ab-word{flex:none;font-size:clamp(11px,5.5cqmin,48px);font-weight:600}
+/* WORDS AS TEXT (note FD 3; button.js WORDS_*): plain words only, set by the module only when a row is not its default.
+   Every size keeps the face's own 14 px floor. */
+.nbtn[data-words-align="left"]{align-items:flex-start}
+.nbtn[data-words-align="left"] .ab-word{text-align:left}
+.nbtn[data-words-align="right"]{align-items:flex-end}
+.nbtn[data-words-align="right"] .ab-word{text-align:right}
+.nbtn[data-words-size="small"] .ab-word{font-size:clamp(14px,7cqmin,170px)}
+.nbtn[data-words-size="medium"] .ab-word{font-size:clamp(14px,9cqmin,170px)}
+.nbtn[data-words-size="large"] .ab-word{font-size:clamp(14px,14cqmin,200px)}
+.nbtn[data-words-size="huge"] .ab-word{font-size:clamp(14px,20cqmin,280px)}
+.nbtn[data-words-emphasis="regular"] .ab-word{font-weight:400}
+.nbtn[data-words-emphasis="italic"] .ab-word{font-weight:400;font-style:italic}
 .nbtn:focus-visible{outline:max(3px,.8cqmin) solid var(--scan-ring, var(--highlight));outline-offset:max(3px,.8cqmin)}
 .nbtn.nbtn-press{transform:scale(.97)}
 

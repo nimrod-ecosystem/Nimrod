@@ -157,8 +157,9 @@ try {
     const keys = (m.settings || []).map((s) => s.key);
     // 2026-10-02: "Picture from" is no longer a row - the picture row opens the shared picker, which
     // shows the sources itself. The source is still STORED in `imageFrom` (the row's `sourceKey`).
-    check('it declares the eleven settings, in menu order (one Picture row, no "Picture from")',
-      keys.join(',') === 'label,image,frame,font,color,style,background,whenPressed,inkLightness,inkSaturation,inkHue', keys.join(','));
+    // (note FD 3, 2026-11-06: three rows for plain words, after the background: line up, size, bold)
+    check('it declares the fourteen settings, in menu order (one Picture row, no "Picture from")',
+      keys.join(',') === 'label,image,frame,font,color,style,background,wordsAlign,wordsSize,wordsEmphasis,whenPressed,inkLightness,inkSaturation,inkHue', keys.join(','));
     const pic = m.settings.find((s) => s.key === 'image');
     check('*** the Picture row is a PICTURE row (it opens the picker), keeping its source in imageFrom ***',
       pic.kind === 'picture' && pic.sourceKey === 'imageFrom');
@@ -728,6 +729,41 @@ try {
     check('frame "none" is still a choice, and draws no frame', FRAMES[0].value === 'none'
       && !('frameArt' in B.face().dataset) && getComputedStyle(B.face(), '::after').backgroundImage === 'none');
     B.inst.destroy(); B.host.remove();
+  }
+
+  // =============================================================================================
+  // NOTE FD 3 (2026-11-06): words as text. Three rows for plain words; each default is today's face.
+  section('*** words as text: line up, size, bold - plain words only, defaults unchanged ***');
+  {
+    const plainRows = (row) => (getManifest('button').settings || []).filter((f) => ['wordsAlign', 'wordsSize', 'wordsEmphasis'].includes(f.key)
+      && f.appliesWhen(row)).map((f) => f.key);
+    check('the three rows are there for plain words', plainRows({}).length === 3 && plainRows({ style: 'plain', frame: 'none' }).length === 3);
+    check('...and not on a designed sign, in a frame, or under a picture', plainRows({ style: 'plate' }).length === 0
+      && plainRows({ frame: 'classic' }).length === 0 && plainRows({ image: 'a.jpg' }).length === 0);
+    check('bold is an advanced row (the switch walk), the other two standard', (getManifest('button').settings || [])
+      .find((f) => f.key === 'wordsEmphasis').level === 'advanced' && (getManifest('button').settings || []).find((f) => f.key === 'wordsSize').level === 'standard');
+    check('a value it does not know reads as the default', configFrom({ wordsAlign: 'sideways', wordsSize: 'giant' }).wordsAlign === 'center'
+      && configFrom({ wordsSize: 'giant' }).wordsSize === 'auto');
+    const D = mount('btn-text-default', { state: liveState({ label: 'A sign' }) });
+    await sleep(10);
+    const dw = D.host.querySelector('.ab-word');
+    check('*** a sign nobody changed: no new attribute, and the face as before (centred, bold) ***',
+      !('wordsAlign' in D.face().dataset) && !('wordsSize' in D.face().dataset) && !('wordsEmphasis' in D.face().dataset)
+      && getComputedStyle(dw).textAlign === 'center' && Number(getComputedStyle(dw).fontWeight) >= 700, D.face().outerHTML.slice(0, 200));
+    const defaultPx = parseFloat(getComputedStyle(dw).fontSize);
+    D.inst.destroy(); D.host.remove();
+    const T = mount('btn-text-set', { state: liveState({ label: 'A note to read', wordsAlign: 'left', wordsSize: 'small', wordsEmphasis: 'regular' }) });
+    await sleep(10);
+    const tw = T.host.querySelector('.ab-word');
+    check('*** set: on the left, smaller, not bold ***', T.face().dataset.wordsAlign === 'left' && getComputedStyle(tw).textAlign === 'left'
+      && parseFloat(getComputedStyle(tw).fontSize) < defaultPx && Number(getComputedStyle(tw).fontWeight) < 700,
+      JSON.stringify({ a: getComputedStyle(tw).textAlign, px: getComputedStyle(tw).fontSize, def: defaultPx, w: getComputedStyle(tw).fontWeight }));
+    check('...and never below the face’s 14 px floor', parseFloat(getComputedStyle(tw).fontSize) >= 14);
+    T.inst.destroy(); T.host.remove();
+    const S = mount('btn-text-sign', { state: liveState({ label: 'A sign', style: 'plate', wordsAlign: 'left', wordsSize: 'huge' }) });
+    await sleep(10);
+    check('*** on a designed sign the rows do nothing (the sign fits its own words) ***', !('wordsAlign' in S.face().dataset) && !('wordsSize' in S.face().dataset));
+    S.inst.destroy(); S.host.remove();
   }
 
   // =============================================================================================
