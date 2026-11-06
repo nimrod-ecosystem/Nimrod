@@ -90,6 +90,7 @@ import { createPackReviews, isReviewPackId, playableBank, REVIEW_STATUS, REVIEW_
          REVIEW_FLAG_TOPIC, REVIEW_PASS_TOPIC, sourceHtml } from '../pack_reviews.js';
 import { linksOpenHere } from '../page_links.js';
 import { spellPaceField, spellPace, spellsAloud, spellAloud, spelledOptions, SPELL_PACE_DEFAULT } from '../spell_aloud.js';
+import { createAfterWait, ADVANCE_DEFAULTS } from '../advance.js';   // after a right answer (row 2.207)
 import { createPlayWatch } from '../game_start.js';
 import { createGameMusic } from '../game_music.js';
 import { createGameMusicHost, gameMusicFields } from '../game_music_host.js';
@@ -735,6 +736,17 @@ const SETTINGS = [
   // A spelling question's answers are read letter by letter (Mike, 2026-10-07); how fast is a row because the
   // right gap depends on the listener. Advanced: the default is the way a person spells aloud. ../spell_aloud.js.
   spellPaceField({ appliesWhen: (v) => v.speak !== false }),
+  // *** AFTER A RIGHT ANSWER: WAIT FOR NEXT, OR GO ON BY ITSELF (Mike, row 2.207: the plays-by-itself / waits-for-Next
+  // mechanic, shared - advance.js; proposal_shared_advance, gate GO: "a NEW option, its default unchanged"). *** Trivia
+  // has always waited for "Next question", and still does unless somebody chooses otherwise. Going on by itself waits
+  // for the answer and its reason to be read (advance.js: the reading time, then the pause), and any press - Next, the
+  // contest, walking the stops - stops it. Never while reviewing. Advanced, as the quiz games' same rows are.
+  { key: 'afterAnswer', label: 'After a right answer', kind: 'choice', default: 'press', level: 'advanced',
+    options: [{ value: 'press', label: 'Wait for Next' }, { value: 'read', label: 'Go on by itself, once it has been read' }],
+    note: 'Either way, Next goes on at once.' },
+  { key: 'afterBeatMs', label: 'After it has been read, wait', kind: 'choice', default: ADVANCE_DEFAULTS.afterBeatMs, level: 'advanced',
+    options: [1000, 2000, 3000, 5000, 8000, 12000].map((v) => ({ value: v, label: `${v / 1000} second${v === 1000 ? '' : 's'}` })),
+    appliesWhen: (v) => (v?.afterAnswer || 'press') === 'read' },
   // *** RECORDING IS OFF UNLESS SOMEBODY TURNED IT ON, and this row is why it is `standard`
   // rather than buried. A microphone that a person cannot easily find the switch for is a
   // microphone they cannot easily turn off. ***
@@ -1342,6 +1354,16 @@ registerModule(
     const PIC_LOADING = 3;
     const setTimer = typeof ctx.setTimer === 'function' ? ctx.setTimer : (fn, ms) => setTimeout(fn, ms);
     const clearTimer = typeof ctx.clearTimer === 'function' ? ctx.clearTimer : (t) => clearTimeout(t);
+    // AFTER A RIGHT ANSWER (row 2.207, the shared advance.js): going on by itself, when chosen. Stopped by any press.
+    const onward = createAfterWait({ setTimer, clearTimer });
+    function goOnLater(lines) {
+      onward.stop();
+      if ((cfg.afterAnswer || 'press') !== 'read' || !q || q.reviewing || answered === null) return;
+      const shown = q;
+      const text = (Array.isArray(lines) ? lines : [lines]).map(asLine).filter(Boolean).join(' ');
+      onward.start({ cfg: { afterAnswer: 'read', afterBeatMs: cfg.afterBeatMs, readWpm: ADVANCE_DEFAULTS.readWpm }, text,
+        onDone: () => { if (!dead && q === shown && answered !== null && !contested) advance(); } });
+    }
     const pics = new Map();       // url -> 'loading' | 'ok' | 'failed'
     const picsLoading = () => [...pics.values()].some((s) => s === 'loading');
     function pictureReady(b) {
@@ -1495,6 +1517,7 @@ registerModule(
     // deck (and every other game's on this profile).
     function contest() {
       if (!q || answered === null || contested) return;
+      onward.stop();
       contested = true;
       contestFailed = false;
       after = 0;
@@ -1591,6 +1614,7 @@ registerModule(
       recordToLadder({ right: true, misses: misses.length });
       render();
       say(rightLines());
+      goOnLater(rightLines());
     }
 
     // ONE DOCUMENT, TWO GAMES. The bank text comes from this instance's own state if somebody
@@ -1685,6 +1709,7 @@ registerModule(
     }
 
     function advance() {
+      onward.stop();
       // A question contested during this round is not asked again in it (a bank can carry the same
       // question twice, or a pack question can also arrive from a lesson).
       const out = contests ? contests.held() : null;
@@ -1901,6 +1926,7 @@ registerModule(
           return answered === null ? moveHighlight(1, { fresh }) : advance();
         });
         bus.subscribe('trivia/prev', () => {
+          onward.stop();      // walking the stops after an answer: somebody is there, so it waits for them
           const fresh = openVoice();
           return answered === null ? moveHighlight(-1, { fresh }) : moveAfter(-1);
         });
@@ -2023,6 +2049,7 @@ registerModule(
       onHide() { plays?.rest(); musicHost?.follow(false); state?.flush?.(); },
       destroy() {
         dead = true;
+        onward.stop();
         if (plays) { plays.destroy(); plays = null; }
         try { unSpeaker?.(); } catch { /* gone */ } unSpeaker = null;
         try { musicHost?.destroy(); } catch { /* gone */ } musicHost = null;

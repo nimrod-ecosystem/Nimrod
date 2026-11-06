@@ -98,6 +98,8 @@ function rig({ bankText = BANK_TEXT, sharedText = null, recorder = null, rand = 
               // "never chosen", which `lessons.js`'s own `modeFrom` reads as sandbox, same as
               // any other profile that has not touched the setting.
               mode = undefined,
+              // (row 2.207) `setTimer` / `clearTimer`: a test's own clock for "go on by itself". Left out: real timers.
+              setTimer = null, clearTimer = null,
               // `ctx.isScreen` (kiosk.js: true on a real screen). Left out unless a test sets it,
               // the way a harness or the modules page leaves it out.
               isScreen = undefined,
@@ -147,6 +149,7 @@ function rig({ bankText = BANK_TEXT, sharedText = null, recorder = null, rand = 
     mount: host, bus, rand, recorder,
     ...(output ? { output } : {}),
     ...(isScreen !== undefined ? { isScreen } : {}),
+    ...(setTimer ? { setTimer } : {}), ...(clearTimer ? { clearTimer } : {}),
     ...(pageLinks ? { pageLinks } : {}),
     ...(now ? { now } : {}),
     ...(telemetry ? { telemetry } : {}),
@@ -237,6 +240,38 @@ try {
 
   // =====================================================================================
   section('*** row 2.40: the score is PUBLISHED, and a Scoreboard can take it over ***');
+  // (row 2.207, 2026-11-06) After a right answer: wait for Next (the default, unchanged), or go on by itself once read.
+  {
+    let seq = 0; let armed = [];
+    const st = (fn, ms) => { const id = ++seq; armed.push({ id, fn, ms }); return id; };
+    const ct = (id) => { armed = armed.filter((t) => t.id !== id); };
+    const fire = () => { const due = armed; armed = []; due.forEach((t) => t.fn()); };
+    const w = rig({ setTimer: st, clearTimer: ct });
+    await sleep(5); fire(); await sleep(5);          // the game's own start-up on this clock
+    const at0 = w.probe().at;
+    w.host.querySelectorAll('[data-opt]')[w.probe().question.correctIndex].click();
+    await sleep(5);
+    fire();
+    check('*** by default a right answer waits for Next (nothing moves on by itself) ***', w.probe().at === at0 && w.probe().answered !== null,
+      JSON.stringify({ at: w.probe().at, at0 }));
+    w.inst.destroy();
+    armed = [];
+    const g = rig({ setTimer: st, clearTimer: ct, saved: { afterAnswer: 'read', afterBeatMs: 1000 } });
+    await sleep(5); fire(); await sleep(5);
+    const g0 = g.probe().at;
+    g.host.querySelectorAll('[data-opt]')[g.probe().question.correctIndex].click();
+    await sleep(5);
+    check('*** chosen: once the answer has been read, it is counting to the next question ***', armed.some((t) => t.ms >= 1000), JSON.stringify(armed.map((t) => t.ms)));
+    fire();
+    check('*** ...and goes on by itself ***', g.probe().at !== g0 && g.probe().answered === null, JSON.stringify({ at: g.probe().at, g0 }));
+    const g1 = g.probe().at;
+    g.host.querySelectorAll('[data-opt]')[g.probe().question.correctIndex].click();
+    await sleep(5);
+    g.bus.publish('trivia/prev');
+    fire();
+    check('*** a press after the answer (walking the stops) stops it: somebody is there ***', g.probe().at === g1 && g.probe().answered !== null);
+    g.inst.destroy();
+  }
   {
     // Mike, 2026-09-30: "we probably have a bunch of modules drawing their own scoreboards. We
     // shouldn't have that." Trivia now says its score on the bus (score_source.js); a Scoreboard on
