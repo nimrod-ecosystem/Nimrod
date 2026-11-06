@@ -22,6 +22,7 @@
 import {
   GRID, COLOURS, HAND_DEFAULT, createEditor, buildSvg, pickAt, specOf, sizeRows, colourCss, normalizeColour, heightAt,
 } from './brick_builder.js';
+import { nearestColor } from './color_picker.js';   // the swatches' spoken names (note FD 4)
 
 const STYLE_ID = 'brick-builder-style';
 const CSS = `
@@ -148,12 +149,26 @@ export function mountBuilderView(host, opts = {}) {
     for (const a of ['pickUp', 'turnHere', 'paint', 'remove']) { const el = root.querySelector(`[data-act="${a}"]`); if (el) el.disabled = !here; }
     const u = root.querySelector('[data-act="undo"]'); if (u) u.disabled = !ed.canUndo();
     const r = root.querySelector('[data-act="redo"]'); if (r) r.disabled = !ed.canRedo();
-    for (const sw of root.querySelectorAll('.bb-sw')) sw.setAttribute('aria-pressed', String(sw.dataset.colour === hand.colour));
+    for (const [i, sw] of [...root.querySelectorAll('.bb-sw')].entries()) {
+      sw.setAttribute('aria-pressed', String(sw.dataset.colour === hand.colour));
+      // A SWATCH SAYS ITS COLOUR (note FD 4, 2026-11-06): "Theme color 3" is noise to somebody choosing by ear. The swatch is a
+      // theme colour (it changes with the theme), so it is named from what it shows NOW, by the shared picker's names.
+      const name = swatchName(sw);
+      const want = name ? `${name}, theme color ${i + 1}` : `Theme color ${i + 1}`;
+      if (sw.getAttribute('aria-label') !== want) sw.setAttribute('aria-label', want);
+    }
     if (ownEl && /^#/.test(hand.colour) && ownEl.value !== hand.colour) ownEl.value = hand.colour;
     const list = stops();
     if (lit >= list.length) lit = list.length ? 0 : -1;
     for (const [i, el] of list.entries()) { const want = i === lit ? '1' : '0'; if (el.dataset.lit !== want) el.dataset.lit = want; }
     for (const el of root.querySelectorAll('[data-lit="1"]')) if (!list.includes(el)) el.dataset.lit = '0';
+  }
+  function swatchName(sw) {
+    let m = null;
+    try { m = /rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/.exec(getComputedStyle(sw).backgroundColor || ''); } catch { m = null; }
+    if (!m || (m[4] != null && Number(m[4]) < 1)) return '';
+    const hex = `#${[m[1], m[2], m[3]].map((v) => Number(v).toString(16).padStart(2, '0')).join('')}`;
+    return nearestColor(hex)?.name || '';
   }
   function cursorWords() {
     const c = ed.cursor();

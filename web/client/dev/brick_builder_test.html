@@ -351,6 +351,10 @@ try {
     check('a click on Part ▶ changes the part in your hand, and says so', p().hand.part === 'baseplate' && /In your hand: Baseplate/.test(p().say), p().say);
     host.querySelector('[data-colour="theme4"]').click();
     check('a click on a colour', p().hand.colour === 'theme4' && host.querySelector('[data-colour="theme4"]').getAttribute('aria-pressed') === 'true');
+    // Note FD 4 (2026-11-06): a swatch says its colour, named from what it shows now (it follows the theme).
+    const swl = [...host.querySelectorAll('.bb-sw')].map((s) => s.getAttribute('aria-label'));
+    check('*** each colour swatch says the colour it shows, and which theme color it is ***',
+      swl.length > 0 && swl.every((l, i) => new RegExp(`^[A-Z][a-z]+( [a-z]+)?, theme color ${i + 1}$`).test(l)), JSON.stringify(swl));
     check('size buttons only for the sizes the part has (a baseplate: thicker / thinner)', !host.querySelector('[data-act="h+"]').hidden && host.querySelector('[data-act="h+"]').textContent === 'Thicker');
     // a second model, and back
     host.querySelector('[data-act="modelNew"]').click();
