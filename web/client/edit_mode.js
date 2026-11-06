@@ -346,7 +346,10 @@ export function renderOptions(host, sel, { onDone = null, level = EDIT_DEFAULTS.
               + `<button type="button" class="em-btn" data-em-step="1" data-em-key="${esc(r.key)}" data-em-focus="${esc(r.key)}:1" aria-label="${esc(`${r.label}: next`)}">›</button>`
             : r.text
               // A secret (a key, a pass phrase; row 2.83) is a HIDDEN box with a Show button, opened empty as before.
-              ? `<input class="em-text"${r.field.secret ? ' type="password" autocomplete="new-password"' : ''} data-em-text="${esc(r.key)}" data-em-focus="${esc(r.key)}:t" aria-label="${esc(r.label)}" value="${esc(r.field.secret ? '' : r.value)}"${r.field.maxLength ? ` maxlength="${r.field.maxLength}"` : ''}>`
+              ? (r.field.lines > 1
+                // (note FD 3) Several lines: a box of that many; Enter is a new line, Ctrl+Enter or ✓ keeps it.
+                ? `<textarea class="em-text" rows="${r.field.lines}" data-em-text="${esc(r.key)}" data-em-focus="${esc(r.key)}:t" aria-label="${esc(`${r.label} (Ctrl+Enter keeps it)`)}"${r.field.maxLength ? ` maxlength="${r.field.maxLength}"` : ''}>${esc(r.value)}</textarea>`
+                : `<input class="em-text"${r.field.secret ? ' type="password" autocomplete="new-password"' : ''} data-em-text="${esc(r.key)}" data-em-focus="${esc(r.key)}:t" aria-label="${esc(r.label)}" value="${esc(r.field.secret ? '' : r.value)}"${r.field.maxLength ? ` maxlength="${r.field.maxLength}"` : ''}>`)
                 + (r.field.secret ? `<button type="button" class="em-btn" data-em-show="${esc(r.key)}" data-em-focus="${esc(r.key)}:s" aria-pressed="false">Show</button>` : '')
                 + `<button type="button" class="em-btn" data-em-keep="${esc(r.key)}" data-em-focus="${esc(r.key)}:k" aria-label="${esc(`Keep ${r.label}`)}">✓</button>`
               : r.picture
@@ -444,6 +447,8 @@ export function renderOptions(host, sel, { onDone = null, level = EDIT_DEFAULTS.
   }
   function onKey(e) {
     if (e.key === 'Enter' && e.target instanceof Element && e.target.matches('[data-em-text]')) {
+      // (note FD 3) In a box of several lines Enter is a new line; Ctrl+Enter keeps it (the ✓ always does).
+      if (e.target.tagName === 'TEXTAREA' && !(e.ctrlKey || e.metaKey)) { e.stopPropagation(); return; }
       e.preventDefault(); e.stopPropagation(); keepText(e.target.dataset.emText);
       return;
     }

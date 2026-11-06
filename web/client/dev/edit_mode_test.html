@@ -249,6 +249,19 @@ try {
     cell.remove();
     if (keep == null) localStorage.removeItem(CHANGES_KEY); else localStorage.setItem(CHANGES_KEY, keep);
   }
+  // (note FD 3) A words row of several lines is drawn as a box of that many lines; Enter there is a new line.
+  {
+    const { renderOptions } = await import('../edit_mode.js');
+    const host = document.createElement('div');
+    document.getElementById('host').append(host);
+    let kept = null;
+    const sel = { label: 'Words', help: '', fields: [{ key: 'w', label: 'Words', kind: 'text', lines: 3, editable: true, default: 'a' }]
+      .map((f) => ({ ...f, cycleable: false, opens: false })), values: () => ({ w: 'one\ntwo' }), set: (k, v) => { kept = v; return true; }, actions: [] };
+    const view = renderOptions(host, sel, {});
+    const ta = host.querySelector('textarea[data-em-text="w"]');
+    check('*** a words row of several lines is a box of that many lines, holding the lines ***', !!ta && ta.rows === 3 && ta.value === 'one\ntwo', host.innerHTML.slice(0, 300));
+    view.destroy(); host.remove();
+  }
 
   // ============================================================================================
   section('*** the clock opts in: its time and its date (it is a digital clock: no face or hands) ***');

@@ -597,6 +597,10 @@ export function normalizeField(raw = {}) {
     const ml = Number(raw.maxLength);
     // No length limit is invented: how long a name or a caption may be is the module's call.
     f.maxLength = Number.isFinite(ml) && ml > 0 ? Math.floor(ml) : null;
+    // SEVERAL LINES (note FD 3, 2026-11-06: a text box). `lines` above 1 makes the box a box of that many lines, where Enter
+    // starts a new line and Ctrl+Enter (or Save) keeps it. Capped at 12, a bound only: the module says how many it wants.
+    const ln = Math.floor(Number(raw.lines));
+    f.lines = Number.isFinite(ln) && ln > 1 && !f.secret ? Math.min(12, ln) : 1;
   }
 
   // WHAT THIS SETTING NEEDS IN ORDER TO WORK AT ALL. Mike: *"It should also be clearly marked
@@ -984,7 +988,7 @@ export function fieldItems(fields = [], {
     if (f.editable) {
       // `secret` (row 2.83): the host draws the box hidden (a password box) with a Show button.
       item.edit = { kind: 'text', value: f.secret ? '' : value, placeholder: f.placeholder, maxLength: f.maxLength,
-        ...(f.secret ? { secret: true } : {}) };
+        ...(f.secret ? { secret: true } : {}), ...(f.lines > 1 ? { lines: f.lines } : {}) };
     }
     if (f.kind === 'color' && !f.readOnly) item.color = { value, palette: f.palette || [] };
     // What the choice picker needs, on every steppable choice row: the options (with their previews),

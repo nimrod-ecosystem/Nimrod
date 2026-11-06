@@ -1672,7 +1672,9 @@ html[data-live-scene] body{background:transparent}
      ground, so it does not want one (the neon sign adds its own below). */
   text-shadow:none;transition:transform .12s ease}
 .nbtn .ab-word{display:block;max-width:100%;font-size:clamp(14px,12cqmin,170px);font-weight:700;
-  line-height:1.08;text-align:center;overflow-wrap:break-word;hyphens:auto}
+  line-height:1.08;text-align:center;overflow-wrap:break-word;hyphens:auto;
+  /* (note FD 3) words typed on several lines keep their lines */
+  white-space:pre-line}
 .nbtn .ab-img{display:block;flex:1 1 auto;min-height:0;width:100%;line-height:0}
 .nbtn .ab-img img{display:block;width:100%;height:100%;object-fit:contain}
 /* WITH A PICTURE the face takes a picture's shape and the words become its caption. */

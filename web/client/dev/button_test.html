@@ -760,6 +760,15 @@ try {
       JSON.stringify({ a: getComputedStyle(tw).textAlign, px: getComputedStyle(tw).fontSize, def: defaultPx, w: getComputedStyle(tw).fontWeight }));
     check('...and never below the face’s 14 px floor', parseFloat(getComputedStyle(tw).fontSize) >= 14);
     T.inst.destroy(); T.host.remove();
+    const lab = (getManifest('button').settings || []).find((f) => f.key === 'label');
+    check('*** the words may be several lines (4), up to 200 letters ***', lab.lines === 4 && lab.maxLength === 200);
+    const M = mount('btn-text-lines', { state: liveState({ label: 'Lunch at noon\nThen a walk', whenPressed: 'say' }) });
+    await sleep(10);
+    const mw = M.host.querySelector('.ab-word');
+    check('*** words on two lines show on two lines ***', getComputedStyle(mw).whiteSpace === 'pre-line' && mw.textContent.includes('\n')
+      && mw.getClientRects().length >= 1 && mw.getBoundingClientRect().height > parseFloat(getComputedStyle(mw).fontSize) * 1.5);
+    check('...and are one sentence for the accessible name', M.face().getAttribute('aria-label') === 'Lunch at noon Then a walk');
+    M.inst.destroy(); M.host.remove();
     const S = mount('btn-text-sign', { state: liveState({ label: 'A sign', style: 'plate', wordsAlign: 'left', wordsSize: 'huge' }) });
     await sleep(10);
     check('*** on a designed sign the rows do nothing (the sign fits its own words) ***', !('wordsAlign' in S.face().dataset) && !('wordsSize' in S.face().dataset));

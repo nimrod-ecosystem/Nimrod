@@ -1018,6 +1018,10 @@ section('text fields — pure: editable, honest, and still not cycleable');
   check('a declared maxLength is carried, and none is invented',
     normalizeField({ key: 'a', kind: 'text', maxLength: 40 }).maxLength === 40
     && normalizeField({ key: 'a', kind: 'text' }).maxLength === null);
+  // (note FD 3, 2026-11-06) several lines: a text row may ask for a box of several lines; a secret never gets one.
+  check('*** a text row may ask for several lines (capped at 12); one line otherwise; never a secret ***',
+    normalizeField({ key: 'a', kind: 'text', lines: 4 }).lines === 4 && normalizeField({ key: 'a', kind: 'text' }).lines === 1
+    && normalizeField({ key: 'a', kind: 'text', lines: 99 }).lines === 12 && normalizeField({ key: 'a', kind: 'text', lines: 4, secret: true }).lines === 1);
 
   const live = { caption: 'Hello' };
   const writes = [];

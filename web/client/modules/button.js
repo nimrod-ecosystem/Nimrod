@@ -226,6 +226,8 @@ export const DEFAULTS = Object.freeze({
 // as the face already sizes itself, so a size reads the same on a small panel and a whole screen. `auto` is the face's
 // own size (12cqmin, between 14 and 170 px). Every step keeps the face's floor of 14 px: no step makes words a person
 // at a bed cannot read (the fitted signs' 8 px floor is theirs, not this). small 7, medium 9, large 14, huge 20.
+export const WORDS_LINES = 4;
+export const WORDS_MAX = 200;
 export const WORDS_ALIGN = Object.freeze([
   { value: 'center', label: 'In the middle' }, { value: 'left', label: 'On the left' }, { value: 'right', label: 'On the right' },
 ]);
@@ -236,6 +238,8 @@ export const WORDS_SIZES = Object.freeze([
 export const WORDS_EMPHASIS = Object.freeze([
   { value: 'bold', label: 'Bold' }, { value: 'regular', label: 'Not bold' }, { value: 'italic', label: 'Slanted' },
 ]);
+/** Words on several lines as one line (for the voice and the accessible name). PURE. */
+export const oneLine = (s) => String(s ?? '').replace(/\s*\n\s*/g, ' ').trim();
 /** Whether the words are PLAIN words (no designed sign, no frame, no picture): only then do the text rows apply. */
 export function plainWords(row) {
   const r = row || {};
@@ -363,8 +367,11 @@ export function inkOrder(style, background) {
 // default too. Only the three colour offsets (lightness, hue, saturation, below) are `advanced`: they are there to be
 // driven by an automation, not chosen by hand.
 export const SETTINGS = [
+  // SEVERAL LINES (note FD 3): up to WORDS_LINES lines and WORDS_MAX letters, argued: a sign or a note on a panel, read
+  // across a room, not a letter. FOR more: a longer note. AGAINST, and it decides it: "Note from someone" is the module for
+  // a longer message, and a button's words shrink to fit, so a paragraph on a sign would be too small to read.
   { key: 'label', label: 'Words', kind: 'text', default: DEFAULTS.label, level: 'essential',
-    placeholder: 'No words yet' },
+    placeholder: 'No words yet', lines: WORDS_LINES, maxLength: WORDS_MAX },
   // ONE ROW FOR THE PICTURE: `select` opens the shared picker (settings_fields.js, kind
   // `picture`). The path is stored here and the source id in `imageFrom` - the same two keys as
   // before, so every saved picture still shows. "Picture from" is no longer a row of its own: the
@@ -629,7 +636,7 @@ registerModule(
       const ref = cfg.image && src ? { sourceId: src, path: cfg.image } : null;
       const words = cfg.label;
       // The accessible name is the words; a picture with no words is still named, never blank.
-      faceEl.setAttribute('aria-label', words || (ref ? 'Picture' : 'Button'));
+      faceEl.setAttribute('aria-label', oneLine(words) || (ref ? 'Picture' : 'Button'));
       faceEl.dataset.style = cfg.style;
       faceEl.dataset.frame = cfg.frame;
       // WORDS AS TEXT (note FD 3): only on plain words; a default is no attribute at all, so today's face is unchanged.
@@ -704,8 +711,9 @@ registerModule(
       if (cfg.whenPressed === 'say' && cfg.label.trim()) {
         // `say`, never `notify` — see the header. It speaks in the room.
         try {
-          if (ctx.output?.say) ctx.output.say(cfg.label, { source: 'button' });
-          else speak(cfg.label);
+          // (note FD 3) Words on several lines are said as one sentence: a line break is not a pause anybody asked for.
+          if (ctx.output?.say) ctx.output.say(oneLine(cfg.label), { source: 'button' });
+          else speak(oneLine(cfg.label));
         } catch (err) { console.error('button: say', err); }
       }
       return true;

@@ -876,10 +876,16 @@ export function mountSettings(root, {
       // A SECRET'S BOX (row 2.83: a pass phrase showed in plain text) is a hidden one - a password box - with a Show
       // button that shows what is being typed (`editing.shown`, kept across repaints), and Clear when one is set.
       const secret = !!(it.edit && it.edit.secret);
+      // (note FD 3) A row of several lines is a box of that many lines: Enter is a new line there, Ctrl+Enter or Save keeps it.
+      const multi = !secret && Number(it.edit?.lines) > 1;
       const editor = isEditing ? `<div class="st-edit" data-edit-for="${n}">
-          <input class="st-input" type="${secret && !editing.shown ? 'password' : 'text'}" data-edit-input value="${esc(editing.draft)}"
+          ${multi
+            ? `<textarea class="st-input" data-edit-input rows="${Number(it.edit.lines)}" placeholder="${esc(it.edit.placeholder || '')}"
+            aria-label="${esc(`${it.label} (Ctrl+Enter or Save keeps it)`)}" ${it.edit.maxLength ? `maxlength="${Number(it.edit.maxLength)}"` : ''}
+            spellcheck="false">${esc(editing.draft)}</textarea>`
+            : `<input class="st-input" type="${secret && !editing.shown ? 'password' : 'text'}" data-edit-input value="${esc(editing.draft)}"
             placeholder="${esc(it.edit.placeholder || '')}" aria-label="${esc(it.label)}"
-            ${it.edit.maxLength ? `maxlength="${Number(it.edit.maxLength)}"` : ''} autocomplete="${secret ? 'new-password' : 'off'}" spellcheck="false">
+            ${it.edit.maxLength ? `maxlength="${Number(it.edit.maxLength)}"` : ''} autocomplete="${secret ? 'new-password' : 'off'}" spellcheck="false">`}
           ${secret ? `<button type="button" class="st-mini" data-edit-show aria-pressed="${editing.shown ? 'true' : 'false'}">${editing.shown ? 'Hide' : 'Show'}</button>` : ''}
           <button type="button" class="st-mini" data-edit-save>Save</button>
           ${secret && typeof it.clear === 'function' && it.value ? '<button type="button" class="st-mini" data-edit-clear>Clear</button>' : ''}
@@ -1590,6 +1596,8 @@ export function mountSettings(root, {
   // Escape is stopped.
   listEl.addEventListener('keydown', (e) => {
     if (!editing || !e.target.matches?.('[data-edit-input]')) return;
+    // (note FD 3) In a box of several lines Enter is a new line; Ctrl+Enter (Cmd+Enter) keeps it.
+    if (e.key === 'Enter' && e.target.tagName === 'TEXTAREA' && !(e.ctrlKey || e.metaKey)) return;
     if (e.key === 'Enter') { e.preventDefault(); editing.draft = e.target.value; saveEdit(); return; }
     if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); cancelEdit(); }
   }, sig);
