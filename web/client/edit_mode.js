@@ -495,12 +495,17 @@ export function ensureEditCss(doc = (typeof document !== 'undefined' ? document 
   if (!doc || doc.getElementById(CSS_ID)) return;
   const s = doc.createElement('style');
   s.id = CSS_ID;
+  // POINTER-EVENTS ON THE BAR AND THE CARD (row 2.213, 2026-11-05: "Sometimes clicking on it doesn't do anything"). They are
+  // put in the panel's box, and when a panel fills its dashboard that box is the kiosk's stage, which lets presses through
+  // (pointer-events: none) so the panels under it get them. The bar and the card inherited it: Done and every button on the
+  // card were drawn but not pressable, and a press went to the board tile under the card instead. They always take their own.
   s.textContent = `
 [data-editing]{outline:3px dashed var(--focus, var(--accent));outline-offset:-3px}
 [data-editing] [data-edit-target]{outline:2px dotted var(--focus, var(--accent));outline-offset:2px;cursor:pointer}
 [data-editing] [data-edit-selected]{outline:3px solid var(--focus, var(--accent));outline-offset:2px;box-shadow:0 0 0 2px var(--surface)}
-.em-bar{position:absolute;left:6px;top:6px;z-index:calc(var(--z-panel-contents,300) + 30);display:flex;gap:6px;align-items:center}
-.em-card{position:absolute;right:6px;top:58px;bottom:58px;width:min(340px,calc(100% - 12px));overflow:auto;
+.em-bar{position:absolute;left:6px;top:6px;z-index:calc(var(--z-panel-contents,300) + 30);display:flex;gap:6px;align-items:center;
+  pointer-events:auto}
+.em-card{position:absolute;right:6px;top:58px;bottom:58px;width:min(340px,calc(100% - 12px));overflow:auto;pointer-events:auto;
   z-index:calc(var(--z-panel-contents,300) + 30);background:var(--surface);color:var(--text);
   border:1px solid var(--border);border-radius:12px;box-shadow:0 6px 24px color-mix(in srgb,var(--text) 25%,transparent)}
 .em-card[hidden]{display:none}

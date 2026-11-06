@@ -202,6 +202,25 @@ try {
   }
 
   // ============================================================================================
+  // ROW 2.213 (Mike, 2026-11-05: "Sometimes clicking on it doesn't do anything"): a panel that fills its dashboard has the
+  // kiosk's stage as its box, and the stage lets presses through (pointer-events: none). The bar and the card are put in
+  // the box, inherited it, and could not be pressed: a press on the card went to the board tile under it.
+  section('*** in a box that lets presses through (a panel filling its dashboard), Done and the card still take theirs ***');
+  {
+    const clock = mountPanel('clock', 'c9', bus);
+    clock.cell.style.pointerEvents = 'none';
+    const em9 = createEditMode({ bus, recs: () => [clock], boxOf: () => clock.cell });
+    em9.enter('c9');
+    clock.el.firstElementChild?.click?.();
+    const bar = clock.cell.querySelector('.em-bar'), card = clock.cell.querySelector('.em-card');
+    check('*** the Done bar takes presses ***', !!bar && getComputedStyle(bar).pointerEvents === 'auto', bar && getComputedStyle(bar).pointerEvents);
+    check('*** the card and its buttons take presses ***', !!card && getComputedStyle(card).pointerEvents === 'auto'
+      && [...card.querySelectorAll('button')].every((b) => getComputedStyle(b).pointerEvents === 'auto'), card && getComputedStyle(card).pointerEvents);
+    em9.leave();
+    clock.cell.style.pointerEvents = '';
+  }
+
+  // ============================================================================================
   section('*** the clock opts in: its time and its date (it is a digital clock: no face or hands) ***');
   {
     const clock = mountPanel('clock', 'c2', bus);
