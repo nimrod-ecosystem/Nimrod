@@ -384,6 +384,12 @@ try {
     const inp = t.q('input[type="color"][data-free="skin"]');
     inp.value = '#224466'; inp.dispatchEvent(new Event('input', { bubbles: true }));
     check('a free colour goes into the record', t.probe().draft.skin === '#224466');
+    // Note FD 4: the free colour box says the colour it holds, by the shared picker's names (re-drawn after the pick).
+    t.press('[data-act="done"]');
+    t.press('[data-act="part"][data-part="skin"]');
+    check('*** "Any color" says the colour it holds, by name ***',
+      /^Any color, now close to [A-Z][a-z]+/.test(t.q('input[type="color"][data-free="skin"]')?.getAttribute('aria-label') || ''),
+      t.q('input[type="color"][data-free="skin"]')?.getAttribute('aria-label'));
     t.press('[data-act="done"]');
     t.key('ArrowDown');
     check('arrow keys walk (the first lights the first part)', t.probe().lit === 0);

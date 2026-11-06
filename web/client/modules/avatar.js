@@ -51,7 +51,7 @@ import { flashLimit } from '../flash_limit.js';
 import { createCardImages } from '../card_face.js';
 import { createMediaSourcesClient } from '../media_sources.js';
 import { mountPicturePicker } from '../picture_picker.js';
-import { normalizeHex } from '../color_picker.js';
+import { normalizeHex, nearestColor } from '../color_picker.js';
 import {
   FIGURE_PARTS, figurePartOf, normalizeFigure, figureOptionFor, renderFigure, describeFigure, surpriseFigure,
 } from '../avatar_figure.js';
@@ -427,8 +427,13 @@ registerModule(
           const swx = p.color ? (x.hex ? `<span class="av-sw" style="background:${esc(x.hex)}" aria-hidden="true"></span>` : '<span class="av-sw av-sw-none" aria-hidden="true"></span>') : '';
           return `<button type="button" class="av-opt" data-walk data-act="opt" data-part="${p.key}" data-value="${esc(x.id)}" aria-pressed="${on}">${swx}${esc(x.name)}</button>`;
         }).join('');
+        // "Any color" says the colour it holds (note FD 4, gated: share the picker's NAMING): a hex is noise to somebody
+        // choosing by ear, so the box is named by the nearest of the shared picker's colours.
+        const freeHex = normalizeHex(o.hex) || '';
+        const freeName = freeHex ? (nearestColor(freeHex)?.name || '') : '';
         const free = p.color
-          ? `<label class="av-free">Any color <input type="color" data-free="${p.key}" value="${esc(normalizeHex(o.hex) || '')}"></label>` : '';
+          ? `<label class="av-free">Any color <input type="color" data-free="${p.key}" value="${esc(freeHex)}"`
+            + ` aria-label="${esc(freeName ? `Any color, now close to ${freeName}` : 'Any color')}"></label>` : '';
         choices = `<div class="av-choices" role="group" aria-label="${esc(p.label)}">${opts}${free}<button type="button" class="av-btn av-done" data-act="done">Done</button></div>`;
       }
       return `<div class="av-part${open ? ' av-open' : ''}">
