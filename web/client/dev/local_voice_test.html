@@ -87,6 +87,14 @@ section('*** speaking through the stub program ***');
   check('*** on: POST <address>/speak with the text (and the chosen voice) ***', c.url === 'http://127.0.0.1:8794/speak' && c.init.method === 'POST'
     && JSON.parse(c.init.body).text === 'Once upon a time.' && JSON.parse(c.init.body).voice === 'en_US-ljspeech-medium', JSON.stringify(c.init.body));
   check('...never with the site\'s cookies', c.init.credentials === 'omit');
+  check('no speaker asked for: none sent', !('speaker' in JSON.parse(c.init.body)));
+  const progS = stubProgram();
+  const vS = createLocalVoice({ fetchImpl: progS, storage: mem });
+  await vS.speak('One voice of many.', { voice: 'en_US-libritts-high', speaker: 115 });
+  const cs = JSON.parse(progS.calls.at(-1).init.body);
+  check('*** one model, many speakers (FD 1): the speaker number is sent with the voice ***', cs.voice === 'en_US-libritts-high' && cs.speaker === 115, JSON.stringify(cs));
+  await vS.speak('Not a number.', { speaker: '115' });
+  check('a speaker that is not a whole number is not sent', !('speaker' in JSON.parse(progS.calls.at(-1).init.body)));
   check('the sound comes back as audio', r.ok && r.blob && /^audio\//.test(r.type), JSON.stringify({ ok: r.ok, type: r.type }));
   const h = await v.check();
   check('"is it there?" reads /health', h.ok && h.engine.startsWith('piper:') && h.voices.length === 1);

@@ -185,13 +185,16 @@ export function createLocalVoice({ fetchImpl = (...a) => fetch(...a), storage = 
         : { ok: false, reason: 'The voice program answered, but not as expected.' };
       return lastHealth;
     },
-    async speak(text, { signal, voice = '', rate = null } = {}) {
+    async speak(text, { signal, voice = '', rate = null, speaker = null } = {}) {
       const c = cfg();
       if (!c.on) return { ok: false, off: true, reason: 'The voice program is turned off on this device.' };
       const t = String(text || '').replace(/\s+/g, ' ').trim().slice(0, MAX_TEXT);
       if (!t) return { ok: false, reason: 'Nothing to say.' };
       const t0 = now();
-      const body = { text: t, ...((voice || c.voice) ? { voice: voice || c.voice } : {}), ...(Number(rate) > 0 ? { rate: Number(rate) } : {}) };
+      // ONE MODEL, MANY SPEAKERS (2026-11-06, note FD 1): `speaker` picks one speaker of a multi-speaker voice
+      // (en_US-libritts-high), so every character can share one loaded model. Sent only when it is a whole number.
+      const body = { text: t, ...((voice || c.voice) ? { voice: voice || c.voice } : {}), ...(Number(rate) > 0 ? { rate: Number(rate) } : {}),
+        ...(Number.isInteger(speaker) && speaker >= 0 ? { speaker } : {}) };
       const r = await call('/speak', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }, { signal });
       if (!r.ok) return r;
       let blob;
@@ -289,7 +292,8 @@ export function withLocalVoice(channel, voice, { createURL = (b) => URL.createOb
       let inner = null;
       let url = null;
       const made = [];   // the program's answer for each piece, asked for at most once
-      const make = (i) => (made[i] ||= Promise.resolve(voice.speak(parts[i], { signal: ctl.signal, voice: item.data?.localVoice || '' }))
+      const make = (i) => (made[i] ||= Promise.resolve(voice.speak(parts[i], { signal: ctl.signal, voice: item.data?.localVoice || '',
+        speaker: item.data?.localSpeaker ?? null }))
         .catch(() => ({ ok: false })));
       const release = () => { if (url) { revokeURL(url); url = null; } };
       const finish = () => { if (finished) return; finished = true; release(); done(); };

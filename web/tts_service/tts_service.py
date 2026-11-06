@@ -6,7 +6,8 @@ voice." On a Raspberry Pi, Chromium's speechSynthesis speaks only through speech
 so `say` there is silent. This is the program local_voice.js was written against (its header has the seam):
 
     GET  /health  -> {"ok": true, "engine": "piper:en_US-ljspeech-medium", "voices": [ids], "protocol": 1}
-    POST /speak   {"text": "...", "voice"?: id, "rate"?: 0.5-2.0}  -> audio/wav
+    POST /speak   {"text": "...", "voice"?: id, "rate"?: 0.5-2.0, "speaker"?: n}  -> audio/wav
+                  (`speaker`: one speaker of a multi-speaker voice; /health lists each voice's count under "speakers")
 
 Standard library only, plus Piper (https://github.com/OHF-Voice/piper1-gpl, `pip install piper-tts`, GPL-3.0-or-later)
 for the real voice. Piper is imported only when a real model is loaded, so this file and its suite run anywhere.
@@ -54,6 +55,7 @@ DEFAULT_PORT = 8794          # local_voice.js DEFAULT_LOCAL_VOICE_URL (8790 the 
 DEFAULT_SITES = ('https://nimrodecosystem.com',)
 MAX_BODY = 8 * 1024          # bytes: 1000 characters of text, a voice name and a rate, with room
 MAX_TEXT = 1000              # characters (local_voice.js MAX_TEXT)
+SPEAKER_MAX = 9999           # a bound on the number only; the voice's own count (libritts-high: 904) is the real check
 MAX_WAITING = 4              # requests queued behind the one being spoken; more get 503
 RATE_MIN, RATE_MAX = 0.5, 2.0
 LOOPBACK_ADDRS = ('127.0.0.1', '::1', 'localhost')
@@ -128,7 +130,13 @@ def read_request(raw: bytes) -> tuple:
         if not (rate == rate) or rate <= 0:      # NaN or not positive
             return None, 'rate is a positive number'
         rate = max(RATE_MIN, min(RATE_MAX, rate))
-    return {'text': text, 'voice': voice, 'rate': rate}, ''
+    # ONE MODEL, MANY SPEAKERS (2026-11-06, note FD 1): a multi-speaker voice (en_US-libritts-high has 904) says a line as
+    # one of its speakers. Optional; a whole number here, checked against the voice's own count when it is spoken.
+    speaker = body.get('speaker')
+    if speaker is not None:
+        if isinstance(speaker, bool) or not isinstance(speaker, int) or speaker < 0 or speaker > SPEAKER_MAX:
+            return None, f'a speaker is a whole number from 0 to {SPEAKER_MAX}'
+    return {'text': text, 'voice': voice, 'rate': rate, 'speaker': speaker}, ''
 
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -138,17 +146,22 @@ class FakeEngine:
     """A stand-in voice: silence, 22050 Hz mono, 50 ms per character (capped at 5 s). For the suite and for trying the
     page without Piper. `delay` (seconds) imitates a slow computer."""
 
-    def __init__(self, voices=('fake',), delay: float = 0.0):
+    def __init__(self, voices=('fake',), delay: float = 0.0, speakers=None):
         self.voices = list(voices)
         self.delay = float(delay)
         self.calls = []
+        self._speakers = dict(speakers or {})
 
     @property
     def name(self) -> str:
         return f'fake:{self.voices[0]}'
 
-    def synthesize(self, text: str, voice: str = '', rate=None) -> bytes:
-        self.calls.append({'chars': len(text), 'voice': voice or self.voices[0], 'rate': rate})
+    def speakers(self, voice: str = '') -> int:
+        """How many speakers the voice has (1 for a one-speaker voice)."""
+        return int(self._speakers.get(voice or self.voices[0], 1))
+
+    def synthesize(self, text: str, voice: str = '', rate=None, speaker=None) -> bytes:
+        self.calls.append({'chars': len(text), 'voice': voice or self.voices[0], 'rate': rate, 'speaker': speaker})
         if self.delay:
             time.sleep(self.delay)
         frames = int(22050 * min(5.0, 0.05 * len(text)) / (rate or 1.0))
@@ -182,10 +195,18 @@ class PiperEngine:
     def name(self) -> str:
         return f'piper:{self.voices[0]}'
 
-    def synthesize(self, text: str, voice: str = '', rate=None) -> bytes:
+    def speakers(self, voice: str = '') -> int:
+        """How many speakers the voice has (its model's own count; 1 for a one-speaker voice)."""
+        v = self._voices[voice or self.voices[0]]
+        try:
+            return max(1, int(getattr(v.config, 'num_speakers', 1) or 1))
+        except (TypeError, ValueError):
+            return 1
+
+    def synthesize(self, text: str, voice: str = '', rate=None, speaker=None) -> bytes:
         v = self._voices[voice or self.voices[0]]
         # Piper's speed is `length_scale`: how long each sound lasts, so faster speech is a smaller number.
-        cfg = self._config(length_scale=(1.0 / rate) if rate else None)
+        cfg = self._config(length_scale=(1.0 / rate) if rate else None, speaker_id=speaker)
         buf = io.BytesIO()
         with wave.open(buf, 'wb') as w:
             v.synthesize_wav(text, w, syn_config=cfg)
@@ -205,17 +226,21 @@ class Speaker:
         self._count = threading.Lock()
         self._waiting = 0
 
-    def speak(self, text: str, voice: str = '', rate=None):
+    def speak(self, text: str, voice: str = '', rate=None, speaker=None):
         """-> (wav bytes, '') or (None, why). 'busy' when too many are already waiting."""
         if voice and voice not in self.engine.voices:
             return None, f'no voice called {voice}'
+        if speaker is not None:
+            n = self.engine.speakers(voice)
+            if not (0 <= speaker < n):
+                return None, f'{voice or self.engine.voices[0]} has {n} speaker{"" if n == 1 else "s"}, so no speaker {speaker}'
         with self._count:
             if self._waiting > self.max_waiting:      # one being spoken + max_waiting behind it
                 return None, 'busy'
             self._waiting += 1
         try:
             with self._lock:
-                return self.engine.synthesize(text, voice, rate), ''
+                return self.engine.synthesize(text, voice, rate, speaker), ''
         finally:
             with self._count:
                 self._waiting -= 1
@@ -321,6 +346,7 @@ def make_handler(speaker: Speaker, sites=DEFAULT_SITES, quiet: bool = False, cli
                 self._json(404, {'ok': False, 'error': 'not found'})
                 return
             self._json(200, {'ok': True, 'engine': speaker.engine.name, 'voices': list(speaker.engine.voices),
+                             'speakers': {v: speaker.engine.speakers(v) for v in speaker.engine.voices},
                              'protocol': PROTOCOL, 'maxText': MAX_TEXT, 'clips': bool(clips)})
 
         def do_POST(self):
@@ -350,7 +376,7 @@ def make_handler(speaker: Speaker, sites=DEFAULT_SITES, quiet: bool = False, cli
                 return
             t0 = time.perf_counter()
             try:
-                wav, why = speaker.speak(req['text'], req['voice'], req['rate'])
+                wav, why = speaker.speak(req['text'], req['voice'], req['rate'], req['speaker'])
             except Exception as err:            # a broken model must not take the program down
                 note(f'synthesis failed: {type(err).__name__}')
                 self._json(500, {'ok': False, 'error': 'the voice could not say that'})

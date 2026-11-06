@@ -56,7 +56,7 @@ check('only loopback addresses count as this computer', T.is_loopback('127.0.0.1
 
 # ---- reading a request (pure) ----------------------------------------------------------------------------------------
 ok, why = T.read_request(b'{"text": "  Hello   there "}')
-check('a sentence is read, spaces tidied', ok == {'text': 'Hello there', 'voice': '', 'rate': None} and why == '')
+check('a sentence is read, spaces tidied', ok == {'text': 'Hello there', 'voice': '', 'rate': None, 'speaker': None} and why == '')
 check('not JSON is refused', T.read_request(b'hello')[0] is None)
 check('a list is refused', T.read_request(b'["hi"]')[0] is None)
 check('no text is refused', T.read_request(b'{"text": "   "}')[0] is None and T.read_request(b'{"voice": "x"}')[0] is None)
@@ -78,10 +78,26 @@ check('an unknown voice says so', sp.speak('Hello', 'zz') == (None, 'no voice ca
 gate = threading.Event()
 
 
+# ---- one model, many speakers (note FD 1) ------------------------------------------------------------------------------
+check('a speaker number is read', T.read_request(b'{"text": "hi", "speaker": 115}')[0]['speaker'] == 115
+      and T.read_request(b'{"text": "hi"}')[0]['speaker'] is None)
+check('a speaker that is not a whole number is refused', all(T.read_request(json.dumps({'text': 'hi', 'speaker': s}).encode())[0] is None
+      for s in (-1, 1.5, '115', True, 10000)))
+multi = T.Speaker(T.FakeEngine(voices=('en_US-libritts-high', 'en_US-mike-medium'), speakers={'en_US-libritts-high': 904}))
+wav, why = multi.speak('Hello', 'en_US-libritts-high', None, 115)
+check('*** one model, a chosen speaker: said, and the speaker reaches the voice ***',
+      wav and why == '' and multi.engine.calls[-1]['speaker'] == 115 and multi.engine.calls[-1]['voice'] == 'en_US-libritts-high')
+check('the default voice takes a speaker too', multi.speak('Hi', '', None, 552)[1] == '' and multi.engine.calls[-1]['speaker'] == 552)
+check('*** a speaker past the voice\'s own count says so ***', multi.speak('Hi', 'en_US-libritts-high', None, 904) ==
+      (None, 'en_US-libritts-high has 904 speakers, so no speaker 904'))
+check('a one-speaker voice takes only speaker 0', multi.speak('Hi', 'en_US-mike-medium', None, 0)[1] == ''
+      and multi.speak('Hi', 'en_US-mike-medium', None, 3) == (None, 'en_US-mike-medium has 1 speaker, so no speaker 3'))
+
+
 class Slow(T.FakeEngine):
-    def synthesize(self, text, voice='', rate=None):
+    def synthesize(self, text, voice='', rate=None, speaker=None):
         gate.wait(5)
-        return super().synthesize(text, voice, rate)
+        return super().synthesize(text, voice, rate, speaker)
 
 
 slow = T.Speaker(Slow(), max_waiting=1)
@@ -131,6 +147,7 @@ j = json.loads(b)
 check('/health answers the site, with its engine and voices', s == 200 and j['ok'] is True
       and j['engine'] == 'fake:en_US-ljspeech-medium' and j['voices'] == ['en_US-ljspeech-medium', 'other'] and j['protocol'] == 1)
 check('...with CORS for exactly that site', h.get('access-control-allow-origin') == SITE and h.get('vary') == 'Origin')
+check('...and how many speakers each voice has', j.get('speakers') == {'en_US-ljspeech-medium': 1, 'other': 1}, j.get('speakers'))
 s, h, b = req('GET', '/health')
 check('/health with no Origin (a program) answers, with no CORS header', s == 200 and 'access-control-allow-origin' not in h)
 s, h, b = req('GET', '/health', headers={'Origin': 'https://evil.example'})
@@ -157,7 +174,9 @@ except wave.Error:
 check('POST /speak -> a WAV the page can play', s == 200 and h.get('content-type') == 'audio/wav' and ok_wav
       and h.get('access-control-allow-origin') == SITE and h.get('cache-control') == 'no-store')
 s, h, b = req('POST', '/speak', {'text': 'Hello', 'voice': 'other', 'rate': 1.25}, headers={'Origin': SITE})
-check('a voice and a rate are passed on', s == 200 and engine.calls[-1] == {'chars': 5, 'voice': 'other', 'rate': 1.25})
+check('a voice and a rate are passed on', s == 200 and engine.calls[-1] == {'chars': 5, 'voice': 'other', 'rate': 1.25, 'speaker': None})
+s, h, b = req('POST', '/speak', {'text': 'Hello', 'speaker': 3}, headers={'Origin': SITE})
+check('a speaker the voice does not have is refused with a sentence (400)', s == 400 and b'no speaker 3' in b)
 s, h, b = req('POST', '/speak', {'text': 'Hello', 'voice': 'nope'}, headers={'Origin': SITE})
 check('an unknown voice is a 400 the page can read', s == 400 and 'no voice' in json.loads(b)['error']
       and h.get('access-control-allow-origin') == SITE)
@@ -179,7 +198,7 @@ before = len(engine.calls)
 
 
 class Broken(T.FakeEngine):
-    def synthesize(self, text, voice='', rate=None):
+    def synthesize(self, text, voice='', rate=None, speaker=None):
         raise RuntimeError('model gone')
 
 
