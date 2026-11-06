@@ -339,7 +339,8 @@ export function inkOrder(style, background) {
 
 // LEVELS: what somebody changes to make it theirs is `essential` (the words, the picture, the
 // frame, the font, the colour of the words); the rest is `standard`, which the menu shows by
-// default too. Nothing here is `advanced` — there is nothing technical about a sign.
+// default too. Only the three colour offsets (lightness, hue, saturation, below) are `advanced`: they are there to be
+// driven by an automation, not chosen by hand.
 export const SETTINGS = [
   { key: 'label', label: 'Words', kind: 'text', default: DEFAULTS.label, level: 'essential',
     placeholder: 'No words yet' },
