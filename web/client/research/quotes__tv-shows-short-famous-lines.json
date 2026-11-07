@@ -1,0 +1,429 @@
+{
+ "schema": "nimrod.research.v1",
+ "kind": "quotes",
+ "name": "tv shows short famous lines",
+ "generated": "2026-11-06",
+ "items": [
+  {
+   "kind": "quote",
+   "text": "Live long and prosper.",
+   "speaker": "Spock (played by Leonard Nimoy)",
+   "work": "Star Trek, \"Amok Time\"",
+   "year": "1967",
+   "work_type": "tv",
+   "context": "Spock's Vulcan blessing, which was first used in this second-season opener.",
+   "sources": [
+    {
+     "url": "https://en.wikipedia.org/wiki/Amok_Time",
+     "title": "Amok Time",
+     "publisher": "Wikipedia"
+    },
+    {
+     "url": "https://en.wikipedia.org/wiki/Vulcan_salute",
+     "title": "Vulcan salute",
+     "publisher": "Wikipedia"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "tv",
+    "star trek",
+    "kind",
+    "inspiring",
+    "catchphrase"
+   ],
+   "difficulty": "very easy",
+   "id": "quotes__tv-shows-short-famous-lines__001",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://en.wikipedia.org/wiki/Amok_Time",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "quote",
+   "text": "We don't make mistakes; we just have happy accidents.",
+   "speaker": "Bob Ross",
+   "work": "The Joy of Painting",
+   "year": "",
+   "work_type": "tv",
+   "context": "Bob Ross reassures viewers that a slip of the brush can lead somewhere good.",
+   "sources": [
+    {
+     "url": "https://en.wikiquote.org/wiki/Bob_Ross",
+     "title": "Bob Ross - Wikiquote",
+     "publisher": "Wikiquote"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "tv",
+    "painting",
+    "encouraging",
+    "wise",
+    "mistakes"
+   ],
+   "difficulty": "easy",
+   "id": "quotes__tv-shows-short-famous-lines__002",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://en.wikiquote.org/wiki/Bob_Ross",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "quote",
+   "text": "You've made this day a special day, by just your being you.",
+   "speaker": "Fred Rogers (Mister Rogers)",
+   "work": "Mister Rogers' Neighborhood",
+   "year": "",
+   "work_type": "tv",
+   "context": "Rogers said this was how he ended each episode of his children's show.",
+   "sources": [
+    {
+     "url": "https://en.wikiquote.org/wiki/Fred_Rogers",
+     "title": "Fred Rogers - Wikiquote",
+     "publisher": "Wikiquote"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "tv",
+    "kindness",
+    "children",
+    "inspiring",
+    "self-worth"
+   ],
+   "difficulty": "easy",
+   "id": "quotes__tv-shows-short-famous-lines__003",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://en.wikiquote.org/wiki/Fred_Rogers",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "quote",
+   "text": "Don't mention the war.",
+   "speaker": "Basil Fawlty (played by John Cleese)",
+   "work": "Fawlty Towers, \"The Germans\"",
+   "year": "1975",
+   "work_type": "tv",
+   "context": "Basil warns his staff before German guests arrive, then fails to follow his own advice.",
+   "sources": [
+    {
+     "url": "https://en.wikipedia.org/wiki/The_Germans",
+     "title": "The Germans",
+     "publisher": "Wikipedia"
+    },
+    {
+     "url": "https://www.imdb.com/title/tt0578590/quotes/?item=qt1627615",
+     "title": "\"Fawlty Towers\" The Germans (TV Episode 1975) - Quotes",
+     "publisher": "IMDb"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "tv",
+    "sitcom",
+    "funny",
+    "british comedy",
+    "catchphrase"
+   ],
+   "difficulty": "easy",
+   "id": "quotes__tv-shows-short-famous-lines__004",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://en.wikipedia.org/wiki/The_Germans",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "quote",
+   "text": "No soup for you!",
+   "speaker": "The Soup Nazi (Yev Kassem, played by Larry Thomas)",
+   "work": "Seinfeld, \"The Soup Nazi\"",
+   "year": "1995",
+   "work_type": "tv",
+   "context": "A strict soup seller sends a customer away empty-handed, and the line became a catchphrase.",
+   "sources": [
+    {
+     "url": "https://en.wikiquote.org/wiki/Seinfeld_(season_7)",
+     "title": "Seinfeld (season 7) - Wikiquote",
+     "publisher": "Wikiquote"
+    },
+    {
+     "url": "https://en.wikipedia.org/wiki/The_Soup_Nazi",
+     "title": "The Soup Nazi",
+     "publisher": "Wikipedia"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "tv",
+    "sitcom",
+    "funny",
+    "catchphrase",
+    "seinfeld"
+   ],
+   "difficulty": "very easy",
+   "id": "quotes__tv-shows-short-famous-lines__005",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://en.wikipedia.org/wiki/The_Soup_Nazi",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "quote",
+   "text": "Make it so.",
+   "speaker": "Jean-Luc Picard (played by Patrick Stewart)",
+   "work": "Star Trek: The Next Generation",
+   "year": "",
+   "work_type": "tv",
+   "context": "Captain Picard's habitual way of approving a plan or order.",
+   "sources": [
+    {
+     "url": "https://en.wikiquote.org/wiki/Jean-Luc_Picard",
+     "title": "Jean-Luc Picard - Wikiquote",
+     "publisher": "Wikiquote"
+    },
+    {
+     "url": "https://en.wikiquote.org/wiki/Star_Trek:_The_Next_Generation",
+     "title": "Star Trek: The Next Generation - Wikiquote",
+     "publisher": "Wikiquote"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "tv",
+    "star trek",
+    "leadership",
+    "catchphrase"
+   ],
+   "difficulty": "very easy",
+   "id": "quotes__tv-shows-short-famous-lines__006",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://en.wikiquote.org/wiki/Jean-Luc_Picard",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "quote",
+   "text": "Engage!",
+   "speaker": "Jean-Luc Picard (played by Patrick Stewart)",
+   "work": "Star Trek: The Next Generation",
+   "year": "",
+   "work_type": "tv",
+   "context": "Picard's order to set the Enterprise moving.",
+   "sources": [
+    {
+     "url": "https://en.wikiquote.org/wiki/Star_Trek:_The_Next_Generation",
+     "title": "Star Trek: The Next Generation - Wikiquote",
+     "publisher": "Wikiquote"
+    },
+    {
+     "url": "https://www.imdb.com/title/tt0092455/quotes/",
+     "title": "Star Trek: The Next Generation (TV Series 1987–1994) - Quotes",
+     "publisher": "IMDb"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "tv",
+    "star trek",
+    "leadership",
+    "catchphrase"
+   ],
+   "difficulty": "very easy",
+   "id": "quotes__tv-shows-short-famous-lines__007",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://en.wikiquote.org/wiki/Star_Trek:_The_Next_Generation",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "quote",
+   "text": "Wishing for a thing does not make it so.",
+   "speaker": "Jean-Luc Picard (played by Patrick Stewart)",
+   "work": "Star Trek: The Next Generation, \"Samaritan Snare\"",
+   "year": "",
+   "work_type": "tv",
+   "context": "Picard gently answers Wesley Crusher when he asks whether Picard ever wished for children of his own.",
+   "sources": [
+    {
+     "url": "https://en.wikiquote.org/wiki/Star_Trek:_The_Next_Generation",
+     "title": "Star Trek: The Next Generation - Wikiquote",
+     "publisher": "Wikiquote"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "tv",
+    "star trek",
+    "wise",
+    "reality"
+   ],
+   "difficulty": "medium",
+   "id": "quotes__tv-shows-short-famous-lines__008",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://en.wikiquote.org/wiki/Jean-Luc_Picard",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "quote",
+   "text": "I have a cunning plan, sir.",
+   "speaker": "Baldrick (played by Tony Robinson)",
+   "work": "Blackadder the Third",
+   "year": "",
+   "work_type": "tv",
+   "context": "Baldrick's catchphrase, usually followed by a hopeless scheme.",
+   "sources": [
+    {
+     "url": "https://en.wikiquote.org/wiki/Blackadder_the_Third_(series_3)",
+     "title": "Blackadder the Third (series 3) - Wikiquote",
+     "publisher": "Wikiquote"
+    },
+    {
+     "url": "https://en.wikipedia.org/wiki/Baldrick",
+     "title": "Baldrick",
+     "publisher": "Wikipedia"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "tv",
+    "sitcom",
+    "funny",
+    "british comedy",
+    "catchphrase"
+   ],
+   "difficulty": "easy",
+   "id": "quotes__tv-shows-short-famous-lines__009",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://en.wikiquote.org/wiki/Blackadder_the_Third_(series_3)",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "quote",
+   "text": "As cunning as a fox who's just been appointed Professor of Cunning at Oxford University?",
+   "speaker": "Captain Blackadder (played by Rowan Atkinson)",
+   "work": "Blackadder Goes Forth, \"Goodbyeee\"",
+   "year": "1989",
+   "work_type": "tv",
+   "context": "Blackadder teases Baldrick when he says he has a plan.",
+   "sources": [
+    {
+     "url": "https://en.wikiquote.org/wiki/Blackadder_Goes_Forth_(series_4)",
+     "title": "Blackadder Goes Forth (series 4) - Wikiquote",
+     "publisher": "Wikiquote"
+    },
+    {
+     "url": "https://www.imdb.com/title/tt0526712/quotes/?item=qt0186056",
+     "title": "\"Blackadder Goes Forth\" Goodbyeee (TV Episode 1989) - Quotes",
+     "publisher": "IMDb"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "tv",
+    "sitcom",
+    "funny",
+    "british comedy"
+   ],
+   "difficulty": "medium",
+   "id": "quotes__tv-shows-short-famous-lines__010",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.imdb.com/title/tt0526712/quotes/?item=qt0186056",
+    "problem": "",
+    "fix": ""
+   }
+  }
+ ]
+}

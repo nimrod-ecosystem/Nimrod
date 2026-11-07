@@ -1,0 +1,296 @@
+{
+ "schema": "nimrod.research.v1",
+ "kind": "facts",
+ "name": "space",
+ "generated": "2026-11-06",
+ "items": [
+  {
+   "kind": "fact",
+   "text": "On Venus, one day is longer than one year. It takes about 243 Earth days to spin once, but only about 225 Earth days to orbit the Sun.",
+   "topic": "space",
+   "note": "This compares one full spin to the stars with the orbit. Sunrise to sunrise on Venus takes about 117 Earth days, because Venus spins backward.",
+   "sources": [
+    {
+     "url": "https://spaceplace.nasa.gov/all-about-venus/en/",
+     "title": "All About Venus",
+     "publisher": "NASA Space Place"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "venus",
+    "planets",
+    "time"
+   ],
+   "difficulty": "easy",
+   "id": "facts__space__001",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://spaceplace.nasa.gov/all-about-venus/en/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "A single teaspoon of neutron-star material would weigh about a billion tons on Earth. That's because a star more massive than our Sun is squeezed into a ball about the size of a city.",
+   "topic": "space",
+   "note": "Estimates vary with which layer of the star you scoop from. NASA gives the figure as about a billion tons.",
+   "sources": [
+    {
+     "url": "https://www.nasa.gov/centers-and-facilities/goddard/new-nasa-mission-to-study-mysterious-neutron-stars-aid-in-deep-space-navigation/",
+     "title": "New NASA Mission to Study Mysterious Neutron Stars, Aid in Deep Space Navigation",
+     "publisher": "NASA"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "neutron stars",
+    "density",
+    "stars"
+   ],
+   "difficulty": "medium",
+   "id": "facts__space__002",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.nasa.gov/news-release/new-nasa-explorer-mission-to-uncover-physics-of-neutron-stars-and-demonstrate-game-changing-navigation-technology",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The Apollo astronauts' footprints on the Moon will probably last millions of years. The Moon has no wind or rain to wipe them away.",
+   "topic": "space",
+   "note": "This is a scientific estimate, not a guarantee. Meteorite impacts and future landings could disturb the prints sooner.",
+   "sources": [
+    {
+     "url": "https://bigthink.com/starts-with-a-bang/astronaut-footprints-disappearing-moon/",
+     "title": "Ask Ethan: Are astronaut footprints disappearing from the Moon?",
+     "publisher": "Big Think"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "moon",
+    "apollo",
+    "footprints"
+   ],
+   "difficulty": "easy",
+   "id": "facts__space__003",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://bigthink.com/starts-with-a-bang/astronaut-footprints-disappearing-moon/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Saturn is the only planet in our solar system that is less dense than water. If you could find a bathtub big enough, it would float.",
+   "topic": "space",
+   "note": "This is about Saturn's average density. In real life no pool could hold it, and Saturn has a dense core inside.",
+   "sources": [
+    {
+     "url": "https://starchild.gsfc.nasa.gov/docs/StarChild/solar_system_level2/saturn.html",
+     "title": "Saturn: The Ringed Planet - StarChild",
+     "publisher": "NASA GSFC"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "saturn",
+    "planets",
+    "density"
+   ],
+   "difficulty": "easy",
+   "id": "facts__space__004",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.jpl.nasa.gov/edu/pdfs/ss_extreme_poster.pdf",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Sunsets on Mars look blue, the opposite of Earth's red ones. Fine Martian dust lets blue light pass through the air more easily than red light.",
+   "topic": "space",
+   "note": "NASA's Curiosity rover recorded its first color Martian sunset in 2015. Mars's daytime sky looks butterscotch or reddish.",
+   "sources": [
+    {
+     "url": "https://svs.gsfc.nasa.gov/11875",
+     "title": "NASA On Air: NASA's Curiosity Sees Blue Sunset On Mars",
+     "publisher": "NASA Scientific Visualization Studio"
+    },
+    {
+     "url": "https://www.space.com/29368-mars-blue-sunset-curiosity-rover-video.html",
+     "title": "Curiosity Rover Sees Stunning Blue-Tinted Sunset on Mars (Video)",
+     "publisher": "Space.com"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "mars",
+    "sunset",
+    "light"
+   ],
+   "difficulty": "easy",
+   "id": "facts__space__005",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://svs.gsfc.nasa.gov/11875",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Astronauts say space smells like seared steak, hot metal and gunpowder. They notice it when they take their helmets off after a spacewalk.",
+   "topic": "space",
+   "note": "Nobody smells open space directly, because they would need to take their helmet off. The smell is on suits and gear brought back into the airlock, and scientists don't fully agree on its cause.",
+   "sources": [
+    {
+     "url": "https://www.livescience.com/space/what-does-space-smell-like",
+     "title": "What does space smell like?",
+     "publisher": "Live Science"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "astronauts",
+    "spacewalk",
+    "smell"
+   ],
+   "difficulty": "easy",
+   "id": "facts__space__006",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.nasa.gov/space-science-and-astrobiology-at-ames/interesting-fact-of-the-month-current/interesting-fact-of-the-month-2021/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The Sun holds about 99.8 percent of all the mass in our solar system. Every planet, moon and asteroid together make up just a sliver of what's left.",
+   "topic": "space",
+   "note": "Some sources give 99.86%, for example the Natural History Museum in London. Both numbers round to about 99.8–99.9%.",
+   "sources": [
+    {
+     "url": "https://www.nasa.gov/solar-system/its-surprisingly-hard-to-go-to-the-sun/",
+     "title": "It's Surprisingly Hard to Go to the Sun",
+     "publisher": "NASA"
+    },
+    {
+     "url": "https://www.nhm.ac.uk/discover/factfile-the-sun.html",
+     "title": "The Sun",
+     "publisher": "Natural History Museum"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "sun",
+    "solar system",
+    "mass"
+   ],
+   "difficulty": "easy",
+   "id": "facts__space__007",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.nasa.gov/solar-system/its-surprisingly-hard-to-go-to-the-sun/embed/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Astronauts on the International Space Station can grow up to 3 percent taller. With no gravity squashing them down, the spaces between the bones in their spines expand.",
+   "topic": "space",
+   "note": "The extra height is temporary, and their bones don't actually grow. Astronaut Scott Kelly was about 2 inches taller after a year in space, and he returned to his normal height after returning to Earth.",
+   "sources": [
+    {
+     "url": "https://www.sciencedaily.com/releases/2013/01/130103090639.htm",
+     "title": "Spinal ultrasounds seeking why astronauts grow taller in space",
+     "publisher": "ScienceDaily (source: NASA)"
+    },
+    {
+     "url": "https://www.cnbc.com/2016/03/02/nasas-scott-kelly-grew-2-inches-the-body-after-a-year-in-space.html",
+     "title": "NASA's Scott Kelly Grew 2 Inches: The Body After a Year in Space",
+     "publisher": "CNBC"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "astronauts",
+    "ISS",
+    "human body",
+    "gravity"
+   ],
+   "difficulty": "easy",
+   "id": "facts__space__008",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.sciencedaily.com/releases/2013/01/130103090639.htm",
+    "problem": "",
+    "fix": ""
+   }
+  }
+ ]
+}

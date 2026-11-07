@@ -1,0 +1,1396 @@
+{
+ "schema": "nimrod.research.v1",
+ "kind": "words",
+ "name": "level2_2",
+ "generated": "2026-11-06",
+ "items": [
+  {
+   "kind": "word",
+   "text": "neck",
+   "word": "neck",
+   "part_of_speech": "noun",
+   "level": 2,
+   "definition": "The part of your body between your head and your shoulders.",
+   "explanation": "",
+   "forms": {
+    "plural": "necks"
+   },
+   "example": "She wore a scarf around her neck.",
+   "picture_idea": "A person with a hand touching the neck between head and shoulders",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "body"
+   ],
+   "difficulty": "easy",
+   "id": "words__level2_2__001",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "new",
+   "word": "new",
+   "part_of_speech": "adjective",
+   "level": 2,
+   "definition": "Not old; made or bought a short time ago.",
+   "explanation": "",
+   "forms": {
+    "comparative": "newer",
+    "superlative": "newest"
+   },
+   "example": "I have a new bag for school.",
+   "picture_idea": "A shiny new bag with a price tag",
+   "aac_core": true,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "describing",
+    "clothes"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level2_2__002",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "nose",
+   "word": "nose",
+   "part_of_speech": "noun",
+   "level": 2,
+   "definition": "The part of your face that you use to smell and breathe.",
+   "explanation": "",
+   "forms": {
+    "plural": "noses"
+   },
+   "example": "My nose is cold.",
+   "picture_idea": "A smiling face with the nose highlighted",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "body",
+    "face"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level2_2__003",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "open",
+   "word": "open",
+   "part_of_speech": "verb",
+   "level": 2,
+   "definition": "To move something so that it is not closed.",
+   "explanation": "",
+   "forms": {
+    "past": "opened",
+    "past participle": "opened",
+    "-ing": "opening",
+    "third person": "opens"
+   },
+   "example": "Please open the door.",
+   "picture_idea": "A child opening a door",
+   "aac_core": true,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "actions",
+    "home"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level2_2__004",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "old",
+   "word": "old",
+   "part_of_speech": "adjective",
+   "level": 2,
+   "definition": "Having lived or existed for a long time; not new.",
+   "explanation": "",
+   "forms": {
+    "comparative": "older",
+    "superlative": "oldest"
+   },
+   "example": "My grandfather has an old watch.",
+   "picture_idea": "An old man holding an old pocket watch",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "describing",
+    "people"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level2_2__005",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "pants",
+   "word": "pants",
+   "part_of_speech": "noun",
+   "level": 2,
+   "definition": "Clothes that cover your legs and waist; trousers.",
+   "explanation": "Always plural. Say 'a pair of pants'. In British English, 'pants' can mean underwear.",
+   "forms": {},
+   "example": "I put on my blue pants.",
+   "picture_idea": "A pair of blue long pants",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "clothes"
+   ],
+   "difficulty": "easy",
+   "id": "words__level2_2__006",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "park",
+   "word": "park",
+   "part_of_speech": "noun",
+   "level": 2,
+   "definition": "A place outside with grass and trees where people can walk and play.",
+   "explanation": "",
+   "forms": {
+    "plural": "parks"
+   },
+   "example": "We play in the park on Sunday.",
+   "picture_idea": "Children playing on grass with trees and a swing",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "places"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level2_2__007",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "pillow",
+   "word": "pillow",
+   "part_of_speech": "noun",
+   "level": 2,
+   "definition": "A soft thing you put your head on when you sleep.",
+   "explanation": "",
+   "forms": {
+    "plural": "pillows"
+   },
+   "example": "I put my head on the pillow.",
+   "picture_idea": "A white pillow on a bed",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "home",
+    "bedroom"
+   ],
+   "difficulty": "easy",
+   "id": "words__level2_2__008",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "play",
+   "word": "play",
+   "part_of_speech": "verb",
+   "level": 2,
+   "definition": "To do something for fun, like a game.",
+   "explanation": "",
+   "forms": {
+    "past": "played",
+    "past participle": "played",
+    "-ing": "playing",
+    "third person": "plays"
+   },
+   "example": "The children play with a ball.",
+   "picture_idea": "Two children kicking a ball",
+   "aac_core": true,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "actions",
+    "fun"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level2_2__009",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "pull",
+   "word": "pull",
+   "part_of_speech": "verb",
+   "level": 2,
+   "definition": "To hold something and move it toward you.",
+   "explanation": "",
+   "forms": {
+    "past": "pulled",
+    "past participle": "pulled",
+    "-ing": "pulling",
+    "third person": "pulls"
+   },
+   "example": "Pull the door to open it.",
+   "picture_idea": "A person pulling a door handle toward them",
+   "aac_core": true,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "actions"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level2_2__010",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "push",
+   "word": "push",
+   "part_of_speech": "verb",
+   "level": 2,
+   "definition": "To press something to make it move away from you.",
+   "explanation": "",
+   "forms": {
+    "past": "pushed",
+    "past participle": "pushed",
+    "-ing": "pushing",
+    "third person": "pushes"
+   },
+   "example": "Push the box across the floor.",
+   "picture_idea": "A child pushing a large box",
+   "aac_core": true,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "actions"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level2_2__011",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "quiet",
+   "word": "quiet",
+   "part_of_speech": "adjective",
+   "level": 2,
+   "definition": "Making very little or no sound.",
+   "explanation": "",
+   "forms": {
+    "comparative": "quieter",
+    "superlative": "quietest"
+   },
+   "example": "The baby is sleeping, so please be quiet.",
+   "picture_idea": "A person with a finger on their lips",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "describing",
+    "sounds"
+   ],
+   "difficulty": "easy",
+   "id": "words__level2_2__012",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "rain",
+   "word": "rain",
+   "part_of_speech": "noun",
+   "level": 2,
+   "definition": "Water that falls from the clouds in small drops.",
+   "explanation": "Rain is not usually counted. You can also use 'rain' as a verb: 'It rains a lot here.'",
+   "forms": {},
+   "example": "I do not like walking in the rain.",
+   "picture_idea": "Grey clouds with raindrops falling",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "weather"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level2_2__013",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "read",
+   "word": "read",
+   "part_of_speech": "verb",
+   "level": 2,
+   "definition": "To look at words and understand them.",
+   "explanation": "The past form is spelled 'read' but sounds like 'red'.",
+   "forms": {
+    "past": "read",
+    "past participle": "read",
+    "-ing": "reading",
+    "third person": "reads"
+   },
+   "example": "I read a book every night.",
+   "picture_idea": "A child reading an open book",
+   "aac_core": true,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "actions",
+    "school"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level2_2__014",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "room",
+   "word": "room",
+   "part_of_speech": "noun",
+   "level": 2,
+   "definition": "A part of a house or building with walls, a floor and a ceiling.",
+   "explanation": "",
+   "forms": {
+    "plural": "rooms"
+   },
+   "example": "My room has a small bed and a desk.",
+   "picture_idea": "A small bedroom with a bed and desk",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "home",
+    "places"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level2_2__015",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "run",
+   "word": "run",
+   "part_of_speech": "verb",
+   "level": 2,
+   "definition": "To move fast on your feet.",
+   "explanation": "",
+   "forms": {
+    "past": "ran",
+    "past participle": "run",
+    "-ing": "running",
+    "third person": "runs"
+   },
+   "example": "The dog runs in the garden.",
+   "picture_idea": "A child running across a field",
+   "aac_core": true,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "actions",
+    "movement"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level2_2__016",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "sad",
+   "word": "sad",
+   "part_of_speech": "adjective",
+   "level": 2,
+   "definition": "Feeling unhappy.",
+   "explanation": "",
+   "forms": {
+    "comparative": "sadder",
+    "superlative": "saddest"
+   },
+   "example": "He is sad because his friend is moving away.",
+   "picture_idea": "A child with a frown and a tear",
+   "aac_core": true,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "feelings"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level2_2__017",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "school",
+   "word": "school",
+   "part_of_speech": "noun",
+   "level": 2,
+   "definition": "A place where children go to learn.",
+   "explanation": "",
+   "forms": {
+    "plural": "schools"
+   },
+   "example": "I walk to school with my sister.",
+   "picture_idea": "A school building with children entering",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "places",
+    "school"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level2_2__018",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "shirt",
+   "word": "shirt",
+   "part_of_speech": "noun",
+   "level": 2,
+   "definition": "A piece of clothing for the top part of your body, often with buttons.",
+   "explanation": "",
+   "forms": {
+    "plural": "shirts"
+   },
+   "example": "He has a white shirt for school.",
+   "picture_idea": "A white button-up shirt",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "clothes"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level2_2__019",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "shoe",
+   "word": "shoe",
+   "part_of_speech": "noun",
+   "level": 2,
+   "definition": "Something you wear on your foot when you go outside.",
+   "explanation": "We usually talk about shoes in pairs.",
+   "forms": {
+    "plural": "shoes"
+   },
+   "example": "I cannot find my left shoe.",
+   "picture_idea": "A pair of sneakers",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "clothes"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level2_2__020",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "shop",
+   "word": "shop",
+   "part_of_speech": "noun",
+   "level": 2,
+   "definition": "A place where you buy things.",
+   "explanation": "",
+   "forms": {
+    "plural": "shops"
+   },
+   "example": "The shop opens at nine o'clock.",
+   "picture_idea": "A small shop with a sign and a window",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "places"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level2_2__021",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "shoulder",
+   "word": "shoulder",
+   "part_of_speech": "noun",
+   "level": 2,
+   "definition": "The part of your body where your arm joins your body.",
+   "explanation": "",
+   "forms": {
+    "plural": "shoulders"
+   },
+   "example": "My bag is heavy on my shoulder.",
+   "picture_idea": "A person carrying a bag on one shoulder",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "body"
+   ],
+   "difficulty": "easy",
+   "id": "words__level2_2__022",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "sit",
+   "word": "sit",
+   "part_of_speech": "verb",
+   "level": 2,
+   "definition": "To rest your body on a chair or the floor, not standing.",
+   "explanation": "",
+   "forms": {
+    "past": "sat",
+    "past participle": "sat",
+    "-ing": "sitting",
+    "third person": "sits"
+   },
+   "example": "Please sit on the chair.",
+   "picture_idea": "A child sitting on a chair",
+   "aac_core": true,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "actions",
+    "body"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level2_2__023",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "sleep",
+   "word": "sleep",
+   "part_of_speech": "verb",
+   "level": 2,
+   "definition": "To rest with your eyes closed and your mind quiet, usually at night.",
+   "explanation": "",
+   "forms": {
+    "past": "slept",
+    "past participle": "slept",
+    "-ing": "sleeping",
+    "third person": "sleeps"
+   },
+   "example": "The baby sleeps in the bedroom.",
+   "picture_idea": "A child sleeping in a bed with closed eyes",
+   "aac_core": true,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "actions",
+    "home"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level2_2__024",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "sock",
+   "word": "sock",
+   "part_of_speech": "noun",
+   "level": 2,
+   "definition": "A soft piece of clothing you wear on your foot inside a shoe.",
+   "explanation": "",
+   "forms": {
+    "plural": "socks"
+   },
+   "example": "I have a hole in my sock.",
+   "picture_idea": "A pair of colorful socks",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "clothes"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level2_2__025",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "sofa",
+   "word": "sofa",
+   "part_of_speech": "noun",
+   "level": 2,
+   "definition": "A long, soft seat for two or more people.",
+   "explanation": "Another word for sofa is 'couch'.",
+   "forms": {
+    "plural": "sofas"
+   },
+   "example": "We watch TV on the sofa.",
+   "picture_idea": "A living room sofa with cushions",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "home",
+    "furniture"
+   ],
+   "difficulty": "easy",
+   "id": "words__level2_2__026",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "stand",
+   "word": "stand",
+   "part_of_speech": "verb",
+   "level": 2,
+   "definition": "To be on your feet, not sitting.",
+   "explanation": "",
+   "forms": {
+    "past": "stood",
+    "past participle": "stood",
+    "-ing": "standing",
+    "third person": "stands"
+   },
+   "example": "Please stand next to the door.",
+   "picture_idea": "A person standing up straight beside a chair",
+   "aac_core": true,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "actions",
+    "body"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level2_2__027",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "stairs",
+   "word": "stairs",
+   "part_of_speech": "noun",
+   "level": 2,
+   "definition": "Steps that you use to go up or down inside a building.",
+   "explanation": "Usually plural. You can also say 'a staircase'.",
+   "forms": {},
+   "example": "My bedroom is at the top of the stairs.",
+   "picture_idea": "An indoor staircase with a handrail",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "home",
+    "places"
+   ],
+   "difficulty": "easy",
+   "id": "words__level2_2__028",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "table",
+   "word": "table",
+   "part_of_speech": "noun",
+   "level": 2,
+   "definition": "A piece of furniture with a flat top and legs.",
+   "explanation": "",
+   "forms": {
+    "plural": "tables"
+   },
+   "example": "We eat dinner at the table.",
+   "picture_idea": "A wooden table with plates and cups",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "home",
+    "furniture"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level2_2__029",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "tooth",
+   "word": "tooth",
+   "part_of_speech": "noun",
+   "level": 2,
+   "definition": "One of the hard white parts in your mouth that you use to bite and chew.",
+   "explanation": "The plural is irregular: teeth.",
+   "forms": {
+    "plural": "teeth"
+   },
+   "example": "I brush my teeth every morning.",
+   "picture_idea": "A smiling mouth showing white teeth",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "body",
+    "face"
+   ],
+   "difficulty": "easy",
+   "id": "words__level2_2__030",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "tired",
+   "word": "tired",
+   "part_of_speech": "adjective",
+   "level": 2,
+   "definition": "Feeling that you need to rest or sleep.",
+   "explanation": "",
+   "forms": {
+    "comparative": "more tired",
+    "superlative": "most tired"
+   },
+   "example": "I am tired after a long day.",
+   "picture_idea": "A person yawning with heavy eyes",
+   "aac_core": true,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "feelings",
+    "body"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level2_2__031",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "toilet",
+   "word": "toilet",
+   "part_of_speech": "noun",
+   "level": 2,
+   "definition": "A bowl with a seat that you use when you need to pass waste from your body; also the room with this bowl.",
+   "explanation": "In American English, people often say 'bathroom' or 'restroom' for the room.",
+   "forms": {
+    "plural": "toilets"
+   },
+   "example": "Where is the toilet, please?",
+   "picture_idea": "A white toilet in a small bathroom",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "home",
+    "places"
+   ],
+   "difficulty": "easy",
+   "id": "words__level2_2__032",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "towel",
+   "word": "towel",
+   "part_of_speech": "noun",
+   "level": 2,
+   "definition": "A soft cloth that you use to dry your body or hands.",
+   "explanation": "",
+   "forms": {
+    "plural": "towels"
+   },
+   "example": "Dry your hands with the towel.",
+   "picture_idea": "A folded blue towel hanging on a rail",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "home",
+    "bathroom"
+   ],
+   "difficulty": "easy",
+   "id": "words__level2_2__033",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "umbrella",
+   "word": "umbrella",
+   "part_of_speech": "noun",
+   "level": 2,
+   "definition": "A thing you hold over your head to keep off the rain.",
+   "explanation": "",
+   "forms": {
+    "plural": "umbrellas"
+   },
+   "example": "Take an umbrella because it is raining.",
+   "picture_idea": "A person holding an open umbrella in the rain",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "weather",
+    "things"
+   ],
+   "difficulty": "easy",
+   "id": "words__level2_2__034",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "up",
+   "word": "up",
+   "part_of_speech": "adverb",
+   "level": 2,
+   "definition": "In or toward a higher place.",
+   "explanation": "",
+   "forms": {},
+   "example": "The cat climbed up the tree.",
+   "picture_idea": "An arrow pointing up and a cat climbing a tree",
+   "aac_core": true,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "position",
+    "movement"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level2_2__035",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "walk",
+   "word": "walk",
+   "part_of_speech": "verb",
+   "level": 2,
+   "definition": "To move on your feet at a normal speed.",
+   "explanation": "",
+   "forms": {
+    "past": "walked",
+    "past participle": "walked",
+    "-ing": "walking",
+    "third person": "walks"
+   },
+   "example": "We walk to the shop every day.",
+   "picture_idea": "Two people walking on a path",
+   "aac_core": true,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "actions",
+    "movement"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level2_2__036",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "wall",
+   "word": "wall",
+   "part_of_speech": "noun",
+   "level": 2,
+   "definition": "A side of a room or building, or something built to close off a space.",
+   "explanation": "",
+   "forms": {
+    "plural": "walls"
+   },
+   "example": "There is a picture on the wall.",
+   "picture_idea": "A wall with a framed picture",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "home"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level2_2__037",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "want",
+   "word": "want",
+   "part_of_speech": "verb",
+   "level": 2,
+   "definition": "To wish to have or do something.",
+   "explanation": "",
+   "forms": {
+    "past": "wanted",
+    "past participle": "wanted",
+    "-ing": "wanting",
+    "third person": "wants"
+   },
+   "example": "I want a glass of water.",
+   "picture_idea": "A child pointing at a glass of water",
+   "aac_core": true,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "feelings",
+    "core"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level2_2__038",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "warm",
+   "word": "warm",
+   "part_of_speech": "adjective",
+   "level": 2,
+   "definition": "A little hot, in a nice way.",
+   "explanation": "",
+   "forms": {
+    "comparative": "warmer",
+    "superlative": "warmest"
+   },
+   "example": "The room is warm.",
+   "picture_idea": "A person wrapped in a blanket near a heater",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "describing",
+    "weather"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level2_2__039",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "wash",
+   "word": "wash",
+   "part_of_speech": "verb",
+   "level": 2,
+   "definition": "To clean something with water and soap.",
+   "explanation": "",
+   "forms": {
+    "past": "washed",
+    "past participle": "washed",
+    "-ing": "washing",
+    "third person": "washes"
+   },
+   "example": "I wash my hands before dinner.",
+   "picture_idea": "Hands under a running tap with soap",
+   "aac_core": true,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "actions",
+    "home"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level2_2__040",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "wait",
+   "word": "wait",
+   "part_of_speech": "verb",
+   "level": 2,
+   "definition": "To stay in a place until something happens.",
+   "explanation": "",
+   "forms": {
+    "past": "waited",
+    "past participle": "waited",
+    "-ing": "waiting",
+    "third person": "waits"
+   },
+   "example": "Please wait here for me.",
+   "picture_idea": "A person standing at a bus stop looking at a watch",
+   "aac_core": true,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "actions"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level2_2__041",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "wear",
+   "word": "wear",
+   "part_of_speech": "verb",
+   "level": 2,
+   "definition": "To have clothes or shoes on your body.",
+   "explanation": "",
+   "forms": {
+    "past": "wore",
+    "past participle": "worn",
+    "-ing": "wearing",
+    "third person": "wears"
+   },
+   "example": "She wears a red coat in winter.",
+   "picture_idea": "A girl in a red coat and hat",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "clothes",
+    "actions"
+   ],
+   "difficulty": "easy",
+   "id": "words__level2_2__042",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "window",
+   "word": "window",
+   "part_of_speech": "noun",
+   "level": 2,
+   "definition": "An opening in a wall with glass, so you can see outside.",
+   "explanation": "",
+   "forms": {
+    "plural": "windows"
+   },
+   "example": "Open the window, please.",
+   "picture_idea": "A house window with a view of trees",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "home"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level2_2__043",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "worried",
+   "word": "worried",
+   "part_of_speech": "adjective",
+   "level": 2,
+   "definition": "Feeling that something bad may happen.",
+   "explanation": "",
+   "forms": {
+    "comparative": "more worried",
+    "superlative": "most worried"
+   },
+   "example": "Mom is worried because I am late.",
+   "picture_idea": "A person with a frown biting their nails",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "feelings"
+   ],
+   "difficulty": "easy",
+   "id": "words__level2_2__044",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "write",
+   "word": "write",
+   "part_of_speech": "verb",
+   "level": 2,
+   "definition": "To make letters or words on paper or a screen.",
+   "explanation": "",
+   "forms": {
+    "past": "wrote",
+    "past participle": "written",
+    "-ing": "writing",
+    "third person": "writes"
+   },
+   "example": "I write my name on the paper.",
+   "picture_idea": "A child writing with a pencil on paper",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "actions",
+    "school"
+   ],
+   "difficulty": "easy",
+   "id": "words__level2_2__045",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "you",
+   "word": "you",
+   "part_of_speech": "pronoun",
+   "level": 2,
+   "definition": "The person or people I am talking to.",
+   "explanation": "",
+   "forms": {},
+   "example": "Can you help me?",
+   "picture_idea": "One person pointing toward the viewer",
+   "aac_core": true,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "people",
+    "core"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level2_2__046",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "zipper",
+   "word": "zipper",
+   "part_of_speech": "noun",
+   "level": 2,
+   "definition": "A thing on clothes or bags that closes two sides by pulling a small tab.",
+   "explanation": "In British English, it is often called a 'zip'.",
+   "forms": {
+    "plural": "zippers"
+   },
+   "example": "The zipper on my coat is stuck.",
+   "picture_idea": "A close-up of a zipper on a jacket",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "clothes"
+   ],
+   "difficulty": "medium",
+   "id": "words__level2_2__047",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  }
+ ]
+}

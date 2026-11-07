@@ -1,0 +1,718 @@
+{
+ "schema": "nimrod.research.v1",
+ "kind": "facts",
+ "name": "music",
+ "generated": "2026-11-06",
+ "items": [
+  {
+   "kind": "fact",
+   "text": "The world's oldest widely accepted musical instruments are flutes about 40,000 years old. One was made from a griffon vulture's hollow wing bone.",
+   "topic": "music",
+   "note": "Dates vary by flute and source. The Hohle Fels vulture-bone flute is dated to roughly 35,000–40,000 years, and the nearby Geissenklösterle flutes to about 42,000–43,000 years.",
+   "sources": [
+    {
+     "url": "https://www.nationalgeographic.com/culture/article/bone-flute-is-oldest-instrument--study-says",
+     "title": "Bone Flute Is Oldest Instrument, Study Says",
+     "publisher": "National Geographic"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "ancient music",
+    "instruments",
+    "flute",
+    "archaeology"
+   ],
+   "difficulty": "easy",
+   "id": "facts__music__001",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.nationalgeographic.com/culture/article/bone-flute-is-oldest-instrument--study-says",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Some Ice Age flutes were carved from mammoth ivory. Makers split the ivory into two halves, carved out each half, then joined them back together with an air-tight seal.",
+   "topic": "music",
+   "note": "The ivory flutes survive only as small fragments. This describes how researchers think they were made.",
+   "sources": [
+    {
+     "url": "https://phys.org/news/2009-06-prehistoric-flute-germany-oldest.html",
+     "title": "Prehistoric flute in Germany is oldest known",
+     "publisher": "Phys.org"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "ancient music",
+    "instruments",
+    "flute",
+    "mammoth"
+   ],
+   "difficulty": "medium",
+   "id": "facts__music__002",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://phys.org/news/2009-06-prehistoric-flute-germany-oldest.html",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The oldest complete song we have, with its melody written down, was carved on a gravestone in what is now Turkey. It is called the Seikilos epitaph.",
+   "topic": "music",
+   "note": "Dating is uncertain: sources give anywhere from about 200 BC to the 2nd century AD. Older music with notation exists, such as the Hurrian songs, but only in fragments. The stone is in the National Museum of Denmark.",
+   "sources": [
+    {
+     "url": "https://www.historyofinformation.com/detail.php?id=5185",
+     "title": "The Seikilos Epitaph: The Earliest Surviving Complete Musical Composition",
+     "publisher": "History of Information (Jeremy Norman)"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "ancient music",
+    "notation",
+    "Greece",
+    "history"
+   ],
+   "difficulty": "medium",
+   "id": "facts__music__003",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.historyofinformation.com/detail.php?id=5185",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "In Halberstadt, Germany, an organ is playing a John Cage piece that is scheduled to last 639 years. It is due to end in 2640.",
+   "topic": "music",
+   "note": "The piece is called Organ²/ASLSP (As Slow as Possible). Cage left the length up to the performers.",
+   "sources": [
+    {
+     "url": "https://www.npr.org/2024/02/27/1234115832/the-piece-as-slow-as-possible-has-been-in-performance-for-21-years-so-far",
+     "title": "The piece 'As Slow as Possible' has been in performance for 21 years — so far",
+     "publisher": "NPR"
+    },
+    {
+     "url": "https://www.artforum.com/news/639-year-john-cage-piece-first-chord-change-in-900-days-1234756726/",
+     "title": "A 639-Year-Long John Cage Performance Had Its First Chord Change In Two Years",
+     "publisher": "Artforum"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "John Cage",
+    "organ",
+    "longest music",
+    "Germany"
+   ],
+   "difficulty": "easy",
+   "id": "facts__music__004",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.npr.org/2024/02/27/1234115832/the-piece-as-slow-as-possible-has-been-in-performance-for-21-years-so-far",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The 639-year organ piece began with a pause that was calculated wrongly. For the first 17 months, visitors heard only air whooshing through the organ's bellows.",
+   "topic": "music",
+   "note": "NPR reports 17 months of bellows sound. Artforum describes the start as 18 months of silence, and the first pipes sounded in February 2003.",
+   "sources": [
+    {
+     "url": "https://www.npr.org/2024/02/27/1234115832/the-piece-as-slow-as-possible-has-been-in-performance-for-21-years-so-far",
+     "title": "The piece 'As Slow as Possible' has been in performance for 21 years — so far",
+     "publisher": "NPR"
+    },
+    {
+     "url": "https://www.artforum.com/news/639-year-john-cage-piece-first-chord-change-in-900-days-1234756726/",
+     "title": "A 639-Year-Long John Cage Performance Had Its First Chord Change In Two Years",
+     "publisher": "Artforum"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "John Cage",
+    "organ",
+    "silence",
+    "mistake"
+   ],
+   "difficulty": "hard",
+   "id": "facts__music__005",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.npr.org/2024/02/27/1234115832/the-piece-as-slow-as-possible-has-been-in-performance-for-21-years-so-far",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The number 639 was chosen on purpose. It is the gap between the 1361 construction of a famous organ in Halberstadt and the start of the new millennium.",
+   "topic": "music",
+   "note": "Artforum describes the 1361 event slightly differently, as the invention of the modern keyboard-played organ. Both sources link 639 years to Halberstadt's 1361 organ.",
+   "sources": [
+    {
+     "url": "https://www.npr.org/2024/02/27/1234115832/the-piece-as-slow-as-possible-has-been-in-performance-for-21-years-so-far",
+     "title": "The piece 'As Slow as Possible' has been in performance for 21 years — so far",
+     "publisher": "NPR"
+    },
+    {
+     "url": "https://www.artforum.com/news/639-year-john-cage-piece-first-chord-change-in-900-days-1234756726/",
+     "title": "A 639-Year-Long John Cage Performance Had Its First Chord Change In Two Years",
+     "publisher": "Artforum"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "John Cage",
+    "organ",
+    "history",
+    "math"
+   ],
+   "difficulty": "hard",
+   "id": "facts__music__006",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.npr.org/2024/02/27/1234115832/the-piece-as-slow-as-possible-has-been-in-performance-for-21-years-so-far",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The first musical instruments ever played in space were a tiny 8-note harmonica and a handful of small bells, in December 1965.",
+   "topic": "music",
+   "note": "Astronauts Wally Schirra and Tom Stafford played them on Gemini 6. Sources differ on whether other, earlier singing in space counts as a first.",
+   "sources": [
+    {
+     "url": "https://www.nasa.gov/feature/space-station-20th-music-on-iss",
+     "title": "Space Station 20th: Music on ISS",
+     "publisher": "NASA"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "space",
+    "NASA",
+    "harmonica",
+    "history"
+   ],
+   "difficulty": "easy",
+   "id": "facts__music__007",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.nasa.gov/feature/space-station-20th-music-on-iss",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Two astronauts pretended to spot a UFO, then played \"Jingle Bells\" on a smuggled harmonica that is only about 4 centimeters long.",
+   "topic": "music",
+   "note": "This was a joke on Mission Control during NASA's Gemini 6A flight on 16 December 1965. The harmonica was a Hohner \"Little Lady\".",
+   "sources": [
+    {
+     "url": "https://www.guinnessworldrecords.com/world-records/105444-first-song-played-in-space",
+     "title": "First song played in space",
+     "publisher": "Guinness World Records"
+    },
+    {
+     "url": "https://www.guinnessworldrecords.com/world-records/674112-first-musical-instrument-in-space",
+     "title": "First musical instrument in space",
+     "publisher": "Guinness World Records"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "space",
+    "NASA",
+    "Jingle Bells",
+    "prank"
+   ],
+   "difficulty": "easy",
+   "id": "facts__music__008",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.guinnessworldrecords.com/world-records/105444-first-song-played-in-space",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Canadian astronaut Chris Hadfield recorded a music video of David Bowie's \"Space Oddity\" aboard the International Space Station in 2013.",
+   "topic": "music",
+   "note": "Bowie called Hadfield's cover \"possibly the most poignant version of the song ever created.\"",
+   "sources": [
+    {
+     "url": "https://music.si.edu/story/smithsonian-year-music-object-day-december-2-harmonica-used-aboard-gemini-6",
+     "title": "Smithsonian Year of Music Object of the Day: Harmonica Used Aboard Gemini 6",
+     "publisher": "Smithsonian Institution"
+    },
+    {
+     "url": "https://www.nasa.gov/feature/space-station-20th-music-on-iss",
+     "title": "Space Station 20th: Music on ISS",
+     "publisher": "NASA"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "space",
+    "ISS",
+    "David Bowie",
+    "video"
+   ],
+   "difficulty": "easy",
+   "id": "facts__music__009",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.nasa.gov/feature/space-station-20th-music-on-iss",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "When an astronaut played a flute aboard the space shuttle Discovery in 1993, she had to use foot restraints while she played.",
+   "topic": "music",
+   "note": "The NASA page names the astronaut only by surname (Ochoa) in the text found. The flute playing was part of an education demonstration on mission STS-56.",
+   "sources": [
+    {
+     "url": "https://www.nasa.gov/feature/space-station-20th-music-on-iss",
+     "title": "Space Station 20th: Music on ISS",
+     "publisher": "NASA"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "space",
+    "flute",
+    "NASA",
+    "weightlessness"
+   ],
+   "difficulty": "medium",
+   "id": "facts__music__010",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.nasa.gov/feature/space-station-20th-music-on-iss",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Chuck Berry's \"Johnny B. Goode\" was launched toward interstellar space in 1977 on the Voyager Golden Records.",
+   "topic": "music",
+   "note": "Both Voyager 1 and Voyager 2 carry a copy of the record.",
+   "sources": [
+    {
+     "url": "https://science.nasa.gov/mission/voyager/golden-record-contents/sounds/",
+     "title": "Golden Record Sounds and Music",
+     "publisher": "NASA Science"
+    },
+    {
+     "url": "https://www.npr.org/transcripts/520862763",
+     "title": "Chuck Berry Immortalized On Voyager Space Mission",
+     "publisher": "NPR"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "Voyager",
+    "space",
+    "rock and roll",
+    "Chuck Berry"
+   ],
+   "difficulty": "easy",
+   "id": "facts__music__011",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.npr.org/transcripts/520862763",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "One member of the Voyager music committee called Chuck Berry's music adolescent. Carl Sagan replied that there are a lot of adolescents on Earth, too.",
+   "topic": "music",
+   "note": "Told by Timothy Ferris, who worked on the Golden Record, in an NPR interview.",
+   "sources": [
+    {
+     "url": "https://www.npr.org/transcripts/520862763",
+     "title": "Chuck Berry Immortalized On Voyager Space Mission",
+     "publisher": "NPR"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "Voyager",
+    "Carl Sagan",
+    "rock and roll",
+    "history"
+   ],
+   "difficulty": "easy",
+   "id": "facts__music__012",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.npr.org/transcripts/520862763",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Carl Sagan and Ann Druyan wrote to Chuck Berry that the Voyager records would last a billion years or more.",
+   "topic": "music",
+   "note": "This is a prediction by Sagan and Druyan, not a measured fact. The letter was sent for Berry's 60th birthday in 1986.",
+   "sources": [
+    {
+     "url": "https://www.space.com/36136-chuck-berry-music-in-interstellar-space.html",
+     "title": "Chuck Berry's Music Is Traveling Through Interstellar Space",
+     "publisher": "Space.com"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "Voyager",
+    "space",
+    "Chuck Berry",
+    "time"
+   ],
+   "difficulty": "medium",
+   "id": "facts__music__014",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.space.com/36136-chuck-berry-music-in-interstellar-space.html",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Thomas Edison's first phonograph recording in 1877 was him reciting the nursery rhyme \"Mary Had a Little Lamb.\"",
+   "topic": "music",
+   "note": "The phonograph was the first machine to both record and play back sound. Earlier devices, such as Scott de Martinville's phonautograph, could record sound but not replay it.",
+   "sources": [
+    {
+     "url": "https://americanhistory.si.edu/press/fact-sheets/early-sound-recording-collection-and-sound-recovery-project",
+     "title": "Early Sound Recording Collection and Sound Recovery Project",
+     "publisher": "Smithsonian National Museum of American History"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "recording",
+    "Edison",
+    "phonograph",
+    "history"
+   ],
+   "difficulty": "very easy",
+   "id": "facts__music__015",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://americanhistory.si.edu/press/fact-sheets/early-sound-recording-collection-and-sound-recovery-project",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Edison's first records were made on tin foil, and they could be played back only a few times before wearing out.",
+   "topic": "music",
+   "note": "Edison later switched to wax cylinders, in the late 1880s.",
+   "sources": [
+    {
+     "url": "https://americanhistory.si.edu/press/fact-sheets/early-sound-recording-collection-and-sound-recovery-project",
+     "title": "Early Sound Recording Collection and Sound Recovery Project",
+     "publisher": "Smithsonian National Museum of American History"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "recording",
+    "Edison",
+    "tin foil",
+    "technology"
+   ],
+   "difficulty": "medium",
+   "id": "facts__music__016",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://americanhistory.si.edu/press/fact-sheets/early-sound-recording-collection-and-sound-recovery-project",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The original 1877 recording of Edison reciting \"Mary Had a Little Lamb\" was never saved. The version you can hear today is Edison re-creating it in 1927.",
+   "topic": "music",
+   "note": "The 1927 re-creation was filmed at the phonograph's Golden Jubilee. The catalog page credits the National Park Service as its source.",
+   "sources": [
+    {
+     "url": "https://archive.org/details/EDIS-SCD-02",
+     "title": "Mary had a little lamb: Thomas Edison",
+     "publisher": "Internet Archive (source: National Park Service)"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "recording",
+    "Edison",
+    "history",
+    "lost recordings"
+   ],
+   "difficulty": "hard",
+   "id": "facts__music__017",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://archive.org/details/EDIS-SCD-02",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "In 1770, 14-year-old Mozart reportedly heard Allegri's Miserere once in Rome and wrote it down from memory. The Vatican had jealously guarded the music.",
+   "topic": "music",
+   "note": "The story rests largely on a letter from Mozart's father, and some historians doubt parts of it. Copies may already have been circulating, and Mozart may have heard the piece in London. The excommunication threat is a rumor, and Vatican records don't confirm it.",
+   "sources": [
+    {
+     "url": "https://www.yourclassical.org/episode/2023/04/11/mozart-and-allegri",
+     "title": "Mozart and Allegri",
+     "publisher": "Classical MPR / Your Classical"
+    },
+    {
+     "url": "https://en.wikipedia.org/wiki/Miserere_(Allegri)",
+     "title": "Miserere (Allegri)",
+     "publisher": "Wikipedia"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "Mozart",
+    "memory",
+    "Vatican",
+    "history"
+   ],
+   "difficulty": "medium",
+   "id": "facts__music__018",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://en.wikipedia.org/wiki/Miserere_(Allegri)",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The \"Happy Birthday\" tune comes from an 1893 song called \"Good Morning to All.\" It was written for kindergarten students, and the birthday words came later.",
+   "topic": "music",
+   "note": "Accounts of exactly how the birthday lyrics arose vary. The melody is credited to the Hill sisters.",
+   "sources": [
+    {
+     "url": "https://www.cbsnews.com/news/happy-birthday-song-officially-recognized-in-public-domain/",
+     "title": "\"Happy Birthday\" song officially recognized in public domain",
+     "publisher": "CBS News"
+    },
+    {
+     "url": "https://www.rollingstone.com/music/news/warner-music-settles-happy-birthday-lawsuit-for-14-million-20160209",
+     "title": "Warner Music Settles 'Happy Birthday' Lawsuit for $14 Million",
+     "publisher": "Rolling Stone"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "Happy Birthday",
+    "songs",
+    "history",
+    "copyright"
+   ],
+   "difficulty": "easy",
+   "id": "facts__music__019",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.cbsnews.com/news/happy-birthday-song-officially-recognized-in-public-domain/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Until 2016, a music company claimed to own \"Happy Birthday\" and charged fees when it was used in films. A US judge then approved a settlement that put the song in the public domain.",
+   "topic": "music",
+   "note": "Warner/Chappell was estimated to collect about $2 million a year, mostly from commercial uses. It agreed to repay $14 million to people who had paid fees. Ordinary people singing at home were typically never at risk. This describes the US situation.",
+   "sources": [
+    {
+     "url": "https://www.businessinsurance.com/warner-settles-happy-birthday-copyright-suit-for-14-million/",
+     "title": "Warner settles 'Happy Birthday' copyright suit for $14 million",
+     "publisher": "Business Insurance (Reuters)"
+    },
+    {
+     "url": "https://www.cbsnews.com/news/happy-birthday-song-officially-recognized-in-public-domain/",
+     "title": "\"Happy Birthday\" song officially recognized in public domain",
+     "publisher": "CBS News / AP"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "Happy Birthday",
+    "copyright",
+    "law",
+    "public domain"
+   ],
+   "difficulty": "easy",
+   "id": "facts__music__020",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.cbsnews.com/news/happy-birthday-song-officially-recognized-in-public-domain/",
+    "problem": "",
+    "fix": ""
+   }
+  }
+ ]
+}

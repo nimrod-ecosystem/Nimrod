@@ -1,0 +1,352 @@
+{
+ "schema": "nimrod.research.v1",
+ "kind": "facts",
+ "name": "history",
+ "generated": "2026-11-06",
+ "items": [
+  {
+   "kind": "fact",
+   "text": "Teaching was already going on at Oxford by 1096, while the Aztec capital Tenochtitlán wasn't founded until 1325.",
+   "topic": "history",
+   "note": "Oxford has no exact founding date, only evidence of teaching by 1096. Counting the Aztec Empire from its 1428 alliance instead of the city's founding makes the gap even bigger.",
+   "sources": [
+    {
+     "url": "https://www.smithsonianmag.com/smart-news/university-oxford-older-than-aztec-empire-other-facts-will-change-your-perspective-history-1529607/",
+     "title": "The University of Oxford Is Older Than the Aztec Empire and Other Facts That Will Change Your Perspective on History",
+     "publisher": "Smithsonian Magazine"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "universities",
+    "aztecs",
+    "medieval",
+    "timelines"
+   ],
+   "difficulty": "easy",
+   "id": "facts__history__001",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.smithsonianmag.com/smart-news/university-oxford-older-than-aztec-empire-other-facts-will-change-your-perspective-history-1529607/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The Aztec Empire took shape in 1428 and fell to Spanish forces and their Indigenous allies in 1521, less than a century later. The White House has now stood longer than that.",
+   "topic": "history",
+   "note": "The White House cornerstone was laid in 1792, about 234 years ago. Even counting from Tenochtitlán's founding in 1325, the city lasted only about 196 years until 1521.",
+   "sources": [
+    {
+     "url": "https://www.smithsonianmag.com/smart-news/university-oxford-older-than-aztec-empire-other-facts-will-change-your-perspective-history-1529607/",
+     "title": "The University of Oxford Is Older Than the Aztec Empire and Other Facts That Will Change Your Perspective on History",
+     "publisher": "Smithsonian Magazine"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "aztecs",
+    "white house",
+    "timelines"
+   ],
+   "difficulty": "medium",
+   "id": "facts__history__002",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.smithsonianmag.com/smart-news/university-oxford-older-than-aztec-empire-other-facts-will-change-your-perspective-history-1529607/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "In 1167, England's King Henry II banned English students from attending the University of Paris during a feud with Archbishop Thomas Becket. That sent a wave of students to Oxford.",
+   "topic": "history",
+   "note": "The Smithsonian says Oxford 'welcomed an influx' of students after the ban. It is one reason Oxford grew quickly, not the only one.",
+   "sources": [
+    {
+     "url": "https://www.smithsonianmag.com/smart-news/university-oxford-older-than-aztec-empire-other-facts-will-change-your-perspective-history-1529607/",
+     "title": "The University of Oxford Is Older Than the Aztec Empire and Other Facts That Will Change Your Perspective on History",
+     "publisher": "Smithsonian Magazine"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "universities",
+    "medieval",
+    "england",
+    "france"
+   ],
+   "difficulty": "hard",
+   "id": "facts__history__003",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.smithsonianmag.com/smart-news/university-oxford-older-than-aztec-empire-other-facts-will-change-your-perspective-history-1529607/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The Anglo-Zanzibar War of August 27, 1896 lasted no longer than 40 minutes, making it the shortest war in recorded history.",
+   "topic": "history",
+   "note": "Sources give slightly different lengths, from about 38 to 45 minutes, depending on when the clock starts and stops.",
+   "sources": [
+    {
+     "url": "https://www.britannica.com/event/Anglo-Zanzibar-War",
+     "title": "Anglo-Zanzibar War",
+     "publisher": "Encyclopaedia Britannica"
+    },
+    {
+     "url": "https://www.historytoday.com/archive/months-past/anglo-zanzibar-war",
+     "title": "The Anglo-Zanzibar War",
+     "publisher": "History Today"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "war",
+    "zanzibar",
+    "britain",
+    "records"
+   ],
+   "difficulty": "easy",
+   "id": "facts__history__004",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.britannica.com/event/Anglo-Zanzibar-War",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Woolly mammoths outlived the Great Pyramid. A small group survived on Wrangel Island until about 4,000 years ago, so they were contemporaries of the Egyptian pyramids.",
+   "topic": "history",
+   "note": "Most mammoths died out around 10,000 years ago. The Great Pyramid dates to about 2560 BCE, roughly 4,500 years ago, so the overlap is a few centuries at most for the pyramid builders.",
+   "sources": [
+    {
+     "url": "https://arcticportal.org/ap-library/news/3710-wrangel-island-land-of-mammoths-explorers-and-polar-bears",
+     "title": "Wrangel Island: Land of Mammoths, Explorers, and Polar Bears",
+     "publisher": "Arctic Portal"
+    },
+    {
+     "url": "https://en.wikipedia.org/wiki/Woolly_mammoth",
+     "title": "Woolly mammoth",
+     "publisher": "Wikipedia"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "mammoths",
+    "ancient egypt",
+    "prehistory",
+    "timelines"
+   ],
+   "difficulty": "easy",
+   "id": "facts__history__005",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://arcticportal.org/news-events/news/3710-wrangel-island-land-of-mammoths-explorers-and-polar-bears",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "In 1932 Australia ran a military operation to stop emus from wrecking crops in Western Australia, and it was unsuccessful. Politicians joked that if anyone deserved medals, it was the emus.",
+   "topic": "history",
+   "note": "It is called the 'Emu War', but it was a culling operation that soldiers with machine guns carried out. The 'emu victory' label is a joke from the time.",
+   "sources": [
+    {
+     "url": "https://www.britannica.com/topic/Emu-War",
+     "title": "Emu War",
+     "publisher": "Encyclopaedia Britannica"
+    },
+    {
+     "url": "https://en.wikipedia.org/wiki/Emu_War",
+     "title": "Emu War",
+     "publisher": "Wikipedia"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "australia",
+    "animals",
+    "1930s",
+    "military"
+   ],
+   "difficulty": "very easy",
+   "id": "facts__history__006",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://en.wikipedia.org/wiki/Emu_War",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Vikings were cutting trees in Newfoundland in exactly 1021. Tree rings show a Viking ax felled trees on the North American continent in 1021 C.E. That was about 471 years before Columbus.",
+   "topic": "history",
+   "note": "Scientists matched a spike in carbon-14 in the tree rings, caused by a solar storm in 993 CE, to count forward to the cutting year. This confirms the Norse were there by 1021 and they may have arrived earlier.",
+   "sources": [
+    {
+     "url": "https://www.science.org/content/article/first-viking-settlement-north-america-dated-exactly-1000-years-ago",
+     "title": "First Viking settlement in North America dated to exactly 1000 years ago",
+     "publisher": "Science (AAAS)"
+    },
+    {
+     "url": "https://www.nature.com/articles/s41586-021-03972-8",
+     "title": "Evidence for European presence in the Americas in ad 1021",
+     "publisher": "Nature"
+    },
+    {
+     "url": "https://theweek.com/health-and-science/1006268/archaeologists-used-tree-rings-and-astrophysics-to-prove-vikings-were-in",
+     "title": "Archaeologists used tree rings and astrophysics to prove Vikings were in Canada in 1021",
+     "publisher": "The Week"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "vikings",
+    "americas",
+    "science",
+    "exploration"
+   ],
+   "difficulty": "medium",
+   "id": "facts__history__007",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.science.org/content/article/first-viking-settlement-north-america-dated-exactly-1000-years-ago",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The pyramid builders were not slaves. Their tombs near the Giza pyramids held jars that once contained beer and bread meant for the workers' afterlife.",
+   "topic": "history",
+   "note": "Egypt's archaeology chief at the time, Zahi Hawass, argued that the builders were paid laborers. The work was still hard and dangerous, and Egypt did have slaves in this period; they just weren't the main workforce here.",
+   "sources": [
+    {
+     "url": "https://www.cbc.ca/technology/story/2010/01/11/tech-egypt-pyramid.html",
+     "title": "Egypt displays tombs of pyramid builders",
+     "publisher": "CBC News"
+    },
+    {
+     "url": "https://www.nbcnews.com/id/wbna34794254",
+     "title": "Egypt discovers workers' tombs near pyramids",
+     "publisher": "NBC News"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "ancient egypt",
+    "pyramids",
+    "archaeology",
+    "myths"
+   ],
+   "difficulty": "easy",
+   "id": "facts__history__008",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.cbc.ca/technology/story/2010/01/11/tech-egypt-pyramid.html",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The Greek historian Herodotus wrote that 100,000 people built the pyramids, but Egypt's antiquities chief estimated about 10,000 workers over more than 30 years for a single pyramid.",
+   "topic": "history",
+   "note": "The 10,000 figure is one expert's estimate, not a settled count. Herodotus visited Egypt around 450 BCE, about 2,000 years after the pyramids were built.",
+   "sources": [
+    {
+     "url": "https://www.cbc.ca/technology/story/2010/01/11/tech-egypt-pyramid.html",
+     "title": "Egypt displays tombs of pyramid builders",
+     "publisher": "CBC News"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "ancient egypt",
+    "pyramids",
+    "herodotus",
+    "numbers"
+   ],
+   "difficulty": "medium",
+   "id": "facts__history__009",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.cbc.ca/technology/story/2010/01/11/tech-egypt-pyramid.html",
+    "problem": "",
+    "fix": ""
+   }
+  }
+ ]
+}

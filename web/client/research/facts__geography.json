@@ -1,0 +1,633 @@
+{
+ "schema": "nimrod.research.v1",
+ "kind": "facts",
+ "name": "geography",
+ "generated": "2026-11-06",
+ "items": [
+  {
+   "kind": "fact",
+   "text": "Everest is the highest mountain above sea level, but the top of Ecuador's Chimborazo is farther from Earth's center, by over 2,000 meters.",
+   "topic": "geography",
+   "note": "Earth bulges at the equator, and Chimborazo sits about one degree south of it. Everest is still highest above sea level.",
+   "sources": [
+    {
+     "url": "https://oceanservice.noaa.gov/facts/highestpoint.html",
+     "title": "What is the highest point on Earth as measured from Earth's center?",
+     "publisher": "NOAA National Ocean Service"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "mountains",
+    "earth shape",
+    "Ecuador"
+   ],
+   "difficulty": "medium",
+   "id": "facts__geography__001",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://oceanservice.noaa.gov/facts/highestpoint.html",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "At least 26 other mountain summits are also farther from Earth's center than Mount Everest is.",
+   "topic": "geography",
+   "note": "Exact rankings depend on the Earth model used. Wikipedia's list is the source here.",
+   "sources": [
+    {
+     "url": "https://en.wikipedia.org/wiki/Summits_farthest_from_the_Earth%27s_center",
+     "title": "Summits farthest from the Earth's center",
+     "publisher": "Wikipedia"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "mountains",
+    "equatorial bulge"
+   ],
+   "difficulty": "hard",
+   "id": "facts__geography__002",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://en.wikipedia.org/wiki/Summits_farthest_from_the_Earth%27s_center",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Africa is the only continent that lies in all four hemispheres, because land on it sits on both the Equator and the Prime Meridian.",
+   "topic": "geography",
+   "note": "The source is a geography education site, not a government or university page.",
+   "sources": [
+    {
+     "url": "https://www.geographyrealm.com/continent-lies-four-hemispheres/",
+     "title": "Which Continent Lies in All Four Hemispheres?",
+     "publisher": "Geography Realm"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "continents",
+    "Africa",
+    "hemispheres"
+   ],
+   "difficulty": "medium",
+   "id": "facts__geography__003",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.geographyrealm.com/continent-lies-four-hemispheres/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The Equator crosses seven African countries, including the island nation of São Tomé and Príncipe, Gabon, Uganda, Kenya and Somalia.",
+   "topic": "geography",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://www.geographyrealm.com/continent-lies-four-hemispheres/",
+     "title": "Which Continent Lies in All Four Hemispheres?",
+     "publisher": "Geography Realm"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "Equator",
+    "Africa",
+    "countries"
+   ],
+   "difficulty": "medium",
+   "id": "facts__geography__004",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.geographyrealm.com/continent-lies-four-hemispheres/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Russia has 11 time zones, while the 48 contiguous U.S. states have just four. When it's breakfast in one part of Russia, it can be nearly dinner in another.",
+   "topic": "geography",
+   "note": "Russia's time-zone count has changed over time (see the next item). 11 is the number in use since 2014.",
+   "sources": [
+    {
+     "url": "https://www.nbcnews.com/id/wbna33896769",
+     "title": "Time may be up for Russia's 11 time zones",
+     "publisher": "NBC News"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "Russia",
+    "time zones"
+   ],
+   "difficulty": "easy",
+   "id": "facts__geography__005",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.nbcnews.com/id/wbna33896769",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "In 2011 Russia cut its time zones from 11 to nine. It later added two new zones, bringing the total back up to 11.",
+   "topic": "geography",
+   "note": "Sources: a 2011 Gulf News report and the Greenwich Mean Time site, which is less authoritative. The 2011 date is inferred from the report's wording and should be checked.",
+   "sources": [
+    {
+     "url": "https://gulfnews.com/world/europe/russia-cuts-time-zones-to-boost-economy-1.604367",
+     "title": "Russia cuts time zones to boost economy",
+     "publisher": "Gulf News"
+    },
+    {
+     "url": "https://greenwichmeantime.com/time-zone/russia/time-zones/",
+     "title": "Time Zones of Russia",
+     "publisher": "Greenwich Mean Time (GMT.co.uk)"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "Russia",
+    "time zones",
+    "history"
+   ],
+   "difficulty": "hard",
+   "id": "facts__geography__006",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://greenwichmeantime.com/time-zone/russia/time-zones/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Russia covers about 17 million square kilometers, which is more than a ninth of all the land on Earth.",
+   "topic": "geography",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://gulfnews.com/world/europe/russia-cuts-time-zones-to-boost-economy-1.604367",
+     "title": "Russia cuts time zones to boost economy",
+     "publisher": "Gulf News"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "Russia",
+    "size",
+    "countries"
+   ],
+   "difficulty": "easy",
+   "id": "facts__geography__007",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://gulfnews.com/world/europe/russia-cuts-time-zones-to-boost-economy-1.604367",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Vatican City is smaller than New York City's Central Park and almost 120 times smaller than the island of Manhattan.",
+   "topic": "geography",
+   "note": "It is the smallest country by land area. Sources give slightly different exact areas, about 0.44 to 0.49 square kilometers.",
+   "sources": [
+    {
+     "url": "https://www.history.com/articles/what-is-the-smallest-country-in-the-world",
+     "title": "What Is the Smallest Country in the World?",
+     "publisher": "HISTORY"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "Vatican City",
+    "smallest",
+    "countries"
+   ],
+   "difficulty": "very easy",
+   "id": "facts__geography__008",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.history.com/articles/what-is-the-smallest-country-in-the-world",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "About 800 to 850 people live in Vatican City, but the Pitcairn Islands have only 40 to 60 inhabitants.",
+   "topic": "geography",
+   "note": "Pitcairn is a British overseas territory, not an independent country. That is why Vatican City is still called the smallest country.",
+   "sources": [
+    {
+     "url": "https://www.history.com/articles/what-is-the-smallest-country-in-the-world",
+     "title": "What Is the Smallest Country in the World?",
+     "publisher": "HISTORY"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "population",
+    "Pitcairn",
+    "Vatican City"
+   ],
+   "difficulty": "medium",
+   "id": "facts__geography__009",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.history.com/articles/what-is-the-smallest-country-in-the-world",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Siberia's Lake Baikal is the world's deepest lake, and it holds 20% of the world's unfrozen fresh water.",
+   "topic": "geography",
+   "note": "UNESCO gives its depth as about 1,700 m. Other sources give a maximum of 1,642 m.",
+   "sources": [
+    {
+     "url": "https://whc.unesco.org/en/list/754/",
+     "title": "Lake Baikal",
+     "publisher": "UNESCO World Heritage Centre"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "lakes",
+    "Russia",
+    "fresh water"
+   ],
+   "difficulty": "easy",
+   "id": "facts__geography__010",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://whc.unesco.org/en/list/754/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Lake Baikal is about 25 million years old, which makes it the oldest lake in the world. Most lakes on Earth are far younger.",
+   "topic": "geography",
+   "note": "The second sentence is general context, not taken from the cited page.",
+   "sources": [
+    {
+     "url": "https://whc.unesco.org/en/list/754/",
+     "title": "Lake Baikal",
+     "publisher": "UNESCO World Heritage Centre"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "lakes",
+    "Russia",
+    "geology"
+   ],
+   "difficulty": "medium",
+   "id": "facts__geography__011",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://whc.unesco.org/en/list/754/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Nearly 80% of the plant and animal species in and around Lake Baikal can't be found anywhere else on Earth.",
+   "topic": "geography",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://www.britannica.com/video/Lake-Baikal-Overview-Russia-Siberia-world/-226690",
+     "title": "Lake Baikal",
+     "publisher": "Encyclopaedia Britannica"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "lakes",
+    "biodiversity",
+    "Russia"
+   ],
+   "difficulty": "medium",
+   "id": "facts__geography__012",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.livescience.com/57653-lake-baikal-facts.html",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Antarctica is the world's largest desert, at 14.2 million square kilometers. The Sahara is only the largest hot desert.",
+   "topic": "geography",
+   "note": "A desert is defined by very little precipitation, not by heat.",
+   "sources": [
+    {
+     "url": "https://www.livescience.com/largest-desert-on-earth",
+     "title": "What's the largest desert in the world?",
+     "publisher": "Live Science"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "Antarctica",
+    "deserts",
+    "definitions"
+   ],
+   "difficulty": "easy",
+   "id": "facts__geography__013",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.livescience.com/largest-desert-on-earth",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "No one lives within about 8.5 million square miles of Point Nemo in the South Pacific, an area larger than Russia. The closest people are astronauts on the International Space Station when it passes overhead.",
+   "topic": "geography",
+   "note": "The astronaut claim holds only while the ISS is passing close to overhead. The rest of the time, people on land can be nearer.",
+   "sources": [
+    {
+     "url": "https://www.britannica.com/place/oceanic-pole-of-inaccessibility",
+     "title": "Oceanic pole of inaccessibility",
+     "publisher": "Encyclopaedia Britannica"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "oceans",
+    "remote places",
+    "Point Nemo"
+   ],
+   "difficulty": "easy",
+   "id": "facts__geography__015",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.britannica.com/place/oceanic-pole-of-inaccessibility",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Point Nemo, the ocean spot farthest from land, was first worked out in 1992 by an engineer using computer software. It is named for Captain Nemo from Jules Verne's novel.",
+   "topic": "geography",
+   "note": "Engineer Hrvoje Lukatela is the name usually given. The Ocean Race page describes him as a survey engineer.",
+   "sources": [
+    {
+     "url": "https://archive.theoceanrace.com/en/news/11338_8-facts-about-Point-Nemo.html",
+     "title": "8 facts about Point Nemo",
+     "publisher": "The Ocean Race"
+    },
+    {
+     "url": "https://www.britannica.com/place/oceanic-pole-of-inaccessibility",
+     "title": "Oceanic pole of inaccessibility",
+     "publisher": "Encyclopaedia Britannica"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "oceans",
+    "Point Nemo",
+    "discovery"
+   ],
+   "difficulty": "medium",
+   "id": "facts__geography__016",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.britannica.com/place/oceanic-pole-of-inaccessibility",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "In 1997 NOAA's underwater microphones picked up a mysterious sound nicknamed the Bloop. In 2005 scientists worked out it was an icequake, with glaciers and icebergs cracking in Antarctica.",
+   "topic": "geography",
+   "note": "This comes from Britannica's Point Nemo article. The sound was recorded in the far South Pacific, not at Point Nemo itself.",
+   "sources": [
+    {
+     "url": "https://www.britannica.com/place/oceanic-pole-of-inaccessibility",
+     "title": "Oceanic pole of inaccessibility",
+     "publisher": "Encyclopaedia Britannica"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "oceans",
+    "Antarctica",
+    "mystery solved"
+   ],
+   "difficulty": "medium",
+   "id": "facts__geography__017",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.britannica.com/place/oceanic-pole-of-inaccessibility",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The 180th meridian passes through Alaska's Aleutian Islands, so part of Alaska is in the Eastern Hemisphere and the state is technically in both hemispheres. That makes it both the westernmost and the easternmost U.S. state by longitude.",
+   "topic": "geography",
+   "note": "By longitude, Alaska is both the easternmost and westernmost state. Maine is still the easternmost state if you travel east across the Lower 48.",
+   "sources": [
+    {
+     "url": "https://britannica.com/place/Alaska/Introduction",
+     "title": "Alaska",
+     "publisher": "Encyclopaedia Britannica"
+    },
+    {
+     "url": "https://en.wikipedia.org/wiki/Geography_of_Alaska",
+     "title": "Geography of Alaska",
+     "publisher": "Wikipedia"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "Alaska",
+    "hemispheres",
+    "United States"
+   ],
+   "difficulty": "medium",
+   "id": "facts__geography__018",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://en.wikipedia.org/wiki/Geography_of_Alaska",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "If Alaska's westernmost point were placed on San Francisco, its easternmost point would land near Jacksonville, Florida.",
+   "topic": "geography",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://en.wikipedia.org/wiki/Geography_of_Alaska",
+     "title": "Geography of Alaska",
+     "publisher": "Wikipedia"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "Alaska",
+    "size",
+    "United States"
+   ],
+   "difficulty": "medium",
+   "id": "facts__geography__019",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://en.wikipedia.org/wiki/Geography_of_Alaska",
+    "problem": "",
+    "fix": ""
+   }
+  }
+ ]
+}

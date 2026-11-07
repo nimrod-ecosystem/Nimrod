@@ -124,6 +124,11 @@ try {
   check('*** the index names the packs; a name with a path in it is never fetched; a missing one is said ***',
     li.items.length === 1 && !asked.includes('x/../evil.json') && li.problems.some((m) => /gone\.json/.test(m)), J({ asked, problems: li.problems }));
   check('no index at all: no items, no error', (await loadResearch({ base: 'none', fetchImpl })).items.length === 0);
+  // (note FL 1, 2026-11-07) The site's own packs: chat's, checked, copied in with only verified facts and quotes.
+  const site = await loadResearch();
+  check('*** the site\'s own packs load with no problems, and no flagged or disputed item is in them ***',
+    site.items.length > 0 && site.problems.length === 0 && !site.items.some((i) => i.status === 'flagged' || i.status === 'disputed')
+    && site.items.filter((i) => i.kind !== 'word').every((i) => i.status === 'verified'), J({ n: site.items.length, problems: site.problems.slice(0, 3) }));
 
   section('registered, reachable, listed');
   check('a module, with its settings as data', getManifest(DYK_TYPE)?.settings === DYK_SETTINGS);

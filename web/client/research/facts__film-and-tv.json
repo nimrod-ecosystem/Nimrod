@@ -1,0 +1,479 @@
+{
+ "schema": "nimrod.research.v1",
+ "kind": "facts",
+ "name": "film and tv",
+ "generated": "2026-11-06",
+ "items": [
+  {
+   "kind": "fact",
+   "text": "A scream recorded for the 1951 film Distant Drums was reused in other films for decades. New sound effects were costly at the time, so studios recycled it.",
+   "topic": "film and TV",
+   "note": "Wikipedia says the scream was 'allegedly' voiced by actor Sheb Wooley, so who recorded it is not certain.",
+   "sources": [
+    {
+     "url": "https://en.wikipedia.org/wiki/Wilhelm_scream",
+     "title": "Wilhelm scream",
+     "publisher": "Wikipedia"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "sound",
+    "Hollywood history",
+    "Star Wars"
+   ],
+   "difficulty": "medium",
+   "id": "facts__film-and-tv__001",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://en.wikipedia.org/wiki/Wilhelm_scream",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Star Wars sound designer Ben Burtt calls the Wilhelm scream an in-joke that got out of hand. It has ended up in hundreds of films, including Star Wars and Toy Story.",
+   "topic": "film and TV",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://www.washingtonpost.com/arts-entertainment/2021/09/30/wilhelm-scream-attack-hollywood-cliches-netflix/",
+     "title": "How the Wilhelm scream became Hollywood's ultimate 'secret' sound effect",
+     "publisher": "The Washington Post"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "sound",
+    "Star Wars",
+    "Pixar"
+   ],
+   "difficulty": "easy",
+   "id": "facts__film-and-tv__002",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.washingtonpost.com/arts-entertainment/2021/09/30/wilhelm-scream-attack-hollywood-cliches-netflix/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "In 1998 a deletion command nearly wiped out Toy Story 2, and about 90% of the film's files vanished. The backups had been failing, and the film was saved by a copy on its supervising technical director's home computer.",
+   "topic": "film and TV",
+   "note": "Accounts differ on the exact date and on what was deleted. Some Pixar staff say it was the database of master assets rather than finished frames.",
+   "sources": [
+    {
+     "url": "https://www.techspot.com/news/112848-how-pixar-nearly-deleted-toy-story-2-single.html",
+     "title": "How Pixar recovered Toy Story 2 after a Unix command deleted nearly the entire film in 1998",
+     "publisher": "TechSpot"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "Pixar",
+    "animation",
+    "technology"
+   ],
+   "difficulty": "easy",
+   "id": "facts__film-and-tv__003",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.techspot.com/news/112848-how-pixar-nearly-deleted-toy-story-2-single.html",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "On January 1, 2024, the early Mickey Mouse from the 1928 short Steamboat Willie entered the public domain in the U.S. for the first time.",
+   "topic": "film and TV",
+   "note": "Only the 1928 version of Mickey is free to use. Later versions of the character are still protected.",
+   "sources": [
+    {
+     "url": "https://www.cnn.com/2024/01/01/business/mickey-mouse-early-version-copyright-expired",
+     "title": "'Steamboat Willie': An early version of Mickey Mouse is now in the public domain",
+     "publisher": "CNN"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "Disney",
+    "animation",
+    "copyright"
+   ],
+   "difficulty": "easy",
+   "id": "facts__film-and-tv__004",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.cnn.com/2024/01/01/business/mickey-mouse-early-version-copyright-expired",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Steamboat Willie was once due to enter the public domain in 1985. Copyright law changes in 1976 and 1998 pushed that date back to 2024.",
+   "topic": "film and TV",
+   "note": "This describes U.S. law. Other countries have different rules, and the NYU source says the film has been public domain in Brazil since 1999.",
+   "sources": [
+    {
+     "url": "https://jipel.law.nyu.edu/steamboat-willie-is-in-the-public-domain-what-does-that-mean-for-mickey-mouse/",
+     "title": "Steamboat Willie is in the Public Domain. What Does That Mean for Mickey Mouse?",
+     "publisher": "NYU Journal of Intellectual Property & Entertainment Law"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "Disney",
+    "copyright",
+    "history"
+   ],
+   "difficulty": "hard",
+   "id": "facts__film-and-tv__006",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://jipel.law.nyu.edu/steamboat-willie-is-in-the-public-domain-what-does-that-mean-for-mickey-mouse/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Steamboat Willie, Mickey Mouse's public debut, was also one of the first animated short films with synchronized sound.",
+   "topic": "film and TV",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://en.wikipedia.org/wiki/2024_in_American_public_domain",
+     "title": "2024 in American public domain",
+     "publisher": "Wikipedia"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "Disney",
+    "animation",
+    "sound"
+   ],
+   "difficulty": "medium",
+   "id": "facts__film-and-tv__007",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://web.law.duke.edu/cspd/mickey/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "In Jurassic Park, the raptors' hissing was voiced by geese. When they bark to each other in the kitchen scene, you're hearing a recording of tortoises mating.",
+   "topic": "film and TV",
+   "note": "Sound designer Gary Rydstrom described this in an interview with Vulture. He recorded the tortoises at Marine World.",
+   "sources": [
+    {
+     "url": "https://www.sciencealert.com/the-raptor-noises-in-jurassic-park-are-mating-tortoises",
+     "title": "The Raptor Noises in Jurassic Park Are Mating Tortoises",
+     "publisher": "ScienceAlert"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "sound design",
+    "dinosaurs",
+    "Jurassic Park"
+   ],
+   "difficulty": "easy",
+   "id": "facts__film-and-tv__008",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.sciencealert.com/the-raptor-noises-in-jurassic-park-are-mating-tortoises",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The roar of Jurassic Park's T. rex was built partly from a baby elephant and the sounds of the sound designer's Jack Russell terrier, Buster.",
+   "topic": "film and TV",
+   "note": "The roars were layered from many recordings. The dog and elephant were two of the sources.",
+   "sources": [
+    {
+     "url": "https://www.sciencealert.com/the-raptor-noises-in-jurassic-park-are-mating-tortoises",
+     "title": "The Raptor Noises in Jurassic Park Are Mating Tortoises",
+     "publisher": "ScienceAlert"
+    },
+    {
+     "url": "https://www.npr.org/2013/04/13/177153801/jurassic-bark-how-sound-design-changed-our-imaginations",
+     "title": "Jurassic Bark: How Sound Design Changed Our Imaginations",
+     "publisher": "NPR"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "sound design",
+    "dinosaurs",
+    "Jurassic Park"
+   ],
+   "difficulty": "medium",
+   "id": "facts__film-and-tv__009",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.sciencealert.com/the-raptor-noises-in-jurassic-park-are-mating-tortoises",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Nobody knows what dinosaurs really sounded like. In Jurassic Park, the running Gallimimus herd was given the squeals of horses.",
+   "topic": "film and TV",
+   "note": "What dinosaurs really sounded like is unknown. The film's sounds are creative choices made by the sound team.",
+   "sources": [
+    {
+     "url": "https://www.npr.org/2013/04/13/177153801/jurassic-bark-how-sound-design-changed-our-imaginations",
+     "title": "Jurassic Bark: How Sound Design Changed Our Imaginations",
+     "publisher": "NPR"
+    },
+    {
+     "url": "https://www.sciencealert.com/the-raptor-noises-in-jurassic-park-are-mating-tortoises",
+     "title": "The Raptor Noises in Jurassic Park Are Mating Tortoises",
+     "publisher": "ScienceAlert"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "sound design",
+    "dinosaurs",
+    "Jurassic Park"
+   ],
+   "difficulty": "easy",
+   "id": "facts__film-and-tv__010",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.sciencealert.com/the-raptor-noises-in-jurassic-park-are-mating-tortoises",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Hollywood actress Hedy Lamarr co-invented a 'frequency hopping' radio system with composer George Antheil. It was meant to stop radio-controlled torpedoes from being jammed, and they received a patent in 1942.",
+   "topic": "film and TV",
+   "note": "Frequency hopping is an ancestor of some modern wireless techniques. It isn't a single invention behind all of Wi-Fi or Bluetooth.",
+   "sources": [
+    {
+     "url": "https://www.invent.org/inductees/hedy-lamarr",
+     "title": "Hedy Lamarr",
+     "publisher": "National Inventors Hall of Fame"
+    },
+    {
+     "url": "https://www.nationalww2museum.org/war/articles/hedy-lamarrs-wwii-invention-helped-shape-modern-tech",
+     "title": "Hedy Lamarr's WWII Invention Helped Shape Modern Tech",
+     "publisher": "The National WWII Museum"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "actors",
+    "inventions",
+    "World War II"
+   ],
+   "difficulty": "medium",
+   "id": "facts__film-and-tv__011",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.invent.org/inductees/hedy-lamarr",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "One of the original Wi-Fi standards, IEEE 802.11 from 1997, used frequency hopping. IEEE says it leveraged Hedy Lamarr's patent, which had expired in 1959.",
+   "topic": "film and TV",
+   "note": "Lamarr's patent is one ancestor of the technique. Wi-Fi was built by many engineers over time.",
+   "sources": [
+    {
+     "url": "https://standards.ieee.org/beyond-standards/hedy-lamarr/",
+     "title": "Actress/Inventor Hedy Lamarr – and How Far Wireless Communication Has Come",
+     "publisher": "IEEE Standards Association"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "actors",
+    "Wi-Fi",
+    "inventions"
+   ],
+   "difficulty": "hard",
+   "id": "facts__film-and-tv__012",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://standards.ieee.org/beyond-standards/hedy-lamarr/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The tornado in the 1939 Wizard of Oz was a cloth windsock about 35 feet long, like the ones at airports. It was spun and moved from a steel gantry above the stage.",
+   "topic": "film and TV",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://arcfieldweather.com/blog/2016/8/25/900-am-wizard-of-oz-tornado-scene-remains-a-classic",
+     "title": "\"Wizard of Oz\" tornado scene remains a classic",
+     "publisher": "Arcfield Weather"
+    },
+    {
+     "url": "https://www.clickondetroit.com/entertainment/2014/08/15/movie-history-wizard-of-oz-turns-75-friday/",
+     "title": "Movie history: Wizard of Oz turns 75 Friday",
+     "publisher": "WDIV ClickOnDetroit"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "special effects",
+    "classic film",
+    "The Wizard of Oz"
+   ],
+   "difficulty": "easy",
+   "id": "facts__film-and-tv__013",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://arcfieldweather.com/blog/2016/8/25/900-am-wizard-of-oz-tornado-scene-remains-a-classic",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The first legal U.S. TV commercial aired on July 1, 1941. It was a 10-second Bulova watch ad shown before a Dodgers–Phillies baseball game, and it cost the company just $9.",
+   "topic": "film and TV",
+   "note": "It is called the first 'legal' ad because some companies had aired unpaid test commercials earlier. Some sources give the length as 9 seconds and the cost as $4–$9.",
+   "sources": [
+    {
+     "url": "https://fortune.com/2016/07/01/bulova-tv-commercial",
+     "title": "The First 'Legal' TV Commercial Aired 75 Years Ago Today",
+     "publisher": "Fortune"
+    },
+    {
+     "url": "https://en.wikipedia.org/wiki/July_1941",
+     "title": "July 1941",
+     "publisher": "Wikipedia"
+    },
+    {
+     "url": "https://www.ktsm.com/local/el-paso-news/on-this-day-first-tv-commercial-airs/",
+     "title": "On this day: First TV commercial airs",
+     "publisher": "KTSM"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "television history",
+    "advertising"
+   ],
+   "difficulty": "easy",
+   "id": "facts__film-and-tv__018",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://fortune.com/2016/07/01/bulova-tv-commercial",
+    "problem": "",
+    "fix": ""
+   }
+  }
+ ]
+}

@@ -1,0 +1,1522 @@
+{
+ "schema": "nimrod.research.v1",
+ "kind": "words",
+ "name": "level4_1",
+ "generated": "2026-11-06",
+ "items": [
+  {
+   "kind": "word",
+   "text": "absorb",
+   "word": "absorb",
+   "part_of_speech": "verb",
+   "level": 4,
+   "definition": "to take in a liquid, light, or information",
+   "explanation": "",
+   "forms": {
+    "past": "absorbed",
+    "past participle": "absorbed",
+    "-ing": "absorbing",
+    "third person": "absorbs"
+   },
+   "example": "The towel absorbed most of the spilled water.",
+   "picture_idea": "A sponge soaking up a puddle of water",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "action",
+    "science"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_1__001",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "accurate",
+   "word": "accurate",
+   "part_of_speech": "adjective",
+   "level": 4,
+   "definition": "correct and exact, with no mistakes",
+   "explanation": "",
+   "forms": {
+    "comparative": "more accurate",
+    "superlative": "most accurate"
+   },
+   "example": "The weather forecast was surprisingly accurate this week.",
+   "picture_idea": "A dart stuck in the center of a target",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "description",
+    "quality"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_1__002",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "advantage",
+   "word": "advantage",
+   "part_of_speech": "noun",
+   "level": 4,
+   "definition": "something that puts you in a better position than others",
+   "explanation": "",
+   "forms": {
+    "plural": "advantages"
+   },
+   "example": "Speaking two languages is a big advantage when applying for jobs.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "abstract",
+    "work"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_1__003",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "afford",
+   "word": "afford",
+   "part_of_speech": "verb",
+   "level": 4,
+   "definition": "to have enough money to pay for something",
+   "explanation": "Often used with 'can' or 'could', as in 'I can't afford it'.",
+   "forms": {
+    "past": "afforded",
+    "past participle": "afforded",
+    "-ing": "affording",
+    "third person": "affords"
+   },
+   "example": "We can't afford a new car right now.",
+   "picture_idea": "A person looking into an empty wallet beside a price tag",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "money",
+    "action"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_1__004",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "ambitious",
+   "word": "ambitious",
+   "part_of_speech": "adjective",
+   "level": 4,
+   "definition": "having a strong wish to succeed or achieve a lot",
+   "explanation": "",
+   "forms": {
+    "comparative": "more ambitious",
+    "superlative": "most ambitious"
+   },
+   "example": "She is an ambitious young lawyer who hopes to become a judge.",
+   "picture_idea": "A person climbing steps toward a flag at the top",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "personality",
+    "work"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_1__005",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "annoy",
+   "word": "annoy",
+   "part_of_speech": "verb",
+   "level": 4,
+   "definition": "to make someone a little angry or irritated",
+   "explanation": "",
+   "forms": {
+    "past": "annoyed",
+    "past participle": "annoyed",
+    "-ing": "annoying",
+    "third person": "annoys"
+   },
+   "example": "It annoys me when people talk during a movie.",
+   "picture_idea": "A person frowning while someone taps loudly on a table",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "emotion",
+    "action"
+   ],
+   "difficulty": "easy",
+   "id": "words__level4_1__006",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "arrange",
+   "word": "arrange",
+   "part_of_speech": "verb",
+   "level": 4,
+   "definition": "to plan or organize something, or to put things in a particular order",
+   "explanation": "",
+   "forms": {
+    "past": "arranged",
+    "past participle": "arranged",
+    "-ing": "arranging",
+    "third person": "arranges"
+   },
+   "example": "I arranged a meeting with my manager for Friday morning.",
+   "picture_idea": "Hands setting flowers neatly into a vase",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "planning",
+    "action"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_1__007",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "benefit",
+   "word": "benefit",
+   "part_of_speech": "noun",
+   "level": 4,
+   "definition": "a good result or helpful effect",
+   "explanation": "",
+   "forms": {
+    "plural": "benefits"
+   },
+   "example": "Regular exercise has many health benefits.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "abstract",
+    "health"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_1__008",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "borrow",
+   "word": "borrow",
+   "part_of_speech": "verb",
+   "level": 4,
+   "definition": "to take something for a short time and then give it back",
+   "explanation": "",
+   "forms": {
+    "past": "borrowed",
+    "past participle": "borrowed",
+    "-ing": "borrowing",
+    "third person": "borrows"
+   },
+   "example": "Can I borrow your umbrella until tomorrow?",
+   "picture_idea": "One person handing an umbrella to a neighbor",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "action",
+    "daily life"
+   ],
+   "difficulty": "easy",
+   "id": "words__level4_1__009",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "cautious",
+   "word": "cautious",
+   "part_of_speech": "adjective",
+   "level": 4,
+   "definition": "careful to avoid danger or mistakes",
+   "explanation": "",
+   "forms": {
+    "comparative": "more cautious",
+    "superlative": "most cautious"
+   },
+   "example": "He was cautious when crossing the icy road.",
+   "picture_idea": "A person stepping slowly across an icy path",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "personality",
+    "safety"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_1__010",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "complain",
+   "word": "complain",
+   "part_of_speech": "verb",
+   "level": 4,
+   "definition": "to say that you are unhappy about something",
+   "explanation": "",
+   "forms": {
+    "past": "complained",
+    "past participle": "complained",
+    "-ing": "complaining",
+    "third person": "complains"
+   },
+   "example": "Several customers complained about the slow service.",
+   "picture_idea": "A customer speaking unhappily to a waiter",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "communication",
+    "emotion"
+   ],
+   "difficulty": "easy",
+   "id": "words__level4_1__011",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "convenient",
+   "word": "convenient",
+   "part_of_speech": "adjective",
+   "level": 4,
+   "definition": "easy to use or suitable for your needs",
+   "explanation": "",
+   "forms": {
+    "comparative": "more convenient",
+    "superlative": "most convenient"
+   },
+   "example": "The apartment is convenient because it is close to the train station.",
+   "picture_idea": "A small shop right next to a bus stop",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "description",
+    "daily life"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_1__012",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "curious",
+   "word": "curious",
+   "part_of_speech": "adjective",
+   "level": 4,
+   "definition": "wanting to know or learn about something",
+   "explanation": "",
+   "forms": {
+    "comparative": "more curious",
+    "superlative": "most curious"
+   },
+   "example": "The children were curious about the strange box.",
+   "picture_idea": "A child peeking into a mysterious box",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "personality",
+    "emotion"
+   ],
+   "difficulty": "easy",
+   "id": "words__level4_1__013",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "decision",
+   "word": "decision",
+   "part_of_speech": "noun",
+   "level": 4,
+   "definition": "a choice you make after thinking about it",
+   "explanation": "",
+   "forms": {
+    "plural": "decisions"
+   },
+   "example": "Moving to a new city was a difficult decision.",
+   "picture_idea": "A person standing at a fork in a road with two signs",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "thinking",
+    "abstract"
+   ],
+   "difficulty": "easy",
+   "id": "words__level4_1__014",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "deliver",
+   "word": "deliver",
+   "part_of_speech": "verb",
+   "level": 4,
+   "definition": "to bring something to a person or place",
+   "explanation": "",
+   "forms": {
+    "past": "delivered",
+    "past participle": "delivered",
+    "-ing": "delivering",
+    "third person": "delivers"
+   },
+   "example": "The company will deliver the sofa on Tuesday.",
+   "picture_idea": "A courier handing a package to someone at a door",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "action",
+    "daily life"
+   ],
+   "difficulty": "easy",
+   "id": "words__level4_1__015",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "depend",
+   "word": "depend",
+   "part_of_speech": "verb",
+   "level": 4,
+   "definition": "to rely on someone or something, or to be decided by something else",
+   "explanation": "Often used with 'on', as in 'It depends on the weather'.",
+   "forms": {
+    "past": "depended",
+    "past participle": "depended",
+    "-ing": "depending",
+    "third person": "depends"
+   },
+   "example": "Whether we go hiking depends on the weather.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "abstract",
+    "relationships"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_1__016",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "describe",
+   "word": "describe",
+   "part_of_speech": "verb",
+   "level": 4,
+   "definition": "to say what someone or something is like",
+   "explanation": "",
+   "forms": {
+    "past": "described",
+    "past participle": "described",
+    "-ing": "describing",
+    "third person": "describes"
+   },
+   "example": "Can you describe the man you saw at the door?",
+   "picture_idea": "A person talking and gesturing to a police officer taking notes",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "communication",
+    "action"
+   ],
+   "difficulty": "easy",
+   "id": "words__level4_1__017",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "disappointed",
+   "word": "disappointed",
+   "part_of_speech": "adjective",
+   "level": 4,
+   "definition": "sad because something was not as good as you hoped",
+   "explanation": "",
+   "forms": {
+    "comparative": "more disappointed",
+    "superlative": "most disappointed"
+   },
+   "example": "She was disappointed when the concert was cancelled.",
+   "picture_idea": "A person holding a ticket with a sad face",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "emotion"
+   ],
+   "difficulty": "easy",
+   "id": "words__level4_1__018",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "discover",
+   "word": "discover",
+   "part_of_speech": "verb",
+   "level": 4,
+   "definition": "to find or learn something for the first time",
+   "explanation": "",
+   "forms": {
+    "past": "discovered",
+    "past participle": "discovered",
+    "-ing": "discovering",
+    "third person": "discovers"
+   },
+   "example": "Scientists discovered a new species of frog in the forest.",
+   "picture_idea": "A person with a magnifying glass finding a small frog",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "action",
+    "science"
+   ],
+   "difficulty": "easy",
+   "id": "words__level4_1__019",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "efficient",
+   "word": "efficient",
+   "part_of_speech": "adjective",
+   "level": 4,
+   "definition": "working well without wasting time, money, or energy",
+   "explanation": "",
+   "forms": {
+    "comparative": "more efficient",
+    "superlative": "most efficient"
+   },
+   "example": "The new dishwasher is much more efficient than our old one.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "work",
+    "description"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_1__020",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "emphasize",
+   "word": "emphasize",
+   "part_of_speech": "verb",
+   "level": 4,
+   "definition": "to show that something is especially important",
+   "explanation": "",
+   "forms": {
+    "past": "emphasized",
+    "past participle": "emphasized",
+    "-ing": "emphasizing",
+    "third person": "emphasizes"
+   },
+   "example": "The teacher emphasized the need to read the instructions carefully.",
+   "picture_idea": "A speaker pointing to a bold underlined word on a board",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "communication",
+    "action"
+   ],
+   "difficulty": "hard",
+   "id": "words__level4_1__021",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "encourage",
+   "word": "encourage",
+   "part_of_speech": "verb",
+   "level": 4,
+   "definition": "to give someone confidence or support to do something",
+   "explanation": "",
+   "forms": {
+    "past": "encouraged",
+    "past participle": "encouraged",
+    "-ing": "encouraging",
+    "third person": "encourages"
+   },
+   "example": "My parents always encouraged me to follow my dreams.",
+   "picture_idea": "A person cheering on a friend at the finish line of a race",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "relationships",
+    "action"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_1__022",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "environment",
+   "word": "environment",
+   "part_of_speech": "noun",
+   "level": 4,
+   "definition": "the natural world, or the surroundings where people live and work",
+   "explanation": "",
+   "forms": {
+    "plural": "environments"
+   },
+   "example": "Plastic bags can seriously harm the environment.",
+   "picture_idea": "A green landscape with trees, a river, and hills",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "nature",
+    "society"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_1__023",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "estimate",
+   "word": "estimate",
+   "part_of_speech": "verb",
+   "level": 4,
+   "definition": "to make a rough guess about an amount or cost",
+   "explanation": "",
+   "forms": {
+    "past": "estimated",
+    "past participle": "estimated",
+    "-ing": "estimating",
+    "third person": "estimates"
+   },
+   "example": "The mechanic estimated that the repair would cost about two hundred dollars.",
+   "picture_idea": "A mechanic looking under a car hood and writing a number",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "money",
+    "thinking"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_1__024",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "evidence",
+   "word": "evidence",
+   "part_of_speech": "noun",
+   "level": 4,
+   "definition": "facts or signs that show something is true",
+   "explanation": "This noun is uncountable, so it has no plural form.",
+   "forms": {},
+   "example": "There was no evidence that he had been at the scene.",
+   "picture_idea": "A detective examining a footprint with a magnifying glass",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "abstract",
+    "law"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_1__025",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "expensive",
+   "word": "expensive",
+   "part_of_speech": "adjective",
+   "level": 4,
+   "definition": "costing a lot of money",
+   "explanation": "",
+   "forms": {
+    "comparative": "more expensive",
+    "superlative": "most expensive"
+   },
+   "example": "Houses in this part of town are very expensive.",
+   "picture_idea": "A shop window with a diamond ring and a high price tag",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "money",
+    "description"
+   ],
+   "difficulty": "easy",
+   "id": "words__level4_1__026",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "familiar",
+   "word": "familiar",
+   "part_of_speech": "adjective",
+   "level": 4,
+   "definition": "well known to you, or easy to recognize",
+   "explanation": "",
+   "forms": {
+    "comparative": "more familiar",
+    "superlative": "most familiar"
+   },
+   "example": "Her face looked familiar, but I couldn't remember her name.",
+   "picture_idea": "A person smiling in a crowd, looking at a face they seem to know",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "description",
+    "thinking"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_1__027",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "flexible",
+   "word": "flexible",
+   "part_of_speech": "adjective",
+   "level": 4,
+   "definition": "able to bend easily, or able to change to fit new situations",
+   "explanation": "",
+   "forms": {
+    "comparative": "more flexible",
+    "superlative": "most flexible"
+   },
+   "example": "My job has flexible hours, so I can start early or late.",
+   "picture_idea": "A person bending a rubber band into a curve",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "description",
+    "work"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_1__028",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "frequently",
+   "word": "frequently",
+   "part_of_speech": "adverb",
+   "level": 4,
+   "definition": "often; many times",
+   "explanation": "",
+   "forms": {},
+   "example": "He frequently travels to Spain for work.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "time"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_1__029",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "generous",
+   "word": "generous",
+   "part_of_speech": "adjective",
+   "level": 4,
+   "definition": "happy to give money, time, or help to others",
+   "explanation": "",
+   "forms": {
+    "comparative": "more generous",
+    "superlative": "most generous"
+   },
+   "example": "It was very generous of you to pay for dinner.",
+   "picture_idea": "A person handing a gift or coins to someone in need",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "personality",
+    "relationships"
+   ],
+   "difficulty": "easy",
+   "id": "words__level4_1__030",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "genuine",
+   "word": "genuine",
+   "part_of_speech": "adjective",
+   "level": 4,
+   "definition": "real and true, not fake or pretended",
+   "explanation": "",
+   "forms": {
+    "comparative": "more genuine",
+    "superlative": "most genuine"
+   },
+   "example": "She gave me a genuine smile when I walked in.",
+   "picture_idea": "A warm smile on a person's face",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "description",
+    "personality"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_1__031",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "grateful",
+   "word": "grateful",
+   "part_of_speech": "adjective",
+   "level": 4,
+   "definition": "feeling thankful for something someone has done",
+   "explanation": "",
+   "forms": {
+    "comparative": "more grateful",
+    "superlative": "most grateful"
+   },
+   "example": "I am so grateful for your help with the move.",
+   "picture_idea": "A person smiling and shaking hands with a helper",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "emotion",
+    "relationships"
+   ],
+   "difficulty": "easy",
+   "id": "words__level4_1__032",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "habit",
+   "word": "habit",
+   "part_of_speech": "noun",
+   "level": 4,
+   "definition": "something you do regularly, often without thinking",
+   "explanation": "",
+   "forms": {
+    "plural": "habits"
+   },
+   "example": "Drinking a glass of water in the morning is a healthy habit.",
+   "picture_idea": "A person drinking a glass of water at sunrise",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "daily life",
+    "behavior"
+   ],
+   "difficulty": "easy",
+   "id": "words__level4_1__033",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "hesitate",
+   "word": "hesitate",
+   "part_of_speech": "verb",
+   "level": 4,
+   "definition": "to pause before doing something because you are unsure",
+   "explanation": "",
+   "forms": {
+    "past": "hesitated",
+    "past participle": "hesitated",
+    "-ing": "hesitating",
+    "third person": "hesitates"
+   },
+   "example": "Please don't hesitate to call me if you have any questions.",
+   "picture_idea": "A person standing at a door with a hand raised to knock but not knocking",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "behavior",
+    "emotion"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_1__034",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "honest",
+   "word": "honest",
+   "part_of_speech": "adjective",
+   "level": 4,
+   "definition": "telling the truth and not cheating or lying",
+   "explanation": "",
+   "forms": {
+    "comparative": "more honest",
+    "superlative": "most honest"
+   },
+   "example": "To be honest, I didn't enjoy the film very much.",
+   "picture_idea": "A person returning a lost wallet to its owner",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "personality",
+    "values"
+   ],
+   "difficulty": "easy",
+   "id": "words__level4_1__035",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "imagine",
+   "word": "imagine",
+   "part_of_speech": "verb",
+   "level": 4,
+   "definition": "to form a picture or idea of something in your mind",
+   "explanation": "",
+   "forms": {
+    "past": "imagined",
+    "past participle": "imagined",
+    "-ing": "imagining",
+    "third person": "imagines"
+   },
+   "example": "Imagine living on a small island with no cars.",
+   "picture_idea": "A person with a thought bubble showing a tropical island",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "thinking",
+    "action"
+   ],
+   "difficulty": "easy",
+   "id": "words__level4_1__036",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "improve",
+   "word": "improve",
+   "part_of_speech": "verb",
+   "level": 4,
+   "definition": "to get better, or to make something better",
+   "explanation": "",
+   "forms": {
+    "past": "improved",
+    "past participle": "improved",
+    "-ing": "improving",
+    "third person": "improves"
+   },
+   "example": "Her English has improved a lot since she moved here.",
+   "picture_idea": "A line graph going steadily upward",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "change",
+    "action"
+   ],
+   "difficulty": "easy",
+   "id": "words__level4_1__037",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "individual",
+   "word": "individual",
+   "part_of_speech": "noun",
+   "level": 4,
+   "definition": "one single person, considered apart from a group",
+   "explanation": "",
+   "forms": {
+    "plural": "individuals"
+   },
+   "example": "Each individual in the team brings different skills.",
+   "picture_idea": "One person standing apart from a crowd",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "people",
+    "society"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_1__038",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "install",
+   "word": "install",
+   "part_of_speech": "verb",
+   "level": 4,
+   "definition": "to put equipment or software in place so it is ready to use",
+   "explanation": "",
+   "forms": {
+    "past": "installed",
+    "past participle": "installed",
+    "-ing": "installing",
+    "third person": "installs"
+   },
+   "example": "A technician came to install the new internet router.",
+   "picture_idea": "A technician fixing a small device to a wall",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "technology",
+    "action"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_1__039",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "instead",
+   "word": "instead",
+   "part_of_speech": "adverb",
+   "level": 4,
+   "definition": "in place of something else",
+   "explanation": "",
+   "forms": {},
+   "example": "We were going to drive, but we took the train instead.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "choice",
+    "function word"
+   ],
+   "difficulty": "easy",
+   "id": "words__level4_1__040",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "involve",
+   "word": "involve",
+   "part_of_speech": "verb",
+   "level": 4,
+   "definition": "to include something as a necessary part, or to make someone take part",
+   "explanation": "",
+   "forms": {
+    "past": "involved",
+    "past participle": "involved",
+    "-ing": "involving",
+    "third person": "involves"
+   },
+   "example": "My job involves a lot of travel.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "abstract",
+    "work"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_1__041",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "journey",
+   "word": "journey",
+   "part_of_speech": "noun",
+   "level": 4,
+   "definition": "a trip from one place to another, especially a long one",
+   "explanation": "",
+   "forms": {
+    "plural": "journeys"
+   },
+   "example": "The journey from London to Edinburgh takes about four hours by train.",
+   "picture_idea": "A winding road stretching toward distant mountains",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "travel"
+   ],
+   "difficulty": "easy",
+   "id": "words__level4_1__042",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "knowledge",
+   "word": "knowledge",
+   "part_of_speech": "noun",
+   "level": 4,
+   "definition": "the facts and understanding you have gained from learning or experience",
+   "explanation": "This noun is uncountable, so it has no plural form.",
+   "forms": {},
+   "example": "He has a deep knowledge of local history.",
+   "picture_idea": "A stack of books next to a glowing light bulb",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "learning",
+    "abstract"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_1__043",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "lately",
+   "word": "lately",
+   "part_of_speech": "adverb",
+   "level": 4,
+   "definition": "in the recent past; over the last few days or weeks",
+   "explanation": "",
+   "forms": {},
+   "example": "I haven't been sleeping well lately.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "time"
+   ],
+   "difficulty": "easy",
+   "id": "words__level4_1__044",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "limit",
+   "word": "limit",
+   "part_of_speech": "noun",
+   "level": 4,
+   "definition": "the highest or lowest amount that is allowed or possible",
+   "explanation": "",
+   "forms": {
+    "plural": "limits"
+   },
+   "example": "The speed limit on this road is fifty kilometers per hour.",
+   "picture_idea": "A road sign showing a maximum speed",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "rules",
+    "abstract"
+   ],
+   "difficulty": "easy",
+   "id": "words__level4_1__045",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "maintain",
+   "word": "maintain",
+   "part_of_speech": "verb",
+   "level": 4,
+   "definition": "to keep something in good condition or at the same level",
+   "explanation": "",
+   "forms": {
+    "past": "maintained",
+    "past participle": "maintained",
+    "-ing": "maintaining",
+    "third person": "maintains"
+   },
+   "example": "It is important to maintain your car with regular checks.",
+   "picture_idea": "A mechanic checking the oil in a car engine",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "action",
+    "daily life"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_1__046",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "manage",
+   "word": "manage",
+   "part_of_speech": "verb",
+   "level": 4,
+   "definition": "to succeed in doing something difficult, or to be in charge of something",
+   "explanation": "",
+   "forms": {
+    "past": "managed",
+    "past participle": "managed",
+    "-ing": "managing",
+    "third person": "manages"
+   },
+   "example": "She managed to finish the report before the deadline.",
+   "picture_idea": "A person at a desk crossing the last item off a to-do list",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "work",
+    "action"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_1__047",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "memory",
+   "word": "memory",
+   "part_of_speech": "noun",
+   "level": 4,
+   "definition": "the ability to remember, or something that you remember",
+   "explanation": "",
+   "forms": {
+    "plural": "memories"
+   },
+   "example": "My happiest memory is of a summer by the sea.",
+   "picture_idea": "A person looking at an old photograph album",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "thinking",
+    "emotion"
+   ],
+   "difficulty": "easy",
+   "id": "words__level4_1__048",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "mention",
+   "word": "mention",
+   "part_of_speech": "verb",
+   "level": 4,
+   "definition": "to say something briefly without giving many details",
+   "explanation": "",
+   "forms": {
+    "past": "mentioned",
+    "past participle": "mentioned",
+    "-ing": "mentioning",
+    "third person": "mentions"
+   },
+   "example": "She mentioned that she might be late for dinner.",
+   "picture_idea": "A person speaking briefly with a small speech bubble",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "communication",
+    "action"
+   ],
+   "difficulty": "easy",
+   "id": "words__level4_1__049",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "messy",
+   "word": "messy",
+   "part_of_speech": "adjective",
+   "level": 4,
+   "definition": "dirty or untidy, with things not in their proper places",
+   "explanation": "",
+   "forms": {
+    "comparative": "messier",
+    "superlative": "messiest"
+   },
+   "example": "His bedroom is always messy, with clothes all over the floor.",
+   "picture_idea": "A cluttered room with clothes and papers scattered around",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "description",
+    "home"
+   ],
+   "difficulty": "easy",
+   "id": "words__level4_1__050",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  }
+ ]
+}

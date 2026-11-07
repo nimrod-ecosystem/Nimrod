@@ -1,0 +1,1541 @@
+{
+ "schema": "nimrod.research.v1",
+ "kind": "words",
+ "name": "level5_1",
+ "generated": "2026-11-06",
+ "items": [
+  {
+   "kind": "word",
+   "text": "abate",
+   "word": "abate",
+   "part_of_speech": "verb",
+   "level": 5,
+   "definition": "to become less strong or intense",
+   "explanation": "",
+   "forms": {
+    "past": "abated",
+    "past participle": "abated",
+    "-ing": "abating",
+    "third person": "abates"
+   },
+   "example": "The storm finally abated just before midnight.",
+   "picture_idea": "Dark storm clouds thinning out as the sun breaks through over a calm sea",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "newspaper",
+    "novel"
+   ],
+   "difficulty": "hard",
+   "id": "words__level5_1__001",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "acquiesce",
+   "word": "acquiesce",
+   "part_of_speech": "verb",
+   "level": 5,
+   "definition": "to agree or give in without protest",
+   "explanation": "Often followed by 'to' or 'in'.",
+   "forms": {
+    "past": "acquiesced",
+    "past participle": "acquiesced",
+    "-ing": "acquiescing",
+    "third person": "acquiesces"
+   },
+   "example": "After a long argument, she reluctantly acquiesced to her brother's plan.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "novel",
+    "agreement"
+   ],
+   "difficulty": "hard",
+   "id": "words__level5_1__002",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "ambivalent",
+   "word": "ambivalent",
+   "part_of_speech": "adjective",
+   "level": 5,
+   "definition": "having mixed or conflicting feelings about something",
+   "explanation": "",
+   "forms": {
+    "comparative": "more ambivalent",
+    "superlative": "most ambivalent"
+   },
+   "example": "Voters remain ambivalent about the proposed tax changes.",
+   "picture_idea": "A person standing at a fork in the road, looking back and forth between two signs",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "newspaper",
+    "feelings"
+   ],
+   "difficulty": "hard",
+   "id": "words__level5_1__003",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "arduous",
+   "word": "arduous",
+   "part_of_speech": "adjective",
+   "level": 5,
+   "definition": "very difficult and tiring, needing a lot of effort",
+   "explanation": "",
+   "forms": {
+    "comparative": "more arduous",
+    "superlative": "most arduous"
+   },
+   "example": "They began the arduous climb to the summit before dawn.",
+   "picture_idea": "A hiker struggling up a steep, rocky mountain path with a heavy backpack",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "novel",
+    "effort"
+   ],
+   "difficulty": "hard",
+   "id": "words__level5_1__004",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "audacious",
+   "word": "audacious",
+   "part_of_speech": "adjective",
+   "level": 5,
+   "definition": "bold and willing to take risks, sometimes rudely so",
+   "explanation": "",
+   "forms": {
+    "comparative": "more audacious",
+    "superlative": "most audacious"
+   },
+   "example": "The thieves carried out an audacious robbery in broad daylight.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "newspaper",
+    "character"
+   ],
+   "difficulty": "hard",
+   "id": "words__level5_1__005",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "benevolent",
+   "word": "benevolent",
+   "part_of_speech": "adjective",
+   "level": 5,
+   "definition": "kind, generous and wanting to help others",
+   "explanation": "",
+   "forms": {
+    "comparative": "more benevolent",
+    "superlative": "most benevolent"
+   },
+   "example": "A benevolent donor paid for the new children's wing of the hospital.",
+   "picture_idea": "An elderly man handing a bag of food to a smiling family",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "novel",
+    "character"
+   ],
+   "difficulty": "hard",
+   "id": "words__level5_1__006",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "bolster",
+   "word": "bolster",
+   "part_of_speech": "verb",
+   "level": 5,
+   "definition": "to support or strengthen something",
+   "explanation": "",
+   "forms": {
+    "past": "bolstered",
+    "past participle": "bolstered",
+    "-ing": "bolstering",
+    "third person": "bolsters"
+   },
+   "example": "The good news helped bolster confidence in the economy.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "newspaper",
+    "support"
+   ],
+   "difficulty": "hard",
+   "id": "words__level5_1__007",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "brevity",
+   "word": "brevity",
+   "part_of_speech": "noun",
+   "level": 5,
+   "definition": "the quality of being short, especially in speech or writing",
+   "explanation": "Also used for something lasting only a short time.",
+   "forms": {},
+   "example": "The speech was praised for its brevity and clarity.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "newspaper",
+    "writing"
+   ],
+   "difficulty": "hard",
+   "id": "words__level5_1__008",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "candid",
+   "word": "candid",
+   "part_of_speech": "adjective",
+   "level": 5,
+   "definition": "honest and direct, even when the truth is uncomfortable",
+   "explanation": "",
+   "forms": {
+    "comparative": "more candid",
+    "superlative": "most candid"
+   },
+   "example": "In a candid interview, the coach admitted the team had played badly.",
+   "picture_idea": "Two people talking frankly across a table",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "newspaper",
+    "honesty"
+   ],
+   "difficulty": "medium",
+   "id": "words__level5_1__009",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "capricious",
+   "word": "capricious",
+   "part_of_speech": "adjective",
+   "level": 5,
+   "definition": "changing suddenly and without clear reason in mood or behavior",
+   "explanation": "",
+   "forms": {
+    "comparative": "more capricious",
+    "superlative": "most capricious"
+   },
+   "example": "The capricious weather ruined our plans for the picnic.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "novel",
+    "character"
+   ],
+   "difficulty": "hard",
+   "id": "words__level5_1__010",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "circumspect",
+   "word": "circumspect",
+   "part_of_speech": "adjective",
+   "level": 5,
+   "definition": "careful to think about possible risks before acting",
+   "explanation": "",
+   "forms": {
+    "comparative": "more circumspect",
+    "superlative": "most circumspect"
+   },
+   "example": "The minister was circumspect when reporters asked about the deal.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "newspaper",
+    "caution"
+   ],
+   "difficulty": "hard",
+   "id": "words__level5_1__011",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "clandestine",
+   "word": "clandestine",
+   "part_of_speech": "adjective",
+   "level": 5,
+   "definition": "done in secret, often because it is not allowed",
+   "explanation": "",
+   "forms": {
+    "comparative": "more clandestine",
+    "superlative": "most clandestine"
+   },
+   "example": "The two leaders held a clandestine meeting in a small hotel.",
+   "picture_idea": "Two figures in coats whispering in a dark alley at night",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "novel",
+    "secrecy"
+   ],
+   "difficulty": "hard",
+   "id": "words__level5_1__012",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "cogent",
+   "word": "cogent",
+   "part_of_speech": "adjective",
+   "level": 5,
+   "definition": "clear, logical and convincing",
+   "explanation": "",
+   "forms": {
+    "comparative": "more cogent",
+    "superlative": "most cogent"
+   },
+   "example": "She made a cogent argument for building the new library.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "newspaper",
+    "argument"
+   ],
+   "difficulty": "hard",
+   "id": "words__level5_1__013",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "conundrum",
+   "word": "conundrum",
+   "part_of_speech": "noun",
+   "level": 5,
+   "definition": "a confusing problem or question that is hard to solve",
+   "explanation": "",
+   "forms": {
+    "plural": "conundrums"
+   },
+   "example": "The city faces a conundrum: it needs more housing but has no land.",
+   "picture_idea": "A person scratching their head in front of a tangled maze",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "newspaper",
+    "problems"
+   ],
+   "difficulty": "hard",
+   "id": "words__level5_1__014",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "culminate",
+   "word": "culminate",
+   "part_of_speech": "verb",
+   "level": 5,
+   "definition": "to reach a final or highest point",
+   "explanation": "Usually followed by 'in' or 'with'.",
+   "forms": {
+    "past": "culminated",
+    "past participle": "culminated",
+    "-ing": "culminating",
+    "third person": "culminates"
+   },
+   "example": "Months of protests culminated in a huge march through the capital.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "newspaper",
+    "events"
+   ],
+   "difficulty": "hard",
+   "id": "words__level5_1__015",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "dearth",
+   "word": "dearth",
+   "part_of_speech": "noun",
+   "level": 5,
+   "definition": "a serious lack or shortage of something",
+   "explanation": "Usually followed by 'of'.",
+   "forms": {},
+   "example": "There is a dearth of affordable apartments in the city.",
+   "picture_idea": "An almost empty shelf in a shop",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "newspaper",
+    "shortage"
+   ],
+   "difficulty": "hard",
+   "id": "words__level5_1__016",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "debacle",
+   "word": "debacle",
+   "part_of_speech": "noun",
+   "level": 5,
+   "definition": "a total and embarrassing failure",
+   "explanation": "",
+   "forms": {
+    "plural": "debacles"
+   },
+   "example": "The company's product launch turned into a public debacle.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "newspaper",
+    "failure"
+   ],
+   "difficulty": "hard",
+   "id": "words__level5_1__017",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "deter",
+   "word": "deter",
+   "part_of_speech": "verb",
+   "level": 5,
+   "definition": "to make someone decide not to do something",
+   "explanation": "",
+   "forms": {
+    "past": "deterred",
+    "past participle": "deterred",
+    "-ing": "deterring",
+    "third person": "deters"
+   },
+   "example": "High prices may deter tourists from visiting the island.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "newspaper",
+    "prevention"
+   ],
+   "difficulty": "hard",
+   "id": "words__level5_1__018",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "diligent",
+   "word": "diligent",
+   "part_of_speech": "adjective",
+   "level": 5,
+   "definition": "working hard and carefully",
+   "explanation": "",
+   "forms": {
+    "comparative": "more diligent",
+    "superlative": "most diligent"
+   },
+   "example": "The diligent student checked every answer twice.",
+   "picture_idea": "A student studying carefully at a desk with books and notes",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "novel",
+    "character"
+   ],
+   "difficulty": "medium",
+   "id": "words__level5_1__019",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "dissent",
+   "word": "dissent",
+   "part_of_speech": "noun",
+   "level": 5,
+   "definition": "disagreement with an official or commonly held opinion",
+   "explanation": "Also a verb meaning to disagree.",
+   "forms": {
+    "plural": "dissents"
+   },
+   "example": "The judge wrote a dissent explaining why she disagreed with the ruling.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "newspaper",
+    "politics"
+   ],
+   "difficulty": "hard",
+   "id": "words__level5_1__020",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "eloquent",
+   "word": "eloquent",
+   "part_of_speech": "adjective",
+   "level": 5,
+   "definition": "able to speak or write clearly and persuasively",
+   "explanation": "",
+   "forms": {
+    "comparative": "more eloquent",
+    "superlative": "most eloquent"
+   },
+   "example": "The mayor gave an eloquent speech after the flood.",
+   "picture_idea": "A speaker addressing a crowd from a podium",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "novel",
+    "speech"
+   ],
+   "difficulty": "medium",
+   "id": "words__level5_1__021",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "elusive",
+   "word": "elusive",
+   "part_of_speech": "adjective",
+   "level": 5,
+   "definition": "hard to find, catch or achieve",
+   "explanation": "",
+   "forms": {
+    "comparative": "more elusive",
+    "superlative": "most elusive"
+   },
+   "example": "The elusive thief has avoided police for months.",
+   "picture_idea": "A fox slipping away between trees, barely seen",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "novel",
+    "newspaper"
+   ],
+   "difficulty": "hard",
+   "id": "words__level5_1__022",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "embellish",
+   "word": "embellish",
+   "part_of_speech": "verb",
+   "level": 5,
+   "definition": "to make something more interesting by adding details, often untrue ones",
+   "explanation": "",
+   "forms": {
+    "past": "embellished",
+    "past participle": "embellished",
+    "-ing": "embellishing",
+    "third person": "embellishes"
+   },
+   "example": "He liked to embellish his stories with imaginary adventures.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "novel",
+    "storytelling"
+   ],
+   "difficulty": "hard",
+   "id": "words__level5_1__023",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "ephemeral",
+   "word": "ephemeral",
+   "part_of_speech": "adjective",
+   "level": 5,
+   "definition": "lasting only a very short time",
+   "explanation": "",
+   "forms": {
+    "comparative": "more ephemeral",
+    "superlative": "most ephemeral"
+   },
+   "example": "Fame can be ephemeral, fading as quickly as it arrived.",
+   "picture_idea": "A soap bubble about to pop",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "novel",
+    "time"
+   ],
+   "difficulty": "hard",
+   "id": "words__level5_1__024",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "exacerbate",
+   "word": "exacerbate",
+   "part_of_speech": "verb",
+   "level": 5,
+   "definition": "to make a problem or bad situation worse",
+   "explanation": "",
+   "forms": {
+    "past": "exacerbated",
+    "past participle": "exacerbated",
+    "-ing": "exacerbating",
+    "third person": "exacerbates"
+   },
+   "example": "The drought was exacerbated by a record-breaking heat wave.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "newspaper",
+    "problems"
+   ],
+   "difficulty": "hard",
+   "id": "words__level5_1__025",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "fastidious",
+   "word": "fastidious",
+   "part_of_speech": "adjective",
+   "level": 5,
+   "definition": "very careful about details and hard to please",
+   "explanation": "",
+   "forms": {
+    "comparative": "more fastidious",
+    "superlative": "most fastidious"
+   },
+   "example": "She was fastidious about keeping her desk perfectly tidy.",
+   "picture_idea": "A neat desk with pens lined up in a perfect row",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "novel",
+    "character"
+   ],
+   "difficulty": "hard",
+   "id": "words__level5_1__026",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "fervent",
+   "word": "fervent",
+   "part_of_speech": "adjective",
+   "level": 5,
+   "definition": "showing strong and sincere feeling or belief",
+   "explanation": "",
+   "forms": {
+    "comparative": "more fervent",
+    "superlative": "most fervent"
+   },
+   "example": "He was a fervent supporter of the local team.",
+   "picture_idea": "A fan cheering passionately in a stadium wearing a team scarf",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "newspaper",
+    "feelings"
+   ],
+   "difficulty": "hard",
+   "id": "words__level5_1__027",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "flourish",
+   "word": "flourish",
+   "part_of_speech": "verb",
+   "level": 5,
+   "definition": "to grow or develop well and be successful",
+   "explanation": "",
+   "forms": {
+    "past": "flourished",
+    "past participle": "flourished",
+    "-ing": "flourishing",
+    "third person": "flourishes"
+   },
+   "example": "Small businesses flourished after the new market opened.",
+   "picture_idea": "A garden full of healthy, blooming flowers",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "newspaper",
+    "growth"
+   ],
+   "difficulty": "medium",
+   "id": "words__level5_1__028",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "foster",
+   "word": "foster",
+   "part_of_speech": "verb",
+   "level": 5,
+   "definition": "to help something develop or grow over time",
+   "explanation": "Also means to care for a child who is not your own for a period of time.",
+   "forms": {
+    "past": "fostered",
+    "past participle": "fostered",
+    "-ing": "fostering",
+    "third person": "fosters"
+   },
+   "example": "Good teachers foster a love of reading in their students.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "newspaper",
+    "growth"
+   ],
+   "difficulty": "medium",
+   "id": "words__level5_1__029",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "frugal",
+   "word": "frugal",
+   "part_of_speech": "adjective",
+   "level": 5,
+   "definition": "careful about spending money and avoiding waste",
+   "explanation": "",
+   "forms": {
+    "comparative": "more frugal",
+    "superlative": "most frugal"
+   },
+   "example": "Her frugal habits allowed her to save enough for a small house.",
+   "picture_idea": "A person counting coins and putting them into a piggy bank",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "novel",
+    "money"
+   ],
+   "difficulty": "medium",
+   "id": "words__level5_1__030",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "futile",
+   "word": "futile",
+   "part_of_speech": "adjective",
+   "level": 5,
+   "definition": "having no chance of success; pointless",
+   "explanation": "",
+   "forms": {
+    "comparative": "more futile",
+    "superlative": "most futile"
+   },
+   "example": "Their attempts to stop the flood were futile.",
+   "picture_idea": "A person trying to sweep back ocean waves with a broom",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "novel",
+    "newspaper"
+   ],
+   "difficulty": "medium",
+   "id": "words__level5_1__031",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "gregarious",
+   "word": "gregarious",
+   "part_of_speech": "adjective",
+   "level": 5,
+   "definition": "enjoying being with other people; sociable",
+   "explanation": "",
+   "forms": {
+    "comparative": "more gregarious",
+    "superlative": "most gregarious"
+   },
+   "example": "He was a gregarious man who knew everyone in the village.",
+   "picture_idea": "A smiling person chatting with a large group at a party",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "novel",
+    "character"
+   ],
+   "difficulty": "hard",
+   "id": "words__level5_1__032",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "grievance",
+   "word": "grievance",
+   "part_of_speech": "noun",
+   "level": 5,
+   "definition": "a real or imagined reason to complain about unfair treatment",
+   "explanation": "",
+   "forms": {
+    "plural": "grievances"
+   },
+   "example": "The workers filed a formal grievance about unpaid overtime.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "newspaper",
+    "complaints"
+   ],
+   "difficulty": "hard",
+   "id": "words__level5_1__033",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "hamper",
+   "word": "hamper",
+   "part_of_speech": "verb",
+   "level": 5,
+   "definition": "to make it hard for someone to move or progress",
+   "explanation": "Also a noun meaning a large basket with a lid.",
+   "forms": {
+    "past": "hampered",
+    "past participle": "hampered",
+    "-ing": "hampering",
+    "third person": "hampers"
+   },
+   "example": "Heavy snow hampered rescue efforts in the mountains.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "newspaper",
+    "obstacles"
+   ],
+   "difficulty": "medium",
+   "id": "words__level5_1__034",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "haphazard",
+   "word": "haphazard",
+   "part_of_speech": "adjective",
+   "level": 5,
+   "definition": "lacking order or planning; random",
+   "explanation": "",
+   "forms": {
+    "comparative": "more haphazard",
+    "superlative": "most haphazard"
+   },
+   "example": "Boxes were stacked in a haphazard way along the hall.",
+   "picture_idea": "A messy pile of boxes stacked unevenly",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "novel",
+    "order"
+   ],
+   "difficulty": "hard",
+   "id": "words__level5_1__035",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "hubris",
+   "word": "hubris",
+   "part_of_speech": "noun",
+   "level": 5,
+   "definition": "extreme pride and self-confidence that often leads to a downfall",
+   "explanation": "",
+   "forms": {},
+   "example": "The king's hubris led him to ignore every warning.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "novel",
+    "character"
+   ],
+   "difficulty": "hard",
+   "id": "words__level5_1__036",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "impartial",
+   "word": "impartial",
+   "part_of_speech": "adjective",
+   "level": 5,
+   "definition": "fair and not favoring one side over another",
+   "explanation": "",
+   "forms": {
+    "comparative": "more impartial",
+    "superlative": "most impartial"
+   },
+   "example": "A judge must remain impartial throughout the trial.",
+   "picture_idea": "A set of balanced scales",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "newspaper",
+    "fairness"
+   ],
+   "difficulty": "medium",
+   "id": "words__level5_1__037",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "incessant",
+   "word": "incessant",
+   "part_of_speech": "adjective",
+   "level": 5,
+   "definition": "continuing without stopping, often in an annoying way",
+   "explanation": "",
+   "forms": {
+    "comparative": "more incessant",
+    "superlative": "most incessant"
+   },
+   "example": "The incessant noise from the building site kept us awake.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "novel",
+    "newspaper"
+   ],
+   "difficulty": "hard",
+   "id": "words__level5_1__038",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "inevitable",
+   "word": "inevitable",
+   "part_of_speech": "adjective",
+   "level": 5,
+   "definition": "certain to happen and impossible to avoid",
+   "explanation": "",
+   "forms": {
+    "comparative": "more inevitable",
+    "superlative": "most inevitable"
+   },
+   "example": "With so little money left, closing the shop seemed inevitable.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "newspaper",
+    "novel"
+   ],
+   "difficulty": "medium",
+   "id": "words__level5_1__039",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "innocuous",
+   "word": "innocuous",
+   "part_of_speech": "adjective",
+   "level": 5,
+   "definition": "not harmful or likely to offend",
+   "explanation": "",
+   "forms": {
+    "comparative": "more innocuous",
+    "superlative": "most innocuous"
+   },
+   "example": "It seemed an innocuous question, but it made him nervous.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "novel",
+    "safety"
+   ],
+   "difficulty": "hard",
+   "id": "words__level5_1__040",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "jeopardize",
+   "word": "jeopardize",
+   "part_of_speech": "verb",
+   "level": 5,
+   "definition": "to put something at risk of harm or failure",
+   "explanation": "",
+   "forms": {
+    "past": "jeopardized",
+    "past participle": "jeopardized",
+    "-ing": "jeopardizing",
+    "third person": "jeopardizes"
+   },
+   "example": "Cutting funds could jeopardize the whole research project.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "newspaper",
+    "risk"
+   ],
+   "difficulty": "hard",
+   "id": "words__level5_1__041",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "juncture",
+   "word": "juncture",
+   "part_of_speech": "noun",
+   "level": 5,
+   "definition": "a particular point in time, especially a critical one",
+   "explanation": "Also means a place where things join.",
+   "forms": {
+    "plural": "junctures"
+   },
+   "example": "At this juncture, the talks could either succeed or collapse.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "newspaper",
+    "time"
+   ],
+   "difficulty": "hard",
+   "id": "words__level5_1__042",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "kindle",
+   "word": "kindle",
+   "part_of_speech": "verb",
+   "level": 5,
+   "definition": "to light a fire, or to awaken a feeling or interest",
+   "explanation": "",
+   "forms": {
+    "past": "kindled",
+    "past participle": "kindled",
+    "-ing": "kindling",
+    "third person": "kindles"
+   },
+   "example": "The teacher's stories kindled a passion for history in the class.",
+   "picture_idea": "A small flame starting on dry twigs",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "novel",
+    "fire"
+   ],
+   "difficulty": "medium",
+   "id": "words__level5_1__043",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "lament",
+   "word": "lament",
+   "part_of_speech": "verb",
+   "level": 5,
+   "definition": "to express sadness or regret about something",
+   "explanation": "Also a noun meaning a song or poem of grief.",
+   "forms": {
+    "past": "lamented",
+    "past participle": "lamented",
+    "-ing": "lamenting",
+    "third person": "laments"
+   },
+   "example": "Residents lamented the closing of the old cinema.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "novel",
+    "sadness"
+   ],
+   "difficulty": "hard",
+   "id": "words__level5_1__044",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "lenient",
+   "word": "lenient",
+   "part_of_speech": "adjective",
+   "level": 5,
+   "definition": "less strict than expected, especially in punishing",
+   "explanation": "",
+   "forms": {
+    "comparative": "more lenient",
+    "superlative": "most lenient"
+   },
+   "example": "Many people thought the sentence was too lenient.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "newspaper",
+    "rules"
+   ],
+   "difficulty": "medium",
+   "id": "words__level5_1__045",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "lucrative",
+   "word": "lucrative",
+   "part_of_speech": "adjective",
+   "level": 5,
+   "definition": "producing a lot of money; very profitable",
+   "explanation": "",
+   "forms": {
+    "comparative": "more lucrative",
+    "superlative": "most lucrative"
+   },
+   "example": "She turned down a lucrative job offer to work for a charity.",
+   "picture_idea": "A briefcase overflowing with banknotes",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "newspaper",
+    "money"
+   ],
+   "difficulty": "hard",
+   "id": "words__level5_1__046",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "meticulous",
+   "word": "meticulous",
+   "part_of_speech": "adjective",
+   "level": 5,
+   "definition": "showing great attention to detail; very careful and precise",
+   "explanation": "",
+   "forms": {
+    "comparative": "more meticulous",
+    "superlative": "most meticulous"
+   },
+   "example": "The detective kept meticulous notes on every clue.",
+   "picture_idea": "A watchmaker examining tiny parts through a magnifying glass",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "novel",
+    "care"
+   ],
+   "difficulty": "hard",
+   "id": "words__level5_1__047",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "mitigate",
+   "word": "mitigate",
+   "part_of_speech": "verb",
+   "level": 5,
+   "definition": "to make something less harmful or severe",
+   "explanation": "Often confused with 'militate'; mitigate means to lessen.",
+   "forms": {
+    "past": "mitigated",
+    "past participle": "mitigated",
+    "-ing": "mitigating",
+    "third person": "mitigates"
+   },
+   "example": "Planting trees can help mitigate the effects of flooding.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "newspaper",
+    "problems"
+   ],
+   "difficulty": "hard",
+   "id": "words__level5_1__048",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "morose",
+   "word": "morose",
+   "part_of_speech": "adjective",
+   "level": 5,
+   "definition": "gloomy, bad-tempered and unwilling to talk",
+   "explanation": "",
+   "forms": {
+    "comparative": "more morose",
+    "superlative": "most morose"
+   },
+   "example": "He sat in morose silence at the end of the table.",
+   "picture_idea": "A frowning man sitting alone with his head in his hands",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "level5",
+    "novel",
+    "feelings"
+   ],
+   "difficulty": "hard",
+   "id": "words__level5_1__049",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  }
+ ]
+}

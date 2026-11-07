@@ -1,0 +1,1433 @@
+{
+ "schema": "nimrod.research.v1",
+ "kind": "words",
+ "name": "level3_2",
+ "generated": "2026-11-06",
+ "items": [
+  {
+   "kind": "word",
+   "text": "name",
+   "word": "name",
+   "part_of_speech": "noun",
+   "level": 3,
+   "definition": "The word that people call a person, animal, or thing.",
+   "explanation": "",
+   "forms": {
+    "plural": "names"
+   },
+   "example": "My dog's name is Max.",
+   "picture_idea": "A name tag reading 'Hello, my name is...' stuck on a shirt",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "people",
+    "communication"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level3_2__001",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "new",
+   "word": "new",
+   "part_of_speech": "adjective",
+   "level": 3,
+   "definition": "Just made or bought; not old.",
+   "explanation": "",
+   "forms": {
+    "comparative": "newer",
+    "superlative": "newest"
+   },
+   "example": "I have new shoes today.",
+   "picture_idea": "A shiny pair of shoes with a bow in a box",
+   "aac_core": true,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "describing",
+    "opposites"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level3_2__002",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "night",
+   "word": "night",
+   "part_of_speech": "noun",
+   "level": 3,
+   "definition": "The time when it is dark and people usually sleep.",
+   "explanation": "",
+   "forms": {
+    "plural": "nights"
+   },
+   "example": "The stars come out at night.",
+   "picture_idea": "A dark sky with a moon and stars over a house",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "time"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level3_2__003",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "nose",
+   "word": "nose",
+   "part_of_speech": "noun",
+   "level": 3,
+   "definition": "The part of your face that you use to smell and breathe.",
+   "explanation": "",
+   "forms": {
+    "plural": "noses"
+   },
+   "example": "The flower smells nice to my nose.",
+   "picture_idea": "A smiling child's face with the nose highlighted",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "body",
+    "senses"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level3_2__004",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "number",
+   "word": "number",
+   "part_of_speech": "noun",
+   "level": 3,
+   "definition": "A word or sign that tells how many, like 1, 2, or 3.",
+   "explanation": "",
+   "forms": {
+    "plural": "numbers"
+   },
+   "example": "What number comes after five?",
+   "picture_idea": "Colorful wooden blocks showing the numbers 1 2 3",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "math",
+    "school"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level3_2__005",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "off",
+   "word": "off",
+   "part_of_speech": "adverb",
+   "level": 3,
+   "definition": "Not on; away from a place or not working.",
+   "explanation": "Off is the opposite of on. It can describe a light, a TV, or something that comes away from a thing.",
+   "forms": {},
+   "example": "Please turn the light off.",
+   "picture_idea": "A hand flipping a light switch down with the lamp dark",
+   "aac_core": true,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "opposites",
+    "position"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level3_2__006",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "open",
+   "word": "open",
+   "part_of_speech": "verb",
+   "level": 3,
+   "definition": "To move something so that things can go in or out, or so you can see inside.",
+   "explanation": "",
+   "forms": {
+    "past": "opened",
+    "past participle": "opened",
+    "-ing": "opening",
+    "third person": "opens"
+   },
+   "example": "She opens the door for her brother.",
+   "picture_idea": "A child pulling open a door or lifting a box lid",
+   "aac_core": true,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "action",
+    "opposites"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level3_2__007",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "orange",
+   "word": "orange",
+   "part_of_speech": "noun",
+   "level": 3,
+   "definition": "A round, juicy fruit with a thick orange skin.",
+   "explanation": "Orange is also a color, the color of this fruit.",
+   "forms": {
+    "plural": "oranges"
+   },
+   "example": "I peeled an orange for my snack.",
+   "picture_idea": "A round orange fruit with a few peeled segments",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "food",
+    "fruit",
+    "color"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level3_2__008",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "over",
+   "word": "over",
+   "part_of_speech": "preposition",
+   "level": 3,
+   "definition": "Above something, or from one side of something to the other.",
+   "explanation": "",
+   "forms": {},
+   "example": "The cow jumped over the moon.",
+   "picture_idea": "A ball flying over a fence",
+   "aac_core": true,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "position"
+   ],
+   "difficulty": "easy",
+   "id": "words__level3_2__009",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "paper",
+   "word": "paper",
+   "part_of_speech": "noun",
+   "level": 3,
+   "definition": "Thin, flat sheets that you write or draw on.",
+   "explanation": "",
+   "forms": {
+    "plural": "papers"
+   },
+   "example": "I drew a picture on the paper.",
+   "picture_idea": "A stack of white paper with a crayon drawing on top",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "school",
+    "things"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level3_2__010",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "park",
+   "word": "park",
+   "part_of_speech": "noun",
+   "level": 3,
+   "definition": "An outdoor place with grass and trees where people play.",
+   "explanation": "",
+   "forms": {
+    "plural": "parks"
+   },
+   "example": "We go to the park on Saturday.",
+   "picture_idea": "A playground with swings, grass, and trees",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "places",
+    "outdoors"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level3_2__011",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "pick",
+   "word": "pick",
+   "part_of_speech": "verb",
+   "level": 3,
+   "definition": "To choose something, or to take something off a plant with your hand.",
+   "explanation": "",
+   "forms": {
+    "past": "picked",
+    "past participle": "picked",
+    "-ing": "picking",
+    "third person": "picks"
+   },
+   "example": "You can pick a red apple from the tree.",
+   "picture_idea": "A child reaching up to pick an apple from a tree",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "action",
+    "choice"
+   ],
+   "difficulty": "easy",
+   "id": "words__level3_2__012",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "play",
+   "word": "play",
+   "part_of_speech": "verb",
+   "level": 3,
+   "definition": "To have fun with games or toys.",
+   "explanation": "",
+   "forms": {
+    "past": "played",
+    "past participle": "played",
+    "-ing": "playing",
+    "third person": "plays"
+   },
+   "example": "The children play in the yard.",
+   "picture_idea": "Two children kicking a ball in a yard",
+   "aac_core": true,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "action",
+    "fun"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level3_2__013",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "please",
+   "word": "please",
+   "part_of_speech": "interjection",
+   "level": 3,
+   "definition": "A polite word you say when you ask for something.",
+   "explanation": "",
+   "forms": {},
+   "example": "Can I have some water, please?",
+   "picture_idea": "A child with hands together asking politely",
+   "aac_core": true,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "manners",
+    "communication"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level3_2__014",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "pull",
+   "word": "pull",
+   "part_of_speech": "verb",
+   "level": 3,
+   "definition": "To hold something and move it toward you.",
+   "explanation": "",
+   "forms": {
+    "past": "pulled",
+    "past participle": "pulled",
+    "-ing": "pulling",
+    "third person": "pulls"
+   },
+   "example": "He will pull the wagon up the hill.",
+   "picture_idea": "A child pulling a red wagon by its handle",
+   "aac_core": true,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "action",
+    "opposites"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level3_2__015",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "put",
+   "word": "put",
+   "part_of_speech": "verb",
+   "level": 3,
+   "definition": "To move something to a place and leave it there.",
+   "explanation": "",
+   "forms": {
+    "past": "put",
+    "past participle": "put",
+    "-ing": "putting",
+    "third person": "puts"
+   },
+   "example": "Please put your coat on the hook.",
+   "picture_idea": "A child placing a coat on a hook",
+   "aac_core": true,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "action"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level3_2__016",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "queen",
+   "word": "queen",
+   "part_of_speech": "noun",
+   "level": 3,
+   "definition": "A woman who rules a country, or the wife of a king.",
+   "explanation": "",
+   "forms": {
+    "plural": "queens"
+   },
+   "example": "The queen wore a gold crown.",
+   "picture_idea": "A woman in a long gown wearing a gold crown on a throne",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "people",
+    "stories"
+   ],
+   "difficulty": "easy",
+   "id": "words__level3_2__017",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "quick",
+   "word": "quick",
+   "part_of_speech": "adjective",
+   "level": 3,
+   "definition": "Fast; taking only a short time.",
+   "explanation": "",
+   "forms": {
+    "comparative": "quicker",
+    "superlative": "quickest"
+   },
+   "example": "The rabbit is quick.",
+   "picture_idea": "A rabbit running fast with motion lines behind it",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "describing",
+    "speed"
+   ],
+   "difficulty": "easy",
+   "id": "words__level3_2__018",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "quiet",
+   "word": "quiet",
+   "part_of_speech": "adjective",
+   "level": 3,
+   "definition": "Making little or no sound.",
+   "explanation": "",
+   "forms": {
+    "comparative": "quieter",
+    "superlative": "quietest"
+   },
+   "example": "Be quiet because the baby is sleeping.",
+   "picture_idea": "A child holding a finger to their lips beside a sleeping baby",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "describing",
+    "sound"
+   ],
+   "difficulty": "easy",
+   "id": "words__level3_2__019",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "rabbit",
+   "word": "rabbit",
+   "part_of_speech": "noun",
+   "level": 3,
+   "definition": "A small furry animal with long ears that hops.",
+   "explanation": "",
+   "forms": {
+    "plural": "rabbits"
+   },
+   "example": "The rabbit ate a carrot.",
+   "picture_idea": "A fluffy rabbit with long ears eating a carrot",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "animals"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level3_2__020",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "rain",
+   "word": "rain",
+   "part_of_speech": "noun",
+   "level": 3,
+   "definition": "Water that falls from the clouds in drops.",
+   "explanation": "",
+   "forms": {},
+   "example": "I wear boots when there is rain.",
+   "picture_idea": "Gray clouds with raindrops falling on a puddle and an umbrella",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "weather",
+    "nature"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level3_2__021",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "read",
+   "word": "read",
+   "part_of_speech": "verb",
+   "level": 3,
+   "definition": "To look at words and understand them.",
+   "explanation": "The past form is spelled the same as read but sounds like 'red'.",
+   "forms": {
+    "past": "read",
+    "past participle": "read",
+    "-ing": "reading",
+    "third person": "reads"
+   },
+   "example": "My mom reads a story to me every night.",
+   "picture_idea": "A child sitting with an open picture book",
+   "aac_core": true,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "school",
+    "action"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level3_2__022",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "red",
+   "word": "red",
+   "part_of_speech": "adjective",
+   "level": 3,
+   "definition": "The color of a ripe tomato or a fire truck.",
+   "explanation": "",
+   "forms": {
+    "comparative": "redder",
+    "superlative": "reddest"
+   },
+   "example": "She has a red balloon.",
+   "picture_idea": "A bright red balloon",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "colors"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level3_2__023",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "road",
+   "word": "road",
+   "part_of_speech": "noun",
+   "level": 3,
+   "definition": "A long hard path where cars and buses drive.",
+   "explanation": "",
+   "forms": {
+    "plural": "roads"
+   },
+   "example": "Look both ways before you cross the road.",
+   "picture_idea": "A paved road with a car and a crosswalk",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "places",
+    "transport"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level3_2__024",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "run",
+   "word": "run",
+   "part_of_speech": "verb",
+   "level": 3,
+   "definition": "To move on your feet very fast.",
+   "explanation": "",
+   "forms": {
+    "past": "ran",
+    "past participle": "run",
+    "-ing": "running",
+    "third person": "runs"
+   },
+   "example": "The dog can run very fast.",
+   "picture_idea": "A child running across a field",
+   "aac_core": true,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "action",
+    "movement"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level3_2__025",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "sad",
+   "word": "sad",
+   "part_of_speech": "adjective",
+   "level": 3,
+   "definition": "Feeling unhappy.",
+   "explanation": "",
+   "forms": {
+    "comparative": "sadder",
+    "superlative": "saddest"
+   },
+   "example": "I felt sad when my friend moved away.",
+   "picture_idea": "A child with a frown and a tear on the cheek",
+   "aac_core": true,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "feelings"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level3_2__026",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "school",
+   "word": "school",
+   "part_of_speech": "noun",
+   "level": 3,
+   "definition": "A place where children go to learn.",
+   "explanation": "",
+   "forms": {
+    "plural": "schools"
+   },
+   "example": "I walk to school with my sister.",
+   "picture_idea": "A school building with a bell and children arriving",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "school",
+    "places"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level3_2__027",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "see",
+   "word": "see",
+   "part_of_speech": "verb",
+   "level": 3,
+   "definition": "To use your eyes to know what is there.",
+   "explanation": "",
+   "forms": {
+    "past": "saw",
+    "past participle": "seen",
+    "-ing": "seeing",
+    "third person": "sees"
+   },
+   "example": "I can see a bird in the tree.",
+   "picture_idea": "A child looking up at a bird in a tree",
+   "aac_core": true,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "senses",
+    "action"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level3_2__028",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "sit",
+   "word": "sit",
+   "part_of_speech": "verb",
+   "level": 3,
+   "definition": "To rest with your bottom on a chair or the floor.",
+   "explanation": "",
+   "forms": {
+    "past": "sat",
+    "past participle": "sat",
+    "-ing": "sitting",
+    "third person": "sits"
+   },
+   "example": "Please sit down on the chair.",
+   "picture_idea": "A child sitting on a chair at a table",
+   "aac_core": true,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "action",
+    "body"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level3_2__029",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "sleep",
+   "word": "sleep",
+   "part_of_speech": "verb",
+   "level": 3,
+   "definition": "To rest with your eyes closed and your mind quiet.",
+   "explanation": "",
+   "forms": {
+    "past": "slept",
+    "past participle": "slept",
+    "-ing": "sleeping",
+    "third person": "sleeps"
+   },
+   "example": "The baby sleeps in a small bed.",
+   "picture_idea": "A child asleep in bed under a blanket with 'Zzz' above",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "action",
+    "daily life"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level3_2__030",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "snow",
+   "word": "snow",
+   "part_of_speech": "noun",
+   "level": 3,
+   "definition": "Soft white flakes of frozen water that fall from the sky when it is cold.",
+   "explanation": "",
+   "forms": {},
+   "example": "We made a snowman in the snow.",
+   "picture_idea": "Snowflakes falling on a snowman in a yard",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "weather",
+    "nature"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level3_2__031",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "soft",
+   "word": "soft",
+   "part_of_speech": "adjective",
+   "level": 3,
+   "definition": "Nice and gentle to touch; not hard.",
+   "explanation": "",
+   "forms": {
+    "comparative": "softer",
+    "superlative": "softest"
+   },
+   "example": "The kitten has soft fur.",
+   "picture_idea": "A hand petting a fluffy kitten",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "describing",
+    "senses",
+    "opposites"
+   ],
+   "difficulty": "easy",
+   "id": "words__level3_2__032",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "table",
+   "word": "table",
+   "part_of_speech": "noun",
+   "level": 3,
+   "definition": "A piece of furniture with a flat top and legs.",
+   "explanation": "",
+   "forms": {
+    "plural": "tables"
+   },
+   "example": "We eat dinner at the table.",
+   "picture_idea": "A wooden table with plates and cups on it",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "home",
+    "furniture"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level3_2__033",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "take",
+   "word": "take",
+   "part_of_speech": "verb",
+   "level": 3,
+   "definition": "To get something and carry it with you, or to pick it up.",
+   "explanation": "",
+   "forms": {
+    "past": "took",
+    "past participle": "taken",
+    "-ing": "taking",
+    "third person": "takes"
+   },
+   "example": "Take your lunch box to school.",
+   "picture_idea": "A child picking up a lunch box from a table",
+   "aac_core": true,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "action"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level3_2__034",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "tall",
+   "word": "tall",
+   "part_of_speech": "adjective",
+   "level": 3,
+   "definition": "Having a lot of height; high from bottom to top.",
+   "explanation": "",
+   "forms": {
+    "comparative": "taller",
+    "superlative": "tallest"
+   },
+   "example": "The giraffe is very tall.",
+   "picture_idea": "A giraffe standing next to a small tree",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "describing",
+    "size",
+    "opposites"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level3_2__035",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "tell",
+   "word": "tell",
+   "part_of_speech": "verb",
+   "level": 3,
+   "definition": "To say something to someone so they know it.",
+   "explanation": "",
+   "forms": {
+    "past": "told",
+    "past participle": "told",
+    "-ing": "telling",
+    "third person": "tells"
+   },
+   "example": "Tell me your name.",
+   "picture_idea": "One child whispering to another child",
+   "aac_core": true,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "communication",
+    "action"
+   ],
+   "difficulty": "easy",
+   "id": "words__level3_2__036",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "tree",
+   "word": "tree",
+   "part_of_speech": "noun",
+   "level": 3,
+   "definition": "A tall plant with a thick trunk, branches, and leaves.",
+   "explanation": "",
+   "forms": {
+    "plural": "trees"
+   },
+   "example": "A bird built a nest in the tree.",
+   "picture_idea": "A large tree with green leaves and a bird nest",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "nature",
+    "plants"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level3_2__037",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "turn",
+   "word": "turn",
+   "part_of_speech": "verb",
+   "level": 3,
+   "definition": "To move around or change direction.",
+   "explanation": "It can also mean your chance to do something in a game, as in 'It is my turn.'",
+   "forms": {
+    "past": "turned",
+    "past participle": "turned",
+    "-ing": "turning",
+    "third person": "turns"
+   },
+   "example": "Turn left at the corner.",
+   "picture_idea": "A bike at a corner with an arrow pointing left",
+   "aac_core": true,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "action",
+    "direction"
+   ],
+   "difficulty": "easy",
+   "id": "words__level3_2__038",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "under",
+   "word": "under",
+   "part_of_speech": "preposition",
+   "level": 3,
+   "definition": "Below something; in a lower place than something.",
+   "explanation": "",
+   "forms": {},
+   "example": "The cat is under the table.",
+   "picture_idea": "A cat sitting beneath a table",
+   "aac_core": true,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "position"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level3_2__039",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "use",
+   "word": "use",
+   "part_of_speech": "verb",
+   "level": 3,
+   "definition": "To do a job with something.",
+   "explanation": "",
+   "forms": {
+    "past": "used",
+    "past participle": "used",
+    "-ing": "using",
+    "third person": "uses"
+   },
+   "example": "I use a spoon to eat soup.",
+   "picture_idea": "A child eating soup with a spoon",
+   "aac_core": true,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "action"
+   ],
+   "difficulty": "easy",
+   "id": "words__level3_2__040",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "very",
+   "word": "very",
+   "part_of_speech": "adverb",
+   "level": 3,
+   "definition": "A lot; more than usual.",
+   "explanation": "We put very before an adjective or adverb to make it stronger.",
+   "forms": {},
+   "example": "The soup is very hot.",
+   "picture_idea": "",
+   "aac_core": true,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "describing"
+   ],
+   "difficulty": "easy",
+   "id": "words__level3_2__041",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "walk",
+   "word": "walk",
+   "part_of_speech": "verb",
+   "level": 3,
+   "definition": "To move by putting one foot in front of the other.",
+   "explanation": "",
+   "forms": {
+    "past": "walked",
+    "past participle": "walked",
+    "-ing": "walking",
+    "third person": "walks"
+   },
+   "example": "We walk to the store together.",
+   "picture_idea": "Two people walking along a sidewalk",
+   "aac_core": true,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "action",
+    "movement"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level3_2__042",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "want",
+   "word": "want",
+   "part_of_speech": "verb",
+   "level": 3,
+   "definition": "To wish for something or need to have it.",
+   "explanation": "",
+   "forms": {
+    "past": "wanted",
+    "past participle": "wanted",
+    "-ing": "wanting",
+    "third person": "wants"
+   },
+   "example": "I want a drink of milk.",
+   "picture_idea": "A child pointing at a glass of milk",
+   "aac_core": true,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "feelings",
+    "communication"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level3_2__043",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "water",
+   "word": "water",
+   "part_of_speech": "noun",
+   "level": 3,
+   "definition": "The clear liquid that we drink and that fills rivers and seas.",
+   "explanation": "",
+   "forms": {},
+   "example": "I drink a glass of water.",
+   "picture_idea": "A clear glass being filled from a tap",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "nature",
+    "food and drink"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level3_2__044",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "wet",
+   "word": "wet",
+   "part_of_speech": "adjective",
+   "level": 3,
+   "definition": "Covered with water or another liquid; not dry.",
+   "explanation": "",
+   "forms": {
+    "comparative": "wetter",
+    "superlative": "wettest"
+   },
+   "example": "My socks are wet from the puddle.",
+   "picture_idea": "A child standing in a puddle with soaked socks",
+   "aac_core": true,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "describing",
+    "opposites"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level3_2__045",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "window",
+   "word": "window",
+   "part_of_speech": "noun",
+   "level": 3,
+   "definition": "A hole in a wall with glass in it that lets in light.",
+   "explanation": "",
+   "forms": {
+    "plural": "windows"
+   },
+   "example": "I look out of the window at the rain.",
+   "picture_idea": "A window with raindrops on the glass and a view of a garden",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "home",
+    "things"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level3_2__046",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "yellow",
+   "word": "yellow",
+   "part_of_speech": "adjective",
+   "level": 3,
+   "definition": "The color of a banana or the sun.",
+   "explanation": "",
+   "forms": {
+    "comparative": "yellower",
+    "superlative": "yellowest"
+   },
+   "example": "The duck has a yellow beak.",
+   "picture_idea": "A bright yellow rubber duck",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "colors"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level3_2__047",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "zoo",
+   "word": "zoo",
+   "part_of_speech": "noun",
+   "level": 3,
+   "definition": "A place where people can see wild animals that live in cages or large areas.",
+   "explanation": "",
+   "forms": {
+    "plural": "zoos"
+   },
+   "example": "We saw a lion at the zoo.",
+   "picture_idea": "A zoo entrance with a lion and an elephant behind a fence",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "places",
+    "animals"
+   ],
+   "difficulty": "very easy",
+   "id": "words__level3_2__048",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  }
+ ]
+}

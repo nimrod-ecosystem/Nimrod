@@ -1,0 +1,489 @@
+{
+ "schema": "nimrod.research.v1",
+ "kind": "facts",
+ "name": "sports",
+ "generated": "2026-11-06",
+ "items": [
+  {
+   "kind": "fact",
+   "text": "An astronaut once played golf on the Moon. In 1971, Apollo 14 commander Alan Shepard hit two golf balls with a 6-iron head attached to a tool handle.",
+   "topic": "sports",
+   "note": "Shepard is still the only person known to have hit a golf ball on the Moon. Some retellings say the balls were hidden in a sock. Forbes calls that a space-age urban legend, so it is left out here.",
+   "sources": [
+    {
+     "url": "https://airandspace.si.edu/collection-objects/head-golf-club-apollo-14-replica/nasm_A19751468000",
+     "title": "Head, Golf Club, Apollo 14, Replica",
+     "publisher": "Smithsonian National Air and Space Museum"
+    },
+    {
+     "url": "https://www.forbes.com/sites/kionasmith/2019/02/06/astronaut-alan-shepards-out-of-this-world-round-of-golf-on-the-moon/",
+     "title": "Astronaut Alan Shepard's Out-Of-This-World Round Of Golf On The Moon",
+     "publisher": "Forbes"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "golf",
+    "space",
+    "Apollo 14",
+    "history"
+   ],
+   "difficulty": "easy",
+   "id": "facts__sports__001",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://airandspace.si.edu/collection-objects/head-golf-club-apollo-14-replica/nasm_A19751468000",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "A marathon is 26.2 miles because of a royal view. In 1908 the London Olympic race started at Windsor Castle and finished in front of the royal box in the stadium.",
+   "topic": "sports",
+   "note": "Accounts differ on exactly why the course ended up 26 miles 385 yards. The official length was standardized in the 1920s, and sources give 1921 or 1924.",
+   "sources": [
+    {
+     "url": "https://www.britannica.com/sports/Why-Is-a-Marathon-26-2-Miles",
+     "title": "Why Is a Marathon 26.2 Miles?",
+     "publisher": "Encyclopaedia Britannica"
+    },
+    {
+     "url": "https://www.boston.com/sports/boston-marathon/2025/04/15/why-is-a-marathon-26-2-miles-2/",
+     "title": "Why is a marathon 26.2 miles?",
+     "publisher": "Boston.com"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "marathon",
+    "Olympics",
+    "running",
+    "history"
+   ],
+   "difficulty": "medium",
+   "id": "facts__sports__002",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.britannica.com/sports/Why-Is-a-Marathon-26-2-Miles",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The longest tennis match ever lasted 11 hours and 5 minutes, spread over three days. John Isner beat Nicolas Mahut at Wimbledon in 2010, and the final set finished 70-68.",
+   "topic": "sports",
+   "note": "Play was stopped for darkness on two nights, which is why the match ran into a third day.",
+   "sources": [
+    {
+     "url": "https://www.olympics.com/en/news/longest-tennis-match-history-grand-slam-record",
+     "title": "The longest tennis match: An 11-hour marathon at Wimbledon",
+     "publisher": "Olympics.com (International Olympic Committee)"
+    },
+    {
+     "url": "https://en.wikipedia.org/wiki/Isner%E2%80%93Mahut_match_at_the_2010_Wimbledon_Championships",
+     "title": "Isner–Mahut match at the 2010 Wimbledon Championships",
+     "publisher": "Wikipedia"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "tennis",
+    "Wimbledon",
+    "records"
+   ],
+   "difficulty": "easy",
+   "id": "facts__sports__003",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://en.wikipedia.org/wiki/Isner%E2%80%93Mahut_match_at_the_2010_Wimbledon_Championships",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The fifth set of that Isner-Mahut match lasted 8 hours 11 minutes. That is longer than the entire previous record match, which took 6 hours 33 minutes.",
+   "topic": "sports",
+   "note": "The previous record was Santoro vs. Clément at the 2004 French Open.",
+   "sources": [
+    {
+     "url": "https://en.wikipedia.org/wiki/Isner%E2%80%93Mahut_match_at_the_2010_Wimbledon_Championships",
+     "title": "Isner–Mahut match at the 2010 Wimbledon Championships",
+     "publisher": "Wikipedia"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "tennis",
+    "Wimbledon",
+    "records"
+   ],
+   "difficulty": "medium",
+   "id": "facts__sports__004",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://en.wikipedia.org/wiki/Isner%E2%80%93Mahut_match_at_the_2010_Wimbledon_Championships",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "In 1966 the World Cup trophy was stolen in London four months before the tournament. A dog named Pickles found it a week later, wrapped in newspaper under a hedge.",
+   "topic": "sports",
+   "note": "The thief was reported in a 2018 Daily Mirror investigation but that is not covered here. Descriptions of Pickles' breed and age vary between sources.",
+   "sources": [
+    {
+     "url": "https://www.bloomberg.com/news/articles/2026-03-20/the-1966-world-cup-trophy-theft-gangsters-spies-and-the-dog-that-found-it",
+     "title": "The 1966 World Cup Trophy Theft: Gangsters, Spies and the Dog That Found It",
+     "publisher": "Bloomberg"
+    },
+    {
+     "url": "https://en.wikipedia.org/wiki/1966_theft_of_the_Jules_Rimet_Trophy",
+     "title": "1966 theft of the Jules Rimet Trophy",
+     "publisher": "Wikipedia"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "soccer",
+    "World Cup",
+    "history",
+    "animals"
+   ],
+   "difficulty": "easy",
+   "id": "facts__sports__005",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://en.wikipedia.org/wiki/1966_theft_of_the_Jules_Rimet_Trophy",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Tug of war was once an Olympic sport. It appeared at the Games in 1900, 1904, 1908, 1912 and 1920.",
+   "topic": "sports",
+   "note": "Olympedia suggests the sport was probably dropped because of the many controversies around it.",
+   "sources": [
+    {
+     "url": "https://www.cnn.com/2012/08/10/sport/olympics-tug-of-war",
+     "title": "Once an Olympic sport, tug-of-war hopes for reinclusion",
+     "publisher": "CNN"
+    },
+    {
+     "url": "https://www.olympedia.org/results/21134",
+     "title": "Tug-of-War, Men (1920)",
+     "publisher": "Olympedia"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "tug of war",
+    "Olympics",
+    "history"
+   ],
+   "difficulty": "easy",
+   "id": "facts__sports__006",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.olympedia.org/editions/3/sports/TOW",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "At the 1904 Olympics in St. Louis, the United States won gold, silver and bronze in tug of war. Each country was allowed to enter several teams.",
+   "topic": "sports",
+   "note": "CNN credits the IOC for the medal sweep. The multiple-teams rule is explained by HistoryFacts.com, which is published by Britannica's editors.",
+   "sources": [
+    {
+     "url": "https://www.cnn.com/2012/08/10/sport/olympics-tug-of-war",
+     "title": "Once an Olympic sport, tug-of-war hopes for reinclusion",
+     "publisher": "CNN"
+    },
+    {
+     "url": "https://historyfacts.com/arts-culture/fact/tug-of-war-used-to-be-in-the-olympic-games/",
+     "title": "When Tug-of-War Was an Olympic Sport",
+     "publisher": "HistoryFacts.com"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "tug of war",
+    "Olympics",
+    "history"
+   ],
+   "difficulty": "medium",
+   "id": "facts__sports__007",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.olympedia.org/editions/3/sports/TOW",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The granite in curling stones formed about 60 million years ago. Ice-age glaciers carried boulders of it as far as Wales and Ireland.",
+   "topic": "sports",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://www.nms.ac.uk/discover-catalogue/the-roaring-game-scotlands-curling-stone-island",
+     "title": "The Roaring Game: Scotland's curling stone island",
+     "publisher": "National Museums Scotland"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "curling",
+    "geology",
+    "Scotland"
+   ],
+   "difficulty": "hard",
+   "id": "facts__sports__009",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.nms.ac.uk/discover-catalogue/the-roaring-game-scotlands-curling-stone-island",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Olympic gold medals are mostly silver. They must be at least 92.5% silver, with only about 6 grams of gold on the outside.",
+   "topic": "sports",
+   "note": "This describes modern medals under IOC requirements. Exact weights vary from one Games to the next.",
+   "sources": [
+    {
+     "url": "https://www.nbc.com/nbc-insider/are-olympic-medals-real-gold-silver-bronze",
+     "title": "Are Olympic Medals Real Gold? The Answer May Surprise You",
+     "publisher": "NBC"
+    },
+    {
+     "url": "https://www.nasdaq.com/articles/how-much-olympic-gold-medal-worth-less-youd-think",
+     "title": "How Much Is an Olympic Gold Medal Worth? Less Than You'd Think",
+     "publisher": "Nasdaq"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "Olympics",
+    "medals",
+    "materials"
+   ],
+   "difficulty": "easy",
+   "id": "facts__sports__010",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.nbc.com/nbc-insider/are-olympic-medals-real-gold-silver-bronze",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Basketball got its name from peach baskets. When James Naismith invented the game in 1891, two half-bushel peach baskets served as the goals.",
+   "topic": "sports",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://www.britannica.com/sports/basketball",
+     "title": "Basketball",
+     "publisher": "Encyclopaedia Britannica"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "basketball",
+    "history",
+    "inventions"
+   ],
+   "difficulty": "very easy",
+   "id": "facts__sports__011",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.britannica.com/sports/basketball",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Basketball hoops are 10 feet high because Naismith hung the first baskets on a gym railing that was 10 feet off the floor. The height has never changed.",
+   "topic": "sports",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://www.britannica.com/sports/Why-did-the-original-basketball-games-use-peach-baskets",
+     "title": "Why did the original basketball games use peach baskets?",
+     "publisher": "Encyclopaedia Britannica"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "basketball",
+    "history",
+    "inventions"
+   ],
+   "difficulty": "easy",
+   "id": "facts__sports__012",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.britannica.com/sports/Why-did-the-original-basketball-games-use-peach-baskets",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The first basketball game was played with a soccer ball, because no basketballs existed yet. There were nine players on each team.",
+   "topic": "sports",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://www.history.com/this-day-in-history/december-21/basketball-invention-james-naismith",
+     "title": "First basketball game played",
+     "publisher": "HISTORY"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "basketball",
+    "history",
+    "inventions"
+   ],
+   "difficulty": "easy",
+   "id": "facts__sports__013",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.history.com/this-day-in-history/december-21/basketball-invention-james-naismith",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Women didn't run an Olympic marathon until 1984. The men's marathon had been in the Games since 1896.",
+   "topic": "sports",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://www.britannica.com/sports/marathon-race",
+     "title": "Marathon",
+     "publisher": "Encyclopaedia Britannica"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "marathon",
+    "Olympics",
+    "women in sport",
+    "history"
+   ],
+   "difficulty": "medium",
+   "id": "facts__sports__014",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.britannica.com/sports/marathon-race",
+    "problem": "",
+    "fix": ""
+   }
+  }
+ ]
+}

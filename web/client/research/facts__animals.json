@@ -1,0 +1,460 @@
+{
+ "schema": "nimrod.research.v1",
+ "kind": "facts",
+ "name": "animals",
+ "generated": "2026-11-06",
+ "items": [
+  {
+   "kind": "fact",
+   "text": "An octopus has blue blood because its oxygen-carrying protein, haemocyanin, contains copper. Ours contains iron.",
+   "topic": "animals",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://www.nhm.ac.uk/discover/octopuses-keep-surprising-us-here-are-eight-examples-how.html",
+     "title": "Octopuses keep surprising us – here are eight examples how",
+     "publisher": "Natural History Museum, London"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "octopus",
+    "blood",
+    "ocean"
+   ],
+   "difficulty": "easy",
+   "id": "facts__animals__001",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.nhm.ac.uk/discover/octopuses-keep-surprising-us-here-are-eight-examples-how.html",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "An octopus has three hearts. One pumps blood around the body, and the other two pump it past the gills.",
+   "topic": "animals",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://www.nhm.ac.uk/discover/octopuses-keep-surprising-us-here-are-eight-examples-how.html",
+     "title": "Octopuses keep surprising us – here are eight examples how",
+     "publisher": "Natural History Museum, London"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "octopus",
+    "hearts",
+    "ocean"
+   ],
+   "difficulty": "very easy",
+   "id": "facts__animals__002",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.nhm.ac.uk/discover/octopuses-keep-surprising-us-here-are-eight-examples-how.html",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Octopus blood loses its blue colour and turns clear if it runs low on oxygen, for example when the animal dies.",
+   "topic": "animals",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://www.nhm.ac.uk/discover/octopuses-keep-surprising-us-here-are-eight-examples-how.html",
+     "title": "Octopuses keep surprising us – here are eight examples how",
+     "publisher": "Natural History Museum, London"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "octopus",
+    "blood",
+    "chemistry"
+   ],
+   "difficulty": "medium",
+   "id": "facts__animals__003",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.nhm.ac.uk/discover/octopuses-keep-surprising-us-here-are-eight-examples-how.html",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Wombats are the only animals known to produce cube-shaped poop.",
+   "topic": "animals",
+   "note": "Several sources use the phrase 'only known', which means no other cube-pooping animal has been found so far.",
+   "sources": [
+    {
+     "url": "https://www.science.org/content/article/wombats-make-cube-shaped-poop-thanks-unique-intestines",
+     "title": "Wombats make cube-shaped poop, thanks to unique intestines",
+     "publisher": "Science (AAAS)"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "wombat",
+    "australia",
+    "poop"
+   ],
+   "difficulty": "very easy",
+   "id": "facts__animals__004",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.science.org/content/article/wombats-make-cube-shaped-poop-thanks-unique-intestines",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "A wombat makes about 80 to 100 cube-shaped poops in a night. Each cube is almost an inch across.",
+   "topic": "animals",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://www.smithsonianmag.com/smart-news/why-wombats-make-cube-shaped-poos-180970847/",
+     "title": "Why Wombats Make Cube-Shaped Poos",
+     "publisher": "Smithsonian Magazine"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "wombat",
+    "australia",
+    "poop"
+   ],
+   "difficulty": "easy",
+   "id": "facts__animals__005",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.smithsonianmag.com/smart-news/why-wombats-make-cube-shaped-poos-180970847/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Wombat poop gets its cube shape inside the intestines, not at the exit. The intestine is about 10 metres long, roughly ten times the length of the wombat.",
+   "topic": "animals",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://www.rsc.org/news-events/articles/2021/jan/wombat-poo/",
+     "title": "Wombat research that's not to be sniffed at",
+     "publisher": "Royal Society of Chemistry"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "wombat",
+    "digestion",
+    "australia"
+   ],
+   "difficulty": "medium",
+   "id": "facts__animals__006",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.rsc.org/news-events/articles/2021/jan/wombat-poo/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "In 2007, tardigrades became the first animals to survive exposure to outer space. About 3,000 of them spent 10 days in the hard vacuum of low Earth orbit.",
+   "topic": "animals",
+   "note": "The animals were dried out beforehand. Space.com and the original paper say only some of them survived when vacuum was combined with full solar UV.",
+   "sources": [
+    {
+     "url": "https://www.space.com/the-universe/new-tardigrade-species-reveals-clues-to-surviving-lethal-space-radiation",
+     "title": "Teeny tardigrades can survive space and lethal radiation. Scientists may finally know how",
+     "publisher": "Space.com"
+    },
+    {
+     "url": "https://www.sciencedirect.com/science/article/pii/S0960982208008051",
+     "title": "Tardigrades survive exposure to space in low Earth orbit",
+     "publisher": "Current Biology (Cell Press) via ScienceDirect"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "tardigrade",
+    "space",
+    "survival"
+   ],
+   "difficulty": "easy",
+   "id": "facts__animals__007",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.space.com/the-universe/new-tardigrade-species-reveals-clues-to-surviving-lethal-space-radiation",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "After coming back from space, the tardigrades were back to full vigor within about 30 minutes of getting water.",
+   "topic": "animals",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://www.space.com/the-universe/new-tardigrade-species-reveals-clues-to-surviving-lethal-space-radiation",
+     "title": "Teeny tardigrades can survive space and lethal radiation. Scientists may finally know how",
+     "publisher": "Space.com"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "tardigrade",
+    "space",
+    "survival"
+   ],
+   "difficulty": "medium",
+   "id": "facts__animals__008",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.space.com/the-universe/new-tardigrade-species-reveals-clues-to-surviving-lethal-space-radiation",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "A tardigrade can survive being frozen to -272 °C. It can also survive about 500 times the X-ray dose that would kill a human.",
+   "topic": "animals",
+   "note": "These tolerances apply to tardigrades in their dried-out, dormant state.",
+   "sources": [
+    {
+     "url": "https://www.sciencenews.org/article/tardigrades-space-travel-survival-humans",
+     "title": "What makes tardigrades so tough?",
+     "publisher": "Science News"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "tardigrade",
+    "radiation",
+    "cold"
+   ],
+   "difficulty": "medium",
+   "id": "facts__animals__009",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.sciencenews.org/article/tardigrades-space-travel-survival-humans",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Crows can remember a specific human face for several years after a single encounter.",
+   "topic": "animals",
+   "note": "In the University of Washington mask experiments, wild American crows kept recognizing a 'dangerous' face for at least 2.7 years.",
+   "sources": [
+    {
+     "url": "https://www.pnas.org/doi/10.1073/pnas.1206109109",
+     "title": "Brain imaging reveals neuronal circuitry underlying the crow's perception of human faces",
+     "publisher": "Proceedings of the National Academy of Sciences (PNAS)"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "crow",
+    "memory",
+    "birds"
+   ],
+   "difficulty": "easy",
+   "id": "facts__animals__010",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3465369",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Flamingos get their pink color from their food. Many plants make natural red, yellow or orange pigments called carotenoids, which also make carrots orange.",
+   "topic": "animals",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://nationalzoo.si.edu/animals/news/why-are-flamingos-pink-and-other-flamingo-facts",
+     "title": "Why Are Flamingos Pink? And Other Flamingo Facts",
+     "publisher": "Smithsonian's National Zoo"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "flamingo",
+    "color",
+    "diet"
+   ],
+   "difficulty": "very easy",
+   "id": "facts__animals__013",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://nationalzoo.si.edu/animals/news/why-are-flamingos-pink-and-other-flamingo-facts",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Flamingos are born with gray plumage. They turn pink only after they take in carotenoid pigments from their food.",
+   "topic": "animals",
+   "note": "Per the National Zoo, it takes several years for them to acquire the full pink color.",
+   "sources": [
+    {
+     "url": "https://www.smithsonianmag.com/science-nature/for-some-species-you-really-are-what-you-eat-40747423/",
+     "title": "For Some Species, You Really Are What You Eat",
+     "publisher": "Smithsonian Magazine"
+    },
+    {
+     "url": "https://nationalzoo.si.edu/animals/news/why-are-flamingos-pink-and-other-flamingo-facts",
+     "title": "Why Are Flamingos Pink? And Other Flamingo Facts",
+     "publisher": "Smithsonian's National Zoo"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "flamingo",
+    "color",
+    "baby animals"
+   ],
+   "difficulty": "easy",
+   "id": "facts__animals__014",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://nationalzoo.si.edu/animals/news/why-are-flamingos-pink-and-other-flamingo-facts",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "A group of flamingos is called a flamboyance.",
+   "topic": "animals",
+   "note": "The National Zoo also lists stand, colony and pat as collective nouns for flamingos.",
+   "sources": [
+    {
+     "url": "https://nationalzoo.si.edu/animals/news/why-are-flamingos-pink-and-other-flamingo-facts",
+     "title": "Why Are Flamingos Pink? And Other Flamingo Facts",
+     "publisher": "Smithsonian's National Zoo"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "flamingo",
+    "words",
+    "birds"
+   ],
+   "difficulty": "very easy",
+   "id": "facts__animals__015",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://nationalzoo.si.edu/animals/news/why-are-flamingos-pink-and-other-flamingo-facts",
+    "problem": "",
+    "fix": ""
+   }
+  }
+ ]
+}

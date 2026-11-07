@@ -1,0 +1,284 @@
+{
+ "schema": "nimrod.research.v1",
+ "kind": "quotes",
+ "name": "leaders presidents and activists",
+ "generated": "2026-11-06",
+ "items": [
+  {
+   "kind": "quote",
+   "text": "the only thing we have to fear is fear itself",
+   "speaker": "Franklin D. Roosevelt",
+   "work": "First Inaugural Address",
+   "year": "1933",
+   "work_type": "speech",
+   "context": "Roosevelt reassured Americans during the Great Depression on the day he took office.",
+   "sources": [
+    {
+     "url": "https://millercenter.org/the-presidency/presidential-speeches/march-4-1933-first-inaugural-address",
+     "title": "March 4, 1933: First Inaugural Address",
+     "publisher": "Miller Center, University of Virginia"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "courage",
+    "hope",
+    "president",
+    "inaugural"
+   ],
+   "difficulty": "very easy",
+   "id": "quotes__leaders-presidents-and-activists__001",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://millercenter.org/node/1599",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "quote",
+   "text": "Injustice anywhere is a threat to justice everywhere.",
+   "speaker": "Martin Luther King Jr.",
+   "work": "Letter from Birmingham Jail",
+   "year": "1963",
+   "work_type": "letter",
+   "context": "King wrote this from jail to explain why he, as an outsider, was working for justice in Birmingham.",
+   "sources": [
+    {
+     "url": "https://www.africa.upenn.edu/Articles_Gen/Letter_Birmingham.html",
+     "title": "Letter from a Birmingham Jail",
+     "publisher": "University of Pennsylvania, African Studies Center"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "justice",
+    "civil rights",
+    "activist",
+    "wisdom"
+   ],
+   "difficulty": "easy",
+   "id": "quotes__leaders-presidents-and-activists__002",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.africa.upenn.edu/Articles_Gen/Letter_Birmingham.html",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "quote",
+   "text": "With malice toward none, with charity for all",
+   "speaker": "Abraham Lincoln",
+   "work": "Second Inaugural Address",
+   "year": "1865",
+   "work_type": "speech",
+   "context": "Lincoln opened his closing call for reconciliation near the end of the Civil War.",
+   "sources": [
+    {
+     "url": "https://millercenter.org/the-presidency/presidential-speeches/march-4-1865-second-inaugural-address",
+     "title": "March 4, 1865: Second Inaugural Address",
+     "publisher": "Miller Center, University of Virginia"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "kindness",
+    "peace",
+    "president",
+    "inaugural"
+   ],
+   "difficulty": "easy",
+   "id": "quotes__leaders-presidents-and-activists__003",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://millercenter.org/the-presidency/presidential-speeches/march-4-1865-second-inaugural-address",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "quote",
+   "text": "I learned that courage was not the absence of fear, but the triumph over it.",
+   "speaker": "Nelson Mandela",
+   "work": "Long Walk to Freedom",
+   "year": "1994",
+   "work_type": "book",
+   "context": "Mandela reflects on what he learned about bravery from fellow freedom fighters.",
+   "sources": [
+    {
+     "url": "https://www.yaclass.in/p/english-language-cbse/class-10/prose-14338/nelson-mandela-long-walk-to-freedom-14950/re-6e52604e-0d00-4f61-a2bc-da932daf7d05",
+     "title": "Nelson Mandela: Long Walk to Freedom, paragraph 15 (NCERT textbook excerpt)",
+     "publisher": "YaClass / NCERT"
+    },
+    {
+     "url": "https://kwize.com/quote/2641",
+     "title": "Nelson Mandela: I learned that courage was not the absence of fear",
+     "publisher": "Kwize"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "courage",
+    "inspiring",
+    "activist",
+    "president"
+   ],
+   "difficulty": "medium",
+   "id": "quotes__leaders-presidents-and-activists__004",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://edition.cnn.com/2008/WORLD/africa/06/24/mandela.quotes/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "quote",
+   "text": "Ask not what your country can do for you—ask what you can do for your country.",
+   "speaker": "John F. Kennedy",
+   "work": "Inaugural Address",
+   "year": "1961",
+   "work_type": "speech",
+   "context": "Kennedy urged Americans to take part in public service.",
+   "sources": [
+    {
+     "url": "https://www.jfklibrary.org/learn/about-jfk/historic-speeches/inaugural-address",
+     "title": "Inaugural Address",
+     "publisher": "John F. Kennedy Presidential Library and Museum"
+    },
+    {
+     "url": "https://millercenter.org/the-presidency/presidential-speeches/january-20-1961-inaugural-address",
+     "title": "January 20, 1961: Inaugural Address",
+     "publisher": "Miller Center, University of Virginia"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "service",
+    "inspiring",
+    "president",
+    "inaugural"
+   ],
+   "difficulty": "very easy",
+   "id": "quotes__leaders-presidents-and-activists__005",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.jfklibrary.org/learn/about-jfk/historic-speeches/inaugural-address",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "quote",
+   "text": "never give in, never give in, never, never, never, never",
+   "speaker": "Winston Churchill",
+   "work": "Speech at Harrow School",
+   "year": "1941",
+   "work_type": "speech",
+   "context": "Churchill told schoolboys that the lesson of the war's first ten months was perseverance, except where honour and good sense demand otherwise.",
+   "sources": [
+    {
+     "url": "https://www.nationalchurchillmuseum.org/never-give-in-never-never-never.html",
+     "title": "Never Give In, Never, Never, Never, 1941",
+     "publisher": "America's National Churchill Museum"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "perseverance",
+    "courage",
+    "leader",
+    "wisdom"
+   ],
+   "difficulty": "easy",
+   "id": "quotes__leaders-presidents-and-activists__006",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://singjupost.com/winston-churchills-address-to-harrow-school-in-1941-transcript/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "quote",
+   "text": "You must do the thing you think you cannot do.",
+   "speaker": "Eleanor Roosevelt",
+   "work": "You Learn by Living",
+   "year": "1960",
+   "work_type": "book",
+   "context": "She argues that facing your fears builds strength, courage and confidence.",
+   "sources": [
+    {
+     "url": "https://en.wikiquote.org/wiki/Eleanor_Roosevelt",
+     "title": "Eleanor Roosevelt (sourced section: You Learn by Living, 1960, p. 29–30)",
+     "publisher": "Wikiquote"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "courage",
+    "inspiring",
+    "activist",
+    "self-belief"
+   ],
+   "difficulty": "easy",
+   "id": "quotes__leaders-presidents-and-activists__007",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://en.wikiquote.org/wiki/Eleanor_Roosevelt",
+    "problem": "",
+    "fix": ""
+   }
+  }
+ ]
+}

@@ -1,0 +1,1497 @@
+{
+ "schema": "nimrod.research.v1",
+ "kind": "words",
+ "name": "level4_2",
+ "generated": "2026-11-06",
+ "items": [
+  {
+   "kind": "word",
+   "text": "negotiate",
+   "word": "negotiate",
+   "part_of_speech": "verb",
+   "level": 4,
+   "definition": "to talk with someone to reach an agreement",
+   "explanation": "",
+   "forms": {
+    "past": "negotiated",
+    "past participle": "negotiated",
+    "-ing": "negotiating",
+    "third person": "negotiates"
+   },
+   "example": "She negotiated a lower price for the car.",
+   "picture_idea": "two people shaking hands across a table with papers between them",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "work",
+    "communication"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_2__001",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "neighborhood",
+   "word": "neighborhood",
+   "part_of_speech": "noun",
+   "level": 4,
+   "definition": "the area around your home and the people who live there",
+   "explanation": "",
+   "forms": {
+    "plural": "neighborhoods"
+   },
+   "example": "We moved to a quiet neighborhood near the park.",
+   "picture_idea": "a street of houses with neighbors chatting on the sidewalk",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "place",
+    "community"
+   ],
+   "difficulty": "easy",
+   "id": "words__level4_2__002",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "nervous",
+   "word": "nervous",
+   "part_of_speech": "adjective",
+   "level": 4,
+   "definition": "worried or a little afraid about something",
+   "explanation": "",
+   "forms": {
+    "comparative": "more nervous",
+    "superlative": "most nervous"
+   },
+   "example": "He felt nervous before his job interview.",
+   "picture_idea": "a person biting their nails while waiting in a chair",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "feelings"
+   ],
+   "difficulty": "easy",
+   "id": "words__level4_2__003",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "noticeable",
+   "word": "noticeable",
+   "part_of_speech": "adjective",
+   "level": 4,
+   "definition": "easy to see or realize",
+   "explanation": "",
+   "forms": {
+    "comparative": "more noticeable",
+    "superlative": "most noticeable"
+   },
+   "example": "The stain on the shirt was very noticeable.",
+   "picture_idea": "a bright red spot on a white shirt",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "description"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_2__004",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "obvious",
+   "word": "obvious",
+   "part_of_speech": "adjective",
+   "level": 4,
+   "definition": "clear and easy to understand or see",
+   "explanation": "",
+   "forms": {
+    "comparative": "more obvious",
+    "superlative": "most obvious"
+   },
+   "example": "It was obvious that she was tired.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "description",
+    "thinking"
+   ],
+   "difficulty": "easy",
+   "id": "words__level4_2__005",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "occasion",
+   "word": "occasion",
+   "part_of_speech": "noun",
+   "level": 4,
+   "definition": "a particular time when something happens, or a special event",
+   "explanation": "",
+   "forms": {
+    "plural": "occasions"
+   },
+   "example": "A wedding is a good occasion to dress up.",
+   "picture_idea": "a group of people in nice clothes at a celebration",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "events",
+    "time"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_2__006",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "opportunity",
+   "word": "opportunity",
+   "part_of_speech": "noun",
+   "level": 4,
+   "definition": "a chance to do something good or useful",
+   "explanation": "",
+   "forms": {
+    "plural": "opportunities"
+   },
+   "example": "Moving abroad gave him an opportunity to learn a new language.",
+   "picture_idea": "an open door with light shining through",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "life",
+    "work"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_2__007",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "ordinary",
+   "word": "ordinary",
+   "part_of_speech": "adjective",
+   "level": 4,
+   "definition": "normal and not special in any way",
+   "explanation": "",
+   "forms": {
+    "comparative": "more ordinary",
+    "superlative": "most ordinary"
+   },
+   "example": "It was just an ordinary day at work.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "description"
+   ],
+   "difficulty": "easy",
+   "id": "words__level4_2__008",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "organize",
+   "word": "organize",
+   "part_of_speech": "verb",
+   "level": 4,
+   "definition": "to arrange things in a neat or planned way",
+   "explanation": "Also spelled organise in British English.",
+   "forms": {
+    "past": "organized",
+    "past participle": "organized",
+    "-ing": "organizing",
+    "third person": "organizes"
+   },
+   "example": "She organized her desk before starting work.",
+   "picture_idea": "a tidy shelf with labeled boxes and folders",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "work",
+    "home"
+   ],
+   "difficulty": "easy",
+   "id": "words__level4_2__009",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "outcome",
+   "word": "outcome",
+   "part_of_speech": "noun",
+   "level": 4,
+   "definition": "the result of something",
+   "explanation": "",
+   "forms": {
+    "plural": "outcomes"
+   },
+   "example": "We were happy with the outcome of the meeting.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "results"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_2__010",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "overwhelm",
+   "word": "overwhelm",
+   "part_of_speech": "verb",
+   "level": 4,
+   "definition": "to be too much for someone to handle",
+   "explanation": "Often used in the form 'overwhelmed' to describe feeling that there is too much to cope with.",
+   "forms": {
+    "past": "overwhelmed",
+    "past participle": "overwhelmed",
+    "-ing": "overwhelming",
+    "third person": "overwhelms"
+   },
+   "example": "The amount of paperwork began to overwhelm her.",
+   "picture_idea": "a person buried under a huge pile of papers",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "feelings",
+    "stress"
+   ],
+   "difficulty": "hard",
+   "id": "words__level4_2__011",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "patient",
+   "word": "patient",
+   "part_of_speech": "adjective",
+   "level": 4,
+   "definition": "able to wait calmly without getting angry or upset",
+   "explanation": "Patient is also a noun meaning a person getting medical care.",
+   "forms": {
+    "comparative": "more patient",
+    "superlative": "most patient"
+   },
+   "example": "Be patient; the bus will come soon.",
+   "picture_idea": "a person calmly waiting at a bus stop",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "personality",
+    "feelings"
+   ],
+   "difficulty": "easy",
+   "id": "words__level4_2__012",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "persuade",
+   "word": "persuade",
+   "part_of_speech": "verb",
+   "level": 4,
+   "definition": "to get someone to do or believe something by giving good reasons",
+   "explanation": "",
+   "forms": {
+    "past": "persuaded",
+    "past participle": "persuaded",
+    "-ing": "persuading",
+    "third person": "persuades"
+   },
+   "example": "I persuaded my brother to come to the party.",
+   "picture_idea": "one person talking and gesturing to convince a friend",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "communication"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_2__013",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "portion",
+   "word": "portion",
+   "part_of_speech": "noun",
+   "level": 4,
+   "definition": "a part of something, or an amount of food for one person",
+   "explanation": "",
+   "forms": {
+    "plural": "portions"
+   },
+   "example": "The restaurant serves large portions.",
+   "picture_idea": "a plate of food with a serving spoon",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "food",
+    "amount"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_2__014",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "predict",
+   "word": "predict",
+   "part_of_speech": "verb",
+   "level": 4,
+   "definition": "to say what you think will happen in the future",
+   "explanation": "",
+   "forms": {
+    "past": "predicted",
+    "past participle": "predicted",
+    "-ing": "predicting",
+    "third person": "predicts"
+   },
+   "example": "The forecast predicts rain tomorrow.",
+   "picture_idea": "a weather map showing clouds and rain symbols",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "thinking",
+    "future"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_2__015",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "prefer",
+   "word": "prefer",
+   "part_of_speech": "verb",
+   "level": 4,
+   "definition": "to like one thing better than another",
+   "explanation": "",
+   "forms": {
+    "past": "preferred",
+    "past participle": "preferred",
+    "-ing": "preferring",
+    "third person": "prefers"
+   },
+   "example": "I prefer tea to coffee.",
+   "picture_idea": "a person choosing a cup of tea over a cup of coffee",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "choices",
+    "likes"
+   ],
+   "difficulty": "easy",
+   "id": "words__level4_2__016",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "pressure",
+   "word": "pressure",
+   "part_of_speech": "noun",
+   "level": 4,
+   "definition": "a feeling of stress from having to do or achieve something, or a force pressing on something",
+   "explanation": "",
+   "forms": {
+    "plural": "pressures"
+   },
+   "example": "He works well under pressure.",
+   "picture_idea": "a person at a desk with a clock and many tasks around",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "stress",
+    "work"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_2__017",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "reasonable",
+   "word": "reasonable",
+   "part_of_speech": "adjective",
+   "level": 4,
+   "definition": "fair and sensible, or not too expensive",
+   "explanation": "",
+   "forms": {
+    "comparative": "more reasonable",
+    "superlative": "most reasonable"
+   },
+   "example": "The hotel offered a reasonable price.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "description",
+    "money"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_2__018",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "recommend",
+   "word": "recommend",
+   "part_of_speech": "verb",
+   "level": 4,
+   "definition": "to say that something is good or suggest that someone should do it",
+   "explanation": "",
+   "forms": {
+    "past": "recommended",
+    "past participle": "recommended",
+    "-ing": "recommending",
+    "third person": "recommends"
+   },
+   "example": "Can you recommend a good restaurant?",
+   "picture_idea": "a person pointing to a menu while talking to a friend",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "communication",
+    "choices"
+   ],
+   "difficulty": "easy",
+   "id": "words__level4_2__019",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "reliable",
+   "word": "reliable",
+   "part_of_speech": "adjective",
+   "level": 4,
+   "definition": "able to be trusted to do what is expected",
+   "explanation": "",
+   "forms": {
+    "comparative": "more reliable",
+    "superlative": "most reliable"
+   },
+   "example": "My car is old but very reliable.",
+   "picture_idea": "a sturdy car starting easily on a cold morning",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "trust",
+    "description"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_2__020",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "reluctant",
+   "word": "reluctant",
+   "part_of_speech": "adjective",
+   "level": 4,
+   "definition": "not wanting to do something",
+   "explanation": "",
+   "forms": {
+    "comparative": "more reluctant",
+    "superlative": "most reluctant"
+   },
+   "example": "She was reluctant to speak in front of the group.",
+   "picture_idea": "a person hanging back while others walk forward",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "feelings"
+   ],
+   "difficulty": "hard",
+   "id": "words__level4_2__021",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "require",
+   "word": "require",
+   "part_of_speech": "verb",
+   "level": 4,
+   "definition": "to need something or make it necessary",
+   "explanation": "",
+   "forms": {
+    "past": "required",
+    "past participle": "required",
+    "-ing": "requiring",
+    "third person": "requires"
+   },
+   "example": "This job requires a driver's license.",
+   "picture_idea": "a checklist with a driver's license on it",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "work",
+    "rules"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_2__022",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "resist",
+   "word": "resist",
+   "part_of_speech": "verb",
+   "level": 4,
+   "definition": "to stop yourself from doing something you want to do, or to fight against something",
+   "explanation": "",
+   "forms": {
+    "past": "resisted",
+    "past participle": "resisted",
+    "-ing": "resisting",
+    "third person": "resists"
+   },
+   "example": "I couldn't resist eating the last cookie.",
+   "picture_idea": "a person looking at a cookie on a plate with a hand held up",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "self-control"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_2__023",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "responsible",
+   "word": "responsible",
+   "part_of_speech": "adjective",
+   "level": 4,
+   "definition": "in charge of something, or able to be trusted to act sensibly",
+   "explanation": "",
+   "forms": {
+    "comparative": "more responsible",
+    "superlative": "most responsible"
+   },
+   "example": "Who is responsible for locking the office?",
+   "picture_idea": "a person holding a ring of keys at a door",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "work",
+    "personality"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_2__024",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "routine",
+   "word": "routine",
+   "part_of_speech": "noun",
+   "level": 4,
+   "definition": "the usual way you do things every day",
+   "explanation": "",
+   "forms": {
+    "plural": "routines"
+   },
+   "example": "My morning routine includes a short walk.",
+   "picture_idea": "a daily planner showing the same steps each morning",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "daily life"
+   ],
+   "difficulty": "easy",
+   "id": "words__level4_2__025",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "schedule",
+   "word": "schedule",
+   "part_of_speech": "noun",
+   "level": 4,
+   "definition": "a plan that lists when things will happen",
+   "explanation": "Schedule can also be a verb meaning to plan something for a certain time.",
+   "forms": {
+    "plural": "schedules"
+   },
+   "example": "The train schedule changes on weekends.",
+   "picture_idea": "a timetable board at a train station",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "time",
+    "planning"
+   ],
+   "difficulty": "easy",
+   "id": "words__level4_2__026",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "sensible",
+   "word": "sensible",
+   "part_of_speech": "adjective",
+   "level": 4,
+   "definition": "showing good judgment and practical",
+   "explanation": "Sensible means practical and wise; it is different from 'sensitive'.",
+   "forms": {
+    "comparative": "more sensible",
+    "superlative": "most sensible"
+   },
+   "example": "Wearing a coat in winter is sensible.",
+   "picture_idea": "a person in a warm coat and boots in the snow",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "personality",
+    "thinking"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_2__027",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "separate",
+   "word": "separate",
+   "part_of_speech": "verb",
+   "level": 4,
+   "definition": "to divide things or move them apart",
+   "explanation": "Separate is also an adjective meaning not joined or different; it is pronounced differently as an adjective.",
+   "forms": {
+    "past": "separated",
+    "past participle": "separated",
+    "-ing": "separating",
+    "third person": "separates"
+   },
+   "example": "Please separate the white clothes from the colored ones.",
+   "picture_idea": "two piles of laundry, one white and one colored",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "actions",
+    "home"
+   ],
+   "difficulty": "easy",
+   "id": "words__level4_2__028",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "significant",
+   "word": "significant",
+   "part_of_speech": "adjective",
+   "level": 4,
+   "definition": "important or large enough to matter",
+   "explanation": "",
+   "forms": {
+    "comparative": "more significant",
+    "superlative": "most significant"
+   },
+   "example": "There has been a significant change in the weather.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "importance"
+   ],
+   "difficulty": "hard",
+   "id": "words__level4_2__029",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "sincere",
+   "word": "sincere",
+   "part_of_speech": "adjective",
+   "level": 4,
+   "definition": "honest and meaning what you say",
+   "explanation": "",
+   "forms": {
+    "comparative": "more sincere",
+    "superlative": "most sincere"
+   },
+   "example": "He gave her a sincere apology.",
+   "picture_idea": "a person speaking earnestly with a hand on their chest",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "personality",
+    "honesty"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_2__030",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "situation",
+   "word": "situation",
+   "part_of_speech": "noun",
+   "level": 4,
+   "definition": "the set of things that are happening at a certain time",
+   "explanation": "",
+   "forms": {
+    "plural": "situations"
+   },
+   "example": "It was a difficult situation for everyone.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "life"
+   ],
+   "difficulty": "easy",
+   "id": "words__level4_2__031",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "struggle",
+   "word": "struggle",
+   "part_of_speech": "verb",
+   "level": 4,
+   "definition": "to try very hard to do something that is difficult",
+   "explanation": "Struggle can also be a noun meaning a hard effort or fight.",
+   "forms": {
+    "past": "struggled",
+    "past participle": "struggled",
+    "-ing": "struggling",
+    "third person": "struggles"
+   },
+   "example": "He struggled to carry all the bags upstairs.",
+   "picture_idea": "a person climbing stairs with many heavy bags",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "effort",
+    "difficulty"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_2__032",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "suddenly",
+   "word": "suddenly",
+   "part_of_speech": "adverb",
+   "level": 4,
+   "definition": "quickly and without warning",
+   "explanation": "",
+   "forms": {},
+   "example": "The lights suddenly went out.",
+   "picture_idea": "a room that goes from bright to dark",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "time"
+   ],
+   "difficulty": "easy",
+   "id": "words__level4_2__033",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "suggest",
+   "word": "suggest",
+   "part_of_speech": "verb",
+   "level": 4,
+   "definition": "to offer an idea or plan for someone to think about",
+   "explanation": "",
+   "forms": {
+    "past": "suggested",
+    "past participle": "suggested",
+    "-ing": "suggesting",
+    "third person": "suggests"
+   },
+   "example": "I suggest we leave early to avoid traffic.",
+   "picture_idea": "a person raising a hand with a lightbulb idea above them",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "communication"
+   ],
+   "difficulty": "easy",
+   "id": "words__level4_2__034",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "support",
+   "word": "support",
+   "part_of_speech": "verb",
+   "level": 4,
+   "definition": "to help someone or hold something up",
+   "explanation": "Support can also be a noun meaning help or encouragement.",
+   "forms": {
+    "past": "supported",
+    "past participle": "supported",
+    "-ing": "supporting",
+    "third person": "supports"
+   },
+   "example": "Her family supported her decision to study abroad.",
+   "picture_idea": "a person putting an arm around a friend's shoulder",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "help",
+    "relationships"
+   ],
+   "difficulty": "easy",
+   "id": "words__level4_2__035",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "surround",
+   "word": "surround",
+   "part_of_speech": "verb",
+   "level": 4,
+   "definition": "to be or go all around something",
+   "explanation": "",
+   "forms": {
+    "past": "surrounded",
+    "past participle": "surrounded",
+    "-ing": "surrounding",
+    "third person": "surrounds"
+   },
+   "example": "Tall trees surround the small lake.",
+   "picture_idea": "a lake with trees circling it",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "place"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_2__036",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "suspect",
+   "word": "suspect",
+   "part_of_speech": "verb",
+   "level": 4,
+   "definition": "to think something is probably true without being sure",
+   "explanation": "As a verb it is stressed on the second syllable; as a noun, a person thought to have done a crime, it is stressed on the first.",
+   "forms": {
+    "past": "suspected",
+    "past participle": "suspected",
+    "-ing": "suspecting",
+    "third person": "suspects"
+   },
+   "example": "I suspect he forgot about our meeting.",
+   "picture_idea": "a person squinting thoughtfully with a magnifying glass",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "thinking"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_2__037",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "temporary",
+   "word": "temporary",
+   "part_of_speech": "adjective",
+   "level": 4,
+   "definition": "lasting for only a short time",
+   "explanation": "",
+   "forms": {
+    "comparative": "more temporary",
+    "superlative": "most temporary"
+   },
+   "example": "She has a temporary job for the summer.",
+   "picture_idea": "a sign saying 'Temporary Closed' on a shop door",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "time",
+    "work"
+   ],
+   "difficulty": "easy",
+   "id": "words__level4_2__038",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "tend",
+   "word": "tend",
+   "part_of_speech": "verb",
+   "level": 4,
+   "definition": "to usually do something or be likely to do it",
+   "explanation": "Used with 'to', as in 'tend to be'.",
+   "forms": {
+    "past": "tended",
+    "past participle": "tended",
+    "-ing": "tending",
+    "third person": "tends"
+   },
+   "example": "I tend to wake up early on weekends.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "habits"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_2__039",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "therefore",
+   "word": "therefore",
+   "part_of_speech": "adverb",
+   "level": 4,
+   "definition": "for that reason; as a result",
+   "explanation": "",
+   "forms": {},
+   "example": "It was raining; therefore, we stayed inside.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "connectors",
+    "reasoning"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_2__040",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "thorough",
+   "word": "thorough",
+   "part_of_speech": "adjective",
+   "level": 4,
+   "definition": "careful and complete, leaving nothing out",
+   "explanation": "",
+   "forms": {
+    "comparative": "more thorough",
+    "superlative": "most thorough"
+   },
+   "example": "The doctor gave her a thorough check-up.",
+   "picture_idea": "a person carefully checking every item on a list",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "work",
+    "description"
+   ],
+   "difficulty": "hard",
+   "id": "words__level4_2__041",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "tradition",
+   "word": "tradition",
+   "part_of_speech": "noun",
+   "level": 4,
+   "definition": "a custom or belief passed down over many years",
+   "explanation": "",
+   "forms": {
+    "plural": "traditions"
+   },
+   "example": "Eating together on Sunday is a family tradition.",
+   "picture_idea": "a family sitting around a dinner table",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "culture",
+    "family"
+   ],
+   "difficulty": "easy",
+   "id": "words__level4_2__042",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "unusual",
+   "word": "unusual",
+   "part_of_speech": "adjective",
+   "level": 4,
+   "definition": "not normal or common",
+   "explanation": "",
+   "forms": {
+    "comparative": "more unusual",
+    "superlative": "most unusual"
+   },
+   "example": "It's unusual to see snow here in April.",
+   "picture_idea": "snow falling on blooming spring flowers",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "description"
+   ],
+   "difficulty": "easy",
+   "id": "words__level4_2__043",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "urgent",
+   "word": "urgent",
+   "part_of_speech": "adjective",
+   "level": 4,
+   "definition": "needing action right away",
+   "explanation": "",
+   "forms": {
+    "comparative": "more urgent",
+    "superlative": "most urgent"
+   },
+   "example": "She got an urgent message from the hospital.",
+   "picture_idea": "a phone showing a flashing red alert message",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "time",
+    "importance"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_2__044",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "valuable",
+   "word": "valuable",
+   "part_of_speech": "adjective",
+   "level": 4,
+   "definition": "worth a lot of money or very useful",
+   "explanation": "",
+   "forms": {
+    "comparative": "more valuable",
+    "superlative": "most valuable"
+   },
+   "example": "Keep your valuable items in a safe place.",
+   "picture_idea": "a jewelry box with a ring and a gold watch",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "money",
+    "description"
+   ],
+   "difficulty": "easy",
+   "id": "words__level4_2__045",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "various",
+   "word": "various",
+   "part_of_speech": "adjective",
+   "level": 4,
+   "definition": "of several different kinds",
+   "explanation": "",
+   "forms": {},
+   "example": "The store sells various types of bread.",
+   "picture_idea": "a bakery shelf with many different loaves",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "amount",
+    "description"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_2__046",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "vehicle",
+   "word": "vehicle",
+   "part_of_speech": "noun",
+   "level": 4,
+   "definition": "a machine that carries people or things, such as a car or truck",
+   "explanation": "",
+   "forms": {
+    "plural": "vehicles"
+   },
+   "example": "Only electric vehicles are allowed in this area.",
+   "picture_idea": "a car, a truck, and a van on a road",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "transport"
+   ],
+   "difficulty": "easy",
+   "id": "words__level4_2__047",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "whether",
+   "word": "whether",
+   "part_of_speech": "conjunction",
+   "level": 4,
+   "definition": "used to talk about two or more possibilities",
+   "explanation": "Often paired with 'or not'. Not the same as 'weather'.",
+   "forms": {},
+   "example": "I don't know whether she will come.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "connectors",
+    "choices"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_2__048",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "wisdom",
+   "word": "wisdom",
+   "part_of_speech": "noun",
+   "level": 4,
+   "definition": "the ability to make good decisions based on experience and knowledge",
+   "explanation": "",
+   "forms": {},
+   "example": "My grandmother shared her wisdom with us.",
+   "picture_idea": "an elderly person talking to a young person",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "thinking",
+    "personality"
+   ],
+   "difficulty": "medium",
+   "id": "words__level4_2__049",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "worthwhile",
+   "word": "worthwhile",
+   "part_of_speech": "adjective",
+   "level": 4,
+   "definition": "important or good enough to spend time or effort on",
+   "explanation": "",
+   "forms": {
+    "comparative": "more worthwhile",
+    "superlative": "most worthwhile"
+   },
+   "example": "The long drive was worthwhile because the view was beautiful.",
+   "picture_idea": "a scenic mountain view at the end of a road",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "value",
+    "description"
+   ],
+   "difficulty": "hard",
+   "id": "words__level4_2__050",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  }
+ ]
+}

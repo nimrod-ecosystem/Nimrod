@@ -1,0 +1,287 @@
+{
+ "schema": "nimrod.research.v1",
+ "kind": "quotes",
+ "name": "disabled people and disability advocates",
+ "generated": "2026-11-06",
+ "items": [
+  {
+   "kind": "quote",
+   "text": "Although the world is full of suffering, it is full also of the overcoming of it.",
+   "speaker": "Helen Keller",
+   "work": "Optimism",
+   "year": "1903",
+   "work_type": "book",
+   "context": "Keller, who was deaf and blind, wrote this in her essay explaining why she is an optimist.",
+   "sources": [
+    {
+     "url": "https://en.wikiquote.org/wiki/Helen_Keller",
+     "title": "Helen Keller - Wikiquote (sourced section: Optimism, 1903)",
+     "publisher": "Wikiquote"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "optimism",
+    "resilience",
+    "deafblind"
+   ],
+   "difficulty": "medium",
+   "id": "quotes__disabled-people-and-disability-advocates__001",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://en.wikiquote.org/wiki/Helen_Keller",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "quote",
+   "text": "Life is either a daring adventure, or nothing.",
+   "speaker": "Helen Keller",
+   "work": "The Open Door",
+   "year": "1957",
+   "work_type": "book",
+   "context": "Wikiquote lists this as the closing line of a passage on security, and notes it is often shortened or paraphrased.",
+   "sources": [
+    {
+     "url": "https://en.wikiquote.org/wiki/Helen_Keller",
+     "title": "Helen Keller - Wikiquote (sourced section: The Open Door, 1957)",
+     "publisher": "Wikiquote"
+    },
+    {
+     "url": "https://quoteinvestigator.com/2014/11/21/adventure/",
+     "title": "Quote Origin: Life Is Either a Daring Adventure or Nothing",
+     "publisher": "Quote Investigator"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "courage",
+    "adventure",
+    "deafblind"
+   ],
+   "difficulty": "easy",
+   "id": "quotes__disabled-people-and-disability-advocates__002",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.oxfordreference.com/display/10.1093/acref/9780191826719.001.0001/q-oro-ed4-00006224",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "quote",
+   "text": "Look up at the stars and not down at your feet.",
+   "speaker": "Stephen Hawking",
+   "work": "London 2012 Paralympic Games opening ceremony",
+   "year": "2012",
+   "work_type": "speech",
+   "context": "Hawking, who had motor neurone disease, spoke these words through his voice synthesiser to open the Paralympics, then added \"Be curious.\"",
+   "sources": [
+    {
+     "url": "https://www.aljazeera.com/sports/2012/8/30/queen-elizabeth-ii-opens-london-paralympics",
+     "title": "Queen Elizabeth II opens London Paralympics",
+     "publisher": "Al Jazeera"
+    },
+    {
+     "url": "https://www.paralympic.org/feature/no-15-hawking-calls-new-age-enlightenment",
+     "title": "No. 15: Hawking calls for new age of enlightenment",
+     "publisher": "International Paralympic Committee"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "curiosity",
+    "science",
+    "Paralympics"
+   ],
+   "difficulty": "very easy",
+   "id": "quotes__disabled-people-and-disability-advocates__003",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.aljazeera.com/sports/2012/8/30/queen-elizabeth-ii-opens-london-paralympics",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "quote",
+   "text": "Feet, what do I need you for, if I have wings to fly?",
+   "speaker": "Frida Kahlo",
+   "work": "The Diary of Frida Kahlo",
+   "year": "1953",
+   "work_type": "book",
+   "context": "Kahlo, who had childhood polio, wrote this in her diary in 1953 after her right leg was amputated. This is an English translation of her Spanish, and other translations differ slightly in wording.",
+   "sources": [
+    {
+     "url": "https://artsandculture.google.com/story/a-peek-at-frida-kahlo-s-diary-museo-dolores-olmedo/9AWxmDksayhmJA?hl=en",
+     "title": "A Peek at Frida Kahlo's Diary",
+     "publisher": "Google Arts & Culture (Museo Dolores Olmedo)"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "art",
+    "resilience",
+    "imagination"
+   ],
+   "difficulty": "easy",
+   "id": "quotes__disabled-people-and-disability-advocates__004",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://artsandculture.google.com/story/a-peek-at-frida-kahlo-s-diary-museo-dolores-olmedo/9AWxmDksayhmJA?hl=en",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "quote",
+   "text": "the only thing we have to fear is fear itself",
+   "speaker": "Franklin D. Roosevelt",
+   "work": "First Inaugural Address",
+   "year": "1933",
+   "work_type": "speech",
+   "context": "Roosevelt, who used a wheelchair after polio, said this to calm a nation in the Great Depression. This is a fragment of a longer sentence.",
+   "sources": [
+    {
+     "url": "https://poemanalysis.com/franklin-d-roosevelt/nothing-to-fear-but-fear-itself/",
+     "title": "Nothing to fear but fear itself (quotes the speech text)",
+     "publisher": "Poem Analysis"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "courage",
+    "leadership",
+    "polio"
+   ],
+   "difficulty": "very easy",
+   "id": "quotes__disabled-people-and-disability-advocates__005",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://millercenter.org/node/1599",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "quote",
+   "text": "I shall seize fate by the throat; it shall certainly never wholly overcome me.",
+   "speaker": "Ludwig van Beethoven",
+   "work": "Letter to Franz Wegeler, 16 November 1801",
+   "year": "1801",
+   "work_type": "letter",
+   "context": "Beethoven wrote this to a friend while his hearing was failing. This is an English translation of his German.",
+   "sources": [
+    {
+     "url": "https://www.oxfordreference.com/display/10.1093/acref/9780191866692.001.0001/q-oro-ed6-00000842",
+     "title": "Ludwig van Beethoven (Oxford Dictionary of Quotations entry)",
+     "publisher": "Oxford Reference"
+    },
+    {
+     "url": "https://en.wikiquote.org/wiki/Beethoven",
+     "title": "Ludwig van Beethoven - Wikiquote",
+     "publisher": "Wikiquote"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "perseverance",
+    "music",
+    "deafness"
+   ],
+   "difficulty": "medium",
+   "id": "quotes__disabled-people-and-disability-advocates__006",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.oxfordreference.com/display/10.1093/acref/9780191866692.001.0001/q-oro-ed6-00000842",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "quote",
+   "text": "Disability doesn't make you exceptional, but questioning what you think you know about it does.",
+   "speaker": "Stella Young",
+   "work": "I'm not your inspiration, thank you very much (TEDxSydney)",
+   "year": "2014",
+   "work_type": "speech",
+   "context": "The comedian and disability advocate ended her talk on \"inspiration porn\" with this line.",
+   "sources": [
+    {
+     "url": "https://www.ted.com/speakers/stella_young",
+     "title": "Stella Young - TED speaker page for the talk",
+     "publisher": "TED"
+    },
+    {
+     "url": "https://singjupost.com/im-not-your-inspiration-thank-you-very-much-stella-young-transcript/",
+     "title": "I'm not your inspiration, thank you very much: Stella Young (Transcript)",
+     "publisher": "The Singju Post"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "disability rights",
+    "wisdom",
+    "humour"
+   ],
+   "difficulty": "medium",
+   "id": "quotes__disabled-people-and-disability-advocates__007",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://vialogue.wordpress.com/2014/06/09/ted-stella-young-im-not-your-inspiration-thank-you-very-much/",
+    "problem": "",
+    "fix": ""
+   }
+  }
+ ]
+}

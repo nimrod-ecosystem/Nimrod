@@ -1,0 +1,648 @@
+{
+ "schema": "nimrod.research.v1",
+ "kind": "facts",
+ "name": "the human body",
+ "generated": "2026-11-06",
+ "items": [
+  {
+   "kind": "fact",
+   "text": "A newborn baby has around 300 bones, but an adult has only 206. Many of the baby's bones fuse together as it grows.",
+   "topic": "the human body",
+   "note": "Exact newborn counts vary by source (roughly 270–300) because it depends on how far bones have already fused.",
+   "sources": [
+    {
+     "url": "https://healthline.com/health/how-many-bones-does-a-baby-have",
+     "title": "How many bones does a baby have?",
+     "publisher": "Healthline"
+    },
+    {
+     "url": "https://www.popsci.com/story/health/bones-human-skeleton/",
+     "title": "You'll never have as many bones as you did at birth (and other strange skeleton facts)",
+     "publisher": "Popular Science"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "bones",
+    "babies",
+    "skeleton"
+   ],
+   "difficulty": "easy",
+   "id": "facts__the-human-body__001",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.popsci.com/story/health/bones-human-skeleton/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Your hands and feet together hold more than half of the 206 bones in your body. Each one is made of nearly 30 separate bones.",
+   "topic": "the human body",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://www.popsci.com/story/health/bones-human-skeleton/",
+     "title": "You'll never have as many bones as you did at birth (and other strange skeleton facts)",
+     "publisher": "Popular Science"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "bones",
+    "hands",
+    "feet"
+   ],
+   "difficulty": "easy",
+   "id": "facts__the-human-body__002",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.popsci.com/story/health/bones-human-skeleton/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "About 1 in 10 adults has an extra vertebra in the lower spine, and many people never find out.",
+   "topic": "the human body",
+   "note": "The article also says the '206 bones' total is not exactly true for everyone. Some people have extra bones or bones that never fused.",
+   "sources": [
+    {
+     "url": "https://www.popsci.com/story/health/bones-human-skeleton/",
+     "title": "You'll never have as many bones as you did at birth (and other strange skeleton facts)",
+     "publisher": "Popular Science"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "bones",
+    "spine",
+    "variation"
+   ],
+   "difficulty": "hard",
+   "id": "facts__the-human-body__003",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.popsci.com/story/health/bones-human-skeleton/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Your 32 teeth aren't counted in the 206 bones. They're covered in enamel, a material even stronger than bone.",
+   "topic": "the human body",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://www.popsci.com/story/health/bones-human-skeleton/",
+     "title": "You'll never have as many bones as you did at birth (and other strange skeleton facts)",
+     "publisher": "Popular Science"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "teeth",
+    "bones",
+    "enamel"
+   ],
+   "difficulty": "medium",
+   "id": "facts__the-human-body__004",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.popsci.com/story/health/bones-human-skeleton/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Bones are your body's calcium bank. They store about 99 percent of all the calcium in your body.",
+   "topic": "the human body",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://healthline.com/health/how-many-bones-does-a-baby-have",
+     "title": "How many bones does a baby have?",
+     "publisher": "Healthline"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "bones",
+    "calcium",
+    "minerals"
+   ],
+   "difficulty": "medium",
+   "id": "facts__the-human-body__005",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://healthline.com/health/how-many-bones-does-a-baby-have",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Your bone marrow makes about 2 million new red blood cells every second.",
+   "topic": "the human body",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://stanfordbloodcenter.org/red_blood_cells-2/",
+     "title": "The Life of a Red Blood Cell",
+     "publisher": "Stanford Blood Center"
+    },
+    {
+     "url": "https://courses.lumenlearning.com/suny-ap2/chapter/erythrocytes/",
+     "title": "Erythrocytes",
+     "publisher": "Lumen Learning (SUNY Anatomy & Physiology)"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "blood",
+    "bone marrow",
+    "cells"
+   ],
+   "difficulty": "easy",
+   "id": "facts__the-human-body__007",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://stanfordbloodcenter.org/red_blood_cells-2/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Red blood cells throw out their nucleus and DNA as they mature, to make room for oxygen-carrying hemoglobin. That means they can't repair themselves, and each one lasts only about 120 days.",
+   "topic": "the human body",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://stanfordbloodcenter.org/red_blood_cells-2/",
+     "title": "The Life of a Red Blood Cell",
+     "publisher": "Stanford Blood Center"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "blood",
+    "cells",
+    "DNA"
+   ],
+   "difficulty": "hard",
+   "id": "facts__the-human-body__009",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://stanfordbloodcenter.org/red_blood_cells-2/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Your brain is only about 2 percent of your body weight, but it uses about 20 percent of your body's energy at rest.",
+   "topic": "the human body",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://www.brainfacts.org/brain-anatomy-and-function/anatomy/2019/how-much-energy-does-the-brain-use-020119",
+     "title": "How Much Energy Does the Brain Use?",
+     "publisher": "BrainFacts.org (Society for Neuroscience)"
+    },
+    {
+     "url": "https://www.britannica.com/science/The-Human-Brain-Runs-on-Less-Power-than-a-Light-Bulb",
+     "title": "The Human Brain Runs on Less Power than a Light Bulb",
+     "publisher": "Encyclopaedia Britannica"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "brain",
+    "energy"
+   ],
+   "difficulty": "easy",
+   "id": "facts__the-human-body__010",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.brainfacts.org/brain-anatomy-and-function/anatomy/2019/how-much-energy-does-the-brain-use-020119",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Your brain runs on only about 20 watts of power. That's less electricity than many household light bulbs use.",
+   "topic": "the human body",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://www.britannica.com/science/The-Human-Brain-Runs-on-Less-Power-than-a-Light-Bulb",
+     "title": "The Human Brain Runs on Less Power than a Light Bulb",
+     "publisher": "Encyclopaedia Britannica"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "brain",
+    "energy",
+    "electricity"
+   ],
+   "difficulty": "medium",
+   "id": "facts__the-human-body__011",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.britannica.com/science/The-Human-Brain-Runs-on-Less-Power-than-a-Light-Bulb",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Your brain uses roughly as much energy while you sleep as it does during the day.",
+   "topic": "the human body",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://www.brainfacts.org/brain-anatomy-and-function/anatomy/2019/how-much-energy-does-the-brain-use-020119",
+     "title": "How Much Energy Does the Brain Use?",
+     "publisher": "BrainFacts.org (Society for Neuroscience)"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "brain",
+    "sleep",
+    "energy"
+   ],
+   "difficulty": "medium",
+   "id": "facts__the-human-body__012",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.brainfacts.org/brain-anatomy-and-function/anatomy/2019/how-much-energy-does-the-brain-use-020119",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Your brain uses about one-fifth of all the oxygen your body takes in.",
+   "topic": "the human body",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://www.britannica.com/science/The-Human-Brain-Runs-on-Less-Power-than-a-Light-Bulb",
+     "title": "The Human Brain Runs on Less Power than a Light Bulb",
+     "publisher": "Encyclopaedia Britannica"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "brain",
+    "oxygen"
+   ],
+   "difficulty": "medium",
+   "id": "facts__the-human-body__013",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.britannica.com/science/The-Human-Brain-Runs-on-Less-Power-than-a-Light-Bulb",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The brain feels pain from everywhere in your body, but the brain tissue itself has no pain receptors. A headache comes from other nerves, such as those in blood vessels in your head.",
+   "topic": "the human body",
+   "note": "The coverings around the brain (the meninges) and the scalp do have pain receptors.",
+   "sources": [
+    {
+     "url": "https://www.ohsu.edu/brain-institute/understanding-headaches-and-migraines",
+     "title": "Understanding Headaches and Migraines",
+     "publisher": "OHSU Brain Institute"
+    },
+    {
+     "url": "https://www.livescience.com/if-the-brain-doesnt-feel-pain-why-do-headaches-hurt",
+     "title": "If the brain doesn't feel pain, why do headaches hurt?",
+     "publisher": "Live Science"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "brain",
+    "pain",
+    "headache"
+   ],
+   "difficulty": "easy",
+   "id": "facts__the-human-body__014",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.livescience.com/if-the-brain-doesnt-feel-pain-why-do-headaches-hurt",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The clear front of your eye, the cornea, has no blood vessels. It has to stay see-through, so it gets oxygen from the air (dissolved in tears) instead of from blood.",
+   "topic": "the human body",
+   "note": "When your eyes are closed, the cornea gets oxygen from other sources, such as the eyelids' blood vessels. This is also why contact lenses can reduce its oxygen supply.",
+   "sources": [
+    {
+     "url": "https://africacheck.org/fact-checks/meta-programme-fact-checks/yes-eyes-cornea-doesnt-have-blood-and-gets-its-oxygen-air",
+     "title": "Yes, the eye's cornea doesn't have blood and gets its oxygen from the air",
+     "publisher": "Africa Check"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "eyes",
+    "oxygen",
+    "cornea"
+   ],
+   "difficulty": "medium",
+   "id": "facts__the-human-body__015",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://africacheck.org/fact-checks/meta-programme-fact-checks/yes-eyes-cornea-doesnt-have-blood-and-gets-its-oxygen-air",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The smallest bone in your body is the stapes, deep in your middle ear. It measures only a few millimeters.",
+   "topic": "the human body",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://my.clevelandclinic.org/health/body/ossicles",
+     "title": "Ossicles: Function & Anatomy",
+     "publisher": "Cleveland Clinic"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "ear",
+    "bones",
+    "hearing"
+   ],
+   "difficulty": "easy",
+   "id": "facts__the-human-body__016",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://my.clevelandclinic.org/health/body/ossicles",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Your middle ear holds three tiny bones that pass sound vibrations along. Their names are the hammer, the anvil and the stirrup.",
+   "topic": "the human body",
+   "note": "Their Latin names are malleus, incus and stapes.",
+   "sources": [
+    {
+     "url": "https://my.clevelandclinic.org/health/body/ossicles",
+     "title": "Ossicles: Function & Anatomy",
+     "publisher": "Cleveland Clinic"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "ear",
+    "hearing",
+    "bones"
+   ],
+   "difficulty": "very easy",
+   "id": "facts__the-human-body__017",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://my.clevelandclinic.org/health/body/ossicles",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "For decades, scientists said bacteria in your body outnumber your own cells 10 to 1. A 2016 recalculation found a typical adult has about 40 trillion bacteria and 30 trillion human cells, a ratio close to 1:1.",
+   "topic": "the human body",
+   "note": "These are estimates for a 'reference' adult man (70 kg), and real numbers vary from person to person.",
+   "sources": [
+    {
+     "url": "https://www.weizmann-usa.org/news-media/news-releases/germs-humans-and-numbers/",
+     "title": "Germs, Humans, and Numbers",
+     "publisher": "Weizmann Institute of Science"
+    },
+    {
+     "url": "https://pubmed.ncbi.nlm.nih.gov/26824647/",
+     "title": "Are We Really Vastly Outnumbered? Revisiting the Ratio of Bacterial to Host Cells in Humans",
+     "publisher": "PubMed / Cell"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "microbiome",
+    "bacteria",
+    "cells",
+    "myth-busting"
+   ],
+   "difficulty": "medium",
+   "id": "facts__the-human-body__018",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.weizmann-usa.org/news-media/news-releases/germs-humans-and-numbers/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Bacteria and human cells are so evenly matched in your body that, according to the scientists who counted, a single trip to the toilet could tip the balance in favor of human cells.",
+   "topic": "the human body",
+   "note": "This is the researchers' own estimate, written as a lighthearted aside in their paper.",
+   "sources": [
+    {
+     "url": "https://www.sciencenews.org/article/bodys-bacteria-dont-outnumber-human-cells-so-much-after-all",
+     "title": "Body's bacteria don't outnumber human cells so much after all",
+     "publisher": "Science News"
+    },
+    {
+     "url": "https://www.cell.com/cell/fulltext/S0092-8674(16)00053-2",
+     "title": "Are We Really Vastly Outnumbered? Revisiting the Ratio of Bacterial to Host Cells in Humans",
+     "publisher": "Cell"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "microbiome",
+    "gut",
+    "bacteria"
+   ],
+   "difficulty": "easy",
+   "id": "facts__the-human-body__019",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://weizmann-usa.org/news-media/in-the-news/you-re-probably-not-mostly-microbes",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Your brain contains around 100 billion neurons, and it needs a huge amount of energy to keep them working.",
+   "topic": "the human body",
+   "note": "Neuron counts are estimates, and published figures vary somewhat.",
+   "sources": [
+    {
+     "url": "https://qbi.uq.edu.au/brain/discovery-science/how-your-brain-makes-and-uses-energy",
+     "title": "How your brain makes and uses energy",
+     "publisher": "Queensland Brain Institute, University of Queensland"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "brain",
+    "neurons"
+   ],
+   "difficulty": "easy",
+   "id": "facts__the-human-body__020",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://qbi.uq.edu.au/brain/discovery-science/how-your-brain-makes-and-uses-energy",
+    "problem": "",
+    "fix": ""
+   }
+  }
+ ]
+}

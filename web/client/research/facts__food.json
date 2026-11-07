@@ -1,0 +1,462 @@
+{
+ "schema": "nimrod.research.v1",
+ "kind": "facts",
+ "name": "food",
+ "generated": "2026-11-06",
+ "items": [
+  {
+   "kind": "fact",
+   "text": "Honey is so low in moisture and so acidic that spoilage organisms can't survive in it, which is why sealed honey can last for millennia. As long as the lid stays on and no water gets in, it won't go bad.",
+   "topic": "food",
+   "note": "The chemistry is well supported. Some beekeepers dispute the popular King Tut / tomb-honey stories, and honey can spoil if it absorbs water.",
+   "sources": [
+    {
+     "url": "https://www.smithsonianmag.com/science-nature/the-science-behind-honeys-eternal-shelf-life-1218690/",
+     "title": "The Science Behind Honey's Eternal Shelf Life",
+     "publisher": "Smithsonian Magazine"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "honey",
+    "preservation",
+    "science"
+   ],
+   "difficulty": "very easy",
+   "id": "facts__food__001",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.smithsonianmag.com/science-nature/the-science-behind-honeys-eternal-shelf-life-1218690/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Honey isn't indestructible: if its moisture content isn't low enough, it can ferment and spoil.",
+   "topic": "food",
+   "note": "Pairs well with the 'honey never spoils' fact as a twist.",
+   "sources": [
+    {
+     "url": "https://askdruniverse.wsu.edu/2022/10/07/honey-last-forever/",
+     "title": "How does honey last forever?",
+     "publisher": "Washington State University (Ask Dr. Universe)"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "honey",
+    "fermentation",
+    "science"
+   ],
+   "difficulty": "easy",
+   "id": "facts__food__002",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://askdruniverse.wsu.edu/2022/10/07/honey-last-forever/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Botanically, bananas, cucumbers and pumpkins are true berries, but strawberries, raspberries and blackberries are not.",
+   "topic": "food",
+   "note": "This uses the botanical definition of 'berry', not the everyday or cooking one.",
+   "sources": [
+    {
+     "url": "https://www.lsop.colostate.edu/?p=4277",
+     "title": "Everything You Need to Know: Is that a berry?",
+     "publisher": "Colorado State University"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "fruit",
+    "botany",
+    "berries"
+   ],
+   "difficulty": "very easy",
+   "id": "facts__food__003",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.lsop.colostate.edu/2020/04/29/everything-you-need-to-know-is-that-a-berry/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Blueberries, pumpkins, oranges and bananas are all botanical berries. Raspberries are fruit, but they aren't berries, and neither are blackberries.",
+   "topic": "food",
+   "note": "Botanical definition only.",
+   "sources": [
+    {
+     "url": "https://www.lsop.colostate.edu/?p=4277",
+     "title": "Everything You Need to Know: Is that a berry?",
+     "publisher": "Colorado State University"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "fruit",
+    "botany",
+    "berries"
+   ],
+   "difficulty": "easy",
+   "id": "facts__food__005",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.lsop.colostate.edu/2020/04/29/everything-you-need-to-know-is-that-a-berry/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The juicy red part of a strawberry grows from the receptacle, the thick tip of the stem just below the flower, not from the ovary, so it isn't a true berry.",
+   "topic": "food",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://www.lsop.colostate.edu/?p=4277",
+     "title": "Everything You Need to Know: Is that a berry?",
+     "publisher": "Colorado State University"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "fruit",
+    "botany",
+    "strawberry"
+   ],
+   "difficulty": "medium",
+   "id": "facts__food__006",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.lsop.colostate.edu/2020/04/29/everything-you-need-to-know-is-that-a-berry/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "In 1893 the U.S. Supreme Court unanimously ruled that tomatoes are vegetables, not fruits, for purposes of tariffs and customs. At the time, imported vegetables were taxed and fruits weren't.",
+   "topic": "food",
+   "note": "The ruling was about customs law, not botany. Botanically a tomato is a fruit, and the Court acknowledged that.",
+   "sources": [
+    {
+     "url": "https://blogs.kentlaw.iit.edu/iscotus/supreme-court-great-tomato-debate/",
+     "title": "The Supreme Court and the Great Tomato Controversy",
+     "publisher": "Chicago-Kent College of Law (ISCOTUS)"
+    },
+    {
+     "url": "https://en.wikipedia.org/wiki/Nix_v._Hedden",
+     "title": "Nix v. Hedden",
+     "publisher": "Wikipedia"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "tomato",
+    "law",
+    "history"
+   ],
+   "difficulty": "easy",
+   "id": "facts__food__008",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://blogs.kentlaw.iit.edu/iscotus/supreme-court-great-tomato-debate/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "In 2005, a class of New Jersey fourth graders cited the Supreme Court's tomato ruling to help get the tomato named the state vegetable.",
+   "topic": "food",
+   "note": "Wikipedia describes the 2005 push as coming from supporters in the New Jersey legislature citing the case. The two accounts are compatible.",
+   "sources": [
+    {
+     "url": "https://blogs.kentlaw.iit.edu/iscotus/supreme-court-great-tomato-debate/",
+     "title": "The Supreme Court and the Great Tomato Controversy",
+     "publisher": "Chicago-Kent College of Law (ISCOTUS)"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "tomato",
+    "law",
+    "kids"
+   ],
+   "difficulty": "medium",
+   "id": "facts__food__009",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://blogs.kentlaw.iit.edu/iscotus/supreme-court-great-tomato-debate/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "In the 1830s, an Ohio physician named John Cook Bennett sold ketchup as a cure for diarrhea, jaundice and indigestion.",
+   "topic": "food",
+   "note": "Source is a food publication (Tasting Table). The medical claims were not scientifically valid.",
+   "sources": [
+    {
+     "url": "https://www.tastingtable.com/1497845/ketchup-origin-medicine/",
+     "title": "The Fascinating Medicinal Origins Of Ketchup",
+     "publisher": "Tasting Table"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "ketchup",
+    "history",
+    "medicine"
+   ],
+   "difficulty": "easy",
+   "id": "facts__food__010",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.tastingtable.com/1497845/ketchup-origin-medicine/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The first known tomato-based ketchup recipe was published in 1812 by Philadelphia scientist James Mease. Ketchups used to come in walnut, grape, lemon and even cucumber versions.",
+   "topic": "food",
+   "note": "'First known' means the earliest recipe historians have found. The first claim is from Wikipedia, the second from an Indiana State Library blog.",
+   "sources": [
+    {
+     "url": "https://en.wikipedia.org/wiki/James_Mease",
+     "title": "James Mease",
+     "publisher": "Wikipedia"
+    },
+    {
+     "url": "https://blog.newspapers.library.in.gov/tag/progressivism/",
+     "title": "Ketchups of Yesteryear (Tag Archives: Progressivism)",
+     "publisher": "Indiana State Library (Hoosier State Chronicles blog)"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "ketchup",
+    "history",
+    "condiments"
+   ],
+   "difficulty": "medium",
+   "id": "facts__food__012",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://en.wikipedia.org/wiki/James_Mease",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "In Aztec marketplaces, everyday items like a taco were bought with cacao beans, while cotton cloth paid for more valuable goods, according to an Arizona State University archaeologist.",
+   "topic": "food",
+   "note": "The beans, not finished chocolate, were the currency.",
+   "sources": [
+    {
+     "url": "https://news.asu.edu/node/64563",
+     "title": "ASU archaeologist talks Aztec currency with New York Times",
+     "publisher": "Arizona State University"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "chocolate",
+    "cacao",
+    "history",
+    "money"
+   ],
+   "difficulty": "easy",
+   "id": "facts__food__015",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://news.asu.edu/node/64563",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "A 1545 price list from Tlaxcala in Mexico valued a turkey hen at 100 cacao beans, a turkey egg at 3, and a ripe avocado at 1.",
+   "topic": "food",
+   "note": "This is one regional price list from 1545, after the Spanish conquest, so prices varied by place and time.",
+   "sources": [
+    {
+     "url": "https://exhibits.library.cornell.edu/chocolate-food-of-the-gods/feature/when-money-grew-on-trees",
+     "title": "When Money Grew on Trees",
+     "publisher": "Cornell University Library"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "chocolate",
+    "cacao",
+    "history",
+    "money"
+   ],
+   "difficulty": "medium",
+   "id": "facts__food__016",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://exhibits.library.cornell.edu/chocolate-food-of-the-gods/feature/when-money-grew-on-trees",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Fortune cookies aren't a Chinese creation but an American one by way of Japan.",
+   "topic": "food",
+   "note": "Origins are disputed. The Smithsonian Magazine says they are 'most likely' of Japanese origin, and several Californian claimants exist.",
+   "sources": [
+    {
+     "url": "https://americanhistory.si.edu/explore/stories/origins-fortune-cookie",
+     "title": "Origins of a fortune cookie",
+     "publisher": "Smithsonian National Museum of American History"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "fortune cookie",
+    "history",
+    "culture"
+   ],
+   "difficulty": "very easy",
+   "id": "facts__food__017",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://americanhistory.si.edu/explore/stories/origins-fortune-cookie",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "When Japanese Americans were sent to internment camps in World War II, Chinese businessmen began making fortune cookies for Chinese restaurants, which created the link between the cookie and those restaurants.",
+   "topic": "food",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://americanhistory.si.edu/explore/stories/origins-fortune-cookie",
+     "title": "Origins of a fortune cookie",
+     "publisher": "Smithsonian National Museum of American History"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "fortune cookie",
+    "history",
+    "WWII"
+   ],
+   "difficulty": "medium",
+   "id": "facts__food__018",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://americanhistory.si.edu/explore/stories/origins-fortune-cookie",
+    "problem": "",
+    "fix": ""
+   }
+  }
+ ]
+}

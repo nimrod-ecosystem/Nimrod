@@ -1,0 +1,374 @@
+{
+ "schema": "nimrod.research.v1",
+ "kind": "facts",
+ "name": "nature",
+ "generated": "2026-11-06",
+ "items": [
+  {
+   "kind": "fact",
+   "text": "An octopus has blue blood, three hearts and a doughnut-shaped brain.",
+   "topic": "nature",
+   "note": "Octopus blood is blue because the oxygen-carrying protein uses copper instead of the iron in our blood.",
+   "sources": [
+    {
+     "url": "https://www.nhm.ac.uk/discover/octopuses-keep-surprising-us-here-are-eight-examples-how.html",
+     "title": "Octopuses keep surprising us - here are eight examples how",
+     "publisher": "Natural History Museum, London"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "octopus",
+    "ocean",
+    "animals",
+    "anatomy"
+   ],
+   "difficulty": "easy",
+   "id": "facts__nature__001",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.nhm.ac.uk/discover/octopuses-keep-surprising-us-here-are-eight-examples-how.html",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "One octopus heart sends blood around the body, while the other two pump it past the gills to pick up oxygen.",
+   "topic": "nature",
+   "note": "Octopus blood is carried by a copper-based protein, which works well in cold, low-oxygen water.",
+   "sources": [
+    {
+     "url": "https://www.nhm.ac.uk/discover/octopuses-keep-surprising-us-here-are-eight-examples-how.html",
+     "title": "Octopuses keep surprising us - here are eight examples how",
+     "publisher": "Natural History Museum, London"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "octopus",
+    "hearts",
+    "ocean",
+    "animals"
+   ],
+   "difficulty": "easy",
+   "id": "facts__nature__002",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.nhm.ac.uk/discover/octopuses-keep-surprising-us-here-are-eight-examples-how.html",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Wombats poop cubes. Their intestine has rigid and elastic parts that contract at different speeds, which makes the corners.",
+   "topic": "nature",
+   "note": "Scientists suspect the cube shape helps wombats mark territory, because the cubes don't easily roll off rocks and logs. That purpose is a suspicion, not proven.",
+   "sources": [
+    {
+     "url": "https://www.smithsonianmag.com/smart-news/scientists-have-solved-mystery-how-wombats-poop-cubes-180976898/",
+     "title": "Wombats Poop Cubes, and Scientists Finally Got to the Bottom of It",
+     "publisher": "Smithsonian Magazine"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "wombat",
+    "Australia",
+    "animals",
+    "digestion"
+   ],
+   "difficulty": "very easy",
+   "id": "facts__nature__003",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.smithsonianmag.com/smart-news/scientists-have-solved-mystery-how-wombats-poop-cubes-180976898/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Archaeologists digging in ancient Egyptian tombs have often found pots of honey that are thousands of years old and still preserved.",
+   "topic": "nature",
+   "note": "This only works when the honey is sealed. Smithsonian notes that honey left unsealed in a humid place will spoil. Honey keeps because it is acidic, has very little water and contains some hydrogen peroxide.",
+   "sources": [
+    {
+     "url": "https://www.smithsonianmag.com/science-nature/the-science-behind-honeys-eternal-shelf-life-1218690/",
+     "title": "The Science Behind Honey's Eternal Shelf Life",
+     "publisher": "Smithsonian Magazine"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "honey",
+    "bees",
+    "food",
+    "chemistry"
+   ],
+   "difficulty": "easy",
+   "id": "facts__nature__004",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.smithsonianmag.com/science-nature/the-science-behind-honeys-eternal-shelf-life-1218690/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "In 2007 a Russian capsule left tardigrades exposed to the vacuum of space for about ten days in low-Earth orbit. They were still alive afterward.",
+   "topic": "nature",
+   "note": "The tardigrades were dried out when launched. When vacuum was combined with strong solar ultraviolet light, far fewer survived.",
+   "sources": [
+    {
+     "url": "https://www.nasa.gov/podcasts/houston-we-have-a-podcast/water-bears-in-space/",
+     "title": "Water Bears in Space",
+     "publisher": "NASA"
+    },
+    {
+     "url": "https://www.nationalgeographic.com/science/article/tardigrades-become-first-animals-to-survive-vacuum-of-space",
+     "title": "Tardigrades become first animals to survive vacuum of space",
+     "publisher": "National Geographic"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "tardigrade",
+    "water bear",
+    "space",
+    "survival"
+   ],
+   "difficulty": "easy",
+   "id": "facts__nature__005",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.nationalgeographic.com/science/article/tardigrades-become-first-animals-to-survive-vacuum-of-space",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Tardigrades are about the size of a dust mite. They can survive being frozen at -272 °C and a dose of X-rays 500 times what would kill a human.",
+   "topic": "nature",
+   "note": "They survive in a dried-out, dormant state. Scientists are still working out exactly how they do it.",
+   "sources": [
+    {
+     "url": "https://www.sciencenews.org/article/tardigrades-space-travel-survival-humans",
+     "title": "Tardigrades could teach us how to handle the rigors of space travel",
+     "publisher": "Science News"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "tardigrade",
+    "microscopic",
+    "radiation",
+    "extreme"
+   ],
+   "difficulty": "medium",
+   "id": "facts__nature__006",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.sciencenews.org/article/tardigrades-space-travel-survival-humans",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "A forest in Utah called Pando looks like about 47,000 separate trees, but it is one living thing. All the stems are clones joined by a single root system.",
+   "topic": "nature",
+   "note": "Pando's age is disputed. One study estimated 16,000 to 80,000 years, while a later analysis in the same research gave 12,000 to 37,000 years. Individual stems live only a century or two, so the root system is far older than any trunk.",
+   "sources": [
+    {
+     "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11526904/",
+     "title": "Mosaic of somatic mutations in one of Earth's largest organisms, Pando",
+     "publisher": "PubMed Central (U.S. National Library of Medicine)"
+    },
+    {
+     "url": "https://www.livescience.com/planet-earth/plants/pando-the-worlds-largest-organism-may-have-been-growing-nonstop-since-the-1st-humans-left-africa-study-suggests",
+     "title": "Pando, the world's largest organism, may have been growing nonstop since the 1st humans left Africa, study suggests",
+     "publisher": "Live Science"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "Pando",
+    "aspen",
+    "trees",
+    "clone",
+    "Utah"
+   ],
+   "difficulty": "medium",
+   "id": "facts__nature__007",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11526904/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "A mantis shrimp swings its club so fast that the water in front of it vaporises. The resulting bubbles collapse with explosive energy. Mantis shrimps have been known to crack, and sometimes shatter, the glass of aquarium tanks.",
+   "topic": "nature",
+   "note": "This describes 'smasher' mantis shrimps such as the peacock mantis shrimp. Not every mantis shrimp species smashes.",
+   "sources": [
+    {
+     "url": "https://www.nhm.ac.uk/discover/mantis-shrimps.html",
+     "title": "Mantis shrimp: The crustacean that packs a punch",
+     "publisher": "Natural History Museum, London"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "mantis shrimp",
+    "ocean",
+    "physics",
+    "cavitation"
+   ],
+   "difficulty": "medium",
+   "id": "facts__nature__008",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.nhm.ac.uk/discover/mantis-shrimps.html",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Some mantis shrimps strike with a spring-loaded club at roughly 80 km/h, accelerating at up to 10,000 times the force of gravity.",
+   "topic": "nature",
+   "note": "Measured speeds vary between studies and species (roughly 50 mph, or 23 m/s, is often quoted for the peacock mantis shrimp), so treat the figure as approximate.",
+   "sources": [
+    {
+     "url": "https://www.sciencefocus.com/nature/mantis-shrimp",
+     "title": "Meet the mantis shrimp, your new favourite animal",
+     "publisher": "BBC Science Focus Magazine"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "mantis shrimp",
+    "speed",
+    "ocean",
+    "animals"
+   ],
+   "difficulty": "hard",
+   "id": "facts__nature__009",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.sciencefocus.com/nature/mantis-shrimp",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The 'immortal jellyfish', Turritopsis dohrnii, can hit the reset button and revert to an earlier stage of life if it is injured or threatened. Fully grown, it is only about 4.5 mm across, smaller than a pinky nail.",
+   "topic": "nature",
+   "note": "'Immortal' means it can avoid dying of old age. It can still be eaten or die of disease, and most in the wild probably do not reverse their life cycle.",
+   "sources": [
+    {
+     "url": "https://www.amnh.org/explore/news-blogs/immortal-jellyfish",
+     "title": "The \"Immortal\" Jellyfish That Resets When Damaged",
+     "publisher": "American Museum of Natural History"
+    },
+    {
+     "url": "https://www.the-scientist.com/an-immortal-jellyfish-offers-clues-into-biological-aging-73346",
+     "title": "An \"Immortal\" Jellyfish Offers Clues into Biological Aging",
+     "publisher": "The Scientist"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "jellyfish",
+    "immortality",
+    "ocean",
+    "life cycle"
+   ],
+   "difficulty": "easy",
+   "id": "facts__nature__010",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.amnh.org/explore/news-blogs/immortal-jellyfish",
+    "problem": "",
+    "fix": ""
+   }
+  }
+ ]
+}

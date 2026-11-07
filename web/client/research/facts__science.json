@@ -1,0 +1,266 @@
+{
+ "schema": "nimrod.research.v1",
+ "kind": "facts",
+ "name": "science",
+ "generated": "2026-11-06",
+ "items": [
+  {
+   "kind": "fact",
+   "text": "An octopus has three hearts: one pumps blood around the body and two pump it past the gills. Its blood is blue because it carries oxygen with copper instead of iron.",
+   "topic": "science",
+   "note": "The blood is blue when it carries oxygen. According to the source, it turns clear when deoxygenated.",
+   "sources": [
+    {
+     "url": "https://www.nhm.ac.uk/discover/octopuses-keep-surprising-us-here-are-eight-examples-how.html",
+     "title": "Octopuses keep surprising us - here are eight examples how",
+     "publisher": "Natural History Museum, London"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "animals",
+    "ocean",
+    "biology",
+    "octopus"
+   ],
+   "difficulty": "very easy",
+   "id": "facts__science__001",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.nhm.ac.uk/discover/octopuses-keep-surprising-us-here-are-eight-examples-how.html",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Honey is very low in moisture and naturally acidic, so spoilage organisms can't survive in it. As long as the lid stays on and no water is added, it won't go bad.",
+   "topic": "science",
+   "note": "The source says honey left unsealed in a humid place will spoil. Stories about edible honey from Egyptian tombs are repeated widely, but some beekeepers dispute them, so this fact sticks to the chemistry.",
+   "sources": [
+    {
+     "url": "https://www.smithsonianmag.com/science-nature/the-science-behind-honeys-eternal-shelf-life-1218690/",
+     "title": "The Science Behind Honey's Eternal Shelf Life",
+     "publisher": "Smithsonian Magazine"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "food",
+    "chemistry",
+    "bees"
+   ],
+   "difficulty": "easy",
+   "id": "facts__science__002",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.smithsonianmag.com/science-nature/the-science-behind-honeys-eternal-shelf-life-1218690/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Venus takes about 243 Earth days to spin once, but only 225 Earth days to orbit the Sun. So a day on Venus is a little longer than its year.",
+   "topic": "science",
+   "note": "This compares one full spin with one orbit. Sunrise to sunrise on Venus is about 117 Earth days, because the Sun rises twice per Venus year.",
+   "sources": [
+    {
+     "url": "https://spaceplace.nasa.gov/all-about-venus/en/",
+     "title": "All About Venus",
+     "publisher": "NASA Space Place"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "space",
+    "planets",
+    "Venus"
+   ],
+   "difficulty": "easy",
+   "id": "facts__science__003",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://spaceplace.nasa.gov/all-about-venus/en/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Wombats are the only animals known to produce cube-shaped poop. The cubes form inside the intestines, not at the point of exit.",
+   "topic": "science",
+   "note": "'Only known' means no other animal has been found doing this. Researchers think the cubes help wombats mark territory, but that part is still a hypothesis.",
+   "sources": [
+    {
+     "url": "https://www.science.org/content/article/wombats-make-cube-shaped-poop-thanks-unique-intestines",
+     "title": "Wombats make cube-shaped poop, thanks to unique intestines",
+     "publisher": "Science (AAAS)"
+    },
+    {
+     "url": "https://www.rsc.org/news-events/articles/2021/jan/wombat-poo/",
+     "title": "Wombat research that's not to be sniffed at",
+     "publisher": "Royal Society of Chemistry"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "animals",
+    "physics",
+    "Australia",
+    "biology"
+   ],
+   "difficulty": "easy",
+   "id": "facts__science__004",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.science.org/content/article/wombats-make-cube-shaped-poop-thanks-unique-intestines",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Lightning can be as hot as 54,000°F (30,000°C), about five times hotter than the surface of the Sun.",
+   "topic": "science",
+   "note": "This compares lightning with the Sun's visible surface only. The Sun's core and outer atmosphere are far hotter, and the Sun gives off vastly more energy overall.",
+   "sources": [
+    {
+     "url": "https://www.noaa.gov/jetstream/lightning/sound-of-thunder",
+     "title": "The Sound of Thunder",
+     "publisher": "NOAA (National Weather Service JetStream)"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "weather",
+    "lightning",
+    "temperature",
+    "Sun"
+   ],
+   "difficulty": "easy",
+   "id": "facts__science__005",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.noaa.gov/jetstream/lightning/sound-of-thunder",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The earliest fossil evidence of sharks or their ancestors dates to about 450 million years ago. That is long before trees existed.",
+   "topic": "science",
+   "note": "The oldest evidence is a few tiny scales, and some paleontologists dispute whether those scales truly belong to sharks. Shark teeth and fossils from roughly 400 million years ago are still older than the first trees.",
+   "sources": [
+    {
+     "url": "https://www.nhm.ac.uk/discover/shark-evolution-a-450-million-year-timeline.html",
+     "title": "Shark evolution: a 450 million year timeline",
+     "publisher": "Natural History Museum, London"
+    },
+    {
+     "url": "https://www.zmescience.com/feature-post/natural-sciences/animals/animal-facts/sharks-older-trees/",
+     "title": "Mindblowing fact of the day: sharks are older than trees",
+     "publisher": "ZME Science"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "animals",
+    "fossils",
+    "evolution",
+    "sharks"
+   ],
+   "difficulty": "medium",
+   "id": "facts__science__006",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.nhm.ac.uk/discover/shark-evolution-a-450-million-year-timeline.html",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "In 2007, tiny water bears (tardigrades) became the first animals shown to survive exposure to open space. Around 3,000 of them spent 12 days in orbit on ESA's Foton-M3 mission.",
+   "topic": "science",
+   "note": "The tardigrades were dried out during the trip. Most survived the vacuum, but unfiltered solar UV radiation killed most of them, and only a few survived that.",
+   "sources": [
+    {
+     "url": "https://www.esa.int/Science_Exploration/Human_and_Robotic_Exploration/Research/Tiny_animals_survive_exposure_to_space",
+     "title": "Tiny animals survive exposure to space",
+     "publisher": "European Space Agency"
+    },
+    {
+     "url": "https://www.cell.com/current-biology/fulltext/S0960-9822(08)00805-1",
+     "title": "Tardigrades survive exposure to space in low Earth orbit",
+     "publisher": "Current Biology (Cell Press)"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "space",
+    "animals",
+    "tardigrades",
+    "survival"
+   ],
+   "difficulty": "medium",
+   "id": "facts__science__007",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.esa.int/Science_Exploration/Human_and_Robotic_Exploration/Research/Tiny_animals_survive_exposure_to_space",
+    "problem": "",
+    "fix": ""
+   }
+  }
+ ]
+}

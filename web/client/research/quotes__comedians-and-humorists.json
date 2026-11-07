@@ -1,0 +1,156 @@
+{
+ "schema": "nimrod.research.v1",
+ "kind": "quotes",
+ "name": "comedians and humorists",
+ "generated": "2026-11-06",
+ "items": [
+  {
+   "kind": "quote",
+   "text": "Against the assault of Laughter nothing can stand.",
+   "speaker": "Mark Twain",
+   "work": "The Mysterious Stranger (\"The Chronicle of Young Satan\" manuscript)",
+   "year": "1916",
+   "work_type": "book",
+   "context": "The line comes from Twain's \"Chronicle of Young Satan\" Mysterious Stranger manuscripts.",
+   "sources": [
+    {
+     "url": "http://www.twainquotes.com/Laughter.html",
+     "title": "Mark Twain quotations - Laughter",
+     "publisher": "TwainQuotes.com"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "laughter",
+    "wisdom",
+    "humor"
+   ],
+   "difficulty": "medium",
+   "id": "quotes__comedians-and-humorists__001",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "http://www.twainquotes.com/Laughter.html",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "quote",
+   "text": "I can resist everything except temptation.",
+   "speaker": "Oscar Wilde",
+   "work": "Lady Windermere's Fan",
+   "year": "1893",
+   "work_type": "book",
+   "context": "In Act I of the play, Lord Darlington says it in reply to Lady Windermere.",
+   "sources": [
+    {
+     "url": "https://www.gutenberg.org/files/790/790-h/790-h.htm",
+     "title": "Lady Windermere's Fan, by Oscar Wilde",
+     "publisher": "Project Gutenberg"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "wit",
+    "temptation",
+    "play"
+   ],
+   "difficulty": "easy",
+   "id": "quotes__comedians-and-humorists__002",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.gutenberg.org/files/790/790-h/790-h.htm",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "quote",
+   "text": "I did say that 80 percent of success is showing up.",
+   "speaker": "Woody Allen",
+   "work": "Letter to William Safire, The New York Times",
+   "year": "1989",
+   "work_type": "letter",
+   "context": "In 1989 Allen replied to New York Times language columnist William Safire's question with a letter confirming this saying.",
+   "sources": [
+    {
+     "url": "https://quoteinvestigator.com/2013/06/10/showing-up/",
+     "title": "Quote Origin: Showing Up Is 80 Percent of Life",
+     "publisher": "Quote Investigator"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "success",
+    "perseverance",
+    "inspiring"
+   ],
+   "difficulty": "medium",
+   "id": "quotes__comedians-and-humorists__003",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://quoteinvestigator.com/2013/06/10/showing-up/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "quote",
+   "text": "Time is an illusion. Lunchtime doubly so.",
+   "speaker": "Douglas Adams",
+   "work": "The Hitchhiker's Guide to the Galaxy",
+   "year": "1979",
+   "work_type": "book",
+   "context": "The line is credited to Adams's novel The Hitchhiker's Guide to the Galaxy (1979).",
+   "sources": [
+    {
+     "url": "https://kwize.com/quote/13219",
+     "title": "Douglas Adams: \"Time is an illusion. Lunchtime doubly so.\"",
+     "publisher": "Kwize"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "humor",
+    "time",
+    "science fiction"
+   ],
+   "difficulty": "easy",
+   "id": "quotes__comedians-and-humorists__004",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://kwize.com/quote/13219",
+    "problem": "",
+    "fix": ""
+   }
+  }
+ ]
+}

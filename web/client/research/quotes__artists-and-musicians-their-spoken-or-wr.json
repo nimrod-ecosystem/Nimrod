@@ -1,0 +1,124 @@
+{
+ "schema": "nimrod.research.v1",
+ "kind": "quotes",
+ "name": "artists and musicians their spoken or wr",
+ "generated": "2026-11-06",
+ "items": [
+  {
+   "kind": "quote",
+   "text": "We don't make mistakes; we just have happy accidents.",
+   "speaker": "Bob Ross",
+   "work": "The Joy of Painting, Season 20, Episode 3",
+   "year": "",
+   "work_type": "tv",
+   "context": "Ross was an American painter who created and hosted the long-running public television program The Joy of Painting.",
+   "sources": [
+    {
+     "url": "https://en.wikiquote.org/wiki/Bob_Ross",
+     "title": "Bob Ross - Wikiquote",
+     "publisher": "Wikiquote"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "art",
+    "painting",
+    "mistakes",
+    "encouragement",
+    "tv"
+   ],
+   "difficulty": "very easy",
+   "id": "quotes__artists-and-musicians-their-spoken-or-wr__001",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://en.wikiquote.org/wiki/Bob_Ross",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "quote",
+   "text": "Music is an oral art. Until you hear it, it is not music and if it sounds good it is good.",
+   "speaker": "Duke Ellington",
+   "work": "Quoted in \"Ellington Jazz Story On Tonight\", St. Louis Globe-Democrat",
+   "year": "1957",
+   "work_type": "interview",
+   "context": "Ellington said this when asked about the vogue for rock 'n' roll and calypso, and it was published just before A Drum Is a Woman was telecast.",
+   "sources": [
+    {
+     "url": "https://en.wikiquote.org/wiki/Duke_Ellington",
+     "title": "Duke Ellington - Wikiquote",
+     "publisher": "Wikiquote"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "music",
+    "jazz",
+    "listening",
+    "wisdom"
+   ],
+   "difficulty": "easy",
+   "id": "quotes__artists-and-musicians-their-spoken-or-wr__002",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://en.wikiquote.org/wiki/Duke_Ellington",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "quote",
+   "text": "Feet, what do I need you for, if I have wings to fly?",
+   "speaker": "Frida Kahlo",
+   "work": "Her diary",
+   "year": "1953",
+   "work_type": "book",
+   "context": "In 1953, after her right leg was amputated, Kahlo wrote this in her diary, and it is one of her best-known phrases.",
+   "sources": [
+    {
+     "url": "https://artsandculture.google.com/story/9AWxmDksayhmJA?hl=en",
+     "title": "A Peek at Frida Kahlo's Diary",
+     "publisher": "Google Arts & Culture"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "art",
+    "painting",
+    "resilience",
+    "inspiring",
+    "diary"
+   ],
+   "difficulty": "easy",
+   "id": "quotes__artists-and-musicians-their-spoken-or-wr__003",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://artsandculture.google.com/story/9AWxmDksayhmJA?hl=en",
+    "problem": "",
+    "fix": ""
+   }
+  }
+ ]
+}

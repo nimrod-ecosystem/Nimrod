@@ -1,0 +1,704 @@
+{
+ "schema": "nimrod.research.v1",
+ "kind": "facts",
+ "name": "inventions",
+ "generated": "2026-11-06",
+ "items": [
+  {
+   "kind": "fact",
+   "text": "The Popsicle was invented by an 11-year-old. In 1905, Frank Epperson left soda powder, water and a stir stick outside on a freezing night, and it froze solid.",
+   "topic": "inventions",
+   "note": "The overnight-freeze origin story can't be independently verified, and sources disagree on whether Epperson lived in San Francisco or Oakland.",
+   "sources": [
+    {
+     "url": "https://www.npr.org/sections/thesalt/2015/07/22/425294957/how-an-11-year-old-boy-invented-the-popsicle",
+     "title": "How An 11-Year-Old Boy Invented The Popsicle",
+     "publisher": "NPR (The Salt)"
+    },
+    {
+     "url": "https://lemelson.mit.edu/resources/frank-epperson",
+     "title": "Frank Epperson",
+     "publisher": "Lemelson-MIT Program"
+    },
+    {
+     "url": "https://www.kqed.org/bayareabites/98186/how-a-bay-area-11-year-old-invented-the-popsicle",
+     "title": "How A Bay Area 11-Year-Old Invented The Popsicle",
+     "publisher": "KQED"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "food",
+    "kid inventor",
+    "accident"
+   ],
+   "difficulty": "easy",
+   "id": "facts__inventions__001",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.npr.org/sections/thesalt/2015/07/22/425294957/how-an-11-year-old-boy-invented-the-popsicle",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The name \"Popsicle\" came from kids. Frank Epperson's own children called his ice pop a \"Pop's 'Sicle\", and he adopted the name.",
+   "topic": "inventions",
+   "note": "He first called it the \"Epsicle\" (also spelled \"Eppsicle\").",
+   "sources": [
+    {
+     "url": "https://www.npr.org/sections/thesalt/2015/07/22/425294957/how-an-11-year-old-boy-invented-the-popsicle",
+     "title": "How An 11-Year-Old Boy Invented The Popsicle",
+     "publisher": "NPR (The Salt)"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "food",
+    "names",
+    "family"
+   ],
+   "difficulty": "easy",
+   "id": "facts__inventions__002",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.npr.org/sections/thesalt/2015/07/22/425294957/how-an-11-year-old-boy-invented-the-popsicle",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The twin Popsicle, with two sticks, was invented during the Great Depression. It let two kids share one ice pop for a single nickel.",
+   "topic": "inventions",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://www.npr.org/transcripts/4727935",
+     "title": "The Popsicle, Frozen for All Summer Time",
+     "publisher": "NPR"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "food",
+    "history",
+    "Great Depression"
+   ],
+   "difficulty": "medium",
+   "id": "facts__inventions__003",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.npr.org/transcripts/4727935",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The microwave oven began with a melted candy bar. Engineer Percy Spencer stood near a radar part called a magnetron and found the candy in his pocket had melted.",
+   "topic": "inventions",
+   "note": "This story is widely told, but details such as the exact candy bar vary between accounts.",
+   "sources": [
+    {
+     "url": "https://www.invent.org/blog/inventors/microwave",
+     "title": "Who Invented the Microwave?",
+     "publisher": "National Inventors Hall of Fame"
+    },
+    {
+     "url": "https://www.history.com/this-day-in-history/october-8/microwave-oven-first-patent",
+     "title": "First microwave patent filed",
+     "publisher": "HISTORY"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "kitchen",
+    "accident",
+    "radar"
+   ],
+   "difficulty": "easy",
+   "id": "facts__inventions__004",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.history.com/this-day-in-history/october-8/microwave-oven-first-patent",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "After the candy bar melted, Percy Spencer tried popcorn kernels next to the magnetron. They popped all over his lab.",
+   "topic": "inventions",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://spectrum.ieee.org/a-history-of-the-microwave-oven",
+     "title": "A History of the Microwave Oven",
+     "publisher": "IEEE Spectrum"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "kitchen",
+    "experiments",
+    "food"
+   ],
+   "difficulty": "easy",
+   "id": "facts__inventions__005",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://spectrum.ieee.org/a-brief-history-of-the-microwave-oven",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The first commercial microwave oven, sold in 1947, was about 6 feet tall and weighed around 750 pounds. It cost about $5,000.",
+   "topic": "inventions",
+   "note": "Sources give slightly different figures. One university source says about 700 pounds and dates the sale to 1946.",
+   "sources": [
+    {
+     "url": "https://en.wikipedia.org/wiki/Percy_Spencer",
+     "title": "Percy Spencer",
+     "publisher": "Wikipedia"
+    },
+    {
+     "url": "https://teachersinstitute.yale.edu/curriculum/units/2020/2/20.02.04/6",
+     "title": "Yale National Initiative curriculum unit (microwave oven history)",
+     "publisher": "Yale Teachers Institute"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "kitchen",
+    "size",
+    "history"
+   ],
+   "difficulty": "medium",
+   "id": "facts__inventions__006",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://en.wikipedia.org/wiki/Percy_Spencer",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Braille, the reading system used by blind people worldwide, was invented by a teenager. Louis Braille developed his six-dot system in 1824, when he was 15.",
+   "topic": "inventions",
+   "note": "He built on an earlier dot code by Charles Barbier.",
+   "sources": [
+    {
+     "url": "https://www.britannica.com/topic/Braille-writing-system",
+     "title": "Braille",
+     "publisher": "Encyclopaedia Britannica"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "kid inventor",
+    "accessibility",
+    "writing"
+   ],
+   "difficulty": "easy",
+   "id": "facts__inventions__008",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.britannica.com/topic/Braille-writing-system",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Braille's own school didn't officially adopt his system until 1854, two years after he died. His fellow students had been using it for years.",
+   "topic": "inventions",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://www.britannica.com/topic/Braille-writing-system",
+     "title": "Braille",
+     "publisher": "Encyclopaedia Britannica"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "accessibility",
+    "history",
+    "recognition"
+   ],
+   "difficulty": "medium",
+   "id": "facts__inventions__009",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.britannica.com/topic/Braille-writing-system",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Braille's 1837 revision is described as the first binary form of writing developed in the modern era. Each dot is either raised or not, like the 1s and 0s of computer code.",
+   "topic": "inventions",
+   "note": "This is the Wikipedia article's description of the second revision, published in 1837.",
+   "sources": [
+    {
+     "url": "https://en.wikipedia.org/wiki/Braille",
+     "title": "Braille",
+     "publisher": "Wikipedia"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "accessibility",
+    "computers",
+    "code"
+   ],
+   "difficulty": "hard",
+   "id": "facts__inventions__010",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://en.wikipedia.org/wiki/Braille",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The Super Soaker came out of a serious science project. Engineer Lonnie Johnson was working on an environmentally friendly heat pump when he got the idea.",
+   "topic": "inventions",
+   "note": "Johnson had worked for the U.S. Air Force and at NASA's Jet Propulsion Laboratory before inventing the toy.",
+   "sources": [
+    {
+     "url": "https://www.invent.org/inductees/lonnie-johnson",
+     "title": "Lonnie Johnson",
+     "publisher": "National Inventors Hall of Fame"
+    },
+    {
+     "url": "https://en.wikipedia.org/wiki/Super_Soaker",
+     "title": "Super Soaker",
+     "publisher": "Wikipedia"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "toys",
+    "NASA",
+    "accident"
+   ],
+   "difficulty": "easy",
+   "id": "facts__inventions__011",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.invent.org/inductees/lonnie-johnson",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Two years after the Super Soaker was licensed, it brought in over $200 million in sales. It became the best-selling toy in America.",
+   "topic": "inventions",
+   "note": "Lifetime sales have passed $1 billion.",
+   "sources": [
+    {
+     "url": "https://www.invent.org/inductees/lonnie-johnson",
+     "title": "Lonnie Johnson",
+     "publisher": "National Inventors Hall of Fame"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "toys",
+    "business",
+    "summer"
+   ],
+   "difficulty": "medium",
+   "id": "facts__inventions__012",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.invent.org/inductees/lonnie-johnson",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The Super Soaker's inventor also holds patents that are the basis of Hasbro's Nerf N-Strike line of toy blasters.",
+   "topic": "inventions",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://www.invent.org/inductees/lonnie-johnson",
+     "title": "Lonnie Johnson",
+     "publisher": "National Inventors Hall of Fame"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "toys",
+    "patents",
+    "Nerf"
+   ],
+   "difficulty": "hard",
+   "id": "facts__inventions__013",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.invent.org/inductees/lonnie-johnson",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The world's first webcam, built in 1991 at the University of Cambridge, pointed at a coffee pot. It saved workers a wasted trip to an empty machine.",
+   "topic": "inventions",
+   "note": "It first ran only on the building's local network. It reached the public web later.",
+   "sources": [
+    {
+     "url": "https://en.wikipedia.org/wiki/Trojan_Room_coffee_pot",
+     "title": "Trojan Room coffee pot",
+     "publisher": "Wikipedia"
+    },
+    {
+     "url": "https://www.historyofinformation.com/detail.php?id=1507",
+     "title": "The First Webcam Points at the Trojan Room Coffee Pot",
+     "publisher": "Jeremy Norman's HistoryofInformation.com"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "internet",
+    "computers",
+    "coffee"
+   ],
+   "difficulty": "easy",
+   "id": "facts__inventions__014",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://en.wikipedia.org/wiki/Trojan_Room_coffee_pot",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The Cambridge coffee-pot camera was connected to the Internet in November 1993. It was finally switched off on August 22, 2001.",
+   "topic": "inventions",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://www.historyofinformation.com/detail.php?id=1507",
+     "title": "The First Webcam Points at the Trojan Room Coffee Pot",
+     "publisher": "Jeremy Norman's HistoryofInformation.com"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "internet",
+    "webcam",
+    "history"
+   ],
+   "difficulty": "hard",
+   "id": "facts__inventions__015",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.cl.cam.ac.uk/coffee/qsf/timeline.html",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The first computer mouse was a wooden box with two metal wheels and a button. Douglas Engelbart's team built it in 1964.",
+   "topic": "inventions",
+   "note": "Engelbart had the idea; his colleague Bill English built the prototype.",
+   "sources": [
+    {
+     "url": "https://invention.si.edu/invention-stories/mother-all-demos",
+     "title": "The Mother of All Demos",
+     "publisher": "Smithsonian Lemelson Center"
+    },
+    {
+     "url": "https://kids.britannica.com/students/assembly/view/208109",
+     "title": "first computer mouse",
+     "publisher": "Britannica Kids"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "computers",
+    "wood",
+    "prototype"
+   ],
+   "difficulty": "easy",
+   "id": "facts__inventions__016",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.computinghistory.org.uk/det/5403/Douglas-Engelbart-Invents-the-Mouse/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The \"mouse\" got its name because the cord looked like a tail. Engelbart said nobody remembered who first used the word.",
+   "topic": "inventions",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://invention.si.edu/invention-stories/mother-all-demos",
+     "title": "The Mother of All Demos",
+     "publisher": "Smithsonian Lemelson Center"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "computers",
+    "names",
+    "wordplay"
+   ],
+   "difficulty": "easy",
+   "id": "facts__inventions__017",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.computerhistory.org/revolution/input-output/14/350",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The inventor of the computer mouse never earned royalties from it. The patent was held by the research institute where he worked.",
+   "topic": "inventions",
+   "note": "Sources differ on dates. The prototype was built in 1964, and the patent was filed in 1967.",
+   "sources": [
+    {
+     "url": "https://www.smithsonianmag.com/smart-news/the-creator-of-the-computer-mouse-never-received-any-royalties-7133825/",
+     "title": "The Creator of the Computer Mouse Never Received Any Royalties",
+     "publisher": "Smithsonian Magazine"
+    },
+    {
+     "url": "https://www.computinghistory.org.uk/det/5403/Douglas-Engelbart-Invents-the-Mouse/",
+     "title": "Douglas Engelbart invents the mouse",
+     "publisher": "Centre for Computing History"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "computers",
+    "patents",
+    "money"
+   ],
+   "difficulty": "medium",
+   "id": "facts__inventions__018",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.computinghistory.org.uk/det/5403/Douglas-Engelbart-Invents-the-Mouse/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Post-it Notes began with a glue too weak to be useful. Spencer Silver found it in 1968, and many people at 3M doubted it could become a product. Art Fry saw a use in 1974, when he wanted a hymnal bookmark that wouldn't damage the pages.",
+   "topic": "inventions",
+   "note": "Post-it Notes were introduced nationally in the U.S. in 1980.",
+   "sources": [
+    {
+     "url": "https://www.invent.org/blog/trends-stem/who-invented-post-it-notes",
+     "title": "The Invention of the Post-it® Note",
+     "publisher": "National Inventors Hall of Fame"
+    },
+    {
+     "url": "https://www.invent.org/inductees/spencer-silver",
+     "title": "Spencer Silver",
+     "publisher": "National Inventors Hall of Fame"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "office",
+    "accident",
+    "persistence"
+   ],
+   "difficulty": "medium",
+   "id": "facts__inventions__019",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.invent.org/blog/trends-stem/who-invented-post-it-notes",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Bubble Wrap was first meant to be wallpaper. In 1957, two inventors sealed shower curtains together with air trapped inside, but the 3D wall covering didn't catch on.",
+   "topic": "inventions",
+   "note": "The company that makes Bubble Wrap, Sealed Air, confirmed this story to HuffPost. The material was first used to pack IBM computers.",
+   "sources": [
+    {
+     "url": "https://www.huffpost.com/entry/bubble-wrap-wallpaper_n_56a65965e4b0404eb8f24f6d",
+     "title": "Turns Out Bubble Wrap Was Originally Meant To Be Wallpaper",
+     "publisher": "HuffPost"
+    },
+    {
+     "url": "https://en.wikipedia.org/wiki/Bubble_Wrap_(brand)",
+     "title": "Bubble Wrap (brand)",
+     "publisher": "Wikipedia"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "packaging",
+    "failed idea",
+    "accident"
+   ],
+   "difficulty": "easy",
+   "id": "facts__inventions__020",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://en.wikipedia.org/wiki/Bubble_Wrap_(brand)",
+    "problem": "",
+    "fix": ""
+   }
+  }
+ ]
+}

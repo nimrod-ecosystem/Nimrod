@@ -1,0 +1,611 @@
+{
+ "schema": "nimrod.research.v1",
+ "kind": "facts",
+ "name": "the ocean",
+ "generated": "2026-11-06",
+ "items": [
+  {
+   "kind": "fact",
+   "text": "It has been calculated that one ship would need nearly 1,000 years to map the whole ocean at every depth.",
+   "topic": "the ocean",
+   "note": "This is a calculated estimate, not a measurement.",
+   "sources": [
+    {
+     "url": "https://oceanexplorer.noaa.gov/explainers/mapping/",
+     "title": "Seafloor Mapping",
+     "publisher": "NOAA Ocean Exploration"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "mapping",
+    "exploration"
+   ],
+   "difficulty": "easy",
+   "id": "facts__the-ocean__002",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://oceanexplorer.noaa.gov/explainers/mapping/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "People have visually explored less than 0.001 percent of the deep seafloor. That means seen with cameras or in person, not just mapped by sonar.",
+   "topic": "the ocean",
+   "note": "This is an estimate from a 2025 Science Advances study, as reported by Discover Magazine. Estimates of how much is 'explored' depend on the definition used.",
+   "sources": [
+    {
+     "url": "https://www.discovermagazine.com/99-999-percent-of-the-deep-ocean-is-unexplored-its-secrets-are-key-to-47636",
+     "title": "99.999 Percent of the Deep Ocean Is Unexplored — Its Secrets Are Key to Understanding Our Planet",
+     "publisher": "Discover Magazine"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "exploration",
+    "deep sea"
+   ],
+   "difficulty": "medium",
+   "id": "facts__the-ocean__003",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.discovermagazine.com/99-999-percent-of-the-deep-ocean-is-unexplored-its-secrets-are-key-to-47636",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "At least half of Earth's oxygen comes from the ocean, mostly from tiny drifting plankton. But marine life uses up roughly the same amount, so the ocean isn't a net oxygen supplier.",
+   "topic": "the ocean",
+   "note": "Estimates range from 50% to 80%, and NOAA says the exact share is hard to pin down because it constantly changes.",
+   "sources": [
+    {
+     "url": "https://oceanservice.noaa.gov/facts/ocean-oxygen.html",
+     "title": "How much oxygen comes from the ocean?",
+     "publisher": "NOAA National Ocean Service"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "oxygen",
+    "plankton"
+   ],
+   "difficulty": "easy",
+   "id": "facts__the-ocean__004",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://oceanservice.noaa.gov/facts/ocean-oxygen.html",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The longest mountain range on Earth is almost entirely underwater. The mid-ocean ridge winds nearly 65,000 km (40,390 miles) around the globe like the seam on a baseball.",
+   "topic": "the ocean",
+   "note": "The range is a chain of underwater volcanoes, and more than 90 percent of it lies underwater.",
+   "sources": [
+    {
+     "url": "https://oceanexplorer.noaa.gov/ocean-fact/mid-ocean-ridge/",
+     "title": "What is a mid-ocean ridge?",
+     "publisher": "NOAA Ocean Exploration"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "mountains",
+    "volcanoes",
+    "seafloor"
+   ],
+   "difficulty": "easy",
+   "id": "facts__the-ocean__006",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://oceanexplorer.noaa.gov/ocean-fact/mid-ocean-ridge/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Most of Earth's volcanic activity happens along mid-ocean ridges, hidden under the sea.",
+   "topic": "the ocean",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://www.whoi.edu/ocean-learning-hub/ocean-topics/how-the-ocean-works/seafloor-below/mid-ocean-ridges/",
+     "title": "Mid-ocean ridges",
+     "publisher": "Woods Hole Oceanographic Institution"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "volcanoes",
+    "seafloor"
+   ],
+   "difficulty": "medium",
+   "id": "facts__the-ocean__007",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.whoi.edu/ocean-learning-hub/ocean-topics/how-the-ocean-works/seafloor-below/mid-ocean-ridges/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Mount Everest isn't the tallest mountain on Earth. Measured from its base on the Pacific seafloor, Hawaii's Mauna Kea rises more than 10,210 meters (33,500 feet).",
+   "topic": "the ocean",
+   "note": "Everest is the highest mountain above sea level. 'Tallest' depends on where you define a mountain's base, and NOAA calls the answer debatable.",
+   "sources": [
+    {
+     "url": "https://oceanservice.noaa.gov/facts/highestpoint.html",
+     "title": "What is the highest point on Earth as measured from Earth's center?",
+     "publisher": "NOAA National Ocean Service"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "mountains",
+    "Hawaii",
+    "volcanoes"
+   ],
+   "difficulty": "easy",
+   "id": "facts__the-ocean__008",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://oceanservice.noaa.gov/facts/highestpoint.html",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The ocean holds about 96.5 percent of all the water on Earth.",
+   "topic": "the ocean",
+   "note": "Other sources round this to 97%. The USGS also gives 97.2% when it counts inland seas.",
+   "sources": [
+    {
+     "url": "https://www.usgs.gov/water-science-school/science/oceans-and-seas-and-water-cycle",
+     "title": "Oceans and Seas and the Water Cycle",
+     "publisher": "U.S. Geological Survey"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "water",
+    "size"
+   ],
+   "difficulty": "very easy",
+   "id": "facts__the-ocean__009",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.usgs.gov/water-science-school/science/oceans-and-seas-and-water-cycle",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The oceans supply about 90 percent of the water that evaporates into the water cycle. Most of the rain you see started out in the sea.",
+   "topic": "the ocean",
+   "note": "The USGS gives 90% as an estimate. The second sentence is a plain-language reading of that figure.",
+   "sources": [
+    {
+     "url": "https://www.usgs.gov/water-science-school/science/oceans-and-seas-and-water-cycle",
+     "title": "Oceans and Seas and the Water Cycle",
+     "publisher": "U.S. Geological Survey"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "water cycle",
+    "rain"
+   ],
+   "difficulty": "medium",
+   "id": "facts__the-ocean__010",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.usgs.gov/water-science-school/science/oceans-and-seas-and-water-cycle",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "UNESCO estimates that more than 3 million undiscovered shipwrecks lie on the ocean floor.",
+   "topic": "the ocean",
+   "note": "This is an estimate. Other sources add that less than 1% have been explored.",
+   "sources": [
+    {
+     "url": "https://unesdoc.unesco.org/ark:/48223/pf0000152883",
+     "title": "The UNESCO Convention on the Protection of the Underwater Cultural Heritage",
+     "publisher": "UNESCO"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "shipwrecks",
+    "history"
+   ],
+   "difficulty": "easy",
+   "id": "facts__the-ocean__011",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://unesdoc.unesco.org/ark:/48223/pf0000152883",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "About three-quarters of the animals in Monterey Bay's waters, from the surface down to 4,000 meters, can make their own light.",
+   "topic": "the ocean",
+   "note": "The study counted animals seen in MBARI's remotely operated vehicle (ROV) videos in Monterey Bay. MBARI reports that about 76% of animals in the water column and 45% of bottom-dwellers can glow.",
+   "sources": [
+    {
+     "url": "https://www.mbari.org/news/new-study-shows-that-three-quarters-of-deep-sea-animals-make-their-own-light/",
+     "title": "New study shows that three quarters of deep-sea animals make their own light",
+     "publisher": "Monterey Bay Aquarium Research Institute (MBARI)"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "bioluminescence",
+    "deep sea"
+   ],
+   "difficulty": "easy",
+   "id": "facts__the-ocean__013",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.mbari.org/news/new-study-shows-that-three-quarters-of-deep-sea-animals-make-their-own-light/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Because most living space on Earth is in the dark deep ocean, MBARI says bioluminescence is almost certainly the most common form of communication on the planet.",
+   "topic": "the ocean",
+   "note": "MBARI says 'almost certainly', so this is a scientific inference rather than a counted fact.",
+   "sources": [
+    {
+     "url": "https://www.mbari.org/project/bioluminescence-and-fluorescence/",
+     "title": "Bioluminescence and Fluorescence",
+     "publisher": "Monterey Bay Aquarium Research Institute (MBARI)"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "bioluminescence",
+    "communication",
+    "deep sea"
+   ],
+   "difficulty": "medium",
+   "id": "facts__the-ocean__014",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.mbari.org/project/bioluminescence-and-fluorescence/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Red light doesn't reach the deep sea, so red-colored animals there are nearly impossible to see.",
+   "topic": "the ocean",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://www.montereybayaquarium.org/about-us/stories/bioluminescence",
+     "title": "Illuminating the facts of deep-sea bioluminescence",
+     "publisher": "Monterey Bay Aquarium"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "deep sea",
+    "color",
+    "camouflage"
+   ],
+   "difficulty": "medium",
+   "id": "facts__the-ocean__015",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.montereybayaquarium.org/about-us/stories/bioluminescence",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Most glowing sea animals make blue light, but the worm Tomopteris is one of the few that makes yellow light.",
+   "topic": "the ocean",
+   "note": "MBARI researchers discovered the chemical that gives Tomopteris its yellow glow.",
+   "sources": [
+    {
+     "url": "https://annualreport.mbari.org/2019/story/bioluminescence-behavior-biochemistry-and-genomics",
+     "title": "Bioluminescence: Behavior, biochemistry, and genomics — MBARI Annual Report 2019",
+     "publisher": "Monterey Bay Aquarium Research Institute (MBARI)"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "bioluminescence",
+    "worms",
+    "color"
+   ],
+   "difficulty": "hard",
+   "id": "facts__the-ocean__016",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://annualreport.mbari.org/2019/story/bioluminescence-behavior-biochemistry-and-genomics",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "An octopus has three hearts. Two pump blood to the gills and one pumps it around the body.",
+   "topic": "the ocean",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://www.sciencefocus.com/nature/why-does-an-octopus-have-more-than-one-heart",
+     "title": "How many hearts does an octopus have?",
+     "publisher": "BBC Science Focus Magazine"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "octopus",
+    "animals",
+    "anatomy"
+   ],
+   "difficulty": "very easy",
+   "id": "facts__the-ocean__017",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.sciencefocus.com/nature/why-does-an-octopus-have-more-than-one-heart",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "An octopus's blood is blue because it carries oxygen with copper-rich haemocyanin instead of iron-rich haemoglobin. Some tarantulas, scorpions and horseshoe crabs have blue blood too.",
+   "topic": "the ocean",
+   "note": "Haemocyanin is less efficient than haemoglobin at carrying oxygen in warm conditions. It works better in cold water, and the three hearts help make up for this.",
+   "sources": [
+    {
+     "url": "https://www.sciencefocus.com/nature/why-does-an-octopus-have-more-than-one-heart",
+     "title": "How many hearts does an octopus have?",
+     "publisher": "BBC Science Focus Magazine"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "octopus",
+    "blood",
+    "horseshoe crab"
+   ],
+   "difficulty": "easy",
+   "id": "facts__the-ocean__018",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.sciencefocus.com/nature/why-does-an-octopus-have-more-than-one-heart",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Ingredients from the sea turn up in surprising foods, including peanut butter and soymilk.",
+   "topic": "the ocean",
+   "note": "NOAA doesn't name the specific ingredients on this page.",
+   "sources": [
+    {
+     "url": "https://oceanservice.noaa.gov/news/june14/30days.html",
+     "title": "30 Days of the Ocean",
+     "publisher": "NOAA National Ocean Service"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "food",
+    "everyday life"
+   ],
+   "difficulty": "easy",
+   "id": "facts__the-ocean__019",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://oceanservice.noaa.gov/news/june14/30days.html",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "When NOAA mapped the seafloor off the southeastern U.S., it found dense mounds of deep-sea coral in areas people thought were flat and featureless.",
+   "topic": "the ocean",
+   "note": "The coral is Lophelia pertusa, a reef-building deep-sea coral found on the Blake Plateau.",
+   "sources": [
+    {
+     "url": "https://oceanexplorer.noaa.gov/explainers/mapping/",
+     "title": "Seafloor Mapping",
+     "publisher": "NOAA Ocean Exploration"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "coral",
+    "mapping",
+    "deep sea"
+   ],
+   "difficulty": "hard",
+   "id": "facts__the-ocean__020",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://oceanexplorer.noaa.gov/explainers/mapping/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The tallest mountain on Earth is an underwater giant that pokes through the surface as an island. Mauna Kea starts deep under the Pacific, and its base-to-peak height beats Everest's height above sea level.",
+   "topic": "the ocean",
+   "note": "Where the 'base' is counts as debatable among volcanologists. Estimates run from about 10,000 to 10,210 m (NOAA) up to 10,205 m (Guinness).",
+   "sources": [
+    {
+     "url": "https://www.guinnessworldrecords.com/world-records/tallest-mountain",
+     "title": "Tallest mountain",
+     "publisher": "Guinness World Records"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "mountains",
+    "Hawaii",
+    "records"
+   ],
+   "difficulty": "medium",
+   "id": "facts__the-ocean__021",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.guinnessworldrecords.com/world-records/tallest-mountain",
+    "problem": "",
+    "fix": ""
+   }
+  }
+ ]
+}

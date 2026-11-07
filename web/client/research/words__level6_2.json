@@ -1,0 +1,1545 @@
+{
+ "schema": "nimrod.research.v1",
+ "kind": "words",
+ "name": "level6_2",
+ "generated": "2026-11-06",
+ "items": [
+  {
+   "kind": "word",
+   "text": "nebulous",
+   "word": "nebulous",
+   "part_of_speech": "adjective",
+   "level": 6,
+   "definition": "vague, unclear, or not well defined",
+   "explanation": "From Latin nebula, 'cloud'. It is often used for ideas, plans, or memories.",
+   "forms": {
+    "comparative": "more nebulous",
+    "superlative": "most nebulous"
+   },
+   "example": "Her plans for the future were still nebulous, with no dates or details.",
+   "picture_idea": "A hazy cloud of mist hiding the outline of a shape",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "vagueness",
+    "academic",
+    "Latin origin"
+   ],
+   "difficulty": "hard",
+   "id": "words__level6_2__001",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "nefarious",
+   "word": "nefarious",
+   "part_of_speech": "adjective",
+   "level": 6,
+   "definition": "wicked or criminal",
+   "explanation": "",
+   "forms": {
+    "comparative": "more nefarious",
+    "superlative": "most nefarious"
+   },
+   "example": "The detective uncovered the villain's nefarious scheme to steal the museum's treasures.",
+   "picture_idea": "A shadowy figure in a cloak sneaking through a dark room",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "crime",
+    "character",
+    "literary"
+   ],
+   "difficulty": "hard",
+   "id": "words__level6_2__002",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "nonchalant",
+   "word": "nonchalant",
+   "part_of_speech": "adjective",
+   "level": 6,
+   "definition": "calm and relaxed, as if not worried or interested",
+   "explanation": "Comes from French. It can describe someone who seems casual even in an exciting or tense moment.",
+   "forms": {
+    "comparative": "more nonchalant",
+    "superlative": "most nonchalant"
+   },
+   "example": "He gave a nonchalant shrug when they announced he had won.",
+   "picture_idea": "A person shrugging with a relaxed smile",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "personality",
+    "French origin",
+    "attitude"
+   ],
+   "difficulty": "medium",
+   "id": "words__level6_2__003",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "nuance",
+   "word": "nuance",
+   "part_of_speech": "noun",
+   "level": 6,
+   "definition": "a small, subtle difference in meaning, tone, or color",
+   "explanation": "",
+   "forms": {
+    "plural": "nuances"
+   },
+   "example": "A good translator must understand the nuances of both languages.",
+   "picture_idea": "Two nearly identical shades of blue side by side",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "language",
+    "subtlety",
+    "academic"
+   ],
+   "difficulty": "medium",
+   "id": "words__level6_2__004",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "obfuscate",
+   "word": "obfuscate",
+   "part_of_speech": "verb",
+   "level": 6,
+   "definition": "to make something unclear or hard to understand",
+   "explanation": "Often used when someone confuses a topic on purpose, such as with complicated wording.",
+   "forms": {
+    "past": "obfuscated",
+    "past participle": "obfuscated",
+    "-ing": "obfuscating",
+    "third person": "obfuscates"
+   },
+   "example": "The company tried to obfuscate the problem with long, technical reports.",
+   "picture_idea": "A person hiding a page of text behind swirling smoke",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "communication",
+    "formal",
+    "clarity"
+   ],
+   "difficulty": "hard",
+   "id": "words__level6_2__005",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "ostentatious",
+   "word": "ostentatious",
+   "part_of_speech": "adjective",
+   "level": 6,
+   "definition": "showy in a way meant to impress others",
+   "explanation": "",
+   "forms": {
+    "comparative": "more ostentatious",
+    "superlative": "most ostentatious"
+   },
+   "example": "The millionaire's ostentatious mansion had gold fountains on the lawn.",
+   "picture_idea": "A huge mansion with gold fountains and a fancy car",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "wealth",
+    "behavior",
+    "criticism"
+   ],
+   "difficulty": "hard",
+   "id": "words__level6_2__006",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "ominous",
+   "word": "ominous",
+   "part_of_speech": "adjective",
+   "level": 6,
+   "definition": "suggesting that something bad is about to happen",
+   "explanation": "",
+   "forms": {
+    "comparative": "more ominous",
+    "superlative": "most ominous"
+   },
+   "example": "Dark, ominous clouds gathered above the picnic.",
+   "picture_idea": "Black storm clouds rolling over an empty field",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "mood",
+    "weather",
+    "warning"
+   ],
+   "difficulty": "medium",
+   "id": "words__level6_2__007",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "paradigm",
+   "word": "paradigm",
+   "part_of_speech": "noun",
+   "level": 6,
+   "definition": "a typical model or pattern; a way of thinking about something",
+   "explanation": "In science, a 'paradigm shift' is a big change in how people understand a subject.",
+   "forms": {
+    "plural": "paradigms"
+   },
+   "example": "The discovery of germs caused a paradigm shift in medicine.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "science",
+    "academic",
+    "ideas"
+   ],
+   "difficulty": "hard",
+   "id": "words__level6_2__008",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "pernicious",
+   "word": "pernicious",
+   "part_of_speech": "adjective",
+   "level": 6,
+   "definition": "harmful in a slow, hidden way",
+   "explanation": "",
+   "forms": {
+    "comparative": "more pernicious",
+    "superlative": "most pernicious"
+   },
+   "example": "Rumors can have a pernicious effect on a friendship.",
+   "picture_idea": "A weed slowly strangling a healthy plant",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "harm",
+    "formal",
+    "academic"
+   ],
+   "difficulty": "hard",
+   "id": "words__level6_2__009",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "petrichor",
+   "word": "petrichor",
+   "part_of_speech": "noun",
+   "level": 6,
+   "definition": "the pleasant smell of rain falling on dry ground",
+   "explanation": "The word was coined in 1964 by two Australian scientists, from Greek petra 'stone' and ichor, the fluid in the veins of the gods.",
+   "forms": {},
+   "example": "We opened the windows to enjoy the petrichor after the first storm of summer.",
+   "picture_idea": "Raindrops hitting dry, dusty earth",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "weather",
+    "smell",
+    "science",
+    "Greek origin"
+   ],
+   "difficulty": "hard",
+   "id": "words__level6_2__010",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "plethora",
+   "word": "plethora",
+   "part_of_speech": "noun",
+   "level": 6,
+   "definition": "a large amount, more than is needed",
+   "explanation": "Usually used in the phrase 'a plethora of'.",
+   "forms": {},
+   "example": "The menu offered a plethora of choices, so it took her ages to decide.",
+   "picture_idea": "A table overflowing with many different dishes",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "quantity",
+    "Greek origin",
+    "formal"
+   ],
+   "difficulty": "medium",
+   "id": "words__level6_2__011",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "panacea",
+   "word": "panacea",
+   "part_of_speech": "noun",
+   "level": 6,
+   "definition": "a cure or solution that is said to fix all problems",
+   "explanation": "Often used in negative sentences, such as 'there is no panacea'.",
+   "forms": {
+    "plural": "panaceas"
+   },
+   "example": "Technology is not a panacea for every problem in schools.",
+   "picture_idea": "A magic bottle labeled 'cures everything'",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "medicine",
+    "solutions",
+    "Greek origin"
+   ],
+   "difficulty": "hard",
+   "id": "words__level6_2__012",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "pragmatic",
+   "word": "pragmatic",
+   "part_of_speech": "adjective",
+   "level": 6,
+   "definition": "dealing with things in a practical, sensible way",
+   "explanation": "",
+   "forms": {
+    "comparative": "more pragmatic",
+    "superlative": "most pragmatic"
+   },
+   "example": "Taking a pragmatic approach, she chose the cheaper option that still worked well.",
+   "picture_idea": "A person comparing two tools and choosing the useful one",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "thinking",
+    "practical",
+    "academic"
+   ],
+   "difficulty": "medium",
+   "id": "words__level6_2__013",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "quixotic",
+   "word": "quixotic",
+   "part_of_speech": "adjective",
+   "level": 6,
+   "definition": "idealistic in a way that is not realistic or practical",
+   "explanation": "From Don Quixote, the hero of a Spanish novel who fought windmills thinking they were giants.",
+   "forms": {
+    "comparative": "more quixotic",
+    "superlative": "most quixotic"
+   },
+   "example": "His quixotic plan to plant a forest in the desert amazed everyone.",
+   "picture_idea": "A knight on a horse charging at a windmill",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "literature",
+    "idealism",
+    "Spanish origin"
+   ],
+   "difficulty": "hard",
+   "id": "words__level6_2__014",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "quandary",
+   "word": "quandary",
+   "part_of_speech": "noun",
+   "level": 6,
+   "definition": "a state of not knowing what to do in a difficult situation",
+   "explanation": "",
+   "forms": {
+    "plural": "quandaries"
+   },
+   "example": "She was in a quandary over which invitation to accept.",
+   "picture_idea": "A person standing at a fork in the road scratching their head",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "decisions",
+    "dilemma",
+    "formal"
+   ],
+   "difficulty": "medium",
+   "id": "words__level6_2__015",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "recalcitrant",
+   "word": "recalcitrant",
+   "part_of_speech": "adjective",
+   "level": 6,
+   "definition": "stubbornly refusing to obey or cooperate",
+   "explanation": "",
+   "forms": {
+    "comparative": "more recalcitrant",
+    "superlative": "most recalcitrant"
+   },
+   "example": "The recalcitrant mule would not move, no matter how hard we pulled.",
+   "picture_idea": "A mule planting its feet while a person tugs the rope",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "stubbornness",
+    "behavior",
+    "formal"
+   ],
+   "difficulty": "hard",
+   "id": "words__level6_2__016",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "reticent",
+   "word": "reticent",
+   "part_of_speech": "adjective",
+   "level": 6,
+   "definition": "unwilling to share thoughts or feelings; reserved",
+   "explanation": "",
+   "forms": {
+    "comparative": "more reticent",
+    "superlative": "most reticent"
+   },
+   "example": "He was reticent about his past and rarely spoke of his childhood.",
+   "picture_idea": "A person with a finger to their lips",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "personality",
+    "communication",
+    "formal"
+   ],
+   "difficulty": "hard",
+   "id": "words__level6_2__017",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "resilient",
+   "word": "resilient",
+   "part_of_speech": "adjective",
+   "level": 6,
+   "definition": "able to recover quickly from difficulty or to spring back into shape",
+   "explanation": "",
+   "forms": {
+    "comparative": "more resilient",
+    "superlative": "most resilient"
+   },
+   "example": "Children are often more resilient than adults expect.",
+   "picture_idea": "A bent branch springing back upright",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "strength",
+    "psychology",
+    "science"
+   ],
+   "difficulty": "medium",
+   "id": "words__level6_2__018",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "serendipity",
+   "word": "serendipity",
+   "part_of_speech": "noun",
+   "level": 6,
+   "definition": "a happy accident; finding something good by chance",
+   "explanation": "Coined by Horace Walpole in 1754 from a fairy tale, 'The Three Princes of Serendip'.",
+   "forms": {},
+   "example": "It was pure serendipity that we met on the same train.",
+   "picture_idea": "A person happily finding a coin on the pavement",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "luck",
+    "coined word",
+    "favorite"
+   ],
+   "difficulty": "medium",
+   "id": "words__level6_2__019",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "sycophant",
+   "word": "sycophant",
+   "part_of_speech": "noun",
+   "level": 6,
+   "definition": "a person who flatters important people to gain favor",
+   "explanation": "",
+   "forms": {
+    "plural": "sycophants"
+   },
+   "example": "The king was surrounded by sycophants who agreed with everything he said.",
+   "picture_idea": "A group of people bowing and clapping around a king",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "people",
+    "flattery",
+    "Greek origin"
+   ],
+   "difficulty": "hard",
+   "id": "words__level6_2__020",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "superfluous",
+   "word": "superfluous",
+   "part_of_speech": "adjective",
+   "level": 6,
+   "definition": "more than is needed; unnecessary",
+   "explanation": "",
+   "forms": {
+    "comparative": "more superfluous",
+    "superlative": "most superfluous"
+   },
+   "example": "The editor cut every superfluous word from the article.",
+   "picture_idea": "A red pen crossing out extra words on a page",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "quantity",
+    "writing",
+    "Latin origin"
+   ],
+   "difficulty": "medium",
+   "id": "words__level6_2__021",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "stoic",
+   "word": "stoic",
+   "part_of_speech": "adjective",
+   "level": 6,
+   "definition": "calm and showing no emotion when facing pain or trouble",
+   "explanation": "From Stoicism, an ancient Greek philosophy that taught people to stay calm and accept what they cannot change.",
+   "forms": {
+    "comparative": "more stoic",
+    "superlative": "most stoic"
+   },
+   "example": "She remained stoic as the doctor explained the long recovery.",
+   "picture_idea": "A calm person standing in heavy rain without flinching",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "philosophy",
+    "emotion",
+    "Greek origin"
+   ],
+   "difficulty": "medium",
+   "id": "words__level6_2__022",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "spurious",
+   "word": "spurious",
+   "part_of_speech": "adjective",
+   "level": 6,
+   "definition": "false or fake, though made to look real",
+   "explanation": "Often used for claims, arguments, or evidence that sound right but are not.",
+   "forms": {
+    "comparative": "more spurious",
+    "superlative": "most spurious"
+   },
+   "example": "The scientist rejected the spurious claim because it had no evidence.",
+   "picture_idea": "A magnifying glass revealing a fake signature",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "truth",
+    "academic",
+    "logic"
+   ],
+   "difficulty": "hard",
+   "id": "words__level6_2__023",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "sporadic",
+   "word": "sporadic",
+   "part_of_speech": "adjective",
+   "level": 6,
+   "definition": "happening now and then, not regularly",
+   "explanation": "",
+   "forms": {
+    "comparative": "more sporadic",
+    "superlative": "most sporadic"
+   },
+   "example": "Sporadic showers fell throughout the afternoon.",
+   "picture_idea": "A few scattered raindrops falling from a mostly clear sky",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "frequency",
+    "science",
+    "Greek origin"
+   ],
+   "difficulty": "medium",
+   "id": "words__level6_2__024",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "tenacious",
+   "word": "tenacious",
+   "part_of_speech": "adjective",
+   "level": 6,
+   "definition": "holding on firmly; refusing to give up",
+   "explanation": "",
+   "forms": {
+    "comparative": "more tenacious",
+    "superlative": "most tenacious"
+   },
+   "example": "The tenacious climber kept going despite the freezing wind.",
+   "picture_idea": "A climber gripping a cliff face with determination",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "determination",
+    "character",
+    "Latin origin"
+   ],
+   "difficulty": "medium",
+   "id": "words__level6_2__025",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "taciturn",
+   "word": "taciturn",
+   "part_of_speech": "adjective",
+   "level": 6,
+   "definition": "saying very little; quiet by nature",
+   "explanation": "",
+   "forms": {
+    "comparative": "more taciturn",
+    "superlative": "most taciturn"
+   },
+   "example": "The old fisherman was taciturn and spoke only when necessary.",
+   "picture_idea": "An old man sitting silently by a boat",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "personality",
+    "communication",
+    "Latin origin"
+   ],
+   "difficulty": "hard",
+   "id": "words__level6_2__026",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "trepidation",
+   "word": "trepidation",
+   "part_of_speech": "noun",
+   "level": 6,
+   "definition": "a feeling of fear or worry about something that may happen",
+   "explanation": "",
+   "forms": {},
+   "example": "She opened the exam paper with trepidation.",
+   "picture_idea": "A nervous person peeking through half-closed fingers at a door",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "emotion",
+    "fear",
+    "formal"
+   ],
+   "difficulty": "hard",
+   "id": "words__level6_2__027",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "tangible",
+   "word": "tangible",
+   "part_of_speech": "adjective",
+   "level": 6,
+   "definition": "able to be touched or clearly seen to be real",
+   "explanation": "The opposite is 'intangible'. Tangible results are results you can clearly see.",
+   "forms": {
+    "comparative": "more tangible",
+    "superlative": "most tangible"
+   },
+   "example": "The project produced tangible results: three new classrooms.",
+   "picture_idea": "A hand touching a solid object",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "real",
+    "business",
+    "Latin origin"
+   ],
+   "difficulty": "medium",
+   "id": "words__level6_2__028",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "ubiquitous",
+   "word": "ubiquitous",
+   "part_of_speech": "adjective",
+   "level": 6,
+   "definition": "seeming to be everywhere at once",
+   "explanation": "From Latin ubique, 'everywhere'.",
+   "forms": {
+    "comparative": "more ubiquitous",
+    "superlative": "most ubiquitous"
+   },
+   "example": "Smartphones have become ubiquitous in modern life.",
+   "picture_idea": "A crowd of people all looking at phones",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "presence",
+    "academic",
+    "Latin origin"
+   ],
+   "difficulty": "hard",
+   "id": "words__level6_2__029",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "unequivocal",
+   "word": "unequivocal",
+   "part_of_speech": "adjective",
+   "level": 6,
+   "definition": "clear and firm, with no doubt",
+   "explanation": "",
+   "forms": {
+    "comparative": "more unequivocal",
+    "superlative": "most unequivocal"
+   },
+   "example": "The judge gave an unequivocal answer: the rule applied to everyone.",
+   "picture_idea": "A person firmly pointing and nodding",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "certainty",
+    "formal",
+    "law"
+   ],
+   "difficulty": "hard",
+   "id": "words__level6_2__030",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "usurp",
+   "word": "usurp",
+   "part_of_speech": "verb",
+   "level": 6,
+   "definition": "to take power or a position by force or without the right",
+   "explanation": "",
+   "forms": {
+    "past": "usurped",
+    "past participle": "usurped",
+    "-ing": "usurping",
+    "third person": "usurps"
+   },
+   "example": "The prince's uncle tried to usurp the throne.",
+   "picture_idea": "A man snatching a crown from a king's head",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "power",
+    "history",
+    "politics"
+   ],
+   "difficulty": "hard",
+   "id": "words__level6_2__031",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "venerate",
+   "word": "venerate",
+   "part_of_speech": "verb",
+   "level": 6,
+   "definition": "to treat with great respect and honor",
+   "explanation": "",
+   "forms": {
+    "past": "venerated",
+    "past participle": "venerated",
+    "-ing": "venerating",
+    "third person": "venerates"
+   },
+   "example": "Many cultures venerate their elders for their wisdom.",
+   "picture_idea": "Young people bowing respectfully to an elderly person",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "respect",
+    "religion",
+    "formal"
+   ],
+   "difficulty": "hard",
+   "id": "words__level6_2__032",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "vicarious",
+   "word": "vicarious",
+   "part_of_speech": "adjective",
+   "level": 6,
+   "definition": "felt or experienced through someone else rather than yourself",
+   "explanation": "",
+   "forms": {
+    "comparative": "more vicarious",
+    "superlative": "most vicarious"
+   },
+   "example": "He got vicarious pleasure from watching his sister's travel videos.",
+   "picture_idea": "A person at home smiling while watching a friend's trip on a screen",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "experience",
+    "psychology",
+    "Latin origin"
+   ],
+   "difficulty": "hard",
+   "id": "words__level6_2__033",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "vestige",
+   "word": "vestige",
+   "part_of_speech": "noun",
+   "level": 6,
+   "definition": "a small trace of something that once existed",
+   "explanation": "",
+   "forms": {
+    "plural": "vestiges"
+   },
+   "example": "Only a few vestiges of the ancient wall remain.",
+   "picture_idea": "A crumbling stone fragment of an old wall in a field",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "history",
+    "remains",
+    "Latin origin"
+   ],
+   "difficulty": "hard",
+   "id": "words__level6_2__034",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "volatile",
+   "word": "volatile",
+   "part_of_speech": "adjective",
+   "level": 6,
+   "definition": "likely to change suddenly or become violent; evaporating quickly",
+   "explanation": "Used for tempers, markets, and situations, and in chemistry for liquids that turn to gas easily.",
+   "forms": {
+    "comparative": "more volatile",
+    "superlative": "most volatile"
+   },
+   "example": "The volatile situation could turn violent at any moment.",
+   "picture_idea": "A bubbling flask with vapor rising quickly",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "science",
+    "change",
+    "economics"
+   ],
+   "difficulty": "hard",
+   "id": "words__level6_2__035",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "vindicate",
+   "word": "vindicate",
+   "part_of_speech": "verb",
+   "level": 6,
+   "definition": "to clear someone of blame or show that they were right",
+   "explanation": "",
+   "forms": {
+    "past": "vindicated",
+    "past participle": "vindicated",
+    "-ing": "vindicating",
+    "third person": "vindicates"
+   },
+   "example": "The new evidence vindicated the accused man.",
+   "picture_idea": "A person being declared innocent in a courtroom",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_words": null,
+   "ai_written": true,
+   "tags": [
+    "law",
+    "justice",
+    "formal"
+   ],
+   "difficulty": "hard",
+   "id": "words__level6_2__036",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "wane",
+   "word": "wane",
+   "part_of_speech": "verb",
+   "level": 6,
+   "definition": "to gradually become smaller, weaker, or less",
+   "explanation": "Used for the moon when it shows less of its face each night. The opposite is 'wax'.",
+   "forms": {
+    "past": "waned",
+    "past participle": "waned",
+    "-ing": "waning",
+    "third person": "wanes"
+   },
+   "example": "Her interest in the hobby began to wane after a few months.",
+   "picture_idea": "The moon shrinking from full to a thin crescent",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "moon",
+    "decrease",
+    "nature"
+   ],
+   "difficulty": "medium",
+   "id": "words__level6_2__037",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "whimsical",
+   "word": "whimsical",
+   "part_of_speech": "adjective",
+   "level": 6,
+   "definition": "playful and unusual in a charming way",
+   "explanation": "",
+   "forms": {
+    "comparative": "more whimsical",
+    "superlative": "most whimsical"
+   },
+   "example": "The garden had whimsical statues of frogs wearing hats.",
+   "picture_idea": "A frog statue wearing a tiny top hat in a garden",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "playful",
+    "art",
+    "description"
+   ],
+   "difficulty": "medium",
+   "id": "words__level6_2__038",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "wistful",
+   "word": "wistful",
+   "part_of_speech": "adjective",
+   "level": 6,
+   "definition": "feeling a quiet, sad longing for something",
+   "explanation": "",
+   "forms": {
+    "comparative": "more wistful",
+    "superlative": "most wistful"
+   },
+   "example": "He gave a wistful smile as he looked at old photographs.",
+   "picture_idea": "A person gazing out a window holding an old photo",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "emotion",
+    "memory",
+    "literary"
+   ],
+   "difficulty": "medium",
+   "id": "words__level6_2__039",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "xenophobia",
+   "word": "xenophobia",
+   "part_of_speech": "noun",
+   "level": 6,
+   "definition": "dislike or fear of people from other countries or cultures",
+   "explanation": "From Greek xenos 'stranger' and phobos 'fear'.",
+   "forms": {},
+   "example": "The campaign aimed to fight xenophobia by celebrating cultural diversity.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "society",
+    "Greek origin",
+    "prejudice"
+   ],
+   "difficulty": "hard",
+   "id": "words__level6_2__040",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "yoke",
+   "word": "yoke",
+   "part_of_speech": "noun",
+   "level": 6,
+   "definition": "a wooden bar that joins two animals so they can pull a load together; something that oppresses",
+   "explanation": "Figuratively, 'the yoke of tyranny' means harsh control over people.",
+   "forms": {
+    "plural": "yokes"
+   },
+   "example": "The oxen wore a heavy wooden yoke as they pulled the plow.",
+   "picture_idea": "Two oxen joined by a wooden bar pulling a plow",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "farming",
+    "history",
+    "metaphor"
+   ],
+   "difficulty": "medium",
+   "id": "words__level6_2__041",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "zeitgeist",
+   "word": "zeitgeist",
+   "part_of_speech": "noun",
+   "level": 6,
+   "definition": "the spirit or mood of a particular period in history",
+   "explanation": "A German word meaning 'time spirit', borrowed into English.",
+   "forms": {
+    "plural": "zeitgeists"
+   },
+   "example": "The film captured the zeitgeist of the 1960s.",
+   "picture_idea": "",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "German origin",
+    "culture",
+    "history"
+   ],
+   "difficulty": "hard",
+   "id": "words__level6_2__042",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "zenith",
+   "word": "zenith",
+   "part_of_speech": "noun",
+   "level": 6,
+   "definition": "the highest point; the point in the sky directly overhead",
+   "explanation": "",
+   "forms": {
+    "plural": "zeniths"
+   },
+   "example": "The Roman Empire reached its zenith in the second century.",
+   "picture_idea": "The sun at its highest point directly above a mountain",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "astronomy",
+    "peak",
+    "Arabic origin"
+   ],
+   "difficulty": "medium",
+   "id": "words__level6_2__043",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "zealous",
+   "word": "zealous",
+   "part_of_speech": "adjective",
+   "level": 6,
+   "definition": "full of energy and strong enthusiasm for a cause",
+   "explanation": "",
+   "forms": {
+    "comparative": "more zealous",
+    "superlative": "most zealous"
+   },
+   "example": "The zealous volunteers cleaned the whole beach before noon.",
+   "picture_idea": "Eager volunteers picking up litter on a beach",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "enthusiasm",
+    "character",
+    "formal"
+   ],
+   "difficulty": "medium",
+   "id": "words__level6_2__044",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "nadir",
+   "word": "nadir",
+   "part_of_speech": "noun",
+   "level": 6,
+   "definition": "the lowest point of something",
+   "explanation": "The opposite of zenith. It comes from Arabic and also means the point in the sky directly below you.",
+   "forms": {
+    "plural": "nadirs"
+   },
+   "example": "Losing his job was the nadir of an awful year.",
+   "picture_idea": "A graph line dropping to its lowest point",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "astronomy",
+    "low point",
+    "Arabic origin"
+   ],
+   "difficulty": "hard",
+   "id": "words__level6_2__045",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "obstinate",
+   "word": "obstinate",
+   "part_of_speech": "adjective",
+   "level": 6,
+   "definition": "stubbornly refusing to change your mind",
+   "explanation": "",
+   "forms": {
+    "comparative": "more obstinate",
+    "superlative": "most obstinate"
+   },
+   "example": "The obstinate child refused to wear a coat even in the snow.",
+   "picture_idea": "A child with folded arms shaking their head",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "stubbornness",
+    "personality",
+    "behavior"
+   ],
+   "difficulty": "medium",
+   "id": "words__level6_2__046",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "palpable",
+   "word": "palpable",
+   "part_of_speech": "adjective",
+   "level": 6,
+   "definition": "so strong that it can almost be felt; easy to notice",
+   "explanation": "",
+   "forms": {
+    "comparative": "more palpable",
+    "superlative": "most palpable"
+   },
+   "example": "The tension in the room was palpable.",
+   "picture_idea": "People sitting stiffly in a silent, tense room",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "feeling",
+    "atmosphere",
+    "Latin origin"
+   ],
+   "difficulty": "medium",
+   "id": "words__level6_2__047",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "sanguine",
+   "word": "sanguine",
+   "part_of_speech": "adjective",
+   "level": 6,
+   "definition": "hopeful and optimistic, especially in a difficult situation",
+   "explanation": "From Latin sanguis, 'blood'. Medieval people believed a lot of blood made someone cheerful.",
+   "forms": {
+    "comparative": "more sanguine",
+    "superlative": "most sanguine"
+   },
+   "example": "Despite the delays, she remained sanguine about the project's success.",
+   "picture_idea": "A smiling person looking up at a sunrise",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "optimism",
+    "history of medicine",
+    "Latin origin"
+   ],
+   "difficulty": "hard",
+   "id": "words__level6_2__048",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "truculent",
+   "word": "truculent",
+   "part_of_speech": "adjective",
+   "level": 6,
+   "definition": "eager to argue or fight; aggressively defiant",
+   "explanation": "",
+   "forms": {
+    "comparative": "more truculent",
+    "superlative": "most truculent"
+   },
+   "example": "The truculent customer shouted at everyone in the shop.",
+   "picture_idea": "A scowling person with clenched fists",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "anger",
+    "behavior",
+    "Latin origin"
+   ],
+   "difficulty": "hard",
+   "id": "words__level6_2__049",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  },
+  {
+   "kind": "word",
+   "text": "winsome",
+   "word": "winsome",
+   "part_of_speech": "adjective",
+   "level": 6,
+   "definition": "charming and attractive in an innocent way",
+   "explanation": "",
+   "forms": {
+    "comparative": "more winsome",
+    "superlative": "most winsome"
+   },
+   "example": "The little girl gave a winsome smile and won over the whole class.",
+   "picture_idea": "A child with a bright, charming smile",
+   "aac_core": false,
+   "sources": [],
+   "status": "unverified",
+   "ai_written": true,
+   "tags": [
+    "charm",
+    "appearance",
+    "literary"
+   ],
+   "difficulty": "medium",
+   "id": "words__level6_2__050",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   }
+  }
+ ]
+}

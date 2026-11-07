@@ -1,0 +1,572 @@
+{
+ "schema": "nimrod.research.v1",
+ "kind": "facts",
+ "name": "words and languages",
+ "generated": "2026-11-06",
+ "items": [
+  {
+   "kind": "fact",
+   "text": "Papua New Guinea has about 840 living languages, which makes it the most linguistically diverse country on Earth.",
+   "topic": "words and languages",
+   "note": "The count is Ethnologue's. Other counts differ (see the separate fact about disagreeing totals). This page mirrors Wikipedia text.",
+   "sources": [
+    {
+     "url": "https://graphsearch.epfl.ch/concept/11920918",
+     "title": "Languages of Papua New Guinea",
+     "publisher": "EPFL GraphSearch (Wikipedia-derived text)"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "diversity",
+    "Papua New Guinea",
+    "Ethnologue"
+   ],
+   "difficulty": "easy",
+   "id": "facts__words-and-languages__001",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.ethnologue.com/country/PG/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Even experts don't agree on exactly how many languages Papua New Guinea has. Ethnologue's 14th edition lists 826, while Glottolog counts 928.",
+   "topic": "words and languages",
+   "note": "Counts differ because linguists draw the line between a language and a dialect in different places.",
+   "sources": [
+    {
+     "url": "https://en.wikipedia.org/wiki/Indigenous_people_of_New_Guinea",
+     "title": "Indigenous people of New Guinea",
+     "publisher": "Wikipedia"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "diversity",
+    "Papua New Guinea",
+    "counting languages"
+   ],
+   "difficulty": "medium",
+   "id": "facts__words-and-languages__002",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://en.wikipedia.org/wiki/Indigenous_people_of_New_Guinea",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Papua New Guinean Sign Language became an officially recognised language of its country in May 2015. It sits alongside Tok Pisin, English and Hiri Motu.",
+   "topic": "words and languages",
+   "note": "This page mirrors Wikipedia text.",
+   "sources": [
+    {
+     "url": "https://graphsearch.epfl.ch/concept/11920918",
+     "title": "Languages of Papua New Guinea",
+     "publisher": "EPFL GraphSearch (Wikipedia-derived text)"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "sign language",
+    "official languages",
+    "Papua New Guinea"
+   ],
+   "difficulty": "medium",
+   "id": "facts__words-and-languages__003",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.wikiwand.com/en/Languages_of_Papua_New_Guinea",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Tok Pisin, an English-based language in Papua New Guinea, has only about 130,000 native speakers. About 4 million more speak it as a second language, so far more people learn it than grow up with it.",
+   "topic": "words and languages",
+   "note": "Figures are estimates from 2004–2016 and are listed in Wikipedia's infobox.",
+   "sources": [
+    {
+     "url": "https://en.wikipedia.org/wiki/Tok_Pisin",
+     "title": "Tok Pisin",
+     "publisher": "Wikipedia"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "creole",
+    "Papua New Guinea",
+    "lingua franca"
+   ],
+   "difficulty": "medium",
+   "id": "facts__words-and-languages__004",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://en.wikipedia.org/wiki/Tok_Pisin",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The Rotokas language of Bougainville is written with only 12 letters, the smallest alphabet in use today.",
+   "topic": "words and languages",
+   "note": "Letter counts can vary by source. Guinness World Records lists 11 letters for Rotokas, using an older spelling.",
+   "sources": [
+    {
+     "url": "https://en.wikipedia.org/wiki/Rotokas_alphabet",
+     "title": "Rotokas alphabet",
+     "publisher": "Wikipedia"
+    },
+    {
+     "url": "https://www.guinnessworldrecords.com/world-records/67417-shortest-alphabet",
+     "title": "Shortest alphabet",
+     "publisher": "Guinness World Records"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "alphabet",
+    "Rotokas",
+    "records"
+   ],
+   "difficulty": "easy",
+   "id": "facts__words-and-languages__005",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://en.wikipedia.org/wiki/Rotokas_alphabet",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The central dialect of Rotokas has only six consonant sounds. That is one of the smallest consonant sets of any language in the world.",
+   "topic": "words and languages",
+   "note": "Another dialect, Aita Rotokas, has nine.",
+   "sources": [
+    {
+     "url": "https://en.wikipedia.org/wiki/Rotokas_language",
+     "title": "Rotokas language",
+     "publisher": "Wikipedia"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "sounds",
+    "Rotokas",
+    "phonology"
+   ],
+   "difficulty": "hard",
+   "id": "facts__words-and-languages__006",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://en.wikipedia.org/wiki/Rotokas_language",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The oldest known sentence written in an alphabet is on a tiny ivory comb. It says, \"May this tusk root out the lice of the hair and the beard.\"",
+   "topic": "words and languages",
+   "note": "The comb is roughly 3,700 years old, but radiocarbon dating failed and its exact date is uncertain. Earlier alphabet inscriptions only had single words or short letter groups.",
+   "sources": [
+    {
+     "url": "https://www.smithsonianmag.com/smart-news/scientists-translate-the-oldest-sentence-written-in-the-first-alphabet-180981101/",
+     "title": "Scientists Translate the Oldest Sentence Written in the First Alphabet",
+     "publisher": "Smithsonian Magazine"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "alphabet",
+    "ancient writing",
+    "Canaanite"
+   ],
+   "difficulty": "easy",
+   "id": "facts__words-and-languages__010",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://en.wikipedia.org/wiki/Canaanite_ivory_comb",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The lice-comb sentence was written in letters only 1–3 millimetres tall. Nobody noticed it until 2021, when a researcher zoomed in on a photo of the comb.",
+   "topic": "words and languages",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://www.smithsonianmag.com/smart-news/scientists-translate-the-oldest-sentence-written-in-the-first-alphabet-180981101/",
+     "title": "Scientists Translate the Oldest Sentence Written in the First Alphabet",
+     "publisher": "Smithsonian Magazine"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "ancient writing",
+    "discovery",
+    "Canaanite"
+   ],
+   "difficulty": "medium",
+   "id": "facts__words-and-languages__011",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://archaeology.org/issues/online/collection/digs-israel-canaanite-comb-alphabet/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "In 1934 a Merriam-Webster dictionary printed the word \"dord\" and defined it as \"density\". It was never a real word. A note meaning \"D or d\" had been misread as one word.",
+   "topic": "words and languages",
+   "note": "Merriam-Webster calls dord its only ghost word.",
+   "sources": [
+    {
+     "url": "https://www.merriam-webster.com/video/ghost-word",
+     "title": "How a Ghost Word Appeared in the Dictionary",
+     "publisher": "Merriam-Webster"
+    },
+    {
+     "url": "https://simple.wikipedia.org/wiki/Dord",
+     "title": "Dord",
+     "publisher": "Simple English Wikipedia"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "dictionary",
+    "ghost word",
+    "mistakes"
+   ],
+   "difficulty": "easy",
+   "id": "facts__words-and-languages__012",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.merriam-webster.com/video/ghost-word",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Nobody at the dictionary noticed \"dord\" until 28 February 1939. It kept being printed until 1947.",
+   "topic": "words and languages",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://www.euronews.com/2023/02/28/culture-re-view-the-discovery-of-the-mystery-word-dord",
+     "title": "Culture Re-View: The discovery of the mystery word \"Dord\"",
+     "publisher": "Euronews"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "dictionary",
+    "ghost word",
+    "history"
+   ],
+   "difficulty": "medium",
+   "id": "facts__words-and-languages__013",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://en.wikipedia.org/wiki/Dord",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Newborn babies cry with an accent. In one study of 60 babies, French newborns tended to cry with a rising melody and German newborns with a falling one, matching their parents' languages.",
+   "topic": "words and languages",
+   "note": "This is one 2009 study of babies aged 3–5 days. Another researcher said more work is needed to confirm the cause.",
+   "sources": [
+    {
+     "url": "https://www.nbcnews.com/health/health-news/newborn-babies-cry-their-native-tongue-flna1c9450227",
+     "title": "Newborn babies cry in their native tongue",
+     "publisher": "NBC News"
+    },
+    {
+     "url": "https://www.sciencenews.org/article/newborn-babies-may-cry-their-mother-tongues",
+     "title": "Newborn babies may cry in their mother tongues",
+     "publisher": "Science News"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "babies",
+    "accent",
+    "language learning"
+   ],
+   "difficulty": "easy",
+   "id": "facts__words-and-languages__014",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.sciencenews.org/article/newborn-babies-may-cry-their-mother-tongues",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "If a baby's mother speaks two languages, the baby shows an equal preference for both languages from birth.",
+   "topic": "words and languages",
+   "note": "This comes from an essay in Aeon summarising research on language learning in the womb.",
+   "sources": [
+    {
+     "url": "https://aeon.co/essays/how-fetuses-learn-to-talk-while-theyre-still-in-the-womb",
+     "title": "How fetuses learn to 'talk' while they're still in the womb",
+     "publisher": "Aeon"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "babies",
+    "bilingual",
+    "womb"
+   ],
+   "difficulty": "medium",
+   "id": "facts__words-and-languages__015",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://aeon.co/essays/how-fetuses-learn-to-talk-while-theyre-still-in-the-womb",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Even as newborns, humans recognise their native language. They also remember stories they heard often in the womb.",
+   "topic": "words and languages",
+   "note": "This is a summary of research from American Scientist. It is not a single experiment.",
+   "sources": [
+    {
+     "url": "https://www.americanscientist.org/article/baby-talk",
+     "title": "Baby Talk",
+     "publisher": "American Scientist"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "babies",
+    "womb",
+    "language learning"
+   ],
+   "difficulty": "easy",
+   "id": "facts__words-and-languages__016",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.americanscientist.org/article/baby-talk",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "In the 1980s, deaf children brought together in Managua, Nicaragua, created a brand-new sign language with its own syntax. Scholars watched a language being born for the first time.",
+   "topic": "words and languages",
+   "note": "Sources differ on dates. Some say the children began signing together in 1977 and the language grew over the 1980s.",
+   "sources": [
+    {
+     "url": "https://www.pbs.org/wgbh/evolution/library/07/2/l_072_04.html",
+     "title": "Evolution: Library: Birth of a Language",
+     "publisher": "PBS"
+    },
+    {
+     "url": "https://www.cato.org/free-society/fall-2025/spontaneous-emergence-nicaraguan-sign-language",
+     "title": "The Spontaneous Emergence of Nicaraguan Sign Language",
+     "publisher": "Cato Institute"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "sign language",
+    "children",
+    "new language"
+   ],
+   "difficulty": "easy",
+   "id": "facts__words-and-languages__017",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.pbs.org/wgbh/evolution/library/07/2/l_072_04.html",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "When Nicaraguan Sign Language first appeared, school staff didn't recognise it as a language. They thought the children's gesturing was mime and a failure to learn Spanish.",
+   "topic": "words and languages",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://en.wikipedia.org/wiki/Nicaraguan_Sign_Language",
+     "title": "Nicaraguan Sign Language",
+     "publisher": "Wikipedia"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "sign language",
+    "Nicaragua",
+    "misunderstanding"
+   ],
+   "difficulty": "medium",
+   "id": "facts__words-and-languages__018",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://en.wikipedia.org/wiki/Nicaraguan_Sign_Language",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Karel Čapek first called his artificial workers \"labori\", but thought it sounded too bookish. His brother Josef suggested \"roboti\", which became \"robots\".",
+   "topic": "words and languages",
+   "note": "Čapek himself credited his brother Josef with the word.",
+   "sources": [
+    {
+     "url": "https://www.sciencefriday.com/segments/the-origin-of-the-word-robot/",
+     "title": "The Origin Of The Word 'Robot'",
+     "publisher": "Science Friday"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "etymology",
+    "robot",
+    "coinage"
+   ],
+   "difficulty": "medium",
+   "id": "facts__words-and-languages__020",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.sciencefriday.com/segments/the-origin-of-the-word-robot/",
+    "problem": "",
+    "fix": ""
+   }
+  }
+ ]
+}

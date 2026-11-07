@@ -1,0 +1,256 @@
+{
+ "schema": "nimrod.research.v1",
+ "kind": "quotes",
+ "name": "scientists and inventors",
+ "generated": "2026-11-06",
+ "items": [
+  {
+   "kind": "quote",
+   "text": "Imagination is more important than knowledge.",
+   "speaker": "Albert Einstein",
+   "work": "What Life Means to Einstein (interview by George Sylvester Viereck, The Saturday Evening Post)",
+   "year": "1929",
+   "work_type": "interview",
+   "context": "Einstein said this when the interviewer asked whether he trusted his imagination more than his knowledge.",
+   "sources": [
+    {
+     "url": "https://todayinsci.com/E/Einstein_Albert/EinsteinAlbert-ImaginationQuote500px.htm",
+     "title": "Albert Einstein quote: Imagination is more important than knowledge",
+     "publisher": "Today in Science History"
+    },
+    {
+     "url": "https://quoteinvestigator.com/2023/09/06/imagination-preview/",
+     "title": "Quote Origin: Imagination Is Everything. It Is the Preview of Life's Coming Attractions",
+     "publisher": "Quote Investigator"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "imagination",
+    "creativity",
+    "science",
+    "inspiring"
+   ],
+   "difficulty": "very easy",
+   "id": "quotes__scientists-and-inventors__001",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://quoteinvestigator.com/2013/01/01/einstein-imagination/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "quote",
+   "text": "I have no special talent. I am only passionately curious.",
+   "speaker": "Albert Einstein",
+   "work": "Letter to Carl Seelig, 11 March 1952",
+   "year": "1952",
+   "work_type": "letter",
+   "context": "Einstein wrote this in German to his biographer Carl Seelig; the English wording is a translation.",
+   "sources": [
+    {
+     "url": "https://quotepark.com/quotes/844055-albert-einstein-i-have-no-special-talents-i-am-only-passionately/",
+     "title": "Albert Einstein quote (citing the Seelig letter and Wikiquote)",
+     "publisher": "QuotePark"
+    },
+    {
+     "url": "https://fixquotes.com/quotes/i-have-no-special-talent-i-am-only-passionately-25287/",
+     "title": "I have no special talent - Albert Einstein",
+     "publisher": "FixQuotes"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "curiosity",
+    "humility",
+    "science",
+    "inspiring"
+   ],
+   "difficulty": "very easy",
+   "id": "quotes__scientists-and-inventors__002",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://catdir.loc.gov/catdir/samples/prin031/00026873.html",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "quote",
+   "text": "The first principle is that you must not fool yourself—and you are the easiest person to fool.",
+   "speaker": "Richard Feynman",
+   "work": "Cargo Cult Science (Caltech commencement address)",
+   "year": "1974",
+   "work_type": "speech",
+   "context": "Feynman was talking about scientific honesty and the need to doubt your own results.",
+   "sources": [
+    {
+     "url": "https://calteches.library.caltech.edu/51/2/CargoCult.htm",
+     "title": "Cargo Cult Science",
+     "publisher": "Caltech (Engineering & Science)"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "honesty",
+    "wisdom",
+    "science",
+    "skepticism"
+   ],
+   "difficulty": "easy",
+   "id": "quotes__scientists-and-inventors__004",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://calteches.library.caltech.edu/3043/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "quote",
+   "text": "In the fields of observation chance favours only the prepared mind.",
+   "speaker": "Louis Pasteur",
+   "work": "Inaugural lecture, Faculty of Science, University of Lille",
+   "year": "1854",
+   "work_type": "speech",
+   "context": "Pasteur gave this lecture on 7 December 1854 as the new dean of the science faculty.",
+   "sources": [
+    {
+     "url": "https://en.wikiquote.org/wiki/Louis_Pasteur",
+     "title": "Louis Pasteur - Wikiquote",
+     "publisher": "Wikiquote"
+    },
+    {
+     "url": "https://causeweb.org/cause/resources/library/r1728",
+     "title": "Quote: Pasteur on Chance",
+     "publisher": "CAUSEweb"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "preparation",
+    "discovery",
+    "wisdom",
+    "science"
+   ],
+   "difficulty": "medium",
+   "id": "quotes__scientists-and-inventors__005",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://en.wikiquote.org/wiki/Louis_Pasteur",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "quote",
+   "text": "Well done is better than well said.",
+   "speaker": "Benjamin Franklin",
+   "work": "Poor Richard's Almanack (Poor Richard, 1737)",
+   "year": "1737",
+   "work_type": "book",
+   "context": "Franklin printed this proverb in his almanac under the pen name Richard Saunders.",
+   "sources": [
+    {
+     "url": "https://founders.archives.gov/documents/Franklin/01-02-02-0028",
+     "title": "Poor Richard, 1737",
+     "publisher": "Founders Online, U.S. National Archives"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "action",
+    "wisdom",
+    "proverb",
+    "invention"
+   ],
+   "difficulty": "very easy",
+   "id": "quotes__scientists-and-inventors__006",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://founders.archives.gov/documents/Franklin/01-02-02-0028",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "quote",
+   "text": "We are a way for the cosmos to know itself.",
+   "speaker": "Carl Sagan",
+   "work": "Cosmos: A Personal Voyage",
+   "year": "1980",
+   "work_type": "tv",
+   "context": "Sagan said this while describing humans as made of star-stuff and as part of the cosmos.",
+   "sources": [
+    {
+     "url": "https://en.wikiquote.org/wiki/Carl_Sagan",
+     "title": "Carl Sagan - Wikiquote",
+     "publisher": "Wikiquote"
+    },
+    {
+     "url": "https://www.imdb.com/title/tt0081846/quotes/",
+     "title": "Cosmos (TV Mini Series 1980) - Quotes",
+     "publisher": "IMDb"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "wonder",
+    "universe",
+    "inspiring",
+    "astronomy"
+   ],
+   "difficulty": "easy",
+   "id": "quotes__scientists-and-inventors__007",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.organism.earth/library/document/cosmos-1",
+    "problem": "",
+    "fix": ""
+   }
+  }
+ ]
+}

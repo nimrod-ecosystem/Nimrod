@@ -1,0 +1,674 @@
+{
+ "schema": "nimrod.research.v1",
+ "kind": "facts",
+ "name": "art",
+ "generated": "2026-11-06",
+ "items": [
+  {
+   "kind": "fact",
+   "text": "A cave painting in Indonesia shows human-like figures and a pig, and it is at least 51,200 years old. It is the oldest known picture that tells a story.",
+   "topic": "art",
+   "note": "Based on a 2024 study in Nature. 'Oldest known' means oldest found so far.",
+   "sources": [
+    {
+     "url": "https://news.griffith.edu.au/2024/07/04/cave-painting-in-indonesia-is-the-oldest-known-picture-story/",
+     "title": "Cave painting in Indonesia is the oldest known 'picture story'",
+     "publisher": "Griffith University"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "cave art",
+    "prehistory",
+    "Indonesia"
+   ],
+   "difficulty": "easy",
+   "id": "facts__art__001",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://news.griffith.edu.au/2024/07/04/cave-painting-in-indonesia-is-the-oldest-known-picture-story/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Scientists can date some cave paintings by testing the mineral crust, sometimes called 'cave popcorn', that grew over the paint. The paint has to be older than the crust on top of it.",
+   "topic": "art",
+   "note": "The 'has to be older' step is simple logic, not a quote from the paper. The study used a laser-based uranium-series dating method.",
+   "sources": [
+    {
+     "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11269172/",
+     "title": "Narrative cave art in Indonesia by 51,200 years ago",
+     "publisher": "Nature (via National Library of Medicine, PMC)"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "cave art",
+    "science",
+    "dating"
+   ],
+   "difficulty": "hard",
+   "id": "facts__art__002",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.science.org/content/article/dreamlike-pig-hunting-scene-world-s-oldest-figurative-art",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The first color humans ever made, instead of digging it up, was Egyptian blue. Ancient Egyptians produced it around 3100 B.C.",
+   "topic": "art",
+   "note": "It is called the earliest known synthetic pigment, and the date is approximate.",
+   "sources": [
+    {
+     "url": "https://news.harvard.edu/gazette/story/2026/04/when-egyptians-made-blue/",
+     "title": "When Egyptians made blue",
+     "publisher": "Harvard Gazette"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "pigments",
+    "ancient Egypt",
+    "color"
+   ],
+   "difficulty": "easy",
+   "id": "facts__art__004",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://news.harvard.edu/gazette/story/2026/04/when-egyptians-made-blue/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Egyptian blue glows in infrared light when normal light shines on it. Scientists use this trick to spot it on ancient artworks.",
+   "topic": "art",
+   "note": "The glow is invisible to the naked eye and needs an infrared camera.",
+   "sources": [
+    {
+     "url": "https://hyperallergic.com/366307/egyptian-blue-the-first-synthetic-pigment/",
+     "title": "Egyptian Blue: The First Synthetic Pigment",
+     "publisher": "Hyperallergic"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "pigments",
+    "science",
+    "ancient Egypt"
+   ],
+   "difficulty": "medium",
+   "id": "facts__art__005",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://hyperallergic.com/366307/egyptian-blue-the-first-synthetic-pigment/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Egyptian blue vanished for centuries and was only linked back to Egypt after samples turned up at Pompeii in 1814.",
+   "topic": "art",
+   "note": "",
+   "sources": [
+    {
+     "url": "https://hyperallergic.com/366307/egyptian-blue-the-first-synthetic-pigment/",
+     "title": "Egyptian Blue: The First Synthetic Pigment",
+     "publisher": "Hyperallergic"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "pigments",
+    "Pompeii",
+    "lost knowledge"
+   ],
+   "difficulty": "medium",
+   "id": "facts__art__006",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://hyperallergic.com/366307/egyptian-blue-the-first-synthetic-pigment/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "A brown paint called Mummy Brown really was made from ground-up Egyptian mummies. European artists used it.",
+   "topic": "art",
+   "note": "The name is still sold today, but modern tubes are made from minerals such as quartz and clay, not mummies.",
+   "sources": [
+    {
+     "url": "https://www.smithsonianmag.com/smart-news/ground-mummies-were-once-ingredient-paint-180950350/",
+     "title": "Ground Up Mummies Were Once an Ingredient in Paint",
+     "publisher": "Smithsonian Magazine"
+    },
+    {
+     "url": "https://www.winsornewton.com/blogs/articles/mummy-brown",
+     "title": "Mummy Brown: The art world's most morbid medium",
+     "publisher": "Winsor & Newton"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "pigments",
+    "paint",
+    "history"
+   ],
+   "difficulty": "easy",
+   "id": "facts__art__007",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.smithsonianmag.com/smart-news/ground-mummies-were-once-ingredient-paint-180950350/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The company that made Mummy Brown reportedly stopped in 1964 because it ran out of mummies to grind up.",
+   "topic": "art",
+   "note": "Smithsonian Magazine says 'reportedly', so treat the exact story as a report rather than a certainty.",
+   "sources": [
+    {
+     "url": "https://www.smithsonianmag.com/smart-news/ground-mummies-were-once-ingredient-paint-180950350/",
+     "title": "Ground Up Mummies Were Once an Ingredient in Paint",
+     "publisher": "Smithsonian Magazine"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "pigments",
+    "paint",
+    "history"
+   ],
+   "difficulty": "medium",
+   "id": "facts__art__008",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.smithsonianmag.com/smart-news/ground-mummies-were-once-ingredient-paint-180950350/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The Mona Lisa became world-famous partly because it was stolen. Newspapers covered the 1911 theft from the Louvre for years, and the painting's fame took off.",
+   "topic": "art",
+   "note": "It was already a respected masterpiece before the theft. The theft made it a household name.",
+   "sources": [
+    {
+     "url": "https://guides.loc.gov/chronicling-america-theft-mona-lisa",
+     "title": "Theft of Mona Lisa: Topics in Chronicling America",
+     "publisher": "Library of Congress"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "Mona Lisa",
+    "Leonardo da Vinci",
+    "theft"
+   ],
+   "difficulty": "easy",
+   "id": "facts__art__009",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.cnn.com/2013/11/18/world/europe/mona-lisa-the-theft/index.html",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "When the Mona Lisa was stolen in 1911, it took about 24 hours before anyone noticed it was gone.",
+   "topic": "art",
+   "note": "The Louvre had very little security at the time.",
+   "sources": [
+    {
+     "url": "https://www.cnn.com/2013/11/18/world/europe/mona-lisa-the-theft",
+     "title": "Mona Lisa: The theft that created a legend",
+     "publisher": "CNN"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "Mona Lisa",
+    "Louvre",
+    "theft"
+   ],
+   "difficulty": "easy",
+   "id": "facts__art__010",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.cnn.com/2013/11/18/world/europe/mona-lisa-the-theft/index.html",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "After the Mona Lisa was stolen, police arrested the poet Guillaume Apollinaire on suspicion of the theft. He was innocent.",
+   "topic": "art",
+   "note": "The real thief was Vincenzo Peruggia, a handyman who had worked at the Louvre.",
+   "sources": [
+    {
+     "url": "https://www.cnn.com/2013/11/18/world/europe/mona-lisa-the-theft",
+     "title": "Mona Lisa: The theft that created a legend",
+     "publisher": "CNN"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "Mona Lisa",
+    "theft",
+    "mystery"
+   ],
+   "difficulty": "medium",
+   "id": "facts__art__011",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.cnn.com/2013/11/18/world/europe/mona-lisa-the-theft/index.html",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "In 2018, Banksy's painting 'Girl with Balloon' shredded itself right after it sold for over £1 million at Sotheby's. Banksy had hidden a shredder inside the frame.",
+   "topic": "art",
+   "note": "Sotheby's called it the first time a work of art shredded itself right after an auction sale. The canvas was only partly shredded.",
+   "sources": [
+    {
+     "url": "https://www.sothebys.com/en/articles/sothebys-gets-banksyed-at-contemporary-art-auction-in-london",
+     "title": "Sotheby's Gets Banksy'ed at Contemporary Art Auction in London",
+     "publisher": "Sotheby's"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "Banksy",
+    "auction",
+    "street art"
+   ],
+   "difficulty": "easy",
+   "id": "facts__art__012",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.sothebys.com/en/articles/sothebys-gets-banksyed-at-contemporary-art-auction-in-london",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The half-shredded Banksy, renamed 'Love is in the Bin', sold again three years later for £18.5 million. That was a record for the artist.",
+   "topic": "art",
+   "note": "The PBS/AP report gives the price as about $25.4 million.",
+   "sources": [
+    {
+     "url": "https://www.pbs.org/newshour/arts/shredded-banksy-artwork-sells-for-25-4-million-at-auction",
+     "title": "Shredded Banksy artwork sells for $25.4 million at auction",
+     "publisher": "PBS NewsHour (AP)"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "Banksy",
+    "auction",
+    "money"
+   ],
+   "difficulty": "easy",
+   "id": "facts__art__013",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.pbs.org/newshour/arts/shredded-banksy-artwork-sells-for-25-4-million-at-auction",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Ancient Greek and Roman statues were not plain white. Many were painted in bright colors, and the paint has worn off over time.",
+   "topic": "art",
+   "note": "Researchers reconstruct the colors using science. Some art historians think the colors may have been more subtle than the bright museum reconstructions.",
+   "sources": [
+    {
+     "url": "https://www.smithsonianmag.com/smart-news/see-the-vibrant-long-overlooked-colors-of-classical-sculptures-180980321/",
+     "title": "See the Vibrant, Long-Overlooked Colors of Classical Sculptures",
+     "publisher": "Smithsonian Magazine"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "sculpture",
+    "ancient Greece",
+    "color"
+   ],
+   "difficulty": "easy",
+   "id": "facts__art__014",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.history.com/articles/ancient-greek-roman-statues-color-scents",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "People in ancient Greece and Rome didn't just paint their statues. They also dressed them in clothes, jewelry and flower wreaths, and anointed them with perfume.",
+   "topic": "art",
+   "note": "This was part of rituals. It is based on ancient sources and modern research.",
+   "sources": [
+    {
+     "url": "https://www.history.com/articles/ancient-greek-roman-statues-color-scents",
+     "title": "Ancient Greco-Roman Sculptures Featured Colors—And Scents",
+     "publisher": "HISTORY"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "sculpture",
+    "ancient Rome",
+    "ancient Greece"
+   ],
+   "difficulty": "medium",
+   "id": "facts__art__015",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.history.com/articles/ancient-greek-roman-statues-color-scents",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "Researchers have found traces of Egyptian blue on Greek and Roman statues. The same pigment the Egyptians invented was reaching sculptors in other civilizations.",
+   "topic": "art",
+   "note": "Researchers also found yellow and red ochres and carbon-based blacks on these statues.",
+   "sources": [
+    {
+     "url": "https://www.history.com/articles/ancient-greek-roman-statues-color-scents",
+     "title": "Ancient Greco-Roman Sculptures Featured Colors—And Scents",
+     "publisher": "HISTORY"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "pigments",
+    "sculpture",
+    "ancient Greece"
+   ],
+   "difficulty": "hard",
+   "id": "facts__art__016",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.history.com/articles/ancient-greek-roman-statues-color-scents",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "There is a small aluminum sculpture on the Moon. The Apollo 15 crew left it in 1971 to honor astronauts and cosmonauts who had died.",
+   "topic": "art",
+   "note": "The astronauts placed it with little ceremony and a replica went to the Smithsonian's National Air and Space Museum.",
+   "sources": [
+    {
+     "url": "https://www.smithsonianmag.com/smart-news/there-is-a-sculpture-on-the-moon-commemorating-fallen-astronauts-358909/",
+     "title": "There Is a Sculpture on the Moon Commemorating Fallen Astronauts",
+     "publisher": "Smithsonian Magazine"
+    },
+    {
+     "url": "https://siarchives.si.edu/collections/siris_arc_390181",
+     "title": "Presentation of 'Fallen Astronaut' Sculpture Replica to NASM",
+     "publisher": "Smithsonian Institution Archives"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "sculpture",
+    "space",
+    "Moon"
+   ],
+   "difficulty": "easy",
+   "id": "facts__art__017",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://en.wikipedia.org/wiki/Fallen_Astronaut",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The plaque beside the Moon sculpture lists 14 names, but two Soviet cosmonauts who had already died were missing. Their deaths were still secret in 1971.",
+   "topic": "art",
+   "note": "The sculpture is called 'Fallen Astronaut' and was made by Belgian artist Paul Van Hoeydonck.",
+   "sources": [
+    {
+     "url": "https://www.smithsonianmag.com/smart-news/there-is-a-sculpture-on-the-moon-commemorating-fallen-astronauts-358909/",
+     "title": "There Is a Sculpture on the Moon Commemorating Fallen Astronauts",
+     "publisher": "Smithsonian Magazine"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "sculpture",
+    "space",
+    "history"
+   ],
+   "difficulty": "medium",
+   "id": "facts__art__018",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.thefactsite.com/fallen-astronaut-memorial/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The famous Bayeux Tapestry isn't a tapestry. It is an embroidery, with pictures stitched in wool thread onto linen cloth.",
+   "topic": "art",
+   "note": "A true tapestry is woven on a loom. The name stuck anyway.",
+   "sources": [
+    {
+     "url": "https://www.bayeuxmuseum.com/en/tapestry-or-embroidery/",
+     "title": "The Bayeux Tapestry is an embroidery",
+     "publisher": "Bayeux Museum"
+    },
+    {
+     "url": "https://www.unesco.org/en/memory-world/bayeux-tapestry",
+     "title": "Bayeux Tapestry - Memory of the World",
+     "publisher": "UNESCO"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "textile",
+    "medieval",
+    "embroidery"
+   ],
+   "difficulty": "easy",
+   "id": "facts__art__019",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.bayeuxmuseum.com/en/tapestry-or-embroidery/",
+    "problem": "",
+    "fix": ""
+   }
+  },
+  {
+   "kind": "fact",
+   "text": "The Bayeux Tapestry is about 70 meters (230 feet) long, and it probably wasn't made in Bayeux at all. Historians think it was made in England.",
+   "topic": "art",
+   "note": "Nobody knows for sure who made it. Most historians think Bishop Odo of Bayeux, William the Conqueror's half-brother, ordered it.",
+   "sources": [
+    {
+     "url": "https://www.bayeuxmuseum.com/en/tapestry-or-embroidery/",
+     "title": "The Bayeux Tapestry is an embroidery",
+     "publisher": "Bayeux Museum"
+    },
+    {
+     "url": "https://www.history.com/articles/bayeux-tapestry-facts-england-battle-hastings",
+     "title": "What Makes the Bayeux Tapestry a Medieval Wonder?",
+     "publisher": "HISTORY"
+    }
+   ],
+   "status": "verified",
+   "ai_written": true,
+   "tags": [
+    "textile",
+    "medieval",
+    "England"
+   ],
+   "difficulty": "medium",
+   "id": "facts__art__020",
+   "written": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "check": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-06",
+    "source_url": "https://www.history.com/articles/bayeux-tapestry-facts-england-battle-hastings",
+    "problem": "",
+    "fix": ""
+   }
+  }
+ ]
+}
