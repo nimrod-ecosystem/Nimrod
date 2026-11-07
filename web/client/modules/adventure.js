@@ -50,6 +50,9 @@ import { themeIdAt } from '../card_deck.js';
 import { flashLimit, minFlashPeriodMs } from '../flash_limit.js';
 import { kindFolder, handleStore } from '../user_folders.js';
 import { registerTownTalk } from '../town_talk.js';
+// (row 2.235, note FK 1) Stories written ahead, for a screen with no AI: adventure_written.js checks and plays them.
+import { createWrittenStory, loadWrittenStories, WRITTEN_FORMAT, END_ANOTHER, END_BACK } from '../adventure_written.js';
+const TIMEOUT_LINE = 'The storyteller is taking too long to answer.';
 
 export const ADVENTURE_TYPE = 'adventure';
 export const ADVENTURE_TITLE = 'Adventure';
@@ -197,9 +200,11 @@ const CSS = `
 registerModule(
   { type: ADVENTURE_TYPE, title: ADVENTURE_TITLE, core: 'new',
     description: 'Talk with the people in town, or play a story where you choose what happens: pick a choice, or say or type '
-      + 'anything. Needs an AI (artificial intelligence) storyteller on this device or on a computer in the house.',
-    // The storyteller is an AI program somewhere (this computer, the house, or online): without one there is no story.
-    dependsOn: 'network', importance: 'optional', settings: SETTINGS },
+      + 'anything. With an AI (artificial intelligence) storyteller on this device or a computer in the house, the story is made '
+      + 'up as you go; without one, there are stories written ahead to play.',
+    // (row 2.235) The written stories are the site's own files, so with no AI anywhere there is still a story: 'server', the
+    // site, not 'network' (an AI somewhere) as before.
+    dependsOn: 'server', importance: 'optional', settings: SETTINGS },
   (ctx) => {
     const { mount } = ctx;
     const win = mount.ownerDocument?.defaultView || globalThis;
@@ -216,6 +221,11 @@ registerModule(
     let setupReason = '';
     let thinking = false;
     let inflight = null;        // AbortController of the turn being told
+    // (row 2.235) A story written ahead: which, and the ones this site ships (read once; empty until they arrive). The next
+    // one starts at a random place, so two sittings do not begin with the same story.
+    let written = false;
+    let writtenList = [];
+    let writtenAt = Math.floor(Math.random() * 1000);
     let cursor = -1;
     let lightTimer = null;
     let lightSteps = 0;
@@ -256,7 +266,7 @@ registerModule(
       const open = !!cfg.listen && view === 'story' && !thinking && !holding && !hidden && !torn;
       const words = [...choices, ...Object.keys(NUMBER_WORDS).filter((w) => !/^\d$/.test(w) && NUMBER_WORDS[w] < choices.length), 'read it again'];
       publish(SPEECH_TOPICS.grammar, { source: ADVENTURE_TYPE, instanceId: ctx.instanceId || null, open,
-        words: open ? words : [], dictation: open && cfg.freeSpeech !== false, phase: storyKind });
+        words: open ? words : [], dictation: open && cfg.freeSpeech !== false && !written, phase: storyKind });
     }
 
     // ---- the light (one switch: by itself; two switches: next / prev) -----------------------------------------
@@ -314,11 +324,17 @@ registerModule(
       if (view === 'home') {
         const saved = cfg.keepOnDevice ? loadStoryLocal(saveKey()) : null;
         const carry = saved ? (saved.kind === 'talk' ? `Carry on talking with ${esc(characterInfo(saved.character, t).name)}` : 'Carry on the adventure') : '';
+        // (row 2.235) A story written ahead: FIRST when no storyteller has ever answered on this device, so one switch (whose
+        // first press lights the first button and the next presses it) reaches it; after "Start an adventure" otherwise.
+        const writtenFirst = writtenList.length > 0 && !storytellerAnswered(ctx.aiStorage || undefined);
+        const writtenBtn = writtenList.length ? `<button${writtenFirst && !carry ? ' class="primary"' : ''} data-adv-act="written">Play a story written ahead</button>` : '';
         root.innerHTML = `<div class="adv-menu">
           <h2>Stories in town</h2>
-          <p class="adv-soft">Play a story where you choose what happens, or talk with somebody in town. An AI (artificial intelligence) storyteller makes it up as you go.</p>
+          <p class="adv-soft">Play a story where you choose what happens, or talk with somebody in town. An AI (artificial intelligence) storyteller makes it up as you go${writtenList.length ? ', or play one written ahead' : ''}.</p>
           ${carry ? `<button class="primary" data-adv-act="carry">${carry}</button>` : ''}
-          <button class="${carry ? '' : 'primary'}" data-adv-act="adventure">Start an adventure</button>
+          ${writtenFirst ? writtenBtn : ''}
+          <button class="${carry || writtenFirst ? '' : 'primary'}" data-adv-act="adventure">Start an adventure</button>
+          ${writtenFirst ? '' : writtenBtn}
           <div class="adv-who">${CHARACTER_IDS.map((id) => { const c = characterInfo(id, t);
             return `<button data-adv-act="talk" data-adv-who="${id}">Talk to ${esc(c.name)}<br><small class="adv-soft">at ${esc(c.home)}</small></button>`; }).join('')}</div>
           ${note ? `<p class="adv-note" data-adv-note>${esc(note)}</p>` : ''}
@@ -327,6 +343,7 @@ registerModule(
         root.innerHTML = `<div class="adv-menu" data-adv-setup>
           <h2>No storyteller answered</h2>
           <p>${esc(setupReason || NO_AI_LINE)}</p>
+          ${writtenList.length ? '<div class="adv-bar"><button class="primary" data-adv-act="written">Play a story written ahead</button></div>' : ''}
           <p>A storyteller is an AI program. To set one up:</p>
           <ul>
             <li>On a computer with Ollama (free, nothing leaves the house): open the Nimrod guide and choose “Set up your guide / AI”.</li>
@@ -345,13 +362,13 @@ registerModule(
             </div>
           </div>
           <div class="adv-choices" data-adv-choices>${choices.map((c, i) => `<button data-adv-act="choose" data-adv-i="${i}" data-adv-text="${esc(c)}"${thinking ? ' disabled' : ''}>${i + 1}. ${esc(c)}</button>`).join('')}</div>
-          <form class="adv-own" data-adv-form><input data-adv-free type="text" maxlength="600" autocomplete="off"
+          ${written ? '' : `<form class="adv-own" data-adv-form><input data-adv-free type="text" maxlength="600" autocomplete="off"
             aria-label="${storyKind === 'talk' ? 'Say something else' : 'Do something else'}"
             placeholder="${storyKind === 'talk' ? 'Or type what you say…' : 'Or type what you do…'}"${thinking ? ' disabled' : ''}>
-            <button data-adv-act="send"${thinking ? ' disabled' : ''}>Send</button></form>
+            <button data-adv-act="send"${thinking ? ' disabled' : ''}>Send</button></form>`}
           <div class="adv-bar">
             ${thinking ? '<button data-adv-act="stop">Stop waiting</button>' : '<button data-adv-act="again">Read it again</button>'}
-            <button data-adv-act="folder">Keep a copy in your Nimrod folder</button>
+            ${written ? '' : '<button data-adv-act="folder">Keep a copy in your Nimrod folder</button>'}
             <button data-adv-act="home">Back to the start</button>
           </div>
           ${note ? `<p class="adv-note" data-adv-note>${esc(note)}</p>` : ''}`;
@@ -380,8 +397,11 @@ registerModule(
       if (r.cancelled) { note = 'Stopped waiting. The choices are here again.'; render(); announceGrammar(); startLight(); return r; }
       // Nothing answered at all: how to set one up. A storyteller that answered too SLOWLY is there (a big model
       // loading): the opening choices, and the next press tries again.
-      if (!r.ok && first && !r.timedOut && !(story && story.started())) {
-        setupReason = r.noAI ? NO_AI_LINE : (r.reason || NO_AI_LINE);
+      // (row 2.235) A first turn that TIMED OUT goes there too when there are stories written ahead to offer (a slow house PC
+      // never reached them otherwise); the model keeps loading meanwhile, so "Try again" can still find it.
+      if (!r.ok && first && (!r.timedOut || writtenList.length) && !(story && story.started())) {
+        if (r.timedOut) warmAhead(storyKind);
+        setupReason = r.timedOut ? TIMEOUT_LINE : (r.noAI ? NO_AI_LINE : (r.reason || NO_AI_LINE));
         view = 'setup';
         cursor = -1;
         render();
@@ -391,16 +411,33 @@ registerModule(
       note = r.ok ? '' : (r.reason ? `(${r.reason})` : '');
       say = r.say || say;
       choices = Array.isArray(r.choices) ? r.choices : choices;
+      // (row 2.235) A written story's end has no choices of its own: another one, or the start.
+      if (written && r.end) choices = [END_ANOTHER, END_BACK];
       cursor = -1;
       if (r.ok && !r.refused && !r.care) remember();
-      if (r.ok && !r.care) markStorytellerAnswered(ctx.aiStorage || undefined);   // the warm-up's guard
+      if (r.ok && !r.care && !written) markStorytellerAnswered(ctx.aiStorage || undefined);   // the warm-up's guard (an AI, not a written story)
       if (!r.ok && r.timedOut) warmAhead(storyKind);   // still loading, most likely: let it finish
       render();
       speak(say);
       announceGrammar();
       return r;
     }
+    // (row 2.235) The next story written ahead, from the start.
+    function beginWritten() {
+      if (!writtenList.length) { note = 'There are no stories written ahead on this site yet.'; view = 'home'; render(); return null; }
+      const pick = writtenList[writtenAt % writtenList.length];
+      writtenAt += 1;
+      storyKind = 'adventure'; character = 'king'; ai = null; written = true;
+      story = createWrittenStory(pick, { theme: theme() });
+      view = 'story';
+      say = pick.title;
+      choices = [];
+      note = '';
+      inflight = new AbortController();
+      return told(story.start(), { first: true });
+    }
     function newStory(kind, who) {
+      written = false;
       storyKind = kind === 'talk' ? 'talk' : 'adventure';
       character = CHARACTER_IDS.includes(who) ? who : 'king';
       ai = storyAIFor(ctx);
@@ -446,6 +483,21 @@ registerModule(
     function carryOn() {
       const saved = loadStoryLocal(saveKey());
       if (!saved) { view = 'home'; render(); return; }
+      // (row 2.235) A written story: the same one, at the same page; a story that changed since starts again, and says so.
+      if (saved.format === WRITTEN_FORMAT) {
+        const s = writtenList.find((x) => x.id === saved.id);
+        if (!s) { note = 'That story is not on this site any more.'; view = 'home'; render(); return; }
+        storyKind = 'adventure'; character = 'king'; ai = null; written = true;
+        story = createWrittenStory(s, { theme: theme() });
+        const back = story.restore(saved);
+        view = 'story';
+        say = story.lastSay();
+        choices = story.ended() ? [END_ANOTHER, END_BACK] : story.choices();
+        note = back.ok ? '' : back.reason;
+        cursor = -1;
+        render(); speak(say); announceGrammar();
+        return;
+      }
       newStory(saved.kind, saved.character);
       story.restore(saved);
       view = 'story';
@@ -460,6 +512,7 @@ registerModule(
     function choose(i) {
       if (!story || thinking) return null;
       pressed();
+      if (written && story.ended()) { if (Number(i) === 0) return beginWritten(); goHome(); return null; }
       inflight = new AbortController();
       return told(story.choose(i, { signal: inflight.signal }));
     }
@@ -476,7 +529,7 @@ registerModule(
       if (!h) return;
       if (h.kind === 'again') { speak(say); return; }
       if (h.kind === 'choose') { choose(h.index); return; }
-      if (cfg.freeSpeech !== false) freeSay(h.text);
+      if (cfg.freeSpeech !== false && !written) freeSay(h.text);
     }
     async function keepInFolder() {
       if (!story) return;
@@ -520,6 +573,7 @@ registerModule(
       if (act !== 'choose') pressed();
       switch (act) {
         case 'adventure': return begin('adventure');
+        case 'written': return beginWritten();
         case 'talk': return begin('talk', el?.dataset?.advWho);
         case 'carry': return carryOn();
         case 'retry': return begin(storyKind, character);
@@ -628,6 +682,12 @@ registerModule(
         render();
         loadHero();
         warmAhead();
+        // (row 2.235) The stories written ahead: the menus offer them once they are read.
+        Promise.resolve(ctx.writtenStories ? ctx.writtenStories() : loadWrittenStories()).then((list) => {
+          if (torn) return;
+          writtenList = Array.isArray(list) ? list : [];
+          if (view !== 'story') render();
+        }, () => {});
       },
       onResize() {},
       onHide() {
@@ -656,7 +716,7 @@ registerModule(
       verb,
       // A suite's window on it.
       __probe: () => ({ view, kind: storyKind, character, say, choices: [...choices], note, thinking, holding, cursor,
-        lit: litEl()?.textContent?.trim() || null, setupReason, saved: loadStoryLocal(saveKey()), story }),
+        lit: litEl()?.textContent?.trim() || null, setupReason, saved: loadStoryLocal(saveKey()), story, written, writtenCount: writtenList.length }),
       __press: (act, i) => press(act, act === 'choose' ? { dataset: { advI: String(i) } } : act === 'talk' ? { dataset: { advWho: i } } : null),
       __heard: (text) => heard({ text, dictation: true }),
       __release: () => release(),

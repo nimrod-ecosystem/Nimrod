@@ -546,7 +546,8 @@ export function saveStoryLocal(key, story, storage = deviceStorage()) {
 }
 export function loadStoryLocal(key, storage = deviceStorage()) {
   if (!key) return null;
-  try { const v = JSON.parse(storage?.getItem(STORY_SAVE_PREFIX + key) || 'null'); return v && v.format === STORY_FORMAT ? v : null; }
+  // (row 2.235) A story written ahead is kept here too, as its place in the story (adventure_written.js WRITTEN_FORMAT).
+  try { const v = JSON.parse(storage?.getItem(STORY_SAVE_PREFIX + key) || 'null'); return v && (v.format === STORY_FORMAT || v.format === 'nimrod-written-story') ? v : null; }
   catch { return null; }
 }
 export function forgetStoryLocal(key, storage = deviceStorage()) {

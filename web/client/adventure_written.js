@@ -127,6 +127,31 @@ export function checkAdventure(raw) {
   return { ok: true, problems, story: Object.freeze({ id: raw.id, version, title, start: raw.start, nodes: Object.freeze(nodes) }) };
 }
 
+// ---- the stories this site ships: adventures/index.json and the files it names, each through the checker ----------------
+export const END_ANOTHER = 'Another story';
+export const END_BACK = 'Back to the start';
+let shipped = null;
+/** `[story]`, checked; a file that fails the checker or cannot be read is left out (said in `problems`). Read once a page. */
+export function loadWrittenStories({ base = new URL('./adventures/', import.meta.url).href, fetchImpl = (...a) => fetch(...a), fresh = false } = {}) {
+  if (shipped && !fresh) return shipped;
+  const b = base.endsWith('/') ? base : `${base}/`;
+  const json = async (u) => { const r = await fetchImpl(u); if (!r.ok) throw new Error(String(r.status)); return r.json(); };
+  shipped = (async () => {
+    let names = [];
+    try { const ix = await json(`${b}index.json`); names = Array.isArray(ix?.stories) ? ix.stories : []; } catch { names = []; }
+    const stories = [];
+    const problems = [];
+    for (const f of names.filter((n) => typeof n === 'string' && /^[\w.-]+\.json$/.test(n)).slice(0, 200)) {
+      try {
+        const r = checkAdventure(await json(`${b}${f}`));
+        if (r.ok) stories.push(r.story); else problems.push(`${f}: ${r.problems[0]}`);
+      } catch { problems.push(`${f} could not be read`); }
+    }
+    return Object.assign(stories, { problems });
+  })();
+  return shipped;
+}
+
 /** Every line a written story says in a theme, for its recordings: each page, each label, and each label as the light says it. PURE. */
 export function writtenLines(story, theme = 'nimrod') {
   const out = new Set();

@@ -31,6 +31,7 @@ import { CATALOG } from '../modules_catalog.js';
 import { MODULE_CATEGORIES } from '../library.js';
 import { auditManifests } from '../settings_audit.js';
 import { talkTo, townTalkReady } from '../town_talk.js';
+import { checkAdventure, ADVENTURE_SCHEMA } from '../adventure_written.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -78,7 +79,8 @@ function host({ ai, id = 'advtest1', state0 = {}, extra = {} } = {}) {
   mount.style.cssText = 'position:absolute;inset:0';
   document.getElementById('stage').append(mount);
   try { localStorage.removeItem(STORY_SAVE_PREFIX + id); } catch { /* blocked */ }
-  const inst = mountModule('adventure', { mount, bus, instanceId: id, personId: null, output, state, storyAI: ai, ...extra });
+  // (row 2.235) No stories written ahead unless a section gives some: the site's own would change what the AI sections see.
+  const inst = mountModule('adventure', { mount, bus, instanceId: id, personId: null, output, state, storyAI: ai, writtenStories: () => [], ...extra });
   inst.init();
   const p = () => inst.impl.__probe();
   const delivered = () => { const last = said[said.length - 1]; bus.publish(DELIVERY_TOPIC, { id: last.id, delivered: true }); };
@@ -238,6 +240,45 @@ section('*** no storyteller: it says how to set one up, instead of failing ***')
   await until(() => slowFirst.calls.length === 2 && !H5.p().thinking);
   check('...and pressing one starts the story', /Bakery/.test(H5.p().say), H5.p().say);
   H5.inst.destroy(); H5.mount.remove();
+  // ---- (row 2.235) stories written ahead, for a screen with no AI ----
+  const J = JSON.stringify;
+  const memStore = () => ({ m: {}, getItem(k) { return k in this.m ? this.m[k] : null; }, setItem(k, v) { this.m[k] = String(v); }, removeItem(k) { delete this.m[k]; } });
+  const W = checkAdventure({ schema: ADVENTURE_SCHEMA, id: 'w-test', version: 1, title: 'A test story', start: 'a', nodes: {
+    a: { place: 'park', cast: ['hero'], text: '{park} is quiet this morning.', choices: [{ label: 'Walk to {bakery}', to: 'b' }, { label: 'Sit down', to: 'b' }] },
+    b: { place: 'bakery', cast: ['hero'], text: 'The bread is warm.', end: true } } }).story;
+  const noAI = stubAI([{ ok: false, reason: 'Could not reach the AI program.' }]);
+  const HW = host({ ai: noAI, id: 'advtestW', state0: { lightMoves: 'off' }, extra: { writtenStories: () => [W], aiStorage: memStore() } });
+  await until(() => HW.p().writtenCount === 1);
+  const homeBtns = () => [...HW.mount.querySelectorAll('[data-adv-act]')].map((b) => b.dataset.advAct);
+  check('*** no storyteller has ever answered here: "Play a story written ahead" is the FIRST button (one switch reaches it) ***',
+    homeBtns()[0] === 'written', J(homeBtns()));
+  HW.inst.impl.__press('adventure');
+  await until(() => HW.p().view === 'setup');
+  check('*** nothing answered: the setup page offers a written story first ***',
+    HW.mount.querySelector('[data-adv-act]')?.dataset.advAct === 'written', J([...HW.mount.querySelectorAll('[data-adv-act]')].map((b) => b.dataset.advAct)));
+  HW.inst.impl.__press('written');
+  await until(() => HW.p().view === 'story' && !HW.p().thinking);
+  check('*** a written story plays: its first page, its places named, its choices (a label\'s place too) ***',
+    HW.p().written && /^The Park is quiet/.test(HW.p().say) && HW.p().choices[0] === 'Walk to the Bakery', J({ say: HW.p().say, c: HW.p().choices }));
+  check('*** no box to type in, and no dictation, in a written story ***', !HW.mount.querySelector('[data-adv-form]')
+    && HW.grammar[HW.grammar.length - 1].dictation === false);
+  HW.inst.impl.__press('choose', 1);
+  await until(() => !HW.p().thinking && /bread/.test(HW.p().say));
+  check('*** the end: "Another story" and "Back to the start" ***', J(HW.p().choices) === J(['Another story', 'Back to the start']), J(HW.p().choices));
+  check('it is kept on this device as its place in the story', HW.p().saved?.format === 'nimrod-written-story' && HW.p().saved?.node === 'b', J(HW.p().saved));
+  check('*** a written story is not the AI answering (the warm-up guard stays unset) ***', noAI.calls.length === 1);
+  HW.inst.impl.__press('choose', 1);
+  check('"Back to the start": the start', HW.p().view === 'home');
+  HW.inst.destroy(); HW.mount.remove();
+  const slowW = stubAI([{ ok: false, timedOut: true, reason: 'The AI model took longer than 2 minutes and was stopped.' }]);
+  const HT = host({ ai: slowW, id: 'advtestT', state0: { lightMoves: 'off', warmUp: false }, extra: { writtenStories: () => [W] } });
+  await until(() => HT.p().writtenCount === 1);
+  HT.inst.impl.__press('adventure');
+  await until(() => HT.p().view === 'setup' || (HT.p().view === 'story' && !HT.p().thinking));
+  check('*** a first turn that times out, with written stories here: the setup page, saying it is slow, with a written story ***',
+    HT.p().view === 'setup' && /taking too long/.test(HT.mount.textContent) && !!HT.mount.querySelector('[data-adv-act="written"]'), HT.p().view);
+  HT.inst.destroy(); HT.mount.remove();
+
   const tAI = stubAI([turn('Hello! Mind the sawdust.', ['Hi Jack', 'What are you making?'])]);
   const H6 = host({ ai: tAI, id: 'advtest6' });
   H6.bus.publish(ADVENTURE_TALK_TOPIC, { who: 'jack' });
