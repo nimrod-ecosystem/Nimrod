@@ -32,7 +32,7 @@ import {
 } from './rating.js';
 import { esc, fill, normalize } from './quiz_flow.js';
 import { normalizeSeats, followsScreen, MAX_SEATS, seatKey } from './player_picker.js';   // players
-import { hasTeams, turnOrder, teamLook } from './teams.js';   // (row 2.220) teams
+import { hasTeams, turnOrder, teamLook, scoreLine as teamScoreLine } from './teams.js';   // (row 2.220) teams
 
 export const LADDER_KEY = 'ratings';
 export const MAX_PLAYERS = MAX_SEATS;
@@ -1135,10 +1135,11 @@ export function createAdaptiveSession({ cfg = () => ({}), bankFor = () => [], st
       }
       return chip(current?.player || currentPlayer(), { game });
     },
-    /** "Ann 3 · Bob 2", or '' with one player. */
+    /** "Ann 3 · Bob 2", or '' with one player; with teams, the sides' totals: "Team 1 ● 5 · Team 2 ■ 3" (row 2.220). */
     scoreDetail() {
       const ps = players();
       if (ps.length < 2) return '';
+      if (hasTeams(ps)) return teamScoreLine(tally, ps);
       return ps.map((p) => `${p.name} ${tally[p.id] || 0}`).join(' · ');
     },
     /** Points for this right answer? The first player only, unless `pointsFor` says everyone. */

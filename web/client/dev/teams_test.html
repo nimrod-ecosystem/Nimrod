@@ -73,6 +73,7 @@ try {
   check('*** the sides take turns (never one side twice running), and within a side the turn rotates ***',
     J(who) === J(['Ann', 'Cy', 'Bo', 'Cy', 'Ann']), J(who));
   check('each answer counted on that member\'s own row', sess.playerRow('name:ann', 'g').n === 2 && sess.playerRow('name:bo', 'g').n === 1 && sess.playerRow('name:cy', 'g').n === 2);
+  check('*** the game\'s score shows the sides\' totals ***', sess.scoreDetail() === 'Team 1 ● 3 · Team 2 ■ 2', sess.scoreDetail());
   const plain = createAdaptiveSession({ cfg: () => ({ players: 'Ann, Bob' }), bankFor: () => bank });
   const w2 = [];
   for (let i = 0; i < 3; i += 1) { w2.push(plain.currentPlayer().name); plain.record({ item: plain.deal('g'), right: true }); }
