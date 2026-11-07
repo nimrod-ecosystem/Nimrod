@@ -1322,6 +1322,12 @@ export const SPEECH_DEFAULTS = Object.freeze({
   // which lets the game's own "I don't know that word" and "I didn't catch that" lines speak - the
   // option for a quiet room with one player in it.
   answerMatch: 'exact',
+  // *** LISTENING WITHOUT THE WAKE PHRASE WHILE A LESSON OR A GAME IS IN FRONT OF YOU (Mike, 2026-11-06, row 2.228: yes
+  // to "ON, closing 1 minute after the last press or word"; note EY 2). *** While the panel in front is a lesson or a
+  // game and somebody pressed or spoke in the last `openMs`, the commands it already knows (next, back, pause, its own
+  // phrases) work without the wake phrase. Never anything else without it: opening a module, "ask", "play as", a
+  // dashboard's name. AGAINST, said with the row: a television saying "stop" would do it too. 0 turns it off.
+  openMs: 60000,
   // *** A TONE, NOT A WORD, BY DEFAULT. *** DECISIONS 08-30: confirm with a tone or a short word,
   // never read content back. The tone wins the default because it is honest about what is known
   // - the phrase was HEARD, not that the panel did it (a panel with no pause ignores the verb) -
@@ -1523,7 +1529,24 @@ export const SPEECH_FIELDS = [
       { value: 'exact', label: 'Only one of the game’s words' },
       { value: 'any', label: 'Anything said' },
     ] },
+  // (Mike, 2026-11-06, row 2.228) SPEECH_DEFAULTS.openMs argues it.
+  { key: 'speechOpenMs', label: 'During a lesson or a game, commands work without the wake phrase', kind: 'choice',
+    default: SPEECH_DEFAULTS.openMs, level: 'standard',
+    options: [
+      { value: 0, label: 'No: always say the wake phrase' },
+      { value: 30000, label: 'Yes, until 30 seconds after the last press or word' },
+      { value: 60000, label: 'Yes, until 1 minute after the last press or word' },
+      { value: 120000, label: 'Yes, until 2 minutes after the last press or word' },
+      { value: 300000, label: 'Yes, until 5 minutes after the last press or word' },
+    ],
+    note: 'Only the commands it already knows: next, back, pause and the game’s own. A television in the room saying '
+      + 'one of them would work too.' },
 ];
+/** The open-listening time in force, from the person's row (SPEECH_DEFAULTS.openMs when unset; 0 is off). PURE. */
+export function speechOpenMsFrom(row = {}) {
+  const v = Number(row?.speechOpenMs);
+  return Number.isFinite(v) && v >= 0 ? v : SPEECH_DEFAULTS.openMs;
+}
 
 const pickChoice = (v, allowed, dflt) => (allowed.includes(v) ? v : dflt);
 
@@ -1809,6 +1832,10 @@ export function attachSpeech(input, {
   // asked each time something is heard, like `scoped`. Null (the default): no such command, exactly as before.
   // (voice open, 2026-10-12: its `modules` too - "open / show <module> [place]" is heard only when the host gives them.)
   playAs = null,
+  // OPEN LISTENING (row 2.228; SPEECH_DEFAULTS.openMs): a function the host answers at the moment something is heard -
+  // true while a lesson or a game is in front and was pressed or spoken to within its time. Then the commands it knows
+  // work without the wake phrase. Null (the default): never, exactly as before.
+  openListen = null,
   setTimer = (fn, ms) => setTimeout(fn, ms),
   clearTimer = (id) => clearTimeout(id),
 } = {}) {
@@ -2316,7 +2343,24 @@ export function attachSpeech(input, {
     // a quiz is an answer, and with the gate turned off it would otherwise skip the video too.
     const g = !w.woke && !inWindow ? currentGame() : null;
     if (g) { answer(g, text, detail); return; }
-    if (requireWake && !w.woke && !inWindow) { report({ text, verb: null, woke: false }); return; }
+    if (requireWake && !w.woke && !inWindow) {
+      // OPEN LISTENING (row 2.228): a lesson or a game in front, used within its time - the focused module's own phrase
+      // or a verb from the table works without the wake phrase. Nothing else does (no route, ask, play-as or open), and
+      // nothing unmatched is logged or asked about: it was not said to the screen.
+      let open = false;
+      try { open = typeof openListen === 'function' && !!openListen(); } catch { open = false; }
+      if (open) {
+        const ownOpen = scopedVerb(rest);
+        const v = ownOpen || verbFor(rest, table);
+        if (v) {
+          report({ text, verb: v, woke: false, open: true, ...(ownOpen ? { scoped: true } : {}) });
+          fire(v);
+          return;
+        }
+      }
+      report({ text, verb: null, woke: false });
+      return;
+    }
     if (w.woke && !rest) {
       // The wake phrase on its own: the command may follow as its own utterance - unless the
       // two-step path is turned off, when it opens nothing (and nothing is announced or ducked).

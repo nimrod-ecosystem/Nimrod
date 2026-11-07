@@ -26,7 +26,7 @@ not.</p>
 <script type="module">
 import {
   PHRASES, SPEECH_DEVICE, DEFAULT_BINDINGS, normalize, verbFor, duplicatePhrases,
-  phraseControl, attachSpeech, SPEECH_DEFAULTS, CONFIRM_MODES, usableWakePhrases, splitWake,
+  phraseControl, attachSpeech, SPEECH_DEFAULTS, CONFIRM_MODES, usableWakePhrases, splitWake, speechOpenMsFrom,
   LISTENING_TOPIC, SPEECH_FIELDS, wakeFrom,
   ROUTES, routeFor, wakeOnlyPhrase, spokenTable, SPEECH_ACTIONS, ROUTE_BINDINGS, SPEECH_BINDINGS, routeAction,
   SPEECH_GRAMMAR_TOPIC, SPEECH_ANSWER_TOPIC, ANSWERING_TOPIC, UNKNOWN_WORD, cleanDetail,
@@ -323,6 +323,33 @@ function section(t) { const h = document.createElement('h2'); h.textContent = t;
     check('...and the live list says which phrases are in force',
       JSON.stringify(r.speech.wakePhrases()) === '["computer please","hey screen"]',
       JSON.stringify(r.speech.wakePhrases()));
+  }
+  // OPEN LISTENING (Mike, 2026-11-06, row 2.228): while a lesson or a game is in front and used, its commands work without
+  // the wake phrase; nothing else does.
+  {
+    let open = false;
+    const routes = { ...ROUTES, 'dashboard-go-p1': { topic: 'kiosk/go', payload: { id: 'p1' }, label: 'Go to Pictures',
+      phrases: ['go to pictures'] } };
+    const r = rig({ openListen: () => open, routes, scoped: () => ({ 'launch the ball': 'launch' }) });
+    r.say('next');
+    check('closed: a bare command does nothing (the wake gate as before)', r.pressed().length === 0);
+    open = true;
+    r.say('next');
+    check('*** open: a bare command the table knows fires ***', JSON.stringify(r.pressed()) === '["phrase:next"]', JSON.stringify(r.pressed()));
+    r.say('launch the ball');
+    check('*** ...and the focused module’s own phrase ***', r.pressed()[1] === 'phrase:launch', JSON.stringify(r.pressed()));
+    check('...reported as open, not woken', r.heard.at(-1).open === true && r.heard.at(-1).woke === false, JSON.stringify(r.heard.at(-1)));
+    r.say('go to pictures');
+    check('*** never a route (a dashboard, a module, play-as) without the wake phrase ***', r.pressed().length === 2, JSON.stringify(r.pressed()));
+    r.say('i think it is going to rain');
+    check('talk that is no command does nothing, and is not asked about', r.pressed().length === 2 && !r.said.length, JSON.stringify(r.said));
+    r.say('computer please go to pictures');
+    check('the wake phrase still works for everything else', r.pressed()[2] === 'phrase:dashboard-go-p1', JSON.stringify(r.pressed()));
+    const broken = rig({ openListen: () => { throw new Error('gone'); } });
+    broken.say('next');
+    check('a host whose check throws: closed, never a stuck microphone', broken.pressed().length === 0);
+    check('the setting: 1 minute by default, 0 is off', speechOpenMsFrom({}) === 60000 && speechOpenMsFrom({ speechOpenMs: 0 }) === 0
+      && speechOpenMsFrom({ speechOpenMs: 'x' }) === 60000);
   }
   {
     const r = rig({ requireWake: false });

@@ -141,7 +141,7 @@ import { attachListening, LISTENING_FIELDS } from './listening_cue.js';
 import {
   attachSpeech, speechOptionsFrom, speechSwitchFrom, browserRecognizer, meansSomething, SPEECH_FIELDS, SPEECH_ON_FIELDS,
   SPEECH_ACTIONS, NEAR_MISS_ACTIONS, SPEECH_BINDINGS, SPEECH_DEVICE, PHRASES, ROUTES, spokenTable,
-  moduleVoiceTable, SPEECH_GRAMMAR_TOPIC,
+  moduleVoiceTable, SPEECH_GRAMMAR_TOPIC, speechOpenMsFrom,
 } from './input_speech.js';
 import { attachCursorDrive } from './cursor_drive.js';
 import {
@@ -1271,6 +1271,24 @@ export async function mountKiosk(root, {
     try { back = voiceOpen?.backTable?.() || null; } catch { back = null; }
     return back ? { ...(own || {}), ...back } : own;
   };
+  // *** OPEN LISTENING (Mike, 2026-11-06, row 2.228; input_speech.js SPEECH_DEFAULTS.openMs argues it). *** While the
+  // focused panel is a lesson or a game (the catalog's "practice" group, answering spoken verbs) and somebody pressed or
+  // gave a command within the person's time, its commands work without the wake phrase. Read when something is heard.
+  let openMs = 0;                 // the person's time, set when speech is attached; 0: off
+  let openTouched = -Infinity;    // the last press or command
+  const touchOpen = () => { openTouched = Date.now(); };
+  const listensOpen = (type) => {
+    const c = MODULE_CATALOG.find((x) => x && x.type === type);
+    let verbs = [];
+    try { verbs = verbsFor(type) || []; } catch { verbs = []; }
+    return !!c && c.group === 'practice' && verbs.length > 0;
+  };
+  const openListenNow = () => {
+    if (!(openMs > 0) || Date.now() - openTouched > openMs) return false;
+    let m = null;
+    try { m = runtime?.router?.focused?.() || null; } catch { m = null; }
+    return !!m && listensOpen(m.type);
+  };
   // (Re)attach speech from the person's row -- only when one of ITS settings changed, so a poll that
   // brings nothing new never restarts a recogniser under somebody who is mid-sentence.
   function syncSpeech(row) {
@@ -1360,6 +1378,7 @@ export async function mountKiosk(root, {
       speechOffs.push(rec.onCaption((c) => { try { subtitles?.caption(c); } catch (err) { console.error('kiosk: subtitles', err); } }));
     }
     const opts = speechOptionsFrom(r);
+    openMs = speechOpenMsFrom(r);
     // THE MISS LOG: only while spoken commands are on AND the person's row asks for it (OFF site-wide;
     // Mike, row 2.28 (b)). On this device, text only, pruned on a schedule that stops with the speech.
     if (sw.on && r.speechMissLog === true) {
@@ -1375,6 +1394,8 @@ export async function mountKiosk(root, {
         routes,
         screenSpeech,
         scoped: sw.on ? focusedVoice : null,
+        // open listening (row 2.228): commands only, so never while speech is subtitles-only.
+        openListen: sw.on ? openListenNow : null,
         // play as (row 2.80): the games and names, read when heard (an arrow: `playAs` is declared further down).
         // voice open (2026-10-12): and every module "open / show <module>" knows (voice_open.js `modules`).
         playAs: sw.on ? () => ({ ...playAs.vocabulary(), modules: voiceOpen.modules() }) : null,
@@ -1384,7 +1405,11 @@ export async function mountKiosk(root, {
         output: sw.on ? output : null,
         bus: sw.on ? bus : null,
         misses: sw.on ? missStore : null,
-        onHeard: (h) => { if (captions) return; try { subtitles?.heard(h); } catch (err) { console.error('kiosk: subtitles', err); } },
+        onHeard: (h) => {
+          if (h && h.verb) touchOpen();      // a command keeps open listening open (row 2.228)
+          if (captions) return;
+          try { subtitles?.heard(h); } catch (err) { console.error('kiosk: subtitles', err); }
+        },
       });
       speech.start();
       // subtitle learning: "what I said was ..." - tell the speech layer just made that corrections are taken.
@@ -9020,6 +9045,14 @@ export async function mountKiosk(root, {
   }
   // WHAT A PLACED BAR'S BUTTONS SAY (shell_verbs.js), done with the plain bar's own functions.
   const offsShell = [];
+  // OPEN LISTENING (row 2.228, `openListenNow` above): a press of a switch or a key, or a tap on the screen, keeps it open.
+  try {
+    const offPress = bus.subscribe(EDGE_TOPIC, (e) => { if (e && e.phase === 'down') touchOpen(); });
+    if (typeof offPress === 'function') offsShell.push(offPress);
+    const onTap = () => touchOpen();
+    kioskEl.addEventListener('pointerdown', onTap, true);
+    offsShell.push(() => kioskEl.removeEventListener('pointerdown', onTap, true));
+  } catch (err) { console.error('kiosk: open listening', err); }
   if (useDashboard) {
     controlsEl.classList.add('k-plain');
     const on = (topic, fn) => offsShell.push(bus.subscribe(topic, fn));
