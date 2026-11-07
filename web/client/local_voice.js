@@ -195,7 +195,14 @@ export function createLocalVoice({ fetchImpl = (...a) => fetch(...a), storage = 
       // (en_US-libritts-high), so every character can share one loaded model. Sent only when it is a whole number.
       const body = { text: t, ...((voice || c.voice) ? { voice: voice || c.voice } : {}), ...(Number(rate) > 0 ? { rate: Number(rate) } : {}),
         ...(Number.isInteger(speaker) && speaker >= 0 ? { speaker } : {}) };
-      const r = await call('/speak', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }, { signal });
+      let r = await call('/speak', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }, { signal });
+      // A VOICE THE PROGRAM DOES NOT HAVE (row 2.208's cast, the gate on note EZ): the program refuses it (400), and the
+      // browser's voice, the next way down, is silent on a Pi. So the line is asked for once more in the program's own
+      // voice: a character in the wrong voice, never a line not said.
+      if (!r.ok && r.status === 400 && (body.voice || body.speaker != null)) {
+        const plain = { text: t, ...(body.rate ? { rate: body.rate } : {}) };
+        r = await call('/speak', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(plain) }, { signal });
+      }
       if (!r.ok) return r;
       let blob;
       try { blob = await r.res.blob(); } catch { return { ok: false, reason: 'The voice program’s sound could not be read.' }; }

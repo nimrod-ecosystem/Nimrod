@@ -89,6 +89,23 @@ try {
   const q = { question: 'How many are there?', answer: '3', wrong: ['2', '5'] };
   check('a question\'s answers in a fixed shuffled order (the same each time, so a switch can learn it)', J(answersOf(q)) === J(answersOf(q)) && answersOf(q).length === 3 && answersOf(q).includes('3'));
 
+  section('*** FOUR VOICES (row 2.228): roles, Mike’s cast by default, one voice per character ***');
+  {
+    const { classCast, roleOf, CLASS_CAST_DEFAULTS, CLASS_VOICE_MODEL } = await import('../modules/lesson_player.js');
+    check('the four roles; "teacher" and nothing are teacher A', roleOf('teacher') === 'a' && roleOf(null) === 'a' && roleOf('B') === 'b'
+      && roleOf('technical') === 'technical' && roleOf('Philosophical') === 'philosophical');
+    const d = classCast({});
+    check('*** Mike’s cast by default: A the person’s own, B 26, technical 41, philosophical 184 (one many-speaker model) ***',
+      J(d.speakers) === J({ a: 0, b: 26, technical: 41, philosophical: 184 }) && !d.clashes.length && CLASS_VOICE_MODEL === 'en_US-libritts-high');
+    const c = classCast({ voice_philosophical: 26 });
+    check('*** one voice per character: a voice already taken is not used twice, and the clash is named ***',
+      c.speakers.philosophical === 0 && c.speakers.b === 26 && /philosophical side has the same voice as teacher B/.test(c.clashes[0] || ''), J(c));
+    check('a voice not offered reads as the default', classCast({ voice_b: 999 }).speakers.b === CLASS_CAST_DEFAULTS.b);
+    const F = Object.fromEntries(LESSON_SETTINGS.map((f) => [f.key, f]));
+    check('two voices by default (today’s sound); the speaker rows only under four', F.classVoices.default === 'two'
+      && F.voice_b.appliesWhen({ classVoices: 'two' }) === false && F.voice_b.appliesWhen({ classVoices: 'four' }) === true);
+  }
+
   section('*** THE PAGE TO BE READ (Mike, 2026-11-05): Watch waits for what a slide shows, not only what it says ***');
   {
     const busy = { say: { text: 'Here is what happened.' }, show: { kind: 'lines', items: ['1798 the first vaccine is tested', '1885 rabies, by Pasteur', '1955 polio, by Salk', '1980 smallpox is gone'] } };

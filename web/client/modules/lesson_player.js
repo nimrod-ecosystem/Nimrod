@@ -76,6 +76,38 @@ export const SECOND_VOICE_STEP = 0.4;
 // as teacher A or teacher B. The debate's philosophical voice is B, the technical one A - what "the other side" sounded
 // like before there were four roles. PURE.
 export const voiceSlot = (who) => { const w = String(who || '').toLowerCase(); return w === 'b' || w === 'philosophical' ? 'b' : 'a'; };
+// *** FOUR VOICES (Mike, 2026-11-06, row 2.228: yes to "roles in the files, captions name the speaker"). *** A role is one
+// of four; under "Voices in a class: four" each may be its own speaker of ONE multi-speaker voice (the local voice
+// program, tts_service.js `speaker`), so no model is switched between lines. CLASS_VOICE_MODEL, argued: libritts-high is
+// the voice with many speakers that may be published (CC BY 4.0, voice_licences_20261105), and Mike's cast is in it.
+export const CLASS_VOICE_MODEL = 'en_US-libritts-high';
+export const CLASS_ROLES = Object.freeze(['a', 'b', 'technical', 'philosophical']);
+/** A beat's `who` as one of the four roles ('teacher' and nothing are teacher A). PURE. */
+export const roleOf = (who) => { const w = String(who || '').toLowerCase(); return w === 'b' || w === 'technical' || w === 'philosophical' ? w : 'a'; };
+// The speakers offered: the libritts speakers of Mike's cast (voice_cast.md), by number. 0: the program's own voice.
+export const CLASS_SPEAKERS = Object.freeze([0, 22, 25, 26, 38, 41, 53, 115, 184, 552]);
+// Mike's cast as the defaults (row 2.208 / 2.224): teacher A keeps the person's own voice (on a screen with an assistant
+// voice, it is set there), teacher B is Nimrod (26), the technical side Jack (41), the philosophical side Robin (184).
+export const CLASS_CAST_DEFAULTS = Object.freeze({ a: 0, b: 26, technical: 41, philosophical: 184 });
+/**
+ * The speaker each role uses under four voices, with ONE VOICE PER CHARACTER (Mike, row 2.212): a speaker already taken by
+ * an earlier role (A, B, technical, philosophical) is not used again - that role keeps its two-voice sound - and the
+ * clash is named. -> { speakers: { role: n }, clashes: ['the philosophical side has the same voice as teacher B'] }. PURE.
+ */
+export function classCast(values = {}) {
+  const words = { a: 'teacher A', b: 'teacher B', technical: 'the technical side', philosophical: 'the philosophical side' };
+  const speakers = {};
+  const clashes = [];
+  const taken = new Map();
+  for (const r of CLASS_ROLES) {
+    const raw = values[`voice_${r}`];
+    const n = CLASS_SPEAKERS.includes(Number(raw)) ? Number(raw) : CLASS_CAST_DEFAULTS[r];
+    if (n > 0 && taken.has(n)) { clashes.push(`${words[r]} has the same voice as ${words[taken.get(n)]}`); speakers[r] = 0; continue; }
+    if (n > 0) taken.set(n, r);
+    speakers[r] = n;
+  }
+  return { speakers, clashes };
+}
 export function voiceFor(who, pref = {}, choice = 'higher') {
   if (voiceSlot(who) !== 'b') return null;
   const p = pref && typeof pref === 'object' ? pref : {};
@@ -172,6 +204,20 @@ const SETTINGS = [
     appliesWhen: (v) => v?.speak !== false,
     note: 'For a lesson written for two voices: who reads the second voice’s lines.',
     options: [{ value: 'higher', label: 'Your voice, higher' }, { value: 'lower', label: 'Your voice, lower' }] },
+  // FOUR VOICES (row 2.228; `classCast` above). Two is today's sound and the default: four needs the local voice program
+  // with the many-speaker voice, and a screen without it says every role in two voices anyway.
+  { key: 'classVoices', label: 'Voices in a class', kind: 'choice', default: 'two', level: 'standard',
+    appliesWhen: (v) => v?.speak !== false,
+    note: 'Four: each side of a debate in a voice of its own, when this screen has the voice program with many voices.',
+    options: [{ value: 'two', label: 'Two: the two teachers' }, { value: 'four', label: 'Four: the teachers and each side of a debate' }] },
+  ...CLASS_ROLES.map((r) => ({ key: `voice_${r}`, kind: 'choice', default: CLASS_CAST_DEFAULTS[r], level: 'advanced',
+    label: { a: 'Teacher A’s voice', b: 'Teacher B’s voice', technical: 'The technical side’s voice',
+      philosophical: 'The philosophical side’s voice' }[r],
+    appliesWhen: (v) => v?.speak !== false && v?.classVoices === 'four',
+    note: 'One voice per character: a voice another role already has is not used twice.',
+    options: CLASS_SPEAKERS.map((n) => ({ value: n, label: n ? `Voice ${n}` : 'This screen’s own voice' })) })),
+  { key: 'name_technical', label: 'The technical side is called', kind: 'text', default: 'Jack', level: 'advanced', maxLength: 24 },
+  { key: 'name_philosophical', label: 'The philosophical side is called', kind: 'text', default: 'Robin', level: 'advanced', maxLength: 24 },
   // THE PACE (row 2.113, 2026-10-23): the pause AFTER a part has been said, before Watch moves on. (It was "each part
   // stays at least", counted from the start of the part, so a long part's words ran past it and on into the next.)
   // Standard, not advanced: Mike's first word on the lessons was that they rush.
@@ -452,6 +498,14 @@ function lessonsModule(ctx) {
     let prefRow = null;         // the profile's settings row: the person's own voice, for the second voice (row 2.111)
 
     const setting = (k, d) => (cfg[k] === undefined ? d : cfg[k]);
+    // (row 2.228) A debate line's caption says who is speaking ("Jack: ..."): two unfamiliar voices are hard to tell apart
+    // by ear. On the caption only, never in the words said (a recording is looked up by its words).
+    const speakerTag = (who) => {
+      const r = roleOf(who);
+      if (r !== 'technical' && r !== 'philosophical') return '';
+      const name = String(setting(`name_${r}`, r === 'technical' ? 'Jack' : 'Robin') || '').trim();
+      return name ? `<b class="lp-who" data-lp-who="${r}">${esc(name)}:</b> ` : '';
+    };
     const form = () => (LESSON_FORMS.includes(cfg.form) ? cfg.form : DEFAULT_LESSON_FORM);
     const look = () => (LOOKS.includes(cfg.look) ? cfg.look : 'child');
 
@@ -547,8 +601,16 @@ function lessonsModule(ctx) {
         if (ctx.output?.say) {
           // clipVoice: which teacher's recording made ahead (local_voice.js clip) may say this line, when one exists for
           // exactly these words. Teacher B is 'b'; teacher A and the learner's own lines are 'a', as make_lesson_clips.py makes them.
-          const clipVoice = voiceSlot(who);
-          const r = speech.say(text, { source: 'lesson', data: { clipVoice, ...(voice ? { voice } : {}) } });
+          const role = roleOf(who);
+          const four = setting('classVoices', 'two') === 'four';
+          // (row 2.228) Under four voices a role with a speaker of its own asks the voice program for it; the recordings
+          // made ahead are two-voice, so a debate line is then said live rather than in the wrong voice.
+          const spk = four ? classCast(cfg).speakers[role] : 0;
+          const debate = role === 'technical' || role === 'philosophical';
+          const clipVoice = four && debate ? null : voiceSlot(who);
+          const data = { ...(clipVoice ? { clipVoice } : {}), ...(voice ? { voice } : {}),
+            ...(spk > 0 ? { localVoice: CLASS_VOICE_MODEL, localSpeaker: spk } : {}) };
+          const r = speech.say(text, { source: 'lesson', data });
           speechId = r.id;
           // Said to the end: nothing left to stop.
           r.done?.then?.(() => { if (speechId === r.id) speechId = null; }, () => {});
@@ -708,7 +770,7 @@ function lessonsModule(ctx) {
       const hideShow = answered || (!!b.ask && show?.kind === 'picture');
       return `<div class="lp-stage${b.move && !answered ? ` lp-m-${b.move}` : ''}" data-lp-beat="${at}">
           ${show && !hideShow ? `<div class="lp-show" role="img" aria-label="${esc(showWords(show, lesson))}">${showHTML(show, lesson)}</div>` : ''}
-          ${b.say && !answered ? `<p class="lp-say"${b.say.who === 'b' ? ' data-who="b"' : ''}>${esc(b.say.text)}</p>` : ''}
+          ${b.say && !answered ? `<p class="lp-say"${voiceSlot(b.say.who) === 'b' ? ' data-who="b"' : ''}>${speakerTag(b.say.who)}${esc(b.say.text)}</p>` : ''}
           ${ask}${citeLine}
         </div><span hidden>${esc(klass.title)}</span>`;
     }

@@ -95,6 +95,16 @@ section('*** speaking through the stub program ***');
   check('*** one model, many speakers (FD 1): the speaker number is sent with the voice ***', cs.voice === 'en_US-libritts-high' && cs.speaker === 115, JSON.stringify(cs));
   await vS.speak('Not a number.', { speaker: '115' });
   check('a speaker that is not a whole number is not sent', !('speaker' in JSON.parse(progS.calls.at(-1).init.body)));
+  // A voice the program lacks: it refuses (400); the line is asked again in the program's own voice, never left unsaid.
+  const lacks = [];
+  const progL = async (url, init = {}) => {
+    const b = JSON.parse(init.body); lacks.push(b);
+    if (b.voice || b.speaker != null) return new Response('{"ok":false,"error":"no voice called x"}', { status: 400 });
+    return new Response(wav(), { headers: { 'Content-Type': 'audio/wav' } });
+  };
+  const rl = await createLocalVoice({ fetchImpl: progL, storage: mem }).speak('Hello.', { voice: 'en_US-libritts-high', speaker: 41 });
+  check('*** a voice the program does not have: said again in its own voice, never silent ***', rl.ok && lacks.length === 2
+    && lacks[1].voice === undefined && lacks[1].speaker === undefined, JSON.stringify(lacks));
   check('the sound comes back as audio', r.ok && r.blob && /^audio\//.test(r.type), JSON.stringify({ ok: r.ok, type: r.type }));
   const h = await v.check();
   check('"is it there?" reads /health', h.ok && h.engine.startsWith('piper:') && h.voices.length === 1);
