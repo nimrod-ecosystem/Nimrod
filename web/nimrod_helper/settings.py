@@ -64,6 +64,18 @@ DEFAULTS = {
         'port': 8770,
         'name': 'This computer',
     },
+    # THE AI RELAY (row 2.231, note FF; web/speech_service/DESKTOP_AI_MODEL.md): tools/ollama_tailnet_proxy.py, so a
+    # screen with no AI of its own (a Pi) can use this computer's Ollama through `tailscale serve`, and it starts with
+    # the helper instead of in a window somebody has to keep open. OFF: sharing this computer's AI with other devices
+    # is a choice, like serving a folder; somebody whose screen IS this computer needs nothing here (the page reaches
+    # Ollama on 127.0.0.1 itself). `install --share-ai` turns it on.
+    'ai': {
+        'on': False,
+        # The relay's own default (it listens on 127.0.0.1 only); `tailscale serve --https=8443` points here.
+        'port': 11435,
+        # Ollama's own default address.
+        'upstream': '127.0.0.1:11434',
+    },
 }
 
 

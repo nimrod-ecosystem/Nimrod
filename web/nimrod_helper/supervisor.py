@@ -147,6 +147,14 @@ def plan(settings: dict, app_dir, python: str, data: Path, models: Path | None =
                 argv += ['--data-dir', str(Path(root) / 'Data')]
             out.append({'name': 'media', 'label': 'Media agent', 'argv': argv, 'cwd': str(app), 'port': port,
                         'env': {'PYTHONUNBUFFERED': '1'}, 'why': ''})
+    # (row 2.231) the AI relay: this computer's Ollama for the house's other screens, through `tailscale serve`.
+    ai = settings.get('ai') or {}
+    if ai.get('on'):
+        port = int(ai.get('port') or 11435)
+        upstream = str(ai.get('upstream') or S.DEFAULTS['ai']['upstream']).strip()
+        argv = [python, str(app / 'tools' / 'ollama_tailnet_proxy.py'), '--port', str(port), '--upstream', upstream]
+        out.append({'name': 'ai', 'label': 'AI relay', 'argv': argv, 'cwd': str(app), 'port': port,
+                    'env': {'PYTHONUNBUFFERED': '1'}, 'why': ''})
     return out
 
 

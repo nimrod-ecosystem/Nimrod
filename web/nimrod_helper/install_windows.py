@@ -161,7 +161,7 @@ def run_command(lay: Layout, verb: str = 'run') -> str:
 # ---------------------------------------------------------------------------------------------
 # What the helper carries, from web/. Tests, build tools, a person's own voice model, the speech
 # program's local "where is my Nimrod folder" note and any VOICEPRINTS made beside it (row 2.56) stay behind.
-APP_PARTS = ('nimrod_helper', 'speech_service', 'media_agent/agent.py')
+APP_PARTS = ('nimrod_helper', 'speech_service', 'media_agent/agent.py', 'tools/ollama_tailnet_proxy.py')
 SKIP_NAMES = {'__pycache__', 'my_voice_model', 'nimrod_folder.txt', 'voiceprints', 'build', 'dist', 'windows',
               'build_windows.py', 'make_test_fixtures.py'}
 

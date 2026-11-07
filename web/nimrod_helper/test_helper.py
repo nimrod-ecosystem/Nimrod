@@ -165,6 +165,16 @@ def plan_tests(tmp: Path):
     check('...a media folder of its own still wins', SV.plan(S.merged(sr, {'media': {'folder': 'E:/Photos'}}), app, 'PY', data)[1]['argv'][3] == 'E:/Photos')
     check('...and the Nimrod folder never turns media on by itself',
           [x['name'] for x in SV.plan(S.merged(S.DEFAULTS, {'nimrodFolder': 'D:/Nimrod'}), app, 'PY', data)] == ['speech'])
+    # row 2.231: the AI relay (this computer's Ollama for the house's other screens).
+    check('*** the AI relay is OFF by default: nothing of this computer\'s AI is offered to other devices ***',
+          S.DEFAULTS['ai']['on'] is False and 'ai' not in [x['name'] for x in SV.plan(S.DEFAULTS, app, 'PY', data)])
+    pa = [x for x in SV.plan(S.merged(S.DEFAULTS, {'ai': {'on': True}}), app, 'PY', data) if x['name'] == 'ai']
+    check('*** on: the relay runs from the program folder, 11435 -> Ollama on 127.0.0.1:11434 ***',
+          len(pa) == 1 and pa[0]['argv'] == ['PY', str(app / 'tools' / 'ollama_tailnet_proxy.py'), '--port', '11435',
+                                             '--upstream', '127.0.0.1:11434'] and pa[0]['port'] == 11435, pa)
+    pb = [x for x in SV.plan(S.merged(S.DEFAULTS, {'ai': {'on': True, 'port': 11500, 'upstream': '127.0.0.1:11999'}}),
+                             app, 'PY', data) if x['name'] == 'ai'][0]['argv']
+    check('...its port and Ollama\'s address are settings', pb[-4:] == ['--port', '11500', '--upstream', '127.0.0.1:11999'], pb)
     pyw = tmp / 'pythonw.exe'
     pyw.write_text('')
     (tmp / 'python.exe').write_text('')
@@ -427,6 +437,8 @@ def secret_tests(tmp: Path):
     over = M.install_settings(ns(allow_host=['desk.tail.ts.net'], models_dir=str(tmp / 'hf')))
     check('install flags: with --models-dir, both are laid over (and the pass phrase is not a flag at all)',
           over == {'speech': {'allowHosts': ['desk.tail.ts.net'], 'modelsDir': str(tmp / 'hf')}}, over)
+    check('install flags: --share-ai on / off -> ai.on, and nothing else changes',
+          M.install_settings(ns(share_ai='on')) == {'ai': {'on': True}} and M.install_settings(ns(share_ai='off')) == {'ai': {'on': False}})
 
 
 def live_secret_tests(tmp: Path):
@@ -641,7 +653,10 @@ def install_tests(tmp: Path):
     files = {p.relative_to(lay.app).as_posix() for p in lay.app.rglob('*') if p.is_file()}
     check('install: the program is copied - the helper, the speech program, the media agent, the launcher',
           {'nimrod_helper/__main__.py', 'nimrod_helper/supervisor.py', 'speech_service/service.py',
-           'speech_service/__main__.py', 'media_agent/agent.py', W.LAUNCHER} <= files, sorted(files)[:20])
+           'speech_service/__main__.py', 'media_agent/agent.py', 'tools/ollama_tailnet_proxy.py', W.LAUNCHER} <= files,
+          sorted(files)[:20])
+    check('install: ...the AI relay alone from tools/, none of the other tools',
+          [f for f in files if f.startswith('tools/')] == ['tools/ollama_tailnet_proxy.py'], [f for f in files if f.startswith('tools/')])
     check('install: ...and not the tests, the build tools or caches',
           not any(f.split('/')[-1].startswith('test_') or '__pycache__' in f or 'build_windows' in f
                   or f.endswith('.iss') for f in files), [f for f in files if 'test_' in f or 'build' in f])

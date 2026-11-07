@@ -66,9 +66,11 @@ models, and a reply, two ways). Everything else gets "not found".
 To stop sharing it: `tailscale serve --https=8443 off`, and close the small program's window. That leaves
 the speech program's address as it was. (`tailscale serve reset` would clear both.)
 
-**After a restart.** `tailscale serve --bg` comes back by itself. The small program does **not**: start it
-again (step 2). Making it start by itself, like the speech program does through the Nimrod helper, is on
-Mike's list.
+**After a restart.** `tailscale serve --bg` comes back by itself. The small program started by hand (step 2)
+does **not**. **The Nimrod helper can start it instead** (2026-11-06): install the helper with
+`--share-ai on` (or set `"ai": {"on": true}` in its settings.json, `%LOCALAPPDATA%\Nimrod Helper`), and it
+runs the small program with the speech program, starts it with Windows, and restarts it if it stops. Then
+step 2 is not needed. It is off unless turned on: sharing this computer's AI is a choice.
 
 ## On the screen
 

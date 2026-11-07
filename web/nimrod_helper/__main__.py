@@ -6,7 +6,8 @@
                  start it with Windows, start it now. From a built package folder: --payload <folder>.
                  From this checkout: --use-this-python (the Python running this command does the work).
                  --allow-host <name>: the speech program also answers to that name (`tailscale serve`).
-    secret       ask for the speech program's pass phrase (not shown as it is typed) and keep it in the
+                 --share-ai on: also start the AI relay (this computer's Ollama for the house's other screens).
+    secret      ask for the speech program's pass phrase (not shown as it is typed) and keep it in the
                  data folder; a running helper restarts the speech program with it. --clear removes it.
     uninstall    stop it and remove everything install wrote (what the Apps list's Uninstall runs)
     register     start-with-Windows + Start menu + start now (a setup.exe calls this after copying files)
@@ -52,7 +53,10 @@ def install_settings(a) -> dict | None:
         speech['modelsDir'] = str(Path(a.models_dir).expanduser())
     if a.allow_host is not None:          # `--allow-host ""` empties the list
         speech['allowHosts'] = host_list(a.allow_host)
-    return {'speech': speech} if speech else None
+    out = {'speech': speech} if speech else {}
+    if getattr(a, 'share_ai', None) is not None:     # --share-ai on | off (row 2.231, settings.py 'ai')
+        out['ai'] = {'on': a.share_ai == 'on'}
+    return out or None
 
 
 def ask_secret(ask=getpass.getpass) -> tuple[str | None, str]:
@@ -76,6 +80,9 @@ def main(argv=None) -> int:
     ap.add_argument('--allow-host', action='append', default=None, metavar='NAME[,NAME...]',
                     help='install: the speech program also answers to this name, e.g. your-desktop.your-tailnet.ts.net '
                          'when `tailscale serve` gives it a secure address (speech_service/DESKTOP_SECOND_PASS.md)')
+    ap.add_argument('--share-ai', choices=['on', 'off'], default=None,
+                    help='install: start the AI relay, so the house\'s other screens can use this computer\'s Ollama '
+                         'through `tailscale serve` (speech_service/DESKTOP_AI_MODEL.md)')
     ap.add_argument('--clear', action='store_true', help='secret: remove the pass phrase')
     ap.add_argument('--payload', default=None, help='install: a folder build_windows.py made (python\\ and app\\)')
     ap.add_argument('--use-this-python', action='store_true',
