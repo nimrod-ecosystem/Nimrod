@@ -287,6 +287,8 @@ export const SUITES = [
   'research_index',
   // row 2.223 (2026-11-06): Did you know, the cards over that index; Facts, Quotes and Words are it with one row set.
   'didyouknow',
+  // row 2.235 (2026-11-06): adventures written ahead, for a screen with no AI: the checker and the player.
+  'adventure_written',
   // 2026-10-25: Design's castle and village (item 45), edited with the room's handles (one editor, note CP).
   'village',
   // 2026-10-25 (row 2.123): change the site's words where they are, `?wording=1`; copied for --apply-page-edits.

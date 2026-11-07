@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>adventure_written — adventures written ahead: the checker and the player — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>adventure_written — the checker, the player, the lines to record</h1>
+<p>A made-up story built here.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<script type="module">
+import { checkAdventure, createWrittenStory, writtenLines, ADVENTURE_SCHEMA, NO_FREE_TEXT_LINE, WRITTEN_FORMAT } from '../adventure_written.js';
+import { pageText } from '../stories.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = (v) => JSON.stringify(v);
+const clone = (o) => JSON.parse(JSON.stringify(o));
+
+const good = { schema: ADVENTURE_SCHEMA, id: 'lost-key', version: 1, title: 'The lost key', start: 'n1', nodes: {
+  n1: { place: 'park', cast: ['hero', 'jack'], text: 'In {park}, Jack is turning out his pockets.',
+        choices: [{ label: 'Help him look', to: 'n2' }, { label: 'Ask what he lost', to: 'n3' }] },
+  n2: { place: 'park', cast: ['hero', 'jack'], text: 'You find it under a bench.', choices: [{ label: 'Next', to: 'n4' }] },
+  n3: { place: 'park', cast: ['jack'], text: '“The key to {jackWorkshop},” he says.', choices: [{ label: 'Help him look', to: 'n2' }] },
+  n4: { place: 'jackWorkshop', cast: ['hero', 'jack'], text: 'The key turns, and the door swings open.', end: true },
+} };
+
+try {
+  section('*** the checker ***');
+  const r = checkAdventure(good);
+  check('*** a good story passes, cleaned ***', r.ok && r.story.nodes.n3.cast[0] === 'hero' && r.story.nodes.n3.cast.includes('jack'), J(r.problems));
+  check('not this format: refused', !checkAdventure({ schema: 'x' }).ok && !checkAdventure(null).ok);
+  const loop = clone(good); loop.nodes.n2.choices = [{ label: 'Look again', to: 'n3' }]; loop.nodes.n3.choices = [{ label: 'Help him look', to: 'n2' }];
+  const rl = checkAdventure(loop);
+  check('*** a loop with no way out: refused, by page ***', !rl.ok && rl.problems.some((p) => /n2.*no way from it to an end/.test(p)), J(rl.problems));
+  const orphan = clone(good); orphan.nodes.n5 = { place: 'park', cast: [], text: 'Nobody gets here.', end: true };
+  check('*** a page nothing leads to: refused ***', checkAdventure(orphan).problems.some((p) => /n5.*nothing leads to it/.test(p)));
+  const bad = clone(good);
+  bad.nodes.n1.place = 'moon'; bad.nodes.n1.text = 'Off to {mars}.'; bad.nodes.n1.choices.push({ label: 'x'.repeat(41), to: 'n4' }, { label: 'Help him look', to: 'nowhere' });
+  bad.nodes.n4.choices = [{ label: 'More', to: 'n1' }]; bad.nodes.n2.cast = ['hero', 'king', 'queen', 'joker'];
+  const rb = checkAdventure(bad);
+  const has = (re) => rb.problems.some((p) => re.test(p));
+  check('every problem said: an unknown place and token, a long label, a choice to nowhere, a repeated choice, an end with choices, a big cast',
+    has(/"moon" is not a place/) && has(/\{mars\}/) && has(/41 characters/) && has(/"nowhere", which is not a page/)
+    && has(/two choices say the same/) && has(/an end has no choices/) && has(/4 in the cast/), J(rb.problems));
+  const five = clone(good); five.nodes.n1.choices = ['a', 'b', 'c', 'd', 'e'].map((l) => ({ label: l, to: 'n4' }));
+  check('more than 4 choices: refused', checkAdventure(five).problems.some((p) => /5 choices/.test(p)));
+  const noend = clone(good); delete noend.nodes.n4.end; noend.nodes.n4.choices = [];
+  check('a page that is neither an end nor has a choice: refused', checkAdventure(noend).problems.some((p) => /n4.*0 choices/.test(p)));
+
+  section('*** the player: the same object Adventure plays ***');
+  const s = createWrittenStory(r.story, { theme: 'nimrod' });
+  const a = await s.start();
+  check('*** start: the first page, its places named for the theme, its choices ***',
+    a.ok && a.say === pageText(good.nodes.n1.text, 'nimrod') && !/\{/.test(a.say) && J(a.choices) === J(['Help him look', 'Ask what he lost']) && s.started(), J(a));
+  const b = await s.choose(1);
+  check('a choice moves to its page', b.say.startsWith('“The key to') && J(b.choices) === J(['Help him look']));
+  const saved = s.toJSON();
+  await s.choose(0); const e = await s.choose(0);
+  check('*** the end: said as an end, no choices of its own ***', e.end === true && e.choices.length === 0 && s.ended());
+  check('a choice that is not there: the page stays', (await s.choose(5)).ok === false && s.ended());
+  const f = await s.say('go to the moon');
+  check('*** free text: nowhere to go, said, the choices kept ***', f.say === NO_FREE_TEXT_LINE && s.ended());
+  const s2 = createWrittenStory(r.story);
+  check('*** saved: story, version, page; restored there ***', saved.format === WRITTEN_FORMAT && saved.id === 'lost-key' && saved.version === 1
+    && s2.restore(saved).ok && s2.lastSay().startsWith('“The key to'), J(saved));
+  const v2 = checkAdventure({ ...clone(good), version: 2 }).story;
+  const s3 = createWrittenStory(v2);
+  const rs = s3.restore(saved);
+  check('*** a changed story: starts again, and says so ***', !rs.ok && /changed/.test(rs.reason) && s3.lastSay() === pageText(good.nodes.n1.text));
+
+  section('the lines to record');
+  const lines = writtenLines(r.story, 'nimrod');
+  check('*** each page as the theme says it, and each label both ways (the light says "label?") ***',
+    lines.includes(pageText(good.nodes.n1.text, 'nimrod')) && lines.includes('Help him look') && lines.includes('Help him look?')
+    && new Set(lines).size === lines.length, J(lines));
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+const s = document.getElementById('summary');
+s.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+s.className = failed ? 'fail' : 'pass';
+s.dataset.done = 'true'; s.dataset.failed = String(failed);
+</script>
+</body>
+</html>
