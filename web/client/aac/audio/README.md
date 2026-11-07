@@ -1,8 +1,10 @@
 # The spoken words on the communication board
 
-Seventeen WAV files — one for every card on the two boards `/talk.html` ships. `talk.js` finds
-them by turning a word into a file name: lower case, every run of anything else becomes one
-underscore, add `.wav`.
+Seventy-four WAV files: one for every word on the built-in boards (`aac_vocab.js`: Yes / No,
+Talk, Core words, Library, Meals), and for the fifteen words Nimrod's own pictures are drawn for
+that no built-in board has yet (Please, Mom, Dad, Pumpkin and the rest). Seventeen until
+2026-11-06; the rest were made that day (row 2.234). The board and `talk.js` find them by turning
+a word into a file name: lower case, every run of anything else becomes one underscore, add `.wav`.
 
     Yes        -> yes.wav
     Thank you  -> thank_you.wav
@@ -22,11 +24,14 @@ attribution: [`ATTRIBUTIONS.md`](../../../ATTRIBUTIONS.md) at the repo root.
 
 ## Adding a word
 
-Generate it **with that tool and that speaker**, in the private repo:
+Generate it **with that model and that speaker**. A word added to a built-in board is found by
+the tool itself (its suite, `tools/test_make_board_clips.py`, fails until the word has a file):
 
-    py -3.13 Cici/tools/gen_aac_voice.py <slug>="Spoken text."
+    py -3.13 web/tools/make_board_clips.py --model <your piper folder>/en_US-libritts-high.onnx
 
-then copy the file here. A clip made with a different engine or speaker is worse than no clip:
+It loads the voice once, makes only the files that are missing, and says each word with a full
+stop, as the first seventeen were made (`Cici/tools/gen_aac_voice.py` in the private repo, one
+word at a time). A clip made with a different engine or speaker is worse than no clip:
 the board would speak in two voices, and that mismatch is more jarring than one word falling
 back to the device synthesiser. If you cannot generate it in the right voice, **leave it out** —
 that path is clean and tested.

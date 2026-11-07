@@ -318,7 +318,7 @@ const DEFAULTS = {
   // board kept to the room. That is one setting away. Nothing goes when there is no call either way.
   intoCall: true,
   // *** AND ITS RECORDED CLIP INTO THE CALL'S SOUND, WHEN IT HAS ONE (call loadouts, 2026-10-09). *** A card whose
-  // word has a recording in `callClipBase` (aac/audio: seventeen Piper clips) is also HEARD on the call - mixed
+  // word has a recording in `callClipBase` (aac/audio: Piper clips, every built-in board word since row 2.234) is also HEARD on the call - mixed
   // into the call's outgoing sound (call_mix.js), not played at a speaker for the microphone to catch. DEFAULT
   // YES, argued: the person on the call is listening, and a word they hear in the same voice the board always
   // speaks in is the word said to them; the text still goes, and a word with no clip is text only, as before.
@@ -334,7 +334,8 @@ const DEFAULTS = {
   // the order talk.html has always used. DEFAULT YES, argued: those clips already go into a call (`callClips`), and the
   // person on the call and the person in the room should hear the same voice say the same word; on a device whose
   // browser voice is poor or missing (a Pi), it is a real voice for the commonest words. The case for no: a person
-  // whose board otherwise speaks in a browser voice they chose hears seventeen words in a different voice. One
+  // whose board otherwise speaks in a browser voice they chose hears the recorded words in a different voice. One
+  // (2026-11-06, row 2.234: the seventeen became every word on the built-in boards, 74; tools/make_board_clips.py.)
   // setting away; it turns the shipped clips off for the call as well, and never touches a card's own sound.
   shippedClips: true,
 
@@ -652,9 +653,17 @@ export const SETTINGS = [
     level: 'advanced', onLabel: 'Yes — a word with a recording is sent as sound as well as text', offLabel: 'No — text only',
     note: 'Only the words that have a recording. This only applies when words go into a call. Then the person on the call sees every word either way.' },
   // own board clips (2026-10-09): see `shippedClips` in DEFAULTS.
-  { key: 'shippedClips', label: 'Common words use the built-in recorded voice', kind: 'toggle', default: true,
-    level: 'advanced', onLabel: 'Yes — 17 common words, like Yes and Thank you', offLabel: 'No — the device’s own voice',
-    note: 'A card with its own sound (recorded or chosen in the board editor) always uses that.' },
+  // (row 2.234, note FJ 2: "these recordings (default), this device's voice, your own recordings, or your AI's voice")
+  // Every word on the built-in boards now has a recording (tools/make_board_clips.py), so this is THE choice of the
+  // board's voice, moved from advanced to standard. Two choices, not four, argued: a card's own recording always wins
+  // whichever is picked (so "your own recordings" is not a third setting, it is what recording a card does), and "this
+  // device's voice" and "your AI's voice" are the same path - the screen's own voice, which is the browser's or this
+  // computer's voice program when one is turned on (This device's settings). Four rows would offer two that change nothing.
+  { key: 'shippedClips', label: 'The board’s voice', kind: 'toggle', default: true,
+    level: 'standard', onLabel: 'The built-in recordings (every word on the built-in boards)',
+    offLabel: 'This screen’s own voice (the device’s, or its voice program when one is on)',
+    note: 'A card with its own sound (recorded or chosen in the board editor) always uses that. A word with no recording is '
+      + 'said in this screen’s own voice, and every word is written on the screen either way.' },
 ];
 
 registerModule(

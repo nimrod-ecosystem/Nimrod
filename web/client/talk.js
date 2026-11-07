@@ -139,7 +139,7 @@ export const DEFAULTS = {
   // wherever they are decided to live — in this repo, on a bucket, behind a CDN — without a
   // code change. `?clips=<url>` overrides it for one visit. An empty base turns clips off.
   //
-  // **All seventeen words ship in `web/client/aac/audio/`, and they are a SYNTHESISED voice** —
+  // **Every built-in board word ships in `web/client/aac/audio/` (seventeen until 2026-11-06), and they are a SYNTHESISED voice** —
   // Piper, `en_US-libritts-high`, speaker 552, the same voice the bedside build speaks in. Not
   // a recording of anybody. That is worth knowing before adding a word: a clip made with a
   // different engine or speaker would make the board speak in two voices, which is more jarring
