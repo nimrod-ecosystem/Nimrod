@@ -81,19 +81,20 @@ export const DIWALI_DATES = { 2026: [10, 8], 2027: [9, 29], 2028: [9, 17], 2029:
   2031: [10, 14], 2032: [10, 2], 2033: [9, 22], 2034: [10, 10], 2035: [9, 30] };
 
 /* Each holiday: the scene it shows, when it starts and ends (`span`), and whether it's in the
-   region's starter set. Every one is a checkbox: nobody gets a holiday they didn't choose to keep,
-   and adding one is a tick. */
+   starter set. Every one is a checkbox: taking one away is a tick. ALL ON BY DEFAULT since 2026-11-07
+   (row 2.241, Mike): Lunar New Year, Diwali and Hanukkah were offered but off. A screen that saved its
+   own ticks keeps them. */
 export const HOLIDAYS = {
   newYear: { label: "New Year's", scene: 'newYear', starter: true, span: (y) => [new Date(y - 1, 11, 31), new Date(y, 0, 1)], also: (y) => [new Date(y, 11, 31), new Date(y + 1, 0, 1)] },
-  lunarNewYear: { label: 'Lunar New Year', scene: 'lunarNewYear', starter: false, test: (d) => { const n = lunarNewYearDay(d) || lunarNewYearDay(addDays(d, -1)); return !!n && between(d, addDays(n, -1), addDays(n, 7)); } },
+  lunarNewYear: { label: 'Lunar New Year', scene: 'lunarNewYear', starter: true, test: (d) => { const n = lunarNewYearDay(d) || lunarNewYearDay(addDays(d, -1)); return !!n && between(d, addDays(n, -1), addDays(n, 7)); } },
   valentines: { label: "Valentine's Day", scene: 'valentines', starter: true, span: (y) => [new Date(y, 1, 10), new Date(y, 1, 14)] },
   stPatricks: { label: "St Patrick's Day", scene: 'stPatricks', starter: true, span: (y) => [new Date(y, 2, 14), new Date(y, 2, 17)] },
   easter: { label: 'Easter', scene: 'easter', starter: true, span: (y) => { const e = easterSunday(y); return [addDays(e, -3), addDays(e, 1)]; } },
   july4: { label: 'Fourth of July', scene: 'july4', starter: true, span: (y) => [new Date(y, 6, 2), new Date(y, 6, 4)] },
   halloween: { label: 'Halloween', scene: 'halloween', starter: true, span: (y) => [new Date(y, 9, 25), new Date(y, 9, 31)] },
-  diwali: { label: 'Diwali', scene: 'diwali', starter: false, span: (y) => { const t = DIWALI_DATES[y]; if (!t) return null; const d = new Date(y, t[0], t[1]); return [addDays(d, -2), addDays(d, 2)]; } },
+  diwali: { label: 'Diwali', scene: 'diwali', starter: true, span: (y) => { const t = DIWALI_DATES[y]; if (!t) return null; const d = new Date(y, t[0], t[1]); return [addDays(d, -2), addDays(d, 2)]; } },
   thanksgiving: { label: 'Thanksgiving', scene: 'harvest', starter: true, span: (y) => { const t = thanksgiving(y); return [addDays(t, -3), addDays(t, 1)]; } },
-  hanukkah: { label: 'Hanukkah', scene: 'hanukkah', starter: false, test: (d) => hanukkahNight(d) > 0 || hanukkahNight(new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23)) > 0 },
+  hanukkah: { label: 'Hanukkah', scene: 'hanukkah', starter: true, test: (d) => hanukkahNight(d) > 0 || hanukkahNight(new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23)) > 0 },
   christmas: { label: 'Christmas', scene: 'christmas', starter: true, span: (y) => [new Date(y, 11, 18), new Date(y, 11, 26)] },
 };
 const on = (h, d) => {

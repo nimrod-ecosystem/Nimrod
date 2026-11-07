@@ -69,9 +69,9 @@ export const SEASON_LOOKS = Object.freeze({
  *   { id: bool }       those, the starter set filling the rest
  * Always a full { id: bool } map.
  *
- * THE STARTER SET IS THE DEFAULT, argued (a guess on Mike's list): New Year's, Valentine's, St Patrick's,
- * Easter, July 4, Halloween, Thanksgiving and Christmas on; Lunar New Year, Diwali and Hanukkah offered,
- * off. FOR: they only ever show to somebody who chose "With the seasons", a choice that already says
+ * EVERY HOLIDAY IS IN THE STARTER SET since 2026-11-07 (row 2.241, Mike: all on by default). Before it was
+ * argued (a guess on Mike's list): New Year's, Valentine's, St Patrick's, Easter, July 4, Halloween,
+ * Thanksgiving and Christmas on; Lunar New Year, Diwali and Hanukkah offered, off. FOR: they only ever show to somebody who chose "With the seasons", a choice that already says
  * "change through the year", and each is one tick to turn off. AGAINST, two ways: Design's own note that
  * it might be better to start with NONE and ask during setup (there is no setup question yet, so "none"
  * would make the feature invisible until somebody went looking); and that the starter set keeps two
