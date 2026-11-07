@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>beatmap — reading a Beat Saber map the person brings — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>beatmap — Info.dat and difficulties (v2, v3, v4) into timed notes</h1>
+<p>Made-up maps built here; no real map or song is used.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<script type="module">
+import { parseInfo, beatClock, parseDifficulty, thinNotes, readMapZip, MAP_ZIP_MAX } from '../beatmap.js';
+import { zipBlob } from '../zip_store.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = (v) => JSON.stringify(v);
+
+try {
+  section('Info.dat, both shapes');
+  const info2 = parseInfo({ _version: '2.0.0', _songFilename: 'song.egg', _beatsPerMinute: 120, _songTimeOffset: 0,
+    _difficultyBeatmapSets: [{ _beatmapCharacteristicName: 'Standard', _difficultyBeatmaps: [{ _difficulty: 'Easy', _beatmapFilename: 'Easy.dat' }] }] });
+  check('*** v2: the song it names, the tempo, the difficulties ***', info2 && info2.songFile === 'song.egg' && info2.bpm === 120
+    && J(info2.difficulties) === J([{ characteristic: 'Standard', difficulty: 'Easy', file: 'Easy.dat' }]), J(info2));
+  const info4 = parseInfo({ version: '4.0.0', audio: { songFilename: 'song.egg', bpm: 100, audioDataFilename: 'AudioData.dat' },
+    difficultyBeatmaps: [{ characteristic: 'Standard', difficulty: 'Normal', beatmapDataFilename: 'Normal.dat' }] });
+  check('*** v4: the song, the tempo and AudioData.dat ***', info4 && info4.version === 4 && info4.audioDataFile === 'AudioData.dat' && info4.bpm === 100);
+  check('not a map: null', parseInfo({}) === null && parseInfo(null) === null && parseInfo({ _songFilename: 'a.egg' }) === null);
+
+  section('beats into milliseconds');
+  const c = beatClock({ bpm: 120 });
+  check('120 BPM: beat 1 is 500 ms, beat 4 is 2 s', c(1) === 500 && c(4) === 2000);
+  const cc = beatClock({ bpm: 120, changes: [{ beat: 4, bpm: 60 }] });
+  check('*** a tempo change: after beat 4, each beat is a second ***', cc(4) === 2000 && cc(6) === 4000, `${cc(4)} ${cc(6)}`);
+  const ca = beatClock({ bpm: 100, audioData: { songFrequency: 44100, bpmData: [{ si: 0, ei: 44100, sb: 0, eb: 2 }, { si: 44100, ei: 132300, sb: 2, eb: 4 }] } });
+  check('*** v4: AudioData.dat’s samples (two beats in the first second, two in the next two) ***', ca(2) === 1000 && ca(4) === 3000, `${ca(2)} ${ca(4)}`);
+
+  section('a difficulty, each version');
+  const d2 = parseDifficulty({ _version: '2.0.0', _notes: [
+    { _time: 2, _lineIndex: 1, _lineLayer: 0, _type: 0, _cutDirection: 1 },
+    { _time: 1, _lineIndex: 3, _lineLayer: 2, _type: 1, _cutDirection: 0 },
+    { _time: 3, _lineIndex: 2, _lineLayer: 0, _type: 3, _cutDirection: 0 },          // a bomb
+    { _time: 4, _lineIndex: 9, _lineLayer: 0, _type: 0, _cutDirection: 0 }],         // outside the lanes
+    _events: [{ _type: 100, _time: 3, _floatValue: 60 }] }, info2);
+  check('*** v2: notes in time order, bombs left out, a lane past 3 left out and said ***', d2.notes.length === 2
+    && d2.notes[0].ms === 500 && d2.notes[0].lane === 3 && d2.notes[0].colour === 1 && d2.notes[1].ms === 1000 && d2.notes[1].cut === 1
+    && d2.problems.some((p) => /1 note outside/.test(p)), J(d2));
+  const d3 = parseDifficulty({ version: '3.3.0', colorNotes: [{ b: 1, x: 0, y: 1, c: 0, d: 8 }], burstSliders: [{ b: 2, x: 1, y: 0, c: 1, d: 1 }],
+    bpmEvents: [{ b: 2, m: 60 }] }, info2);
+  check('*** v3: colour notes and a chain’s head; its tempo change ***', d3.notes.length === 2 && d3.notes[0].ms === 500 && d3.notes[1].ms === 1000
+    && d3.notes[1].colour === 1, J(d3));
+  const d4 = parseDifficulty({ version: '4.0.0', colorNotes: [{ b: 2, i: 0 }, { b: 4, i: 1 }], colorNotesData: [{ x: 2, y: 1, c: 0, d: 0 }, { x: 0, y: 0, c: 1, d: 3 }],
+    chains: [], chainsData: [] }, info4, { audioData: { songFrequency: 44100, bpmData: [{ si: 0, ei: 44100, sb: 0, eb: 2 }, { si: 44100, ei: 132300, sb: 2, eb: 4 }] } });
+  check('*** v4: the indexed notes, timed by AudioData.dat ***', d4.notes.length === 2 && d4.notes[0].ms === 1000 && d4.notes[1].ms === 3000
+    && d4.notes[1].lane === 0 && d4.notes[1].cut === 3 && !d4.problems.length, J(d4));
+  const d4b = parseDifficulty({ version: '4.0.0', colorNotes: [{ b: 1, i: 0 }], colorNotesData: [{ x: 0, y: 0, c: 0, d: 0 }] }, info4);
+  check('v4 with no AudioData.dat: the map’s one tempo, and said', d4b.notes[0].ms === 600 && d4b.problems.some((p) => /AudioData/.test(p)), J(d4b));
+
+  section('*** thinning for one button: a minimum gap, never a chain merged into one press ***');
+  const stream = Array.from({ length: 16 }, (_, i) => ({ ms: i * 125, lane: 0, row: 0, colour: 0, cut: 8 }));   // eighth notes at 240 BPM
+  const t = thinNotes(stream, 500);
+  check('*** a fast stream keeps a steady beat (every 500 ms), not one press for the lot ***', J(t.map((n) => n.ms)) === J([0, 500, 1000, 1500]), J(t.map((n) => n.ms)));
+  check('no gap: every note', thinNotes(stream, 0).length === 16);
+
+  section('a map zip, end to end');
+  const enc = (o) => JSON.stringify(o);
+  const zip = zipBlob([
+    { name: 'My Map/', },
+    { name: 'My Map/info.DAT', text: enc({ _version: '2.0.0', _songFilename: 'song.egg', _beatsPerMinute: 60,
+      _difficultyBeatmapSets: [{ _beatmapCharacteristicName: 'Standard', _difficultyBeatmaps: [{ _difficulty: 'Easy', _beatmapFilename: 'Easy.dat' }] }] }) },
+    { name: 'My Map/Easy.dat', text: enc({ _version: '2.0.0', _notes: [{ _time: 1, _lineIndex: 0, _lineLayer: 0, _type: 0, _cutDirection: 8 }] }) },
+    { name: 'My Map/song.egg', bytes: new Uint8Array([79, 103, 103, 83, 0, 0]) },
+  ]);
+  const m = await readMapZip(new File([zip], 'map.zip'));
+  check('*** Info.dat found one folder down, its name in any case ***', !!m.info && m.info.songFile === 'song.egg', J(m.problem || m.info));
+  const song = await m.song();
+  check('...the song it names, as Ogg', song && song.type === 'audio/ogg' && song.size === 6);
+  const dd = await m.difficulty(m.info.difficulties[0]);
+  check('...and a difficulty’s notes', dd.notes.length === 1 && dd.notes[0].ms === 1000, J(dd));
+  const noInfo = await readMapZip(new File([zipBlob([{ name: 'readme.txt', text: 'hello' }])], 'x.zip'));
+  check('a zip with no Info.dat: not a map, said', /no Info\.dat/.test(noInfo.problem || ''));
+  const noSong = await readMapZip(new File([zipBlob([{ name: 'Info.dat', text: enc({ _songFilename: 'gone.egg', _beatsPerMinute: 60,
+    _difficultyBeatmapSets: [{ _difficultyBeatmaps: [{ _beatmapFilename: 'E.dat' }] }] }) }])], 'y.zip'));
+  check('a map whose song is missing: said', /gone\.egg/.test(noSong.problem || ''), J(noSong));
+  check('*** a file over the cap is not read ***', /larger than/.test((await readMapZip({ size: MAP_ZIP_MAX + 1 })).problem || ''));
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+const s = document.getElementById('summary');
+s.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+s.className = failed ? 'fail' : 'pass';
+s.dataset.done = 'true'; s.dataset.failed = String(failed);
+</script>
+</body>
+</html>
