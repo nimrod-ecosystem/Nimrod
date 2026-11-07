@@ -272,7 +272,7 @@ export async function mountHome(root, { email = '', profiles, manifests = [], on
       // already gets below for bindings. Absent before a person has resolved — `mountMedia`
       // treats that exactly like a signed-out visitor: the Presets section renders, says so,
       // and every other part of the page (Sources) is unaffected.
-      const m = mountMedia(host, { user, personId, makeUserState });
+      const m = mountMedia(host, { user, personId, makeUserState, personName });   // personName: whose music favourites (row 2.246)
       await m.refresh();
 
       // *** YOUR NIMROD FOLDER, HERE TOO (row 2.49, chat's note CM; Mike 2026-10-23: "I was expecting it to be on the

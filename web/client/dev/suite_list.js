@@ -291,6 +291,8 @@ export const SUITES = [
   'adventure_written',
   // row 2.220 (2026-11-07): teams, the data: a team on a seat, turns between teams, a score per team.
   'teams',
+  // row 2.246 (2026-11-07): a person's music favourites on the Media page, the same list every Music panel plays from.
+  'music_card',
   // 2026-10-25: Design's castle and village (item 45), edited with the room's handles (one editor, note CP).
   'village',
   // 2026-10-25 (row 2.123): change the site's words where they are, `?wording=1`; copied for --apply-page-edits.

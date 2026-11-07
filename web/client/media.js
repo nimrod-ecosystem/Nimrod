@@ -87,6 +87,7 @@ import {
   folderWritePermission, requestFolderWrite,   // remove this picture: only looked at, and asked only on a press
 } from './folder_source.js';
 import { createPresetLibrary } from './presets.js';
+import { mountMusicCard } from './music_card.js';   // (row 2.246) the person's music favourites
 // photo sources first (2026-10-09): the second everyday way in, and the helper's page for the advanced one.
 import { addDevicePictures, setDevicePhotosOn } from './device_pictures.js';
 import { HELPER_PAGE, HELPER_DOWNLOADS } from './nimrod_helper.js';
@@ -145,6 +146,7 @@ export function mountMedia(root, {
   presets = null,
   personId = null,
   makeUserState = null,
+  personName = '',   // (row 2.246) whose music favourites the card shows, by name; '' says nothing
   // photo sources first: `devicePics` keeps pictures from this device and turns them on as a photo source; `helper`
   // is whether the helper's download is published (HELPER_DOWNLOADS). Both injectable for the suite.
   devicePics = { add: addDevicePictures, setOn: setDevicePhotosOn },
@@ -263,6 +265,8 @@ export function mountMedia(root, {
           </form>
         </details>
       </details>
+
+      <div data-music-card-host></div>
 
       <div class="h-card h-presets">
         <div class="h-card-head"><h2>Presets</h2></div>
@@ -813,9 +817,18 @@ export function mountMedia(root, {
     if (label && url) add(label, url);
   });
 
+  // (row 2.246, note FT 2) The person's music favourites, the same list every Music panel of theirs plays from.
+  let musicCard = null;
+  try {
+    const mh = el('[data-music-card-host]');
+    if (mh) musicCard = mountMusicCard(mh, { personId, whose: personName,
+      makePersonState: makeUserState ? (_pid, key) => makeUserState(key) : null });
+  } catch (err) { console.error('media: music favourites', err); }
+
   return {
     refresh,
     destroy() {
+      try { musicCard?.destroy(); } catch { /* gone */ }
       // Only torn down when this call built the library itself — an injected `presets`
       // handle is the caller's own to manage (see `ownsPresetLib` above).
       if (ownsPresetLib) { try { presetLib?.destroy(); } catch { /* already gone */ } }

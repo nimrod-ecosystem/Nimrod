@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>music_card — a person's music favourites on the Media page — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>music_card — the same list every Music panel plays from</h1>
+<div id="stage"></div>
+<div id="results"></div>
+<div id="summary">running…</div>
+<script type="module">
+import { mountMusicCard } from '../music_card.js';
+import { watchFavourites } from '../music_favourites.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+const J = (v) => JSON.stringify(v);
+const tick = () => new Promise((r) => setTimeout(r, 0));
+
+// One person's rows, shared by every handle (as the server's row is).
+const rows = {};
+const subs = {};
+function makePersonState(pid, key) {
+  const k = `${pid}/${key}`;
+  subs[k] ||= new Set();
+  let mine = null;
+  return {
+    load: async () => {}, get: () => rows[k] || {}, startPolling() {},
+    set(p) { rows[k] = { ...(rows[k] || {}), ...p }; for (const f of subs[k]) f(rows[k]); },
+    subscribe(f) { mine = f; subs[k].add(f); return () => subs[k].delete(f); },
+    destroy() { if (mine) subs[k].delete(mine); },
+  };
+}
+
+try {
+  const host = document.getElementById('stage');
+  const card = mountMusicCard(host, { makePersonState, personId: 'p1', whose: 'Robin' });
+  await card.ready; await tick();
+  check('*** names whose list it is, and says it is the one every Music panel plays from ***',
+    /Music favorites for Robin/.test(host.textContent) && /every Music panel/.test(host.textContent) && !!host.querySelector('[data-music-empty]'));
+  const panelList = watchFavourites({ makePersonState, personId: 'p1' });   // a Music panel's own handle on the same list
+  await panelList.ready;
+  host.querySelector('[data-music-name]').value = 'Dinner music';
+  host.querySelector('[data-music-link]').value = 'https://open.spotify.com/playlist/37i9dQZF1DX4xuWVBs4FgJ';
+  host.querySelector('[data-music-add]').requestSubmit();
+  await tick();
+  check('*** added here: on the person\'s list, so a Music panel sees it at once ***',
+    panelList.list().length === 1 && panelList.list()[0].name === 'Dinner music' && panelList.list()[0].source.kind === 'spotify', J(panelList.list()));
+  check('...and the card lists it', /Dinner music/.test(host.querySelector('[data-music-list]')?.textContent || ''));
+  panelList.set([...panelList.list(), { id: 'x1', name: 'The Beatles', source: { kind: 'youtube', playlistId: 'PLabc' } }]);
+  await tick();
+  check('*** added in a panel: shows here ***', /The Beatles/.test(host.textContent));
+  host.querySelector('[data-music-name]').value = 'Bad';
+  host.querySelector('[data-music-link]').value = 'not a link';
+  host.querySelector('[data-music-add]').requestSubmit();
+  await tick();
+  check('a link it cannot play: said, nothing added', /not a YouTube, Spotify or Internet Archive address/.test(host.textContent) && panelList.list().length === 2);
+  host.querySelector('[data-music-name]').value = 'dinner MUSIC';
+  host.querySelector('[data-music-link]').value = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+  host.querySelector('[data-music-add]').requestSubmit();
+  await tick();
+  check('a name already on the list: said, nothing added', /already on the list/.test(host.textContent) && panelList.list().length === 2);
+  host.querySelector('[data-music-remove]').click();
+  await tick();
+  check('Remove takes it off the person\'s list', panelList.list().length === 1 && panelList.list()[0].name === 'The Beatles', J(panelList.list()));
+  card.destroy();
+  const none = document.createElement('div');
+  mountMusicCard(none, { makePersonState: null, personId: null });
+  check('no person yet: it says the list belongs to a person, and offers nothing to add', /belong to a person/.test(none.textContent) && !none.querySelector('[data-music-add]'));
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+const s = document.getElementById('summary');
+s.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+s.className = failed ? 'fail' : 'pass';
+s.dataset.done = 'true'; s.dataset.failed = String(failed);
+</script>
+</body>
+</html>
