@@ -43,8 +43,13 @@ export const EMBED_HEIGHT = 152;       // Spotify's compact player: name, artist
 
 export const EMBED_WORDS = Object.freeze({
   'api-load-failed': 'Spotify’s player did not load. It may be blocked (an ad blocker), or the connection is down.',
-  preview: 'Spotify is playing 30-second previews here. Sign in to Spotify in this browser (open.spotify.com) for '
-    + 'whole songs; that needs Spotify Premium.',
+  // (rows 2.244-2.245, 2026-11-07) MIKE FOUND THE FIX on the main Pi: signed in was not enough; Chromium blocked Spotify's
+  // player's cookies inside the frame, and allowing them for "spotify.com" (not "[*.]spotify.com", which Chromium refused)
+  // played whole songs. So the words say exactly where. Other browsers unchecked: Chrome on Windows allows these cookies
+  // unless somebody turned them off, so the same steps fix it there too when it happens.
+  preview: 'Spotify is playing 30-second previews here. For whole songs: 1. sign in at open.spotify.com in this browser; '
+    + '2. in this browser’s Settings, Privacy and security, Third-party cookies, add spotify.com under “Allowed to use '
+    + 'third-party cookies”; 3. press play again. Whole songs may also need Spotify Premium.',
   'own-order': 'This plays in Spotify’s own order here. The site’s shuffle needs your own Spotify app connected, and a '
     + 'playlist you made or share.',
   'default-speaker': 'Spotify’s player always uses this computer’s own speaker. Its sound cannot be sent to another one from '

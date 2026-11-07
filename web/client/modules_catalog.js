@@ -178,7 +178,8 @@ export const CATALOG = [
     use: 'watch',
     lead: 'Their favorite music, by name.',
     needs: 'A few favorites. They can be YouTube links, music files in a connected folder, Internet Archive items, or '
-      + 'Spotify. Spotify is optional and needs Spotify Premium.',
+      + 'Spotify. Spotify is optional and needs Spotify Premium. For whole songs rather than 30-second previews, sign in at '
+      + 'open.spotify.com and allow third-party cookies for spotify.com in the browser’s settings.',
     why: 'Say “computer please play” and a name, or press it. The family writes the list once; '
       + 'the same names work by voice, by switch and by touch.',
   },
