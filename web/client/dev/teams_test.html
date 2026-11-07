@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>teams — a team on a seat, turns between teams, a score per team — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>teams — the data: seats carry a team; turns, scores and the score line</h1>
+<div id="results"></div>
+<div id="summary">running…</div>
+<script type="module">
+import { normalizeSeat, normalizeSeats, TEAMS_MAX } from '../player_picker.js';
+import { resolvePlayers } from '../adaptive_play.js';
+import { teamsOf, turnOrder, teamTally, scoreLine, dealEvenly, hasTeams, TEAM_LOOKS } from '../teams.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = (v) => JSON.stringify(v);
+
+try {
+  section('*** a seat carries its team (the gate: normalizeSeat dropped unknown fields) ***');
+  check('a guest, a person and the self keep a team 1..4', normalizeSeat({ kind: 'guest', name: 'Ann', team: 2 }).team === 2
+    && normalizeSeat({ kind: 'person', id: 'p1', name: 'Bo', team: 1 }).team === 1 && normalizeSeat({ kind: 'self', team: 3 }).team === 3);
+  check('a person who is the screen\'s person becomes the self seat, team kept', J(normalizeSeat({ kind: 'person', id: 'me', team: 2 }, { selfId: 'me' })) === J({ kind: 'self', team: 2 }));
+  check('no team, or a team out of range: no team (plays for itself, as always)', !('team' in normalizeSeat({ kind: 'guest', name: 'A' }))
+    && !('team' in normalizeSeat({ kind: 'guest', name: 'A', team: 9 })) && !('team' in normalizeSeat({ kind: 'guest', name: 'A', team: 'x' })) && TEAMS_MAX === 4);
+  check('normalizeSeats keeps them', J(normalizeSeats([{ kind: 'guest', name: 'A', team: 1 }, { kind: 'guest', name: 'B', team: 2 }]).map((s) => s.team)) === J([1, 2]));
+
+  section('*** players carry it (resolvePlayers), and a voice start keeps the screen\'s teams ***');
+  const host = { seats: () => [{ kind: 'self', team: 1 }, { kind: 'guest', name: 'Ann', team: 2 }, { kind: 'guest', name: 'Bo', team: 1 }], self: () => ({ name: 'Me' }), override: () => null };
+  const ps = resolvePlayers('', { personId: 'me', host });
+  check('each player has its seat\'s team, and its index is its seat\'s (index 0 is the screen\'s person)',
+    J(ps.map((p) => [p.index, p.team])) === J([[0, 1], [1, 2], [2, 1]]) && ps[0].id === 'person:me', J(ps));
+  const voice = resolvePlayers('', { personId: 'me', host: { ...host, override: () => [{ kind: 'guest', name: 'Ann' }, { kind: 'self' }] } });
+  check('*** "play as Ann and me" (no teams said): each keeps the screen\'s team ***', J(voice.map((p) => [p.name, p.team])) === J([['Ann', 2], ['Me', 1]]), J(voice));
+  check('no teams anywhere: players exactly as before (no team field)', resolvePlayers('', { personId: 'me', host: { seats: () => [{ kind: 'self' }, { kind: 'guest', name: 'Ann' }], self: () => ({ name: 'Me' }) } }).every((p) => !('team' in p)));
+
+  section('the teams, the turns, the score');
+  check('no teams: nothing to show, turns as today (one player each, seat order)', !hasTeams(ps.map(({ team, ...p }) => p))
+    && J(turnOrder([{ id: 'a' }, { id: 'b' }]).map((t) => t.map((p) => p.id))) === J([['a'], ['b']]));
+  const teams = teamsOf(ps);
+  check('teams in order, each with its members, named by number with a colour AND a shape', J(teams.map((t) => [t.name, t.players.map((p) => p.index)])) === J([['Team 1', [0, 2]], ['Team 2', [1]]])
+    && TEAM_LOOKS.every((l) => l.colour && l.shape && l.mark && /^Team \d$/.test(l.name)));
+  check('*** "the team is one seat" (default): the teams take turns, each turn the whole team ***',
+    J(turnOrder(ps).map((t) => t.map((p) => p.index))) === J([[0, 2], [1]]));
+  check('each member takes a turn: team 1\'s first, team 2\'s first, team 1\'s second, team 2 again',
+    J(turnOrder(ps, { memberTurns: true }).map((t) => t[0].index)) === J([0, 1, 2, 1]));
+  check('an empty team is not a turn', turnOrder([{ id: 'a', team: 1 }, { id: 'b', team: 3 }]).length === 2);
+  const tally = { 'person:me': 2, 'name:ann': 3, 'name:bo': 4 };
+  check('*** the score per team, and the line "Team 1 ● 6 · Team 2 ■ 3" ***', J(teamTally(tally, ps).map((t) => t.score)) === J([6, 3])
+    && scoreLine(tally, ps) === 'Team 1 ● 6 · Team 2 ■ 3', scoreLine(tally, ps));
+  check('no teams: no score line', scoreLine(tally, [{ id: 'a' }]) === '');
+  check('"Deal evenly": one press, seats alternate between the teams', J(dealEvenly([{ kind: 'self' }, { kind: 'guest', name: 'A' }, { kind: 'guest', name: 'B' }], 2).map((s) => s.team)) === J([1, 2, 1]));
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+const s = document.getElementById('summary');
+s.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+s.className = failed ? 'fail' : 'pass';
+s.dataset.done = 'true'; s.dataset.failed = String(failed);
+</script>
+</body>
+</html>

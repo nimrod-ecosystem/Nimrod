@@ -70,18 +70,24 @@ const guestKey = (name) => clip(name).toLowerCase();
 // THE RULES (pure)
 // ---------------------------------------------------------------------------------------------------
 
-/** One seat, cleaned, or null. A person whose id is `selfId` IS the screen's person: a self seat. */
+// TEAMS (row 2.220, note FE 3; proposal_teams_beatmaps_20261106, gated): a seat may carry `team`, 1 to TEAMS_MAX. Nothing
+// else stores teams: the seats already are who plays. A seat with no team plays for itself, as every seat always has.
+// 4, argued: four seats, so at most four teams (teams.js argues the rest).
+export const TEAMS_MAX = 4;
+const teamOf = (raw) => { const t = Number(raw && raw.team); return Number.isInteger(t) && t >= 1 && t <= TEAMS_MAX ? { team: t } : {}; };
+
+/** One seat, cleaned, or null. A person whose id is `selfId` IS the screen's person: a self seat. Its team is kept. */
 export function normalizeSeat(raw, { selfId = null } = {}) {
   if (typeof raw === 'string') { const n = clip(raw); return n ? { kind: 'guest', name: n } : null; }
   if (!raw || typeof raw !== 'object') return null;
-  if (raw.kind === 'self') return { kind: 'self' };
+  if (raw.kind === 'self') return { kind: 'self', ...teamOf(raw) };
   if (raw.kind === 'person') {
     const id = typeof raw.id === 'string' ? raw.id.trim() : '';
     if (!id) return null;
-    if (selfId && id === selfId) return { kind: 'self' };
-    return { kind: 'person', id, name: clip(raw.name) };
+    if (selfId && id === selfId) return { kind: 'self', ...teamOf(raw) };
+    return { kind: 'person', id, name: clip(raw.name), ...teamOf(raw) };
   }
-  if (raw.kind === 'guest') { const n = clip(raw.name); return n ? { kind: 'guest', name: n } : null; }
+  if (raw.kind === 'guest') { const n = clip(raw.name); return n ? { kind: 'guest', name: n, ...teamOf(raw) } : null; }
   return null;
 }
 

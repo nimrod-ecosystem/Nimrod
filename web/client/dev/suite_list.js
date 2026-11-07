@@ -289,6 +289,8 @@ export const SUITES = [
   'didyouknow',
   // row 2.235 (2026-11-06): adventures written ahead, for a screen with no AI: the checker and the player.
   'adventure_written',
+  // row 2.220 (2026-11-07): teams, the data: a team on a seat, turns between teams, a score per team.
+  'teams',
   // 2026-10-25: Design's castle and village (item 45), edited with the room's handles (one editor, note CP).
   'village',
   // 2026-10-25 (row 2.123): change the site's words where they are, `?wording=1`; copied for --apply-page-edits.

@@ -31,7 +31,7 @@ import {
   stepFloor, choose, scheduleReview, dueIds, outcomeOf, scoreOf, thresholdsAt, judgeWindow,
 } from './rating.js';
 import { esc, fill, normalize } from './quiz_flow.js';
-import { normalizeSeats, followsScreen, MAX_SEATS } from './player_picker.js';   // players
+import { normalizeSeats, followsScreen, MAX_SEATS, seatKey } from './player_picker.js';   // players
 
 export const LADDER_KEY = 'ratings';
 export const MAX_PLAYERS = MAX_SEATS;
@@ -223,6 +223,13 @@ export function resolvePlayers(value, { personId = null, host = null } = {}) {
   // An old typed list is read exactly as it always was (the same names, ids and order).
   if (typeof raw === 'string') return parsePlayers(raw, { personId });
   let seats = normalizeSeats(raw, { selfId: personId, max: MAX_PLAYERS });
+  // (row 2.220, teams) A voice start ("play trivia as Robin and me") names seats without teams: each keeps the team the
+  // screen's own seats give that person, so the screen's teams stand.
+  if (Array.isArray(forced) && forced.length) {
+    const screenTeams = new Map(normalizeSeats(ask(host?.seats, []), { selfId: personId, max: MAX_PLAYERS })
+      .filter((s) => s.team).map((s) => [seatKey(s), s.team]));
+    seats = seats.map((s) => (s.team || !screenTeams.has(seatKey(s)) ? s : { ...s, team: screenTeams.get(seatKey(s)) }));
+  }
   if (!seats.length) seats = [{ kind: 'self' }];
   if (seats.length === 1 && seats[0].kind === 'self') {
     return [{ id: personId ? `person:${personId}` : 'player', name: '', index: 0 }];
@@ -237,7 +244,7 @@ export function resolvePlayers(value, { personId = null, host = null } = {}) {
     else p = { id: `name:${normalize(s.name).replace(/\s+/g, '-') || s.name.toLowerCase()}`, name: s.name };
     if (seen.has(p.id)) continue;
     seen.add(p.id);
-    out.push({ ...p, index: out.length });
+    out.push({ ...p, index: out.length, ...(s.team ? { team: s.team } : {}) });   // (row 2.220) the seat's team, if any
   }
   return out;
 }
