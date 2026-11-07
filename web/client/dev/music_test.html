@@ -943,6 +943,9 @@ const FAVS = normalizeFavourites([
       const typeIn = (sel, v) => { const el = hq(sel); el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); };
       hq('[data-act="edit"]').click();
       await tick();
+      // (row 2.246, note FT 1) A screen with nobody set: the editor says the list is this panel's own, and how to share it.
+      check('*** a screen with nobody set: the editor says this list belongs to this panel only ***',
+        /belongs to this panel only/.test(hq('[data-whose]')?.textContent || ''), hq('[data-whose]')?.textContent);
       typeIn('[data-fav-name]', 'Dinner music');
       typeIn('[data-fav-link]', 'https://open.spotify.com/embed/playlist/37i9dQZF1DX4xuWVBs4FgJ?utm_source=generator&si=abc');
       hq('[data-act="add"]').click();

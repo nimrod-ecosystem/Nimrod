@@ -265,6 +265,11 @@ registerModule(
     // again ten times, 1.5 s apart, and gave up for good after fifteen seconds. Now it draws with the
     // panel's own list, and the screen's one answer -- however late, or never (it then carries on as
     // nobody, after person_known's bounded wait) -- moves it to the person's.
+    // (row 2.246, note FT 1) WHOSE LIST THIS IS, said where it is edited: a list set on one panel and missing from another was
+    // the screen with nobody set, whose list is the panel's own (below, "Nobody's screen").
+    const whoseListWords = (forPerson) => (forPerson
+      ? 'This list is the person’s own: every Music panel on a screen for them shows the same one.'
+      : 'This screen has nobody set, so this list belongs to this panel only. To share it with every Music panel, set whose screen this is in Dashboards.');
     function usePerson(pid) {
       if (dead) return;
       const want = pid && typeof ctx.makePersonState === 'function' ? pid : null;
@@ -792,6 +797,7 @@ registerModule(
       const opts = sourcesList.map((s) => `<option value="${esc(s.id)}"${s.id === draft.sourceId ? ' selected' : ''}>${esc(s.label || s.id)}</option>`).join('');
       return `
         <p class="mu-head">Favorites</p>
+        <p class="mu-hint" data-whose>${esc(whoseListWords(!!personFor))}</p>
         <p class="mu-hint">Typing needs a keyboard. Each favorite is a name to say and where its music is.</p>
         <label class="mu-field">Name to say <input type="text" data-fav-name maxlength="${MAX_NAME}" value="${esc(draft.name)}" placeholder="the Beatles"></label>
         <label class="mu-field">A YouTube, Spotify or Internet Archive link <input type="text" data-fav-link value="${esc(draft.link)}" placeholder="https://…"></label>
