@@ -29,6 +29,7 @@ import './modules/progress.js';   // registers 'progress' (measurement <- gamepl
 import './modules/wordforge.js';  // registers 'wordforge' (a game -> BOTH streams)
 import './modules/trivia.js';    // registers 'trivia'
 import './modules/bank.js';      // registers 'bank' (the shared questions + words)
+import './modules/didyouknow.js';   // registers 'didyouknow' (facts, quotes and words, row 2.223)
 import './modules/lesson_player.js';   // registers 'lessons' (lesson files, row 2.92) and 'lesson_player'
 import './modules/video_quiz.js';      // registers 'video_quiz' (the transcript quiz)
 import './modules/algebra.js';    // registers 'algebra' (solve for x, with a calculator)

@@ -108,7 +108,7 @@ export const MODULE_CATEGORIES = Object.freeze({
   board: ['people', 'tools'], overlays: ['visual', 'scenes'], room: ['visual', 'scenes'],
   note: ['people', 'visual'], avatar: ['people', 'visual'], weather: ['visual'], pond: ['visual', 'games'],
   call: ['people'], pressgame: ['games'], comet: ['games'], comet_ambient: ['visual', 'games'],
-  button: ['visual', 'people'], bank: ['learning', 'tools'],
+  button: ['visual', 'people'], bank: ['learning', 'tools'], didyouknow: ['learning'],
   trivia: ['games', 'learning'], wordforge: ['games', 'learning'], lessons: ['learning'], algebra: ['learning'],
   word_games: ['games', 'learning'], spelling: ['learning', 'games'], think_games: ['learning', 'games'], quiz_mix: ['games', 'learning'],
   word_builder: ['games', 'learning'], brain_games: ['games', 'learning'], name_that: ['games', 'learning', 'people'],
@@ -270,8 +270,22 @@ export function presetItems({ manifests = listManifests() } = {}) {
       needs: 'Nothing.', note: '', use: 'touch', group: 'comfort', cats: ['visual'],
       settings: { ...TEXT_PRESET }, placeable: true, whyNot: '', link: '', lockKey: 'module:button', stage: stageOf('button') });
   }
+  // (row 2.223) Facts, Quotes and Words: Did you know with "Show only these" set, the way Text is a Button.
+  if (has('didyouknow')) {
+    for (const p of RESEARCH_PRESETS) {
+      out.push({ key: `preset:didyouknow:${p.show}`, kind: 'preset', id: `didyouknow:${p.show}`, type: 'didyouknow', title: p.title,
+        lead: p.lead, why: 'Did you know, showing only these. Its settings choose the topics and how often a new one comes.',
+        needs: 'Nothing.', note: '', use: 'watch', group: 'practice', cats: ['learning'],
+        settings: { show: p.show }, placeable: true, whyNot: '', link: '', lockKey: 'module:didyouknow', stage: stageOf('didyouknow') });
+    }
+  }
   return out;
 }
+export const RESEARCH_PRESETS = Object.freeze([
+  Object.freeze({ show: 'fact', title: 'Facts', lead: 'A fact at a time, each checked against a source.' }),
+  Object.freeze({ show: 'quote', title: 'Quotes', lead: 'Things people said or wrote, with who and where.' }),
+  Object.freeze({ show: 'word', title: 'Words', lead: 'A word at a time: what it means, and an example.' }),
+]);
 
 // ---------------------------------------------------------------------------------------------------
 // FILTER, SEARCH AND SORT (pure).

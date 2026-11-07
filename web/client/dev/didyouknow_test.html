@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>didyouknow — a fact, a quote or a word at a time — test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #stage{width:480px;height:300px;border:1px solid #999}
+</style>
+</head>
+<body>
+<h1>Did you know — the cards, the order, the empty state, the library's three</h1>
+<div id="stage"></div>
+<div id="results"></div>
+<div id="summary">running…</div>
+<script type="module">
+import { mountDidYouKnow, dykConfig, dykQuery, seedOf, cardHtml, cardWords, loadResearch, DYK_SETTINGS, DYK_TYPE } from '../modules/didyouknow.js';
+import { readPack, buildIndex, RESEARCH_SCHEMA } from '../research_index.js';
+import { getManifest } from '../module.js';
+import { verbsFor, verbTarget } from '../actions.js';
+import { presetItems } from '../library.js';
+import { CATALOG } from '../modules_catalog.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = (v) => JSON.stringify(v);
+const tick = () => new Promise((r) => setTimeout(r, 0));
+const settle = async () => { for (let i = 0; i < 5; i++) await tick(); };
+
+const pack = (kind, items) => readPack({ schema: RESEARCH_SCHEMA, kind, name: kind, items });
+const ix = buildIndex([
+  pack('facts', [
+    { kind: 'fact', id: 'f1', text: 'A day on Venus is longer than its year.', topic: 'space', status: 'verified', sources: [{ url: 'https://example.org/v', publisher: 'NASA' }] },
+    { kind: 'fact', id: 'f2', text: 'Octopus blood is blue.', topic: 'animals', status: 'verified' },
+    { kind: 'fact', id: 'f3', text: 'Not checked.', topic: 'space', status: 'unverified' },
+    { kind: 'fact', id: 'f4', text: 'Found wrong.', topic: 'space', status: 'flagged' }]),
+  pack('quotes', [{ kind: 'quote', id: 'q1', text: 'Be <yourself>.', speaker: 'Oscar Wilde', status: 'verified' }]),
+  pack('words', [{ kind: 'word', id: 'w1', text: 'all', word: 'all', level: 1, part_of_speech: 'determiner', definition: 'every one', example: 'I ate all my peas.', status: 'unverified' }]),
+]);
+function memState(init = {}) { let s = { ...init }; return { get: () => s, set: (p) => { s = { ...s, ...p }; } }; }
+function fakeTimers() {
+  const q = []; return { q, setTimer: (f, ms) => { const h = { f, ms }; q.push(h); return h; },
+    clearTimer: (h) => { const i = q.indexOf(h); if (i >= 0) q.splice(i, 1); }, fire() { const h = q.shift(); h?.f(); return h; } };
+}
+
+try {
+  section('settings');
+  check('defaults: everything, a new one every minute, read aloud only on request, sources shown',
+    J(dykConfig({})) === J({ show: 'all', topics: '', wordLevel: 'all', onlyChecked: true, everyMs: 60000, readAloud: false, showSource: true }));
+  check('a value not offered falls back', dykConfig({ show: 'poem', everyMs: 5, wordLevel: 9 }).show === 'all'
+    && dykConfig({ everyMs: 5 }).everyMs === 60000 && dykConfig({ wordLevel: 9 }).wordLevel === 'all');
+  check('the rows are data, "Show only these" first and essential', DYK_SETTINGS[0].key === 'show' && DYK_SETTINGS[0].level === 'essential'
+    && DYK_SETTINGS.every((f) => f.key && f.label));
+  check('the query: kinds, topics as tags, a word level only when showing words',
+    J(dykQuery(dykConfig({ show: 'fact', topics: 'Space, animals' }), 1)) === J({ kind: 'fact', onlyChecked: true, seed: 1, tags: ['space', 'animals'] })
+    && dykQuery(dykConfig({ show: 'word', wordLevel: 2 }), 1).level === 2 && dykQuery(dykConfig({ wordLevel: 2 }), 1).level === undefined);
+  check('a panel\'s seed is its own and steady', seedOf('a') === seedOf('a') && seedOf('a') !== seedOf('b'));
+
+  section('a card');
+  const qh = cardHtml(ix.byId.get('q1'));
+  check('*** a quote: the words, who said it, escaped ***', /“Be &lt;yourself&gt;\.”/.test(qh) && /Oscar Wilde/.test(qh) && !/<yourself>/.test(qh), qh);
+  check('a word: the word, its kind, its meaning, an example', /dyk-word">all</.test(cardHtml(ix.byId.get('w1'))) && /determiner/.test(cardHtml(ix.byId.get('w1')))
+    && /I ate all my peas/.test(cardHtml(ix.byId.get('w1'))));
+  check('a fact with its source; the source can be left off', /From NASA/.test(cardHtml(ix.byId.get('f1'))) && !/From/.test(cardHtml(ix.byId.get('f1'), { showSource: false })));
+  check('read aloud: a quote with who said it; a word, its meaning and example',
+    cardWords(ix.byId.get('q1')) === 'Be <yourself>. (Oscar Wilde)' && cardWords(ix.byId.get('w1')) === 'all. every one. I ate all my peas.', cardWords(ix.byId.get('q1')));
+
+  section('*** the panel ***');
+  const stage = document.getElementById('stage');
+  const t = fakeTimers();
+  const said = [];
+  const st = memState();
+  const p = mountDidYouKnow(stage, { getIndex: async () => ix, state: st, say: (x) => said.push(x), instanceId: 'dyk-1', setTimer: t.setTimer, clearTimer: t.clearTimer });
+  check('before the packs are read: "Finding facts…", never blank', /Finding facts/.test(stage.textContent));
+  await settle();
+  check('*** shown: the checked facts, the quote and the word; never the flagged, never the unchecked fact ***',
+    p.size() === 4 && !stage.innerHTML.includes('Found wrong'), `${p.size()}`);
+  const first = p.current().id;
+  check('nothing said by itself (read aloud is off)', said.length === 0);
+  check('*** a new card after a minute ***', t.q.length === 1 && t.q[0].ms === 60000);
+  t.fire();
+  check('...the next one, and where it is kept', p.current().id !== first && st.get().pos === 1);
+  stage.querySelector('[data-dyk-act="prev"]').click();
+  check('Previous goes back', p.current().id === first && st.get().pos === 0);
+  stage.querySelector('[data-dyk-act="say"]').click();
+  check('*** Read it says the card ***', said.length === 1 && said[0] === cardWords(p.current()), J(said));
+  st.set({ show: 'quote' }); p.refresh();
+  check('"Show only these": quotes', p.size() === 1 && p.current().id === 'q1' && t.q.length === 0 /* one card: nothing to move to */);
+  st.set({ show: 'fact', onlyChecked: false }); p.refresh();
+  check('"Only checked" off: the unchecked fact too, still never the flagged one', p.size() === 3 && ![...Array(3)].some(() => { const c = p.current().id; p.next(); return c === 'f4'; }));
+  st.set({ show: 'all', onlyChecked: true, readAloud: true, everyMs: 0 }); p.refresh();
+  check('"Only when Next is pressed": no timer', t.q.length === 0);
+  said.length = 0; p.next();
+  check('read each one aloud: on Next as well', said.length === 1);
+  p.destroy();
+
+  section('the empty card says why');
+  const e1 = document.createElement('div');
+  const pe = mountDidYouKnow(e1, { getIndex: async () => buildIndex([]), state: memState({ show: 'fact' }) });
+  await settle();
+  check('*** no checked facts: says only checked ones are shown, and the buttons are off ***',
+    /No facts to show here yet: only checked ones are shown/.test(e1.textContent) && e1.querySelector('[data-dyk-act="next"]').disabled, e1.textContent);
+  pe.destroy();
+
+  section('the packs, from the site\'s research folder');
+  const files = { 'x/index.json': { packs: ['facts__a.json', '../evil.json', 'gone.json'] },
+    'x/facts__a.json': { schema: RESEARCH_SCHEMA, items: [{ kind: 'fact', id: 'a1', text: 'A.', status: 'verified' }] } };
+  const asked = [];
+  const fetchImpl = async (u) => { asked.push(u); return u in files ? { ok: true, json: async () => files[u] } : { ok: false, status: 404 }; };
+  const li = await loadResearch({ base: 'x', fetchImpl });
+  check('*** the index names the packs; a name with a path in it is never fetched; a missing one is said ***',
+    li.items.length === 1 && !asked.includes('x/../evil.json') && li.problems.some((m) => /gone\.json/.test(m)), J({ asked, problems: li.problems }));
+  check('no index at all: no items, no error', (await loadResearch({ base: 'none', fetchImpl })).items.length === 0);
+
+  section('registered, reachable, listed');
+  check('a module, with its settings as data', getManifest(DYK_TYPE)?.settings === DYK_SETTINGS);
+  check('*** a switch or a voice reaches it: next, prev, select (read it) ***', J(verbsFor(DYK_TYPE)) === J(['next', 'prev', 'select'])
+    && verbTarget(DYK_TYPE, 'select')?.topic === 'didyouknow/select');
+  check('in the catalog', CATALOG.some((c) => c.type === DYK_TYPE));
+  const pre = presetItems().filter((x) => x.type === DYK_TYPE);
+  check('*** Facts, Quotes and Words in the library: this module with "Show only these" set ***',
+    J(pre.map((x) => [x.title, x.settings.show])) === J([['Facts', 'fact'], ['Quotes', 'quote'], ['Words', 'word']]), J(pre.map((x) => x.title)));
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+const s = document.getElementById('summary');
+s.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+s.className = failed ? 'fail' : 'pass';
+s.dataset.done = 'true'; s.dataset.failed = String(failed);
+</script>
+</body>
+</html>

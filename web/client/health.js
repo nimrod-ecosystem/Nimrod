@@ -142,6 +142,8 @@ export const HEALTH_EXPECT = {
   // fault never cleared and the ladder climbed on. Nothing was watching for the general case,
   // which is why `modules_catalog_test` now fails if a registered module has no row here.
   bank:        { idle: true },
+  // (row 2.223) a card that may change only when Next is pressed: silence is its ordinary state.
+  didyouknow:  { idle: true },
   wallpaper:   { idle: true },
   board:       { idle: true },
   // Same as wallpaper, added the same day it shipped rather than left to be found the hard way:

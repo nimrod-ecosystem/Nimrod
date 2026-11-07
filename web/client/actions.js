@@ -579,6 +579,8 @@ export const MODULE_VERBS = {
   // PLAY AND PAUSE (2026-10-02): a slideshow can wait for Start (its "When it opens" row) and be paused, so
   // the bar's one Pause / Play, Space and a switch reach it as they reach a video.
   photos:        { next: 'photos/next', prev: 'photos/prev', play: 'photos/play', pause: 'photos/pause' },
+  // (row 2.223) Did you know: the next card, the one before, and `select` reads the card aloud.
+  didyouknow:    { next: 'didyouknow/next', prev: 'didyouknow/prev', select: 'didyouknow/select' },
   personal:      { next: 'personal/next', prev: 'personal/prev' },
   educational:   { next: 'educational/next', prev: 'educational/prev', back: 'educational/skip' },
   // PLAY AND PAUSE (row 2.28). NOT volume-up/volume-down any more: Mike ruled 2026-09-30 that

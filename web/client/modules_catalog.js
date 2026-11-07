@@ -562,6 +562,19 @@ export const CATALOG = [
 
   // ------------------------------------------------------------------ practice
   {
+    // row 2.223 (2026-11-06): research saved once, used everywhere (research_index.js). Facts, Quotes and Words are this
+    // module again with "Show only these" set (library.js RESEARCH_PRESETS).
+    type: 'didyouknow',
+    stage: 'beta',
+    title: 'Did you know',
+    group: 'practice',
+    use: 'watch',
+    lead: 'A fact, a quote or a word, one at a time.',
+    needs: 'Nothing.',
+    why: 'Something new to read or hear every minute, and each fact and quote has been checked against a source. '
+      + 'A new card comes by itself, or only when Next is pressed, so it suits a corner of the screen or a switch.',
+  },
+  {
     type: 'bank',
     stage: 'beta',
     title: 'Questions',

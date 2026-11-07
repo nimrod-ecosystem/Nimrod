@@ -1815,3 +1815,17 @@ html[data-live-scene] body{background:transparent}
 .wg[data-motion="full"] .wg-star{animation:wg-drift 1.6s ease-out 1 both}
 .wg[data-motion="reduce"] .wg-star{animation:none}
 /* ---- end WORD GAMES ---- */
+
+/* Did you know (row 2.223, modules/didyouknow.js): one card, big words, three buttons. */
+.dyk{display:flex;flex-direction:column;height:100%;padding:clamp(8px,3cqmin,24px);gap:12px;box-sizing:border-box;container-type:size}
+.dyk-card{flex:1;overflow:auto;display:flex;flex-direction:column;justify-content:center}
+.dyk-head{margin:0 0 6px;font-weight:700;opacity:.75;font-size:clamp(13px,4cqmin,28px)}
+.dyk-text{margin:0;font-size:clamp(16px,7cqmin,64px);line-height:1.25}
+.dyk-word{margin:0;font-size:clamp(22px,12cqmin,110px);font-weight:700}
+.dyk-pos,.dyk-who,.dyk-example{margin:6px 0 0;font-size:clamp(13px,4.5cqmin,36px)}
+.dyk-pos{font-style:italic;opacity:.8}
+.dyk-source{margin:10px 0 0;font-size:clamp(12px,3.2cqmin,24px);opacity:.7}
+.dyk-empty{margin:0;font-size:clamp(14px,5cqmin,40px);opacity:.8}
+.dyk blockquote{margin:0}
+.dyk-bar{display:flex;gap:10px;flex-wrap:wrap}
+.dyk-bar button{flex:1 1 0;min-height:48px;font:inherit;font-weight:600}
