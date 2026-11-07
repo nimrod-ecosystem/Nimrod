@@ -16,7 +16,7 @@
 <div id="results"></div>
 <div id="summary">running…</div>
 <script type="module">
-import { normalizeSeat, normalizeSeats, TEAMS_MAX } from '../player_picker.js';
+import { normalizeSeat, normalizeSeats, TEAMS_MAX, mountPlayerPicker } from '../player_picker.js';
 import { resolvePlayers, createAdaptiveSession } from '../adaptive_play.js';
 import { teamsOf, turnOrder, teamTally, scoreLine, dealEvenly, hasTeams, TEAM_LOOKS } from '../teams.js';
 
@@ -77,6 +77,23 @@ try {
   const w2 = [];
   for (let i = 0; i < 3; i += 1) { w2.push(plain.currentPlayer().name); plain.record({ item: plain.deal('g'), right: true }); }
   check('no teams: seat order, as always', J(w2) === J(['Ann', 'Bob', 'Ann']), J(w2));
+  section('*** the picker: Teams, a seat moved, Done ***');
+  const host2 = document.createElement('div'); document.body.append(host2);
+  let picked = null;
+  const pk = mountPlayerPicker(host2, { value: [{ kind: 'guest', name: 'Ann' }, { kind: 'guest', name: 'Bo' }, { kind: 'guest', name: 'Cy' }],
+    follow: false, onPick: (v) => { picked = v; } });
+  const q = (sel) => host2.querySelector(sel);
+  check('with two or more seats: a Teams row, "Each for themself" chosen, no seat chips yet', !!q('[data-plp-teams="0"]') && !!q('[data-plp-teams="2"]')
+    && q('[data-plp-teams="0"]').getAttribute('aria-pressed') === 'true' && !q('[data-plp-seatteam]'));
+  q('[data-plp-teams="2"]').click();
+  check('*** "2 teams": the seats dealt evenly, shown on each seat ("Team 1 ●") ***',
+    /Team 1 ●/.test(q('[data-plp-seatteam="0"]')?.textContent || '') && /Team 2 ■/.test(q('[data-plp-seatteam="1"]')?.textContent || '')
+    && /Team 1 ●/.test(q('[data-plp-seatteam="2"]')?.textContent || ''), q('[data-plp-group="seatteams"]')?.textContent);
+  q('[data-plp-seatteam="2"]').click();
+  check('a press on a seat\'s chip moves it to the next team', /Team 2 ■/.test(q('[data-plp-seatteam="2"]')?.textContent || ''));
+  q('[data-plp-act="done"]').click();
+  check('*** Done hands back the seats WITH their teams ***', J((picked || []).map((s) => [s.name, s.team])) === J([['Ann', 1], ['Bo', 2], ['Cy', 2]]), J(picked));
+  pk.destroy?.(); host2.remove();
   check('"Deal evenly": one press, seats alternate between the teams', J(dealEvenly([{ kind: 'self' }, { kind: 'guest', name: 'A' }, { kind: 'guest', name: 'B' }], 2).map((s) => s.team)) === J([1, 2, 1]));
 } catch (e) {
   check('unexpected error', false, String((e && e.stack) || e));

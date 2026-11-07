@@ -46,6 +46,7 @@
 // openPlayersDialog for a host that draws its rows itself).
 
 import { sortFilter, searchBoxHTML, selectHTML, chipsHTML, ensureSortFilterCss, byText } from './sort_filter.js';
+import { TEAM_LOOKS } from './teams.js';   // (row 2.220) teams' names and marks
 
 // *** HARD-CODED, EACH ARGUED (Rule 1); every one is also an option on the picker. ***
 //   MAX_SEATS 4      adaptive_play.js MAX_PLAYERS' reason: a longer turn order is a long wait between one person's
@@ -328,6 +329,8 @@ export function mountPlayerPicker(root, {
   let mode = startFollow ? 'screen' : (isJustSelf(fromValue) && follow ? 'self' : 'game');
   // The seat the next pick fills: the first one, until somebody asks for more seats or presses another.
   let active = 0;
+  // (row 2.220) TEAMS: how many (0 = each for themself, as always), read from the seats' own teams.
+  let teamsN = Math.max(0, ...seats.filter(Boolean).map((s) => Number(s.team) || 0));
   let list = [];                       // the people, once loaded
   let loadState = 'none';              // none | loading | ready | failed
   let loadWhy = '';
@@ -379,12 +382,50 @@ export function mountPlayerPicker(root, {
       <div class="chp-row sf-row" data-plp-group="count" role="toolbar" aria-label="How many players">${
       chipsHTML({ options: opts, value: String(seats.length), attrOf: (o) => `data-plp-stop data-plp-count="${esc(o.id)}"` })}</div>`;
   }
+  const markOf = (s) => { const l = s && s.team ? TEAM_LOOKS.find((x) => x.team === s.team) : null; return l ? `${l.name} ${l.mark}` : ''; };
   function seatsHTML() {
     return `<p class="chp-note">Turn order. Press a seat to fill it; the next pick goes there.</p>
       <div class="chp-row chp-tiles" data-plp-group="seats" style="--chp-cols:${Math.min(cap, 4)}">${seats.map((s, i) => `
         <button type="button" class="chp-tile plp-seat" data-plp-stop data-plp-seat="${i}"${i === active ? ' data-active="1"' : ''}
-          ><span class="chp-hint">Seat ${i + 1}${i === active ? ' · filling' : ''}</span>
+          ><span class="chp-hint">Seat ${i + 1}${i === active ? ' · filling' : ''}${teamsN && markOf(s) ? ` · ${esc(markOf(s))}` : ''}</span>
           <span class="chp-name">${esc(s ? nameOf(s) : 'Empty')}</span></button>`).join('')}</div>`;
+  }
+  // (row 2.220) TEAMS, like a party game's: off (each for themself), or 2 to 4 teams; "Deal evenly" is one press (a switch
+  // user does not cycle each seat); a seat's chip below moves it to the next team. Teams are "Team 1 ●", "Team 2 ■"... (a
+  // colour AND a shape). Only with two or more seats: one player has nobody to be on a side with.
+  function teamsHTML() {
+    if (seats.length < 2) return '';
+    const n = Math.min(TEAMS_MAX, seats.length);
+    const opts = [{ id: '0', label: 'Each for themself' }, ...Array.from({ length: n - 1 }, (_, i) => ({ id: String(i + 2), label: `${i + 2} teams` }))];
+    const row = `<p class="chp-note">Teams</p><div class="chp-row sf-row" data-plp-group="teams" role="toolbar" aria-label="Teams">${
+      chipsHTML({ options: opts, value: String(teamsN), attrOf: (o) => `data-plp-stop data-plp-teams="${esc(o.id)}"` })}${
+      teamsN ? '<button type="button" class="sf-btn" data-plp-stop data-plp-deal>Deal evenly</button>' : ''}</div>`;
+    if (!teamsN) return row;
+    return `${row}<p class="chp-note">Press a seat to move it to the next team.</p><div class="chp-row sf-row" data-plp-group="seatteams"
+      role="toolbar" aria-label="Which team each seat is on">${seats.map((s, i) => `<button type="button" class="sf-btn" data-plp-stop data-plp-seatteam="${i}"
+      ${s ? '' : 'disabled'}>Seat ${i + 1}: ${esc(markOf(s) || 'no team')}</button>`).join('')}</div>`;
+  }
+  function setTeams(n) {
+    teamsN = Math.max(0, Math.min(TEAMS_MAX, Math.floor(Number(n)) || 0));
+    if (!teamsN) seats = seats.map((s) => { if (!s) return s; const { team, ...rest } = s; return rest; });
+    else if (seats.some((s) => s && (!s.team || s.team > teamsN))) dealSeats();
+    render();
+  }
+  function dealSeats() {
+    let k = 0;
+    seats = seats.map((s) => (s ? { ...s, team: ((k++) % teamsN) + 1 } : s));
+  }
+  // Whoever is put in a seat takes that seat's team (or, an empty seat, the next in turn), so picking people keeps the sides.
+  function withSeatTeam(seat, i) {
+    if (!teamsN) return seat;
+    const t = Number(seats[i]?.team) || ((i % teamsN) + 1);
+    return { ...seat, team: t };
+  }
+  function nextTeam(i) {
+    const s = seats[i];
+    if (!s || !teamsN) return;
+    seats = seats.map((x, j) => (j === i ? { ...x, team: ((Number(x.team) || 0) % teamsN) + 1 } : x));
+    render();
   }
   function toolsHTML() {
     const kind = PLAYER_FACETS[0];
@@ -429,7 +470,7 @@ export function mountPlayerPicker(root, {
       ${title ? `<p class="chp-head">${esc(title)}</p>` : ''}
       ${actsHTML()}
       ${modeHTML()}
-      ${picking ? `${countHTML()}${seatsHTML()}${toolsHTML()}${loadNote()}
+      ${picking ? `${countHTML()}${seatsHTML()}${teamsHTML()}${toolsHTML()}${loadNote()}
         <div class="chp-grid" data-plp-results>${resultsHTML()}</div>${guestBoxHTML()}` : ''}
     </div>`;
     const g = root.querySelector('[data-plp-guestname]');
@@ -460,7 +501,7 @@ export function mountPlayerPicker(root, {
     const seat = seatFromItem(it, { selfId, seats: filled() });
     if (!seat) return;
     if (active < 0 || active >= seats.length) active = 0;
-    seats = placeSeat(seats, active, seat);
+    seats = placeSeat(seats, active, withSeatTeam(seat, active));
     const e = firstEmpty();
     if (e >= 0) active = e;
     render();
@@ -469,7 +510,7 @@ export function mountPlayerPicker(root, {
     const n = clip(name);
     if (!n) return;
     if (active < 0 || active >= seats.length) active = 0;
-    seats = placeSeat(seats, active, { kind: 'guest', name: n });
+    seats = placeSeat(seats, active, withSeatTeam({ kind: 'guest', name: n }, active));
     const e = firstEmpty();
     if (e >= 0) active = e;
     const box = root.querySelector('[data-plp-guestname]');
@@ -490,6 +531,9 @@ export function mountPlayerPicker(root, {
     if (el.dataset.plpMode) { setMode(el.dataset.plpMode); return; }
     if (el.dataset.plpCount) { setCount(el.dataset.plpCount); return; }
     if (el.dataset.plpSeat !== undefined) { active = Number(el.dataset.plpSeat) || 0; render(); return; }
+    if (el.dataset.plpTeams !== undefined) { setTeams(el.dataset.plpTeams); return; }        // (row 2.220) teams
+    if (el.dataset.plpDeal !== undefined) { dealSeats(); render(); return; }
+    if (el.dataset.plpSeatteam !== undefined) { nextTeam(Number(el.dataset.plpSeatteam) || 0); return; }
     if (el.dataset.plpFilter) { picked[el.dataset.plpFilter] = el.dataset.plpVal; render(); return; }
     if (el.dataset.plpPick) pickItem(el.dataset.plpPick);
   }
