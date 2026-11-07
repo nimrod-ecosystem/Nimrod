@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>story_lines — every line the written adventures say, in every town theme</title>
+</head>
+<body>
+<p>For tools/make_story_clips.py: <code>window.storyLines()</code> is every distinct line the written adventures say (each page,
+each choice label as a button says it and as the light asks it), in every town theme (a place's name changes with the theme).</p>
+<div id="summary">loading…</div>
+<script type="module">
+import { loadWrittenStories, writtenLines } from '../adventure_written.js';
+import { TOWN_DRESS } from '../town.js';
+
+window.storyLines = async () => {
+  const stories = await loadWrittenStories({ fresh: true });
+  const out = new Set();
+  for (const theme of Object.keys(TOWN_DRESS)) for (const s of stories) for (const l of writtenLines(s, theme)) out.add(l);
+  return { stories: stories.length, themes: Object.keys(TOWN_DRESS).length, problems: stories.problems || [], lines: [...out] };
+};
+const s = document.getElementById('summary');
+s.textContent = 'ready';
+s.dataset.done = 'true';
+</script>
+</body>
+</html>

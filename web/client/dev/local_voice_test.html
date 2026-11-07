@@ -258,7 +258,9 @@ section('*** recordings made ahead: a lesson line with a recording is played fro
   const mem = memStore();
   writeLocalVoice({ on: true }, mem);
   const ogg = () => new Blob([new Uint8Array([79, 103, 103, 83])], { type: 'audio/ogg' });
-  const index = { format: 'nimrod.clips.v1', model: 'm', voices: { a: 552 }, lines: { a: { 'Hello class.': { file: '0123456789abcdef0123.ogg', ms: 42000 } }, b: {} } };
+  const index = { format: 'nimrod.clips.v1', model: 'm', voices: { a: 552 }, lines: { a: { 'Hello class.': { file: '0123456789abcdef0123.ogg', ms: 42000 } }, b: {},
+    // (row 2.235) the written adventures' narrator, a voice of its own
+    story: { 'The Park is quiet.': { file: 'abcdef0123456789abcd.ogg', ms: 1800 } } } };
   const clipProg = (how = {}) => {
     const calls = [];
     const f = async (url, init = {}) => {
@@ -280,6 +282,8 @@ section('*** recordings made ahead: a lesson line with a recording is played fro
   check('...the list is asked for once, not per line (and spacing does not matter)', spaced.ok && miss.ok === false
     && p0.calls.filter((u) => u.endsWith('/clips')).length === 1, JSON.stringify(p0.calls));
   check('a line not in the list, or the other teacher\'s, or no teacher: none', (await v.clip('Hello class.', 'b')).ok === false && (await v.clip('Hello class.', 'x')).ok === false);
+  const st = await v.clip('The Park is quiet.', 'story');
+  check('*** a written adventure\'s line, under its own "story" voice ***', st.ok && st.ms === 1800 && (await v.clip('The Park is quiet.', 'a')).ok === false, JSON.stringify(st));
   const presented = [];
   const inner = { name: 'speech', concurrency: 1, present(item, { done }) { presented.push(item); setTimeout(done, 0); return () => {}; } };
   const make = (f) => withLocalVoice(inner, createLocalVoice({ fetchImpl: f, storage: mem }), { createURL: () => 'blob:clip', revokeURL: () => {} });

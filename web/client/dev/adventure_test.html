@@ -260,6 +260,8 @@ section('*** no storyteller: it says how to set one up, instead of failing ***')
   await until(() => HW.p().view === 'story' && !HW.p().thinking);
   check('*** a written story plays: its first page, its places named, its choices (a label\'s place too) ***',
     HW.p().written && /^The Park is quiet/.test(HW.p().say) && HW.p().choices[0] === 'Walk to the Bakery', J({ say: HW.p().say, c: HW.p().choices }));
+  check('*** its words are said under the "story" voice, so a recording made ahead plays ***',
+    HW.said.some((s) => /^The Park is quiet/.test(s.text) && s.opts?.data?.clipVoice === 'story'), J(HW.said.map((s) => [s.text.slice(0, 20), s.opts?.data])));
   check('*** no box to type in, and no dictation, in a written story ***', !HW.mount.querySelector('[data-adv-form]')
     && HW.grammar[HW.grammar.length - 1].dictation === false);
   HW.inst.impl.__press('choose', 1);

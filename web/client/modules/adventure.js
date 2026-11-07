@@ -246,7 +246,9 @@ registerModule(
     function speak(text, { hold = true } = {}) {
       if (saidId != null) { try { ctx.output?.cancel?.(saidId); } catch { /* said */ } saidId = null; }
       if (!cfg.readAloud || !text || typeof ctx.output?.say !== 'function') { if (hold) release(); return; }
-      try { saidId = ctx.output.say(text, { source: STORY_SOURCE }); } catch (err) { console.error('adventure: say', err); if (hold) release(); return; }
+      // (row 2.235) A written story's words are recorded ahead (tools/make_story_clips.py), filed under the 'story' voice:
+      // the screen's voice program plays the recording when it has one, and says it live when it has not.
+      try { saidId = ctx.output.say(text, { source: STORY_SOURCE, ...(written ? { data: { clipVoice: 'story' } } : {}) }); } catch (err) { console.error('adventure: say', err); if (hold) release(); return; }
       if (!hold) return;
       holding = true;
       stopLight();

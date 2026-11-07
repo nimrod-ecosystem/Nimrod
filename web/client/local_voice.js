@@ -215,7 +215,7 @@ export function createLocalVoice({ fetchImpl = (...a) => fetch(...a), storage = 
      * has one: `{ ok: true, blob, ms }` (ms: the recording's own length, from clips.json), else `{ ok: false }`. Never throws.
      */
     async clip(text, slot, { signal } = {}) {
-      if (!cfg().on || (slot !== 'a' && slot !== 'b')) return { ok: false };
+      if (!cfg().on || !CLIP_SLOTS.includes(slot)) return { ok: false };
       if (now() - clipIndexAt > CLIPS_FRESH_MS) {
         clipIndexAsk ||= (async () => {
           const r = await call('/clips', { method: 'GET' }, { timeoutMs: Math.max(cfg().timeoutMs, 3000) });
@@ -239,6 +239,9 @@ export function createLocalVoice({ fetchImpl = (...a) => fetch(...a), storage = 
   };
 }
 export const CLIPS_FORMAT = 'nimrod.clips.v1';
+// The voices a recording may be filed under: the lesson's two teachers, and (row 2.235) the written adventures' narrator, a
+// slot of its own so a change to either teacher's voice never touches the stories' recordings (tools/make_story_clips.py).
+export const CLIP_SLOTS = Object.freeze(['a', 'b', 'story']);
 // Ten minutes, argued: clips are copied onto a screen rarely (after a night's run on the PC), and asking for the list on
 // every line would be a request per sentence for nothing. FOR shorter: a newly copied set is used sooner; it is still used
 // the same day either way. A restart of the page reads it at once.
@@ -261,7 +264,7 @@ export function withLocalVoice(channel, voice, { createURL = (b) => URL.createOb
       // channel's watchdog ends a stalled one after its own length rather than 30 s. Without one, the line goes on below,
       // spoken live as before.
       const slot = item && item.data && item.data.clipVoice;
-      if ((slot === 'a' || slot === 'b') && typeof voice.clip === 'function') {
+      if (CLIP_SLOTS.includes(slot) && typeof voice.clip === 'function') {
         const ctl0 = new AbortController();
         let cancelled0 = false;
         let inner0 = null;

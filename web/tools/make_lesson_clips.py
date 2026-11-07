@@ -67,8 +67,9 @@ def wanted_lines(classes, with_b):
     return want
 
 
-async def read_lines(base, name, courses=None, limit=None):
-    """Every class's lines, from the panel's own code, through headless Chrome."""
+async def read_page(base, page, ready, expr):
+    """`expr` (a promise of JSON text) evaluated on `page` once `ready` is true, through headless Chrome. Shared with
+    make_story_clips.py: the lines always come from the site's own code."""
     import run_suite as RS
     import websockets
     if not RS.CHROME:
@@ -83,22 +84,28 @@ async def read_lines(base, name, courses=None, limit=None):
             cdp = RS.CDP(ws)
             await cdp.send('Page.enable')
             await cdp.send('Runtime.enable')
-            await cdp.send('Page.navigate', url=f'{base.rstrip("/")}/dev/lesson_lines.html')
+            await cdp.send('Page.navigate', url=f'{base.rstrip("/")}/{page}')
             for _ in range(240):
-                if await cdp.js("!!(window.lessonLines && document.getElementById('summary')?.dataset.done)"):
+                if await cdp.js(ready):
                     break
                 await asyncio.sleep(0.5)
             else:
-                raise SystemExit('dev/lesson_lines.html never finished loading: is the server running at --base?')
-            out = await cdp.js(f'window.lessonLines({json.dumps(name)}).then((x) => JSON.stringify(x))', timeout=600)
+                raise SystemExit(f'{page} never finished loading: is the server running at --base?')
+            out = await cdp.js(expr, timeout=600)
             if isinstance(out, dict) and '__error__' in out:
-                raise SystemExit(f'lessonLines failed: {out["__error__"]}')
+                raise SystemExit(f'{page} failed: {out["__error__"]}')
     finally:
         proc.terminate()
         try: proc.wait(timeout=10)
         except Exception: proc.kill()
         shutil.rmtree(profile, ignore_errors=True)
-    classes = json.loads(out)
+    return json.loads(out)
+
+
+async def read_lines(base, name, courses=None, limit=None):
+    """Every class's lines, from the panel's own code, through headless Chrome."""
+    classes = await read_page(base, 'dev/lesson_lines.html', "!!(window.lessonLines && document.getElementById('summary')?.dataset.done)",
+                              f'window.lessonLines({json.dumps(name)}).then((x) => JSON.stringify(x))')
     if courses:
         classes = [c for c in classes if c['course'] in courses]
     if limit:
@@ -162,7 +169,9 @@ def main():
         same = isinstance(old, dict) and old.get('model') == cur['model'] and old.get('speaker') == cur['speaker']
         if not same:
             m['lines'][v] = {}
-    m['voices'] = {v: {'model': c['model'], 'speaker': c['speaker']} for v, c in voices.items()}
+    # Another tool's slots (make_story_clips.py's 'story') keep their voice, so their recordings are not started again.
+    m['voices'] = {**{k: v for k, v in was.items() if k not in voices},
+                   **{v: {'model': c['model'], 'speaker': c['speaker']} for v, c in voices.items()}}
     m.pop('model', None)   # the old one-model shape
     todo = []
     for (v, t) in want:
