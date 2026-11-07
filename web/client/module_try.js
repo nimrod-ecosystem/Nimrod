@@ -63,10 +63,18 @@ function attachAim(bus, host) {
  * Build the world a module needs, once, and hand back something that can mount one into any
  * element.
  *
- * `seed` fixes the random sequence so two visits to the same page look the same — a difference
- * between two runs should mean something changed, not that a shuffle came out differently.
+ * `seed` fixes the random sequence, for a run that must come out the same twice (a suite comparing two runs).
+ * *** NONE BY DEFAULT (row 2.239, Mike 2026-11-06: "the trivia always gives the questions in the same order"). *** It
+ * used to default to a fixed seed, so every visit to the modules page or Home's try dealt Trivia, the quiz games and every
+ * shuffle in the same order; this host is what a visitor PLAYS, so the default is the browser's own random, as the kiosk's.
  */
-export async function createTryHost({ seed = 20260902, profileSeed = true } = {}) {
+/** The try host's random: the browser's own, or a fixed sequence for a given seed. */
+export function tryRand(seed = null) {
+  if (!Number.isFinite(seed)) return Math.random;
+  let s = seed;
+  return () => ((s = (s * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+}
+export async function createTryHost({ seed = null, profileSeed = true } = {}) {
   const bus = createBus();
   const backend = createLocalBackend();
   // The starter screen exists so the modules that show CONTENT have some. Without it, Photos
@@ -91,8 +99,7 @@ export async function createTryHost({ seed = 20260902, profileSeed = true } = {}
   // anywhere over it should count, the same as it would on a real kiosk.
   const { aim, detach: detachAim } = attachAim(bus, window);
 
-  let s = seed;
-  const rand = () => ((s = (s * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+  const rand = tryRand(seed);
 
   // `{rec, id, type}` per host, not just `rec` — the input runtime's own `modules()` needs to
   // list what is actually mounted right now, and deriving that from this one map (rather than
