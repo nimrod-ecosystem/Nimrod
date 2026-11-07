@@ -32,6 +32,7 @@ import {
 } from './rating.js';
 import { esc, fill, normalize } from './quiz_flow.js';
 import { normalizeSeats, followsScreen, MAX_SEATS, seatKey } from './player_picker.js';   // players
+import { hasTeams, turnOrder, teamLook } from './teams.js';   // (row 2.220) teams
 
 export const LADDER_KEY = 'ratings';
 export const MAX_PLAYERS = MAX_SEATS;
@@ -864,7 +865,11 @@ export function createAdaptiveSession({ cfg = () => ({}), bankFor = () => [], st
   }
 
   const players = () => resolvePlayers(c().players, { personId: personId(), host: playersHost });   // players
-  const currentPlayer = () => { const ps = players(); return ps[turn % ps.length]; };
+  // (row 2.220, teams; teams.js argues it) With teams, the turn goes from team to team; within a team, whose row the answer
+  // counts on rotates, so every member's level moves. "The team is one seat": the chip names the team, and any member may
+  // answer. Without teams, the order is the seats', as always. A player's `index` never changes.
+  const turnList = () => { const ps = players(); return hasTeams(ps) ? turnOrder(ps, { memberTurns: true }).map((t) => t[0]) : ps; };
+  const currentPlayer = () => { const ps = turnList(); return ps[turn % ps.length]; };
   // A word is read over the game's WRITTEN levels (its bank), not any AI-written above them, so "hard" is
   // the hardest level somebody wrote, the same on every screen.
   const writtenTop = (game) => {
@@ -1015,7 +1020,8 @@ export function createAdaptiveSession({ cfg = () => ({}), bankFor = () => [], st
     lastPlayer = p;
     if (step.moved) lastMove = { player: p, game, moved: step.moved, floor: step.floor };
     const ps = players();
-    turn = ps.length > 1 ? (ps.findIndex((x) => x.id === p.id) + 1) % ps.length : 0;
+    if (hasTeams(ps)) turn = (turn + 1) % turnList().length;   // (teams) the next side's turn
+    else turn = ps.length > 1 ? (ps.findIndex((x) => x.id === p.id) + 1) % ps.length : 0;
     persist();
     return { player: p, outcome, score, rating: r, floor: step.floor, moved: step.moved, review: entry };
   }
@@ -1052,9 +1058,11 @@ export function createAdaptiveSession({ cfg = () => ({}), bankFor = () => [], st
     const k = c();
     const many = players().length > 1;
     if (!many && !k.showLevel) return '';
-    const name = p.name || '';
-    const initial = esc((name.trim()[0] || '•').toUpperCase());
-    const lvl = k.showLevel && game ? ` · level ${windowFor(p.id, game).floor}` : '';
+    // (teams) the side whose turn it is, by its name and mark: "Team 1 ●" (any member may answer).
+    const look = Number.isInteger(p.team) ? teamLook(p.team) : null;
+    const name = look ? `${look.name} ${look.mark}` : (p.name || '');
+    const initial = esc(look ? look.mark : (name.trim()[0] || '•').toUpperCase());
+    const lvl = k.showLevel && game && !look ? ` · level ${windowFor(p.id, game).floor}` : '';
     const label = `${next ? 'Next: ' : ''}${name}${lvl}`;
     return `<span class="qz-turn" data-turn="${esc(p.id)}"${next ? ' data-next' : ''}>`
       + `<span class="qz-token" data-p="${p.index % MAX_PLAYERS}" aria-hidden="true">${initial}</span>${esc(label)}</span>`;
