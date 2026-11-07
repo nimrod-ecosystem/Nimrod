@@ -91,7 +91,7 @@ const host = document.getElementById('host');
       check('unmount clears the stage', host.children.length === 0);
       // row 2.239 (Mike, 2026-11-06): "the trivia always gives the questions in the same order" - the try host's fixed seed.
       const a = tryRand(7), b = tryRand(7);
-      check('*** the try host deals with the browser's own random by default; a seed only when one is given ***',
+      check('*** the try host deals with the browser’s own random by default; a seed only when one is given ***',
         tryRand() === Math.random && tryRand(null) === Math.random && a() === b() && a() === b());
       t.destroy();
     }
