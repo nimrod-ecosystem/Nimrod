@@ -29,9 +29,14 @@ import { createState } from './state.js';
 import { getManifest, seedFromSibling } from './module.js';
 import { MODE_KEY, DEFAULT_MODE, PROFILE_SETTINGS_KEY } from './lessons.js';
 import { DEVICE_THEME } from './theme_default.js';
+import { STARTER_MODULES } from './modules_catalog.js';
+import { STARTER_SCHEDULE } from './local_store.js';
 
-// A starter profile so a fresh account "just works": photos, the camera mirror, the
-// clock, and YouTube (a plain panel since 2026-10-15, row 2.93; it was the Lineup director).
+/** A new account's first screen's name (row 2.237): local_store.js seedStarterScreen's, not "Bedside". */
+export const STARTER_SCREEN_NAME = 'My screen';
+
+// A starter profile so a fresh account "just works": the starter screen (photos, YouTube, the word game, the clock;
+// no camera since 2026-11-06, row 2.237 - see below).
 // Shared by kiosk.html and modules.html's live editor -- both need "an account's default
 // screen" resolved the same way, and a second copy of this is exactly the kind of drift
 // module_try.js's own header warns about.
@@ -44,13 +49,26 @@ export async function ensureProfile(profiles, user, wantProfile = null, { person
     () => (personId ? profiles.list(personId) : profiles.list()));
   if (wantProfile) { const p = list.find((x) => x.id === wantProfile); if (p) return p.id; }
   if (!list.length) {
-    const p = personId ? await profiles.create('Bedside', personId) : await profiles.create('Bedside');
-    await profiles.addModule(p.id, 'photos');
-    await profiles.addModule(p.id, 'camera');
-    await profiles.addModule(p.id, 'clock');
-    // (row 2.93, Mike 2026-10-15: a new screen gets plain modules - "otherwise it's plain". It used to get a Lineup
-    // here, where people expect a YouTube panel; a Lineup is one choice away in Switch module or the library.)
-    await profiles.addModule(p.id, 'youtube');
+    // *** NO CAMERA, AND NOT "BEDSIDE" (row 2.237, Mike 2026-11-06: a new account opened "the bedside dashboard ... with
+    // the camera showing over the top of it. It should not be doing that as a default for anyone"). *** This used to make
+    // a screen called "Bedside" with the Camera on it, and a Camera in no slot is the corner mirror (arrangement.js
+    // partition), so every new account had its own camera live over everything. A camera is a choice somebody makes
+    // (camera_owner.js), never a default. Now it is the SAME starter a signed-out visitor gets (local_store.js
+    // seedStarterScreen, modules_catalog.js STARTER_MODULES): "My screen", photos, YouTube, the word game and the clock,
+    // four up, YouTube with its starter playlists. One starter, so the two cannot drift again.
+    const name = STARTER_SCREEN_NAME;
+    const p = personId ? await profiles.create(name, personId) : await profiles.create(name);
+    const made = [];
+    for (const type of STARTER_MODULES) made.push(await profiles.addModule(p.id, type));
+    try {
+      const tube = made[STARTER_MODULES.indexOf('youtube')];
+      if (tube?.id) {
+        const tubeState = createState({ url: profiles.stateURL(p.id, tube.id), user });
+        await tubeState.load().catch(() => {});
+        tubeState.set({ schedule: STARTER_SCHEDULE.map((d) => ({ ...d })) });
+        await tubeState.flush?.();
+      }
+    } catch { /* an empty YouTube panel says how to add videos */ }
     // A brand-new profile starts in SANDBOX (Mike, 2026-09-28, register 257.2: "Sandbox is
     // default for new profiles"). `lessons.js`'s own `modeFrom` already falls back to sandbox
     // for any profile that has never chosen one, so this write changes no behavior today — but
@@ -59,7 +77,13 @@ export async function ensureProfile(profiles, user, wantProfile = null, { person
     // "mode" section for the read half (`createQuestMode`, used by trivia/wordforge/algebra).
     const settings = createState({ url: profiles.stateURL(p.id, PROFILE_SETTINGS_KEY), user });
     await settings.load().catch(() => {});
-    settings.set({ [MODE_KEY]: DEFAULT_MODE });
+    // The four up, in local_store.js's order (TL, TR, BL, BR: photos, YouTube, the word game, the clock), so no module is
+    // left out of a slot (a clock in no slot would be the corner clock). One write with the mode: it is one document.
+    // SAVED BEFORE THE SCREEN IS HANDED BACK: a kiosk that mounted first and then saw the layout arrive would reload the
+    // page for it (kiosk.js "a corrected arrangement is one reload"); theme_boot's suite caught exactly that.
+    settings.set({ [MODE_KEY]: DEFAULT_MODE, kiosk: { layout: { preset: 'quad', slots: made.map((m) => m?.id || null) } } });
+    try { await settings.flush?.(); } catch { /* saved on the next change; the screen still has no camera */ }
+    try { settings.destroy?.(); } catch { /* gone */ }
     return p.id;
   }
   return list[0].id;

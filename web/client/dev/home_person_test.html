@@ -128,8 +128,8 @@ try {
   check('*** B now has exactly one screen, and it is Home’s default ***', bList.length === 1 && bList[0].id === madeB, J(bList));
   // (54de3637, row 2.93, 2026-10-15: a new screen gets a plain YouTube panel where it got a Lineup, `director`; profile.js.)
   const bTypes = J((await api.get(madeB)).modules.map((m) => m.type).sort());
-  check('*** it is the starter screen a new account gets (Bedside: photos, camera, clock, youtube) ***', bList[0]?.name === 'Bedside'
-    && bTypes === J(['camera', 'clock', 'photos', 'youtube']), `${bList[0]?.name} ${bTypes}`);
+  check('*** it is the starter screen a new account gets (My screen: photos, YouTube, Word Forge, the clock; no camera, row 2.237) ***', bList[0]?.name === 'My screen'
+    && bTypes === J(['clock', 'photos', 'wordforge', 'youtube']), `${bList[0]?.name} ${bTypes}`);
   check('*** never A’s: A’s screen is not B’s Home default, and A’s screens are unchanged ***', madeB !== screenA && J(await screensOf(A)) === aScreens);
   check('B has no Home and no landing of their own (A’s are not theirs)', who()?.homeId === null && who()?.landingId === null, why());
   check('B’s page does not wear A’s theme', themeVar() !== THEMES[THEME_A].vars[VAR], themeVar());
@@ -140,7 +140,7 @@ try {
   await writePerson(B, HOME_STATE_KEY, { homeId: homeB, welcomeDone: true });
   await openHome();
   check('*** B again: their own screen (not a second one), their theme, their Home ***', await until(() => who()?.personId === B)
-    && who()?.defaultId === madeB && who()?.homeId === homeB && (await api.list(B)).filter((s) => s.name === 'Bedside').length === 1, why());
+    && who()?.defaultId === madeB && who()?.homeId === homeB && (await api.list(B)).filter((s) => s.name === 'My screen').length === 1, why());
   check('*** B’s Home wears its theme (the showing dashboard’s, else B’s screen’s) ***', await until(() => wearsHomeTheme(THEME_B)), homeThemeWhy());
 
   // ============================================================================================

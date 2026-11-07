@@ -140,6 +140,10 @@ const host = document.getElementById('host');
         live.profile.modules.some((m) => m.type === 'photos')
         && live.profile.modules.some((m) => m.type === 'clock'),
         JSON.stringify(live.profile.modules.map((m) => m.type)));
+      // row 2.237 (Mike, 2026-11-06): "It should not be doing that as a default for anyone."
+      check('*** NO CAMERA on a new account\'s screen, and it is not called "Bedside" ***',
+        !live.profile.modules.some((m) => m.type === 'camera') && live.profile.name !== 'Bedside',
+        `${live.profile.name} ${JSON.stringify(live.profile.modules.map((m) => m.type))}`);
 
       // *** ensureProfile's OWN new hook (register 252/257.2): a brand-new profile's mode is
       // written EXPLICITLY, not left purely inferred. *** Read the same real per-profile

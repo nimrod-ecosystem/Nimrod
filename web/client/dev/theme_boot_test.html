@@ -269,7 +269,10 @@ try {
   {
     // The screen's row: no theme. The person's row: High contrast. So the answer is High contrast -- and before the
     // fix the screen painted "Best for this device" first, then High contrast when the person's row came in.
-    await setRow(profiles.stateURL(pid, 'settings'), { theme: null });
+    // (2026-11-06, row 2.237) A new account's screen is now the four-up starter; this section was written against a
+    // screen with no layout, whose mount returns before the rows answer, so the gate can be SEEN shut. The layout is taken
+    // off here, and the one-theme checks below hold either way (they passed on the four-up screen too).
+    await setRow(profiles.stateURL(pid, 'settings'), { theme: null, kiosk: null });
     await setRow(profiles.personStateURL(personId, INPUTS_KEY), { theme: 'contrast' });
     clearRoot();
     root.setAttribute('data-theme-boot', 'page');            // a saved look is on the page...
