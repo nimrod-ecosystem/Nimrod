@@ -4731,9 +4731,8 @@ export async function mountKiosk(root, {
     // (seasons, 2026-10-05) "Holiday looks" is now one row per holiday (sky.js HOLIDAY_FIELDS argues the eleven
     // stops), each naming its next dates ("Halloween look, Oct 25 to Oct 31"). A screen that saved the old
     // single "Off" shows them all off.
-    ...(followsSeasons(shownTheme()) ? HOLIDAY_FIELDS.map((f) => ({ ...f,
-      default: readScreen()[HOLIDAYS_KEY] === false ? false : f.default,
-      label: (() => { try { return holidayRowLabel(f.holiday); } catch { return f.label; } })() })) : []),
+    // (2026-11-07, row 2.241) ...and now ONE row, "Holiday looks", a list of ticks (screenItems' 'holiday-looks' and
+    // `holidayLooksPage`): Mike, "Kind of like how you filter in Excel". The keys and what they hold are unchanged.
     ...(sceneTakesSky(paintedTheme(shownTheme()).scene) ? [{ ...SKY_FIELD, options: SKY_FIELD.options.map((o) => ({ ...o })) }] : []),
     // (2026-11-02) "Moving theme scene": only while the theme on screen has a scene to move.
     ...(paintedTheme(shownTheme())?.scene ? [{ ...SCENE_MOTION_FIELD, options: SCENE_MOTION_FIELD.options.map((o) => ({ ...o })) }] : []),
@@ -6994,6 +6993,11 @@ export async function mountKiosk(root, {
       // (Tabs: "How it looks" heads the Display tab's first rows; "Switches" the hold row on Devices; "Hidden
       // panels" the hide question's wait on Sound. Each row's tab: SCREEN_FIELD_TABS, else This screen.)
       { kind: 'heading', id: 'look-head', label: 'How it looks', ...MENU_TAB.display(0) },
+      // HOLIDAY LOOKS, ONE ROW (row 2.241): while the Colours follow the seasons, one stop on the Theme tab that opens the
+      // list of ticks (`holidayLooksPage`), instead of eleven rows on the switch walk.
+      ...(followsSeasons(shownTheme()) ? [{ kind: 'item', id: 'holiday-looks', label: 'Holiday looks', page: 'holiday-looks',
+        hint: (() => { const n = HOLIDAY_FIELDS.filter((f) => holidayOn(f)).length; return n === HOLIDAY_FIELDS.length ? 'all on' : n ? `${n} of ${HOLIDAY_FIELDS.length} on` : 'all off'; })(),
+        ...MENU_TAB.theme(0) }] : []),
       // THE SCENE EDITOR, FINDABLE (2026-10-27, chat's note DB 5: Mike asked where it is). It was the room's ✎ corner,
       // shown only on hover, and "Edit the room" under a piece chosen in "Settings for": both real, neither something
       // a person finds. Here while this dashboard's backdrop is a room; not at "Just the essentials" ("Edit the room"'s
@@ -7423,6 +7427,7 @@ export async function mountKiosk(root, {
       // LESSON TOPICS (moved here from the Settings panel's own list, 2026-10-03; its id 'sc-mode' kept, so the
       // guide's "Show the lesson-topic setting" still finds it). `lessonTopicsPage` argues it.
       get 'sc-mode'() { return lessonTopicsPage(); },
+      get 'holiday-looks'() { return holidayLooksPage(); },   // (row 2.241) `holidayLooksPage` argues it
       // A PAGE SET UP SOMEWHERE ELSE, ON A SCREEN (2026-10-04; page_links.js): the address and a code to scan,
       // instead of opening /claude.html or /reviews.html over the dashboard. Back is the menu's own.
       ...Object.fromEntries(Object.keys(ELSEWHERE_PAGES).map((k) => [`${ELSEWHERE_PAGE_PREFIX}${k}`, elsewhereMenuPage(k)])),
@@ -7914,6 +7919,66 @@ export async function mountKiosk(root, {
   // carries a paragraph saying what the two mean and that nothing unlocked is lost by switching, which a hint
   // cannot hold, and it is set rarely. AGAINST: two presses (in, choose) where a row would be one. Its list is the
   // choice picker, so a switch walks it by the page's own moves (settings.js openPage). Choosing applies at once.
+  // *** HOLIDAY LOOKS, A LIST OF TICKS (row 2.241, Mike 2026-11-07: "One dropdown with a checkbox beside each holiday and a
+  // Select all ... Kind of like how you filter in Excel"). *** The choice picker, as Lesson topics uses it, so a switch walks
+  // it by the page's own moves: each holiday a tile, ticked or not (☑ / ☐ in its name, aria-pressed for a screen reader),
+  // a press turns that one over and the list stays open; "Select all" and "Select none" first; "Done" leaves. Each tick
+  // writes the same key its row wrote (sky.js holidayKey), so a screen's saved choices are untouched.
+  // FOR one page: eleven stops off the Theme tab's walk, and the whole set in one place. AGAINST: two presses (in, tick)
+  // where a row was one. Holidays are set rarely, so the second press is spent rarely.
+  function holidayOn(f) {
+    const s = settings.get() || {};
+    if (typeof s[f.key] === 'boolean') return s[f.key];
+    return s[HOLIDAYS_KEY] === false ? false : !!f.default;
+  }
+  const HOLIDAY_ALL = '__all', HOLIDAY_NONE = '__none';
+  function holidayLooksPage() {
+    const owner = menuView();
+    return {
+      title: 'Holiday looks',
+      render(el) {
+        el.innerHTML = `<p class="st-hint" style="display:block;margin:0 0 10px">With the seasons, each ticked holiday shows on
+          its dates. Press one to tick it or take its tick off.</p><div data-holiday-looks></div>`;
+        const box = el.querySelector('[data-holiday-looks]');
+        const label = (f) => { try { return holidayRowLabel(f.holiday); } catch { return f.label; } };
+        const named = (f) => `${holidayOn(f) ? '☑' : '☐'} ${label(f)}`;
+        // The ticks change IN PLACE: the list is never drawn again, so a switch's light stays where it was pressed.
+        const paintTicks = () => {
+          for (const t of box.querySelectorAll('[data-chp-pick]')) {
+            const f = HOLIDAY_FIELDS.find((x) => x.holiday === t.dataset.chpPick);
+            if (!f) { t.setAttribute('aria-pressed', 'false'); continue; }
+            t.setAttribute('aria-pressed', String(holidayOn(f)));
+            const n = t.querySelector('.chp-name');
+            if (n) n.textContent = named(f);
+          }
+        };
+        const pick = mountChoicePicker(box, {
+          title: null, key: 'holidayLooks', value: null, columns: 1,
+          options: [{ value: HOLIDAY_ALL, label: 'Select all' }, { value: HOLIDAY_NONE, label: 'Select none' },
+            ...HOLIDAY_FIELDS.map((f) => ({ value: f.holiday, label: named(f) }))],
+          cancelLabel: 'Done',
+          onPick: (v) => {
+            if (v === HOLIDAY_ALL || v === HOLIDAY_NONE) {
+              settings.set(Object.fromEntries(HOLIDAY_FIELDS.map((f) => [f.key, v === HOLIDAY_ALL])));
+            } else {
+              const f = HOLIDAY_FIELDS.find((x) => x.holiday === v);
+              if (f) settings.set({ [f.key]: !holidayOn(f) });
+            }
+            paintTicks();
+            refreshViews();
+          },
+          onCancel: () => { try { owner?.closePage?.(); } catch { /* gone */ } },
+        });
+        paintTicks();
+        return {
+          next: () => pick.next(), prev: () => pick.prev(), select: () => pick.select(),
+          back: () => pick.back(),
+          destroy: () => { try { pick.destroy(); } catch { /* gone */ } },
+          __pick: pick,
+        };
+      },
+    };
+  }
   function lessonTopicsPage() {
     const owner = menuView();
     return {

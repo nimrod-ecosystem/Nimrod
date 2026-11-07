@@ -659,11 +659,26 @@ try {
     const items = rowItems(kiosk);
     const ids = items.map((i) => i.id);
     // (themes, 2026-10-06, deliberately: the holiday rows moved with the Theme row to the new Theme tab.)
-    check('*** with the seasons: one row per holiday, eleven, on the Theme tab; the old single row is gone ***',
-      HOLIDAY_FIELDS.every((fld) => ids.includes(`set:${fld.key}`)) && !ids.includes('set:holidayLooks')
-      && items.filter((i) => /^set:holiday/.test(i.id)).every((i) => i.tab === 'theme'), ids.filter((i) => /^set:holiday/.test(i)).join());
-    const hrow = items.find((i) => i.id === 'set:holidayHalloween');
-    check('...each names its next dates', hrow && /^Halloween look, /.test(hrow.label) && / to /.test(hrow.label), hrow?.label);
+    // (2026-11-07, row 2.241) ONE row, "Holiday looks", that opens a list of ticks, instead of eleven.
+    const hl = items.find((i) => i.id === 'holiday-looks');
+    check('*** with the seasons: ONE "Holiday looks" row on the Theme tab, all on by default; no row per holiday ***',
+      hl && hl.tab === 'theme' && hl.hint === 'all on' && !ids.some((i) => /^set:holiday/.test(i)), J({ hl, rows: ids.filter((i) => /holiday/.test(i)) }));
+    kiosk.menu.open();
+    kiosk.menu.openPage('holiday-looks');
+    await sleep(50);
+    const tile = (v) => root.querySelector(`[data-holiday-looks] [data-chp-pick="${v}"]`);
+    check('*** the page: Select all, Select none, then each holiday ticked, naming its next dates ***',
+      !!tile('__all') && !!tile('__none') && HOLIDAY_FIELDS.every((fld) => tile(fld.holiday)?.getAttribute('aria-pressed') === 'true')
+      && /^☑ Halloween look, .* to /.test(tile('halloween')?.textContent.trim() || ''), tile('halloween')?.textContent);
+    tile('diwali').click();
+    await sleep(50);
+    check('*** a press takes one tick off, shown at once, the list still open ***',
+      tile('diwali')?.getAttribute('aria-pressed') === 'false' && /^☐ /.test(tile('diwali')?.textContent.trim() || '') && !!tile('halloween'), tile('diwali')?.textContent);
+    tile('__none').click(); await sleep(50);
+    check('Select none: every tick off', HOLIDAY_FIELDS.every((fld) => tile(fld.holiday)?.getAttribute('aria-pressed') === 'false'));
+    tile('__all').click(); await sleep(50);
+    check('Select all: every tick on again', HOLIDAY_FIELDS.every((fld) => tile(fld.holiday)?.getAttribute('aria-pressed') === 'true'));
+    kiosk.menu.close();
     const why = items.find((i) => i.id === 'seasons-why');
     const at = ids.indexOf('set:theme');
     check('*** under Colours: why this look, and what comes next - read, not a stop ***', why && why.disabled === true && ids[at + 1] === 'seasons-why'
