@@ -1676,6 +1676,9 @@ export async function mountKiosk(root, {
         pairStore: () => (voiceRec?.options?.().on ? voiceStore : null), pairPerson: () => personId });
     } catch (err) { console.error('kiosk: subtitle learning', err); subLearn = null; }
   }
+  // This device's voice program client, one for the speech channel below and the "This device" row (localVoiceRows).
+  let localVoiceObj = null;
+  function localVoiceClient() { return (localVoiceObj ||= createLocalVoice(storage ? { storage } : {})); }
   try {
     // NO `mount`, SO NO SCREEN CHANNEL - deliberately. A banner adapter rendering into the
     // kiosk root has never been tried on this surface and could land on top of her photos.
@@ -1705,7 +1708,7 @@ export async function mountKiosk(root, {
     // played through the speech channel below, a sentence at a time, and anything it cannot make is the browser's voice.
     // Wrapped OUTSIDE the subtitles' tap, so each sentence is captioned when it is heard, not while it is being made.
     const voiceOf = (chs) => {
-      try { localVoiceFrom(); if (chs.speech) chs.speech = withLocalVoice(chs.speech, createLocalVoice()); }
+      try { localVoiceFrom(storage ? { storage } : {}); if (chs.speech) chs.speech = withLocalVoice(chs.speech, localVoiceClient()); }
       catch (err) { console.error('kiosk: local voice', err); }
       return chs;
     };
@@ -4408,8 +4411,40 @@ export async function mountKiosk(root, {
       { kind: 'heading', id: 'level-head', label: `${levelTitle(lv)}. Used when nothing more particular has made its own choice` },
       ...rows,
       ...(layoutHere ? [layoutRow(), ...saveRows()] : []),
-      ...(lv === 'device' ? deviceLookRows() : []),
+      ...(lv === 'device' ? [...deviceLookRows(), ...localVoiceRows()] : []),
     ]);
+  }
+
+  // *** "USE THIS COMPUTER'S VOICE PROGRAM" (row 2.233, note FI). *** Until now only the kiosk launcher's `?localVoice=on`
+  // turned it on, so a Pi used as an ordinary computer, its site in an ordinary browser window, spoke with the browser's
+  // own voice, which a Pi does not have: silence. A row of "Settings for: This device", because the program is on THIS
+  // computer (local_voice.js "PER DEVICE"), the same storage the launcher's word is kept in. Off by default, as before.
+  // Turning it on asks the program once (`check`), from the press: a browser that asks before a site reaches this computer
+  // puts its question in front of the person who just pressed, never on a screen nobody is at. Not reached or refused:
+  // still on, and the row says why; every sentence it cannot make is the browser's voice, as always.
+  // (localVoiceClient is declared beside the speech channel's wiring, which needs it first.)
+  let localVoiceNote = '';
+  function localVoiceRows() {
+    if (!deviceRow) return [];
+    let on = false;
+    try { on = localVoiceClient().enabled(); } catch { return []; }
+    return [{ kind: 'heading', id: 'lv-head', label: 'Voice on this device' },
+      { kind: 'item', id: 'local-voice', label: `Use this computer’s voice program: ${on ? 'yes' : 'no'}`,
+        hint: localVoiceNote || (on ? 'What this screen says is made by the voice program on this computer; press to use the browser’s own voice'
+          : 'This screen speaks with the browser’s own voice. A computer with the Nimrod voice program (a Raspberry Pi set up with it) '
+            + 'needs this on, or it is silent; the browser may ask once to let this site reach this computer'),
+        run: () => {
+          const next = !on;
+          try { localVoiceClient().setSettings({ on: next }); } catch (err) { console.error('kiosk: local voice', err); return; }
+          localVoiceNote = next ? 'Asking the voice program…' : '';
+          redrawMenu();
+          if (!next) return;
+          Promise.resolve(localVoiceClient().check()).then((h) => {
+            localVoiceNote = h && h.ok ? `On: the voice program answered (${h.engine || 'a voice'})`
+              : `On, but ${String((h && h.reason) || 'the voice program did not answer.').replace(/^./, (c) => c.toLowerCase())} Until it does, the browser’s own voice is used`;
+            redrawMenu();
+          }, () => { localVoiceNote = 'On, but the voice program could not be asked'; redrawMenu(); });
+        } }];
   }
 
   // *** "FONT ON THIS DEVICE" AND "COLOUR LOOK", FOR A SWITCH (2026-10-02; 1392018 / b8d918e). *** They lived

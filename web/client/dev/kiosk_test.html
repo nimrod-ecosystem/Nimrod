@@ -2605,14 +2605,16 @@ const toTab = (m, id) => {
         for (let i = 0; i < 60 && bk.menu.focusId() !== id; i += 1) await press('ArrowDown', 10);
         return bk.menu.focusId() === id;
       };
-      const box = () => bbox.querySelector('input.st-input');
+      // (2026-11-06, the Text preset) a button's words may be several lines, so the box is a textarea: Enter is a new
+      // line there, and Ctrl+Enter keeps what was typed (settings.js 1600).
+      const box = () => bbox.querySelector('input.st-input, textarea.st-input');
 
       check('ArrowDown walks to the Words row', await walk('set:label'));
       await press('Enter', 40);
       check('Enter opens the text box, with the keyboard in it', !!box() && document.activeElement === box());
       box().value = 'Robin';
       box().dispatchEvent(new Event('input', { bubbles: true }));
-      box().dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+      box().dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', ctrlKey: true, bubbles: true, cancelable: true }));
       await sleep(60);
       check('*** THE TYPED WORDS LAND IN THE BUTTON’S STATE ***', bk.stageState().label === 'Robin',
         JSON.stringify(bk.stageState()));
@@ -5133,6 +5135,23 @@ const toTab = (m, id) => {
       ['uf:look:photos', 'uf:look:video', 'uf:look:wallpaper'].every((id) => row(id) && !row(id).disabled), gk.menu.items().map((r) => r.id).join());
     gk.menu.focusRow('uf:look:video'); gk.menu.select();
     check('a switch row writes the same grade', await settled(() => grade()?.targets?.video === true, 3000), JSON.stringify(grade()?.targets));
+    // ---- (3) row 2.233: THIS COMPUTER'S VOICE PROGRAM, for a Pi used as an ordinary computer (no launcher) ----
+    // This kiosk keeps it in the page's own storage (no `storage` given), where the launcher's word is kept too.
+    const lvStore = window.localStorage;
+    const lvBefore = lvStore.getItem('nimrod.voice.local');
+    lvStore.removeItem('nimrod.voice.local');
+    const lv = () => JSON.parse(lvStore.getItem('nimrod.voice.local') || 'null');
+    check('*** "Use this computer\'s voice program": a row of This device, off by default ***',
+      /voice program: no$/.test(row('local-voice')?.label || '') && !lv()?.on, JSON.stringify(row('local-voice')));
+    gk.menu.focusRow('local-voice'); gk.menu.select();
+    check('*** pressed: on, kept on this device where the launcher\'s word is kept ***',
+      lv()?.on === true && /voice program: yes$/.test(row('local-voice')?.label || ''), `${lvStore.getItem('nimrod.voice.local')} ${row('local-voice')?.label}`);
+    check('*** nothing answers here: still on, and the row says the browser\'s voice is used until it does ***',
+      await settled(() => /On, but no voice program answered at http:\/\/127\.0\.0\.1:8794\..*browser’s own voice is used/.test(row('local-voice')?.hint || ''), 9000),
+      row('local-voice')?.hint);
+    gk.menu.focusRow('local-voice'); gk.menu.select();
+    check('pressed again: off', lv()?.on === false && /: no$/.test(row('local-voice')?.label || ''), `${lvStore.getItem('nimrod.voice.local')} ${row('local-voice')?.label}`);
+    if (lvBefore == null) lvStore.removeItem('nimrod.voice.local'); else lvStore.setItem('nimrod.voice.local', lvBefore);
     gk.menu.close();
     gk.destroy();
     groot.remove();
