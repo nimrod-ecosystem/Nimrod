@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>research_index — facts, quotes and words, read once — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem} h2{font-size:.95rem;margin:16px 0 4px}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>research_index — one index, one question, and what may be shown</h1>
+<p>Made-up packs built here.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<script type="module">
+import { readPack, buildIndex, find, mayShow, itemLine, topicsOf, cleanItem, RESEARCH_SCHEMA } from '../research_index.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+function section(t) { const h = document.createElement('h2'); h.textContent = t; out.append(h); }
+const J = (v) => JSON.stringify(v);
+const ids = (list) => list.map((i) => i.id);
+
+try {
+  const facts = { schema: RESEARCH_SCHEMA, kind: 'facts', name: 'space', items: [
+    { kind: 'fact', id: 'f1', text: 'A day on Venus is longer than its year.', topic: 'Space', tags: ['planets'], status: 'verified',
+      sources: [{ url: 'https://example.org/venus', title: 'Venus' }, { url: 'javascript:alert(1)', title: 'bad' }] },
+    { kind: 'fact', id: 'f2', text: 'Unchecked fact.', topic: 'space', status: 'unverified' },
+    { kind: 'fact', id: 'f3', text: 'Wrong fact.', topic: 'space', status: 'flagged', check: { problem: 'no such figure' } },
+    { kind: 'fact', id: 'f4', text: 'Octopus blood is blue.', topic: 'animals', tags: ['ocean'], status: 'verified' },
+    { kind: 'fact', id: '', text: 'no id' },
+    { kind: 'song', id: 's1', text: 'a lyric' },
+  ] };
+  const quotes = { schema: RESEARCH_SCHEMA, kind: 'quotes', name: 'q', items: [
+    { kind: 'quote', id: 'q1', text: 'I can resist everything except temptation.', speaker: 'Oscar Wilde', work: "Lady Windermere's Fan", status: 'verified' },
+    { kind: 'quote', id: 'q2', text: 'Nobody said this.', status: 'verified' },
+    { kind: 'quote', id: 'q3', text: 'Disputed.', speaker: 'Someone', status: 'disputed' },
+  ] };
+  const words = { schema: RESEARCH_SCHEMA, kind: 'words', name: 'level1', items: [
+    { kind: 'word', id: 'w1', text: 'all', word: 'all', level: 1, definition: 'every one', status: 'unverified', aac_core: true },
+    { kind: 'word', id: 'w2', text: 'rare', word: 'rare', level: 6, status: 'unverified' },
+    { kind: 'word', id: 'w3', text: 'bad', word: 'bad', level: 9, status: 'flagged' },
+    { kind: 'fact', id: 'f1', text: 'A second f1.', status: 'verified' },
+  ] };
+
+  section('reading packs');
+  const pf = readPack(facts, { fileName: 'facts__space.json' });
+  check('*** a pack is read; an item with no id, or of a kind not known, is left out and said ***',
+    J(ids(pf.items)) === J(['f1', 'f2', 'f3', 'f4']) && pf.problems.length === 2 && /no id/.test(pf.problems.join()) && /song/.test(pf.problems.join()), J(pf.problems));
+  check('a source that is not a web address is dropped', pf.items[0].sources.length === 1 && pf.items[0].sources[0].url === 'https://example.org/venus');
+  check('a topic is kept in lower case', pf.items[0].topic === 'space');
+  check('*** a quote with nobody who said it is not read ***', !readPack(quotes).items.some((i) => i.id === 'q2'));
+  check('a file that is not a research pack: nothing, and said', readPack({ schema: 'nimrod.pack.v1', items: [] }).items.length === 0
+    && /not a nimrod\.research\.v1/.test(readPack({}).problems[0]));
+  check('a level outside 1-6 is no level', cleanItem({ kind: 'word', id: 'x', text: 'x', level: 9 }).item.level === null);
+  check('a long text is cut, not refused', cleanItem({ kind: 'fact', id: 'x', text: 'a'.repeat(5000) }).item.text.length === 1000);
+
+  section('one index');
+  const ix = buildIndex([pf, readPack(quotes), readPack(words)]);
+  check('*** an id in two packs: the first is used, and it is said ***', ix.byId.get('f1').text.startsWith('A day on Venus')
+    && ix.problems.some((p) => /f1 is in more than one pack/.test(p)), J(ix.problems));
+
+  section('*** what may be shown ***');
+  check('*** flagged and disputed: never, even with "Only checked ones" off ***',
+    !mayShow(ix.byId.get('f3'), { onlyChecked: false }) && !mayShow(ix.byId.get('q3'), { onlyChecked: false }) && !mayShow(ix.byId.get('w3'), { onlyChecked: false }));
+  check('*** a fact or quote: only verified by default; unverified only with it off ***',
+    mayShow(ix.byId.get('f1')) && !mayShow(ix.byId.get('f2')) && mayShow(ix.byId.get('f2'), { onlyChecked: false }));
+  check('*** a word (nothing to check it against): shown unless flagged ***', mayShow(ix.byId.get('w1')) && mayShow(ix.byId.get('w2')));
+
+  section('the one question');
+  check('every fact that may be shown', J(ids(find(ix, { kind: 'fact' }))) === J(['f1', 'f4']));
+  check('...and with "Only checked ones" off', J(ids(find(ix, { kind: 'fact', onlyChecked: false }))) === J(['f1', 'f2', 'f4']));
+  check('tags: any of them; a topic counts as a tag', J(ids(find(ix, { tags: ['ocean'] }))) === J(['f4'])
+    && J(ids(find(ix, { tags: ['space'] }))) === J(['f1']) && J(ids(find(ix, { tags: ['animals', 'planets'] }))) === J(['f1', 'f4']));
+  check('more than one kind', J(ids(find(ix, { kind: ['fact', 'quote'] }))) === J(['f1', 'f4', 'q1']));
+  check('a word\'s level', J(ids(find(ix, { kind: 'word', level: 1 }))) === J(['w1']) && J(ids(find(ix, { level: [1, 6] }))) === J(['w1', 'w2']));
+  check('ids already shown are left out', J(ids(find(ix, { kind: 'fact', exclude: ['f1'] }))) === J(['f4']));
+  const a = ids(find(ix, { onlyChecked: false, seed: 7 })), b = ids(find(ix, { onlyChecked: false, seed: 7 })), c = ids(find(ix, { onlyChecked: false, seed: 8 }));
+  check('*** the same seed, the same order; another seed, another order ***', J(a) === J(b) && J(a) !== J(c) && a.length === 6, J([a, c]));
+  check('a limit', find(ix, { onlyChecked: false, limit: 2 }).length === 2);
+
+  section('words for a screen');
+  check('a quote says who said it, and where', itemLine(ix.byId.get('q1')) === '“I can resist everything except temptation.” (Oscar Wilde, Lady Windermere\'s Fan)');
+  check('a word with its meaning', itemLine(ix.byId.get('w1')) === 'all: every one' && itemLine(ix.byId.get('w2')) === 'rare');
+  check('topics for "Which topics", from what may be shown only', J(topicsOf(ix, { kind: 'fact' })) === J([{ tag: 'animals', count: 1 }, { tag: 'ocean', count: 1 }, { tag: 'planets', count: 1 }, { tag: 'space', count: 1 }]));
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+const s = document.getElementById('summary');
+s.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+s.className = failed ? 'fail' : 'pass';
+s.dataset.done = 'true'; s.dataset.failed = String(failed);
+</script>
+</body>
+</html>

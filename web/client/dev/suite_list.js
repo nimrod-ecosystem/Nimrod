@@ -283,6 +283,8 @@ export const SUITES = [
   'symbol_packs',
   // row 2.222 (2026-11-06): reading a Beat Saber map the person brings (v2, v3, v4), made-up maps only.
   'beatmap',
+  // row 2.223 (2026-11-06): facts, quotes and words read into one index; flagged never shown, facts and quotes verified only.
+  'research_index',
   // 2026-10-25: Design's castle and village (item 45), edited with the room's handles (one editor, note CP).
   'village',
   // 2026-10-25 (row 2.123): change the site's words where they are, `?wording=1`; copied for --apply-page-edits.
