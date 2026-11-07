@@ -1,0 +1,170 @@
+{
+ "schema": "nimrod.adventure.v1",
+ "id": "taste-test",
+ "version": 1,
+ "title": "The Honest Taster",
+ "start": "n1",
+ "nodes": {
+  "n1": {
+   "place": "bakery",
+   "cast": [
+    "hero"
+   ],
+   "text": "The baker at {bakery} slides a warm, lumpy-looking loaf towards you. \"New recipe,\" she says. \"I need honest tasters, and I need a name.\" It smells of honey and toasted seeds.",
+   "choices": [
+    {
+     "label": "Taste it right away",
+     "to": "n2"
+    },
+    {
+     "label": "Ask who else could taste it",
+     "to": "n3"
+    }
+   ]
+  },
+  "n2": {
+   "place": "bakery",
+   "cast": [
+    "hero"
+   ],
+   "text": "You take a slice. Honey first, then a nutty crunch, then a surprising little hint of pepper. The baker waits with her pencil raised. \"Honest, please. I can take it.\"",
+   "choices": [
+    {
+     "label": "Say it needs a pinch more salt",
+     "to": "n4"
+    },
+    {
+     "label": "Say it's lovely as it is",
+     "to": "n5"
+    }
+   ]
+  },
+  "n3": {
+   "place": "bakery",
+   "cast": [
+    "hero"
+   ],
+   "text": "\"Good thinking,\" says the baker. \"More opinions, more bread.\" She wraps two thick slices in paper and tucks them into your hands. \"Take them wherever you like.\"",
+   "choices": [
+    {
+     "label": "Visit Queen Rose",
+     "to": "n6"
+    },
+    {
+     "label": "Visit Robin the Joker",
+     "to": "n7"
+    }
+   ]
+  },
+  "n4": {
+   "place": "bakery",
+   "cast": [
+    "hero"
+   ],
+   "text": "The baker nods and writes it down. \"Salt. Of course.\" She bakes a small second loaf, and it is even better: rounder, deeper, just right. \"Now it only needs a name.\"",
+   "choices": [
+    {
+     "label": "Name it Honey Hearth",
+     "to": "n8"
+    },
+    {
+     "label": "Ask Robin for a name",
+     "to": "n7"
+    }
+   ]
+  },
+  "n5": {
+   "place": "bakery",
+   "cast": [
+    "hero"
+   ],
+   "text": "The baker laughs. \"Kind of you. But honest tasters find one small thing, and so do I. Be brave.\" You chew a little longer, and she is right. Something is missing.",
+   "choices": [
+    {
+     "label": "Own up: it needs more salt",
+     "to": "n4"
+    },
+    {
+     "label": "Name it Good Morning Loaf",
+     "to": "n9"
+    }
+   ]
+  },
+  "n6": {
+   "place": "queenParlour",
+   "cast": [
+    "hero",
+    "queen"
+   ],
+   "text": "Queen Rose pours tea and tries the bread in {queenParlour}. \"Mmm. Wonderful with butter. And a little jam, I think.\" She dabs her fingers on a napkin. \"Tell the baker it is a loaf for sitting down with.\"",
+   "choices": [
+    {
+     "label": "Carry her advice to the baker",
+     "to": "n10"
+    },
+    {
+     "label": "Ask Robin's opinion too",
+     "to": "n7"
+    }
+   ]
+  },
+  "n7": {
+   "place": "jokerCaravan",
+   "cast": [
+    "hero",
+    "joker"
+   ],
+   "text": "In {jokerCaravan}, Robin pulls a slice from behind your ear, takes a bite, and bows. \"Riddle me this: what is round, speckled, and gone by noon?\" Robin grins and waits.",
+   "choices": [
+    {
+     "label": "Solve the riddle: the loaf!",
+     "to": "n11"
+    },
+    {
+     "label": "Take the riddle back to the baker",
+     "to": "n9"
+    }
+   ]
+  },
+  "n8": {
+   "place": "bakery",
+   "cast": [
+    "hero"
+   ],
+   "text": "The baker chalks \"Honey Hearth\" on the board by the door of {bakery}. By the afternoon, the first customers are asking for it by name. She saves you the warm end slice, and you eat it happily.",
+   "end": true
+  },
+  "n9": {
+   "place": "bakery",
+   "cast": [
+    "hero"
+   ],
+   "text": "Back at {bakery}, the baker reads the name aloud and smiles. \"Good Morning Loaf. Simple, and it makes you want some.\" She writes it on the board and hands you a slice for the road.",
+   "end": true
+  },
+  "n10": {
+   "place": "bakery",
+   "cast": [
+    "hero",
+    "queen"
+   ],
+   "text": "You pass on the Queen's advice at {bakery}. The baker sets out butter and jam beside the loaf and calls it the Parlour Loaf. \"Fit for a Queen,\" she says, and you agree, with your mouth full.",
+   "end": true
+  },
+  "n11": {
+   "place": "bakery",
+   "cast": [
+    "hero",
+    "joker"
+   ],
+   "text": "\"Right!\" cries Robin, delighted, and follows you to {bakery}. The baker chalks \"Gone by Noon\" on the board. By twelve, there is only one crumb left, and Robin makes it vanish with a flourish.",
+   "end": true
+  }
+ },
+ "written": {
+  "by": "claude-sonnet-5-5",
+  "on": "2026-11-07",
+  "batch": "msgbatch_01L88zJCvmUuLRjqApWw2C6w",
+  "ai_written": true
+ }
+}

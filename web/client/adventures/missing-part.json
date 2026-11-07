@@ -1,0 +1,149 @@
+{
+ "schema": "nimrod.adventure.v1",
+ "id": "missing-part",
+ "version": 1,
+ "title": "The Missing Part",
+ "start": "n1",
+ "nodes": {
+  "n1": {
+   "place": "jackWorkshop",
+   "cast": [
+    "hero",
+    "jack"
+   ],
+   "text": "Jack turns a brass teapot over in his hands. It is meant to stir itself, but it needs one small cog, no bigger than a button. \"There must be a spare somewhere in town,\" he says. You offer to help look.",
+   "choices": [
+    {
+     "label": "Go where things are sold",
+     "to": "n2"
+    },
+    {
+     "label": "Ask someone clever",
+     "to": "n3"
+    }
+   ]
+  },
+  "n2": {
+   "place": "shop",
+   "cast": [
+    "hero"
+   ],
+   "text": "The shopkeeper searches tins of screws and reels of wire. No cog. \"Try something that ticks,\" she says. \"The old clock in {library} has been mended before, and menders always keep spares.\"",
+   "choices": [
+    {
+     "label": "Follow her advice",
+     "to": "n4"
+    },
+    {
+     "label": "Ask Robin as well",
+     "to": "n3"
+    }
+   ]
+  },
+  "n3": {
+   "place": "jokerCaravan",
+   "cast": [
+    "hero",
+    "joker"
+   ],
+   "text": "Robin fans a deck of cards, then pulls a coin from your ear. \"A cog? Very well, but riddle first. I have hands but cannot clap. What am I?\"",
+   "choices": [
+    {
+     "label": "Answer: a clock",
+     "to": "n4"
+    },
+    {
+     "label": "Admit you have no idea",
+     "to": "n5"
+    }
+   ]
+  },
+  "n4": {
+   "place": "library",
+   "cast": [
+    "hero"
+   ],
+   "text": "The old clock in {library} ticks along calmly. The librarian opens a small drawer marked Spares and lets you choose. One brass cog is exactly the size Jack described.",
+   "choices": [
+    {
+     "label": "Stop for something warm first",
+     "to": "n7"
+    },
+    {
+     "label": "Hurry back to Jack",
+     "to": "n6"
+    }
+   ]
+  },
+  "n5": {
+   "place": "jokerCaravan",
+   "cast": [
+    "hero",
+    "joker"
+   ],
+   "text": "\"A clock!\" Robin laughs, delighted. Then he rummages in a trick box with a false bottom and holds up a brass cog. \"A stage prop. It never did anything but look important. Take it.\"",
+   "choices": [
+    {
+     "label": "Take it to Jack",
+     "to": "n8"
+    },
+    {
+     "label": "Check the clock for a spare too",
+     "to": "n4"
+    }
+   ]
+  },
+  "n6": {
+   "place": "jackWorkshop",
+   "cast": [
+    "hero",
+    "jack"
+   ],
+   "text": "Jack fits the cog with two careful turns of his screwdriver. The teapot gives a small click, and the spoon begins to stir, slowly and proudly. Jack pours you the first cup. \"Couldn't have done it without you.\"",
+   "end": true
+  },
+  "n7": {
+   "place": "bakery",
+   "cast": [
+    "hero"
+   ],
+   "text": "The baker wraps two warm buns without being asked. You tuck the cog safely in your pocket and the paper bag in your hand. There is one bun for Jack, and one left over.",
+   "choices": [
+    {
+     "label": "Take a bun to the King",
+     "to": "n9"
+    },
+    {
+     "label": "Return to Jack",
+     "to": "n6"
+    }
+   ]
+  },
+  "n8": {
+   "place": "jackWorkshop",
+   "cast": [
+    "hero",
+    "jack",
+    "joker"
+   ],
+   "text": "Jack holds up Robin's stage-prop cog and grins. It fits perfectly. The teapot stirs, and Robin, who has followed you in, claims full credit for the trick. Jack lets him, and pours three cups.",
+   "end": true
+  },
+  "n9": {
+   "place": "kingHall",
+   "cast": [
+    "hero",
+    "king",
+    "jack"
+   ],
+   "text": "King Kenny accepts the bun with great ceremony. Soon Jack walks in with the teapot, following the smell of buns. The cog fits right there on the table, and the spoon starts to stir. The King declares it a triumph.",
+   "end": true
+  }
+ },
+ "written": {
+  "by": "claude-sonnet-5-5",
+  "on": "2026-11-07",
+  "batch": "msgbatch_01L88zJCvmUuLRjqApWw2C6w",
+  "ai_written": true
+ }
+}

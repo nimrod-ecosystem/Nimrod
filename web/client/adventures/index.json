@@ -1,0 +1,17 @@
+{
+ "schema": "nimrod.adventure.index.v1",
+ "stories": [
+  "kite.json",
+  "letter.json",
+  "missing-part.json",
+  "music-box.json",
+  "new-sign.json",
+  "note-in-a-book.json",
+  "picnic.json",
+  "repotting.json",
+  "stopped-clock.json",
+  "surprise.json",
+  "taste-test.json",
+  "trick-that-surprised.json"
+ ]
+}

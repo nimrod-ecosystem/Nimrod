@@ -1,0 +1,170 @@
+{
+ "schema": "nimrod.adventure.v1",
+ "id": "surprise",
+ "version": 1,
+ "title": "Thank You, Baker",
+ "start": "n1",
+ "nodes": {
+  "n1": {
+   "place": "kingHall",
+   "cast": [
+    "hero",
+    "king"
+   ],
+   "text": "King Kenny waves you into {kingHall} and lowers his voice. \"The baker has sent warm loaves to this court all year and never asked for a thing. I'd like us to say thank you, quietly, as a surprise. Where shall we start?\"",
+   "choices": [
+    {
+     "label": "Visit {jackWorkshop}",
+     "to": "n2"
+    },
+    {
+     "label": "Ask Robin for ideas",
+     "to": "n3"
+    }
+   ]
+  },
+  "n2": {
+   "place": "jackWorkshop",
+   "cast": [
+    "hero",
+    "jack"
+   ],
+   "text": "Jack is sanding a plain piece of oak in {jackWorkshop}. \"A bread board,\" he says. \"Every baker can use a good one. It needs a few words on it, though, and a steady hand.\"",
+   "choices": [
+    {
+     "label": "Help him carve the words",
+     "to": "n4"
+    },
+    {
+     "label": "Ask Queen Rose what to write",
+     "to": "n5"
+    }
+   ]
+  },
+  "n3": {
+   "place": "jokerCaravan",
+   "cast": [
+    "hero",
+    "joker"
+   ],
+   "text": "Robin is shuffling cards among the teacups in {jokerCaravan}. \"A surprise needs a little magic,\" Robin says. \"I shall make a loaf appear from my hat. The hat has been warned.\"",
+   "choices": [
+    {
+     "label": "Help Robin rehearse",
+     "to": "n6"
+    },
+    {
+     "label": "Suggest something quieter",
+     "to": "n5"
+    }
+   ]
+  },
+  "n4": {
+   "place": "jackWorkshop",
+   "cast": [
+    "hero",
+    "jack"
+   ],
+   "text": "Together you carve three words into the board: \"Thank you, Baker.\" Jack blows away the dust and nods. The letters are only slightly wobbly, and he says that is what makes it kind.",
+   "choices": [
+    {
+     "label": "Show it to Queen Rose",
+     "to": "n5"
+    },
+    {
+     "label": "Carry it to the bakery",
+     "to": "n7"
+    }
+   ]
+  },
+  "n5": {
+   "place": "queenParlour",
+   "cast": [
+    "hero",
+    "queen"
+   ],
+   "text": "Queen Rose is in {queenParlour}, writing a card in her best handwriting. \"Everyone should add a line,\" she says. \"Small notes mean more than grand speeches. Flowers would be nice too, if you can find some.\"",
+   "choices": [
+    {
+     "label": "Sign the card and go",
+     "to": "n7"
+    },
+    {
+     "label": "Pick flowers in the park",
+     "to": "n8"
+    }
+   ]
+  },
+  "n6": {
+   "place": "jokerCaravan",
+   "cast": [
+    "hero",
+    "joker"
+   ],
+   "text": "The rehearsal goes badly, then wonderfully. The first loaf is a scarf, the second is a spoon, and the third is a real bread roll Robin had hidden earlier. You laugh until your sides ache. \"Ready,\" Robin declares.",
+   "choices": [
+    {
+     "label": "Take the act to the bakery",
+     "to": "n7"
+    }
+   ]
+  },
+  "n7": {
+   "place": "bakery",
+   "cast": [
+    "hero"
+   ],
+   "text": "{bakery} smells of warm crust and butter. The baker is busy at the ovens with flour on both elbows and has not noticed you yet. Your gift is ready in your hands.",
+   "choices": [
+    {
+     "label": "Leave it on the counter",
+     "to": "n9"
+    },
+    {
+     "label": "Invite the baker to the park",
+     "to": "n10"
+    }
+   ]
+  },
+  "n8": {
+   "place": "park",
+   "cast": [
+    "hero",
+    "king"
+   ],
+   "text": "You gather a small bunch of flowers in {park}. King Kenny appears with a picnic blanket over his arm and looks pleased with himself. \"I thought we might need this,\" he says.",
+   "choices": [
+    {
+     "label": "Set up a picnic",
+     "to": "n10"
+    },
+    {
+     "label": "Take the flowers to the bakery",
+     "to": "n7"
+    }
+   ]
+  },
+  "n9": {
+   "place": "bakery",
+   "cast": [
+    "hero"
+   ],
+   "text": "You set the gift on the counter and step back. The baker turns, reads it, and goes quiet. Then comes a big smile, and a kettle is put on. Soon everyone is sharing tea and crumbs in {bakery}.",
+   "end": true
+  },
+  "n10": {
+   "place": "park",
+   "cast": [
+    "hero"
+   ],
+   "text": "The baker arrives at {park} wiping floury hands, to find a blanket, flowers, and the whole court waiting. There is a long, happy pause. \"Well,\" says the baker, \"I did bring spare loaves.\" Of course they did.",
+   "end": true
+  }
+ },
+ "written": {
+  "by": "claude-sonnet-5-5",
+  "on": "2026-11-07",
+  "batch": "msgbatch_01L88zJCvmUuLRjqApWw2C6w",
+  "ai_written": true
+ }
+}

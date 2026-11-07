@@ -1,0 +1,146 @@
+{
+ "schema": "nimrod.adventure.v1",
+ "id": "repotting",
+ "version": 1,
+ "title": "A Bigger Home for the Fern",
+ "start": "n1",
+ "nodes": {
+  "n1": {
+   "place": "queenParlour",
+   "cast": [
+    "hero",
+    "queen"
+   ],
+   "text": "In {queenParlour}, Queen Rose is frowning kindly at her favourite fern. Its leaves have spilled over the rim, and roots are peeking out of the pot's base. \"It needs more room,\" she says. \"Any ideas?\"",
+   "choices": [
+    {
+     "label": "Ask Jack for help",
+     "to": "n2"
+    },
+    {
+     "label": "Look for a pot at the Shop",
+     "to": "n3"
+    },
+    {
+     "label": "Ask Robin for ideas",
+     "to": "n4"
+    }
+   ]
+  },
+  "n2": {
+   "place": "jackWorkshop",
+   "cast": [
+    "hero",
+    "jack"
+   ],
+   "text": "Jack wipes his hands on his apron and looks over the fern. \"Roots that keen deserve something good,\" he says. He has a pile of cedar offcuts, and a spare clay pot on the shelf.",
+   "choices": [
+    {
+     "label": "Help Jack build a planter",
+     "to": "n5"
+    },
+    {
+     "label": "Borrow the spare clay pot",
+     "to": "n6"
+    }
+   ]
+  },
+  "n3": {
+   "place": "shop",
+   "cast": [
+    "hero"
+   ],
+   "text": "{shop} has a whole shelf of pots. You hold a few up and picture the fern in each one. Two stand out: a deep blue glazed pot, and a plain clay one with a lovely weight to it.",
+   "choices": [
+    {
+     "label": "Choose the blue glazed pot",
+     "to": "n6"
+    },
+    {
+     "label": "Choose the plain clay pot",
+     "to": "n6"
+    }
+   ]
+  },
+  "n4": {
+   "place": "jokerCaravan",
+   "cast": [
+    "hero",
+    "joker"
+   ],
+   "text": "Robin pulls a coin from behind a fern frond and bows. \"Plants love company,\" he says. \"This one is big enough to become two. Or you could simply give it a bigger pot. Both are good magic.\"",
+   "choices": [
+    {
+     "label": "Divide the fern into two",
+     "to": "n9"
+    },
+    {
+     "label": "Go and find a bigger pot",
+     "to": "n3"
+    }
+   ]
+  },
+  "n5": {
+   "place": "jackWorkshop",
+   "cast": [
+    "hero",
+    "jack",
+    "queen"
+   ],
+   "text": "You hold the boards steady while Jack measures twice and cuts once. By afternoon there is a handsome cedar planter that smells wonderful. Queen Rose arrives, runs a thumb along the smooth edge, and smiles. \"Perfect,\" she says.",
+   "end": true
+  },
+  "n6": {
+   "place": "queenParlour",
+   "cast": [
+    "hero",
+    "queen"
+   ],
+   "text": "Back in {queenParlour}, you spread out some newspaper and set the new pot beside the fern. Queen Rose tips the old pot gently sideways. The roots are curled round and round like a sleeping cat.",
+   "choices": [
+    {
+     "label": "Loosen the roots with your fingers",
+     "to": "n7"
+    },
+    {
+     "label": "Hand the Queen the trowel",
+     "to": "n8"
+    }
+   ]
+  },
+  "n7": {
+   "place": "queenParlour",
+   "cast": [
+    "hero",
+    "queen"
+   ],
+   "text": "You tease the roots apart, slowly, and settle the fern into fresh soil. Queen Rose pats it down and pours a little water. The leaves seem to lift already. She pours you a cup of tea to celebrate.",
+   "end": true
+  },
+  "n8": {
+   "place": "queenParlour",
+   "cast": [
+    "hero",
+    "queen"
+   ],
+   "text": "Queen Rose takes the trowel as if she were born holding it. You steady the pot while she fills in the soil, humming quietly. \"There,\" she says. \"Roomy at last.\" The fern looks very pleased with itself.",
+   "end": true
+  },
+  "n9": {
+   "place": "kingHall",
+   "cast": [
+    "hero",
+    "king",
+    "queen"
+   ],
+   "text": "With Robin's help, the fern comes apart into two healthy plants. One goes back in {queenParlour}. The other you carry to {kingHall}, where King Kenny puts it by his favourite chair. \"Company,\" he says happily.",
+   "end": true
+  }
+ },
+ "written": {
+  "by": "claude-sonnet-5-5",
+  "on": "2026-11-07",
+  "batch": "msgbatch_01L88zJCvmUuLRjqApWw2C6w",
+  "ai_written": true
+ }
+}

@@ -1,0 +1,143 @@
+{
+ "schema": "nimrod.adventure.v1",
+ "id": "note-in-a-book",
+ "version": 1,
+ "title": "A Note in the Book",
+ "start": "n1",
+ "nodes": {
+  "n1": {
+   "place": "library",
+   "cast": [
+    "hero"
+   ],
+   "text": "You return a novel at {library}. As it is stamped, a folded note slips out: \"Chapter three made me laugh out loud. I hope it does the same for you.\" There is no name, only a tiny drawing of a teapot.",
+   "choices": [
+    {
+     "label": "Show the note to Jack",
+     "to": "n2"
+    },
+    {
+     "label": "Take the note to Robin",
+     "to": "n3"
+    }
+   ]
+  },
+  "n2": {
+   "place": "jackWorkshop",
+   "cast": [
+    "hero",
+    "jack"
+   ],
+   "text": "Jack turns the note over in his careful hands. \"Good paper. Thick, cream, a little rough at the edge. That's the kind kept on the writing desk in {kingHall}.\" He hands it back, looking rather pleased with himself.",
+   "choices": [
+    {
+     "label": "Go and visit the king",
+     "to": "n5"
+    },
+    {
+     "label": "Ask Robin for a second opinion",
+     "to": "n3"
+    }
+   ]
+  },
+  "n3": {
+   "place": "jokerCaravan",
+   "cast": [
+    "hero",
+    "joker"
+   ],
+   "text": "Robin holds the note up to a lantern, then produces a teacup from nowhere. \"The teapot is a signature! Whoever drew it loves a quiet cuppa. Try {kingHall} or {queenParlour}, where the kettle never cools.\"",
+   "choices": [
+    {
+     "label": "Try the king first",
+     "to": "n5"
+    },
+    {
+     "label": "Try the queen first",
+     "to": "n6"
+    },
+    {
+     "label": "Write a reply and leave it",
+     "to": "n7"
+    }
+   ]
+  },
+  "n5": {
+   "place": "kingHall",
+   "cast": [
+    "hero",
+    "king"
+   ],
+   "text": "King Kenny reads the note and goes pink to the ears. \"Guilty,\" he says. \"I've tucked little notes into library books for years. I never thought one would be followed all the way to {kingHall}.\"",
+   "choices": [
+    {
+     "label": "Ask to see his other notes",
+     "to": "n8"
+    },
+    {
+     "label": "Suggest writing a new one together",
+     "to": "n9"
+    }
+   ]
+  },
+  "n6": {
+   "place": "queenParlour",
+   "cast": [
+    "hero",
+    "queen"
+   ],
+   "text": "Queen Rose studies the teapot and smiles. \"Not mine, though I'd be proud of it. That wobbly spout is Kenny's. He thinks nobody knows.\" She pours you a cup while she speaks.",
+   "choices": [
+    {
+     "label": "Stay and finish your tea",
+     "to": "n10"
+    },
+    {
+     "label": "Go and thank Kenny",
+     "to": "n5"
+    }
+   ]
+  },
+  "n7": {
+   "place": "library",
+   "cast": [
+    "hero"
+   ],
+   "text": "Back at {library}, you write underneath: \"Chapter three was a delight. Thank you.\" You tuck it into the book and set it on the returns shelf. Some mysteries are nicest left warm and unsolved.",
+   "end": true
+  },
+  "n8": {
+   "place": "kingHall",
+   "cast": [
+    "hero",
+    "king"
+   ],
+   "text": "Kenny opens a drawer full of tiny teapot notes, each waiting for a book. \"Take your pick,\" he says. You choose one about a lost umbrella, and the two of you laugh until the tea goes cold.",
+   "end": true
+  },
+  "n9": {
+   "place": "library",
+   "cast": [
+    "hero",
+    "king"
+   ],
+   "text": "You and Kenny write a note together, arguing happily over every word. At {library} you slip it into a fresh book and leave it on the shelf. Someone will find it soon, and you'll both pretend not to watch.",
+   "end": true
+  },
+  "n10": {
+   "place": "queenParlour",
+   "cast": [
+    "hero",
+    "queen"
+   ],
+   "text": "The tea is warm and the cushions are deep. Rose tells you Kenny's notes have cheered half the town. You sit a while longer in {queenParlour}, in no hurry at all, with the book open on your knee.",
+   "end": true
+  }
+ },
+ "written": {
+  "by": "claude-sonnet-5-5",
+  "on": "2026-11-07",
+  "batch": "msgbatch_01L88zJCvmUuLRjqApWw2C6w",
+  "ai_written": true
+ }
+}

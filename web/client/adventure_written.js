@@ -22,8 +22,14 @@
 //   * 2 to 40 pages: the proposal asked chat for 6 to 15, and the checker allows a little either side of that; a story outside
 //     it is refused, said.
 
-import { PLACES } from './town.js';
-import { STORY_ROLES, MAX_CAST, MAX_PAGE_CHARS, pageText } from './stories.js';
+import { PLACES, HOMES } from './town.js';
+import { STORY_ROLES, MAX_CAST, MAX_PAGE_CHARS, pageText as storyPageText } from './stories.js';
+
+/** A page's or a label's words in a theme: stories.js pageText, then a capital at the start of each sentence (a token that
+ *  opens one is filled as "the Park"). PURE. */
+export function pageText(text, theme = 'nimrod') {
+  return storyPageText(text, theme).replace(/(^|[.!?]["”’)]?\s+)(["“‘(]?)the /g, (all, a, q) => `${a}${q}The `);
+}
 
 export const ADVENTURE_SCHEMA = 'nimrod.adventure.v1';
 export const WRITTEN_FORMAT = 'nimrod-written-story';
@@ -34,6 +40,25 @@ export const NODES_MAX = 40;
 export const NO_FREE_TEXT_LINE = 'This story is written ahead, so it goes by its choices. Pick one of them.';
 
 const isId = (s) => typeof s === 'string' && /^[a-z0-9][a-z0-9_-]{0,63}$/i.test(s);
+// PLACE NAMES, two rules found on chat's first twelve (2026-11-07): a `{token}` is filled with the place's whole name, its
+// "The" included (stories.js placeName: "the Workshop"), so "the {jackWorkshop}" reads "the the Workshop"; and a place that a
+// theme RENAMES (town.js HOMES: the Workshop is the Smithy in one world, the Potting Shed in another) must be written as its
+// token, in a label too, or the words name a place that is not on the screen. A place no theme renames (the park, the bakery)
+// may be written in plain words.
+const RENAMED = Object.keys(PLACES).filter((id) => Object.values(HOMES || {}).some((h) => h && h[id] && h[id].label && h[id].label !== PLACES[id].label));
+const plainName = (id) => String(PLACES[id].label || '').replace(/^The /, '');
+function placeProblems(text, at) {
+  const out = [];
+  if (/\bthe \{\w+\}/i.test(text)) out.push(`${at}: write {place}, not "the {place}" (the name already has its "the")`);
+  const bare = text.replace(/\{\w+\}/g, '');
+  for (const id of RENAMED) {
+    const name = plainName(id);
+    if (name && new RegExp(`\\b${name.replace(/[.*+?^${}()|[\]\\']/g, '\\$&')}\\b`, 'i').test(bare)) {
+      out.push(`${at}: "${name}" is {${id}} (its name changes with the theme)`);
+    }
+  }
+  return out;
+}
 const words = (s) => (typeof s === 'string' ? s.replace(/[<>]/g, '').replace(/\s+/g, ' ').trim() : '');
 
 /** `{ ok, problems: [..], story }`: the story cleaned when ok, else null. PURE. */
@@ -59,6 +84,7 @@ export function checkAdventure(raw) {
     if (!text) say(`${at}: no words`);
     if (text.length > MAX_PAGE_CHARS) say(`${at}: ${text.length} characters; ${MAX_PAGE_CHARS} at most`);
     for (const m of text.matchAll(/\{(\w+)\}/g)) if (!PLACES[m[1]]) say(`${at}: {${m[1]}} is not a place in town`);
+    for (const p of placeProblems(text, at)) say(p);
     const cast = Array.isArray(n.cast) ? n.cast : [];
     if (cast.some((r) => !STORY_ROLES.includes(r))) say(`${at}: the cast is from ${STORY_ROLES.join(', ')}`);
     if (new Set(cast).size !== cast.length) say(`${at}: someone is in the cast twice`);
@@ -73,6 +99,8 @@ export function checkAdventure(raw) {
       if (!label) say(`${at}: a choice with no words`);
       else if (label.length > LABEL_MAX) say(`${at}: "${label}" is ${label.length} characters; ${LABEL_MAX} at most`);
       if (!nodesIn[c && c.to]) say(`${at}: "${label || '?'}" leads to "${c && c.to}", which is not a page`);
+      for (const m of label.matchAll(/\{(\w+)\}/g)) if (!PLACES[m[1]]) say(`${at}: {${m[1]}} is not a place in town`);
+      for (const p of placeProblems(label, `${at}, "${label}"`)) say(p);
       cleanChoices.push({ label, to: c && c.to });
     }
     const seen = new Set(cleanChoices.map((c) => c.label.toLowerCase()));
@@ -104,7 +132,7 @@ export function writtenLines(story, theme = 'nimrod') {
   const out = new Set();
   for (const n of Object.values(story?.nodes || {})) {
     out.add(pageText(n.text, theme));
-    for (const c of n.choices) { out.add(c.label); out.add(`${c.label}?`); }
+    for (const c of n.choices) { const l = pageText(c.label, theme); out.add(l); out.add(`${l}?`); }
   }
   return [...out];
 }
@@ -120,7 +148,7 @@ export function createWrittenStory(story, { theme = 'nimrod' } = {}) {
   const node = () => (at ? story.nodes[at] : null);
   const answer = (extra = {}) => {
     const n = node();
-    return Promise.resolve({ ok: true, written: true, say: pageText(n.text, theme), choices: n.choices.map((c) => c.label),
+    return Promise.resolve({ ok: true, written: true, say: pageText(n.text, theme), choices: n.choices.map((c) => pageText(c.label, theme)),
       page: { place: n.place, cast: [...n.cast] }, ...(n.end ? { end: true } : {}), ...extra });
   };
   return {
@@ -134,7 +162,7 @@ export function createWrittenStory(story, { theme = 'nimrod' } = {}) {
     },
     /** Free text has nowhere to go in a written story: said, and the choices stay. */
     say() { return Promise.resolve({ ok: true, written: true, say: NO_FREE_TEXT_LINE, choices: this.choices(), note: true }); },
-    choices: () => (node() ? node().choices.map((c) => c.label) : []),
+    choices: () => (node() ? node().choices.map((c) => pageText(c.label, theme)) : []),
     lastSay: () => (node() ? pageText(node().text, theme) : ''),
     started: () => started,
     ended: () => !!node()?.end,

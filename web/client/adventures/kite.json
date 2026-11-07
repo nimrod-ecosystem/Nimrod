@@ -1,0 +1,176 @@
+{
+ "schema": "nimrod.adventure.v1",
+ "id": "kite",
+ "version": 1,
+ "title": "The Kite in the Oak",
+ "start": "n1",
+ "nodes": {
+  "n1": {
+   "place": "park",
+   "cast": [
+    "hero",
+    "king"
+   ],
+   "text": "In {park}, King Kenny stands beneath the old oak, looking up. His red kite is wedged in the highest branches, tail fluttering. \"It was only a small gust,\" he says. \"Any ideas? I'd rather not climb.\"",
+   "choices": [
+    {
+     "label": "Fetch Jack from {jackWorkshop}",
+     "to": "n2"
+    },
+    {
+     "label": "Visit {jokerCaravan}",
+     "to": "n3"
+    },
+    {
+     "label": "Ask Queen Rose for advice",
+     "to": "n4"
+    }
+   ]
+  },
+  "n2": {
+   "place": "jackWorkshop",
+   "cast": [
+    "hero",
+    "jack"
+   ],
+   "text": "In {jackWorkshop}, Jack listens, wipes his hands on his apron and nods. \"Kites in trees are a classic. Two options: a long hooked pole, or my ladder with someone steady holding it.\"",
+   "choices": [
+    {
+     "label": "Carry the long hooked pole",
+     "to": "n5"
+    },
+    {
+     "label": "Ask Jack to bring the ladder",
+     "to": "n6"
+    }
+   ]
+  },
+  "n3": {
+   "place": "jokerCaravan",
+   "cast": [
+    "hero",
+    "joker"
+   ],
+   "text": "Robin leans out of {jokerCaravan} with a grin. \"A stuck kite! Solve my riddle first: what goes up, but needs a string to come back down?\" A top hat on the table seems to be listening.",
+   "choices": [
+    {
+     "label": "Guess the riddle",
+     "to": "n7"
+    },
+    {
+     "label": "Ask for a real trick instead",
+     "to": "n8"
+    }
+   ]
+  },
+  "n4": {
+   "place": "queenParlour",
+   "cast": [
+    "hero",
+    "queen"
+   ],
+   "text": "Queen Rose pours tea in {queenParlour}. \"Never rush a kite,\" she says. \"Either borrow something long and sensible from {bakery}, or sit with a cup and let the breeze change its mind.\"",
+   "choices": [
+    {
+     "label": "Walk to the Bakery",
+     "to": "n11"
+    },
+    {
+     "label": "Have tea and wait",
+     "to": "n9"
+    }
+   ]
+  },
+  "n5": {
+   "place": "park",
+   "cast": [
+    "hero",
+    "jack",
+    "king"
+   ],
+   "text": "Back in {park}, Jack hooks the pole through the kite's string and lifts it, slow as threading a needle. The kite slips free and floats down into King Kenny's hands. \"Splendid,\" he says. \"Tea is on me.\"",
+   "end": true
+  },
+  "n6": {
+   "place": "park",
+   "cast": [
+    "hero",
+    "jack",
+    "king"
+   ],
+   "text": "You hold the ladder steady while Jack climbs three careful rungs and reaches. The kite comes free. King Kenny applauds as though it were a performance. Jack bows, a little pink, and folds the ladder away.",
+   "end": true
+  },
+  "n7": {
+   "place": "jokerCaravan",
+   "cast": [
+    "hero",
+    "joker"
+   ],
+   "text": "\"A kite!\" Robin cries, delighted, though you only guessed. From the top hat comes a long chain of knotted scarves with a small beanbag on one end. \"Toss it over the branch. Magic is mostly knots.\"",
+   "choices": [
+    {
+     "label": "Take the scarves to the Park",
+     "to": "n10"
+    }
+   ]
+  },
+  "n8": {
+   "place": "park",
+   "cast": [
+    "hero",
+    "joker",
+    "king"
+   ],
+   "text": "Robin arrives at {park} and flourishes a cape. \"Watch closely. Nothing in my hands, nothing up my sleeves.\" A breeze lifts, the kite slides off its branch and drifts down. Robin looks quite as surprised as everyone else, then bows anyway.",
+   "end": true
+  },
+  "n9": {
+   "place": "park",
+   "cast": [
+    "hero",
+    "queen"
+   ],
+   "text": "After a second cup, you and Queen Rose stroll to {park}. The wind has turned. As you reach the oak, the kite slips from the branches and settles on a bench. \"Patience,\" says Queen Rose, \"is a form of cleverness.\"",
+   "end": true
+  },
+  "n10": {
+   "place": "park",
+   "cast": [
+    "hero",
+    "joker",
+    "king"
+   ],
+   "text": "The beanbag arcs over the branch on your second try and drops neatly. Together you ease the kite loose with the scarves. King Kenny wears the longest one as a cape all afternoon, and Robin does not ask for it back.",
+   "end": true
+  },
+  "n11": {
+   "place": "bakery",
+   "cast": [
+    "hero"
+   ],
+   "text": "At {bakery}, the baker wipes flour from her hands and hands over a long wooden peel, the sort used for reaching the back of the oven. \"Bring it back warm,\" she says, \"or with a loaf's worth of thanks.\"",
+   "choices": [
+    {
+     "label": "Take the peel to the Park",
+     "to": "n12"
+    }
+   ]
+  },
+  "n12": {
+   "place": "park",
+   "cast": [
+    "hero",
+    "king"
+   ],
+   "text": "King Kenny holds the oak steady, laughing, while you nudge the kite with the peel. It tumbles down in a flurry of red. Later you return the peel with a bag of sweet buns, bought from the baker with the King's coins.",
+   "end": true
+  }
+ },
+ "written": {
+  "by": "claude-sonnet-5-5",
+  "on": "2026-11-07",
+  "batch": "msgbatch_01L88zJCvmUuLRjqApWw2C6w",
+  "ai_written": true
+ }
+}

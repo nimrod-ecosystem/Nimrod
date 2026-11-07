@@ -1,0 +1,160 @@
+{
+ "schema": "nimrod.adventure.v1",
+ "id": "music-box",
+ "version": 1,
+ "title": "The Silent Music Box",
+ "start": "n1",
+ "nodes": {
+  "n1": {
+   "place": "queenParlour",
+   "cast": [
+    "hero",
+    "queen"
+   ],
+   "text": "Queen Rose sets her old music box on the table in {queenParlour}. It has been silent for a week. \"Jack thinks it needs cleaning,\" she says. \"I think it needs a new key. Both could be true.\"",
+   "choices": [
+    {
+     "label": "Take it to Jack",
+     "to": "n2"
+    },
+    {
+     "label": "Go with the Queen to buy a key",
+     "to": "n3"
+    }
+   ]
+  },
+  "n2": {
+   "place": "jackWorkshop",
+   "cast": [
+    "hero",
+    "jack"
+   ],
+   "text": "Jack clears a space on the bench in {jackWorkshop} and lifts the lid. \"Dust,\" he says, \"and old oil gone sticky. Nothing serious.\" He hands you a soft brush and a small lamp.",
+   "choices": [
+    {
+     "label": "Brush the dust away",
+     "to": "n4"
+    },
+    {
+     "label": "Ask about the Queen's idea",
+     "to": "n5"
+    }
+   ]
+  },
+  "n3": {
+   "place": "shop",
+   "cast": [
+    "hero",
+    "queen"
+   ],
+   "text": "In {shop}, the shopkeeper turns the box over and peers at the key. \"Worn smooth,\" she says. \"It slips.\" She finds a small brass key in a drawer. Queen Rose smiles. \"I do enjoy being right.\"",
+   "choices": [
+    {
+     "label": "Try the new key",
+     "to": "n6"
+    },
+    {
+     "label": "Take the box to Jack first",
+     "to": "n5"
+    }
+   ]
+  },
+  "n4": {
+   "place": "jackWorkshop",
+   "cast": [
+    "hero",
+    "jack"
+   ],
+   "text": "You brush gently between the tiny pins. Jack adds one drop of oil with a needle. The cylinder turns and three notes ring out, then stop. \"The key slips,\" he says. \"Her Majesty may be right too.\"",
+   "choices": [
+    {
+     "label": "Carry it back to the Queen",
+     "to": "n7"
+    },
+    {
+     "label": "Go and look for a new key",
+     "to": "n3"
+    }
+   ]
+  },
+  "n5": {
+   "place": "jackWorkshop",
+   "cast": [
+    "hero",
+    "jack"
+   ],
+   "text": "Jack studies the old key and nods. \"Worn smooth. She's right.\" He taps the file on his bench. \"I could roughen the edge a little. It would hold. Or we could fetch a proper new one.\"",
+   "choices": [
+    {
+     "label": "Let Jack file the old key",
+     "to": "n8"
+    },
+    {
+     "label": "Fetch a new key",
+     "to": "n3"
+    }
+   ]
+  },
+  "n6": {
+   "place": "shop",
+   "cast": [
+    "hero",
+    "queen"
+   ],
+   "text": "The new key bites at once. The box plays a bright, stuttering run of notes and then stalls. \"Dusty,\" says Queen Rose, pleased with both of you. \"That part is Jack's department.\"",
+   "choices": [
+    {
+     "label": "Walk to {jackWorkshop}",
+     "to": "n9"
+    }
+   ]
+  },
+  "n7": {
+   "place": "queenParlour",
+   "cast": [
+    "hero",
+    "queen"
+   ],
+   "text": "Back in {queenParlour}, Queen Rose holds the old key between finger and thumb and winds very slowly, with great care. The whole tune plays, a little slow, a little wobbly. \"Patience and a drop of oil,\" she says. \"We make a good team.\"",
+   "end": true
+  },
+  "n8": {
+   "place": "jackWorkshop",
+   "cast": [
+    "hero",
+    "jack"
+   ],
+   "text": "Jack files a tiny edge onto the old key, wipes it clean and winds the box. The full tune plays, clear and sweet. \"Not elegant,\" he says, \"but honest.\" You hum it for the rest of the afternoon.",
+   "end": true
+  },
+  "n9": {
+   "place": "jackWorkshop",
+   "cast": [
+    "hero",
+    "jack"
+   ],
+   "text": "Jack cleans the box and oils it in a few quiet minutes, then fits the new key and gives you a nod. \"Go on,\" he says. \"You do the honours.\"",
+   "choices": [
+    {
+     "label": "Wind the box yourself",
+     "to": "n10"
+    }
+   ]
+  },
+  "n10": {
+   "place": "queenParlour",
+   "cast": [
+    "hero",
+    "queen"
+   ],
+   "text": "In {queenParlour}, you wind the new key and the old tune fills the room, every note in its place. Queen Rose closes her eyes and listens. Then she pours the tea, and neither of you says anything for a while.",
+   "end": true
+  }
+ },
+ "written": {
+  "by": "claude-sonnet-5-5",
+  "on": "2026-11-07",
+  "batch": "msgbatch_01L88zJCvmUuLRjqApWw2C6w",
+  "ai_written": true
+ }
+}

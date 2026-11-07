@@ -1,0 +1,208 @@
+{
+ "schema": "nimrod.adventure.v1",
+ "id": "stopped-clock",
+ "version": 1,
+ "title": "The Stopped Clock",
+ "start": "n1",
+ "nodes": {
+  "n1": {
+   "place": "kingHall",
+   "cast": [
+    "hero",
+    "king"
+   ],
+   "text": "King Kenny is standing before the big clock in {kingHall}, hands on his hips. It has stopped at ten past four. \"My friends arrive this afternoon,\" he says, \"and I would like the clock going. You look like someone who can help.\"",
+   "choices": [
+    {
+     "label": "Ask Jack to take a look",
+     "to": "n2"
+    },
+    {
+     "label": "Ask Queen Rose for advice",
+     "to": "n3"
+    },
+    {
+     "label": "Look inside the clock yourself",
+     "to": "n4"
+    }
+   ]
+  },
+  "n2": {
+   "place": "jackWorkshop",
+   "cast": [
+    "hero",
+    "jack"
+   ],
+   "text": "Jack wipes his hands on a rag and listens carefully. \"Stopped clocks usually want two things,\" he says. \"A little oil and a proper winding.\" He pats his toolbox. \"I've the tools, but the oil is running low.\"",
+   "choices": [
+    {
+     "label": "Go back with Jack now",
+     "to": "n5"
+    },
+    {
+     "label": "Fetch clock oil from the shop",
+     "to": "n6"
+    }
+   ]
+  },
+  "n3": {
+   "place": "queenParlour",
+   "cast": [
+    "hero",
+    "queen"
+   ],
+   "text": "Queen Rose looks up from her tea and smiles. \"Ah. I think Robin borrowed the winding key last week for a magic trick. Knowing Robin, it may have vanished on purpose.\" She pours you a cup while you think.",
+   "choices": [
+    {
+     "label": "Go and find Robin",
+     "to": "n7"
+    },
+    {
+     "label": "Stop at the bakery first",
+     "to": "n8"
+    }
+   ]
+  },
+  "n4": {
+   "place": "kingHall",
+   "cast": [
+    "hero",
+    "king"
+   ],
+   "text": "You open the little door in the clock's case. A folded napkin is wedged beside the pendulum. You ease it out, and the pendulum begins to swing. Tick, tock. The King beams, though the chime stays silent.",
+   "choices": [
+    {
+     "label": "Ask Jack about the chime",
+     "to": "n2"
+    },
+    {
+     "label": "Enjoy the ticking with the King",
+     "to": "n12"
+    }
+   ]
+  },
+  "n5": {
+   "place": "kingHall",
+   "cast": [
+    "hero",
+    "jack",
+    "king"
+   ],
+   "text": "Jack works quietly, putting a drop of oil here and a gentle turn there. The King hovers and offers advice nobody needs. At last Jack winds the spring with his spare key, and the pendulum swings. Tick. Tock.",
+   "choices": [
+    {
+     "label": "Set the hands with the King",
+     "to": "n9"
+    },
+    {
+     "label": "Wait for the first chime",
+     "to": "n10"
+    }
+   ]
+  },
+  "n6": {
+   "place": "shop",
+   "cast": [
+    "hero"
+   ],
+   "text": "Among the shelves of string, soap and spare buttons, you find a small tin of clock oil. The person at the counter wraps it in paper and slips a peppermint into your hand. \"For the journey back,\" they say.",
+   "choices": [
+    {
+     "label": "Take the oil to Jack",
+     "to": "n5"
+    }
+   ]
+  },
+  "n7": {
+   "place": "jokerCaravan",
+   "cast": [
+    "hero",
+    "joker"
+   ],
+   "text": "Robin throws open the door of {jokerCaravan} with a flourish. \"A key? Of course!\" Robin plucks it from behind your ear. \"But first, a riddle. What has hands but cannot clap?\"",
+   "choices": [
+    {
+     "label": "Answer \"a clock\"",
+     "to": "n11"
+    },
+    {
+     "label": "Guess a very polite statue",
+     "to": "n11"
+    }
+   ]
+  },
+  "n8": {
+   "place": "bakery",
+   "cast": [
+    "hero"
+   ],
+   "text": "{bakery} smells of warm bread and butter. You buy a bag of fresh rolls for the King's guests. \"A stopped clock is only time stopping for tea,\" says the person at the counter, handing you the bag.",
+   "choices": [
+    {
+     "label": "Carry the rolls to Robin",
+     "to": "n7"
+    }
+   ]
+  },
+  "n9": {
+   "place": "kingHall",
+   "cast": [
+    "hero",
+    "king",
+    "jack"
+   ],
+   "text": "Together you and the King nudge the hands round to the right time. Jack closes the little door with a click. When the friends arrive, the clock is ticking steadily, and nobody guesses it was ever stopped. It was a good afternoon.",
+   "end": true
+  },
+  "n10": {
+   "place": "kingHall",
+   "cast": [
+    "hero",
+    "king",
+    "jack"
+   ],
+   "text": "You wait, and on the hour the clock gives a deep, golden chime that fills {kingHall}. The King laughs out loud and shakes Jack's hand, then yours. His friends arrive to the sound of it, and he looks very proud.",
+   "end": true
+  },
+  "n11": {
+   "place": "kingHall",
+   "cast": [
+    "hero",
+    "king",
+    "joker"
+   ],
+   "text": "Robin declares your answer \"nearly magical\" and hands over the key with a bow. Back in {kingHall}, the King takes it, opens the clock and winds it with great ceremony. The clock ticks. Robin pretends to have planned all of it.",
+   "choices": [
+    {
+     "label": "Watch the King wind it",
+     "to": "n13"
+    }
+   ]
+  },
+  "n12": {
+   "place": "kingHall",
+   "cast": [
+    "hero",
+    "king"
+   ],
+   "text": "You sit beside the King and listen to the clock tick. \"I never noticed how much I missed that,\" he says. The chime can wait for another day. When his friends arrive, they all agree it is a calm, friendly sound.",
+   "end": true
+  },
+  "n13": {
+   "place": "kingHall",
+   "cast": [
+    "hero",
+    "king",
+    "joker"
+   ],
+   "text": "The clock strikes, a little late but very sure of itself. Robin takes a bow as though it were part of the act, and the King laughs. When his friends arrive, you are all sharing warm rolls under the ticking clock.",
+   "end": true
+  }
+ },
+ "written": {
+  "by": "claude-sonnet-5-5",
+  "on": "2026-11-07",
+  "batch": "msgbatch_01L88zJCvmUuLRjqApWw2C6w",
+  "ai_written": true
+ }
+}

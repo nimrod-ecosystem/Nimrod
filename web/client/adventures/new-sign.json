@@ -1,0 +1,161 @@
+{
+ "schema": "nimrod.adventure.v1",
+ "id": "new-sign",
+ "version": 1,
+ "title": "The New Sign",
+ "start": "n1",
+ "nodes": {
+  "n1": {
+   "place": "shop",
+   "cast": [
+    "hero"
+   ],
+   "text": "You stand outside {shop} and squint at the sign. The paint has faded so far that it now reads \"S OP\". Passers-by smile kindly. Someone should paint a new one, and it may as well be you. Where do you start?",
+   "choices": [
+    {
+     "label": "Ask Queen Rose for ideas",
+     "to": "n2"
+    },
+    {
+     "label": "Visit Jack for a board",
+     "to": "n3"
+    },
+    {
+     "label": "Call on Robin the Joker",
+     "to": "n4"
+    }
+   ]
+  },
+  "n2": {
+   "place": "queenParlour",
+   "cast": [
+    "hero",
+    "queen"
+   ],
+   "text": "Queen Rose pours tea in {queenParlour} and listens to your problem. \"A sign should say what people love about a place,\" she says. \"Ask them. And take Jack a sketch, he likes to know what he's building.\"",
+   "choices": [
+    {
+     "label": "Ask around at the bakery",
+     "to": "n5"
+    },
+    {
+     "label": "Take her sketch to Jack",
+     "to": "n3"
+    }
+   ]
+  },
+  "n3": {
+   "place": "jackWorkshop",
+   "cast": [
+    "hero",
+    "jack"
+   ],
+   "text": "Jack is already sanding a wide pale board in {jackWorkshop}. \"Good timing,\" he says, blowing off the dust. \"Smooth as a plate. All it needs now is some words.\"",
+   "choices": [
+    {
+     "label": "Ask the town for words",
+     "to": "n5"
+    },
+    {
+     "label": "Hear Robin's idea",
+     "to": "n4"
+    }
+   ]
+  },
+  "n4": {
+   "place": "jokerCaravan",
+   "cast": [
+    "hero",
+    "joker"
+   ],
+   "text": "Robin pulls a paintbrush from behind your ear, which you did not know was there. In {jokerCaravan}, Robin proposes a riddle for the sign: \"What opens every morning and is never quite empty?\" You could paint it as it is, or let the town have a say.",
+   "choices": [
+    {
+     "label": "Paint Robin's riddle",
+     "to": "n7"
+    },
+    {
+     "label": "Put it to the town in the park",
+     "to": "n6"
+    }
+   ]
+  },
+  "n5": {
+   "place": "bakery",
+   "cast": [
+    "hero"
+   ],
+   "text": "At {bakery}, the queue becomes a committee. Between bites of warm rolls, everyone votes. The winner, by a crumb: \"Open Door, Kettle On.\" It is friendly and fits on a board. Now, where to paint it?",
+   "choices": [
+    {
+     "label": "Paint it together in the park",
+     "to": "n6"
+    },
+    {
+     "label": "Paint it quietly with Jack",
+     "to": "n8"
+    }
+   ]
+  },
+  "n6": {
+   "place": "park",
+   "cast": [
+    "hero",
+    "king"
+   ],
+   "text": "Word spreads, and soon half the town is at {park}. King Kenny arrives with a bucket of brushes and a borrowed apron. \"I have been told I am an excellent holder of things,\" he says. The board waits on the grass.",
+   "choices": [
+    {
+     "label": "Paint the big letters",
+     "to": "n9"
+    },
+    {
+     "label": "Paint a border of leaves",
+     "to": "n10"
+    }
+   ]
+  },
+  "n7": {
+   "place": "shop",
+   "cast": [
+    "hero",
+    "joker"
+   ],
+   "text": "You paint Robin's riddle in tall, cheerful letters, and Robin hangs it over {shop} door with a flourish. People stop, frown, grin, and walk in to ask the answer. Robin just winks. Business has never been so curious.",
+   "end": true
+  },
+  "n8": {
+   "place": "jackWorkshop",
+   "cast": [
+    "hero",
+    "jack"
+   ],
+   "text": "In {jackWorkshop}, you and Jack work without hurry. He steadies the board while you paint each letter. When the last one dries, he nods once, which from Jack is high praise. You carry the sign to {shop} together.",
+   "end": true
+  },
+  "n9": {
+   "place": "park",
+   "cast": [
+    "hero",
+    "king"
+   ],
+   "text": "You paint the letters slowly, and the King holds the board steady, narrating like a sports commentator. Everyone cheers at the final \"K\". The sign goes up at {shop} that afternoon, bright and easy to read from across the street.",
+   "end": true
+  },
+  "n10": {
+   "place": "park",
+   "cast": [
+    "hero",
+    "king"
+   ],
+   "text": "Neighbours add a leaf each, until the border is a wild green ring. The King's leaf looks a little like a boot, and he is delighted. The finished sign hangs at {shop}, and everyone who passes finds their own leaf.",
+   "end": true
+  }
+ },
+ "written": {
+  "by": "claude-sonnet-5-5",
+  "on": "2026-11-07",
+  "batch": "msgbatch_01L88zJCvmUuLRjqApWw2C6w",
+  "ai_written": true
+ }
+}

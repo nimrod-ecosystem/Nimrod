@@ -1,0 +1,131 @@
+{
+ "schema": "nimrod.adventure.v1",
+ "id": "letter",
+ "version": 1,
+ "title": "A Letter for Someone",
+ "start": "n1",
+ "nodes": {
+  "n1": {
+   "place": "library",
+   "cast": [
+    "hero"
+   ],
+   "text": "A cream envelope sits on the desk at {library}, with no one to claim it. The ink is smudged, but you can read: \"To the keeper of good time.\" You decide to find its owner. Which way first?",
+   "choices": [
+    {
+     "label": "Follow the smell of fresh bread",
+     "to": "n2"
+    },
+    {
+     "label": "Take a stroll through the green",
+     "to": "n3"
+    }
+   ]
+  },
+  "n2": {
+   "place": "bakery",
+   "cast": [
+    "hero",
+    "queen"
+   ],
+   "text": "At {bakery}, Queen Rose is choosing a loaf. She studies the envelope and sniffs it. \"Sawdust and clock oil,\" she says, smiling. \"That's surely for Jack. Do come and have tea first, though.\"",
+   "choices": [
+    {
+     "label": "Accept the tea",
+     "to": "n5"
+    },
+    {
+     "label": "Go straight to Jack",
+     "to": "n4"
+    }
+   ]
+  },
+  "n3": {
+   "place": "park",
+   "cast": [
+    "hero",
+    "joker"
+   ],
+   "text": "In {park}, Robin is juggling three oranges and not dropping any. Robin reads the envelope upside down. \"'Keeper of good time.' That's either Jack and his clocks, or me and my punchlines.\"",
+   "choices": [
+    {
+     "label": "Take it to Jack",
+     "to": "n4"
+    },
+    {
+     "label": "Ask Robin for a trick",
+     "to": "n9"
+    }
+   ]
+  },
+  "n5": {
+   "place": "queenParlour",
+   "cast": [
+    "hero",
+    "queen"
+   ],
+   "text": "{queenParlour} is quiet and smells of roses and toast. Rose pours the tea and scribbles a short note to go with the letter. \"Just a hello,\" she says. \"Letters like company.\"",
+   "choices": [
+    {
+     "label": "Carry both to Jack",
+     "to": "n4"
+    }
+   ]
+  },
+  "n9": {
+   "place": "jokerCaravan",
+   "cast": [
+    "hero",
+    "joker"
+   ],
+   "text": "Back at {jokerCaravan}, Robin waves a hand over the envelope. The flap lifts and a tiny line shows inside: \"For Jack.\" Robin bows. \"I'd love to say I planned that. Shall we go together?\"",
+   "choices": [
+    {
+     "label": "Walk to Jack's with Robin",
+     "to": "n4"
+    }
+   ]
+  },
+  "n4": {
+   "place": "jackWorkshop",
+   "cast": [
+    "hero",
+    "jack"
+   ],
+   "text": "Jack wipes his hands and opens the letter at {jackWorkshop}. It's a thank-you from a traveller whose old clock he mended, with a little drawing of it ticking happily. Jack looks quite pleased.",
+   "choices": [
+    {
+     "label": "Ask about the clock",
+     "to": "n7"
+    },
+    {
+     "label": "Offer to carry his reply",
+     "to": "n8"
+    }
+   ]
+  },
+  "n7": {
+   "place": "jackWorkshop",
+   "cast": [
+    "hero",
+    "jack"
+   ],
+   "text": "Jack shows you the twin of that clock, its brass gears gleaming. He lets you wind it, and the ticking fills {jackWorkshop}. \"Good time,\" he says. You stay a while and listen. The end.",
+   "end": true
+  },
+  "n8": {
+   "place": "shop",
+   "cast": [
+    "hero"
+   ],
+   "text": "Jack writes a few warm lines and seals the envelope. At {shop} you buy a stamp, and the shopkeeper lets you post the reply yourself. It drops into the box with a soft, satisfying thud. The end.",
+   "end": true
+  }
+ },
+ "written": {
+  "by": "claude-sonnet-5-5",
+  "on": "2026-11-07",
+  "batch": "msgbatch_01L88zJCvmUuLRjqApWw2C6w",
+  "ai_written": true
+ }
+}

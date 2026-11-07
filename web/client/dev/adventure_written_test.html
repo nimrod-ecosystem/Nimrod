@@ -19,6 +19,8 @@
 <script type="module">
 import { checkAdventure, createWrittenStory, writtenLines, ADVENTURE_SCHEMA, NO_FREE_TEXT_LINE, WRITTEN_FORMAT } from '../adventure_written.js';
 import { pageText } from '../stories.js';
+import { placeName } from '../stories.js';
+const placeInfoName = (id) => placeName(id, 'nimrod');
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -84,6 +86,30 @@ try {
   const s3 = createWrittenStory(v2);
   const rs = s3.restore(saved);
   check('*** a changed story: starts again, and says so ***', !rs.ok && /changed/.test(rs.reason) && s3.lastSay() === pageText(good.nodes.n1.text));
+
+  section('*** place names (found on chat\'s first twelve) ***');
+  const the = clone(good); the.nodes.n1.text = 'In the {park}, Jack is turning out his pockets.';
+  check('*** "the {place}": refused (the name has its own "the") ***', checkAdventure(the).problems.some((p) => /not "the \{place\}"/.test(p)));
+  const plain = clone(good); plain.nodes.n1.choices[0].label = 'Go to the Workshop';
+  check('*** a renamed place in plain words, in a label too: refused ***', checkAdventure(plain).problems.some((p) => /"Workshop" is \{jackWorkshop\}/.test(p)));
+  const tok = clone(good); tok.nodes.n1.choices[0].label = 'Go to {jackWorkshop}'; tok.nodes.n2.text = '{park} is quiet. You find it under a bench.';
+  const rt = checkAdventure(tok);
+  check('a token in a label is allowed', rt.ok, J(rt.problems));
+  const st = createWrittenStory(rt.story, { theme: 'nimrod' });
+  const op = await st.start();
+  check('*** a label\'s token is filled for the theme ***', op.choices[0] === `Go to ${placeInfoName('jackWorkshop')}`, J(op.choices));
+  await st.choose(0);
+  check('*** a token that opens a sentence starts with a capital ***', /^The /.test(st.lastSay()), st.lastSay());
+
+  section('*** the stories this site ships (web/client/adventures) all pass the checker ***');
+  const ixr = await fetch('../adventures/index.json');
+  const shipped = ixr.ok ? (await ixr.json()).stories || [] : [];
+  const failing = [];
+  for (const f of shipped) {
+    const r2 = checkAdventure(await (await fetch(`../adventures/${f}`)).json());
+    if (!r2.ok) failing.push(`${f}: ${r2.problems.slice(0, 3).join('; ')}`);
+  }
+  check(`*** every shipped story passes (${shipped.length}) ***`, shipped.length > 0 && !failing.length, failing.join(' | '));
 
   section('the lines to record');
   const lines = writtenLines(r.story, 'nimrod');

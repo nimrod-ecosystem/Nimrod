@@ -1,0 +1,158 @@
+{
+ "schema": "nimrod.adventure.v1",
+ "id": "picnic",
+ "version": 1,
+ "title": "A Picnic in the Park",
+ "start": "n1",
+ "nodes": {
+  "n1": {
+   "place": "queenParlour",
+   "cast": [
+    "hero",
+    "queen"
+   ],
+   "text": "Queen Rose pours the tea and looks out of the window. \"It is far too nice a day to stay indoors,\" she says. \"Shall we have a picnic in {park}? You choose who we ask.\"",
+   "choices": [
+    {
+     "label": "Ask King Kenny",
+     "to": "n2"
+    },
+    {
+     "label": "Ask Robin the Joker",
+     "to": "n3"
+    }
+   ]
+  },
+  "n2": {
+   "place": "kingHall",
+   "cast": [
+    "hero",
+    "king"
+   ],
+   "text": "King Kenny is delighted. \"A picnic! I shall bring my old checked blanket. It has seen many good afternoons.\" He pats it fondly. \"You see to the food, if you would.\"",
+   "choices": [
+    {
+     "label": "Visit the bakery",
+     "to": "n4"
+    },
+    {
+     "label": "Visit the shop",
+     "to": "n5"
+    }
+   ]
+  },
+  "n3": {
+   "place": "jokerCaravan",
+   "cast": [
+    "hero",
+    "joker"
+   ],
+   "text": "Robin pulls a coin from behind your ear. \"I accept, and I will bring a riddle and a trick or two.\" Robin then pulls out a second coin. \"Now, who is buying the food?\"",
+   "choices": [
+    {
+     "label": "Visit the bakery",
+     "to": "n4"
+    },
+    {
+     "label": "Visit the shop",
+     "to": "n5"
+    }
+   ]
+  },
+  "n4": {
+   "place": "bakery",
+   "cast": [
+    "hero"
+   ],
+   "text": "{bakery} smells of warm bread. The baker packs soft rolls, a fruit cake and two jam tarts into a basket, and adds an extra tart. \"For the walk,\" she says, with a wink.",
+   "choices": [
+    {
+     "label": "Carry the basket to the Park",
+     "to": "n6"
+    }
+   ]
+  },
+  "n5": {
+   "place": "shop",
+   "cast": [
+    "hero"
+   ],
+   "text": "At {shop} you fill a basket with cheese, ripe pears, crackers and a large bottle of lemonade. The shopkeeper finds you a little cloth to wrap the cheese. It is a very good basket.",
+   "choices": [
+    {
+     "label": "Carry the basket to the Park",
+     "to": "n6"
+    }
+   ]
+  },
+  "n6": {
+   "place": "park",
+   "cast": [
+    "hero",
+    "queen"
+   ],
+   "text": "{park} is green and quiet. Your guests are on their way, and Queen Rose is already looking around. \"Now then,\" she says, \"where shall we sit?\"",
+   "choices": [
+    {
+     "label": "Spread a blanket under the tree",
+     "to": "n7"
+    },
+    {
+     "label": "Take the bench by the pond",
+     "to": "n8"
+    },
+    {
+     "label": "Ask Jack for a clever idea",
+     "to": "n9"
+    }
+   ]
+  },
+  "n7": {
+   "place": "park",
+   "cast": [
+    "hero",
+    "queen"
+   ],
+   "text": "The blanket goes down in the shade of the big tree. Everyone arrives, shoes come off, and the basket is passed around. Queen Rose pours the first drink. The afternoon goes slowly, just as it should.",
+   "end": true
+  },
+  "n8": {
+   "place": "park",
+   "cast": [
+    "hero",
+    "queen"
+   ],
+   "text": "The bench by the pond has a lovely view of the ducks. You set the basket between you and share the food. Everyone agrees it is the best seat in {park}, and the ducks politely agree too.",
+   "end": true
+  },
+  "n9": {
+   "place": "jackWorkshop",
+   "cast": [
+    "hero",
+    "jack"
+   ],
+   "text": "Jack looks up from his bench in {jackWorkshop}. \"Sitting on the ground is hard on the knees,\" he says. In ten minutes he has made a small folding table and some stools, and he offers to carry them over himself.",
+   "choices": [
+    {
+     "label": "Walk back with Jack",
+     "to": "n10"
+    }
+   ]
+  },
+  "n10": {
+   "place": "park",
+   "cast": [
+    "hero",
+    "jack"
+   ],
+   "text": "Jack sets up the table on a flat patch of grass in {park}, and checks that it does not wobble. It does not. The food looks very grand on it, and everyone sits comfortably and eats well.",
+   "end": true
+  }
+ },
+ "written": {
+  "by": "claude-sonnet-5-5",
+  "on": "2026-11-07",
+  "batch": "msgbatch_01L88zJCvmUuLRjqApWw2C6w",
+  "ai_written": true
+ }
+}

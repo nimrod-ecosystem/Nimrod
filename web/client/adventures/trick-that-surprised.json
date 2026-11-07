@@ -1,0 +1,173 @@
+{
+ "schema": "nimrod.adventure.v1",
+ "id": "trick-that-surprised",
+ "version": 1,
+ "title": "The Hat That Baked",
+ "start": "n1",
+ "nodes": {
+  "n1": {
+   "place": "jokerCaravan",
+   "cast": [
+    "hero",
+    "joker"
+   ],
+   "text": "You are sitting in {jokerCaravan} while Robin taps a top hat. \"One red silk scarf, coming up.\" With a flourish, Robin pulls out... a warm bread roll. Robin stares at it. \"That is not a scarf.\"",
+   "choices": [
+    {
+     "label": "Taste the roll",
+     "to": "n2"
+    },
+    {
+     "label": "Look inside the hat",
+     "to": "n3"
+    }
+   ]
+  },
+  "n2": {
+   "place": "jokerCaravan",
+   "cast": [
+    "hero",
+    "joker"
+   ],
+   "text": "Soft, golden, still warm, and very good. Robin taps the hat again and a second roll pops out. \"I may have invented something,\" Robin says, \"just not what I meant to.\"",
+   "choices": [
+    {
+     "label": "Carry the hat to the baker",
+     "to": "n4"
+    },
+    {
+     "label": "Take some rolls to King Kenny",
+     "to": "n5"
+    }
+   ]
+  },
+  "n3": {
+   "place": "jokerCaravan",
+   "cast": [
+    "hero",
+    "joker"
+   ],
+   "text": "You peek inside. Flour dusts the lining, and a tag is stitched in: \"Property of the baker.\" Robin groans. \"I borrowed the wrong hat. Mine must still be at {bakery}.\"",
+   "choices": [
+    {
+     "label": "Walk the hat to the bakery",
+     "to": "n4"
+    },
+    {
+     "label": "Show the hat to Jack",
+     "to": "n6"
+    }
+   ]
+  },
+  "n4": {
+   "place": "bakery",
+   "cast": [
+    "hero",
+    "joker"
+   ],
+   "text": "At {bakery}, the baker laughs and holds up Robin's hat. \"Three red scarves have come out of my oven this morning. I wondered why my loaves looked so fashionable.\"",
+   "choices": [
+    {
+     "label": "Swap the hats back",
+     "to": "n7"
+    },
+    {
+     "label": "Suggest Robin try the trick again",
+     "to": "n8"
+    }
+   ]
+  },
+  "n5": {
+   "place": "kingHall",
+   "cast": [
+    "hero",
+    "king",
+    "joker"
+   ],
+   "text": "In {kingHall}, King Kenny accepts a roll with great ceremony. Robin taps the hat; another appears, then another. \"Splendid,\" says the King. \"A magician who also caters.\"",
+   "choices": [
+    {
+     "label": "Ask for a proper scarf trick",
+     "to": "n9"
+    },
+    {
+     "label": "Settle in and share the rolls",
+     "to": "n10"
+    }
+   ]
+  },
+  "n6": {
+   "place": "jackWorkshop",
+   "cast": [
+    "hero",
+    "jack",
+    "joker"
+   ],
+   "text": "In {jackWorkshop}, Jack turns the hat over with a small lens. \"False bottom, and the hinge is loose,\" he says. \"It hands out whatever was in here last.\" Robin hums. \"Bread, apparently.\"",
+   "choices": [
+    {
+     "label": "Help Jack mend the hinge",
+     "to": "n11"
+    },
+    {
+     "label": "Take the hat to the baker",
+     "to": "n4"
+    }
+   ]
+  },
+  "n7": {
+   "place": "bakery",
+   "cast": [
+    "hero",
+    "joker"
+   ],
+   "text": "Hats swapped, Robin tips the right one and a red scarf floats out. The baker applauds and presses a warm loaf into your hands. \"For the confusing morning.\" You eat a good piece on the way home, quite content.",
+   "end": true
+  },
+  "n8": {
+   "place": "jokerCaravan",
+   "cast": [
+    "hero",
+    "joker"
+   ],
+   "text": "Back in {jokerCaravan}, Robin tries once more. Out comes a red scarf with a single small roll tucked in its folds. \"Call it a bonus,\" Robin says, bowing. You clap, and the roll gets shared.",
+   "end": true
+  },
+  "n9": {
+   "place": "kingHall",
+   "cast": [
+    "hero",
+    "king",
+    "joker"
+   ],
+   "text": "Robin tries again. Out comes a red scarf, and the King wraps it around his shoulders, delighted. Then, with a little cough, the hat produces one last roll. \"Encore!\" says Kenny. Everyone agrees it was the best trick, mistake and all.",
+   "end": true
+  },
+  "n10": {
+   "place": "kingHall",
+   "cast": [
+    "hero",
+    "king",
+    "joker"
+   ],
+   "text": "You and the King sit down with the rolls and a pot of tea while Robin keeps the hat going. By the twelfth roll, nobody is counting. It is the most pleasant, unplanned lunch in a long while.",
+   "end": true
+  },
+  "n11": {
+   "place": "jackWorkshop",
+   "cast": [
+    "hero",
+    "jack",
+    "joker"
+   ],
+   "text": "Jack tightens the hinge with a tiny screwdriver and tests it with a handkerchief. It comes out a handkerchief. \"Boring,\" says Robin, \"but reliable.\" Jack hands you a roll he saved from earlier. \"For the helper.\"",
+   "end": true
+  }
+ },
+ "written": {
+  "by": "claude-sonnet-5-5",
+  "on": "2026-11-07",
+  "batch": "msgbatch_01L88zJCvmUuLRjqApWw2C6w",
+  "ai_written": true
+ }
+}
