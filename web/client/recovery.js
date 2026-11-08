@@ -218,7 +218,8 @@ export function normalizePolicy(raw = {}) {
     .map((t) => t.trim());
   if (!URGENCIES.includes(p.quietBelow)) p.quietBelow = DEFAULT_POLICY.quietBelow;
   if (p.quietHours) {
-    const h = (v) => Math.min(23, Math.max(0, Math.floor(Number(v)) || 0));
+    // Whole or half hours (2026-11-07: the screen's Quiet hours, quiet_hours.js, may start at 22:30).
+    const h = (v) => Math.min(23.5, Math.max(0, Math.floor(Number(v) * 2) / 2 || 0));
     p.quietHours = { fromHour: h(p.quietHours.fromHour), toHour: h(p.quietHours.toHour) };
     // A window of zero length would hold nothing; treat it as "no quiet hours" rather than
     // pretending, because a setting that silently does nothing is worse than an absent one.

@@ -432,8 +432,14 @@ section('the policy normalizes rather than throwing');
   check('an unknown urgency threshold falls back', p.quietBelow === DEFAULT_POLICY.quietBelow);
   check('a zero-length quiet window becomes NO quiet hours rather than a setting that '
     + 'silently does nothing', normalizePolicy({ quietHours: { fromHour: 5, toHour: 5 } }).quietHours === null);
+  // (2026-11-07, DELIBERATELY: half hours are kept, for the screen's Quiet hours (quiet_hours.js), so the latest is 23:30.)
   check('hours out of range are clamped',
-    normalizePolicy({ quietHours: { fromHour: 99, toHour: -3 } }).quietHours.fromHour === 23);
+    normalizePolicy({ quietHours: { fromHour: 99, toHour: -3 } }).quietHours.fromHour === 23.5);
+  check('a half hour is kept (22:30), anything finer is rounded down to it',
+    normalizePolicy({ quietHours: { fromHour: 22.5, toHour: 7.9 } }).quietHours.fromHour === 22.5
+    && normalizePolicy({ quietHours: { fromHour: 22.5, toHour: 7.9 } }).quietHours.toHour === 7.5);
+  check('*** with the minutes in the hour, a 22:30 start holds at 22:45 and not at 22:15 ***',
+    isQuietHour(22.75, { fromHour: 22.5, toHour: 7 }) && !isQuietHour(22.25, { fromHour: 22.5, toHour: 7 }));
   check('an empty policy is the default policy', normalizePolicy().sequence.join(',')
     === DEFAULT_SEQUENCE.join(','));
   check('the vocabularies are exported for whoever renders the settings',

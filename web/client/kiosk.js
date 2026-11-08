@@ -73,7 +73,7 @@ import {
 // 2026-10-02: a call to a screen with no Call panel rings a notice here, and the call it answers is hosted
 // over the panels by the Call module (`openCallView`). `CALL_ENDED` is that module's own "the call is over".
 import { createCallNotice, callNoticeModeOf, CALL_NOTICE_FIELD, NOTICE_RING_MS } from './call_notice.js';
-import { createQuietHours, QUIET_FIELDS, quietRingAllows, quietDropInAnswers } from './quiet_hours.js';   // quiet hours (2026-11-07)
+import { createQuietHours, QUIET_FIELDS, quietRingAllows, quietDropInAnswers, quietSettings } from './quiet_hours.js';   // quiet hours (2026-11-07)
 // Mike, 2026-10-12: calls wait to be answered unless the caller may drop in; "may <name> see this screen?" on the
 // screen; a temporary "see this screen" lent during a call (screen_permissions.js, see_ask.js, server/screen_access.py).
 import { dropInFor, dropInSecondsOf, lendLengthOf, checkInTicked } from './screen_permissions.js';
@@ -8431,8 +8431,14 @@ export async function mountKiosk(root, {
   let recoveryTimer = null;
   let currentFault = null;
 
-  const recoveryCfg = () => ({ on: false, ...DEFAULT_POLICY,
-                               ...((settings.get() || {}).recovery || {}) });
+  // (quiet hours, 2026-11-07; the gate's "one quiet-hours clock per screen") With the screen's Quiet hours on, recovery
+  // holds its non-urgent notices for THOSE hours, not its own 22-7: one night per screen, not two.
+  const recoveryCfg = () => {
+    const s = settings.get() || {};
+    const q = quietSettings(s);
+    return { on: false, ...DEFAULT_POLICY, ...(s.recovery || {}),
+      ...(q.on ? { quietHours: { fromHour: q.from, toHour: q.to } } : {}) };
+  };
 
   // A panel is watched from the moment it mounts. Cheap: a heartbeat is any publish on a
   // topic the module already owns, so nothing was added to any module for this.
@@ -8489,7 +8495,8 @@ export async function mountKiosk(root, {
       recoveryHistory,
       {
         now: recoveryNow(),
-        hour: new Date(recoveryNow()).getHours(),
+        // In hours with the minutes (22.5 is 22:30), so a half-hour quiet-hours edge holds what it says.
+        hour: (() => { const d = new Date(recoveryNow()); return d.getHours() + d.getMinutes() / 60; })(),
         inUse: screenInUse(),
         // A fallback is only offered for a panel that is genuinely broken. "Nothing to show"
         // is a setup state with a human repair, and swapping her photos away because nobody
