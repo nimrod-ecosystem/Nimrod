@@ -95,6 +95,57 @@ export function judge(pressMs, { origin, interval, window, offset = 0 }) {
   return { k, delta, verdict };
 }
 
+// *** A MAP'S NOTES ARE NOT A GRID (2026-11-08, proposal_rhythm_levels gate change 3). *** `judge` above snaps to
+// `origin + k * interval`; a Beat Saber map (beatmap.js) is a LIST of note times with uneven gaps. These judge against the
+// list. The same two rules carry over: a press is judged against the NEAREST note, and a note's window never covers more
+// than WINDOW_MAX_FRACTION of the gap to its nearer neighbour (so a burst of close notes is never one mashed press). A
+// note is judged once: `judged` (a Set of indexes) is the caller's, so a replay or a seek can clear it.
+
+/** The window a note gets: the setting, capped at 40% of the gap to its nearer neighbour (none: the setting). Pure. */
+export function noteWindowMs(notes, i, setting) {
+  const w = typeof setting === 'number' ? setting : (WINDOWS[setting] ?? WINDOWS.generous);
+  const at = (j) => (notes[j] ? Number(notes[j].ms) : NaN);
+  const gaps = [at(i) - at(i - 1), at(i + 1) - at(i)].filter((g) => Number.isFinite(g) && g > 0);
+  const gap = gaps.length ? Math.min(...gaps) : Infinity;
+  return Math.max(10, Math.min(w, gap * WINDOW_MAX_FRACTION));
+}
+
+/**
+ * Judge a press against a map's notes (sorted by `ms`). Returns { i, delta, verdict }: `i` the nearest note not yet judged
+ * (-1 when there is none), `delta` how far off (ms, negative = early), verdict 'hit' | 'early' | 'late' | 'stray' (no note
+ * left to judge). `offset` moves the centre for presses that land consistently late, as `judge` does. Pure.
+ */
+export function judgeNote(pressMs, notes, { window = 'generous', offset = 0, judged = null } = {}) {
+  const list = Array.isArray(notes) ? notes : [];
+  const t = pressMs - (Number(offset) || 0);
+  // The first note at or after t (binary search), then the nearest unjudged one either side of it.
+  let lo = 0, hi = list.length;
+  while (lo < hi) { const mid = (lo + hi) >> 1; if (Number(list[mid].ms) < t) lo = mid + 1; else hi = mid; }
+  const free = (j) => j >= 0 && j < list.length && !(judged && judged.has(j));
+  let a = lo - 1, b = lo;
+  while (a >= 0 && !free(a)) a -= 1;
+  while (b < list.length && !free(b)) b += 1;
+  const cands = [a, b].filter((j) => free(j));
+  if (!cands.length) return { i: -1, delta: 0, verdict: 'stray' };
+  const i = cands.reduce((best, j) => (Math.abs(t - list[j].ms) < Math.abs(t - list[best].ms) ? j : best));
+  const delta = t - Number(list[i].ms);
+  const verdict = Math.abs(delta) <= noteWindowMs(list, i, window) ? 'hit' : (delta < 0 ? 'early' : 'late');
+  return { i, delta, verdict };
+}
+
+/** The notes whose window has closed by `nowMs` with no press: missed. Indexes, oldest first; `judged` ones left out. Pure. */
+export function missedNotes(nowMs, notes, { window = 'generous', offset = 0, judged = null } = {}) {
+  const list = Array.isArray(notes) ? notes : [];
+  const t = nowMs - (Number(offset) || 0);
+  const out = [];
+  for (let i = 0; i < list.length; i += 1) {
+    if (Number(list[i].ms) > t) break;
+    if (judged && judged.has(i)) continue;
+    if (t - Number(list[i].ms) > noteWindowMs(list, i, window)) out.push(i);
+  }
+  return out;
+}
+
 /** Where beat `rel` (0 = the first beat of this run) falls: counting in, playing, or resting. */
 export function roundOf(rel, { countIn = 4, roundBeats = 16, restBeats = 4 } = {}) {
   if (rel < 0) return { phase: 'before', round: 0, beat: 0 };

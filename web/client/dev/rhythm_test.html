@@ -39,7 +39,7 @@ import { verbsFor, verbTarget } from '../actions.js';
 import { expectFor, HEALTH_EXPECT } from '../health.js';
 import {
   MAX_BPM, MIN_BPM, TEMPOS, LIT_FRACTION, WINDOWS, WINDOW_MAX_FRACTION, clampBpm, lightEvery, windowMs,
-  judge, roundOf, createPattern,
+  judge, roundOf, createPattern, noteWindowMs, judgeNote, missedNotes,
 } from '../rhythm_beat.js';
 import { GAME, DEFAULTS, STATUS_GAP_MS, IDLE_BEATS, VERDICT_WORDS, statusGapMs, markGapMs } from '../modules/rhythm.js';
 import { maxBpmFor } from '../rhythm_beat.js';
@@ -165,6 +165,29 @@ try {
     check('the window is capped at 40% of the gap between beats', windowMs('very-generous', 400) === 160
       && windowMs('generous', 1000) === 250 && WINDOW_MAX_FRACTION === 0.4);
     check('generous is a quarter of a second', WINDOWS.generous === 250);
+  }
+
+  // (2026-11-08, proposal_rhythm_levels gate change 3) A Beat Saber map's notes are a list with uneven gaps, not a grid.
+  section('the judge for a map\'s notes (a list, not a grid)');
+  {
+    const notes = [{ ms: 1000 }, { ms: 2000 }, { ms: 2200 }, { ms: 4000 }];
+    check('a lone gap: the setting (generous, 250 ms) when the gap is wide', noteWindowMs(notes, 3, 'generous') === 250);
+    check('*** close notes: the window shrinks to 40% of the gap (200 ms apart -> 80 ms), so a burst is not one mashed press ***',
+      noteWindowMs(notes, 1, 'generous') === 80 && noteWindowMs(notes, 2, 'generous') === 80);
+    check('a press on a note: hit, that note', JSON.stringify(judgeNote(1030, notes)) === JSON.stringify({ i: 0, delta: 30, verdict: 'hit' }));
+    check('*** the NEAREST note, not a grid: 2190 is note 2 (2200), early by 10, a hit ***',
+      judgeNote(2190, notes).i === 2 && judgeNote(2190, notes).verdict === 'hit');
+    check('outside a close note\'s small window: early or late, never a hit', judgeNote(1900, notes).verdict === 'early' && judgeNote(1900, notes).i === 1);
+    const judged = new Set([0, 1]);
+    check('*** a note is judged once: with notes 0 and 1 judged, a press at 1010 is judged against the next free one (2200, early) ***',
+      judgeNote(1010, notes, { judged }).i === 2 && judgeNote(1010, notes, { judged }).verdict === 'early', JSON.stringify(judgeNote(1010, notes, { judged })));
+    check('every note judged: a stray press, nothing scored', judgeNote(5000, notes, { judged: new Set([0, 1, 2, 3]) }).verdict === 'stray');
+    check('the press offset moves the centre (a switch that closes 60 ms late)', judgeNote(1100, notes, { offset: 60 }).delta === 40);
+    check('no notes: stray, never a throw', judgeNote(10, []).verdict === 'stray' && judgeNote(10, null).verdict === 'stray');
+    check('*** missed: at 2400 notes 0, 1 and 2 have closed unpressed; 4000 has not come ***',
+      JSON.stringify(missedNotes(2400, notes)) === '[0,1,2]', JSON.stringify(missedNotes(2400, notes)));
+    check('...a judged note is never missed too; one still inside its window is not missed yet',
+      JSON.stringify(missedNotes(2400, notes, { judged: new Set([1]) })) === '[0,2]' && JSON.stringify(missedNotes(1200, notes)) === '[]');
   }
 
   section('rounds and patterns');
