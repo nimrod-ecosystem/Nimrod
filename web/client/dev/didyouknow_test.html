@@ -93,6 +93,15 @@ try {
   check('*** a new card after a minute ***', t.q.length === 1 && t.q[0].ms === 60000);
   t.fire();
   check('...the next one, and where it is kept', p.current().id !== first && st.get().pos === 1);
+  // (Mike, 2026-11-08: "The buttons on Did You Know are different than the buttons on everything else.") Measured with
+  // the real stylesheet and a theme's two colours: the panel's own surface and border, rounded; not the browser's grey.
+  stage.style.setProperty('--surface', 'rgb(10, 20, 30)'); stage.style.setProperty('--border', 'rgb(200, 100, 50)');
+  {
+    const b = getComputedStyle(stage.querySelector('[data-dyk-act="next"]'));
+    check('*** its buttons wear the theme: its surface, its border, rounded corners ***',
+      b.backgroundColor === 'rgb(10, 20, 30)' && b.borderTopColor === 'rgb(200, 100, 50)' && parseFloat(b.borderTopLeftRadius) >= 10,
+      `${b.backgroundColor} | ${b.borderTopColor} | ${b.borderTopLeftRadius}`);
+  }
   stage.querySelector('[data-dyk-act="prev"]').click();
   check('Previous goes back', p.current().id === first && st.get().pos === 0);
   stage.querySelector('[data-dyk-act="say"]').click();

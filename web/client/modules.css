@@ -1828,4 +1828,13 @@ html[data-live-scene] body{background:transparent}
 .dyk-empty{margin:0;font-size:clamp(14px,5cqmin,40px);opacity:.8}
 .dyk blockquote{margin:0}
 .dyk-bar{display:flex;gap:10px;flex-wrap:wrap}
-.dyk-bar button{flex:1 1 0;min-height:48px;font:inherit;font-weight:600}
+/* (Mike, 2026-11-08: "The buttons on Did You Know are different than the buttons on everything else.") They were the
+   browser's own grey buttons. Now the panels' own: the theme's surface and border, rounded, sized with the panel like the
+   word games' (.wg-btn), "Read it" edged in the accent, and the theme's focus ring. */
+.dyk-bar button{flex:1 1 0;min-height:max(48px,10cqmin);padding:0 3cqmin;border-radius:max(10px,2.2cqmin);
+  border:max(1px,.4cqmin) solid var(--border);background:var(--surface);color:var(--text);
+  font:700 clamp(15px,4.5cqmin,48px)/1.1 var(--font, inherit);cursor:pointer}
+.dyk-bar button[data-dyk-act="say"]{border-color:var(--accent)}
+.dyk-bar button:hover:not(:disabled){background:var(--surface-alt, var(--surface))}
+.dyk-bar button:disabled{opacity:.45;cursor:not-allowed}
+.dyk-bar button:focus-visible{outline:max(3px,1cqmin) solid var(--scan-ring, var(--focus, var(--link)));outline-offset:max(2px,.6cqmin)}
