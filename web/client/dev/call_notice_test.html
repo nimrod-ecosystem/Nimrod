@@ -134,7 +134,7 @@ function fakeLink() {
 }
 
 // A notice on a fake transport, in a box of its own.
-function rig({ mode = 'notice', open = async () => true, dropIn = undefined, avatars = undefined } = {}) {
+function rig({ mode = 'notice', open = async () => true, dropIn = undefined, avatars = undefined, silent = undefined, onShow = undefined } = {}) {
   const t = fakeTransport();
   const clock = fakeClock();
   const host = document.createElement('div');
@@ -152,6 +152,8 @@ function rig({ mode = 'notice', open = async () => true, dropIn = undefined, ava
     now: clock.now, setTimer: clock.setTimer, clearTimer: clock.clearTimer,
     ...(dropIn !== undefined ? { dropIn } : {}),
     ...(avatars !== undefined ? { avatars } : {}),
+    ...(silent !== undefined ? { silent } : {}),
+    ...(onShow !== undefined ? { onShow } : {}),
   });
   const el = () => host.querySelector('[data-call-notice]');
   const btn = (stop) => host.querySelector(`[data-cn-stop="${stop}"]`);
@@ -213,6 +215,27 @@ try {
     r.n.decline();
     r.done();
     check('...and the picture subscription goes with the notice', subs.size === 0);
+  }
+
+  // =====================================================================================
+  section('*** quiet hours (2026-11-07): a ring the night leaves silent still shows, and Answer works ***');
+  {
+    let shown = 0;
+    const r = rig({ silent: (from) => from && from.name === 'Bo', onShow: () => { shown += 1; } });
+    r.t.ring({ name: 'Bo', video: true });
+    check('*** a silent ring: the card shows, nothing is announced ***', r.n.showing() && r.alerts.length === 0 && shown === 1, JSON.stringify(r.alerts));
+    r.btn('answer').click();
+    await Promise.resolve(); await Promise.resolve();
+    check('...and Answer still answers it', r.t.calls.includes('claim') || r.t.calls.includes('open'), JSON.stringify(r.t.calls));
+    r.done();
+    const r2 = rig({ silent: (from) => from && from.name === 'Bo' });
+    r2.t.ring({ name: 'Ann', video: true });
+    check('a caller the night lets ring is announced as by day', JSON.stringify(r2.alerts) === '["Video call from Ann."]', JSON.stringify(r2.alerts));
+    r2.done();
+    const r3 = rig({ silent: () => { throw new Error('broken'); } });
+    r3.t.ring({ name: 'Ann', video: true });
+    check('a broken "silent" is not silent (a ring is never lost to a fault)', r3.alerts.length === 1);
+    r3.done();
   }
 
   // =====================================================================================

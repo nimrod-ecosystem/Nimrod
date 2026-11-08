@@ -71,6 +71,10 @@
    * `scale(1.015)` gives a ~1.5% oversize buffer so the drift never exposes an edge outside
    * the kiosk (well past the few px of actual movement at any real screen size). */
   .kiosk.burn-dim{filter:brightness(.72);transition:filter 4s ease}
+  /* Quiet hours (2026-11-07, quiet_hours.js): the night's dim, and with burn-in's the LOWER of the two, never multiplied
+   * (the gate: .72 x 40% would be 29%). The same filter burn-in already uses: nothing hidden, no layer over the presses. */
+  .kiosk.quiet-dim{filter:brightness(var(--quiet-dim,1));transition:filter 4s ease}
+  .kiosk.quiet-dim.burn-dim{filter:brightness(min(.72,var(--quiet-dim,1)))}
   .kiosk.burn-drift{animation:nimrod-burn-drift 240s ease-in-out infinite}
   @keyframes nimrod-burn-drift{
     0%{transform:scale(1.015) translate(0,0)}

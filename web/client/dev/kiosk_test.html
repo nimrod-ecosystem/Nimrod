@@ -551,8 +551,11 @@ const toTab = (m, id) => {
       // (row 2.191, 2026-11-02, DELIBERATELY: the corner buttons retired to the bar, so "Buttons in a panel's corner" joins
       // How it looks, beside "Show which panel is selected", for a screen that wants them back. 62.)
       // (row 2.191, 2026-11-02, DELIBERATELY: "Arrange buttons on the bar" under The bar on Devices. 63.)
-      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 15 stops (was every row: 63) ***',
-        lapStops.length === 15 && oldStops.length === 63 && oldStops.some((i) => i.id === 'mirror') /* Mirror */
+      // (quiet hours, 2026-11-07, DELIBERATELY: "Quiet hours" on How it looks, beside burn-in; its other rows show only
+      // while it is on. 64.)
+      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 15 stops (was every row: 64) ***',
+        lapStops.length === 15 && oldStops.length === 64 && oldStops.some((i) => i.id === 'set:quietHours') /* quiet hours */
+        && oldStops.some((i) => i.id === 'mirror') /* Mirror */
         && oldStops.some((i) => i.id === 'set:panelCorners') /* the corners */
         && oldStops.some((i) => i.id === 'set:barArrangeOpen') /* arrange on the bar */
         && oldStops.some((i) => i.id === 'set:booksOpen') /* books */
@@ -1738,6 +1741,38 @@ const toTab = (m, id) => {
     check('*** turning it off clears an already-drifting screen right away, not on the next touch ***',
       !kioskEl.classList.contains('burn-drift') && !kioskEl.classList.contains('burn-dim'),
       kioskEl.className);
+
+    // QUIET HOURS (2026-11-07, quiet_hours.js): through the real menu, with hours set around NOW so the test is the same
+    // at any time of day: From = this half hour, To = an hour later.
+    {
+      const pad2 = (n) => String(n).padStart(2, '0');
+      const words = (h) => { const n = ((h % 24) + 24) % 24; return `${pad2(Math.floor(n))}:${pad2(Math.round((n % 1) * 60))}`; };
+      const nowD = new Date();
+      const fromH = Math.floor((nowD.getHours() * 60 + nowD.getMinutes()) / 30) / 2;
+      const toH = (fromH + 1) % 24;
+      check('quiet hours: off by default, nothing dimmed', !kioskEl.classList.contains('quiet-dim'), kioskEl.className);
+      check('found the quiet hours row', walkToB('set:quietHours'));
+      bk.menu.select();   // off -> on, through the menu
+      const hintOf = (id) => bk.menu.items().find((r) => r.id === id)?.hint;
+      check('*** turned on: its hours show in the menu, 22:00 to 07:00 by default ***',
+        walkToB('set:quietFrom') && hintOf('set:quietFrom') === '22:00' && hintOf('set:quietTo') === '07:00',
+        `${hintOf('set:quietFrom')} to ${hintOf('set:quietTo')}`);
+      bk.menu.close?.();
+      // The hours set around now through the screen's saved settings (a 48-choice row is a list, not a press-to-step).
+      const qState = createState({ url: bProfiles.stateURL(bp.id, 'settings'), user: USER });
+      await qState.load().catch(() => {});
+      qState.set({ quietHours: true, quietFrom: fromH, quietTo: toH });
+      await qState.flush();
+      check('*** inside quiet hours the screen dims to 40% (and nothing is removed) ***',
+        await settled(() => kioskEl.classList.contains('quiet-dim') && kioskEl.style.getPropertyValue('--quiet-dim') === '0.4')
+        && !!broot.querySelector('.k-clock .clock'), `${kioskEl.className} ${kioskEl.style.getPropertyValue('--quiet-dim')}`);
+      broot.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+      check('*** a press brightens it ***', await settled(() => !kioskEl.classList.contains('quiet-dim')), kioskEl.className);
+      qState.set({ quietHours: false });
+      await qState.flush();
+      check('turned off: nothing dimmed', await settled(() => !kioskEl.classList.contains('quiet-dim')), kioskEl.className);
+      qState.destroy?.();
+    }
 
     try { bk?.destroy?.(); } catch { /* already gone */ }
     broot.remove();

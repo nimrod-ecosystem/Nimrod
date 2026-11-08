@@ -339,6 +339,7 @@ registerModule(
     // Which ring this is (bumped on every incoming), and whether answer() is waiting on the server's
     // pick (see `answer`): a ring that ended or was replaced while asking must open nothing.
     let ringSeq = 0;
+    let ringHushed = false;        // quiet hours: this ring's spoken words are left out (`ctx.ringSilent`)
     let claiming = false;
     // call loadouts: how the call `takeCall` hands over should start (camera, their video); null = all on.
     let answerWith = null;
@@ -1145,6 +1146,7 @@ registerModule(
     // connected is worse than useless.
     function announce(text) {
       if (!cfg.announce || !output || !text) return;
+      if (ringHushed && phase === 'ringing') return;   // quiet hours (2026-11-07): this ring is silent; the card still shows
       try { output.alert(String(text)); } catch (err) { console.error('call announce', err); }
     }
 
@@ -1178,6 +1180,8 @@ registerModule(
       stopDemo();
       who = from || {};
       phase = 'ringing';
+      // quiet hours (2026-11-07): the host says whether this caller's ring is heard tonight (kiosk.js `ringSilent`).
+      try { ringHushed = typeof ctx.ringSilent === 'function' && ctx.ringSilent(who) === true; } catch { ringHushed = false; }
       ringSeq += 1;
       ringingAt = now();
       render();
@@ -1292,6 +1296,7 @@ registerModule(
       clearRing();
       who = from || {};
       phase = 'ringing';
+      ringHushed = false;          // the notice that handed it over already chose whether its ring was heard
       ringSeq += 1;
       ringingAt = Number.isFinite(ringStartedAt) ? ringStartedAt : now();
       render();

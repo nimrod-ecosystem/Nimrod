@@ -73,6 +73,7 @@ import {
 // 2026-10-02: a call to a screen with no Call panel rings a notice here, and the call it answers is hosted
 // over the panels by the Call module (`openCallView`). `CALL_ENDED` is that module's own "the call is over".
 import { createCallNotice, callNoticeModeOf, CALL_NOTICE_FIELD, NOTICE_RING_MS } from './call_notice.js';
+import { createQuietHours, QUIET_FIELDS, quietRingAllows, quietDropInAnswers } from './quiet_hours.js';   // quiet hours (2026-11-07)
 // Mike, 2026-10-12: calls wait to be answered unless the caller may drop in; "may <name> see this screen?" on the
 // screen; a temporary "see this screen" lent during a call (screen_permissions.js, see_ask.js, server/screen_access.py).
 import { dropInFor, dropInSecondsOf, lendLengthOf, checkInTicked } from './screen_permissions.js';
@@ -1123,6 +1124,7 @@ export async function mountKiosk(root, {
   // the transport's getter can name them before this line runs; they only ever run on a call.
   function onCallLive(on) {
     try { voiceRec?.hold('call', !!on); } catch (err) { console.error('kiosk: voice recording hold', err); }
+    try { quiet?.refresh(); } catch (err) { console.error('kiosk: quiet hours', err); }   // a call lifts quiet hours at once
     if (on) { try { intercomRx?.endAll('call'); } catch (err) { console.error('kiosk: intercom', err); } }
     // ...and a quiet check-in gives way to an answered call too (checkin.js: the room is awake and talking).
     if (on) { try { checkInRx?.endAll('call'); } catch (err) { console.error('kiosk: check-in', err); } }
@@ -2049,8 +2051,10 @@ export async function mountKiosk(root, {
     // "May drop in" list - `by` is the SERVER-STAMPED caller (drive.py stamp_signal), never a name a page sent.
     // `byOwner` (2026-10-14): the server's word that the caller owns these screens - the owner drops in by default.
     // (row 2.167, 2026-11-02) A call placed FROM A SCREEN never drops in: it rings and waits (the server's `byScreen`).
-    mayDropIn: (from) => !(from && from.byScreen === true)
-      && dropInFor(personRow || {}, from && from.by, from && from.byOwner === true ? from.by : null),
+    // (quiet hours, 2026-11-07) a drop-in at night rings and waits unless the screen's row says "as by day".
+    mayDropIn: (from) => mayDropInNow(from) && quietDropInAnswers(quiet?.state?.()),
+    // (quiet hours) the Call panel's spoken ring, left out at night for a caller the "calls ring for" row leaves out.
+    ringSilent: (from) => !quietRingAllows(quiet?.state?.(), mayDropInNow(from)),
     // WHAT THE SCREEN LENDS THE CALLER DURING A CALL (2026-10-12; "see" or "drive", and how long, 2026-10-14): until the
     // call ends by default, a set time that still ends with it, or "always" for a caller with the guardian set. The
     // server checks this screen answered that call and lends it to that call's own caller (screen_access.py).
@@ -2525,6 +2529,8 @@ export async function mountKiosk(root, {
   // beside the subscribe call argued this callback "only ever runs later", which is true for a
   // setting a person actually changes but not for the immediate replay `subscribe` performs.
   let burnInT = null;
+  // Quiet hours (2026-11-07, quiet_hours.js), declared here for burnInT's reason: the settings callback below refreshes it.
+  let quiet = null;
   // *** PANEL BACKGROUNDS, HOST-LEVEL. *** Mike, 2026-09-23, looking at the live kiosk: "I would
   // make the backgrounds transparent/translucent wherever possible. Like the clock and trivia."
   // Every panel in the grid gets its background from ONE rule (`.k-stage .k-mod`, kiosk.css) --
@@ -2804,6 +2810,7 @@ export async function mountKiosk(root, {
     // above this subscribe call — safe to reference here because this callback only ever RUNS
     // later, once a setting actually changes, by which point it exists.
     pokeBurnIn();
+    try { quiet?.refresh(); } catch (err) { console.error('kiosk: quiet hours', err); }   // quiet hours: a row changed
   });
   settings.startPolling();
 
@@ -4150,6 +4157,7 @@ export async function mountKiosk(root, {
   // Which tab (and section) each of the screen's own rows is on.
   const SCREEN_FIELD_TABS = {
     theme: ['theme', 0], burnIn: ['display', 0], panelSurface: ['display', 0], panelGap: ['display', 0],   // themes: theme on Theme
+    ...Object.fromEntries(QUIET_FIELDS.map((f) => [f.key, ['display', 0]])),   // quiet hours: beside burn-in's dim
     [SMALL_CLOCK_KEY]: ['display', 0],
     [PANEL_RING_FIELD.key]: ['display', 0],   // panel ring: "How it looks", with the panels' framing
     [PANEL_CORNERS_FIELD.key]: ['display', 0],   // row 2.191: the corner buttons, beside the ring
@@ -4711,6 +4719,9 @@ export async function mountKiosk(root, {
         { value: 'dim', label: 'Dim after 10 minutes idle' },
         { value: 'drift', label: 'Slowly shift the picture when idle (for OLED screens)' },
       ] },
+    // QUIET HOURS (2026-11-07, readiness plan problem 6; quiet_hours.js argues every row): off by default, the screen's.
+    // Not on an embed: it dims and caps the whole screen, which an embed does not own.
+    ...(!embedded ? QUIET_FIELDS.map((f) => ({ ...f, ...(f.options ? { options: f.options.map((o) => ({ ...o })) } : {}) })) : []),
     // Mike, 2026-09-23: "I would make the backgrounds transparent/translucent wherever
     // possible." `standard`, not `essential`, matching `burnIn` above -- a preference, not a
     // legibility escape hatch. (2026-10-07: the default is `clear`, PANEL_SURFACE_DEFAULT, argued there.)
@@ -6573,9 +6584,12 @@ export async function mountKiosk(root, {
         // Mike, 2026-10-12: a caller on the person's "May drop in" list is answered by itself after the person's own
         // countdown (`dropInSeconds`, 10 s by default); everybody else waits for Answer. null = wait.
         // (row 2.167, 2026-11-02; Mike: "good") a call placed from a screen rings and waits: no countdown for it.
-        dropIn: (from) => (!(from && from.byScreen === true)
-          && dropInFor(personRow || {}, from && from.by, from && from.byOwner === true ? from.by : null)
+        // (quiet hours, 2026-11-07) ...and during quiet hours, as its "a drop-in call" row says (rings and waits by default).
+        dropIn: (from) => (mayDropInNow(from) && quietDropInAnswers(quiet?.state?.())
           ? dropInSecondsOf(personRow || {}) : null),
+        // (quiet hours) The one alert a call makes, left out when the night's "calls ring for" row says so. The card still shows.
+        silent: (from) => !quietRingAllows(quiet?.state?.(), mayDropInNow(from)),
+        onShow: () => { try { quiet?.refresh(); } catch { /* none */ } },   // a ring lifts quiet hours at once
         // row 2.167: the caller's picture, from the card the server named (the same faces "Who this screen is for" draws).
         avatars: () => whoAvatars(),
         zIndex: LAYERS.menus + 50,
@@ -8305,6 +8319,8 @@ export async function mountKiosk(root, {
 
   runtime = mountInputRuntime({
     bus,
+    // quiet hours: a switch (or any device the input bus hears) is a press too, and lifts the night for a while.
+    onActivation: () => pokeQuiet(),
     // (voice open, 2026-10-12: while a module opened by voice shows, it is the switch lap's only stop -- voice_open.js
     // `ring` argues it. A panel beside it is still a pointer's; the lap comes back with the dashboard.)
     modules: () => voiceOpen.ring(focusRing()),
@@ -8933,6 +8949,40 @@ export async function mountKiosk(root, {
     root.addEventListener(ev, pokeBurnIn, { passive: true });
   }
   pokeBurnIn();
+
+  // *** QUIET HOURS (2026-11-07; readiness plan problem 6; proposal_quiet_hours_20261107.md, gated; quiet_hours.js argues
+  // every row). *** Off unless this screen turns it on. The screen dims (the LOWER of this and burn-in's dim, kiosk.css),
+  // videos, music, game sounds and spoken prompts are capped (never calls or the AAC voice, never the master), and calls
+  // ring as the night's rows say. Lifted by itself for the whole of a ring, a call, the intercom or a check-in, and for
+  // a while after a press (a pointerdown, a key or a switch: not a mouse moved). Read every 5 seconds, not every minute:
+  // cheap (one comparison), and it is how a call that ends gives the night back within seconds.
+  /** May this caller drop in on this screen (by day)? A call placed from a screen never does (row 2.167). */
+  function mayDropInNow(from) {
+    return !(from && from.byScreen === true)
+      && dropInFor(personRow || {}, from && from.by, from && from.byOwner === true ? from.by : null);
+  }
+  const quietHeld = () => {
+    try { if (callTransport?.isLive?.() || callView || callNotice?.showing?.()) return true; } catch { return true; }
+    try { if ((intercomRx?.sessions?.() || []).length > 0) return true; } catch { /* none */ }
+    try { if ((checkInRx?.sessions?.() || []).length > 0) return true; } catch { /* none */ }
+    return false;
+  };
+  function pokeQuiet() { try { quiet?.poke(); } catch { /* none */ } }   // a declaration: the input runtime, above, calls it
+  const QUIET_PRESS_EVENTS = ['pointerdown', 'keydown'];
+  if (!embedded) {
+    try {
+      quiet = createQuietHours({
+        row: () => settings.get() || {}, audio, held: quietHeld, tickMs: 5000,
+        onChange: (st) => {
+          try {
+            kioskEl.style.setProperty('--quiet-dim', String(st.dim));
+            kioskEl.classList.toggle('quiet-dim', st.dim < 1);
+          } catch (err) { console.error('kiosk: quiet hours dim', err); }
+        },
+      });
+      for (const ev of QUIET_PRESS_EVENTS) root.addEventListener(ev, pokeQuiet, { passive: true, capture: true });
+    } catch (err) { console.error('kiosk: quiet hours', err); quiet = null; }
+  }
 
   root.addEventListener('mousemove', pokeIfNearBar, { passive: true });
   // A PRESS THAT WOKE THE BAR IS NOT ALSO A PRESS ON IT (2026-10-02, late; transport_bar.js `sitOutWakePress`
@@ -10184,6 +10234,11 @@ export async function mountKiosk(root, {
       // time somebody picks another module, so each cycle stacked three more listeners on it.
       for (const ev of BURN_IN_EVENTS) root.removeEventListener(ev, pokeBurnIn);
       clearBurnIn();
+      if (quiet) {   // quiet hours: only what was added (never on an embed)
+        for (const ev of QUIET_PRESS_EVENTS) root.removeEventListener(ev, pokeQuiet, { capture: true });
+        try { quiet.destroy(); } catch { /* gone */ }
+        quiet = null;
+      }
       clearInterval(recoveryTimer);
       try { stallSwitch?.destroy(); } catch { /* stalled playback: its timers only */ }
       health.destroy();

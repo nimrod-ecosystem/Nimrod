@@ -133,6 +133,10 @@ export function createCallNotice({
   zIndex = null,
   dropIn = () => null,
   avatars = null,
+  // (quiet hours, 2026-11-07) `silent(from)` true: this ring makes no alert (the card still shows, Answer works);
+  // `onShow()` told when a ring shows, so the screen can lift its night dim for it at once. Both read at each ring.
+  silent = () => false,
+  onShow = null,
   now = () => Date.now(),
   setTimer = (fn, ms) => setTimeout(fn, ms),
   clearTimer = (id) => clearTimeout(id),
@@ -301,6 +305,7 @@ export function createCallNotice({
     el.hidden = false;
     paint();
     setHold(true);
+    try { onShow?.(); } catch (err) { console.error('call notice: onShow', err); }
     const mine = seq;
     if (drop != null && drop > 0) {
       dropLeft = drop;
@@ -325,10 +330,14 @@ export function createCallNotice({
       // does (call.js `end('unanswered')`). Normally the caller's `bye` got here first and this never runs.
       try { transport.hangup('unanswered'); } catch { /* already gone */ }
     }, NOTICE_RING_MS);
-    try {
-      const out = typeof output === 'function' ? output() : output;
-      out?.alert?.(t.announce, { source: 'call' });
-    } catch (err) { console.error('call notice: announce', err); }
+    let hush = false;
+    try { hush = silent?.(who) === true; } catch (err) { console.error('call notice: silent', err); hush = false; }
+    if (!hush) {
+      try {
+        const out = typeof output === 'function' ? output() : output;
+        out?.alert?.(t.announce, { source: 'call' });
+      } catch (err) { console.error('call notice: announce', err); }
+    }
     // Straight through, for somebody allowed to: the same claim-then-open path as a pressed Answer.
     if (drop === 0) answer().catch(() => {});
   }
