@@ -88,6 +88,9 @@ export function createLocalMusic({
   // folder's plays, for the charts (row 2.62 step 2; music.js files them as source `folder`). A file that will not
   // play is never counted. `title` is the file's name without its folder or extension; no tags are read yet.
   onTrack = null,
+  // (row 2.247, note FT 3) Told when what was asked for has played to its end, or none of it would play: the router's
+  // "it finished", so a shuffle of every favourite moves on. Not told on `stop()`.
+  onEnded = null,
   // backup source: `backup()` the choice in force (media_sources.js backupChoice), `personId()` whose screen (never
   // another resident's source), `onBackup(state|null)` told when a backup starts or stops playing. Timers are seams.
   backup = null,
@@ -196,7 +199,7 @@ export function createLocalMusic({
       // backup source: the main source answered while the backup played - back to it now the song is over.
       if (mainBack && onBackupNow) { backToMain(); return; }
       if (queue.length > 1 && at < queue.length - 1) playAt(at + 1, g);
-      else finish();
+      else { finish(); toldEnded(); }
     });
     // One unplayable file is dropped and the next one tried; when none will play, it stops and says so.
     mine.addEventListener?.('error', () => {
@@ -210,7 +213,10 @@ export function createLocalMusic({
         const req = lastReq;
         const fromMain = !onBackupNow && !playedOne;
         finish('unplayable');
-        if (fromMain && req) { const g2 = ++gen; viaBackup(req, 'unplayable', g2).catch(() => {}); }
+        if (fromMain && req) {
+          const g2 = ++gen;
+          viaBackup(req, 'unplayable', g2).then((r) => { if (!r && g2 === gen) toldEnded(); }, () => { if (g2 === gen) toldEnded(); });
+        } else toldEnded();
         return;
       }
       playAt(at, g);
@@ -219,6 +225,7 @@ export function createLocalMusic({
     if (gain > 0 && !paused) startEl();
   }
 
+  const toldEnded = () => { if (dead || typeof onEnded !== 'function') return; try { onEnded(); } catch (err) { console.error('music: ended', err); } };
   let lastReason = null;
   function finish(reason = null) {
     lastReason = reason;

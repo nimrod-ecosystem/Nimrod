@@ -45,10 +45,27 @@ import { ARCHIVE_MESSAGES, archiveAudioTracks } from './archive_org.js';   // in
 export const MUSIC_TOPICS = Object.freeze({
   play: MUSIC_PLAY_TOPIC, stop: MUSIC_STOP_TOPIC, pause: 'music/pause', resume: 'music/resume',
   confirm: 'music/confirm', now: 'music/now', didYouMean: 'music/did-you-mean',
+  shuffle: 'music/shuffle',      // (note FT 3) shuffle every favourite, a bounded run
+
   // (row 2.107, 2026-10-18) "is there a Music panel on this screen, and what can it play?" - asked by a game that plays
   // a favourite while somebody plays (game_music_host.js); answered by the leader with the favourites' names.
   who: 'music/who', here: 'music/here',
 });
+// *** SHUFFLE ALL MY FAVOURITES (row 2.247, note FT 3; gated GO WITH CHANGES: "plays a BOUNDED run by default, never
+// forever"). *** One Play that walks the whole list: the shared weighted picker (music_pick.js, the YouTube panel's
+// weights) chooses the next favourite, its own player plays it, and when it ends the next is chosen. A favourite that
+// will not play is passed over quietly and the next tried; when none will, the run stops and says so once.
+// HOW LONG: an HOUR by default, then it stops by itself. FOR a longer default or none: a person who wants music all
+// evening has to start it again. AGAINST, and it decides: the person in front of the screen may not be able to reach
+// Stop, and sound that goes on with nobody able to end it is the risk the gate named; an hour is a dinner or an
+// afternoon's sitting. It is a setting (the panel's "Shuffle all plays for" row): 30 minutes, 1, 2 or 4 hours, or
+// until Stop is pressed. At the hour it stops at once, not at the end of the favourite: a favourite can be a whole
+// album or playlist, and "at the end of it" would not be a bound.
+// A YOUTUBE FAVOURITE IN A RUN PLAYS IN THIS PANEL, not the screen's YouTube panel: only this panel's own player says
+// when it has ended, and a run handed to the YouTube panel would stop there.
+// Starting anything else (a favourite by name, Stop) ends the run.
+export const SHUFFLE_MINUTES_DEFAULT = 60;
+export const SHUFFLE_MINUTES = Object.freeze([30, 60, 120, 240, 0]);
 export const NEAR_MATCH_MODES = Object.freeze(['ask', 'play', 'off']);
 export const YOUTUBE_WHERE = Object.freeze(['panel', 'here']);
 
@@ -65,6 +82,8 @@ export const MESSAGES = Object.freeze({
   'spotify-off': 'Spotify is turned off for this panel. Turn it on in this panel’s settings (the “Spotify” row), '
     + 'or press “Turn Spotify on” here.',
   'bad-source': 'That favorite does not say where its music is.',
+  'shuffle-none': 'None of the favorites would play.',
+  'shuffle-empty': 'There are no favorites to shuffle yet.',
 });
 export const messageFor = (reason, name = '', device = '') =>
   String(MESSAGES[reason] || MESSAGES.failed || '').replace(/\{name\}/g, name).replace(/\{device\}/g, device || 'another device');
@@ -91,6 +110,13 @@ export function createMusicRouter({
   instanceTopic = (id, topic) => (id ? `${topic}#${id}` : topic),
   onChange = null,
   say = null,                    // (text) => void - to speak a problem out loud; null = silent
+  // (row 2.247, note FT 3) "Shuffle all my favourites": `picker` is the shared weighted picker (music_pick.js) over the
+  // favourites; `shuffleMinutes()` how long a run lasts (0: until Stop). Timers are the suites' seams.
+  picker = null,
+  shuffleMinutes = () => SHUFFLE_MINUTES_DEFAULT,
+  setTimer = (fn, ms) => setTimeout(fn, ms),
+  clearTimer = (id) => clearTimeout(id),
+  now = () => Date.now(),
 } = {}) {
   if (!bus) throw new Error('createMusicRouter: a bus is required');
   const key = busKey || bus;
@@ -106,6 +132,8 @@ export function createMusicRouter({
   let pendingDevice = null;      // play on: the device a "playing elsewhere" question names (a yes plays anyway)
   let dead = false;
   let seq = 0;
+  let run = null;                // (note FT 3) { endsAt|null, timer } while every favourite is being shuffled
+  let quiet = false;             // a run is trying a favourite: a failure is passed over, not said
 
   const read = (f, dflt) => { try { const v = typeof f === 'function' ? f() : f; return v ?? dflt; } catch { return dflt; } };
 
@@ -113,7 +141,8 @@ export function createMusicRouter({
     return { playing: !!current, name: current?.name || null, kind: current?.kind || null,
              reason: lastReason, message: lastReason ? messageFor(lastReason, pending?.name || '', pendingDevice || '') : '',
              asking: pending ? pending.name : null,
-             askingWhy: pending ? (pendingDevice != null ? 'elsewhere' : 'near') : null, device: pendingDevice };
+             askingWhy: pending ? (pendingDevice != null ? 'elsewhere' : 'near') : null, device: pendingDevice,
+             shuffle: run ? { endsAt: run.endsAt } : null };
   }
   function changed() {
     const s = status();
@@ -122,6 +151,7 @@ export function createMusicRouter({
   }
   function fail(reason, name = '', { speak = true } = {}) {
     lastReason = reason;
+    if (quiet) return { ok: false, reason };   // a run passing over a favourite: said once, by the run, if none play
     changed();
     if (speak && say) { try { say(messageFor(reason, name)); } catch { /* fine */ } }
     return { ok: false, reason };
@@ -164,7 +194,7 @@ export function createMusicRouter({
     const sp = read(spotify, null);
     if (src.kind === 'youtube') {
       const payload = src.videoId ? { videoId: src.videoId } : { playlistId: src.playlistId };
-      const where = read(youtubeWhere, 'panel');
+      const where = run && ownYoutube ? 'here' : read(youtubeWhere, 'panel');   // a run hears this panel's own player end
       const panel = where === 'panel' ? findYoutubePanel() : null;
       await stopCurrent();
       if (panel) {
@@ -245,8 +275,49 @@ export function createMusicRouter({
     return { ok: false, reason: 'playing-elsewhere', device: pendingDevice };
   }
 
+  // ---- shuffle all my favourites (note FT 3; SHUFFLE_MINUTES_DEFAULT says why it is bounded) ----------------------
+  function endRun() {
+    if (!run) return;
+    if (run.timer != null) { try { clearTimer(run.timer); } catch { /* gone */ } }
+    run = null;
+  }
+  async function shuffleAll() {
+    if (dead) return { ok: false, reason: 'gone' };
+    endRun();
+    const favs = read(favourites, []) || [];
+    if (!favs.length) return fail('shuffle-empty');
+    const mins = Number(read(shuffleMinutes, SHUFFLE_MINUTES_DEFAULT));
+    const ms = Number.isFinite(mins) && mins > 0 ? mins * 60000 : 0;
+    const mine = { endsAt: ms ? now() + ms : null, timer: null };
+    run = mine;
+    if (ms) mine.timer = setTimer(() => { if (run === mine) { run = null; stop(); } }, ms);
+    return nextInRun(mine);
+  }
+  // The next favourite of the run, by the weighted picker; one that will not play is left out and another tried.
+  async function nextInRun(mine) {
+    const favs = (read(favourites, []) || []).filter((f) => f && f.id);
+    const tried = new Set();
+    while (run === mine && !dead) {
+      const pool = favs.filter((f) => !tried.has(f.id));
+      if (!pool.length) break;
+      const id = (picker && picker.next(pool.map((f) => ({ id: f.id })))) || pool[Math.floor(Math.random() * pool.length)].id;
+      const entry = pool.find((f) => f.id === id) || pool[0];
+      tried.add(entry.id);
+      quiet = true;
+      let r;
+      try { r = await dispatch(entry); } finally { quiet = false; }
+      if (run !== mine || dead) return r || { ok: false, reason: 'superseded' };
+      if (r && r.ok) { try { picker?.played(entry.id); } catch { /* counted in memory */ } return r; }
+      if (r && (r.reason === 'playing-elsewhere' || r.reason === 'superseded')) return r;   // asked, or replaced: wait
+    }
+    if (run !== mine) return { ok: false, reason: 'superseded' };
+    endRun();
+    return fail('shuffle-none');
+  }
+
   async function play(payload) {
     if (dead) return { ok: false, reason: 'gone' };
+    endRun();
     const favs = read(favourites, []) || [];
     const byId = payload && typeof payload === 'object' && payload.id ? favs.find((f) => f.id === payload.id) : null;
     const name = typeof payload === 'string' ? payload : (payload && payload.name) || '';
@@ -271,7 +342,7 @@ export function createMusicRouter({
     return fail('not-found', name);
   }
 
-  async function stop() { pending = null; pendingDevice = null; lastReason = null; ++seq; await stopCurrent(); changed(); return { ok: true }; }
+  async function stop() { endRun(); pending = null; pendingDevice = null; lastReason = null; ++seq; await stopCurrent(); changed(); return { ok: true }; }
   async function pause() {
     const c = current;
     if (!c) return { ok: false };
@@ -309,6 +380,7 @@ export function createMusicRouter({
     bus.subscribe(MUSIC_TOPICS.pause, guard(pause)),
     bus.subscribe(MUSIC_TOPICS.resume, guard(resume)),
     bus.subscribe(MUSIC_TOPICS.confirm, guard(confirm)),
+    bus.subscribe(MUSIC_TOPICS.shuffle, guard(shuffleAll)),
     bus.subscribe(MUSIC_TOPICS.who, () => {
       if (!leader() || dead) return;
       let names = [];
@@ -318,13 +390,20 @@ export function createMusicRouter({
   ];
 
   return {
-    play, stop, pause, resume, confirm, status,
+    play, stop, pause, resume, confirm, status, shuffleAll,
     isLeader: leader,
     // desktop prompt (2026-10-10): the favourite last asked for, again - after "Try on this computer" reached its folder.
     again() { return lastEntry ? dispatch(lastEntry) : Promise.resolve({ ok: false, reason: 'nothing-asked' }); },
     // Something outside told us the thing we started has finished (the panel's own player ended).
-    ended(kind) { if (current && current.kind === kind) { current = null; changed(); } },
+    // In a run, the next favourite is chosen (note FT 3).
+    ended(kind) {
+      if (!current || current.kind !== kind) return;
+      current = null;
+      if (run) { nextInRun(run).catch((err) => console.error('music: shuffle', err)); return; }
+      changed();
+    },
     destroy() {
+      endRun();
       dead = true;
       for (const off of offs) { try { off?.(); } catch { /* gone */ } }
       const i = list.indexOf(me);

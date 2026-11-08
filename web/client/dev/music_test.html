@@ -799,6 +799,76 @@ const FAVS = normalizeFavourites([
     }
 
     // ============================================================================================
+    section('shuffle all my favourites (note FT 3): a bounded run, each by its own player');
+    {
+      const bus = createBus();
+      // A YouTube panel IS on the screen: a run must not hand its YouTube favourite there (it could not hear it end).
+      const panelLoads = [];
+      bus.subscribe('youtube/who', () => bus.publish('youtube/here', { instanceId: 'yt1' }));
+      bus.subscribe('youtube/load#yt1', (p) => panelLoads.push(p));
+      const played = [];
+      const ownYoutube = { play(src) { played.push(['yt', src.videoId]); }, stop() {} };
+      const local = {
+        async playFile(o) { played.push(['file', o.path]); return { ok: true }; },
+        async playFolder(o) { return { ok: false, reason: 'not-connected' }; },   // this one will not play
+        stop() {},
+      };
+      const spoke = [];
+      let timerFn = null, timerMs = 0, cleared = 0;
+      const favs = FAVS.filter((f) => f.id !== 'fspot');   // Spotify off here: left out so the run's choices are known
+      const r = createMusicRouter({ bus, favourites: () => favs, ownYoutube, local, say: (t) => spoke.push(t),
+        picker: createMusicPicker(), shuffleMinutes: () => 60, now: () => 1000,
+        setTimer: (fn, ms) => { timerFn = fn; timerMs = ms; return 7; }, clearTimer: () => { cleared += 1; } });
+      const first = await r.shuffleAll();
+      check('*** it starts: one favourite plays, and the run says when it ends by itself (an hour) ***',
+        first.ok && played.length === 1 && r.status().shuffle?.endsAt === 1000 + 3600000 && timerMs === 3600000, J({ first, played, s: r.status() }));
+      check('*** a YouTube favourite in a run plays in the panel\'s own player, not the YouTube panel ***',
+        panelLoads.length === 0, J(panelLoads));
+      for (let i = 0; i < 4; i++) {
+        const kind = r.status().kind;
+        r.ended(kind);
+        await tick(); await tick();
+      }
+      check('*** when one ends the next is chosen: the run goes on by itself ***', played.length === 5, J(played));
+      check('*** the folder that will not play is passed over quietly: never played, never said ***',
+        !played.some((p) => p[0] === 'folder') && !spoke.length, J({ played, spoke }));
+      check('a run never stalls on a favourite that will not play: it is still going', r.status().playing && !!r.status().shuffle);
+      timerFn();
+      await tick();
+      check('*** at the hour it stops by itself ***', !r.status().playing && !r.status().shuffle, J(r.status()));
+      await r.shuffleAll();
+      await r.play({ name: 'Morning hymn' });
+      check('a favourite asked for by name ends the run (and plays)', !r.status().shuffle && r.status().name === 'Morning hymn' && cleared >= 1);
+      await r.shuffleAll();
+      await r.stop();
+      check('Stop ends the run', !r.status().shuffle && !r.status().playing);
+      bus.publish('music/shuffle');
+      await tick(); await tick();
+      check('music/shuffle starts one too (a switch, a voice route)', !!r.status().shuffle);
+      await r.stop();
+      r.destroy();
+      // Until Stop, when the setting says so; and a list where nothing plays says so once.
+      const r2 = createMusicRouter({ bus: createBus(), favourites: () => favs, ownYoutube, local, picker: createMusicPicker(),
+        shuffleMinutes: () => 0, setTimer: () => { throw new Error('no timer wanted'); } });
+      await r2.shuffleAll();
+      check('"until Stop is pressed": no end time, no timer', !!r2.status().shuffle && r2.status().shuffle.endsAt === null);
+      r2.destroy();
+      const spoke3 = [];
+      const r3 = createMusicRouter({ bus: createBus(), favourites: () => [favs.find((f) => f.id === 'fjazz')], local,
+        picker: createMusicPicker(), say: (t) => spoke3.push(t), setTimer: () => 1, clearTimer() {} });
+      const none = await r3.shuffleAll();
+      check('*** nothing will play: the run ends and says so, ONCE ***',
+        !none.ok && none.reason === 'shuffle-none' && !r3.status().shuffle && spoke3.length === 1, J({ none, spoke3 }));
+      r3.destroy();
+      const r4 = createMusicRouter({ bus: createBus(), favourites: () => [], say: () => {} });
+      check('no favourites: said', (await r4.shuffleAll()).reason === 'shuffle-empty');
+      r4.destroy();
+      const opt = MUSIC_SETTINGS.find((s) => s.key === 'shuffleMinutes');
+      check('the panel\'s "Shuffle all plays for" row: an hour by default, and "until Stop is pressed" there to choose',
+        opt && opt.default === '60' && opt.options.some((o) => o.value === '0' && /until Stop/.test(o.label)), J(opt));
+    }
+
+    // ============================================================================================
     section('the panel: the list, the buttons, and where things play');
     const T = timers();
     const rootBus = createBus();
@@ -876,6 +946,15 @@ const FAVS = normalizeFavourites([
     rootBus.publish('music/select');
     await tick();
     check('select presses the lit one (Stop)', !probe().status.playing && audio.state()['music:mu1:local']?.active === false && alog.at(-1).startsWith('pause:'), J(probe().status));
+    // note FT 3: the panel's own "Shuffle all my favorites", right after Stop on the switch walk.
+    host.querySelector('[data-act="shuffle-all"]')?.click();
+    await tick(); await tick();
+    check('*** "Shuffle all my favorites": something plays, and the panel says when it stops by itself ***',
+      probe().status.playing && !!probe().status.shuffle && /stops by itself at/.test(host.querySelector('[data-shuffle-note]')?.textContent || ''),
+      J(probe().status));
+    host.querySelector('[data-act="stop"]')?.click();
+    await tick();
+    check('...and Stop ends it', !probe().status.playing && !probe().status.shuffle && !host.querySelector('[data-shuffle-note]'));
 
     // With a real YouTube panel on the screen, the favourite goes THERE.
     const yhost = document.getElementById('yhost');

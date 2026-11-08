@@ -92,7 +92,7 @@ import { createMusicPicker } from '../music_pick.js';
 import { panelPlays } from '../plays.js';
 import { spotifyRef, thumbOk, PREVIEW_URL } from '../recommend.js';
 import { authHeaders } from '../auth.js';
-import { createMusicRouter, NEAR_MATCH_MODES, YOUTUBE_WHERE, messageFor } from '../music_player.js';
+import { createMusicRouter, NEAR_MATCH_MODES, YOUTUBE_WHERE, messageFor, SHUFFLE_MINUTES, SHUFFLE_MINUTES_DEFAULT } from '../music_player.js';
 // play on (rows 2.61, 2.68)
 import { createEmbedPlayer, EMBED_WORDS } from '../spotify_embed.js';
 import { parsePlayOn, playOnWords, playOnChoices, sinkIdFor, refreshOutputs, watchOutputs, rememberSpotifySpeakers,
@@ -116,7 +116,16 @@ const DEFAULTS = {
   playOn: '',              // play on: '' follows the screen's Devices -> Speakers row
   whenElsewhere: 'ask',    // play on (note BK item 4)
   backupSource: '',        // backup source: '' follows the screen's "Backup folder for this screen"
+  shuffleMinutes: String(SHUFFLE_MINUTES_DEFAULT),   // note FT 3: music_player.js argues the hour
 };
+
+// (note FT 3) What a shuffle of every favourite is doing, and when it ends by itself.
+function shuffleWords(s) {
+  if (!s || !s.endsAt) return 'Shuffling every favorite, until Stop is pressed.';
+  let at = '';
+  try { at = new Date(s.endsAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }); } catch { at = ''; }
+  return at ? `Shuffling every favorite. It stops by itself at ${at}.` : 'Shuffling every favorite. It stops by itself.';
+}
 
 // The Spotify rows other than the switch show only while it is on (settings_fields.js `appliesWhen`), so the
 // standard menu is one row longer with Spotify off, not five. Their values are kept either way.
@@ -204,6 +213,11 @@ export const SETTINGS = [
   // backup source (2026-10-08): for music FILE and FOLDER favourites whose folder can't be reached. Its own default is
   // nothing - music said "not connected" before - and the screen's "Backup folder for this screen" applies unless set.
   backupPanelField({ panelDefault: BACKUP_NONE }),
+  // (note FT 3) How long "Shuffle all my favorites" plays before it stops by itself. An hour; music_player.js argues it.
+  { key: 'shuffleMinutes', label: 'Shuffle all plays for', kind: 'choice', default: String(SHUFFLE_MINUTES_DEFAULT),
+    level: 'standard',
+    options: SHUFFLE_MINUTES.map((m) => ({ value: String(m),
+      label: m === 0 ? 'until Stop is pressed' : m < 60 ? `${m} minutes` : m === 60 ? '1 hour' : `${m / 60} hours` })) },
 ];
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
@@ -325,6 +339,8 @@ registerModule(
         if (!path) return;
         folderLog.played(sourceId ? `${sourceId}:${path}` : path, { title });
       },
+      onEnded: () => router?.ended('local'),   // (note FT 3) a folder or file played out: "Playing" stops saying so
+
       ...(ctx.makeAudio ? { makeAudio: ctx.makeAudio } : {}),
       ...(ctx.resolveListing ? { resolve: ctx.resolveListing } : {}),
       ...(ctx.resolveItem ? { resolveItem: ctx.resolveItem } : {}),
@@ -341,6 +357,7 @@ registerModule(
     // ON THIS DEVICE (plays.js, row 2.58), as the YouTube panel keeps its own; the old server rows come down once.
     const playLog = panelPlays(ctx, 'spotify');
     const picker = createMusicPicker({ log: playLog });
+    const favPicker = createMusicPicker({ log: null });   // note FT 3: which favourite a shuffle of all of them plays next
     const setT = ctx.setTimer || ((fn, ms) => setTimeout(fn, ms));
     const clearT = ctx.clearTimer || ((id) => clearTimeout(id));
 
@@ -611,6 +628,11 @@ registerModule(
       nearMatch: () => (NEAR_MATCH_MODES.includes(cfg.nearMatch) ? cfg.nearMatch : 'ask'),
       instanceTopic: (id, topic) => (typeof ctx.rootBus?.instanceTopic === 'function'
         ? ctx.rootBus.instanceTopic(id, topic) : (id ? `${topic}#${id}` : topic)),
+      // (note FT 3) "Shuffle all my favorites": its own picker over the favourites, the same weights; its history is in
+      // memory for this panel's life (no second play log beside the panel's Spotify and folder ones).
+      picker: favPicker,
+      shuffleMinutes: () => Number(cfg.shuffleMinutes),
+      setTimer: setT, clearTimer: clearT,
       onChange: (s) => {
         const was = status;
         status = s;
@@ -678,7 +700,8 @@ registerModule(
         <div class="mu-list" data-list>${favs.length
           ? favs.map((f) => btn('play', f.name, ` data-id="${esc(f.id)}"`)).join('')
           : '<p class="mu-empty">No favorites yet. Add some with “Change the list”.</p>'}</div>
-        <div class="mu-btns">${btn('stop', 'Stop')}${btn('play-on', `Play on: ${playOnWords(playOnValue())}`, ' data-play-on')}${btn('edit', 'Change the list')}</div>`;
+        ${status.shuffle ? `<p class="mu-hint" data-shuffle-note role="status">${esc(shuffleWords(status.shuffle))}</p>` : ''}
+        <div class="mu-btns">${btn('stop', 'Stop')}${favs.length > 1 ? btn('shuffle-all', 'Shuffle all my favorites') : ''}${btn('play-on', `Play on: ${playOnWords(playOnValue())}`, ' data-play-on')}${btn('edit', 'Change the list')}</div>`;
     }
 
     // *** THE "PLAY ON" CHOOSER (play on, rows 2.61 and 2.68). *** One press on the panel opens it; one press on a
@@ -911,6 +934,7 @@ registerModule(
       if (!a) return;
       if (a === 'play') { router.play({ id: b.dataset.id, name: favs.find((f) => f.id === b.dataset.id)?.name }); return; }
       if (a === 'stop') { router.stop(); return; }
+      if (a === 'shuffle-all') { router.shuffleAll(); return; }   // note FT 3
       if (a === 'confirm') { router.confirm(); return; }
       if (a === 'try-here') { tryHere(); return; }   // desktop prompt
       if (a === 'decline') { router.stop(); return; }
