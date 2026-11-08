@@ -276,6 +276,15 @@ export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS, callMode = 'pa
   const faderFor = (ch) => (faderOf.has(ch) ? faderOf.get(ch) : 1);
   const floorFor = (ch) => (floorOf.has(ch) ? floorOf.get(ch) : defaultFloorOf(ch));
 
+  // *** A CEILING PER CHANNEL (quiet hours, 2026-11-07; quiet_hours.js argues it). *** "No louder than this, now", set
+  // by something on a clock, NOT by the person: so it is kept apart from the master and the faders (the person's own
+  // volumes, which a spoken "louder" moves, and which come back untouched when the ceiling is lifted). Applied LAST, after
+  // the floor: a ceiling somebody chose for the night outranks a minimum somebody chose for the day. It only ever lowers
+  // (min), never lifts a 0, and a channel with no ceiling is exactly as before. Which channels get one is the caller's
+  // choice; quiet hours never gives one to calls or the AAC voice.
+  const capOf = new Map();
+  const capValue = (v) => { const n = Number(v); return v != null && v !== '' && Number.isFinite(n) && n >= 0 && n <= 1 ? n : null; };
+
   // The mixer's half of a level: fader x master, lifted to the floor when the arbiter says the
   // source should sound. Guarded: anything that goes wrong here is the arbiter's level untouched.
   function mixed(level, ch, g) {
@@ -284,6 +293,7 @@ export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS, callMode = 'pa
       let out = level * faderValue(faderFor(ch)) * g;
       const fl = channelFloorValue(floorFor(ch), defaultFloorOf(ch));
       if (out < fl) out = fl;
+      if (capOf.has(ch) && out > capOf.get(ch)) out = capOf.get(ch);   // the ceiling, last
       if (!Number.isFinite(out)) return level;
       return Math.max(0, Math.min(1, out));
     } catch { return level; }
@@ -574,6 +584,16 @@ export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS, callMode = 'pa
       return floorOf.get(ch);
     },
     floor: (ch) => channelFloorValue(floorFor(ch), defaultFloorOf(ch)),
+    // A ceiling, 0..1, per channel (quiet hours); null (or anything not a level) takes it away. Returns what is in force.
+    setCap(ch, v) {
+      if (!ch || typeof ch !== 'string') return null;
+      const c = capValue(v);
+      const had = capOf.has(ch) ? capOf.get(ch) : null;
+      if (c == null) capOf.delete(ch); else capOf.set(ch, c);
+      if (had !== c) recompute();
+      return c;
+    },
+    cap: (ch) => (capOf.has(ch) ? capOf.get(ch) : null),
     channelOf: (id) => (sources.has(id) ? sources.get(id).channel : null),
     // What a source on `ch` would be heard at with nothing ducking it: fader x master, lifted to the
     // floor. For a sound that has no `onGain` and reads its level when it starts - the speech
@@ -606,6 +626,6 @@ export function createAudioBus({ duckTo = DUCK_TO, tiers = TIERS, callMode = 'pa
       return out;
     },
 
-    destroy() { sources.clear(); mutedOwners.clear(); levels.clear(); hushed = false; },
+    destroy() { sources.clear(); mutedOwners.clear(); levels.clear(); capOf.clear(); hushed = false; },
   };
 }

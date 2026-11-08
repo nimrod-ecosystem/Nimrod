@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>quiet_hours — what a screen does at night — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>quiet_hours — the clock, the ceiling, the rings (proposal_quiet_hours, gated)</h1>
+<div id="results"></div>
+<div id="summary">running…</div>
+<script type="module">
+import { QUIET_FIELDS, QUIET_DEFAULTS, QUIET_CAPPED, quietSettings, inQuietHours, quietRingAllows, quietDropInAnswers,
+  createQuietHours } from '../quiet_hours.js';
+import { createAudioBus } from '../audio_bus.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+const J = (v) => JSON.stringify(v);
+const at = (h, m = 0) => new Date(2026, 10, 11, h, m);
+
+try {
+  check('*** off by default ***', QUIET_DEFAULTS.quietHours === false && QUIET_FIELDS[0].default === false && quietSettings({}).on === false);
+  check('every row but the switch shows only while it is on', QUIET_FIELDS.slice(1).every((f) => f.appliesWhen({ quietHours: false }) === false && f.appliesWhen({ quietHours: true }) === true));
+  check('the defaults: 22:00 to 07:00, 40% bright, 40% loud, rings for drop-in people, a drop-in waits, 10 minutes',
+    J(quietSettings({ quietHours: true })) === J({ on: true, from: 22, to: 7, dim: 0.4, cap: 0.4, ring: 'dropin', dropIn: 'ring', liftMin: 10 }),
+    J(quietSettings({ quietHours: true })));
+  check('a broken value is its default', quietSettings({ quietHours: true, quietDim: 'loud', quietFrom: 99 }).dim === 0.4 && quietSettings({ quietFrom: 99 }).from === 22);
+
+  // The clock.
+  check('*** across midnight: 23:30 and 03:00 are quiet, 07:00 and 12:00 are not ***',
+    inQuietHours(at(23, 30), 22, 7) && inQuietHours(at(3), 22, 7) && !inQuietHours(at(7), 22, 7) && !inQuietHours(at(12), 22, 7) && inQuietHours(at(22), 22, 7));
+  check('a daytime span (13:00 to 15:30) works too, to the half hour', inQuietHours(at(15, 29), 13, 15.5) && !inQuietHours(at(15, 30), 13, 15.5) && !inQuietHours(at(12, 59), 13, 15.5));
+  check('From equal to To is never quiet (not "always")', !inQuietHours(at(3), 7, 7) && !inQuietHours(at(7), 7, 7));
+
+  // Rings.
+  const q = (ring, dropIn = 'ring') => ({ quiet: true, ring, dropIn });
+  check('*** at night, "only people who may drop in": they ring, nobody else does ***', quietRingAllows(q('dropin'), true) && !quietRingAllows(q('dropin'), false));
+  check('"everyone" and "nobody" do what they say; by day everyone rings',
+    quietRingAllows(q('all'), false) && !quietRingAllows(q('none'), true) && quietRingAllows({ quiet: false, ring: 'none' }, false));
+  check('*** a drop-in at night rings and waits by default; "as by day" answers; by day it answers ***',
+    !quietDropInAnswers(q('dropin', 'ring')) && quietDropInAnswers(q('dropin', 'day')) && quietDropInAnswers({ quiet: false, dropIn: 'ring' }));
+
+  // The controller, with the real audio bus.
+  const bus = createAudioBus({ master: 0.8 });
+  const got = {};
+  for (const [id, tier, channel] of [['vid', 'media', null], ['say', 'voice', null], ['call1', 'call', null], ['board', 'voice', 'aac'], ['beep', 'sfx', null]]) {
+    bus.register(id, { tier, ...(channel ? { channel } : {}), onGain: (l) => { got[id] = l; } });
+  }
+  let clock = at(21, 59);
+  let row = { quietHours: true };
+  let busy = false;
+  const timers = [];
+  const changes = [];
+  const qh = createQuietHours({ row: () => row, audio: bus, held: () => busy, now: () => clock, onChange: (s) => changes.push(s),
+    setTimer: (fn, ms) => { timers.push({ fn, ms }); return timers.length; }, clearTimer() {} });
+  check('the clock is read every minute (not one long timer to morning)', timers[0]?.ms === 60000);
+  check('21:59: not quiet, nothing dimmed or capped', !qh.state().quiet && qh.state().dim === 1 && QUIET_CAPPED.every((c) => bus.cap(c) === null));
+  bus.setActive('vid', true);
+  check('a video at 21:59 plays at the person\'s own volume (the master, 0.8)', Math.abs(got.vid - 0.8) < 1e-9, J(got));
+  clock = at(22, 0);
+  timers.shift().fn();
+  check('*** 22:00: quiet; the screen at 40%; the video capped at 40% ***', qh.state().quiet && qh.state().dim === 0.4 && Math.abs(got.vid - 0.4) < 1e-9, J({ s: qh.state(), got }));
+  check('*** the master is NOT written: the person\'s own volume is still 0.8 ***', bus.master() === 0.8);
+  bus.setActive('vid', false);
+  bus.setActive('call1', true);
+  check('*** a call is never capped ***', Math.abs(got.call1 - 0.8) < 1e-9 && bus.cap('call') === null, J(got));
+  bus.setActive('call1', false);
+  bus.setActive('board', true);
+  check('*** nor the AAC board\'s voice ***', Math.abs(got.board - 0.8) < 1e-9 && bus.cap('aac') === null, J(got));
+  bus.setActive('board', false);
+  bus.setActive('say', true);
+  check('spoken prompts are capped', Math.abs(got.say - 0.4) < 1e-9, J(got));
+  bus.setActive('say', false);
+  // A press lifts it for 10 minutes; then it comes back by itself.
+  qh.poke();
+  bus.setActive('vid', true);
+  check('*** a press lifts the dim and the ceiling ***', qh.state().lifted && qh.state().dim === 1 && Math.abs(got.vid - 0.8) < 1e-9, J({ s: qh.state(), got }));
+  clock = at(22, 11);
+  timers.shift().fn();
+  check('*** ...and 10 minutes later it is back by itself, no press needed ***', !qh.state().lifted && qh.state().dim === 0.4 && Math.abs(got.vid - 0.4) < 1e-9, J(qh.state()));
+  // A call or ring lifts it for its whole length.
+  busy = true;
+  qh.refresh();
+  check('*** a ring or a call lifts it for as long as it lasts (no caller\'s face at 40%) ***', qh.state().lifted && qh.state().dim === 1);
+  busy = false;
+  qh.refresh();
+  check('...and when it ends, quiet again', qh.state().dim === 0.4);
+  // Morning.
+  clock = at(7, 0);
+  timers.shift().fn();
+  check('*** 07:00: morning; the ceiling comes off and the day\'s volume is exactly as it was ***',
+    !qh.state().quiet && QUIET_CAPPED.every((c) => bus.cap(c) === null) && Math.abs(got.vid - 0.8) < 1e-9, J(got));
+  check('a press by day changes nothing', qh.poke() === false);
+  // 100% means not capped; turned off means nothing.
+  clock = at(23, 0); row = { quietHours: true, quietCap: 1, quietDim: 1 };
+  timers.shift().fn();
+  check('"100%" rows: quiet, but nothing dimmed or capped', qh.state().quiet && qh.state().dim === 1 && bus.cap('media') === null);
+  row = { quietHours: false };
+  qh.refresh();
+  check('turned off at night: nothing at all', !qh.state().quiet && bus.cap('media') === null);
+  check('every change was told', changes.length >= 6, String(changes.length));
+  row = { quietHours: true };
+  qh.refresh();
+  qh.destroy();
+  check('destroyed: the ceilings are taken away', QUIET_CAPPED.every((c) => bus.cap(c) === null));
+  check('the bus: a ceiling never lifts a 0, and a broken one is none', (() => { const b = createAudioBus(); return b.setCap('media', 'x') === null && b.cap('media') === null && b.setCap('media', 0.3) === 0.3; })());
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+const s = document.getElementById('summary');
+s.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+s.className = failed ? 'fail' : 'pass';
+s.dataset.done = 'true'; s.dataset.failed = String(failed);
+</script>
+</body>
+</html>
