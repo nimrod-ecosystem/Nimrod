@@ -418,6 +418,10 @@
     border:1px solid rgba(255,255,255,.14);border-radius:14px;padding:8px 12px;z-index:var(--z-transport);
     transition:opacity .3s ease}
   .k-controls.hidden{opacity:0;pointer-events:none}
+  /* THE BAR'S SIZE (2026-11-08, kiosk.js BAR_SIZE_FIELD): both bars zoomed as one, words and gaps with them. The width
+   * allowance is divided by the same number, so a bigger bar still wraps inside the screen instead of running off it. */
+  .kiosk[data-bar-size] .k-controls,.kiosk[data-bar-size] .tb-bar{zoom:var(--bar-zoom,1)}
+  .kiosk[data-bar-size] > .k-controls{max-width:calc((100% - 4.4vmin) / var(--bar-zoom,1));max-height:calc(40vh / var(--bar-zoom,1))}
   /* bar toggle (2026-10-06, bar_toggle.js): put away by its key. Over the plain bar's solid look too (`.k-plain` keeps
      opacity 1 on purpose); `visibility`, not `display`, so the bar's own box still says where "near the bar" is. */
   .kiosk > .k-controls.k-bar-hidden{visibility:hidden;pointer-events:none}

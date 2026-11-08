@@ -430,6 +430,41 @@ const mouseNearBar = async (bar) => {
     root.querySelector('.k-controls [data-act="gohome"]').click();
     await sleep(50);
     check('*** a screen let in by its own key: no page opened (it stays on its dashboards, going to its first) ***', opened.length === 0, J(opened));
+    // (Mike, 2026-11-08: "The home button on the transport bar doesn't do anything.") Already on the first dashboard,
+    // the press said nothing and changed nothing. Now it always answers, and brings a bigger panel back down.
+    check('*** Home on the first dashboard is never silent: it says where it is ***',
+      /^Home: /.test(root.querySelector('[data-lock-note]')?.textContent || ''), root.querySelector('[data-lock-note]')?.textContent || '(no note)');
+    k.promote?.();
+    await sleep(30);
+    const upBefore = !!root.querySelector('.kiosk[data-promoted]') || !!root.querySelector('.kiosk [data-promoted]');
+    root.querySelector('.k-controls [data-act="gohome"]').click();
+    await sleep(50);
+    check('...and a panel made bigger comes back down', !root.querySelector('.kiosk[data-promoted]'), `was up: ${upBefore}`);
+    // (Mike, 2026-11-08: "I need a way to resize the transport bar. It looks very small on the TV." and "How do I turn on
+    // the setting for the big cursor?") Both through the menu, as a person would.
+    {
+      const kEl = root.querySelector('.kiosk');
+      const barEl = root.querySelector('.k-controls');
+      const w0 = barEl.getBoundingClientRect().height;
+      k.menu.open();
+      k.menu.setChooseMode('step');
+      const walkTo = (id) => { k.menu.showTab('devices'); for (let i = 0; i < 200 && k.menu.focusId() !== id; i += 1) k.menu.next(); return k.menu.focusId() === id; };
+      const hint = (id) => k.menu.items().find((r) => r.id === id)?.hint;
+      check('"Size of the bar" is in the menu, Normal by default', walkTo('set:barSize') && hint('set:barSize') === 'Normal', hint('set:barSize'));
+      for (let i = 0; i < 5 && hint('set:barSize') !== '200%'; i += 1) k.menu.select();
+      await sleep(80);
+      check('*** stepped to 200%: the bar wears it, and is drawn bigger ***',
+        kEl.dataset.barSize === '2' && getComputedStyle(barEl).zoom === '2', `${kEl.dataset.barSize} zoom ${getComputedStyle(barEl).zoom} h ${w0}`);
+      for (let i = 0; i < 5 && hint('set:barSize') !== 'Normal'; i += 1) k.menu.select();
+      await sleep(50);
+      check('...and back to Normal: nothing on it', !kEl.dataset.barSize);
+      check('"Show a big cursor" is in the menu', walkTo('set:cursor_show'), k.menu.focusId());
+      for (let i = 0; i < 4 && !/^always/.test(hint('set:cursor_show') || ''); i += 1) k.menu.select();
+      await sleep(80);
+      check('*** set to "always, including with a mouse": saved where the screen\'s cursor reads it ***',
+        /^always/.test(hint('set:cursor_show') || ''), hint('set:cursor_show'));
+      k.menu.close();
+    }
     k.destroy(); root.innerHTML = '';
   }
 

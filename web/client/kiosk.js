@@ -207,6 +207,18 @@ import { mountSettings, resolveLevel, levelFieldItems, createLocalRow, LEVEL_ORD
 // The order the LOOK (theme, panel backgrounds, panel spacing) is resolved in: the person this screen is for first
 // (row 2.164, Mike 2026-11-02), then the nearest level set. Argued where it is used (shownPanelSurface).
 export const LOOK_ORDER = Object.freeze(['person', 'dashboard', 'screen', 'device']);
+
+// *** THE BAR'S SIZE (Mike, 2026-11-08: "I need a way to resize the transport bar. It looks very small on the TV."). ***
+// One number for both bars (the plain `.k-controls` and a placed `.tb-bar`), as a CSS zoom (kiosk.css), so the buttons,
+// their words, the gaps and the corners grow together and nothing is re-laid out by hand. Normal (100%) by default:
+// every screen looks as it did. Up to 250%: a TV seen from a bed across a room. The bar still wraps inside the screen
+// (kiosk.css divides its width allowance by the same number).
+export const BAR_SIZES = Object.freeze([1, 1.25, 1.5, 2, 2.5]);
+export const BAR_SIZE_FIELD = Object.freeze({ key: 'barSize', label: 'Size of the bar', kind: 'choice', default: 1, level: 'standard',
+  options: BAR_SIZES.map((v) => ({ value: v, label: v === 1 ? 'Normal' : `${Math.round(v * 100)}%` })),
+  note: 'Bigger buttons for a screen seen from across a room, like a TV.' });
+/** The bar's size from a screen's row: one of BAR_SIZES, else 1. Pure. */
+export const barSizeOf = (row) => { const n = Number(row && row.barSize); return BAR_SIZES.includes(n) ? n : 1; };
 import { LAYERS } from './layers.js';
 import { fieldsFor, fieldItems, normalizeField, CHOOSE_MODE_FIELD, CHOOSE_MODE_KEY, chooseModeOf, chooseModeFrom, showsAtLevel, keepFields } from './settings_fields.js';
 // LIVE AND BETA (2026-10-14): the person's "Beta things" row, and a beta panel says so in its own settings.
@@ -234,7 +246,7 @@ import { nextAction, applied, cleared, chooseFallback, DEFAULT_POLICY,
          RECOVERY_SETTINGS } from './recovery.js';
 import { listManifests } from './module.js';
 import { mountInputRuntime, INPUTS_KEY, RECORD_VERSION } from './input_runtime.js';
-import { mountCursor } from './cursor.js';
+import { mountCursor, SETTINGS as CURSOR_SETTINGS } from './cursor.js';
 import { createMicOwner } from './mic_owner.js';
 import { DEFAULT_BINDINGS, isTyping, keyControl, KEYBOARD_DEVICE } from './input_keyboard.js';
 import { attachDriveToBus, connectDrive } from './drive.js';
@@ -2601,6 +2613,14 @@ export async function mountKiosk(root, {
     }
     themeDoc().set({ [key]: value });
   }
+  // (2026-11-08) "Size of the bar" (BAR_SIZE_FIELD): the zoom both bars wear (kiosk.css), on the kiosk box.
+  function applyBarSize(s) {
+    try {
+      const z = barSizeOf(s || {});
+      if (z === 1) { delete kioskEl.dataset.barSize; kioskEl.style.removeProperty('--bar-zoom'); }
+      else { kioskEl.dataset.barSize = String(z); kioskEl.style.setProperty('--bar-zoom', String(z)); }
+    } catch (err) { console.error('kiosk: bar size', err); }
+  }
   function shownPanelSurface(s) {
     const L = levelLayers();
     if (s && typeof s === 'object') L.screen = s;
@@ -2830,7 +2850,9 @@ export async function mountKiosk(root, {
     // later, once a setting actually changes, by which point it exists.
     pokeBurnIn();
     try { quiet?.refresh(); } catch (err) { console.error('kiosk: quiet hours', err); }   // quiet hours: a row changed
+    applyBarSize(s);   // (2026-11-08) the bar's size
   });
+  applyBarSize(settings.get());
   settings.startPolling();
 
   // A LAYOUT, if the composer saved one. It wins for whatever it places: a module sitting
@@ -3246,7 +3268,17 @@ export async function mountKiosk(root, {
   /** Home: the dashboard this screen started on, and the trail cleared. (Row 2.89: "started on" survives a switch that
    *  reloaded - `homeProfileId`, carried in the trail - so Home after a switch is still the first dashboard.) */
   async function goHomeScreen() {
-    if (profileId === homeProfileId) { screenStack.length = 0; drawCrumbs(); return profileId; }
+    if (profileId === homeProfileId) {
+      screenStack.length = 0; drawCrumbs();
+      // (Mike, 2026-11-08: "The home button on the transport bar doesn't do anything.") Already on the first dashboard,
+      // a press did nothing at all. Home now puts it back the way it starts -- every level made bigger comes down (a
+      // panel taken full screen, a module opened by voice or from a book) -- and always says where it is, so a press
+      // is never silent. Up to four levels: more than any screen has; a bound so a level that will not go cannot loop.
+      let downs = 0;
+      try { while (downs < 4 && promotedAny() && demotePanel()) downs += 1; } catch { /* declared later; nothing up */ }
+      try { sayNote(`Home: ${crumbName(homeProfileId, screenNames) || 'this screen’s first dashboard'}.`); } catch { /* a courtesy */ }
+      return profileId;
+    }
     return switchScreen(homeProfileId, { remember: false, home: true });
   }
   /** ⌂ HOME ON THE BAR (row 2.172): "your home page". Signed in in a browser: the Home page (/home), where signing in
@@ -4188,6 +4220,7 @@ export async function mountKiosk(root, {
     // bar toggle (2026-10-06): the bar's key and whether it comes up by itself, under "The bar" on Devices.
     [BAR_QUIET_FIELD.key]: ['devices', 2], [BAR_SELF_FIELD.key]: ['devices', 2],
     [ARRANGE_OPEN_FIELD.key]: ['devices', 2],   // (row 2.191) under "The bar", with how it comes and goes
+    [BAR_SIZE_FIELD.key]: ['devices', 2],   // (2026-11-08) the bar's size, under "The bar"
     [BAR_PLAY_FIELD.key]: ['devices', 2],   // bar while playing (row 2.65): under "The bar" with the other two
     // play on (row 2.68, Mike: "Speakers should be under devices"): under "Speakers", after the rest of Devices.
     ...Object.fromEntries(SPEAKER_KINDS.map((k) => [k.key, ['devices', 4]])),
@@ -4795,6 +4828,9 @@ export async function mountKiosk(root, {
     { ...BAR_SELF_FIELD, options: BAR_SELF_FIELD.options.map((o) => ({ ...o })) },
     // (row 2.191) "Arrange buttons on the bar": folded behind "Arrange ▸" (default) or always shown.
     { ...ARRANGE_OPEN_FIELD, default: !!arrangeOpenDefault },
+    // (Mike, 2026-11-08: "I need a way to resize the transport bar. It looks very small on the TV.") The SCREEN's, like
+    // the other bar rows: a TV across a room and a monitor at arm's length want different sizes. Normal by default.
+    BAR_SIZE_FIELD,
     // bar while playing (row 2.65; bar_toggle.js argues the default): the screen's too, for the same reason.
     { ...BAR_PLAY_FIELD, options: BAR_PLAY_FIELD.options.map((o) => ({ ...o })) },
     // play on (row 2.68; speakers.js argues the rows): where this screen's music goes. Its first choice is the computer's
@@ -7620,6 +7656,20 @@ export async function mountKiosk(root, {
       // to mean hand-writing state; now it is one press, which is what "turn it on for the
       // bench first" has to mean in practice. Written to the same profile settings blob the
       // engine reads, so there is one source of truth rather than two.
+      // *** THE BIG CURSOR (Mike, 2026-11-08: "How do I turn on the setting for the big cursor like we used to have for
+      // the comet game?"). *** The screen has drawn it all along (cursor.js, mounted below, reading `cursor`), but its
+      // rows were only on the Talk page: nothing on a screen's own menu could turn it on. Here, on Devices, the same
+      // four rows cursor.js declares, written to the same `cursor` the screen reads. Keys prefixed so they cannot meet
+      // another row's `size` or `color`. "always, including with a mouse" is the choice for a mouse on a TV.
+      ...(!embedded ? tagged([{ kind: 'heading', id: 'cursor-head', label: 'Big cursor' },
+        ...fieldItems(CURSOR_SETTINGS.map((f) => normalizeField({ ...f, key: `cursor_${f.key}` })).filter(Boolean), {
+          values: () => Object.fromEntries(Object.entries((settings.get() || {}).cursor || {}).map(([k, v]) => [`cursor_${k}`, v])),
+          level: complexity(),
+          onStep: (key, value) => {
+            const cur = (settings.get() || {}).cursor || {};
+            settings.set({ cursor: { ...cur, [String(key).replace(/^cursor_/, '')]: value } });
+          },
+        })], 'devices', 6) : []),
       ...tagged([{ kind: 'heading', id: 'recovery-head', label: 'When something stops working' },
         ...fieldItems(RECOVERY_SETTINGS.map(normalizeField).filter(Boolean), {
           values: () => (settings.get() || {}).recovery || {},
