@@ -513,6 +513,62 @@ try {
   }
 
   // =====================================================================================
+  section('*** a preset (note FT 2): items set once on the Media page, used by any panel that picks it ***');
+  {
+    // One person's `presets` document, shared by every handle (as the server's row is).
+    let doc = { presets: [
+      { id: 'pr1', type: 'archive', name: 'Old radio', settings: { items: 'OTRR_Test_Radio' } },
+      { id: 'pr2', type: 'archive', name: 'Old TV', settings: { items: 'TestTVSeries1' }, isDefault: true },
+      { id: 'pr3', type: 'youtube', name: 'Cartoons', settings: { playlist: [] } },
+    ] };
+    const subs = new Set();
+    const makePersonState = (pid, key) => {
+      let mine = null;
+      return { load: async () => {}, get: () => doc, startPolling() {}, flush: async () => {},
+        set(p) { doc = { ...doc, ...p }; for (const f of [...subs]) f(doc); },
+        subscribe(f) { mine = f; subs.add(f); return () => subs.delete(f); }, destroy() { if (mine) subs.delete(mine); } };
+    };
+    const extra = (more = {}) => ({ speakersOffline: true, archiveFetch: stubFetch(DB), makeMedia: fakeMedia().factory,
+      personId: 'p1', makePersonState, ...more });
+    forgetItemsForTest();
+    const r = rig(TYPE, { saved: { presetId: 'pr1', items: 'alicebook00' }, extra: extra() });
+    await sleep(30);
+    check('*** a panel that picks a preset plays the PRESET\'s items, not its own ***', J(r.probe().ids) === J(['OTRR_Test_Radio']), J(r.probe()));
+    const choices = r.inst.impl.settingsChoices?.() || {};
+    check('the "Use a saved preset" row lists this person\'s Internet Archive presets only',
+      J((choices.presetId || []).map((c) => c.label)) === J(['Old radio', 'Old TV']), J(choices.presetId));
+    r.host.querySelector('[data-act="edit"]').click();
+    check('*** "Change the list" says the items are the preset\'s, and where to change them; nothing to add here ***',
+      !!r.host.querySelector('[data-ia-from-preset]') && /Old radio/.test(r.host.textContent) && /Media page/.test(r.host.textContent)
+      && !r.host.querySelector('[data-ia-add]'));
+    // The preset changed on the Media page: the panel follows.
+    doc.presets[0] = { ...doc.presets[0], settings: { items: 'OTRR_Test_Radio TestTVSeries1' } };
+    for (const f of [...subs]) f(doc);
+    await sleep(20);
+    check('*** the preset changed somewhere else: the panel has the new items ***', J(r.probe().ids) === J(['OTRR_Test_Radio', 'TestTVSeries1']), J(r.probe().ids));
+    r.setCfg({ presetId: '' });
+    await sleep(20);
+    check('"No preset": the panel\'s own items again, kept all along', J(r.probe().ids) === J(['alicebook00']), J(r.probe().ids));
+    r.inst.destroy();
+    forgetItemsForTest();
+    const r2 = rig(TYPE, { saved: {}, extra: extra() });
+    await sleep(30);
+    check('*** nothing of its own and no preset picked: the person\'s DEFAULT Internet Archive preset ***', J(r2.probe().ids) === J(['TestTVSeries1']), J(r2.probe()));
+    r2.inst.destroy();
+    forgetItemsForTest();
+    const r3 = rig(TYPE, { saved: { items: 'alicebook00' }, extra: extra() });
+    await sleep(30);
+    check('...but a panel with its own items keeps them over the default', J(r3.probe().ids) === J(['alicebook00']));
+    r3.inst.destroy();
+    forgetItemsForTest();
+    const r4 = rig(TYPE, { saved: { presetId: 'pr1' }, extra: { speakersOffline: true, archiveFetch: stubFetch(DB), makeMedia: fakeMedia().factory } });
+    await sleep(20);
+    check('a screen with nobody set (no presets to read): its own items, as before', r4.probe().ids.length === 0);
+    r4.inst.destroy();
+    check('the items row hides while a preset is picked', SETTINGS.find((s) => s.key === 'items').appliesWhen({ presetId: 'pr1' }) === false);
+  }
+
+  // =====================================================================================
   section('*** a Music favourite can be an Internet Archive item ***');
   {
     const S = (u) => J(parseSource(u));

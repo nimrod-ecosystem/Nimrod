@@ -284,6 +284,7 @@ export function mountMedia(root, {
             <select data-preset-type aria-label="which module this preset is for">
               <option value="youtube">YouTube</option>
               <option value="lineup">Lineup (turns between modules, by day and time)</option>
+              <option value="archive">Internet Archive (old films, radio, music and books)</option>
             </select>
           </label>
           <!-- Row 2.22 (Mike, 2026-10-14): "replace the one on the media page with the one from the Youtube settings".
@@ -502,6 +503,11 @@ export function mountMedia(root, {
       if (list.some((e) => e && e.module === 'dashboard')) askDashboards();
       const board = (id) => (knownDashboards ? (knownDashboards.find((d) => d && d.id === id)?.name || '') : 'a dashboard');
       return list.length ? list.map((e) => entryWords(e, { presetName: name, showName: board })).join(' · ') : 'no turns yet';
+    }
+    // (note FT 2) The Internet Archive: how many items.
+    if (p.type === 'archive') {
+      const n = String(s.items || '').split(/[\s,;]+/).filter(Boolean).length;
+      return n ? `${n} item${n === 1 ? '' : 's'}` : 'no items yet';
     }
     const n = Array.isArray(s.playlist) ? s.playlist.length : 0;
     const sched = Array.isArray(s.schedule) ? s.schedule.length : 0;

@@ -698,6 +698,30 @@ section('*** presets — a Lineup turn can be a whole dashboard (Mike, 2026-10-1
   presets.destroy();
 }
 
+section('*** presets — an Internet Archive preset (row 2.247, note FT 2: "should also offer ... Internet Archive") ***');
+{
+  const presets = createPresetLibrary({ makeState: () => fakePresetState() });
+  const p = mount({ client: fakeClient([]), folders: fakeFolders(), resolve: okListing(0), presets });
+  await p.refresh();
+  const typeSel = host.querySelector('[data-preset-type]');
+  check('the module dropdown offers the Internet Archive', [...typeSel.options].some((o) => o.value === 'archive'));
+  typeSel.value = 'archive'; typeSel.dispatchEvent(new Event('change', { bubbles: true }));
+  await settle();
+  const box = host.querySelector('[data-preset-editor] [data-ia-preset-items]');
+  check('*** it gets its own form: the items, one on each line ***', !!box);
+  box.value = 'https://archive.org/details/OTRR_Test_Radio\nTestTVSeries1\nhttps://example.com/elsewhere';
+  box.dispatchEvent(new Event('input', { bubbles: true }));
+  check('...which says how many are items, and how many are not', /2 items · 1 not an Internet Archive address/.test(text(host.querySelector('[data-ia-preset-note]'))),
+    text(host.querySelector('[data-ia-preset-note]')));
+  host.querySelector('[data-preset-name]').value = 'Old radio';
+  host.querySelector('[data-preset-save]').click();
+  await settle();
+  const saved = presets.listPresets('archive')[0];
+  check('*** saved as an Internet Archive preset, by item name only ***', saved && saved.settings.items === 'OTRR_Test_Radio, TestTVSeries1', JSON.stringify(saved));
+  check('...and its card says how many', /2 items/.test(text(host.querySelector('[data-preset-list]'))), text(host.querySelector('[data-preset-list]')));
+  presets.destroy();
+}
+
 section('presets — the module itself keeps behaving with an injected library present');
 {
   // Not a regression test for youtube.js (that lives in youtube_test.html) — just proof that

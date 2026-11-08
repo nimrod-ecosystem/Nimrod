@@ -49,6 +49,10 @@ import { autostartFields, shouldAutostart, panelAlone, createPlayReporter } from
 import { parsePlayOn, playOnWords, playOnChoices, sinkIdFor, refreshOutputs, watchOutputs, PLAY_ON_HERE } from '../speakers.js';
 import { DOWN_AFTER_FAILURES, SOURCE_RECHECK_MS } from '../media_sources.js';
 import { stallFields, createStallReporter } from '../playback_stall.js';
+// (row 2.247, note FT 2; the gate: "An Internet Archive preset is fine (PRESET_KEYS `items`)") a preset's items, set once
+// on the Media page and used by any Internet Archive panel that picks it - YouTube's preset pattern (youtube.js).
+import { createPresetLibrary } from '../presets.js';
+import { followPerson } from '../person_known.js';
 import {
   parseArchiveId, parseItemList, itemListText, fetchItem, playableFiles, itemView, whatItHolds, itemType,
   embedUrl, tileUrl, itemAddress, ARCHIVE_MESSAGES, FILES_MAX_DEFAULT, FRAME_FOR, ITEMS_MAX, searchArchive, searchKindWords,
@@ -62,6 +66,7 @@ export const KEYS_BACK_MS = 10 * 60 * 1000;
 
 export const DEFAULTS = Object.freeze({
   items: '',
+  presetId: '',
   autostart: true,
   autostartAlone: 'same',
   autoNext: true,
@@ -76,8 +81,13 @@ export const DEFAULTS = Object.freeze({
 });
 
 export const SETTINGS = [
+  // (note FT 2) A LIVE choice: this person's saved Internet Archive presets (`settingsChoices`), as YouTube's row is. A
+  // panel that picks one plays the preset's items; its own items are kept and come back when it picks none. A panel that
+  // picks nothing and has no items of its own uses the person's default Internet Archive preset, if there is one.
+  { key: 'presetId', label: 'Use a saved preset', kind: 'choice', default: '', level: 'standard',
+    emptyLabel: 'No preset. This panel’s own items' },
   { key: 'items', label: 'Items from the Internet Archive', kind: 'text', default: '', level: 'standard',
-    placeholder: 'archive.org/details/…',
+    placeholder: 'archive.org/details/…', appliesWhen: (v) => !v?.presetId,
     note: 'Paste an address from archive.org, or type an item’s name (the part after /details/). Put a comma between '
       + 'several. “Change the list” on the panel does the same.' },
   ...autostartFields({ on: true }),
@@ -231,6 +241,35 @@ registerModule(
     let offOutputs = null;
     const win = (mount.ownerDocument && mount.ownerDocument.defaultView) || (typeof window !== 'undefined' ? window : null);
     const doc = mount.ownerDocument || (typeof document !== 'undefined' ? document : null);
+
+    // ---- presets (note FT 2): whose, decided when the screen knows (person_known.js), as YouTube's -------------------
+    let presetsLib = null;
+    let knownPresets = [];
+    let offPerson = null;
+    function activePreset() {
+      if (!presetsLib) return null;
+      if (!cfg.presetId) {
+        if (parseItemList(cfg.items).length) return null;   // the panel's own items come first
+        const d = presetsLib.defaultFor?.(TYPE);
+        return d && d.type === TYPE ? d : null;
+      }
+      const p = presetsLib.getPreset(cfg.presetId);
+      return p && p.type === TYPE ? p : null;
+    }
+    const effectiveItems = () => { const p = activePreset(); return p ? String(p.settings?.items || '') : cfg.items; };
+    function usePresets(pid) {
+      if (dead) return;
+      try { presetsLib?.destroy(); } catch { /* gone */ }
+      presetsLib = pid && typeof ctx.makePersonState === 'function'
+        ? createPresetLibrary({ makeState: (key, opts) => ctx.makePersonState(pid, key, opts) }) : null;
+      knownPresets = [];
+      const lib = presetsLib;
+      if (!lib) { readCfg(rawRow); return; }
+      const changed = () => { if (lib !== presetsLib || dead) return; knownPresets = lib.listPresets(); readCfg(rawRow); };
+      Promise.resolve(lib.load()).then(changed).catch((e) => console.error('archive: presets load', e));
+      lib.subscribe?.(changed);
+      lib.startPolling?.();
+    }
 
     const num = (v, d, lo, hi) => { const n = Number(v); return Number.isFinite(n) ? Math.max(lo, Math.min(hi, n)) : d; };
     const volume = () => num(cfg.volume, 100, VOLUME_MIN, 100) / 100;
@@ -536,7 +575,7 @@ registerModule(
       rawRow = snap && typeof snap === 'object' ? snap : {};
       cfg = { ...DEFAULTS, ...(snap || {}) };
       stallReport.refresh();
-      const list = parseItemList(cfg.items);
+      const list = parseItemList(effectiveItems());   // note FT 2: a chosen preset's items, else the panel's own
       listNote = { bad: list.bad, over: list.over };
       const next = [...list];
       const changed = next.join('|') !== ids.join('|');
@@ -616,6 +655,17 @@ registerModule(
         ${lines.join('')}`;
     }
     function editHtml() {
+      const preset = activePreset();
+      if (preset) {
+        // note FT 2: a preset's items are changed where the preset is, so every panel using it changes together.
+        const rowsP = ids.map((id) => `<li><span><b>${esc(titles[id] || id)}</b></span></li>`).join('');
+        return `<div class="ia-edit" data-ia-edit data-ia-from-preset>
+            <p class="ia-hint">These items are from the preset “${esc(preset.name)}”. Change them on the Media page, or choose
+              “No preset” in this panel’s settings to use its own.</p>
+            <ul class="ia-list" data-ia-list>${rowsP || '<li class="ia-hint">The preset has no items yet.</li>'}</ul>
+            <div class="ia-btns">${btn('close', 'Done')}</div>
+          </div>`;
+      }
       const rows = ids.map((id, i) => `<li><span><b>${esc(titles[id] || id)}</b> · <span class="ia-hint">${esc(itemAddress(id))}</span></span>
           ${btn('show', 'Show it', ` data-index="${i}"`)}${btn('remove', 'Remove', ` data-id="${esc(id)}"`)}</li>`).join('');
       return `<div class="ia-edit" data-ia-edit>
@@ -643,6 +693,7 @@ registerModule(
       try { state?.set?.({ items: itemListText(next) }); } catch { /* not saved */ }
     }
     async function addFromDraft() {
+      if (activePreset()) return;   // note FT 2: the preset's items are changed on the Media page
       const id = parseArchiveId(draft);
       if (!id) { editMsg = ARCHIVE_MESSAGES['archive-bad-id']; render(); return; }
       if (ids.includes(id)) { editMsg = 'That item is already in the list.'; render(); return; }
@@ -661,6 +712,7 @@ registerModule(
       else render();
     }
     function removeId(id) {
+      if (activePreset()) return;   // note FT 2
       const was = currentId();
       const next = ids.filter((x) => x !== id);
       saveIds(next);
@@ -762,6 +814,8 @@ registerModule(
         bus.subscribe(`${TYPE}/pause`, () => api.pause());
         bus.subscribe(`${TYPE}/select`, () => api.select());
         bus.subscribe(`${TYPE}/item`, () => api.nextItem());
+        // note FT 2: the person's presets, for whoever the screen is for (and again if that changes).
+        offPerson = followPerson(ctx, (pid) => usePresets(pid));
       },
       onResize() {},
       onHide() { stallReport.gone(); state?.flush?.(); },
@@ -769,6 +823,9 @@ registerModule(
         stallReport.gone();
         dead = true;
         loadGen += 1;
+        try { offPerson?.(); } catch { /* gone */ }
+        try { presetsLib?.destroy(); } catch { /* gone */ }
+        presetsLib = null;
         if (retryTimer != null) { try { clearT(retryTimer); } catch { /* gone */ } }
         if (keysTimer != null) { try { clearT(keysTimer); } catch { /* gone */ } }
         try { win?.removeEventListener?.('blur', onWinBlur); win?.removeEventListener?.('focus', onWinFocus); } catch { /* gone */ }
@@ -803,13 +860,15 @@ registerModule(
         const out = [{ kind: 'heading', id: 'ia-found', label: found.busy ? `Searching the Internet Archive for \u201c${found.q}\u201d\u2026` : `Found on the Internet Archive for \u201c${found.q}\u201d` }];
         if (found.words) out.push({ kind: 'item', id: 'ia-found:words', label: found.words, disabled: true });
         const have = parseItemList(cfg.items);
+        const preset = activePreset();   // note FT 2: nothing is added to a preset from a panel
         for (const it of found.items) {
           const added = have.includes(it.id);
-          out.push({ kind: 'item', id: `ia-found:${it.id}`, label: added ? `Added: ${it.title}` : `Add ${it.title}`, disabled: added,
-            hint: [searchKindWords(it.kind), it.creator].filter(Boolean).join(', '),
+          out.push({ kind: 'item', id: `ia-found:${it.id}`, label: added ? `Added: ${it.title}` : `Add ${it.title}`, disabled: added || !!preset,
+            hint: preset ? `this panel plays the preset “${preset.name}”; add it there, on the Media page`
+              : [searchKindWords(it.kind), it.creator].filter(Boolean).join(', '),
             run: () => {
               const now = parseItemList(cfg.items);
-              if (now.includes(it.id) || now.length >= ITEMS_MAX) return;
+              if (activePreset() || now.includes(it.id) || now.length >= ITEMS_MAX) return;
               titles[it.id] = titles[it.id] || it.title;
               try { state?.set?.({ items: itemListText([...now, it.id]) }); } catch { /* not saved */ }
             } });
@@ -822,6 +881,7 @@ registerModule(
       settingsChoices() {
         const out = {
           playOn: playOnChoices({ inherit: `As Devices → Speakers says (${playOnWords(screenRoute() || PLAY_ON_HERE)})`, spotifyOn: false }),
+          presetId: knownPresets.filter((p) => p && p.type === TYPE).map((p) => ({ value: p.id, label: p.name })),   // note FT 2
         };
         if (ids.length) {
           const named = ids.map((id) => titles[id] || id);

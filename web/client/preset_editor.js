@@ -17,12 +17,15 @@
 import { mountModule } from './module.js';
 import { createBus } from './bus.js';
 import './modules/youtube.js';   // registers 'youtube'
+import { parseItemList, itemListText, ITEMS_MAX } from './archive_org.js';   // note FT 2: the Internet Archive's form
 import { LINEUP_TYPE, LINEUP_MODULES, OFTEN_LABELS, OFTEN_DEFAULT, DAY_LABELS, cleanEntries, OFTEN as OFTEN_NUMBERS } from './lineup.js';
 
 export const PRESET_KEYS = Object.freeze({
   youtube: Object.freeze(['playlist', 'playlistId', 'schedule', 'shuffle']),
   // A Lineup (row 2.87, lineup.js): its entries, one per line.
   lineup: Object.freeze(['entries']),
+  // (row 2.247, note FT 2) The Internet Archive: its items (modules/archive.js reads them from a chosen preset).
+  archive: Object.freeze(['items']),
 });
 export const PRESET_EDITOR_TYPES = Object.freeze(Object.keys(PRESET_KEYS));
 
@@ -48,6 +51,7 @@ export function mountPresetEditor(host, { type = 'youtube', settings = {}, onCha
   if (!host) throw new Error('mountPresetEditor: a host element is required');
   if (!PRESET_KEYS[type]) throw new Error(`mountPresetEditor: no preset form for "${type}"`);
   if (type === LINEUP_TYPE) return mountLineupForm(host, { settings, onChange, presets, dashboards });
+  if (type === 'archive') return mountArchiveForm(host, { settings, onChange });
   // `directed` + no autoAdvance: the module waits to be told to play, and nobody tells it.
   let draft = { ...presetSettingsFrom(type, settings), directed: true, autoAdvance: false };
   const subs = new Set();
@@ -210,6 +214,43 @@ function mountLineupForm(host, { settings = {}, onChange = null, presets = [], d
     // The account's dashboards arrived (or changed): the "Shows" lists are drawn again, nothing chosen is lost.
     setDashboards: (list) => { boards = Array.isArray(list) ? list : []; draw(); },
     destroy: () => { host.removeEventListener('change', onInput); host.removeEventListener('click', onClick); host.replaceChildren(); host.classList.remove('preset-editor'); },
+  };
+}
+
+// ---- THE INTERNET ARCHIVE'S FORM (row 2.247, note FT 2) -----------------------------------------------------------
+// The items, one per line (or with commas), as the panel's own "Items" row takes them: an archive.org address or an
+// item's name. Plain, not the panel mounted: the panel reads archive.org as it draws, and a form has nothing to play.
+// It says how many are Internet Archive items and how many are not, as the panel does.
+function mountArchiveForm(host, { settings = {}, onChange = null } = {}) {
+  let text = parseItemList(settings && settings.items).join('\n');
+  const values = () => ({ items: itemListText(parseItemList(text)) });
+  function noteHtml() {
+    const list = parseItemList(text);
+    const parts = [`${list.length} item${list.length === 1 ? '' : 's'}`];
+    if (list.bad) parts.push(`${list.bad} not an Internet Archive address`);
+    if (list.over) parts.push(`${list.over} more than ${ITEMS_MAX}, left off`);
+    return esc(parts.join(' · '));
+  }
+  host.classList.add('preset-editor');
+  host.innerHTML = `<div class="ia-form" style="display:flex;flex-direction:column;gap:.4em">
+    <label for="ia-preset-items">Items from the Internet Archive, one on each line</label>
+    <textarea id="ia-preset-items" data-ia-preset-items rows="5" placeholder="archive.org/details/…"
+      aria-describedby="ia-preset-note">${esc(text)}</textarea>
+    <p class="h-quiet" id="ia-preset-note" data-ia-preset-note>${noteHtml()}</p>
+    <p class="h-quiet">Paste an address from archive.org, or type an item’s name (the part after /details/). Only the names
+      are saved. An Internet Archive panel plays them when it picks this preset in its settings.</p>
+  </div>`;
+  const box = host.querySelector('[data-ia-preset-items]');
+  const onInput = () => {
+    text = box.value;
+    const n = host.querySelector('[data-ia-preset-note]');
+    if (n) n.innerHTML = noteHtml();
+    try { onChange?.(values()); } catch (err) { console.error('archive form', err); }
+  };
+  box.addEventListener('input', onInput);
+  return {
+    values,
+    destroy: () => { box.removeEventListener('input', onInput); host.replaceChildren(); host.classList.remove('preset-editor'); },
   };
 }
 
