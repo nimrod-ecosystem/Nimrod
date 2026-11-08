@@ -108,7 +108,7 @@ export const SUITES = [
   'nimrod_helper',
   'sprint',
   'statemachine', 'talk', 'theme', 'theme_boot', 'tour', 'trivia', 'voice', 'walkthrough', 'wallpaper', 'watchdog', 'wordforge', 'youtube',
-  'youtube_watchdog',
+  'youtube_fill', 'youtube_watchdog',
   // stalled playback (2026-10-13, playback_stall.js): a video that freezes, buffers or errors is fixed, said, and after
   // a while shown as pictures in its place, and put back by itself. Stubbed player and fake clock; the last section
   // mounts a real screen (needs the server).

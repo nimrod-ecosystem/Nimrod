@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>youtube_fill — the video fills its panel — test</title>
+<link rel="stylesheet" href="../modules.css">
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px;color:#0A3323;background:#F7F4D5}
+  h1{font-size:1.2rem}
+  .pass{color:#2c6e49}.fail{color:#a4243b;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  .box{width:640px;height:360px}
+</style>
+</head>
+<body>
+<h1>youtube_fill — measured with the real stylesheet (row 2.243, note FQ 1)</h1>
+<div id="stage"></div>
+<div id="results"></div>
+<div id="summary">running…</div>
+<script type="module">
+import { createYtPlayer } from '../modules/youtube.js';
+
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div');
+  d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`;
+  out.append(d);
+}
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// What the real API does with the element it is given: REPLACES it with an iframe carrying the asked-for size as
+// attributes ('100%'), and a frame whose percentage resolves against nothing is drawn at its own 300x150.
+const fakeYT = {
+  PlayerState: { ENDED: 0, PLAYING: 1, PAUSED: 2, BUFFERING: 3, CUED: 5 },
+  Player: class {
+    constructor(el, o) {
+      const f = document.createElement('iframe');
+      f.setAttribute('width', o.width); f.setAttribute('height', o.height);
+      el.replaceWith(f); this.f = f;
+      setTimeout(() => o.events.onReady(), 0);
+    }
+    destroy() { this.f.remove(); }
+  },
+};
+
+try {
+  // The panel exactly as the YouTube module draws it: `.youtube > .stage`, the stage a centring flex.
+  const panel = document.createElement('div');
+  panel.className = 'box';
+  panel.innerHTML = '<div class="youtube"><div class="stage" data-stage></div></div>';
+  document.getElementById('stage').append(panel);
+  const stageEl = panel.querySelector('[data-stage]');
+  const p = createYtPlayer(stageEl, {}, { loadApi: () => Promise.resolve(fakeYT) });
+  await sleep(30);
+  const f = stageEl.querySelector('iframe');
+  const s = stageEl.getBoundingClientRect(), r = f ? f.getBoundingClientRect() : { width: 0, height: 0 };
+  check('the stylesheet is in: the stage is 640x360', Math.round(s.width) === 640 && Math.round(s.height) === 360, `${s.width}x${s.height}`);
+  check('*** the video fills its panel: not YouTube\'s 300x150 in the middle ***',
+    f && Math.round(r.width) === Math.round(s.width) && Math.round(r.height) === Math.round(s.height), `frame ${r.width}x${r.height} in ${s.width}x${s.height}`);
+  panel.className = '';
+  panel.style.cssText = 'width:1200px;height:300px';
+  const s2 = stageEl.getBoundingClientRect(), r2 = f.getBoundingClientRect();
+  check('...and it follows the panel when the panel changes size', Math.round(r2.width) === 1200 && Math.round(r2.height) === 300,
+    `frame ${r2.width}x${r2.height} in ${s2.width}x${s2.height}`);
+  p.destroy();
+  panel.remove();
+} catch (e) {
+  check('unexpected error', false, String((e && e.stack) || e));
+}
+
+const sum = document.getElementById('summary');
+sum.textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+sum.className = failed ? 'fail' : 'pass';
+sum.dataset.done = 'true'; sum.dataset.failed = String(failed);
+</script>
+</body>
+</html>
