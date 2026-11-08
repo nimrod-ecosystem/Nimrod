@@ -1774,6 +1774,44 @@ const toTab = (m, id) => {
       qState.destroy?.();
     }
 
+    // *** THE THEME CAN BE CHANGED WHEN THE PERSON'S THEME IS THE ONE SHOWING (Mike, 2026-11-08: "I can't change the
+    // theme from the theme that changes with the seasons to anything else"). *** The person's row says "With the
+    // seasons"; the screen shows it first (row 2.164); a pick on the Theme tab used to be stored on the dashboard, below
+    // it, and nothing changed.
+    {
+      const tp = await bProfiles.create('TEST-person-theme');
+      await bProfiles.addModule(tp.id, 'clock');
+      const tFull = await bProfiles.get(tp.id);
+      const rowURL = bProfiles.personStateURL(tFull.person_id, INPUTS_KEY);
+      const pState = createState({ url: rowURL, user: USER });
+      await pState.load().catch(() => {});
+      pState.set({ theme: 'seasons' });
+      await pState.flush();
+      pState.destroy?.();
+      const troot = document.createElement('div');
+      document.body.append(troot);
+      const tk = await mountKiosk(troot, { user: USER, profileId: tp.id, profiles: bProfiles, bus: createBus() });
+      const themeHint = () => tk.menu.items().find((r) => r.id === 'set:theme')?.hint || '';
+      check('(setup) the person\'s "With the seasons" is the theme showing', await settled(() => /^With the seasons/.test(themeHint()), 9000), themeHint());
+      const themeRow = () => tk.menu.items().find((r) => r.id === 'set:theme');
+      check('the row says a pick here changes it for the person', /changes it for them/.test(JSON.stringify(themeRow() || {})), JSON.stringify(themeRow() || {}).slice(0, 300));
+      tk.menu.open();
+      toTab(tk.menu, 'set:theme');
+      for (let i = 0; i < 60 && tk.menu.focusId() !== 'set:theme'; i += 1) tk.menu.next();
+      check('found the theme row', tk.menu.focusId() === 'set:theme');
+      tk.menu.setChooseMode('step');
+      tk.menu.select();
+      check('*** a pick on the Theme tab CHANGES what shows (it was stored below the person\'s and nothing changed) ***',
+        await settled(() => !!themeHint() && !/^With the seasons/.test(themeHint())), themeHint());
+      const readP = async () => { const s = createState({ url: rowURL, user: USER }); await s.load().catch(() => {}); const v = s.get(); s.destroy?.(); return v || {}; };
+      let moved = false;
+      for (let i = 0; i < 40 && !moved; i += 1) { moved = (await readP()).theme !== 'seasons'; if (!moved) await sleep(150); }
+      check('...and it is the person\'s row that changed (their choice, on every screen of theirs)', moved);
+      tk.menu.close?.();
+      try { tk.destroy?.(); } catch { /* gone */ }
+      troot.remove();
+    }
+
     try { bk?.destroy?.(); } catch { /* already gone */ }
     broot.remove();
   } catch (e) {

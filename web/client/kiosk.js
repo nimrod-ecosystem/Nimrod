@@ -2580,7 +2580,26 @@ export async function mountKiosk(root, {
   function personLookNote(key) {
     const p = levelLayers().person;
     const v = p && p[key];
-    return v !== undefined && v !== null && v !== '' ? 'the person this screen is for chose this, and it comes first' : undefined;
+    if (v === undefined || v === null || v === '') return undefined;
+    return personInputs?.set ? 'the person this screen is for chose this; a pick here changes it for them, on every screen of theirs'
+      : 'the person this screen is for chose this, and it comes first';
+  }
+  // *** A PICK ON THE MENU'S LOOK ROWS CHANGES WHAT SHOWS (Mike, 2026-11-08: "I can't change the theme from the theme
+  // that changes with the seasons to anything else"). *** The Theme, Panel backgrounds and Space rows wrote to the showing
+  // dashboard (or the screen), while the screen shows the PERSON's choice first (row 2.164): with the person's theme set
+  // (the People page's "everywhere", or the menu's person level), every pick here was stored below it and nothing changed.
+  // Now a pick goes where the value on screen comes from: the person's own row when theirs is showing and it can be
+  // written, else the dashboard or screen, as before. FOR: a pick that visibly does nothing is the fault. AGAINST: a pick
+  // at one screen then changes the person's other screens too; that is already what the person's level IS (it is
+  // showing on all of them), and the row says so before the pick (`personLookNote`). The order itself is unchanged.
+  function lookWrite(key, value) {
+    const from = resolveLevel(key, levelLayers(), { from: 'person', order: LOOK_ORDER }).at;
+    if (from === 'person' && typeof personInputs?.set === 'function') {
+      try { personInputs.set({ [key]: value }); }
+      catch (err) { console.error('kiosk: person look', err); themeDoc().set({ [key]: value }); }
+      return;
+    }
+    themeDoc().set({ [key]: value });
   }
   function shownPanelSurface(s) {
     const L = levelLayers();
@@ -7053,9 +7072,7 @@ export async function mountKiosk(root, {
         onStep: (key, value) => {
           // (row 2.94) the search is this menu's, this visit: never written to the screen's row.
           if (key === 'menuSearch') { menuQuery = String(value == null ? '' : value).trim(); return; }
-          if (key === 'theme') themeDoc().set({ theme: value });
-          else if (key === 'panelSurface') themeDoc().set({ panelSurface: value });
-          else if (key === 'panelGap') themeDoc().set({ panelGap: value });
+          if (key === 'theme' || key === 'panelSurface' || key === 'panelGap') lookWrite(key, value);
           // (2026-10-03: not a key of its own -- the corner clock's corner, or a clock added; `smallClockHere`.)
           else if (key === SMALL_CLOCK_KEY) smallClockHere(value).catch((err) => console.error('kiosk: small clock', err));
           else settings.set({ [key]: value });
