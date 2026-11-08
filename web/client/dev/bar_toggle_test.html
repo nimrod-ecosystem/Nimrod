@@ -47,6 +47,7 @@ import { PLAY_STATE_TOPIC } from '../game_start.js';
 import { CALL_CONTROLS_TOPIC } from '../actions.js';
 import { EDGE_TOPIC } from '../input.js';
 import { barGroupOf } from '../transport_bar.js';
+import { fitBarInto, unfitBar } from '../room_bar.js';   // (2026-11-08) a cabinet's bar keeps its own fit under "Size of the bar"
 
 const USER = 'bartoggle-' + Math.floor(Math.random() * 1e6);
 const root = document.getElementById('root');
@@ -464,6 +465,25 @@ const mouseNearBar = async (bar) => {
       check('*** set to "always, including with a mouse": saved where the screen\'s cursor reads it ***',
         /^always/.test(hint('set:cursor_show') || ''), hint('set:cursor_show'));
       k.menu.close();
+    }
+    // A bar placed in a room's cabinet fits its box itself (room_bar.js); on a screen at 200% it must still fit, measured.
+    {
+      const scr = document.createElement('div');
+      scr.className = 'kiosk'; scr.dataset.barSize = '2'; scr.style.setProperty('--bar-zoom', '2');
+      scr.style.cssText += ';position:relative;width:800px;height:500px';
+      const cab = document.createElement('div');
+      cab.style.cssText = 'position:relative;width:300px;height:60px;overflow:visible';
+      const bar = document.createElement('div');
+      bar.className = 'tb-bar';
+      bar.innerHTML = Array.from({ length: 8 }, (_, i) => `<button style="font-size:16px;padding:8px 14px">B${i}</button>`).join('');
+      cab.append(bar); scr.append(cab); document.body.append(scr);
+      fitBarInto(bar, cab);
+      const b = bar.getBoundingClientRect(), c = cab.getBoundingClientRect();
+      check('*** a cabinet\'s bar on a 200% screen still fits inside its cabinet (no zoom on top of its own fit) ***',
+        getComputedStyle(bar).zoom === '1' && b.right <= c.right + 1 && b.bottom <= c.bottom + 1, `zoom ${getComputedStyle(bar).zoom} bar ${b.width}x${b.height} box ${c.width}x${c.height}`);
+      unfitBar(bar);
+      check('...and taken out of the cabinet, it wears the screen\'s size again', getComputedStyle(bar).zoom === '2', getComputedStyle(bar).zoom);
+      scr.remove();
     }
     k.destroy(); root.innerHTML = '';
   }

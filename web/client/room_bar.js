@@ -70,6 +70,9 @@ export function fitBarInto(bar, box) {
   const bw = box.clientWidth, bh = box.clientHeight;
   if (!(bw > 0 && bh > 0)) return 1;
   bar.style.transformOrigin = '0 0';
+  // (2026-11-08) The screen's "Size of the bar" (a zoom, kiosk.css) is for a bar on the screen's edge; a bar in a
+  // cabinet already fits its box here, and a zoom on top would push it out of it. Inline, so it outranks that rule.
+  bar.style.zoom = '1';
   bar.style.position = 'absolute';
   bar.style.left = '0'; bar.style.top = '0';
   const fits = (s) => { bar.style.width = `${Math.floor(bw / s)}px`; return bar.offsetHeight * s <= bh + 0.5; };
@@ -84,5 +87,5 @@ export function fitBarInto(bar, box) {
 }
 export function unfitBar(bar) {
   if (!bar) return;
-  for (const k of ['transformOrigin', 'position', 'left', 'top', 'width', 'transform']) bar.style[k] = '';
+  for (const k of ['transformOrigin', 'position', 'left', 'top', 'width', 'transform', 'zoom']) bar.style[k] = '';
 }
