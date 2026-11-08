@@ -417,6 +417,8 @@ NIMROD_TTS_MODEL=$TTS_DIR/voices/$TTS_VOICE.onnx
 NIMROD_TTS_PORT=$TTS_PORT
 # The website allowed to use the voice (the kiosk's). More than one: comma-separated.
 NIMROD_TTS_SITES=$SITE_ORIGIN
+# Recordings made ahead on a faster computer (web/tools/make_lesson_clips.py): their folder, served with --clips.
+# NIMROD_TTS_CLIPS=$HOME/lesson-clips
 EOF
   else
     echo "kept existing $TTS_ENV"

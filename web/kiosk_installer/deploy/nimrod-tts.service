@@ -11,7 +11,9 @@ Type=simple
 EnvironmentFile=%h/.config/nimrod/tts.env
 Environment=PYTHONUNBUFFERED=1
 # $$ hands the variables to the shell, so the venv's own python runs the program (a variable cannot be the first word).
-ExecStart=/bin/sh -c 'exec "$${NIMROD_TTS_DIR}/venv/bin/python" "%h/.local/bin/nimrod-tts-service.py" --model "$${NIMROD_TTS_MODEL}" --port "$${NIMROD_TTS_PORT:-8794}" --allow-origin "$${NIMROD_TTS_SITES:-https://nimrodecosystem.com}" --quiet'
+# (2026-11-08) NIMROD_TTS_CLIPS=<folder> in tts.env serves the recordings made ahead (make_lesson_clips.py) with --clips;
+# unset, the line is exactly as before.
+ExecStart=/bin/sh -c 'exec "$${NIMROD_TTS_DIR}/venv/bin/python" "%h/.local/bin/nimrod-tts-service.py" --model "$${NIMROD_TTS_MODEL}" --port "$${NIMROD_TTS_PORT:-8794}" --allow-origin "$${NIMROD_TTS_SITES:-https://nimrodecosystem.com}" $${NIMROD_TTS_CLIPS:+--clips "$${NIMROD_TTS_CLIPS}"} --quiet'
 Restart=on-failure
 RestartSec=5
 
