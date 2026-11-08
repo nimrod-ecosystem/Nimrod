@@ -612,7 +612,12 @@ export function createYtPlayer(mountEl, { onEnded, onError, onPlaying, onIdle, o
     if (!muteAsked || !ready || !player) return;
     try { if (wantMuted) player.mute?.(); else player.unMute?.(); } catch { /* not ready */ }
   };
+  // The player's own box FILLS what it was given (row 2.243, note FQ 1: "YouTube tiny in its panel"). Since the retry
+  // above wraps the player in this box (d27bc2c2), the iframe is no longer the stage's own child: a sizeless box in the
+  // stage's centring flex shrank to nothing and YouTube's frame fell back to its own 300x150. Inline, so every caller
+  // (a panel, livecams, a follow page, play sync) gets it whatever its CSS.
   const host = document.createElement('div');
+  host.style.width = '100%'; host.style.height = '100%';
   mountEl.append(host);
 
   // *** WHEN THE PLAYER CANNOT LOAD (row 2.148, Mike 2026-10-28: "ad blockers have broken Nimrod before"). ***

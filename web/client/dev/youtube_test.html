@@ -1184,6 +1184,11 @@ const channelOf = Object.fromEntries(PLAYLIST.map((v) => [v.id, v.channel]));
       const hostY = document.createElement('div'); document.body.append(hostY);
       const p = createYtPlayer(hostY, { onPlaylist: (l) => got.lists.push(l), onPlaying: () => { got.playing += 1; }, onIdle: () => { got.idle += 1; } });
       await sleep(20);
+      {
+        const box = hostY.firstElementChild;
+        check('*** row 2.243 (note FQ 1): the player\'s box fills what it was given, so the video is not YouTube\'s tiny 300x150 in the middle ***',
+          box && box.style.width === '100%' && box.style.height === '100%', box ? box.style.cssText : 'no box');
+      }
       check('row 2.156: a caller that does not ask (music, cams, a follow page) keeps YouTube\'s controls', !('controls' in (inst.o.playerVars || {})),
         JSON.stringify(inst.o.playerVars));
       const keep = inst;
