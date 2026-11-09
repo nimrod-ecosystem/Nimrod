@@ -61,6 +61,10 @@ export const SHELL_DEMOTE = 'shell/demote';
 // switch and "quick swap" said aloud say. SHELL_STATE carries `save: { n, title }` and `swap: { can, title }`.
 export const SHELL_SAVE = 'shell/save';
 
+// The person button (Mike, 2026-11-06, ruling 34; Design's who_is_here_bar): who this screen is for, on the bar. kiosk.js `pressWho`.
+// SHELL_STATE carries `who: { label, title }`, or null where it is not offered.
+export const SHELL_WHO = 'shell/who';
+
 // What the shell tells placed chrome after it acted, so a placed bar can show the same state the
 // plain bar shows (Hush lit while it is on). Payload: { hushed } and/or { help } (whether the Nimrod
 // button is offered: the person's "Cat help" setting, read by the shell) and/or { barHeld } (something

@@ -141,7 +141,24 @@ function unreachableChips() {
     const mir = root.querySelector('[data-act="mirror"]');
     check('*** with no camera on the screen, Mirror is dimmed and says there is no camera ***',
       !!mir && mir.disabled && /no camera/.test(mir.title), mir ? `${mir.disabled} ${mir.title}` : 'no Mirror button');
-    const { paintMirror } = await import('../transport_bar.js');
+    const { paintMirror, paintWho, whoWords, barGroupOf, BAR_PERSON_FIELD, WHO_ACT } = await import('../transport_bar.js');
+
+    // The person button (ruling 34).
+    check('the person button says who', whoWords('Dana').label === 'Who: Dana' && /for Dana/.test(whoWords('Dana').title));
+    check('...and how many more are playing', whoWords('Dana', 2).label === 'Who: Dana + 2' && /2 more/.test(whoWords('Dana', 2).title));
+    check('...and asks, with nobody', whoWords('').label === 'Who?' && whoWords(null).label === 'Who?' && /not for anybody/.test(whoWords('').title));
+    check('players with nobody named do not read as "Who?"', whoWords('', 2).label === 'Who: nobody + 2');
+    const wb = document.createElement('button');
+    wb.dataset.act = WHO_ACT;
+    paintWho(wb, whoWords('Dana', 1));
+    const whoShown = !wb.hidden && wb.textContent === 'Who: Dana + 1' && /for Dana/.test(wb.title);
+    paintWho(wb, null);
+    check('*** where it is not offered it is hidden, not dimmed: it costs a switch no stop ***', whoShown && wb.hidden === true);
+    check('it walks with Home and Dashboards', barGroupOf(wb) === 'go');
+    check('its row is on by default: Mike asked for it', BAR_PERSON_FIELD.default === true && BAR_PERSON_FIELD.kind === 'toggle');
+    paintWho(null, whoWords('Dana'));
+    check('no button: nothing throws', true);
+
     const b = document.createElement('button');
     paintMirror(b, { can: true, on: false });
     const live = !b.disabled && b.getAttribute('aria-pressed') === 'false';

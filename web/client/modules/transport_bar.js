@@ -42,13 +42,13 @@
 import { registerModule } from '../module.js';
 import {
   barModel, drawChips, drawHelpButton, helpOn, paintPlayPause, paintBigger, paintSmaller, drawCallControls, pieceOf, paintPieceInert, PIECE_SWITCH_TITLE,
-  sitOutWakePress, paintSave, paintSwap, paintMirror, paintEditPanel, drawArrangeToggle, paintBarGroups, arrangeWaiting, paintMediaButtons,
+  sitOutWakePress, paintSave, paintSwap, paintMirror, paintEditPanel, drawArrangeToggle, paintBarGroups, arrangeWaiting, paintMediaButtons, paintWho, WHO_ACT,
 } from '../transport_bar.js';
 import {
   SHELL_NEXT, SHELL_PREV, SHELL_PANEL, SHELL_HUSH, SHELL_MENU, SHELL_FULLSCREEN, SHELL_HOME, SHELL_GO_HOME,
   SHELL_MIRROR, SHELL_STATE, SHELL_HELP, SHELL_HOST, FULLSCREEN_BAR_HIDE_DEFAULT_MS, SHELL_SWITCH_MODULE,
   SHELL_PLAY_PAUSE, SHELL_PROMOTE, SHELL_DEMOTE, SHELL_SAVE, SHELL_PAGE_NEXT, SHELL_PAGE_PREV,
-  SHELL_MEDIA_STOP, SHELL_MEDIA_REWIND, SHELL_MEDIA_FORWARD,
+  SHELL_MEDIA_STOP, SHELL_MEDIA_REWIND, SHELL_MEDIA_FORWARD, SHELL_WHO,
 } from '../shell_verbs.js';
 import { CALL_CONTROL_TOPIC, CALL_CONTROLS_TOPIC, CALL_HANGUP_TOPIC, QUICK_SWAP_TOPIC, EDIT_PANEL_TOPIC } from '../actions.js';
 import { EDGE_TOPIC } from '../input.js';
@@ -63,6 +63,8 @@ const REVEAL_MARGIN_PX = 140;
 // other screens to go Home to, and never the camera as an overlay), the same rule kiosk.css applies to
 // the plain bar there.
 const BUTTONS = [
+  // The person button (ruling 34): first of its group, drawn hidden until the shell says who (SHELL_STATE `who`).
+  { act: WHO_ACT, verb: SHELL_WHO, label: 'Who?', title: 'who this screen is for', embed: false, hidden: true },
   // ⌂ Home and ▦ Dashboards (row 2.172, Mike 2026-11-01: the old Home "should be renamed 'Dashboards'. There should be a
   // new home button that actually takes you to your home page"). The picker keeps its act, 'home', which the menu, the
   // tray and every suite already call it by; only its words changed.
@@ -131,6 +133,8 @@ registerModule(
     let pages = (() => { try { return ctx.shell?.pages?.() || null; } catch { return null; } })();
     // (2026-11-08) the picked panel's Stop, Rewind and Fast forward, or null (the same way: getter, then SHELL_STATE `media`).
     let media = (() => { try { return ctx.shell?.media?.() || null; } catch { return null; } })();
+    // The person button (ruling 34): the same, getter then SHELL_STATE `who`.
+    let whoS = (() => { try { return ctx.shell?.who?.() || null; } catch { return null; } })();
     // (row 2.191) whether this dashboard has a camera for Mirror (the shell's getter, then SHELL_STATE `mirror`).
     let mirrorS = (() => { try { return ctx.shell?.mirror?.() || null; } catch { return null; } })();
     // Bigger / Smaller (2026-10-02 evening): the same, for the selected panel's corner press.
@@ -339,6 +343,7 @@ registerModule(
         pb.disabled = !!pages?.locked;
       }
       paintMediaButtons(shell, media);   // (2026-11-08) Stop, Rewind and Fast forward
+      paintWho(shell?.querySelector(`[data-act="${WHO_ACT}"]`), whoS);   // the person button
       paintBigger(root.querySelector('.tb-actions:not(.tb-host) [data-act="bigger"]'), bigger || {});
       paintSmaller(root.querySelector('.tb-actions:not(.tb-host) [data-act="smaller"]'), bigger || {});
       paintSave(shell?.querySelector('[data-act="save"]'), saveS || {});
@@ -430,12 +435,13 @@ registerModule(
           if ('swap' in s) swapS = s.swap || null;
           if ('pages' in s) pages = s.pages || null;
           if ('media' in s) media = s.media || null;
+          if ('who' in s) whoS = s.who || null;
           if ('mirror' in s) mirrorS = s.mirror || null;
           if ('editPanel' in s) editS = s.editPanel || null;
           if ('arrangeAlways' in s) { arrangeAlways = !!s.arrangeAlways; draw(); }
           if ('arrangeFold' in s && arrangeOpen) { arrangeOpen = false; draw(); }   // the switch scan let go of the bar
           if ('hushed' in s || 'help' in s || 'menuOpen' in s || 'playPause' in s || 'bigger' in s || 'save' in s || 'swap' in s
-            || 'pages' in s || 'media' in s || 'mirror' in s || 'editPanel' in s) draw();
+            || 'pages' in s || 'media' in s || 'who' in s || 'mirror' in s || 'editPanel' in s) draw();
           if ('barHeld' in s) { held = !!s.barHeld; reveal(); }
           // bar toggle: the key put the bar away (tucked, whether or not in full screen) or brought it back.
           if (BAR_KEY_HIDDEN in s) {

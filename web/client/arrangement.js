@@ -146,7 +146,7 @@ function ensurePromoteCss() {
   const s = document.createElement('style');
   s.id = PROMOTE_CSS_ID;
   s.textContent = `
-.k-promote{position:absolute;right:6px;bottom:calc(6px + var(--k-corner-lift, 0px));z-index:calc(var(--z-panel-contents,300) + 20);
+.k-promote{position:absolute;right:calc(6px + var(--k-corner-shift, 0px));bottom:calc(6px + var(--k-corner-lift, 0px));z-index:calc(var(--z-panel-contents,300) + 20);
   width:${PROMOTE_PX}px;height:${PROMOTE_PX}px;margin:0;padding:0;border-radius:10px;cursor:pointer;
   border:1px solid var(--border);background:var(--surface);color:var(--text);
   font:600 22px/1 system-ui,-apple-system,Segoe UI,sans-serif;opacity:0;pointer-events:none;transition:opacity .15s}

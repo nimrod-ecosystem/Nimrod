@@ -126,6 +126,35 @@ export function paintMediaButtons(root, s) {
   set('mediaforward', !s?.canSeek, seekWhy || `on ${jump}`, s ? `Fast forward ${s.seekSec}s ⏩` : null);
 }
 
+// *** THE PERSON BUTTON (Mike, 2026-11-06, ruling 34; Design's who_is_here_bar_20261106). *** Who this screen is for, on the bar, and one
+// press from changing it: "Who: Dana", "Who: Dana + 2" with players beside them, "Who?" with nobody. It opens the menu's existing page; a
+// reload still does the switching (kiosk.js says why). HIDDEN, not dimmed, where it is not offered (a preview, a locked screen, the row
+// turned off): there it can never do anything, so it should not cost a switch a stop. The first piece of Design's: the bar's views,
+// Undo and playing together are not here yet.
+//   THE ROW. FOR on by default: Mike asked for it, and an aide should see whose screen this is. AGAINST: one more stop on a one-switch
+// walk, and a name on a bar that has run out of room. So it is a row, and a long name is cut short by kiosk.css, whole in its title.
+export const WHO_ACT = 'who';
+export const BAR_PERSON_KEY = 'barPerson';
+export const BAR_PERSON_FIELD = Object.freeze({
+  key: BAR_PERSON_KEY, label: 'The person button on the bar (who this screen is for)', kind: 'toggle',
+  level: 'standard', default: true, onLabel: 'Shown', offLabel: 'Hidden',
+});
+/** The button's words: `name` the screen's person (or nothing), `others` how many more are playing. PURE. */
+export function whoWords(name, others = 0) {
+  const who = String(name || '').trim();
+  const more = Number(others) > 0 ? ` + ${Number(others)}` : '';
+  if (!who) return { label: more ? `Who: nobody${more}` : 'Who?', title: 'this screen is not for anybody yet: press to choose' };
+  return { label: `Who: ${who}${more}`, title: `this screen is for ${who}${more ? `, with ${Number(others)} more playing` : ''}: press to change` };
+}
+/** Draw it on either bar. `s`: { label, title }, or null where it is not offered. */
+export function paintWho(btn, s) {
+  if (!btn) return;
+  btn.hidden = !s;
+  if (!s) return;
+  if (btn.textContent !== s.label) btn.textContent = s.label;
+  btn.title = s.title || '';
+}
+
 // ---------------------------------------------------------------------------------------------------
 // *** BIGGER / SMALLER, FOR THE SELECTED PANEL (2026-10-02 evening). *** The panel corner's press
 // (arrangement.js `promote`, kiosk.js `promotePanel`), on both bars: one level at a time, and at the top
@@ -659,7 +688,7 @@ export const BAR_GROUP_NAMES = Object.freeze({
   arrange: 'arrange the panels', screen: 'sound, help, settings, full screen and hide',
 });
 export const BAR_ACT_GROUPS = Object.freeze({
-  gohome: 'go', home: 'go',
+  who: 'go', gohome: 'go', home: 'go',
   back: 'play', playpause: 'play', next: 'play', pageprev: 'play', pagenext: 'play', panel: 'play',
   mediarewind: 'play', mediastop: 'play', mediaforward: 'play',
   arrange: 'arrange', switch: 'arrange', save: 'arrange', swap: 'arrange', bigger: 'arrange', smaller: 'arrange',

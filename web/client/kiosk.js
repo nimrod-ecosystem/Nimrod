@@ -45,6 +45,7 @@ import { REMOTE_STREAM } from './output_remote.js';
 import { createArrangement, classifyLayoutChange as layoutChange, ROOM_PANEL_ID, ROOM_PIECE_PREFIX,
   PLACE_REQUEST_TOPIC, SMALL_CLOCK_FIELD, SMALL_CLOCK_KEY, CLOCK_CORNERS, clockCornerOf } from './arrangement.js';
 import {
+  paintWho, whoWords, BAR_PERSON_FIELD, BAR_PERSON_KEY, WHO_ACT,
   barModel, drawChips, drawHelpButton, mountBarHelp, helpOn, paintPlayPause, paintMediaButtons, paintBigger, paintSmaller, drawCallControls, paintPieceInert, PIECE_SWITCH_TITLE,
   paintMirror, paintEditPanel, drawArrangeToggle, paintBarGroups, arrangeOpenFrom, arrangeWaiting, ARRANGE_OPEN_FIELD,
   paintSave as paintSaveBtn, paintSwap as paintSwapBtn,
@@ -65,7 +66,7 @@ import {
   SHELL_NEXT, SHELL_PREV, SHELL_PANEL, SHELL_HUSH, SHELL_MENU, SHELL_FULLSCREEN, SHELL_HOME, SHELL_GO_HOME, SHELL_MIRROR,
   SHELL_STATE, SHELL_HELP, SHELL_HOST, PLAIN_BAR_SHOW, PLAIN_BAR_RING, PLAIN_BAR_RING_END, PLAIN_BAR_MOUNT_GRACE_MS,
   PLAIN_BAR_HOLD_DEFAULT_MS, SHELL_PLAY_PAUSE, SHELL_PROMOTE, SHELL_DEMOTE, SHELL_SAVE, SHELL_PAGE_NEXT, SHELL_PAGE_PREV,
-  SHELL_MEDIA_STOP, SHELL_MEDIA_REWIND, SHELL_MEDIA_FORWARD,
+  SHELL_MEDIA_STOP, SHELL_MEDIA_REWIND, SHELL_MEDIA_FORWARD, SHELL_WHO,
 } from './shell_verbs.js';
 import {
   SYSTEM_TOPICS, verbTopic, SWITCH_MODULE_TOPIC, QUICK_SWAP_TOPIC, verbsFor, verbTarget, CALL_CONTROL_TOPIC, CALL_CONTROLS_TOPIC,
@@ -678,6 +679,8 @@ export async function mountKiosk(root, {
           <!-- ROW 2.172 (Mike, 2026-11-01): "The current Home button on the transport bar should be renamed
                Dashboards. There should be a new home button that actually takes you to your home page." The
                picker keeps its act, home, which the menu, the tray and the suites call it by. See goHomePage. -->
+          <!-- THE PERSON BUTTON (ruling 34): who this screen is for, one press from changing it. See whoBarState. -->
+          <button data-act="who" title="who this screen is for" hidden>Who?</button>
           <button data-act="gohome" title="your Home page">⌂ Home</button>
           <button data-act="home" title="your dashboards, and the way out (S)">▦ Dashboards</button>
           <!-- BACK. The reverse of Next, and until now there was nothing here — see
@@ -4151,6 +4154,36 @@ export async function mountKiosk(root, {
   // broken.
   const canPickPerson = () => !!(profiles.people && profiles.moveToPerson);
 
+  // THE PERSON BUTTON, BOTH BARS (ruling 34; transport_bar.js argues the row). Offered where the menu's "who" page can be: not on a
+  // preview, not with no people to pick from, not on a locked screen (LOCK_PAGE_DROPS), and only once the lookup has an answer, so it
+  // never says "Who?" about a screen that is still finding out. Players beside the person (the Players tab's seats) count as "+ N".
+  function whoBarState() {
+    if (embedded || !canPickPerson() || whoState === null || screenLocked()) return null;
+    let row = null;
+    try { row = settings.get() || {}; } catch { row = null; }
+    if (row?.[BAR_PERSON_KEY] === false) return null;
+    let others = 0;
+    try { others = screenPlayersHost.seats().filter((s) => s.kind !== 'self').length; } catch { others = 0; }
+    return whoWords(whoState && whoState.name, others);
+  }
+  let whoBarSig = '';
+  function paintWhoBar() {
+    if (torn) return;
+    const s = whoBarState();
+    paintWho(controlsEl.querySelector(`[data-act="${WHO_ACT}"]`), s);
+    const sig = JSON.stringify(s);
+    if (sig === whoBarSig) return;
+    whoBarSig = sig;
+    if (useDashboard) bus.publish(SHELL_STATE, { who: s });
+  }
+  function pressWho() {
+    if (!whoBarState()) return;
+    if (!menu.isOpen() && menu.open() === false) return;
+    menu.openPage('who');
+  }
+  controlsEl.querySelector(`[data-act="${WHO_ACT}"]`).addEventListener('click', pressWho);
+  try { settings.subscribe?.(() => paintWhoBar()); } catch (err) { console.error('kiosk: person button', err); }
+
   // ---- THE MENU'S TABS (2026-10-02; settings.js "TABS" is the mechanism) -------------------------------
   //
   // Mike: "The settings menu needs to be broken up into tabs. The choice for what to show should be at
@@ -4229,6 +4262,7 @@ export async function mountKiosk(root, {
     // bar toggle (2026-10-06): the bar's key and whether it comes up by itself, under "The bar" on Devices.
     [BAR_QUIET_FIELD.key]: ['devices', 2], [BAR_SELF_FIELD.key]: ['devices', 2],
     [ARRANGE_OPEN_FIELD.key]: ['devices', 2],   // (row 2.191) under "The bar", with how it comes and goes
+    [BAR_PERSON_KEY]: ['devices', 2],   // (ruling 34) the person button
     [BAR_SIZE_FIELD.key]: ['devices', 2],   // (2026-11-08) the bar's size, under "The bar"
     [BAR_PLAY_FIELD.key]: ['devices', 2],   // bar while playing (row 2.65): under "The bar" with the other two
     // play on (row 2.68, Mike: "Speakers should be under devices"): under "Speakers", after the rest of Devices.
@@ -4837,6 +4871,7 @@ export async function mountKiosk(root, {
     { ...BAR_SELF_FIELD, options: BAR_SELF_FIELD.options.map((o) => ({ ...o })) },
     // (row 2.191) "Arrange buttons on the bar": folded behind "Arrange ▸" (default) or always shown.
     { ...ARRANGE_OPEN_FIELD, default: !!arrangeOpenDefault },
+    BAR_PERSON_FIELD,   // (ruling 34) the person button on the bar
     // (Mike, 2026-11-08: "I need a way to resize the transport bar. It looks very small on the TV.") The SCREEN's, like
     // the other bar rows: a TV across a room and a monitor at arm's length want different sizes. Normal by default.
     BAR_SIZE_FIELD,
@@ -6376,20 +6411,49 @@ export async function mountKiosk(root, {
     try { dodgeClock(); } catch { /* the clock's corner; not load-bearing */ }
     let bars = [];
     try { bars = shownBarRects(); } catch { bars = []; }
+    // One panel's corners move together: they sit side by side, and moved apart they could land on each other.
+    const byPanel = new Map();
     for (const btn of kioskEl.querySelectorAll('.k-promote, .k-editc, .k-barc')) {
-      const had = parseFloat(btn.style.getPropertyValue('--k-corner-lift')) || 0;
-      let lift = 0;
-      if (bars.length) {
-        // Where it would sit unlifted: its box now, moved back down by the lift it has.
+      const list = byPanel.get(btn.parentElement) || [];
+      list.push(btn);
+      byPanel.set(btn.parentElement, list);
+    }
+    for (const [panel, btns] of byPanel) {
+      // Where each would sit unmoved: its box now, moved back by the lift and the shift it has.
+      const rows = btns.map((btn) => {
+        const had = parseFloat(btn.style.getPropertyValue('--k-corner-lift')) || 0;
+        const hadShift = parseFloat(btn.style.getPropertyValue('--k-corner-shift')) || 0;
         const r = btn.getBoundingClientRect();
-        const top = r.top + had, bottom = r.bottom + had;
+        const top = r.top + had, bottom = r.bottom + had, right = r.right + hadShift, left = r.left + hadShift;
+        let lift = 0, over = null;
         for (const b of bars) {
-          if (r.right > b.left && r.left < b.right && bottom > b.top && top < b.bottom) lift = Math.max(lift, Math.ceil(bottom - b.top + CORNER_GAP_PX));
+          if (right > b.left && left < b.right && bottom > b.top && top < b.bottom) {
+            const need = Math.ceil(bottom - b.top + CORNER_GAP_PX);
+            if (need > lift) { lift = need; over = b; }
+          }
+        }
+        return { btn, had, hadShift, top, bottom, right, left, lift, over, shift: 0 };
+      });
+      // *** THEY STAY IN THEIR OWN PANEL (2026-11-09). *** On a small screen with a tall bar, the lift took a corner right out of its panel and
+      // behind the one above, where a press landed on that panel instead. Too tall to go above: all of them beside the bar, where there is
+      // room. No room: as high as the panel lets them, under the bar, which has its own Bigger and Smaller.
+      const cell = panel?.getBoundingClientRect?.();
+      const tooHigh = cell ? rows.filter((o) => o.over && o.top - o.lift < cell.top + CORNER_GAP_PX) : [];
+      if (tooHigh.length) {
+        const beside = Math.max(...tooHigh.map((o) => Math.ceil(o.right - o.over.left + CORNER_GAP_PX)));
+        const fits = rows.every((o) => o.left - beside >= cell.left + CORNER_GAP_PX);
+        for (const o of rows) {
+          if (fits) { o.shift = beside; o.lift = 0; }
+          else if (o.over) o.lift = Math.min(o.lift, Math.max(0, Math.floor(o.top - cell.top - CORNER_GAP_PX)));
         }
       }
-      if (lift === had) continue;
-      if (lift > 0) btn.style.setProperty('--k-corner-lift', `${lift}px`);
-      else btn.style.removeProperty('--k-corner-lift');
+      for (const o of rows) {
+        if (o.lift === o.had && o.shift === o.hadShift) continue;
+        if (o.lift > 0) o.btn.style.setProperty('--k-corner-lift', `${o.lift}px`);
+        else o.btn.style.removeProperty('--k-corner-lift');
+        if (o.shift > 0) o.btn.style.setProperty('--k-corner-shift', `${o.shift}px`);
+        else o.btn.style.removeProperty('--k-corner-shift');
+      }
     }
   }
   // *** THE SMALL CLOCK'S CORNER, KEPT CLEAR (2026-10-14, seen on the bench at 1920x1080: Quiz mix's "Play together"
@@ -8154,7 +8218,7 @@ export async function mountKiosk(root, {
       // who row offers to fix it.
       if (!p?.person_id) {
         themeLayerIn('person');   // (row 2.164) nobody's screen: no person row will decide its theme
-        whoState = false; menu.refresh(); if (!torn) personKnown.settle(null, 'none'); return;
+        whoState = false; menu.refresh(); paintWhoBar(); if (!torn) personKnown.settle(null, 'none'); return;
       }
       personId = p.person_id;
       // The live answer (usually the same one the screen's row gave at boot, which changes nothing).
@@ -8167,6 +8231,7 @@ export async function mountKiosk(root, {
         // (`profile_name`), not an "I call them" the login gave them: this screen is theirs (claims.seen_name).
         whoState = who ? { name: who.profile_name || who.name } : false;
         menu.refresh();
+        paintWhoBar();
       }
       // REMOTE DRIVE. A verb arriving on the wire is published onto this screen's own
       // bus, so the router, the settings menu and every module answer it exactly as they
@@ -8383,7 +8448,7 @@ export async function mountKiosk(root, {
       // still running, and leaving it mid-sentence is the exact defect this section was
       // opened for. `false` reads as "not set up for anybody yet", which is what somebody
       // standing at an offline screen can act on.
-      if (whoState === null) { whoState = false; menu.refresh(); }
+      if (whoState === null) { whoState = false; menu.refresh(); paintWhoBar(); }
     }
   })();
 
@@ -9329,6 +9394,7 @@ export async function mountKiosk(root, {
     // away with the bar's auto-hide unless somebody keeps touching the screen. An embed's bar stays.)
     on(SHELL_HOME, () => { toggleScreens(); if (!embedded && screensOpen) poke(); });
   on(SHELL_GO_HOME, () => goHomePage());   // row 2.172: a placed bar's ⌂ Home
+    on(SHELL_WHO, () => { pressWho(); });    // ruling 34: a placed bar's person button
     on(SHELL_MIRROR, () => { toggleMirrorFull(); });
     on(SHELL_HELP, () => { explainHelp(); });
     on(PLAIN_BAR_SHOW, () => { summonPlainBar(); });
@@ -9643,6 +9709,7 @@ export async function mountKiosk(root, {
       const locked = screenLocked();
       if (locked) kioskEl.dataset.screenLocked = ''; else delete kioskEl.dataset.screenLocked;
       try { lockGuards.sync(); } catch (err) { console.error('kiosk: lock guards', err); }
+      paintWhoBar();   // the person button is not on a locked screen (LOCK_PAGE_DROPS)
       if (screenLock.staysOut()) lockChip.show(`Unlocked — ${chordWords(lockControlNow())} to lock`); else lockChip.hide();
       if (!boot) {
         if (locked) closeForLock();
@@ -9856,6 +9923,7 @@ export async function mountKiosk(root, {
           playPause: () => playPauseState(), callControls: () => callState,
           pages: () => pagesState(),   // row 2.190: Previous page / Next page at mount (then SHELL_STATE `pages`)
           media: () => mediaState(),   // 2026-11-08: Stop, Rewind and Fast forward at mount (then SHELL_STATE `media`)
+          who: () => whoBarState(),    // ruling 34: the person button at mount (then SHELL_STATE `who`)
     mirror: () => mirrorState(), // row 2.191: Mirror dimmed with no camera, at mount (then SHELL_STATE `mirror`)
           bigger: () => biggerState(),
           editPanel: () => editPanelState(), // row 2.191: ✎ Edit panel at mount (then SHELL_STATE `editPanel`)

@@ -555,8 +555,9 @@ const toTab = (m, id) => {
       // while it is on. 64.)
       // (Mike, 2026-11-08, DELIBERATELY: "Big cursor" on Devices (its four rows: show, size, shape, colour; it had no rows
       // on a screen's menu at all) and "Size of the bar" under The bar. 69.)
-      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 15 stops (was every row: 69) ***',
-        lapStops.length === 15 && oldStops.length === 69 && oldStops.some((i) => i.id === 'set:quietHours') /* quiet hours */
+      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 15 stops (was every row: 70) ***',
+        lapStops.length === 15 && oldStops.length === 70 && oldStops.some((i) => i.id === 'set:barPerson') /* the person button */
+        && oldStops.some((i) => i.id === 'set:quietHours') /* quiet hours */
         && oldStops.some((i) => i.id === 'set:cursor_show') && oldStops.some((i) => i.id === 'set:barSize') /* 2026-11-08 */
         && oldStops.some((i) => i.id === 'mirror') /* Mirror */
         && oldStops.some((i) => i.id === 'set:panelCorners') /* the corners */
@@ -694,6 +695,17 @@ const toTab = (m, id) => {
       kiosk.menu.back();
       check('and back returns to the list without closing the menu',
         kiosk.menu.page() === null && kiosk.menu.isOpen());
+
+      // THE PERSON BUTTON (ruling 34): who, on the bar, and one press to the same page.
+      const whoBtn = root.querySelector('.k-controls [data-act="who"]');
+      const whoName = byId.who.label.replace(/^Setting up for /, '');
+      check('*** the bar says who this screen is for ***', !!whoBtn && !whoBtn.hidden && whoBtn.textContent === `Who: ${whoName}`, whoBtn?.textContent);
+      kiosk.menu.close();
+      whoBtn.click();
+      check('*** one press opens the page for changing it ***', kiosk.menu.isOpen() && kiosk.menu.page() === 'who', String(kiosk.menu.page()));
+      whoBtn.click();
+      check('pressed again it stays where it is, not a second menu', kiosk.menu.isOpen() && kiosk.menu.page() === 'who');
+      kiosk.menu.back();
 
       // SCREEN. Two real screen-level settings where there was nothing.
       check('the screen section carries the per-screen theme',

@@ -539,13 +539,13 @@ export function ensureEditCss(doc = (typeof document !== 'undefined' ? document 
 .em-act{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:8px}
 .em-def{grid-column:1/-1;grid-row:3;display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;font-size:.85rem;font-style:italic}
 .em-act a.em-btn{display:inline-flex;align-items:center;text-decoration:none}
-.k-editc{position:absolute;right:56px;bottom:calc(6px + var(--k-corner-lift, 0px));z-index:calc(var(--z-panel-contents,300) + 20);width:44px;height:44px;
+.k-editc{position:absolute;right:calc(56px + var(--k-corner-shift, 0px));bottom:calc(6px + var(--k-corner-lift, 0px));z-index:calc(var(--z-panel-contents,300) + 20);width:44px;height:44px;
   margin:0;padding:0;border-radius:10px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text);
   font:600 20px/1 system-ui,-apple-system,Segoe UI,sans-serif;opacity:0;pointer-events:none;transition:opacity .15s}
 ${cornerShowCss('.k-editc')}
 [data-editing]>.k-editc{opacity:1;pointer-events:auto}
 .k-room>.k-editc{right:6px}
-.k-barc{position:absolute;right:106px;bottom:calc(6px + var(--k-corner-lift, 0px));z-index:calc(var(--z-panel-contents,300) + 20);width:44px;height:44px;
+.k-barc{position:absolute;right:calc(106px + var(--k-corner-shift, 0px));bottom:calc(6px + var(--k-corner-lift, 0px));z-index:calc(var(--z-panel-contents,300) + 20);width:44px;height:44px;
   margin:0;padding:0;border-radius:10px;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text);
   font:600 20px/1 system-ui,-apple-system,Segoe UI,sans-serif;opacity:0;pointer-events:none;transition:opacity .15s}
 ${cornerShowCss('.k-barc')}

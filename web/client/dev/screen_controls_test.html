@@ -716,6 +716,12 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
       // tap woke, and a tap on the bar brings up no panel's corner now -- so a spot on the panel itself.)
       await pressQuiet(cells[2].querySelector('.k-mod'), 'touch');
       await sleep(300);
+      // (2026-11-09) On a small screen with a tall bar, lifting it clear used to take a corner right out of its own panel, behind the
+      // one above, where a press landed on that panel instead. It stays in its panel: beside the bar where there is room.
+      const inPanel = (c, cell) => { const a = c.getBoundingClientRect(), b = cell.getBoundingClientRect(); return a.top >= b.top && a.bottom <= b.bottom && a.left >= b.left && a.right <= b.right; };
+      check('*** the corner stays inside its own panel, however tall the bar ***', inPanel(corner(2), cells[2]), `${J(corner(2).getBoundingClientRect())} in ${J(cells[2].getBoundingClientRect())}`);
+      const barRect = root.querySelector('.k-controls').getBoundingClientRect(), cr = corner(2).getBoundingClientRect();
+      check('...and clear of the bar', cr.right <= barRect.left || cr.bottom <= barRect.top || cr.left >= barRect.right, `${J(cr)} bar ${J(barRect)}`);
       const c2 = await pressAt(corner(2), 'touch');
       check('(setup) a tap in the calculator, then on its corner: it fills its dashboard', c2.click === corner(2) && kiosk.promoted().dashboard === ids[2],
         `${c2.click?.className} ${cells.map((c) => c.dataset.cornerShow || '-').join()} ${J(kiosk.promoted())}`);

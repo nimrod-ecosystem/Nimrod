@@ -469,6 +469,8 @@
   .k-actions button{font-size:.82rem;color:#cfe0d6;background:transparent;
     border:1px solid rgba(255,255,255,.22);border-radius:9px;padding:6px 12px;cursor:pointer}
   .k-actions button:hover,.k-dot:hover{background:rgba(255,255,255,.10)}
+  /* The person button: a long name is cut short here and whole in its title (transport_bar.js). */
+  .k-actions [data-act="who"],.tb-actions [data-act="who"]{max-width:14em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   /* Hush, while it is on. LIT, not subtle: silence with no visible cause reads as a broken
      screen, and whoever finds it that way has to be able to see why and undo it. */
   .k-actions button[data-on="1"]{background:var(--highlight);border-color:var(--highlight);
