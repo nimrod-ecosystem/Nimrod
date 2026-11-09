@@ -10,7 +10,7 @@
    "word": "negotiate",
    "part_of_speech": "verb",
    "level": 4,
-   "definition": "to talk with someone to reach an agreement",
+   "definition": "To talk with other people to agree on the terms of a deal or plan.",
    "explanation": "",
    "forms": {
     "past": "negotiated",
@@ -21,7 +21,14 @@
    "example": "She negotiated a lower price for the car.",
    "picture_idea": "two people shaking hands across a table with papers between them",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00763758-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -34,6 +41,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to talk with someone to reach an agreement",
+   "definition_basis": {
+    "wordnet_sense": "00763758-v",
+    "wordnet_meaning": "discuss the terms of an arrangement"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -42,7 +60,7 @@
    "word": "neighborhood",
    "part_of_speech": "noun",
    "level": 4,
-   "definition": "the area around your home and the people who live there",
+   "definition": "A part of a town where people live close to one another.",
    "explanation": "",
    "forms": {
     "plural": "neighborhoods"
@@ -50,7 +68,14 @@
    "example": "We moved to a quiet neighborhood near the park.",
    "picture_idea": "a street of houses with neighbors chatting on the sidewalk",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-08659906-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -63,6 +88,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "the area around your home and the people who live there",
+   "definition_basis": {
+    "wordnet_sense": "08659906-n",
+    "wordnet_meaning": "an area within a city or town that has some distinctive features (especially one forming a community)"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -71,7 +107,7 @@
    "word": "nervous",
    "part_of_speech": "adjective",
    "level": 4,
-   "definition": "worried or a little afraid about something",
+   "definition": "Worried or a little afraid about something that is going to happen.",
    "explanation": "",
    "forms": {
     "comparative": "more nervous",
@@ -80,7 +116,14 @@
    "example": "He felt nervous before his job interview.",
    "picture_idea": "a person biting their nails while waiting in a chair",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02465209-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -92,6 +135,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "worried or a little afraid about something",
+   "definition_basis": {
+    "wordnet_sense": "02465209-s",
+    "wordnet_meaning": "causing or fraught with or showing anxiety"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -100,7 +154,7 @@
    "word": "noticeable",
    "part_of_speech": "adjective",
    "level": 4,
-   "definition": "easy to see or realize",
+   "definition": "Easy to see or spot, so people can tell it is there.",
    "explanation": "",
    "forms": {
     "comparative": "more noticeable",
@@ -109,7 +163,14 @@
    "example": "The stain on the shirt was very noticeable.",
    "picture_idea": "a bright red spot on a white shirt",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01289803-a"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -121,6 +182,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "easy to see or realize",
+   "definition_basis": {
+    "wordnet_sense": "01289803-a",
+    "wordnet_meaning": "capable or worthy of being noticed"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -129,7 +201,7 @@
    "word": "obvious",
    "part_of_speech": "adjective",
    "level": 4,
-   "definition": "clear and easy to understand or see",
+   "definition": "Easy to see or understand, so everyone can tell.",
    "explanation": "",
    "forms": {
     "comparative": "more obvious",
@@ -138,7 +210,14 @@
    "example": "It was obvious that she was tired.",
    "picture_idea": "",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01622205-a"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -151,6 +230,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "clear and easy to understand or see",
+   "definition_basis": {
+    "wordnet_sense": "01622205-a",
+    "wordnet_meaning": "easily perceived and understood"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -159,7 +249,7 @@
    "word": "occasion",
    "part_of_speech": "noun",
    "level": 4,
-   "definition": "a particular time when something happens, or a special event",
+   "definition": "A special event, such as a wedding or a party.",
    "explanation": "",
    "forms": {
     "plural": "occasions"
@@ -167,7 +257,14 @@
    "example": "A wedding is a good occasion to dress up.",
    "picture_idea": "a group of people in nice clothes at a celebration",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-07461861-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -180,6 +277,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "a particular time when something happens, or a special event",
+   "definition_basis": {
+    "wordnet_sense": "07461861-n",
+    "wordnet_meaning": "a formal or official social gathering or ceremony of people"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -188,7 +296,7 @@
    "word": "opportunity",
    "part_of_speech": "noun",
    "level": 4,
-   "definition": "a chance to do something good or useful",
+   "definition": "A chance to do something, made possible by the right time or situation.",
    "explanation": "",
    "forms": {
     "plural": "opportunities"
@@ -196,7 +304,14 @@
    "example": "Moving abroad gave him an opportunity to learn a new language.",
    "picture_idea": "an open door with light shining through",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-14507501-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -209,6 +324,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "a chance to do something good or useful",
+   "definition_basis": {
+    "wordnet_sense": "14507501-n",
+    "wordnet_meaning": "a possibility due to a favorable combination of circumstances"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -217,7 +343,7 @@
    "word": "ordinary",
    "part_of_speech": "adjective",
    "level": 4,
-   "definition": "normal and not special in any way",
+   "definition": "Normal, and not special or different from what you usually see.",
    "explanation": "",
    "forms": {
     "comparative": "more ordinary",
@@ -226,7 +352,14 @@
    "example": "It was just an ordinary day at work.",
    "picture_idea": "",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01677162-a"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -238,6 +371,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "normal and not special in any way",
+   "definition_basis": {
+    "wordnet_sense": "01677162-a",
+    "wordnet_meaning": "not exceptional in any way especially in quality or ability or size or degree"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -246,7 +390,7 @@
    "word": "organize",
    "part_of_speech": "verb",
    "level": 4,
-   "definition": "to arrange things in a neat or planned way",
+   "definition": "To put things in order so they are neat and easy to find.",
    "explanation": "Also spelled organise in British English.",
    "forms": {
     "past": "organized",
@@ -257,7 +401,14 @@
    "example": "She organized her desk before starting work.",
    "picture_idea": "a tidy shelf with labeled boxes and folders",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00405549-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -270,6 +421,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to arrange things in a neat or planned way",
+   "definition_basis": {
+    "wordnet_sense": "00405549-v",
+    "wordnet_meaning": "bring order and organization to"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -278,7 +440,7 @@
    "word": "outcome",
    "part_of_speech": "noun",
    "level": 4,
-   "definition": "the result of something",
+   "definition": "What happens at the end of something; the result of an action or event.",
    "explanation": "",
    "forms": {
     "plural": "outcomes"
@@ -286,7 +448,14 @@
    "example": "We were happy with the outcome of the meeting.",
    "picture_idea": "",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-07307418-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -298,6 +467,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "the result of something",
+   "definition_basis": {
+    "wordnet_sense": "07307418-n",
+    "wordnet_meaning": "something that results"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -306,7 +486,7 @@
    "word": "overwhelm",
    "part_of_speech": "verb",
    "level": 4,
-   "definition": "to be too much for someone to handle",
+   "definition": "To give someone so much to deal with that they cannot cope.",
    "explanation": "Often used in the form 'overwhelmed' to describe feeling that there is too much to cope with.",
    "forms": {
     "past": "overwhelmed",
@@ -317,7 +497,14 @@
    "example": "The amount of paperwork began to overwhelm her.",
    "picture_idea": "a person buried under a huge pile of papers",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00753137-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -330,6 +517,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to be too much for someone to handle",
+   "definition_basis": {
+    "wordnet_sense": "00753137-v",
+    "wordnet_meaning": "charge someone with too many tasks"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -338,7 +536,7 @@
    "word": "patient",
    "part_of_speech": "adjective",
    "level": 4,
-   "definition": "able to wait calmly without getting angry or upset",
+   "definition": "Able to wait or deal with problems calmly, without getting angry or upset.",
    "explanation": "Patient is also a noun meaning a person getting medical care.",
    "forms": {
     "comparative": "more patient",
@@ -347,7 +545,14 @@
    "example": "Be patient; the bus will come soon.",
    "picture_idea": "a person calmly waiting at a bus stop",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01739985-a"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -360,6 +565,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "able to wait calmly without getting angry or upset",
+   "definition_basis": {
+    "wordnet_sense": "01739985-a",
+    "wordnet_meaning": "enduring trying circumstances with even temper or characterized by such endurance"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -368,7 +584,7 @@
    "word": "persuade",
    "part_of_speech": "verb",
    "level": 4,
-   "definition": "to get someone to do or believe something by giving good reasons",
+   "definition": "To get someone to agree to do or believe something by giving good reasons.",
    "explanation": "",
    "forms": {
     "past": "persuaded",
@@ -379,7 +595,14 @@
    "example": "I persuaded my brother to come to the party.",
    "picture_idea": "one person talking and gesturing to convince a friend",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00768463-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -391,6 +614,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to get someone to do or believe something by giving good reasons",
+   "definition_basis": {
+    "wordnet_sense": "00768463-v",
+    "wordnet_meaning": "cause somebody to adopt a certain position, belief, or course of action; twist somebody's arm"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -399,7 +633,7 @@
    "word": "portion",
    "part_of_speech": "noun",
    "level": 4,
-   "definition": "a part of something, or an amount of food for one person",
+   "definition": "An amount of food for one person at a meal; also, a part of something bigger.",
    "explanation": "",
    "forms": {
     "plural": "portions"
@@ -407,7 +641,14 @@
    "example": "The restaurant serves large portions.",
    "picture_idea": "a plate of food with a serving spoon",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-07593928-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -420,6 +661,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "a part of something, or an amount of food for one person",
+   "definition_basis": {
+    "wordnet_sense": "07593928-n",
+    "wordnet_meaning": "an individual quantity of food or drink taken as part of a meal"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -428,7 +680,7 @@
    "word": "predict",
    "part_of_speech": "verb",
    "level": 4,
-   "definition": "to say what you think will happen in the future",
+   "definition": "To say what you think will happen before it happens.",
    "explanation": "",
    "forms": {
     "past": "predicted",
@@ -439,7 +691,14 @@
    "example": "The forecast predicts rain tomorrow.",
    "picture_idea": "a weather map showing clouds and rain symbols",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00919743-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -452,6 +711,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to say what you think will happen in the future",
+   "definition_basis": {
+    "wordnet_sense": "00919743-v",
+    "wordnet_meaning": "make a prediction about; tell in advance"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -460,7 +730,7 @@
    "word": "prefer",
    "part_of_speech": "verb",
    "level": 4,
-   "definition": "to like one thing better than another",
+   "definition": "To like one choice more than another and pick it if you can.",
    "explanation": "",
    "forms": {
     "past": "preferred",
@@ -471,7 +741,14 @@
    "example": "I prefer tea to coffee.",
    "picture_idea": "a person choosing a cup of tea over a cup of coffee",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01830440-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -484,6 +761,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to like one thing better than another",
+   "definition_basis": {
+    "wordnet_sense": "01830440-v",
+    "wordnet_meaning": "like better; value more highly"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -492,7 +780,7 @@
    "word": "pressure",
    "part_of_speech": "noun",
    "level": 4,
-   "definition": "a feeling of stress from having to do or achieve something, or a force pressing on something",
+   "definition": "The stress you feel when you must do something well or quickly; also, a force pressing on something.",
    "explanation": "",
    "forms": {
     "plural": "pressures"
@@ -500,7 +788,14 @@
    "example": "He works well under pressure.",
    "picture_idea": "a person at a desk with a clock and many tasks around",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-14500660-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -513,6 +808,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "a feeling of stress from having to do or achieve something, or a force pressing on something",
+   "definition_basis": {
+    "wordnet_sense": "14500660-n",
+    "wordnet_meaning": "an oppressive condition of physical or mental or social or economic distress"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -521,7 +827,7 @@
    "word": "reasonable",
    "part_of_speech": "adjective",
    "level": 4,
-   "definition": "fair and sensible, or not too expensive",
+   "definition": "Fair and not too much, such as a price; also, sensible.",
    "explanation": "",
    "forms": {
     "comparative": "more reasonable",
@@ -530,7 +836,14 @@
    "example": "The hotel offered a reasonable price.",
    "picture_idea": "",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01536380-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -543,6 +856,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "fair and sensible, or not too expensive",
+   "definition_basis": {
+    "wordnet_sense": "01536380-s",
+    "wordnet_meaning": "not excessive or extreme"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -551,7 +875,7 @@
    "word": "recommend",
    "part_of_speech": "verb",
    "level": 4,
-   "definition": "to say that something is good or suggest that someone should do it",
+   "definition": "To tell someone that something is good and that they should try it.",
    "explanation": "",
    "forms": {
     "past": "recommended",
@@ -562,7 +886,14 @@
    "example": "Can you recommend a good restaurant?",
    "picture_idea": "a person pointing to a menu while talking to a friend",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00884469-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -575,6 +906,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to say that something is good or suggest that someone should do it",
+   "definition_basis": {
+    "wordnet_sense": "00884469-v",
+    "wordnet_meaning": "express a good opinion of"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -583,7 +925,7 @@
    "word": "reliable",
    "part_of_speech": "adjective",
    "level": 4,
-   "definition": "able to be trusted to do what is expected",
+   "definition": "Able to be trusted to work well or do what it should, every time.",
    "explanation": "",
    "forms": {
     "comparative": "more reliable",
@@ -592,7 +934,14 @@
    "example": "My car is old but very reliable.",
    "picture_idea": "a sturdy car starting easily on a cold morning",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00727525-a"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -605,6 +954,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "able to be trusted to do what is expected",
+   "definition_basis": {
+    "wordnet_sense": "00727525-a",
+    "wordnet_meaning": "worthy of reliance or trust"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -613,7 +973,7 @@
    "word": "reluctant",
    "part_of_speech": "adjective",
    "level": 4,
-   "definition": "not wanting to do something",
+   "definition": "Slow to do something because you do not really want to.",
    "explanation": "",
    "forms": {
     "comparative": "more reluctant",
@@ -622,7 +982,14 @@
    "example": "She was reluctant to speak in front of the group.",
    "picture_idea": "a person hanging back while others walk forward",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00815538-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -634,6 +1001,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "not wanting to do something",
+   "definition_basis": {
+    "wordnet_sense": "00815538-s",
+    "wordnet_meaning": "not eager"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -642,7 +1020,7 @@
    "word": "require",
    "part_of_speech": "verb",
    "level": 4,
-   "definition": "to need something or make it necessary",
+   "definition": "To need something, so that you must have it or do it.",
    "explanation": "",
    "forms": {
     "past": "required",
@@ -653,7 +1031,14 @@
    "example": "This job requires a driver's license.",
    "picture_idea": "a checklist with a driver's license on it",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02634015-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -666,6 +1051,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to need something or make it necessary",
+   "definition_basis": {
+    "wordnet_sense": "02634015-v",
+    "wordnet_meaning": "require as useful, just, or proper"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -674,7 +1070,7 @@
    "word": "resist",
    "part_of_speech": "verb",
    "level": 4,
-   "definition": "to stop yourself from doing something you want to do, or to fight against something",
+   "definition": "To stop yourself from doing something you want to do; also, to fight against something.",
    "explanation": "",
    "forms": {
     "past": "resisted",
@@ -697,6 +1093,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to stop yourself from doing something you want to do, or to fight against something",
+   "definition_basis": {
+    "wordnet_sense": null,
+    "note": "no WordNet meaning fit; written by Claude"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -705,7 +1112,7 @@
    "word": "responsible",
    "part_of_speech": "adjective",
    "level": 4,
-   "definition": "in charge of something, or able to be trusted to act sensibly",
+   "definition": "In charge of something, so it is your job; also, sensible and able to be trusted.",
    "explanation": "",
    "forms": {
     "comparative": "more responsible",
@@ -714,7 +1121,14 @@
    "example": "Who is responsible for locking the office?",
    "picture_idea": "a person holding a ring of keys at a door",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02003477-a"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -727,6 +1141,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "in charge of something, or able to be trusted to act sensibly",
+   "definition_basis": {
+    "wordnet_sense": "02003477-a",
+    "wordnet_meaning": "worthy of or requiring responsibility or trust; or held accountable"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -735,7 +1160,7 @@
    "word": "routine",
    "part_of_speech": "noun",
    "level": 4,
-   "definition": "the usual way you do things every day",
+   "definition": "The usual way you do things, in the same order, each day.",
    "explanation": "",
    "forms": {
     "plural": "routines"
@@ -743,7 +1168,14 @@
    "example": "My morning routine includes a short walk.",
    "picture_idea": "a daily planner showing the same steps each morning",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01028424-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -755,6 +1187,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "the usual way you do things every day",
+   "definition_basis": {
+    "wordnet_sense": "01028424-n",
+    "wordnet_meaning": "an unvarying or habitual method or procedure"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -763,7 +1206,7 @@
    "word": "schedule",
    "part_of_speech": "noun",
    "level": 4,
-   "definition": "a plan that lists when things will happen",
+   "definition": "A list of the times when things are planned to happen.",
    "explanation": "Schedule can also be a verb meaning to plan something for a certain time.",
    "forms": {
     "plural": "schedules"
@@ -771,7 +1214,14 @@
    "example": "The train schedule changes on weekends.",
    "picture_idea": "a timetable board at a train station",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-06507319-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -784,6 +1234,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "a plan that lists when things will happen",
+   "definition_basis": {
+    "wordnet_sense": "06507319-n",
+    "wordnet_meaning": "an ordered list of times at which things are planned to occur"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -792,7 +1253,7 @@
    "word": "sensible",
    "part_of_speech": "adjective",
    "level": 4,
-   "definition": "showing good judgment and practical",
+   "definition": "Showing good sense and making wise, practical choices.",
    "explanation": "Sensible means practical and wise; it is different from 'sensitive'.",
    "forms": {
     "comparative": "more sensible",
@@ -801,7 +1262,14 @@
    "example": "Wearing a coat in winter is sensible.",
    "picture_idea": "a person in a warm coat and boots in the snow",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01950023-a"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -814,6 +1282,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "showing good judgment and practical",
+   "definition_basis": {
+    "wordnet_sense": "01950023-a",
+    "wordnet_meaning": "showing reason or sound judgment"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -822,7 +1301,7 @@
    "word": "separate",
    "part_of_speech": "verb",
    "level": 4,
-   "definition": "to divide things or move them apart",
+   "definition": "To move or keep things apart from each other, or sort them into groups.",
    "explanation": "Separate is also an adjective meaning not joined or different; it is pronounced differently as an adjective.",
    "forms": {
     "past": "separated",
@@ -833,7 +1312,14 @@
    "example": "Please separate the white clothes from the colored ones.",
    "picture_idea": "two piles of laundry, one white and one colored",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01461602-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -846,6 +1332,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to divide things or move them apart",
+   "definition_basis": {
+    "wordnet_sense": "01461602-v",
+    "wordnet_meaning": "divide into components or constituents"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -854,7 +1351,7 @@
    "word": "significant",
    "part_of_speech": "adjective",
    "level": 4,
-   "definition": "important or large enough to matter",
+   "definition": "Important or big enough to be noticed or to matter.",
    "explanation": "",
    "forms": {
     "comparative": "more significant",
@@ -863,7 +1360,14 @@
    "example": "There has been a significant change in the weather.",
    "picture_idea": "",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02168847-a"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -875,6 +1379,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "important or large enough to matter",
+   "definition_basis": {
+    "wordnet_sense": "02168847-a",
+    "wordnet_meaning": "important in effect or meaning"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -883,7 +1398,7 @@
    "word": "sincere",
    "part_of_speech": "adjective",
    "level": 4,
-   "definition": "honest and meaning what you say",
+   "definition": "Honest and truly meaning what you say or feel.",
    "explanation": "",
    "forms": {
     "comparative": "more sincere",
@@ -892,7 +1407,14 @@
    "example": "He gave her a sincere apology.",
    "picture_idea": "a person speaking earnestly with a hand on their chest",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02186899-a"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -905,6 +1427,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "honest and meaning what you say",
+   "definition_basis": {
+    "wordnet_sense": "02186899-a",
+    "wordnet_meaning": "open and genuine; not deceitful"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -913,7 +1446,7 @@
    "word": "situation",
    "part_of_speech": "noun",
    "level": 4,
-   "definition": "the set of things that are happening at a certain time",
+   "definition": "All the things that are happening around you at a certain time.",
    "explanation": "",
    "forms": {
     "plural": "situations"
@@ -921,7 +1454,14 @@
    "example": "It was a difficult situation for everyone.",
    "picture_idea": "",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-13950416-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -933,6 +1473,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "the set of things that are happening at a certain time",
+   "definition_basis": {
+    "wordnet_sense": "13950416-n",
+    "wordnet_meaning": "the general state of things; the combination of circumstances at a given time"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -941,7 +1492,7 @@
    "word": "struggle",
    "part_of_speech": "verb",
    "level": 4,
-   "definition": "to try very hard to do something that is difficult",
+   "definition": "To try very hard to do something that is difficult.",
    "explanation": "Struggle can also be a noun meaning a hard effort or fight.",
    "forms": {
     "past": "struggled",
@@ -952,7 +1503,14 @@
    "example": "He struggled to carry all the bags upstairs.",
    "picture_idea": "a person climbing stairs with many heavy bags",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02412468-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -965,6 +1523,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to try very hard to do something that is difficult",
+   "definition_basis": {
+    "wordnet_sense": "02412468-v",
+    "wordnet_meaning": "make a strenuous or labored effort"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -973,13 +1542,20 @@
    "word": "suddenly",
    "part_of_speech": "adverb",
    "level": 4,
-   "definition": "quickly and without warning",
+   "definition": "Quickly and when no one expects it.",
    "explanation": "",
    "forms": {},
    "example": "The lights suddenly went out.",
    "picture_idea": "a room that goes from bright to dark",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-81484980-r"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -991,6 +1567,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "quickly and without warning",
+   "definition_basis": {
+    "wordnet_sense": "81484980-r",
+    "wordnet_meaning": "quickly and without warning"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -999,7 +1586,7 @@
    "word": "suggest",
    "part_of_speech": "verb",
    "level": 4,
-   "definition": "to offer an idea or plan for someone to think about",
+   "definition": "To offer an idea or plan for someone to think about.",
    "explanation": "",
    "forms": {
     "past": "suggested",
@@ -1010,7 +1597,14 @@
    "example": "I suggest we leave early to avoid traffic.",
    "picture_idea": "a person raising a hand with a lightbulb idea above them",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00876925-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1022,6 +1616,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to offer an idea or plan for someone to think about",
+   "definition_basis": {
+    "wordnet_sense": "00876925-v",
+    "wordnet_meaning": "make a proposal, declare a plan for something"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1030,7 +1635,7 @@
    "word": "support",
    "part_of_speech": "verb",
    "level": 4,
-   "definition": "to help someone or hold something up",
+   "definition": "To help or encourage someone; also, to hold something up so it does not fall.",
    "explanation": "Support can also be a noun meaning help or encouragement.",
    "forms": {
     "past": "supported",
@@ -1041,7 +1646,14 @@
    "example": "Her family supported her decision to study abroad.",
    "picture_idea": "a person putting an arm around a friend's shoulder",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02561834-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1054,6 +1666,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to help someone or hold something up",
+   "definition_basis": {
+    "wordnet_sense": "02561834-v",
+    "wordnet_meaning": "give moral or psychological support, aid, or courage to"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1062,7 +1685,7 @@
    "word": "surround",
    "part_of_speech": "verb",
    "level": 4,
-   "definition": "to be or go all around something",
+   "definition": "To be or go all the way around something.",
    "explanation": "",
    "forms": {
     "past": "surrounded",
@@ -1073,7 +1696,14 @@
    "example": "Tall trees surround the small lake.",
    "picture_idea": "a lake with trees circling it",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01469999-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1085,6 +1715,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to be or go all around something",
+   "definition_basis": {
+    "wordnet_sense": "01469999-v",
+    "wordnet_meaning": "extend on all sides of simultaneously; encircle"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1093,7 +1734,7 @@
    "word": "suspect",
    "part_of_speech": "verb",
    "level": 4,
-   "definition": "to think something is probably true without being sure",
+   "definition": "To think something is probably true, but not be sure.",
    "explanation": "As a verb it is stressed on the second syllable; as a noun, a person thought to have done a crime, it is stressed on the first.",
    "forms": {
     "past": "suspected",
@@ -1104,7 +1745,14 @@
    "example": "I suspect he forgot about our meeting.",
    "picture_idea": "a person squinting thoughtfully with a magnifying glass",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00923043-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1116,6 +1764,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to think something is probably true without being sure",
+   "definition_basis": {
+    "wordnet_sense": "00923043-v",
+    "wordnet_meaning": "imagine to be the case or true or probable"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1124,7 +1783,7 @@
    "word": "temporary",
    "part_of_speech": "adjective",
    "level": 4,
-   "definition": "lasting for only a short time",
+   "definition": "Lasting for only a short time, not forever.",
    "explanation": "",
    "forms": {
     "comparative": "more temporary",
@@ -1133,7 +1792,14 @@
    "example": "She has a temporary job for the summer.",
    "picture_idea": "a sign saying 'Temporary Closed' on a shop door",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01760139-a"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1146,6 +1812,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "lasting for only a short time",
+   "definition_basis": {
+    "wordnet_sense": "01760139-a",
+    "wordnet_meaning": "not permanent; not lasting"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1154,7 +1831,7 @@
    "word": "tend",
    "part_of_speech": "verb",
    "level": 4,
-   "definition": "to usually do something or be likely to do it",
+   "definition": "To often do something, or to be likely to do it.",
    "explanation": "Used with 'to', as in 'tend to be'.",
    "forms": {
     "past": "tended",
@@ -1165,7 +1842,14 @@
    "example": "I tend to wake up early on weekends.",
    "picture_idea": "",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02725274-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1177,6 +1861,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to usually do something or be likely to do it",
+   "definition_basis": {
+    "wordnet_sense": "02725274-v",
+    "wordnet_meaning": "have a tendency or disposition to do or be something; be inclined"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1185,13 +1880,20 @@
    "word": "therefore",
    "part_of_speech": "adverb",
    "level": 4,
-   "definition": "for that reason; as a result",
+   "definition": "For that reason; because of what was just said.",
    "explanation": "",
    "forms": {},
    "example": "It was raining; therefore, we stayed inside.",
    "picture_idea": "",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00043413-r"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1204,6 +1906,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "for that reason; as a result",
+   "definition_basis": {
+    "wordnet_sense": "00043413-r",
+    "wordnet_meaning": "(used to introduce a logical conclusion) from that fact or reason or as a result"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1212,7 +1925,7 @@
    "word": "thorough",
    "part_of_speech": "adjective",
    "level": 4,
-   "definition": "careful and complete, leaving nothing out",
+   "definition": "Done with great care and completely, with nothing missed.",
    "explanation": "",
    "forms": {
     "comparative": "more thorough",
@@ -1221,7 +1934,14 @@
    "example": "The doctor gave her a thorough check-up.",
    "picture_idea": "a person carefully checking every item on a list",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00524524-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1234,6 +1954,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "careful and complete, leaving nothing out",
+   "definition_basis": {
+    "wordnet_sense": "00524524-s",
+    "wordnet_meaning": "performed comprehensively and completely; not superficial or partial"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1242,7 +1973,7 @@
    "word": "tradition",
    "part_of_speech": "noun",
    "level": 4,
-   "definition": "a custom or belief passed down over many years",
+   "definition": "A custom or belief that people have kept for many years and pass on.",
    "explanation": "",
    "forms": {
     "plural": "traditions"
@@ -1250,7 +1981,14 @@
    "example": "Eating together on Sunday is a family tradition.",
    "picture_idea": "a family sitting around a dinner table",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-05675248-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1263,6 +2001,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "a custom or belief passed down over many years",
+   "definition_basis": {
+    "wordnet_sense": "05675248-n",
+    "wordnet_meaning": "a specific practice of long standing"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1271,7 +2020,7 @@
    "word": "unusual",
    "part_of_speech": "adjective",
    "level": 4,
-   "definition": "not normal or common",
+   "definition": "Different from what is normal or common.",
    "explanation": "",
    "forms": {
     "comparative": "more unusual",
@@ -1280,7 +2029,14 @@
    "example": "It's unusual to see snow here in April.",
    "picture_idea": "snow falling on blooming spring flowers",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00492026-a"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1292,6 +2048,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "not normal or common",
+   "definition_basis": {
+    "wordnet_sense": "00492026-a",
+    "wordnet_meaning": "not usual or common or ordinary"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1300,7 +2067,7 @@
    "word": "urgent",
    "part_of_speech": "adjective",
    "level": 4,
-   "definition": "needing action right away",
+   "definition": "Needing to be dealt with right away.",
    "explanation": "",
    "forms": {
     "comparative": "more urgent",
@@ -1309,7 +2076,14 @@
    "example": "She got an urgent message from the hospital.",
    "picture_idea": "a phone showing a flashing red alert message",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00717023-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1322,6 +2096,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "needing action right away",
+   "definition_basis": {
+    "wordnet_sense": "00717023-s",
+    "wordnet_meaning": "compelling immediate action"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1330,7 +2115,7 @@
    "word": "valuable",
    "part_of_speech": "adjective",
    "level": 4,
-   "definition": "worth a lot of money or very useful",
+   "definition": "Worth a lot of money; also, very useful or important.",
    "explanation": "",
    "forms": {
     "comparative": "more valuable",
@@ -1339,7 +2124,14 @@
    "example": "Keep your valuable items in a safe place.",
    "picture_idea": "a jewelry box with a ring and a gold watch",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02510833-a"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1352,6 +2144,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "worth a lot of money or very useful",
+   "definition_basis": {
+    "wordnet_sense": "02510833-a",
+    "wordnet_meaning": "having great material or monetary value especially for use or exchange"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1360,13 +2163,20 @@
    "word": "various",
    "part_of_speech": "adjective",
    "level": 4,
-   "definition": "of several different kinds",
+   "definition": "Of several different kinds.",
    "explanation": "",
    "forms": {},
    "example": "The store sells various types of bread.",
    "picture_idea": "a bakery shelf with many different loaves",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02073069-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1379,6 +2189,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "of several different kinds",
+   "definition_basis": {
+    "wordnet_sense": "02073069-s",
+    "wordnet_meaning": "of many different kinds purposefully arranged but lacking any uniformity"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1387,7 +2208,7 @@
    "word": "vehicle",
    "part_of_speech": "noun",
    "level": 4,
-   "definition": "a machine that carries people or things, such as a car or truck",
+   "definition": "A machine, such as a car or truck, that carries people or things.",
    "explanation": "",
    "forms": {
     "plural": "vehicles"
@@ -1395,7 +2216,14 @@
    "example": "Only electric vehicles are allowed in this area.",
    "picture_idea": "a car, a truck, and a van on a road",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-04531608-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1407,6 +2235,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "a machine that carries people or things, such as a car or truck",
+   "definition_basis": {
+    "wordnet_sense": "04531608-n",
+    "wordnet_meaning": "a conveyance that transports people or objects"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1415,7 +2254,7 @@
    "word": "whether",
    "part_of_speech": "conjunction",
    "level": 4,
-   "definition": "used to talk about two or more possibilities",
+   "definition": "Used when you talk about two possibilities and are not sure which one is true.",
    "explanation": "Often paired with 'or not'. Not the same as 'weather'.",
    "forms": {},
    "example": "I don't know whether she will come.",
@@ -1434,6 +2273,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "used to talk about two or more possibilities",
+   "definition_basis": {
+    "wordnet_sense": null,
+    "note": "WordNet has no entry for this word; written by Claude"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1442,13 +2292,20 @@
    "word": "wisdom",
    "part_of_speech": "noun",
    "level": 4,
-   "definition": "the ability to make good decisions based on experience and knowledge",
+   "definition": "Good judgment that comes from experience and knowledge.",
    "explanation": "",
    "forms": {},
    "example": "My grandmother shared her wisdom with us.",
    "picture_idea": "an elderly person talking to a young person",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-05624890-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1461,6 +2318,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "the ability to make good decisions based on experience and knowledge",
+   "definition_basis": {
+    "wordnet_sense": "05624890-n",
+    "wordnet_meaning": "ability to apply knowledge or experience or understanding or common sense and insight"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1469,7 +2337,7 @@
    "word": "worthwhile",
    "part_of_speech": "adjective",
    "level": 4,
-   "definition": "important or good enough to spend time or effort on",
+   "definition": "Good enough to be worth the time or effort you spend on it.",
    "explanation": "",
    "forms": {
     "comparative": "more worthwhile",
@@ -1478,7 +2346,14 @@
    "example": "The long drive was worthwhile because the view was beautiful.",
    "picture_idea": "a scenic mountain view at the end of a road",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02598251-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1491,6 +2366,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "important or good enough to spend time or effort on",
+   "definition_basis": {
+    "wordnet_sense": "02598251-s",
+    "wordnet_meaning": "sufficiently valuable to justify the investment of time or interest"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   }
  ]

@@ -10,7 +10,7 @@
    "word": "abate",
    "part_of_speech": "verb",
    "level": 5,
-   "definition": "to become less strong or intense",
+   "definition": "To become weaker or less strong, as a storm, pain or anger does over time.",
    "explanation": "",
    "forms": {
     "past": "abated",
@@ -21,7 +21,14 @@
    "example": "The storm finally abated just before midnight.",
    "picture_idea": "Dark storm clouds thinning out as the sun breaks through over a calm sea",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00245945-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -35,6 +42,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to become less strong or intense",
+   "definition_basis": {
+    "wordnet_sense": "00245945-v",
+    "wordnet_meaning": "become less in amount or intensity"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -43,7 +61,7 @@
    "word": "acquiesce",
    "part_of_speech": "verb",
    "level": 5,
-   "definition": "to agree or give in without protest",
+   "definition": "To agree to something, often without wanting to, and without arguing any more.",
    "explanation": "Often followed by 'to' or 'in'.",
    "forms": {
     "past": "acquiesced",
@@ -54,7 +72,14 @@
    "example": "After a long argument, she reluctantly acquiesced to her brother's plan.",
    "picture_idea": "",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00805801-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -68,6 +93,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to agree or give in without protest",
+   "definition_basis": {
+    "wordnet_sense": "00805801-v",
+    "wordnet_meaning": "to agree or express agreement"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -76,7 +112,7 @@
    "word": "ambivalent",
    "part_of_speech": "adjective",
    "level": 5,
-   "definition": "having mixed or conflicting feelings about something",
+   "definition": "Having mixed feelings about something, so you cannot decide what you think of it.",
    "explanation": "",
    "forms": {
     "comparative": "more ambivalent",
@@ -85,7 +121,14 @@
    "example": "Voters remain ambivalent about the proposed tax changes.",
    "picture_idea": "A person standing at a fork in the road, looking back and forth between two signs",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00338739-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -99,6 +142,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "having mixed or conflicting feelings about something",
+   "definition_basis": {
+    "wordnet_sense": "00338739-s",
+    "wordnet_meaning": "uncertain or unable to decide about what course to follow"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -107,7 +161,7 @@
    "word": "arduous",
    "part_of_speech": "adjective",
    "level": 5,
-   "definition": "very difficult and tiring, needing a lot of effort",
+   "definition": "Very hard and tiring, and needing a lot of effort over a long time.",
    "explanation": "",
    "forms": {
     "comparative": "more arduous",
@@ -116,7 +170,14 @@
    "example": "They began the arduous climb to the summit before dawn.",
    "picture_idea": "A hiker struggling up a steep, rocky mountain path with a heavy backpack",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00840083-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -130,6 +191,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "very difficult and tiring, needing a lot of effort",
+   "definition_basis": {
+    "wordnet_sense": "00840083-s",
+    "wordnet_meaning": "characterized by effort to the point of exhaustion; especially physical effort"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -138,7 +210,7 @@
    "word": "audacious",
    "part_of_speech": "adjective",
    "level": 5,
-   "definition": "bold and willing to take risks, sometimes rudely so",
+   "definition": "Very bold, willing to take big risks or to ignore what others think is proper.",
    "explanation": "",
    "forms": {
     "comparative": "more audacious",
@@ -147,7 +219,14 @@
    "example": "The thieves carried out an audacious robbery in broad daylight.",
    "picture_idea": "",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00066755-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -161,6 +240,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "bold and willing to take risks, sometimes rudely so",
+   "definition_basis": {
+    "wordnet_sense": "00066755-s",
+    "wordnet_meaning": "disposed to venture or take risks"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -169,7 +259,7 @@
    "word": "benevolent",
    "part_of_speech": "adjective",
    "level": 5,
-   "definition": "kind, generous and wanting to help others",
+   "definition": "Kind and generous, and wanting to help other people.",
    "explanation": "",
    "forms": {
     "comparative": "more benevolent",
@@ -178,7 +268,14 @@
    "example": "A benevolent donor paid for the new children's wing of the hospital.",
    "picture_idea": "An elderly man handing a bag of food to a smiling family",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02672151-a"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -192,6 +289,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "kind, generous and wanting to help others",
+   "definition_basis": {
+    "wordnet_sense": "02672151-a",
+    "wordnet_meaning": "intending or showing kindness"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -200,7 +308,7 @@
    "word": "bolster",
    "part_of_speech": "verb",
    "level": 5,
-   "definition": "to support or strengthen something",
+   "definition": "To make something stronger or more secure by giving it extra support.",
    "explanation": "",
    "forms": {
     "past": "bolstered",
@@ -211,7 +319,14 @@
    "example": "The good news helped bolster confidence in the economy.",
    "picture_idea": "",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00223800-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -225,6 +340,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to support or strengthen something",
+   "definition_basis": {
+    "wordnet_sense": "00223800-v",
+    "wordnet_meaning": "support and strengthen"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -233,13 +359,20 @@
    "word": "brevity",
    "part_of_speech": "noun",
    "level": 5,
-   "definition": "the quality of being short, especially in speech or writing",
+   "definition": "Being short, especially in speech or writing, by using only a few words.",
    "explanation": "Also used for something lasting only a short time.",
    "forms": {},
    "example": "The speech was praised for its brevity and clarity.",
    "picture_idea": "",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-05060193-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -253,6 +386,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "the quality of being short, especially in speech or writing",
+   "definition_basis": {
+    "wordnet_sense": "05060193-n",
+    "wordnet_meaning": "the attribute of being brief or fleeting"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -261,7 +405,7 @@
    "word": "candid",
    "part_of_speech": "adjective",
    "level": 5,
-   "definition": "honest and direct, even when the truth is uncomfortable",
+   "definition": "Honest and open in what you say, even when the truth is hard to hear.",
    "explanation": "",
    "forms": {
     "comparative": "more candid",
@@ -270,7 +414,14 @@
    "example": "In a candid interview, the coach admitted the team had played badly.",
    "picture_idea": "Two people talking frankly across a table",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01313228-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -284,6 +435,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "honest and direct, even when the truth is uncomfortable",
+   "definition_basis": {
+    "wordnet_sense": "01313228-s",
+    "wordnet_meaning": "openly straightforward and direct without reserve or secretiveness"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -292,7 +454,7 @@
    "word": "capricious",
    "part_of_speech": "adjective",
    "level": 5,
-   "definition": "changing suddenly and without clear reason in mood or behavior",
+   "definition": "Changing suddenly and for no clear reason, like a person's mood or the weather.",
    "explanation": "",
    "forms": {
     "comparative": "more capricious",
@@ -301,7 +463,14 @@
    "example": "The capricious weather ruined our plans for the picnic.",
    "picture_idea": "",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01848219-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -315,6 +484,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "changing suddenly and without clear reason in mood or behavior",
+   "definition_basis": {
+    "wordnet_sense": "01848219-s",
+    "wordnet_meaning": "changeable"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -323,7 +503,7 @@
    "word": "circumspect",
    "part_of_speech": "adjective",
    "level": 5,
-   "definition": "careful to think about possible risks before acting",
+   "definition": "Careful, and thinking about possible risks before you say or do something.",
    "explanation": "",
    "forms": {
     "comparative": "more circumspect",
@@ -332,7 +512,14 @@
    "example": "The minister was circumspect when reporters asked about the deal.",
    "picture_idea": "",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01904557-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -346,6 +533,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "careful to think about possible risks before acting",
+   "definition_basis": {
+    "wordnet_sense": "01904557-s",
+    "wordnet_meaning": "heedful of potential consequences"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -354,7 +552,7 @@
    "word": "clandestine",
    "part_of_speech": "adjective",
    "level": 5,
-   "definition": "done in secret, often because it is not allowed",
+   "definition": "Kept secret, often because other people would not allow it or would not approve.",
    "explanation": "",
    "forms": {
     "comparative": "more clandestine",
@@ -363,7 +561,14 @@
    "example": "The two leaders held a clandestine meeting in a small hotel.",
    "picture_idea": "Two figures in coats whispering in a dark alley at night",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01710918-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -377,6 +582,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "done in secret, often because it is not allowed",
+   "definition_basis": {
+    "wordnet_sense": "01710918-s",
+    "wordnet_meaning": "conducted with or marked by hidden aims or methods"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -385,7 +601,7 @@
    "word": "cogent",
    "part_of_speech": "adjective",
    "level": 5,
-   "definition": "clear, logical and convincing",
+   "definition": "Clear and logical, so that people find it easy to believe.",
    "explanation": "",
    "forms": {
     "comparative": "more cogent",
@@ -394,7 +610,14 @@
    "example": "She made a cogent argument for building the new library.",
    "picture_idea": "",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01774916-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -408,6 +631,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "clear, logical and convincing",
+   "definition_basis": {
+    "wordnet_sense": "01774916-s",
+    "wordnet_meaning": "powerfully persuasive"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -416,7 +650,7 @@
    "word": "conundrum",
    "part_of_speech": "noun",
    "level": 5,
-   "definition": "a confusing problem or question that is hard to solve",
+   "definition": "A confusing problem or question that is very hard to solve.",
    "explanation": "",
    "forms": {
     "plural": "conundrums"
@@ -424,7 +658,14 @@
    "example": "The city faces a conundrum: it needs more housing but has no land.",
    "picture_idea": "A person scratching their head in front of a tangled maze",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-06798080-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -438,6 +679,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "a confusing problem or question that is hard to solve",
+   "definition_basis": {
+    "wordnet_sense": "06798080-n",
+    "wordnet_meaning": "a difficult problem"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -446,7 +698,7 @@
    "word": "culminate",
    "part_of_speech": "verb",
    "level": 5,
-   "definition": "to reach a final or highest point",
+   "definition": "To end at the highest or most important point, after things have built up over time.",
    "explanation": "Usually followed by 'in' or 'with'.",
    "forms": {
     "past": "culminated",
@@ -457,7 +709,14 @@
    "example": "Months of protests culminated in a huge march through the capital.",
    "picture_idea": "",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00486540-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -471,6 +730,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to reach a final or highest point",
+   "definition_basis": {
+    "wordnet_sense": "00486540-v",
+    "wordnet_meaning": "end, especially to reach a final or climactic stage"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -479,13 +749,20 @@
    "word": "dearth",
    "part_of_speech": "noun",
    "level": 5,
-   "definition": "a serious lack or shortage of something",
+   "definition": "A serious lack of something, when there is far too little of it.",
    "explanation": "Usually followed by 'of'.",
    "forms": {},
    "example": "There is a dearth of affordable apartments in the city.",
    "picture_idea": "An almost empty shelf in a shop",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-14473331-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -499,6 +776,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "a serious lack or shortage of something",
+   "definition_basis": {
+    "wordnet_sense": "14473331-n",
+    "wordnet_meaning": "an acute insufficiency"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -507,7 +795,7 @@
    "word": "debacle",
    "part_of_speech": "noun",
    "level": 5,
-   "definition": "a total and embarrassing failure",
+   "definition": "A sudden and complete failure that is very embarrassing or causes great trouble.",
    "explanation": "",
    "forms": {
     "plural": "debacles"
@@ -515,7 +803,14 @@
    "example": "The company's product launch turned into a public debacle.",
    "picture_idea": "",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-07380032-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -529,6 +824,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "a total and embarrassing failure",
+   "definition_basis": {
+    "wordnet_sense": "07380032-n",
+    "wordnet_meaning": "a sudden and violent collapse"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -537,7 +843,7 @@
    "word": "deter",
    "part_of_speech": "verb",
    "level": 5,
-   "definition": "to make someone decide not to do something",
+   "definition": "To make someone decide not to do something, by making it seem hard or risky.",
    "explanation": "",
    "forms": {
     "past": "deterred",
@@ -548,7 +854,14 @@
    "example": "High prices may deter tourists from visiting the island.",
    "picture_idea": "",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00772186-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -562,6 +875,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to make someone decide not to do something",
+   "definition_basis": {
+    "wordnet_sense": "00772186-v",
+    "wordnet_meaning": "turn away from by persuasion"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -570,7 +894,7 @@
    "word": "diligent",
    "part_of_speech": "adjective",
    "level": 5,
-   "definition": "working hard and carefully",
+   "definition": "Working hard and carefully, and not giving up on a task.",
    "explanation": "",
    "forms": {
     "comparative": "more diligent",
@@ -579,7 +903,14 @@
    "example": "The diligent student checked every answer twice.",
    "picture_idea": "A student studying carefully at a desk with books and notes",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00757628-a"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -593,6 +924,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "working hard and carefully",
+   "definition_basis": {
+    "wordnet_sense": "00757628-a",
+    "wordnet_meaning": "characterized by care and perseverance in carrying out tasks"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -601,15 +943,22 @@
    "word": "dissent",
    "part_of_speech": "noun",
    "level": 5,
-   "definition": "disagreement with an official or commonly held opinion",
+   "definition": "Strong disagreement with an idea or decision that most people or leaders accept.",
    "explanation": "Also a verb meaning to disagree.",
    "forms": {
     "plural": "dissents"
    },
-   "example": "The judge wrote a dissent explaining why she disagreed with the ruling.",
+   "example": "There was growing dissent among workers after the new rules were announced.",
    "picture_idea": "",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-07196018-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -623,6 +972,18 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "disagreement with an official or commonly held opinion",
+   "example_previous": "The judge wrote a dissent explaining why she disagreed with the ruling.",
+   "definition_basis": {
+    "wordnet_sense": "07196018-n",
+    "wordnet_meaning": "a difference of opinion"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -631,7 +992,7 @@
    "word": "eloquent",
    "part_of_speech": "adjective",
    "level": 5,
-   "definition": "able to speak or write clearly and persuasively",
+   "definition": "Able to speak or write clearly and in a way that moves people.",
    "explanation": "",
    "forms": {
     "comparative": "more eloquent",
@@ -640,7 +1001,14 @@
    "example": "The mayor gave an eloquent speech after the flood.",
    "picture_idea": "A speaker addressing a crowd from a podium",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00151773-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -654,6 +1022,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "able to speak or write clearly and persuasively",
+   "definition_basis": {
+    "wordnet_sense": "00151773-s",
+    "wordnet_meaning": "expressing yourself readily, clearly, effectively"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -662,7 +1041,7 @@
    "word": "elusive",
    "part_of_speech": "adjective",
    "level": 5,
-   "definition": "hard to find, catch or achieve",
+   "definition": "Hard to find or catch, because it keeps getting away.",
    "explanation": "",
    "forms": {
     "comparative": "more elusive",
@@ -671,7 +1050,14 @@
    "example": "The elusive thief has avoided police for months.",
    "picture_idea": "A fox slipping away between trees, barely seen",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00150530-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -685,6 +1071,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "hard to find, catch or achieve",
+   "definition_basis": {
+    "wordnet_sense": "00150530-s",
+    "wordnet_meaning": "skillful at eluding capture"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -693,7 +1090,7 @@
    "word": "embellish",
    "part_of_speech": "verb",
    "level": 5,
-   "definition": "to make something more interesting by adding details, often untrue ones",
+   "definition": "To make a story more interesting by adding extra details, often ones that are not true.",
    "explanation": "",
    "forms": {
     "past": "embellished",
@@ -704,7 +1101,14 @@
    "example": "He liked to embellish his stories with imaginary adventures.",
    "picture_idea": "",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00958437-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -718,6 +1122,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to make something more interesting by adding details, often untrue ones",
+   "definition_basis": {
+    "wordnet_sense": "00958437-v",
+    "wordnet_meaning": "add details to"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -726,7 +1141,7 @@
    "word": "ephemeral",
    "part_of_speech": "adjective",
    "level": 5,
-   "definition": "lasting only a very short time",
+   "definition": "Lasting only a short time before it fades or disappears.",
    "explanation": "",
    "forms": {
     "comparative": "more ephemeral",
@@ -735,7 +1150,14 @@
    "example": "Fame can be ephemeral, fading as quickly as it arrived.",
    "picture_idea": "A soap bubble about to pop",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01760804-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -749,6 +1171,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "lasting only a very short time",
+   "definition_basis": {
+    "wordnet_sense": "01760804-s",
+    "wordnet_meaning": "lasting a very short time"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -757,7 +1190,7 @@
    "word": "exacerbate",
    "part_of_speech": "verb",
    "level": 5,
-   "definition": "to make a problem or bad situation worse",
+   "definition": "To make a problem or bad situation even worse.",
    "explanation": "",
    "forms": {
     "past": "exacerbated",
@@ -768,7 +1201,14 @@
    "example": "The drought was exacerbated by a record-breaking heat wave.",
    "picture_idea": "",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00208618-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -782,6 +1222,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to make a problem or bad situation worse",
+   "definition_basis": {
+    "wordnet_sense": "00208618-v",
+    "wordnet_meaning": "make worse"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -790,7 +1241,7 @@
    "word": "fastidious",
    "part_of_speech": "adjective",
    "level": 5,
-   "definition": "very careful about details and hard to please",
+   "definition": "Very careful about small details and cleanliness, and hard to please.",
    "explanation": "",
    "forms": {
     "comparative": "more fastidious",
@@ -799,7 +1250,14 @@
    "example": "She was fastidious about keeping her desk perfectly tidy.",
    "picture_idea": "A neat desk with pens lined up in a perfect row",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00987053-a"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -813,6 +1271,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "very careful about details and hard to please",
+   "definition_basis": {
+    "wordnet_sense": "00987053-a",
+    "wordnet_meaning": "giving careful attention to detail; hard to please; excessively concerned with cleanliness"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -821,7 +1290,7 @@
    "word": "fervent",
    "part_of_speech": "adjective",
    "level": 5,
-   "definition": "showing strong and sincere feeling or belief",
+   "definition": "Showing very strong and sincere feeling or belief.",
    "explanation": "",
    "forms": {
     "comparative": "more fervent",
@@ -830,7 +1299,14 @@
    "example": "He was a fervent supporter of the local team.",
    "picture_idea": "A fan cheering passionately in a stadium wearing a team scarf",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01730449-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -844,6 +1320,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "showing strong and sincere feeling or belief",
+   "definition_basis": {
+    "wordnet_sense": "01730449-s",
+    "wordnet_meaning": "characterized by intense emotion"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -852,7 +1339,7 @@
    "word": "flourish",
    "part_of_speech": "verb",
    "level": 5,
-   "definition": "to grow or develop well and be successful",
+   "definition": "To grow well and be healthy or successful.",
    "explanation": "",
    "forms": {
     "past": "flourished",
@@ -863,7 +1350,14 @@
    "example": "Small businesses flourished after the new market opened.",
    "picture_idea": "A garden full of healthy, blooming flowers",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00311168-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -877,6 +1371,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to grow or develop well and be successful",
+   "definition_basis": {
+    "wordnet_sense": "00311168-v",
+    "wordnet_meaning": "grow vigorously"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -885,7 +1390,7 @@
    "word": "foster",
    "part_of_speech": "verb",
    "level": 5,
-   "definition": "to help something develop or grow over time",
+   "definition": "To help something grow or get stronger over time.",
    "explanation": "Also means to care for a child who is not your own for a period of time.",
    "forms": {
     "past": "fostered",
@@ -896,7 +1401,14 @@
    "example": "Good teachers foster a love of reading in their students.",
    "picture_idea": "",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02560130-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -910,6 +1422,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to help something develop or grow over time",
+   "definition_basis": {
+    "wordnet_sense": "02560130-v",
+    "wordnet_meaning": "promote the growth of"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -918,7 +1441,7 @@
    "word": "frugal",
    "part_of_speech": "adjective",
    "level": 5,
-   "definition": "careful about spending money and avoiding waste",
+   "definition": "Careful with money and not wasting things.",
    "explanation": "",
    "forms": {
     "comparative": "more frugal",
@@ -927,7 +1450,14 @@
    "example": "Her frugal habits allowed her to save enough for a small house.",
    "picture_idea": "A person counting coins and putting them into a piggy bank",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02430138-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -941,6 +1471,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "careful about spending money and avoiding waste",
+   "definition_basis": {
+    "wordnet_sense": "02430138-s",
+    "wordnet_meaning": "avoiding waste"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -949,7 +1490,7 @@
    "word": "futile",
    "part_of_speech": "adjective",
    "level": 5,
-   "definition": "having no chance of success; pointless",
+   "definition": "Having no chance of working; pointless, because it brings no result.",
    "explanation": "",
    "forms": {
     "comparative": "more futile",
@@ -958,7 +1499,14 @@
    "example": "Their attempts to stop the flood were futile.",
    "picture_idea": "A person trying to sweep back ocean waves with a broom",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02507270-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -972,6 +1520,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "having no chance of success; pointless",
+   "definition_basis": {
+    "wordnet_sense": "02507270-s",
+    "wordnet_meaning": "producing no result or effect"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -980,7 +1539,7 @@
    "word": "gregarious",
    "part_of_speech": "adjective",
    "level": 5,
-   "definition": "enjoying being with other people; sociable",
+   "definition": "Liking to be around other people and to talk and spend time with them.",
    "explanation": "",
    "forms": {
     "comparative": "more gregarious",
@@ -989,7 +1548,14 @@
    "example": "He was a gregarious man who knew everyone in the village.",
    "picture_idea": "A smiling person chatting with a large group at a party",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02256728-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1003,6 +1569,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "enjoying being with other people; sociable",
+   "definition_basis": {
+    "wordnet_sense": "02256728-s",
+    "wordnet_meaning": "instinctively or temperamentally seeking and enjoying the company of others"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1011,7 +1588,7 @@
    "word": "grievance",
    "part_of_speech": "noun",
    "level": 5,
-   "definition": "a real or imagined reason to complain about unfair treatment",
+   "definition": "A reason to complain because you feel you were treated unfairly.",
    "explanation": "",
    "forms": {
     "plural": "grievances"
@@ -1019,7 +1596,14 @@
    "example": "The workers filed a formal grievance about unpaid overtime.",
    "picture_idea": "",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-07225461-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1033,6 +1617,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "a real or imagined reason to complain about unfair treatment",
+   "definition_basis": {
+    "wordnet_sense": "07225461-n",
+    "wordnet_meaning": "a complaint about a (real or imaginary) wrong that causes resentment and is grounds for action"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1041,7 +1636,7 @@
    "word": "hamper",
    "part_of_speech": "verb",
    "level": 5,
-   "definition": "to make it hard for someone to move or progress",
+   "definition": "To make it hard for someone or something to move or make progress.",
    "explanation": "Also a noun meaning a large basket with a lid.",
    "forms": {
     "past": "hampered",
@@ -1052,7 +1647,14 @@
    "example": "Heavy snow hampered rescue efforts in the mountains.",
    "picture_idea": "",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00237139-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1066,6 +1668,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to make it hard for someone to move or progress",
+   "definition_basis": {
+    "wordnet_sense": "00237139-v",
+    "wordnet_meaning": "prevent the progress or free movement of"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1074,7 +1687,7 @@
    "word": "haphazard",
    "part_of_speech": "adjective",
    "level": 5,
-   "definition": "lacking order or planning; random",
+   "definition": "Done without order or planning, as if left to chance.",
    "explanation": "",
    "forms": {
     "comparative": "more haphazard",
@@ -1083,7 +1696,14 @@
    "example": "Boxes were stacked in a haphazard way along the hall.",
    "picture_idea": "A messy pile of boxes stacked unevenly",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01931202-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1097,6 +1717,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "lacking order or planning; random",
+   "definition_basis": {
+    "wordnet_sense": "01931202-s",
+    "wordnet_meaning": "dependent upon or characterized by chance"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1105,13 +1736,20 @@
    "word": "hubris",
    "part_of_speech": "noun",
    "level": 5,
-   "definition": "extreme pride and self-confidence that often leads to a downfall",
+   "definition": "Too much pride and self-confidence, which often leads to trouble.",
    "explanation": "",
    "forms": {},
    "example": "The king's hubris led him to ignore every warning.",
    "picture_idea": "",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-04895898-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1125,6 +1763,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "extreme pride and self-confidence that often leads to a downfall",
+   "definition_basis": {
+    "wordnet_sense": "04895898-n",
+    "wordnet_meaning": "overbearing pride or presumption"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1133,7 +1782,7 @@
    "word": "impartial",
    "part_of_speech": "adjective",
    "level": 5,
-   "definition": "fair and not favoring one side over another",
+   "definition": "Fair, and not taking one side over the other.",
    "explanation": "",
    "forms": {
     "comparative": "more impartial",
@@ -1142,7 +1791,14 @@
    "example": "A judge must remain impartial throughout the trial.",
    "picture_idea": "A set of balanced scales",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01727525-a"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1156,6 +1812,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "fair and not favoring one side over another",
+   "definition_basis": {
+    "wordnet_sense": "01727525-a",
+    "wordnet_meaning": "showing lack of favoritism"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1164,7 +1831,7 @@
    "word": "incessant",
    "part_of_speech": "adjective",
    "level": 5,
-   "definition": "continuing without stopping, often in an annoying way",
+   "definition": "Going on and on without stopping, often in an annoying way.",
    "explanation": "",
    "forms": {
     "comparative": "more incessant",
@@ -1173,7 +1840,14 @@
    "example": "The incessant noise from the building site kept us awake.",
    "picture_idea": "",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00597981-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1187,6 +1861,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "continuing without stopping, often in an annoying way",
+   "definition_basis": {
+    "wordnet_sense": "00597981-s",
+    "wordnet_meaning": "uninterrupted in time and indefinitely long continuing"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1195,7 +1880,7 @@
    "word": "inevitable",
    "part_of_speech": "adjective",
    "level": 5,
-   "definition": "certain to happen and impossible to avoid",
+   "definition": "Certain to happen and impossible to stop or avoid.",
    "explanation": "",
    "forms": {
     "comparative": "more inevitable",
@@ -1204,7 +1889,14 @@
    "example": "With so little money left, closing the shop seemed inevitable.",
    "picture_idea": "",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00343913-a"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1218,6 +1910,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "certain to happen and impossible to avoid",
+   "definition_basis": {
+    "wordnet_sense": "00343913-a",
+    "wordnet_meaning": "incapable of being avoided or prevented"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1226,7 +1929,7 @@
    "word": "innocuous",
    "part_of_speech": "adjective",
    "level": 5,
-   "definition": "not harmful or likely to offend",
+   "definition": "Not harmful, and not likely to upset or offend anyone.",
    "explanation": "",
    "forms": {
     "comparative": "more innocuous",
@@ -1235,7 +1938,14 @@
    "example": "It seemed an innocuous question, but it made him nervous.",
    "picture_idea": "",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01631816-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1249,6 +1959,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "not harmful or likely to offend",
+   "definition_basis": {
+    "wordnet_sense": "01631816-s",
+    "wordnet_meaning": "not causing disapproval"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1257,7 +1978,7 @@
    "word": "jeopardize",
    "part_of_speech": "verb",
    "level": 5,
-   "definition": "to put something at risk of harm or failure",
+   "definition": "To put something at risk of being harmed, lost or spoiled.",
    "explanation": "",
    "forms": {
     "past": "jeopardized",
@@ -1268,7 +1989,14 @@
    "example": "Cutting funds could jeopardize the whole research project.",
    "picture_idea": "",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02550969-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1282,6 +2010,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to put something at risk of harm or failure",
+   "definition_basis": {
+    "wordnet_sense": "02550969-v",
+    "wordnet_meaning": "put at risk"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1290,7 +2029,7 @@
    "word": "juncture",
    "part_of_speech": "noun",
    "level": 5,
-   "definition": "a particular point in time, especially a critical one",
+   "definition": "A point in time when something important is about to be decided or to change.",
    "explanation": "Also means a place where things join.",
    "forms": {
     "plural": "junctures"
@@ -1298,7 +2037,14 @@
    "example": "At this juncture, the talks could either succeed or collapse.",
    "picture_idea": "",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-14056667-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1312,6 +2058,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "a particular point in time, especially a critical one",
+   "definition_basis": {
+    "wordnet_sense": "14056667-n",
+    "wordnet_meaning": "a crisis situation or point in time when a critical decision must be made"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1320,7 +2077,7 @@
    "word": "kindle",
    "part_of_speech": "verb",
    "level": 5,
-   "definition": "to light a fire, or to awaken a feeling or interest",
+   "definition": "To start a feeling or interest in someone; also, to light a fire.",
    "explanation": "",
    "forms": {
     "past": "kindled",
@@ -1331,7 +2088,14 @@
    "example": "The teacher's stories kindled a passion for history in the class.",
    "picture_idea": "A small flame starting on dry twigs",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01763170-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1345,6 +2109,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to light a fire, or to awaken a feeling or interest",
+   "definition_basis": {
+    "wordnet_sense": "01763170-v",
+    "wordnet_meaning": "call forth (emotions, feelings, and responses)"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1353,7 +2128,7 @@
    "word": "lament",
    "part_of_speech": "verb",
    "level": 5,
-   "definition": "to express sadness or regret about something",
+   "definition": "To say or show that you are very sad or sorry about something.",
    "explanation": "Also a noun meaning a song or poem of grief.",
    "forms": {
     "past": "lamented",
@@ -1364,7 +2139,14 @@
    "example": "Residents lamented the closing of the old cinema.",
    "picture_idea": "",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00913303-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1378,6 +2160,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to express sadness or regret about something",
+   "definition_basis": {
+    "wordnet_sense": "00913303-v",
+    "wordnet_meaning": "regret strongly"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1386,7 +2179,7 @@
    "word": "lenient",
    "part_of_speech": "adjective",
    "level": 5,
-   "definition": "less strict than expected, especially in punishing",
+   "definition": "Not strict, especially when punishing someone; going easy on people.",
    "explanation": "",
    "forms": {
     "comparative": "more lenient",
@@ -1395,7 +2188,14 @@
    "example": "Many people thought the sentence was too lenient.",
    "picture_idea": "",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00715296-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1409,6 +2209,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "less strict than expected, especially in punishing",
+   "definition_basis": {
+    "wordnet_sense": "00715296-s",
+    "wordnet_meaning": "not strict"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1417,7 +2228,7 @@
    "word": "lucrative",
    "part_of_speech": "adjective",
    "level": 5,
-   "definition": "producing a lot of money; very profitable",
+   "definition": "Bringing in a lot of money; very profitable.",
    "explanation": "",
    "forms": {
     "comparative": "more lucrative",
@@ -1426,7 +2237,14 @@
    "example": "She turned down a lucrative job offer to work for a charity.",
    "picture_idea": "A briefcase overflowing with banknotes",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01877742-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1440,6 +2258,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "producing a lot of money; very profitable",
+   "definition_basis": {
+    "wordnet_sense": "01877742-s",
+    "wordnet_meaning": "producing a sizeable profit"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1448,7 +2277,7 @@
    "word": "meticulous",
    "part_of_speech": "adjective",
    "level": 5,
-   "definition": "showing great attention to detail; very careful and precise",
+   "definition": "Very careful about small details and getting everything exactly right.",
    "explanation": "",
    "forms": {
     "comparative": "more meticulous",
@@ -1457,7 +2286,14 @@
    "example": "The detective kept meticulous notes on every clue.",
    "picture_idea": "A watchmaker examining tiny parts through a magnifying glass",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00988070-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1471,6 +2307,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "showing great attention to detail; very careful and precise",
+   "definition_basis": {
+    "wordnet_sense": "00988070-s",
+    "wordnet_meaning": "marked by extreme care in treatment of details"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1479,7 +2326,7 @@
    "word": "mitigate",
    "part_of_speech": "verb",
    "level": 5,
-   "definition": "to make something less harmful or severe",
+   "definition": "To make something less serious, harmful or painful.",
    "explanation": "Often confused with 'militate'; mitigate means to lessen.",
    "forms": {
     "past": "mitigated",
@@ -1490,7 +2337,14 @@
    "example": "Planting trees can help mitigate the effects of flooding.",
    "picture_idea": "",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00907990-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1504,6 +2358,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to make something less harmful or severe",
+   "definition_basis": {
+    "wordnet_sense": "00907990-v",
+    "wordnet_meaning": "lessen or to try to lessen the seriousness or extent of"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1512,7 +2377,7 @@
    "word": "morose",
    "part_of_speech": "adjective",
    "level": 5,
-   "definition": "gloomy, bad-tempered and unwilling to talk",
+   "definition": "Unhappy and bad-tempered, and not wanting to talk to other people.",
    "explanation": "",
    "forms": {
     "comparative": "more morose",
@@ -1521,7 +2386,14 @@
    "example": "He sat in morose silence at the end of the table.",
    "picture_idea": "A frowning man sitting alone with his head in his hands",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01140878-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1535,6 +2407,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "gloomy, bad-tempered and unwilling to talk",
+   "definition_basis": {
+    "wordnet_sense": "01140878-s",
+    "wordnet_meaning": "showing a brooding ill humor"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   }
  ]

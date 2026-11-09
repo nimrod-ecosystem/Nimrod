@@ -139,6 +139,19 @@ credit.
 
 ---
 
+## Word meanings - Did you know
+
+`web/client/research/words__level*.json`
+
+| | |
+|---|---|
+| **What** | The meanings of 592 words shown by Did you know. 542 of them are based on a sense in the source below, reworded in plain language; each of those items names its sense in `sources`. The other 50 are ours (WordNet has no entry for them) |
+| **Source** | [Open English WordNet](https://en-word.net/) 2025, Global WordNet Association |
+| **Licence** | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). **Changed:** the wording is rewritten and example sentences added |
+| **Credit shown** | On each such card ("Meaning based on Open English WordNet 2025 (CC BY 4.0), reworded"), and on the module's "Say where it came from" row, which stands when the card's line is turned off |
+
+---
+
 ## Fonts, libraries, symbols
 
 The board's symbols (`web/client/aac_symbols.js`) are **drawn in-repo**, not taken from a symbol

@@ -35,7 +35,8 @@ function cleanSources(v) {
   for (const s of v.slice(0, 10)) {
     const url = str(s && s.url, 500);
     if (!/^https?:\/\//i.test(url)) continue;               // a link that is not a web address is not a source
-    out.push({ url, title: str(s.title, 300), publisher: str(s.publisher, 200) });
+    // `licence` (2026-11-08): a CC BY source must be credited with its licence (note FV: Open English WordNet).
+    out.push({ url, title: str(s.title, 300), publisher: str(s.publisher, 200), ...(s.licence ? { licence: str(s.licence, 60) } : {}) });
   }
   return out;
 }

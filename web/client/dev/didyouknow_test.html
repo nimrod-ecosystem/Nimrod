@@ -75,6 +75,15 @@ try {
   check('a word: the word, its kind, its meaning, an example', /dyk-word">all</.test(cardHtml(ix.byId.get('w1'))) && /determiner/.test(cardHtml(ix.byId.get('w1')))
     && /I ate all my peas/.test(cardHtml(ix.byId.get('w1'))));
   check('a fact with its source; the source can be left off', /From NASA/.test(cardHtml(ix.byId.get('f1'))) && !/From/.test(cardHtml(ix.byId.get('f1'), { showSource: false })));
+  // (note FV, 2026-11-08) Open English WordNet is CC BY 4.0: the credit, the licence, and that it was changed.
+  {
+    const wn = buildIndex([pack('words', [{ kind: 'word', id: 'w2', text: 'apple', word: 'apple', level: 1, definition: 'An apple is a round fruit.', status: 'unverified',
+      sources: [{ title: 'Open English WordNet 2025', publisher: 'Global WordNet Association', licence: 'CC BY 4.0', url: 'https://en-word.net/id/oewn-07755101-n' }] }])]);
+    check('*** a word based on WordNet says so: its title, its licence, and "reworded" ***',
+      /Meaning based on Open English WordNet 2025 \(CC BY 4\.0\), reworded/.test(cardHtml(wn.byId.get('w2'))), cardHtml(wn.byId.get('w2')));
+    check('...and the credit stands with the card\'s line turned off: on that row\'s own note',
+      /Open English WordNet 2025.*CC BY 4\.0/.test(DYK_SETTINGS.find((f) => f.key === 'showSource').note) && !/WordNet/.test(cardHtml(wn.byId.get('w2'), { showSource: false })));
+  }
   check('read aloud: a quote with who said it; a word, its meaning and example',
     cardWords(ix.byId.get('q1')) === 'Be <yourself>. (Oscar Wilde)' && cardWords(ix.byId.get('w1')) === 'all. every one. I ate all my peas.', cardWords(ix.byId.get('q1')));
 

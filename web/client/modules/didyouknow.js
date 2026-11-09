@@ -28,6 +28,8 @@ export const DYK_EVERY = Object.freeze([0, 15000, 30000, 60000, 120000, 300000, 
 export const DYK_DEFAULTS = Object.freeze({ show: 'all', topics: '', wordLevel: 'all', onlyChecked: true, everyMs: 60000,
   readAloud: false, showSource: true });
 const MAX_PACKS = 100;            // research/index.json names a few dozen; 100 stops a broken index fetching forever
+// The credit that stands whatever the row says (note FV): where the words' meanings come from.
+export const DYK_CREDITS = 'Word meanings are based on Open English WordNet 2025 (Global WordNet Association, CC BY 4.0), reworded.';
 
 export const DYK_SETTINGS = [
   { key: 'show', label: 'Show only these', kind: 'choice', default: 'all', level: 'essential',
@@ -42,7 +44,8 @@ export const DYK_SETTINGS = [
     options: [{ value: 'all', label: 'All levels' }, ...[1, 2, 3, 4, 5, 6].map((n) => ({ value: n,
       label: n === 1 ? '1 (first words)' : n === 6 ? '6 (rare words)' : String(n) }))] },
   { key: 'readAloud', label: 'Read each one aloud', default: false, level: 'standard', onLabel: 'Yes', offLabel: 'No, only on Read it' },
-  { key: 'showSource', label: 'Say where it came from', default: true, level: 'standard', onLabel: 'Yes', offLabel: 'No' },
+  { key: 'showSource', label: 'Say where it came from', default: true, level: 'standard', onLabel: 'Yes', offLabel: 'No',
+    note: DYK_CREDITS },
   { key: 'onlyChecked', label: 'Only checked facts and quotes', default: true, level: 'advanced', onLabel: 'Yes', offLabel: 'No',
     note: 'Every fact and quote is checked against a source. One the check found wrong is never shown, whatever this says.' },
 ];
@@ -109,8 +112,20 @@ export function cardHtml(item, { showSource = true } = {}) {
   } else {
     body = `<p class="dyk-text">${esc(item.text)}</p>`;
   }
-  const src = showSource && item.sources?.length ? `<p class="dyk-source">From ${esc(item.sources[0].publisher || item.sources[0].title || 'a source')}</p>` : '';
+  const src = showSource && item.sources?.length ? `<p class="dyk-source" data-dyk-source>${esc(sourceWords(item))}</p>` : '';
   return `<p class="dyk-head">${KIND_HEAD[item.kind] || ''}</p>${body}${src}`;
+}
+
+// *** THE CREDIT (note FV, 2026-11-08). *** A word's meaning is REWORDED from its source, so it says "based on ... reworded" with
+// the source's title and licence: Open English WordNet is CC BY 4.0, which asks for the credit, the licence and a note that it
+// was changed. A fact's source is what it was checked against, so it says "From". With "Say where it came from" off, the
+// module's own credits still name it (`DYK_CREDITS`, the row's note and ATTRIBUTIONS.md).
+function sourceWords(item) {
+  const s = item.sources[0];
+  if (item.kind === 'word') {
+    return `Meaning based on ${s.title || s.publisher || 'a source'}${s.licence ? ` (${s.licence})` : ''}, reworded`;
+  }
+  return `From ${s.publisher || s.title || 'a source'}${s.licence ? ` (${s.licence})` : ''}`;
 }
 
 /** What is read aloud for a card: a quote with who said it; a word, then what it means. PURE. */

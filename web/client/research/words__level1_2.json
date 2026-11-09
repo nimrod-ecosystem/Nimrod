@@ -10,7 +10,7 @@
    "word": "no",
    "part_of_speech": "interjection",
    "level": 1,
-   "definition": "A word you say to refuse something or to say that something is not true.",
+   "definition": "You say no when you do not want something, or when something is not true.",
    "explanation": "",
    "forms": {},
    "example": "No, I don't want any more peas.",
@@ -30,6 +30,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "A word you say to refuse something or to say that something is not true.",
+   "definition_basis": {
+    "wordnet_sense": null,
+    "note": "WordNet has no entry for this word; written by Claude"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -38,7 +49,7 @@
    "word": "nose",
    "part_of_speech": "noun",
    "level": 1,
-   "definition": "The part of your face that you use to smell and breathe.",
+   "definition": "Your nose is in the middle of your face. You smell things and breathe air with it.",
    "explanation": "",
    "forms": {
     "plural": "noses"
@@ -46,7 +57,14 @@
    "example": "The baby touched her nose.",
    "picture_idea": "A smiling child pointing to the nose on their face.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-05605902-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -59,6 +77,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "The part of your face that you use to smell and breathe.",
+   "definition_basis": {
+    "wordnet_sense": "05605902-n",
+    "wordnet_meaning": "the organ of smell and entrance to the respiratory tract; the prominent part of the face of man or other mammals"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -67,7 +96,7 @@
    "word": "night",
    "part_of_speech": "noun",
    "level": 1,
-   "definition": "The time when it is dark and people usually sleep.",
+   "definition": "Night is the dark part of the day, after the sun goes down. Many people sleep then.",
    "explanation": "",
    "forms": {
     "plural": "nights"
@@ -75,7 +104,14 @@
    "example": "The stars come out at night.",
    "picture_idea": "A dark sky with a moon and stars over a house.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-15192074-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -88,6 +124,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "The time when it is dark and people usually sleep.",
+   "definition_basis": {
+    "wordnet_sense": "15192074-n",
+    "wordnet_meaning": "the time after sunset and before sunrise while it is dark outside"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -96,13 +143,20 @@
    "word": "now",
    "part_of_speech": "adverb",
    "level": 1,
-   "definition": "At this moment; not later.",
+   "definition": "You say now to mean at this moment, not later. If you want something right away, you say now.",
    "explanation": "",
    "forms": {},
    "example": "I want my snack now.",
    "picture_idea": "",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00049758-r"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -116,6 +170,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "At this moment; not later.",
+   "definition_basis": {
+    "wordnet_sense": "00049758-r",
+    "wordnet_meaning": "at the present moment"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -124,13 +189,20 @@
    "word": "off",
    "part_of_speech": "adverb",
    "level": 1,
-   "definition": "Not on; away from a place, or not working.",
+   "definition": "Off means not on or not working. When you turn a light off, it goes dark.",
    "explanation": "We say the light is off when it is not shining.",
    "forms": {},
    "example": "Please turn the light off.",
    "picture_idea": "A hand flipping a light switch down, with a dark lamp.",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00194904-r"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -144,6 +216,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "Not on; away from a place, or not working.",
+   "definition_basis": {
+    "wordnet_sense": "00194904-r",
+    "wordnet_meaning": "no longer on or in contact or attached"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -152,7 +235,7 @@
    "word": "on",
    "part_of_speech": "preposition",
    "level": 1,
-   "definition": "Touching the top of something, or working.",
+   "definition": "Use on to say something is sitting on top of something else, like a cup on a table.",
    "explanation": "",
    "forms": {},
    "example": "The cup is on the table.",
@@ -172,6 +255,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "Touching the top of something, or working.",
+   "definition_basis": {
+    "wordnet_sense": null,
+    "note": "WordNet has no entry for this word; written by Claude"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -180,7 +274,7 @@
    "word": "one",
    "part_of_speech": "determiner",
    "level": 1,
-   "definition": "The number 1; a single thing.",
+   "definition": "One is the number 1. If you have one ball, you have a single ball, not two.",
    "explanation": "",
    "forms": {},
    "example": "I have one ball.",
@@ -199,6 +293,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "The number 1; a single thing.",
+   "definition_basis": {
+    "wordnet_sense": null,
+    "note": "WordNet has no entry for this word; written by Claude"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -207,7 +312,7 @@
    "word": "open",
    "part_of_speech": "verb",
    "level": 1,
-   "definition": "To move something so that it is not closed.",
+   "definition": "To open a door or a box, you move it so it is not shut. Then you can look inside.",
    "explanation": "",
    "forms": {
     "past": "opened",
@@ -218,7 +323,14 @@
    "example": "Can you open the door?",
    "picture_idea": "A child opening a door wide.",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01348685-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -232,6 +344,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "To move something so that it is not closed.",
+   "definition_basis": {
+    "wordnet_sense": "01348685-v",
+    "wordnet_meaning": "cause to open or to become open"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -240,7 +363,7 @@
    "word": "ouch",
    "part_of_speech": "interjection",
    "level": 1,
-   "definition": "A word you say when something hurts.",
+   "definition": "You say ouch when something hurts you. If you bump your knee, you might say ouch.",
    "explanation": "",
    "forms": {},
    "example": "Ouch! I bumped my knee.",
@@ -260,6 +383,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "A word you say when something hurts.",
+   "definition_basis": {
+    "wordnet_sense": null,
+    "note": "WordNet has no entry for this word; written by Claude"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -268,13 +402,20 @@
    "word": "out",
    "part_of_speech": "adverb",
    "level": 1,
-   "definition": "Not inside; going from inside to outside.",
+   "definition": "Out means going from the inside of a place to the outside. You go out of the house to play.",
    "explanation": "",
    "forms": {},
    "example": "Let's go out and play.",
    "picture_idea": "A child walking out through a front door into a garden.",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00235144-r"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -288,6 +429,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "Not inside; going from inside to outside.",
+   "definition_basis": {
+    "wordnet_sense": "00235144-r",
+    "wordnet_meaning": "moving or appearing to move away from a place, especially one that is enclosed or hidden"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -296,7 +448,7 @@
    "word": "pig",
    "part_of_speech": "noun",
    "level": 1,
-   "definition": "A pink farm animal that says oink.",
+   "definition": "A pig is a farm animal with a curly tail and a flat nose. It says oink and likes mud.",
    "explanation": "",
    "forms": {
     "plural": "pigs"
@@ -304,7 +456,14 @@
    "example": "The pig is rolling in the mud.",
    "picture_idea": "A pink pig with a curly tail standing in mud.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02398058-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -317,6 +476,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "A pink farm animal that says oink.",
+   "definition_basis": {
+    "wordnet_sense": "02398058-n",
+    "wordnet_meaning": "domestic swine"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -325,7 +495,7 @@
    "word": "play",
    "part_of_speech": "verb",
    "level": 1,
-   "definition": "To have fun with toys or games.",
+   "definition": "To play is to have fun with toys or games. You can play with blocks or a ball.",
    "explanation": "",
    "forms": {
     "past": "played",
@@ -336,7 +506,14 @@
    "example": "Can we play with the blocks?",
    "picture_idea": "Two children stacking colorful blocks.",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02423786-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -350,6 +527,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "To have fun with toys or games.",
+   "definition_basis": {
+    "wordnet_sense": "02423786-v",
+    "wordnet_meaning": "be at play; be engaged in playful activity; amuse oneself in a way characteristic of children"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -358,7 +546,7 @@
    "word": "please",
    "part_of_speech": "interjection",
    "level": 1,
-   "definition": "A polite word you use when you ask for something.",
+   "definition": "You say please when you ask for something, to be polite. You say please when you want more juice.",
    "explanation": "",
    "forms": {},
    "example": "More juice, please.",
@@ -378,6 +566,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "A polite word you use when you ask for something.",
+   "definition_basis": {
+    "wordnet_sense": null,
+    "note": "WordNet has no entry for this word; written by Claude"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -386,7 +585,7 @@
    "word": "potty",
    "part_of_speech": "noun",
    "level": 1,
-   "definition": "A small toilet for a young child.",
+   "definition": "A potty is a small seat shaped like a bowl that sits on the floor. You use it to go pee or poo.",
    "explanation": "",
    "forms": {
     "plural": "potties"
@@ -394,7 +593,14 @@
    "example": "I need to go on the potty.",
    "picture_idea": "A small child-sized potty on a bathroom floor.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-03007879-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -408,6 +614,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "A small toilet for a young child.",
+   "definition_basis": {
+    "wordnet_sense": "03007879-n",
+    "wordnet_meaning": "a receptacle for urination or defecation in the bedroom"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -416,7 +633,7 @@
    "word": "pull",
    "part_of_speech": "verb",
    "level": 1,
-   "definition": "To hold something and move it toward you.",
+   "definition": "You pull a wagon or a door by holding it and moving it toward you.",
    "explanation": "",
    "forms": {
     "past": "pulled",
@@ -427,7 +644,14 @@
    "example": "Pull the wagon to the tree.",
    "picture_idea": "A child pulling a toy wagon by its handle.",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01450719-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -441,6 +665,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "To hold something and move it toward you.",
+   "definition_basis": {
+    "wordnet_sense": "01450719-v",
+    "wordnet_meaning": "cause to move by pulling"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -449,7 +684,7 @@
    "word": "push",
    "part_of_speech": "verb",
    "level": 1,
-   "definition": "To press something to make it move away from you.",
+   "definition": "You push something by pressing on it so it moves away from you, like a swing or a door.",
    "explanation": "",
    "forms": {
     "past": "pushed",
@@ -460,7 +695,14 @@
    "example": "Push the swing, please.",
    "picture_idea": "A parent pushing a child on a swing.",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01875972-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -474,6 +716,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "To press something to make it move away from you.",
+   "definition_basis": {
+    "wordnet_sense": "01875972-v",
+    "wordnet_meaning": "move with force"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -482,7 +735,7 @@
    "word": "put",
    "part_of_speech": "verb",
    "level": 1,
-   "definition": "To place something somewhere.",
+   "definition": "Use put when you take something and set it down in a spot, like a toy in a box.",
    "explanation": "",
    "forms": {
     "past": "put",
@@ -493,7 +746,14 @@
    "example": "Put the toy in the box.",
    "picture_idea": "A child placing a teddy bear into a toy box.",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01496967-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -507,6 +767,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "To place something somewhere.",
+   "definition_basis": {
+    "wordnet_sense": "01496967-v",
+    "wordnet_meaning": "put into a certain place or abstract location"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -515,13 +786,20 @@
    "word": "rain",
    "part_of_speech": "noun",
    "level": 1,
-   "definition": "Water that falls from the clouds in drops.",
+   "definition": "Rain is water that falls from clouds in small drops. You get wet in the rain if you have no umbrella.",
    "explanation": "",
    "forms": {},
    "example": "I can hear the rain on the window.",
    "picture_idea": "Gray clouds with raindrops falling on a window.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-11521799-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -534,6 +812,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "Water that falls from the clouds in drops.",
+   "definition_basis": {
+    "wordnet_sense": "11521799-n",
+    "wordnet_meaning": "water falling in drops from vapor condensed in the atmosphere"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -542,7 +831,7 @@
    "word": "read",
    "part_of_speech": "verb",
    "level": 1,
-   "definition": "To look at words or pictures in a book and say or understand them.",
+   "definition": "When you read, you look at words and know what they say. You can read a book or a sign.",
    "explanation": "The past form is spelled the same but sounds like \"red\".",
    "forms": {
     "past": "read",
@@ -553,7 +842,14 @@
    "example": "Please read me a story.",
    "picture_idea": "An adult reading a picture book to a child on their lap.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00626756-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -567,6 +863,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "To look at words or pictures in a book and say or understand them.",
+   "definition_basis": {
+    "wordnet_sense": "00626756-v",
+    "wordnet_meaning": "interpret something that is written or printed"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -575,7 +882,7 @@
    "word": "red",
    "part_of_speech": "adjective",
    "level": 1,
-   "definition": "The color of a strawberry or a fire truck.",
+   "definition": "Red is the color of ripe strawberries and fire trucks.",
    "explanation": "",
    "forms": {
     "comparative": "redder",
@@ -584,7 +891,14 @@
    "example": "I have a red ball.",
    "picture_idea": "A bright red ball or a ripe strawberry.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00382159-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -597,6 +911,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "The color of a strawberry or a fire truck.",
+   "definition_basis": {
+    "wordnet_sense": "00382159-s",
+    "wordnet_meaning": "of a color at the end of the color spectrum (next to orange); resembling the color of blood or cherries or tomatoes or rubies"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -605,7 +930,7 @@
    "word": "run",
    "part_of_speech": "verb",
    "level": 1,
-   "definition": "To move fast on your feet.",
+   "definition": "To run is to move fast on your feet, faster than walking. Dogs and people run in the park.",
    "explanation": "",
    "forms": {
     "past": "ran",
@@ -616,7 +941,14 @@
    "example": "The puppy likes to run in the park.",
    "picture_idea": "A child running across a grassy field.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01930264-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -630,6 +962,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "To move fast on your feet.",
+   "definition_basis": {
+    "wordnet_sense": "01930264-v",
+    "wordnet_meaning": "move fast by using one's feet, with one foot off the ground at any given time"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -638,7 +981,7 @@
    "word": "sad",
    "part_of_speech": "adjective",
    "level": 1,
-   "definition": "Feeling unhappy.",
+   "definition": "Sad is how you feel when something bad happens. You may cry if your balloon pops.",
    "explanation": "",
    "forms": {
     "comparative": "sadder",
@@ -647,7 +990,14 @@
    "example": "The little boy is sad because his balloon popped.",
    "picture_idea": "A child with a frown and a tear, holding a popped balloon.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01364779-a"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -660,6 +1010,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "Feeling unhappy.",
+   "definition_basis": {
+    "wordnet_sense": "01364779-a",
+    "wordnet_meaning": "experiencing or showing sorrow or unhappiness"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -668,7 +1029,7 @@
    "word": "shoes",
    "part_of_speech": "noun",
    "level": 1,
-   "definition": "Things you wear on your feet when you go outside.",
+   "definition": "Shoes cover your feet when you walk outside. You put them on before you go out.",
    "explanation": "This word is usually used in the plural. One of them is a shoe.",
    "forms": {
     "plural": "shoes"
@@ -690,6 +1051,18 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "Things you wear on your feet when you go outside.",
+   "definition_basis": {
+    "wordnet_sense": null,
+    "note": "no WordNet meaning fit; written by Claude",
+    "batch_note": "Headword is a plural form; the only WordNet meaning for 'shoes' is the idiom 'in someone's shoes', which does not fit. 'Shoe' would be the usual headword."
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -698,7 +1071,7 @@
    "word": "sit",
    "part_of_speech": "verb",
    "level": 1,
-   "definition": "To rest with your bottom on a chair or the floor.",
+   "definition": "You sit by resting your bottom on a chair or the floor. Sit down when you want to rest or eat.",
    "explanation": "",
    "forms": {
     "past": "sat",
@@ -709,7 +1082,14 @@
    "example": "Sit here next to me.",
    "picture_idea": "A child sitting on a small chair.",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01545905-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -723,6 +1103,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "To rest with your bottom on a chair or the floor.",
+   "definition_basis": {
+    "wordnet_sense": "01545905-v",
+    "wordnet_meaning": "be in a position in which one's upper body is largely upright and supported by one's backside"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -731,7 +1122,7 @@
    "word": "sleep",
    "part_of_speech": "verb",
    "level": 1,
-   "definition": "To rest with your eyes closed, like at night.",
+   "definition": "When you sleep, your eyes are closed and your body rests, usually at night. You may dream.",
    "explanation": "",
    "forms": {
     "past": "slept",
@@ -742,7 +1133,14 @@
    "example": "The baby will sleep in her crib.",
    "picture_idea": "A baby sleeping in a crib with a blanket.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00014735-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -756,6 +1154,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "To rest with your eyes closed, like at night.",
+   "definition_basis": {
+    "wordnet_sense": "00014735-v",
+    "wordnet_meaning": "be asleep"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -764,7 +1173,7 @@
    "word": "snack",
    "part_of_speech": "noun",
    "level": 1,
-   "definition": "A small amount of food you eat between meals.",
+   "definition": "A snack is a small bit of food you eat between meals. Fruit or crackers can be a snack.",
    "explanation": "",
    "forms": {
     "plural": "snacks"
@@ -772,7 +1181,14 @@
    "example": "I want a snack, please.",
    "picture_idea": "A small bowl of crackers and apple slices.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-07592939-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -785,6 +1201,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "A small amount of food you eat between meals.",
+   "definition_basis": {
+    "wordnet_sense": "07592939-n",
+    "wordnet_meaning": "a light informal meal"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -793,7 +1220,7 @@
    "word": "sorry",
    "part_of_speech": "adjective",
    "level": 1,
-   "definition": "Feeling bad about something you did, or a word you say after a mistake.",
+   "definition": "You feel sorry when you wish you had not done something bad. You say \"sorry\" after a mistake.",
    "explanation": "",
    "forms": {
     "comparative": "sorrier",
@@ -802,7 +1229,14 @@
    "example": "I'm sorry I knocked over your tower.",
    "picture_idea": "A child looking down, next to a fallen block tower.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01153978-a"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -816,6 +1250,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "Feeling bad about something you did, or a word you say after a mistake.",
+   "definition_basis": {
+    "wordnet_sense": "01153978-a",
+    "wordnet_meaning": "feeling or expressing regret or sorrow or a sense of loss over something done or undone"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -824,7 +1269,7 @@
    "word": "spoon",
    "part_of_speech": "noun",
    "level": 1,
-   "definition": "A tool with a small bowl on a handle that you use to eat soup or cereal.",
+   "definition": "A spoon is a tool with a small bowl and a long handle. You use it to eat soup.",
    "explanation": "",
    "forms": {
     "plural": "spoons"
@@ -832,7 +1277,14 @@
    "example": "The baby holds the spoon.",
    "picture_idea": "A baby spoon with a bit of food on it.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-04291140-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -846,6 +1298,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "A tool with a small bowl on a handle that you use to eat soup or cereal.",
+   "definition_basis": {
+    "wordnet_sense": "04291140-n",
+    "wordnet_meaning": "a piece of cutlery with a shallow bowl-shaped container and a handle; used to stir or serve or take up food"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -854,7 +1317,7 @@
    "word": "stop",
    "part_of_speech": "verb",
    "level": 1,
-   "definition": "To not move or not do something anymore.",
+   "definition": "You say stop when you want someone to not move or not go on. Cars stop at a red light.",
    "explanation": "",
    "forms": {
     "past": "stopped",
@@ -865,7 +1328,14 @@
    "example": "Stop! That's too hot.",
    "picture_idea": "A red stop sign or a hand held up flat.",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01864781-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -879,6 +1349,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "To not move or not do something anymore.",
+   "definition_basis": {
+    "wordnet_sense": "01864781-v",
+    "wordnet_meaning": "come to a halt, stop moving"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -887,7 +1368,7 @@
    "word": "sun",
    "part_of_speech": "noun",
    "level": 1,
-   "definition": "The bright round star in the sky that gives us light and heat in the day.",
+   "definition": "The sun is the bright light in the sky in the day. It gives us light and makes us warm.",
    "explanation": "",
    "forms": {
     "plural": "suns"
@@ -895,7 +1376,14 @@
    "example": "The sun is warm today.",
    "picture_idea": "A bright yellow sun with rays in a blue sky.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-09473603-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -909,6 +1397,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "The bright round star in the sky that gives us light and heat in the day.",
+   "definition_basis": {
+    "wordnet_sense": "09473603-n",
+    "wordnet_meaning": "any star around which a planetary system revolves"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -917,7 +1416,7 @@
    "word": "thanks",
    "part_of_speech": "interjection",
    "level": 1,
-   "definition": "A word you say to show you are grateful.",
+   "definition": "You say thanks when someone gives you something or helps you. It shows you are glad.",
    "explanation": "It is a short way of saying \"thank you\".",
    "forms": {},
    "example": "Thanks for the cookie!",
@@ -936,6 +1435,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "A word you say to show you are grateful.",
+   "definition_basis": {
+    "wordnet_sense": null,
+    "note": "WordNet has no entry for this word; written by Claude"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -944,7 +1454,7 @@
    "word": "that",
    "part_of_speech": "determiner",
    "level": 1,
-   "definition": "A word for pointing to something that is not close to you.",
+   "definition": "You say that to point to something away from you. Use it for the one over there.",
    "explanation": "",
    "forms": {},
    "example": "I want that one.",
@@ -964,6 +1474,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "A word for pointing to something that is not close to you.",
+   "definition_basis": {
+    "wordnet_sense": null,
+    "note": "WordNet has no entry for this word; written by Claude"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -972,7 +1493,7 @@
    "word": "this",
    "part_of_speech": "determiner",
    "level": 1,
-   "definition": "A word for pointing to something that is close to you.",
+   "definition": "You say this to point to something close to you. If you hold a book, you say \"this book.\"",
    "explanation": "",
    "forms": {},
    "example": "I like this book.",
@@ -992,6 +1513,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "A word for pointing to something that is close to you.",
+   "definition_basis": {
+    "wordnet_sense": null,
+    "note": "WordNet has no entry for this word; written by Claude"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1000,7 +1532,7 @@
    "word": "toy",
    "part_of_speech": "noun",
    "level": 1,
-   "definition": "A thing that children play with.",
+   "definition": "A toy is something made to play with. A ball and a puzzle are toys.",
    "explanation": "",
    "forms": {
     "plural": "toys"
@@ -1008,7 +1540,14 @@
    "example": "She put her toy in the box.",
    "picture_idea": "A toy box with a teddy bear, car, and blocks.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-03971038-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1022,6 +1561,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "A thing that children play with.",
+   "definition_basis": {
+    "wordnet_sense": "03971038-n",
+    "wordnet_meaning": "an artifact designed to be played with"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1030,7 +1580,7 @@
    "word": "tree",
    "part_of_speech": "noun",
    "level": 1,
-   "definition": "A tall plant with a thick brown trunk, branches, and leaves.",
+   "definition": "A tree is a tall plant with a thick trunk, branches, and leaves. Birds often sit in trees.",
    "explanation": "",
    "forms": {
     "plural": "trees"
@@ -1038,7 +1588,14 @@
    "example": "The bird sits in the tree.",
    "picture_idea": "A big tree with green leaves and a brown trunk.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-13124818-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1051,6 +1608,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "A tall plant with a thick brown trunk, branches, and leaves.",
+   "definition_basis": {
+    "wordnet_sense": "13124818-n",
+    "wordnet_meaning": "a tall perennial woody plant having a main trunk and branches forming a distinct elevated crown; includes both gymnosperms and angiosperms"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1059,13 +1627,20 @@
    "word": "up",
    "part_of_speech": "adverb",
    "level": 1,
-   "definition": "Toward a higher place.",
+   "definition": "You say up when something goes to a higher place. You say \"up\" when you want to be lifted.",
    "explanation": "A baby may say \"up\" to ask to be picked up.",
    "forms": {},
    "example": "Pick me up, please.",
    "picture_idea": "A baby reaching both arms up toward a parent.",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00096883-r"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1079,6 +1654,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "Toward a higher place.",
+   "definition_basis": {
+    "wordnet_sense": "00096883-r",
+    "wordnet_meaning": "spatially or metaphorically from a lower to a higher position"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1087,7 +1673,7 @@
    "word": "wait",
    "part_of_speech": "verb",
    "level": 1,
-   "definition": "To stay in a place or not do something until later.",
+   "definition": "You wait when you stay where you are until someone comes or something happens. People wait in line.",
    "explanation": "",
    "forms": {
     "past": "waited",
@@ -1098,7 +1684,14 @@
    "example": "Wait for me at the door.",
    "picture_idea": "A child standing by a door with a hand up.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02644022-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1112,6 +1705,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "To stay in a place or not do something until later.",
+   "definition_basis": {
+    "wordnet_sense": "02644022-v",
+    "wordnet_meaning": "stay in one place and anticipate or expect something"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1120,7 +1724,7 @@
    "word": "walk",
    "part_of_speech": "verb",
    "level": 1,
-   "definition": "To move on your feet at a slow, steady speed.",
+   "definition": "When you walk, you move on your feet, one step at a time. You can walk to the park.",
    "explanation": "",
    "forms": {
     "past": "walked",
@@ -1131,7 +1735,14 @@
    "example": "Let's walk to the park.",
    "picture_idea": "A parent and child walking hand in hand on a path.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01908923-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1145,6 +1756,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "To move on your feet at a slow, steady speed.",
+   "definition_basis": {
+    "wordnet_sense": "01908923-v",
+    "wordnet_meaning": "use one's feet to advance; advance by steps"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1153,7 +1775,7 @@
    "word": "want",
    "part_of_speech": "verb",
    "level": 1,
-   "definition": "To wish for something.",
+   "definition": "You use want to say what you would like to have or do. Say \"I want juice\" to ask for it.",
    "explanation": "",
    "forms": {
     "past": "wanted",
@@ -1164,7 +1786,14 @@
    "example": "I want some water.",
    "picture_idea": "A child reaching toward a cup.",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01829179-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1178,6 +1807,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "To wish for something.",
+   "definition_basis": {
+    "wordnet_sense": "01829179-v",
+    "wordnet_meaning": "feel or have a desire for; want strongly"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1186,13 +1826,20 @@
    "word": "water",
    "part_of_speech": "noun",
    "level": 1,
-   "definition": "The clear liquid that we drink and wash with.",
+   "definition": "Water is the clear liquid you drink. It comes out of a tap and falls as rain.",
    "explanation": "",
    "forms": {},
    "example": "Can I have a drink of water?",
    "picture_idea": "A clear cup of water.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-07951744-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1206,6 +1853,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "The clear liquid that we drink and wash with.",
+   "definition_basis": {
+    "wordnet_sense": "07951744-n",
+    "wordnet_meaning": "a liquid necessary for the life of most animals and plants"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1214,7 +1872,7 @@
    "word": "we",
    "part_of_speech": "pronoun",
    "level": 1,
-   "definition": "A word for you and me, or me and other people.",
+   "definition": "You say we when you talk about yourself and other people together. When you all go out, you say \"we go.\"",
    "explanation": "",
    "forms": {},
    "example": "We are going to the park.",
@@ -1234,6 +1892,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "A word for you and me, or me and other people.",
+   "definition_basis": {
+    "wordnet_sense": null,
+    "note": "WordNet has no entry for this word; written by Claude"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1242,7 +1911,7 @@
    "word": "what",
    "part_of_speech": "pronoun",
    "level": 1,
-   "definition": "A word you use to ask about a thing.",
+   "definition": "You say what when you ask about a thing. If you see something new, you ask \"What is it?\"",
    "explanation": "",
    "forms": {},
    "example": "What is that?",
@@ -1262,6 +1931,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "A word you use to ask about a thing.",
+   "definition_basis": {
+    "wordnet_sense": null,
+    "note": "WordNet has no entry for this word; written by Claude"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1270,7 +1950,7 @@
    "word": "where",
    "part_of_speech": "adverb",
    "level": 1,
-   "definition": "A word you use to ask about a place.",
+   "definition": "You say where when you ask about a place. If you cannot find your shoe, you ask \"Where is it?\"",
    "explanation": "",
    "forms": {},
    "example": "Where is my shoe?",
@@ -1290,6 +1970,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "A word you use to ask about a place.",
+   "definition_basis": {
+    "wordnet_sense": null,
+    "note": "WordNet has no entry for this word; written by Claude"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1298,7 +1989,7 @@
    "word": "who",
    "part_of_speech": "pronoun",
    "level": 1,
-   "definition": "A word you use to ask which person.",
+   "definition": "You say who when you ask which person. If someone knocks, you ask \"Who is it?\"",
    "explanation": "",
    "forms": {},
    "example": "Who is at the door?",
@@ -1318,6 +2009,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "A word you use to ask which person.",
+   "definition_basis": {
+    "wordnet_sense": null,
+    "note": "WordNet has no entry for this word; written by Claude"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1326,7 +2028,7 @@
    "word": "yellow",
    "part_of_speech": "adjective",
    "level": 1,
-   "definition": "The color of a banana or the sun.",
+   "definition": "Something is yellow when it is the color of a banana or a lemon.",
    "explanation": "",
    "forms": {
     "comparative": "yellower",
@@ -1335,7 +2037,14 @@
    "example": "The duck is yellow.",
    "picture_idea": "A yellow rubber duck and a banana.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00386818-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1348,6 +2057,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "The color of a banana or the sun.",
+   "definition_basis": {
+    "wordnet_sense": "00386818-s",
+    "wordnet_meaning": "of the color intermediate between green and orange in the color spectrum; of something resembling the color of an egg yolk"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1356,7 +2076,7 @@
    "word": "yes",
    "part_of_speech": "interjection",
    "level": 1,
-   "definition": "A word you say to agree or to answer \"I do\" or \"it is.\"",
+   "definition": "You say yes when you agree or want something. If someone asks \"Do you want milk?\" you can say yes.",
    "explanation": "",
    "forms": {},
    "example": "Yes, I want more milk.",
@@ -1376,6 +2096,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "A word you say to agree or to answer \"I do\" or \"it is.\"",
+   "definition_basis": {
+    "wordnet_sense": null,
+    "note": "WordNet has no entry for this word; written by Claude"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1384,7 +2115,7 @@
    "word": "you",
    "part_of_speech": "pronoun",
    "level": 1,
-   "definition": "A word for the person you are talking to.",
+   "definition": "You say you when you are talking to someone. It means the person who is listening to you.",
    "explanation": "",
    "forms": {},
    "example": "I love you.",
@@ -1404,6 +2135,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "A word for the person you are talking to.",
+   "definition_basis": {
+    "wordnet_sense": null,
+    "note": "WordNet has no entry for this word; written by Claude"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1412,7 +2154,7 @@
    "word": "yucky",
    "part_of_speech": "adjective",
    "level": 1,
-   "definition": "Tasting, smelling, or looking bad.",
+   "definition": "Something is yucky when it tastes, smells, or looks so bad that you do not like it.",
    "explanation": "This is a casual word, often used by children.",
    "forms": {
     "comparative": "yuckier",
@@ -1421,7 +2163,14 @@
    "example": "The mud is yucky.",
    "picture_idea": "A child wrinkling their nose at a muddy shoe.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01630074-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1435,6 +2184,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "Tasting, smelling, or looking bad.",
+   "definition_basis": {
+    "wordnet_sense": "01630074-s",
+    "wordnet_meaning": "highly offensive; arousing aversion or disgust"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1443,7 +2203,7 @@
    "word": "yum",
    "part_of_speech": "interjection",
    "level": 1,
-   "definition": "A word you say when food tastes good.",
+   "definition": "You say yum when food tastes or smells very good. It shows you like it.",
    "explanation": "",
    "forms": {},
    "example": "Yum! I love banana.",
@@ -1463,6 +2223,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "A word you say when food tastes good.",
+   "definition_basis": {
+    "wordnet_sense": null,
+    "note": "WordNet has no entry for this word; written by Claude"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1471,7 +2242,7 @@
    "word": "zoo",
    "part_of_speech": "noun",
    "level": 1,
-   "definition": "A place where people go to see wild animals.",
+   "definition": "A zoo is a place where wild animals live so people can come and look at them.",
    "explanation": "",
    "forms": {
     "plural": "zoos"
@@ -1479,7 +2250,14 @@
    "example": "We saw a lion at the zoo.",
    "picture_idea": "A zoo entrance with a lion and an elephant behind a fence.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-03750637-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1493,6 +2271,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "A place where people go to see wild animals.",
+   "definition_basis": {
+    "wordnet_sense": "03750637-n",
+    "wordnet_meaning": "the facility where wild animals are housed for exhibition"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   }
  ]

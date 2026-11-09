@@ -10,7 +10,7 @@
    "word": "all",
    "part_of_speech": "determiner",
    "level": 1,
-   "definition": "every one or the whole amount",
+   "definition": "You say all when you mean every one, or the whole amount. If you eat all the peas, none are left.",
    "explanation": "",
    "forms": {},
    "example": "I ate all my peas.",
@@ -30,6 +30,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "every one or the whole amount",
+   "definition_basis": {
+    "wordnet_sense": null,
+    "note": "WordNet has no entry for this word; written by Claude"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -38,7 +49,7 @@
    "word": "apple",
    "part_of_speech": "noun",
    "level": 1,
-   "definition": "a round red or green fruit that grows on a tree",
+   "definition": "An apple is a round fruit with red, yellow, or green skin. It is crunchy to bite, and you find apples in a fruit bowl.",
    "explanation": "",
    "forms": {
     "plural": "apples"
@@ -46,7 +57,14 @@
    "example": "I want a crunchy apple.",
    "picture_idea": "a shiny red apple with a leaf",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-07755101-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -60,6 +78,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "a round red or green fruit that grows on a tree",
+   "definition_basis": {
+    "wordnet_sense": "07755101-n",
+    "wordnet_meaning": "fruit with red or yellow or green skin and sweet to tart crisp whitish flesh"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -68,7 +97,7 @@
    "word": "baby",
    "part_of_speech": "noun",
    "level": 1,
-   "definition": "a very young child",
+   "definition": "A baby is a very small child who cannot walk or talk yet. A baby sleeps and cries a lot.",
    "explanation": "",
    "forms": {
     "plural": "babies"
@@ -76,7 +105,14 @@
    "example": "The baby is sleeping.",
    "picture_idea": "a smiling baby in a diaper",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-09846929-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -89,6 +125,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "a very young child",
+   "definition_basis": {
+    "wordnet_sense": "09846929-n",
+    "wordnet_meaning": "a very young child (birth to 1 year) who has not yet begun to walk or talk"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -97,7 +144,7 @@
    "word": "ball",
    "part_of_speech": "noun",
    "level": 1,
-   "definition": "a round toy that you throw, kick, or roll",
+   "definition": "A ball is a round toy. You can throw it, kick it, or roll it when you play.",
    "explanation": "",
    "forms": {
     "plural": "balls"
@@ -105,7 +152,14 @@
    "example": "Can you roll the ball to me?",
    "picture_idea": "a bright red ball on grass",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02782458-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -118,6 +172,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "a round toy that you throw, kick, or roll",
+   "definition_basis": {
+    "wordnet_sense": "02782458-n",
+    "wordnet_meaning": "a spherical object used as a plaything"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -126,7 +191,7 @@
    "word": "banana",
    "part_of_speech": "noun",
    "level": 1,
-   "definition": "a long yellow fruit with a soft inside and a peel",
+   "definition": "A banana is a long yellow fruit. You pull off the peel and eat the soft, sweet inside.",
    "explanation": "",
    "forms": {
     "plural": "bananas"
@@ -134,7 +199,14 @@
    "example": "She peeled the banana and took a bite.",
    "picture_idea": "a yellow banana, partly peeled",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-07769568-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -148,6 +220,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "a long yellow fruit with a soft inside and a peel",
+   "definition_basis": {
+    "wordnet_sense": "07769568-n",
+    "wordnet_meaning": "elongated crescent-shaped yellow fruit with soft sweet flesh"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -156,7 +239,7 @@
    "word": "bath",
    "part_of_speech": "noun",
    "level": 1,
-   "definition": "washing your body in a tub of water",
+   "definition": "A bath is when you sit in a tub of water and wash your body.",
    "explanation": "",
    "forms": {
     "plural": "baths"
@@ -164,7 +247,14 @@
    "example": "It is time for your bath.",
    "picture_idea": "a child in a tub with soap bubbles and a rubber duck",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00258637-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -178,6 +268,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "washing your body in a tub of water",
+   "definition_basis": {
+    "wordnet_sense": "00258637-n",
+    "wordnet_meaning": "a soaking and washing in a bathtub"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -186,7 +287,7 @@
    "word": "bed",
    "part_of_speech": "noun",
    "level": 1,
-   "definition": "a soft place where you sleep",
+   "definition": "A bed is a soft thing to lie on at night when you sleep. You lie in it under a blanket.",
    "explanation": "",
    "forms": {
     "plural": "beds"
@@ -194,7 +295,14 @@
    "example": "I am tired and want to go to bed.",
    "picture_idea": "a small bed with a pillow and blanket",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02821967-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -208,6 +316,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "a soft place where you sleep",
+   "definition_basis": {
+    "wordnet_sense": "02821967-n",
+    "wordnet_meaning": "a piece of furniture that provides a place to sleep"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -216,7 +335,7 @@
    "word": "big",
    "part_of_speech": "adjective",
    "level": 1,
-   "definition": "large in size",
+   "definition": "You say big when something takes up a lot of space. An elephant is big, but a mouse is small.",
    "explanation": "",
    "forms": {
     "comparative": "bigger",
@@ -225,7 +344,14 @@
    "example": "That is a big dog.",
    "picture_idea": "a large elephant next to a small mouse",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01385012-a"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -239,6 +365,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "large in size",
+   "definition_basis": {
+    "wordnet_sense": "01385012-a",
+    "wordnet_meaning": "above average in size or number or quantity or magnitude or extent"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -247,7 +384,7 @@
    "word": "bird",
    "part_of_speech": "noun",
    "level": 1,
-   "definition": "an animal with feathers and wings that can usually fly",
+   "definition": "A bird is an animal with feathers and wings. Many birds fly, and you see them in trees or the sky.",
    "explanation": "",
    "forms": {
     "plural": "birds"
@@ -255,7 +392,14 @@
    "example": "The bird is singing in the tree.",
    "picture_idea": "a small bird perched on a branch",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01505702-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -268,6 +412,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "an animal with feathers and wings that can usually fly",
+   "definition_basis": {
+    "wordnet_sense": "01505702-n",
+    "wordnet_meaning": "warm-blooded egg-laying vertebrates characterized by feathers and forelimbs modified as wings"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -276,7 +431,7 @@
    "word": "book",
    "part_of_speech": "noun",
    "level": 1,
-   "definition": "pages with words or pictures that you read",
+   "definition": "A book has many pages joined inside a cover. You open it to read the words or look at pictures.",
    "explanation": "",
    "forms": {
     "plural": "books"
@@ -284,7 +439,14 @@
    "example": "Please read me my book.",
    "picture_idea": "an open picture book",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02873453-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -298,6 +460,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "pages with words or pictures that you read",
+   "definition_basis": {
+    "wordnet_sense": "02873453-n",
+    "wordnet_meaning": "physical objects consisting of a number of pages bound together"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -306,7 +479,7 @@
    "word": "bye",
    "part_of_speech": "interjection",
    "level": 1,
-   "definition": "a word you say when you leave",
+   "definition": "Say bye when you leave, or when someone else is leaving. You can wave your hand at the same time.",
    "explanation": "Short for goodbye.",
    "forms": {},
    "example": "Bye, see you tomorrow!",
@@ -326,6 +499,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "a word you say when you leave",
+   "definition_basis": {
+    "wordnet_sense": null,
+    "note": "WordNet has no entry for this word; written by Claude"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -334,7 +518,7 @@
    "word": "car",
    "part_of_speech": "noun",
    "level": 1,
-   "definition": "a vehicle with four wheels that people ride in",
+   "definition": "A car is a machine with four wheels that drives on roads. People ride in it to get places.",
    "explanation": "",
    "forms": {
     "plural": "cars"
@@ -342,7 +526,14 @@
    "example": "We go to school in the car.",
    "picture_idea": "a small family car on a road",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02961779-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -355,6 +546,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "a vehicle with four wheels that people ride in",
+   "definition_basis": {
+    "wordnet_sense": "02961779-n",
+    "wordnet_meaning": "a motor vehicle with four wheels; usually propelled by an internal combustion engine"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -363,7 +565,7 @@
    "word": "cat",
    "part_of_speech": "noun",
    "level": 1,
-   "definition": "a small furry pet that says meow",
+   "definition": "A cat is a furry animal with whiskers and a tail. Many people keep one at home, and it says meow.",
    "explanation": "",
    "forms": {
     "plural": "cats"
@@ -371,7 +573,14 @@
    "example": "The cat likes milk.",
    "picture_idea": "a sitting tabby cat",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02124272-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -385,6 +594,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "a small furry pet that says meow",
+   "definition_basis": {
+    "wordnet_sense": "02124272-n",
+    "wordnet_meaning": "feline mammal usually having thick soft fur and no ability to roar"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -393,7 +613,7 @@
    "word": "cold",
    "part_of_speech": "adjective",
    "level": 1,
-   "definition": "having a low temperature; not warm",
+   "definition": "You say cold when something feels like ice or snow. A cold drink is nice on a hot day.",
    "explanation": "",
    "forms": {
     "comparative": "colder",
@@ -402,7 +622,14 @@
    "example": "The ice cream is cold.",
    "picture_idea": "a child shivering in a scarf next to a snowman",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01254201-a"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -416,6 +643,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "having a low temperature; not warm",
+   "definition_basis": {
+    "wordnet_sense": "01254201-a",
+    "wordnet_meaning": "having a low or inadequate temperature or feeling a sensation of coldness or having been made cold by e.g. ice or refrigeration"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -424,7 +662,7 @@
    "word": "come",
    "part_of_speech": "verb",
    "level": 1,
-   "definition": "to move toward the speaker or a place",
+   "definition": "You use come to ask someone to move closer to you, or when you move toward a place. Come here!",
    "explanation": "",
    "forms": {
     "past": "came",
@@ -435,7 +673,14 @@
    "example": "Come here, please.",
    "picture_idea": "a person waving someone closer",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01853188-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -449,6 +694,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to move toward the speaker or a place",
+   "definition_basis": {
+    "wordnet_sense": "01853188-v",
+    "wordnet_meaning": "move toward, travel toward something or somebody or approach something or somebody"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -457,7 +713,7 @@
    "word": "cookie",
    "part_of_speech": "noun",
    "level": 1,
-   "definition": "a small, flat, sweet baked treat",
+   "definition": "A cookie is a small, flat, sweet food made in an oven. You can eat one with milk.",
    "explanation": "",
    "forms": {
     "plural": "cookies"
@@ -465,7 +721,14 @@
    "example": "Can I have a cookie?",
    "picture_idea": "a round chocolate chip cookie",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-07650764-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -479,6 +742,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "a small, flat, sweet baked treat",
+   "definition_basis": {
+    "wordnet_sense": "07650764-n",
+    "wordnet_meaning": "any of various small flat sweet cakes"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -487,7 +761,7 @@
    "word": "cup",
    "part_of_speech": "noun",
    "level": 1,
-   "definition": "a small container you drink from",
+   "definition": "A cup is a small, open container with a handle. You hold it to drink tea, milk, or water.",
    "explanation": "",
    "forms": {
     "plural": "cups"
@@ -495,7 +769,14 @@
    "example": "My cup is full of water.",
    "picture_idea": "a small cup with a handle",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-03152175-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -509,6 +790,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "a small container you drink from",
+   "definition_basis": {
+    "wordnet_sense": "03152175-n",
+    "wordnet_meaning": "a small open container usually used for drinking; usually has a handle"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -517,7 +809,7 @@
    "word": "dad",
    "part_of_speech": "noun",
    "level": 1,
-   "definition": "your father",
+   "definition": "A dad is a man who has a child. A child says Dad when talking to him.",
    "explanation": "",
    "forms": {
     "plural": "dads"
@@ -525,7 +817,14 @@
    "example": "Dad is making breakfast.",
    "picture_idea": "a smiling man holding a child's hand",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-10007601-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -539,6 +838,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "your father",
+   "definition_basis": {
+    "wordnet_sense": "10007601-n",
+    "wordnet_meaning": "an informal term for a father; probably derived from baby talk"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -547,7 +857,7 @@
    "word": "dog",
    "part_of_speech": "noun",
    "level": 1,
-   "definition": "a furry pet that barks",
+   "definition": "A dog is a furry animal that barks. Many people keep a dog at home and walk it outside.",
    "explanation": "",
    "forms": {
     "plural": "dogs"
@@ -555,7 +865,14 @@
    "example": "The dog wants to play.",
    "picture_idea": "a friendly dog wagging its tail",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02086723-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -569,6 +886,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "a furry pet that barks",
+   "definition_basis": {
+    "wordnet_sense": "02086723-n",
+    "wordnet_meaning": "a member of the genus Canis (probably descended from the common wolf) that has been domesticated by man since prehistoric times; occurs in many breeds"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -577,13 +905,20 @@
    "word": "down",
    "part_of_speech": "adverb",
    "level": 1,
-   "definition": "toward a lower place",
+   "definition": "You use down to say something moves to a lower place. When you sit down, you move onto a seat.",
    "explanation": "",
    "forms": {},
    "example": "Please sit down.",
    "picture_idea": "a child sitting down on a chair, with an arrow pointing down",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00095870-r"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -597,6 +932,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "toward a lower place",
+   "definition_basis": {
+    "wordnet_sense": "00095870-r",
+    "wordnet_meaning": "spatially or metaphorically from a higher to a lower level or position"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -605,7 +951,7 @@
    "word": "drink",
    "part_of_speech": "verb",
    "level": 1,
-   "definition": "to swallow a liquid",
+   "definition": "You say drink when you swallow water, milk, or other liquid. You can drink from a cup or a bottle.",
    "explanation": "Drink can also be a noun, meaning something you drink.",
    "forms": {
     "past": "drank",
@@ -616,7 +962,14 @@
    "example": "I drink water when I am thirsty.",
    "picture_idea": "a child drinking from a cup",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01172332-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -630,6 +983,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to swallow a liquid",
+   "definition_basis": {
+    "wordnet_sense": "01172332-v",
+    "wordnet_meaning": "take in liquids"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -638,7 +1002,7 @@
    "word": "eat",
    "part_of_speech": "verb",
    "level": 1,
-   "definition": "to put food in your mouth and swallow it",
+   "definition": "You say eat when you chew food and swallow it. You eat an apple, a sandwich, or dinner.",
    "explanation": "",
    "forms": {
     "past": "ate",
@@ -649,7 +1013,14 @@
    "example": "We eat lunch at noon.",
    "picture_idea": "a child eating with a spoon",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01170802-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -663,6 +1034,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to put food in your mouth and swallow it",
+   "definition_basis": {
+    "wordnet_sense": "01170802-v",
+    "wordnet_meaning": "take in solid food"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -671,7 +1053,7 @@
    "word": "eye",
    "part_of_speech": "noun",
    "level": 1,
-   "definition": "the part of your face that you see with",
+   "definition": "An eye is the part of the body you see with. You close your eyes when you sleep.",
    "explanation": "We usually have two, so you often see the plural, eyes.",
    "forms": {
     "plural": "eyes"
@@ -679,7 +1061,14 @@
    "example": "Close your eyes and go to sleep.",
    "picture_idea": "a close-up of an open eye",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-05318579-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -692,6 +1081,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "the part of your face that you see with",
+   "definition_basis": {
+    "wordnet_sense": "05318579-n",
+    "wordnet_meaning": "the organ of sight"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -700,13 +1100,20 @@
    "word": "finished",
    "part_of_speech": "adjective",
    "level": 1,
-   "definition": "done; with nothing more to do",
+   "definition": "You say finished when you have no more to do. When you are finished with dinner, you stop eating.",
    "explanation": "On many AAC boards, \"all done\" or \"finished\" tells people you want to stop an activity.",
    "forms": {},
    "example": "I am finished with my dinner.",
    "picture_idea": "an empty plate",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01006451-a"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -720,6 +1127,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "done; with nothing more to do",
+   "definition_basis": {
+    "wordnet_sense": "01006451-a",
+    "wordnet_meaning": "ended or brought to an end"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -728,7 +1146,7 @@
    "word": "fish",
    "part_of_speech": "noun",
    "level": 1,
-   "definition": "an animal that lives and swims in water",
+   "definition": "A fish is an animal that lives and swims in water. You can see fish in a tank.",
    "explanation": "The plural is usually the same word: fish.",
    "forms": {
     "plural": "fish"
@@ -736,7 +1154,14 @@
    "example": "The fish swims in the tank.",
    "picture_idea": "an orange fish in a bowl",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02514684-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -749,6 +1174,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "an animal that lives and swims in water",
+   "definition_basis": {
+    "wordnet_sense": "02514684-n",
+    "wordnet_meaning": "any of various mostly cold-blooded aquatic vertebrates usually having scales and breathing through gills"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -757,7 +1193,7 @@
    "word": "get",
    "part_of_speech": "verb",
    "level": 1,
-   "definition": "to take or receive something",
+   "definition": "You use get when you go and pick something up so you have it. You get your coat before going outside.",
    "explanation": "",
    "forms": {
     "past": "got",
@@ -768,7 +1204,14 @@
    "example": "I will get my shoes.",
    "picture_idea": "a child picking up shoes from the floor",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01435927-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -782,6 +1225,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to take or receive something",
+   "definition_basis": {
+    "wordnet_sense": "01435927-v",
+    "wordnet_meaning": "go or come after and bring or take back"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -790,7 +1244,7 @@
    "word": "give",
    "part_of_speech": "verb",
    "level": 1,
-   "definition": "to hand something to someone",
+   "definition": "You use give when you hand something to someone so they have it. You give a friend a toy to hold.",
    "explanation": "",
    "forms": {
     "past": "gave",
@@ -801,7 +1255,14 @@
    "example": "Give me the ball, please.",
    "picture_idea": "one hand giving a toy to another hand",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02204104-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -815,6 +1276,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to hand something to someone",
+   "definition_basis": {
+    "wordnet_sense": "02204104-v",
+    "wordnet_meaning": "transfer possession of something concrete or abstract to somebody"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -823,7 +1295,7 @@
    "word": "go",
    "part_of_speech": "verb",
    "level": 1,
-   "definition": "to move from one place to another",
+   "definition": "You say go when you move from one place to another. You go to school in the morning.",
    "explanation": "",
    "forms": {
     "past": "went",
@@ -834,7 +1306,14 @@
    "example": "Let's go to the park.",
    "picture_idea": "a green traffic light or a child walking away",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01839438-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -848,6 +1327,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to move from one place to another",
+   "definition_basis": {
+    "wordnet_sense": "01839438-v",
+    "wordnet_meaning": "change location; move, travel, or proceed, also metaphorically"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -856,7 +1346,7 @@
    "word": "good",
    "part_of_speech": "adjective",
    "level": 1,
-   "definition": "nice or well done; not bad",
+   "definition": "You say good when something is nice or done well. A good meal tastes great.",
    "explanation": "",
    "forms": {
     "comparative": "better",
@@ -865,7 +1355,14 @@
    "example": "You did a good job.",
    "picture_idea": "a thumbs-up",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01126910-a"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -879,6 +1376,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "nice or well done; not bad",
+   "definition_basis": {
+    "wordnet_sense": "01126910-a",
+    "wordnet_meaning": "having desirable or positive qualities especially those suitable for a thing specified"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -887,7 +1395,7 @@
    "word": "hand",
    "part_of_speech": "noun",
    "level": 1,
-   "definition": "the part at the end of your arm with fingers",
+   "definition": "Your hand is the part at the end of your arm. You use it to hold a cup or to wave.",
    "explanation": "",
    "forms": {
     "plural": "hands"
@@ -895,7 +1403,14 @@
    "example": "Wash your hands with soap.",
    "picture_idea": "an open hand with five fingers",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-05572223-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -908,6 +1423,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "the part at the end of your arm with fingers",
+   "definition_basis": {
+    "wordnet_sense": "05572223-n",
+    "wordnet_meaning": "the (prehensile) extremity of the superior limb"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -916,7 +1442,7 @@
    "word": "happy",
    "part_of_speech": "adjective",
    "level": 1,
-   "definition": "feeling glad and joyful",
+   "definition": "You feel happy when something good happens, like a party with friends. You often smile when you are happy.",
    "explanation": "",
    "forms": {
     "comparative": "happier",
@@ -925,7 +1451,14 @@
    "example": "I am happy to see you.",
    "picture_idea": "a smiling face",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01151786-a"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -938,6 +1471,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "feeling glad and joyful",
+   "definition_basis": {
+    "wordnet_sense": "01151786-a",
+    "wordnet_meaning": "enjoying or showing or marked by joy or pleasure"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -946,7 +1490,7 @@
    "word": "help",
    "part_of_speech": "verb",
    "level": 1,
-   "definition": "to make something easier for someone",
+   "definition": "You say help when you need someone to make a job easier. A friend can help you carry a heavy box.",
    "explanation": "Help is also what you say when you need someone to assist you.",
    "forms": {
     "past": "helped",
@@ -957,7 +1501,14 @@
    "example": "Can you help me, please?",
    "picture_idea": "one person helping another reach a high shelf",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02553283-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -971,6 +1522,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to make something easier for someone",
+   "definition_basis": {
+    "wordnet_sense": "02553283-v",
+    "wordnet_meaning": "give help or assistance; be of service"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -979,13 +1541,20 @@
    "word": "here",
    "part_of_speech": "adverb",
    "level": 1,
-   "definition": "in this place",
+   "definition": "Here means the place where you are now. You say it when you point to a spot close to you.",
    "explanation": "",
    "forms": {},
    "example": "Put the toy here.",
    "picture_idea": "a finger pointing to a spot on a table",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00109247-r"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -999,6 +1568,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "in this place",
+   "definition_basis": {
+    "wordnet_sense": "00109247-r",
+    "wordnet_meaning": "in or at this place; where the speaker or writer is"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1007,7 +1587,7 @@
    "word": "hi",
    "part_of_speech": "interjection",
    "level": 1,
-   "definition": "a friendly word you say when you meet someone",
+   "definition": "Hi is a friendly word you say when you meet someone. You say hi to a friend at school.",
    "explanation": "",
    "forms": {},
    "example": "Hi, how are you?",
@@ -1027,6 +1607,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "a friendly word you say when you meet someone",
+   "definition_basis": {
+    "wordnet_sense": null,
+    "note": "WordNet has no entry for this word; written by Claude"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1035,7 +1626,7 @@
    "word": "hot",
    "part_of_speech": "adjective",
    "level": 1,
-   "definition": "having a high temperature; very warm",
+   "definition": "You say hot when something has a lot of heat, like soup from the stove or a sunny day.",
    "explanation": "",
    "forms": {
     "comparative": "hotter",
@@ -1044,7 +1635,14 @@
    "example": "Careful, the soup is hot.",
    "picture_idea": "a steaming bowl of soup",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01250274-a"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1058,6 +1656,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "having a high temperature; very warm",
+   "definition_basis": {
+    "wordnet_sense": "01250274-a",
+    "wordnet_meaning": "used of physical heat; having a high or higher than desirable temperature or giving off heat or feeling or causing a sensation of heat or burning"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1066,7 +1675,7 @@
    "word": "hug",
    "part_of_speech": "verb",
    "level": 1,
-   "definition": "to hold someone close with your arms",
+   "definition": "To hug is to hold someone close in your arms. You hug a person to show you care.",
    "explanation": "Hug can also be a noun: \"a big hug.\"",
    "forms": {
     "past": "hugged",
@@ -1077,7 +1686,14 @@
    "example": "I hug my mom every morning.",
    "picture_idea": "two people hugging",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01427110-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1091,6 +1707,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to hold someone close with your arms",
+   "definition_basis": {
+    "wordnet_sense": "01427110-v",
+    "wordnet_meaning": "hold (someone) tightly in your arms, usually with fondness"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1099,7 +1726,7 @@
    "word": "hurt",
    "part_of_speech": "verb",
    "level": 1,
-   "definition": "to feel pain, or to cause pain",
+   "definition": "You say hurt when a part of your body feels pain. If you fall down, your knee might hurt.",
    "explanation": "The past tense is the same as the base form: hurt.",
    "forms": {
     "past": "hurt",
@@ -1110,7 +1737,14 @@
    "example": "My knee hurts.",
    "picture_idea": "a child holding a scraped knee",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02126629-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1124,6 +1758,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to feel pain, or to cause pain",
+   "definition_basis": {
+    "wordnet_sense": "02126629-v",
+    "wordnet_meaning": "be the source of pain"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1132,7 +1777,7 @@
    "word": "I",
    "part_of_speech": "pronoun",
    "level": 1,
-   "definition": "the word you use to talk about yourself",
+   "definition": "You say I when you talk about yourself. If you want a snack, you say, \"I want a snack.\"",
    "explanation": "",
    "forms": {},
    "example": "I want a snack.",
@@ -1152,6 +1797,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "the word you use to talk about yourself",
+   "definition_basis": {
+    "wordnet_sense": null,
+    "note": "WordNet has no entry for this word; written by Claude"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1160,7 +1816,7 @@
    "word": "in",
    "part_of_speech": "preposition",
    "level": 1,
-   "definition": "inside something",
+   "definition": "You use in to tell where something is. When a toy is in a box, the box is all around it.",
    "explanation": "",
    "forms": {},
    "example": "The toy is in the box.",
@@ -1180,6 +1836,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "inside something",
+   "definition_basis": {
+    "wordnet_sense": null,
+    "note": "WordNet has no entry for this word; written by Claude"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1188,7 +1855,7 @@
    "word": "it",
    "part_of_speech": "pronoun",
    "level": 1,
-   "definition": "a word for a thing or animal you already mentioned",
+   "definition": "You use it instead of the name of a thing or animal. If you have a ball, you can say, \"I like it.\"",
    "explanation": "",
    "forms": {},
    "example": "I like it.",
@@ -1208,6 +1875,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "a word for a thing or animal you already mentioned",
+   "definition_basis": {
+    "wordnet_sense": null,
+    "note": "WordNet has no entry for this word; written by Claude"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1216,7 +1894,7 @@
    "word": "juice",
    "part_of_speech": "noun",
    "level": 1,
-   "definition": "a sweet drink made from fruit",
+   "definition": "Juice is a drink made from the liquid inside fruit. You can squeeze an orange to get juice.",
    "explanation": "",
    "forms": {
     "plural": "juices"
@@ -1224,7 +1902,14 @@
    "example": "I want apple juice.",
    "picture_idea": "a glass of orange juice with a straw",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-07939988-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1238,6 +1923,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "a sweet drink made from fruit",
+   "definition_basis": {
+    "wordnet_sense": "07939988-n",
+    "wordnet_meaning": "the liquid part that can be extracted from plant or animal tissue by squeezing or cooking"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1246,7 +1942,7 @@
    "word": "like",
    "part_of_speech": "verb",
    "level": 1,
-   "definition": "to enjoy something or think it is nice",
+   "definition": "You say like when something is fun or tastes good to you. If pizza tastes good to you, you like it.",
    "explanation": "",
    "forms": {
     "past": "liked",
@@ -1257,7 +1953,14 @@
    "example": "I like pizza.",
    "picture_idea": "a child smiling at a slice of pizza",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01781131-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1271,6 +1974,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to enjoy something or think it is nice",
+   "definition_basis": {
+    "wordnet_sense": "01781131-v",
+    "wordnet_meaning": "find enjoyable or agreeable"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1279,7 +1993,7 @@
    "word": "look",
    "part_of_speech": "verb",
    "level": 1,
-   "definition": "to use your eyes to see something",
+   "definition": "You use look when you point your eyes at something to see it. You look at a truck driving by.",
    "explanation": "",
    "forms": {
     "past": "looked",
@@ -1290,7 +2004,14 @@
    "example": "Look at the big truck!",
    "picture_idea": "a child pointing at something and looking",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02134989-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1304,6 +2025,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to use your eyes to see something",
+   "definition_basis": {
+    "wordnet_sense": "02134989-v",
+    "wordnet_meaning": "perceive with attention; direct one's gaze towards; look"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1312,7 +2044,7 @@
    "word": "love",
    "part_of_speech": "verb",
    "level": 1,
-   "definition": "to care about someone very much",
+   "definition": "You love someone when you care about them very much and like being with them.",
    "explanation": "Love can also be a noun, meaning a strong feeling of caring.",
    "forms": {
     "past": "loved",
@@ -1323,7 +2055,14 @@
    "example": "I love my grandma.",
    "picture_idea": "a red heart",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01779085-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1337,6 +2076,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to care about someone very much",
+   "definition_basis": {
+    "wordnet_sense": "01779085-v",
+    "wordnet_meaning": "have a great affection or liking for"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1345,7 +2095,7 @@
    "word": "make",
    "part_of_speech": "verb",
    "level": 1,
-   "definition": "to build or create something",
+   "definition": "You say make when you build or put things together to get something new. You can make a tower with blocks.",
    "explanation": "",
    "forms": {
     "past": "made",
@@ -1356,7 +2106,14 @@
    "example": "Let's make a tower with blocks.",
    "picture_idea": "a child stacking colorful blocks",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01624592-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1370,6 +2127,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to build or create something",
+   "definition_basis": {
+    "wordnet_sense": "01624592-v",
+    "wordnet_meaning": "create or manufacture a man-made product"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1378,7 +2146,7 @@
    "word": "me",
    "part_of_speech": "pronoun",
    "level": 1,
-   "definition": "the word you use for yourself when you are not the doer, such as after a verb",
+   "definition": "You say me when you talk about yourself. If you want a ball, you say, \"Throw it to me.\"",
    "explanation": "",
    "forms": {},
    "example": "Give it to me.",
@@ -1398,6 +2166,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "the word you use for yourself when you are not the doer, such as after a verb",
+   "definition_basis": {
+    "wordnet_sense": null,
+    "note": "WordNet has no entry for this word; written by Claude"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1406,13 +2185,20 @@
    "word": "milk",
    "part_of_speech": "noun",
    "level": 1,
-   "definition": "a white drink that comes from cows and is full of nutrients",
+   "definition": "Milk is a white drink that comes from cows. You can pour it on your cereal.",
    "explanation": "",
    "forms": {},
    "example": "I drink milk with my cereal.",
    "picture_idea": "a glass of milk next to a milk carton",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-07860018-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1426,6 +2212,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "a white drink that comes from cows and is full of nutrients",
+   "definition_basis": {
+    "wordnet_sense": "07860018-n",
+    "wordnet_meaning": "a white nutritious liquid secreted by mammals and used as food by human beings"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1434,7 +2231,7 @@
    "word": "mom",
    "part_of_speech": "noun",
    "level": 1,
-   "definition": "your mother",
+   "definition": "Mom is what you call your mother, the parent who cares for you. You say, \"Mom, come and see!\"",
    "explanation": "In British English, people often say mum.",
    "forms": {
     "plural": "moms"
@@ -1442,7 +2239,14 @@
    "example": "Mom is reading me a story.",
    "picture_idea": "a smiling woman holding a child",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-10297825-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1456,6 +2260,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "your mother",
+   "definition_basis": {
+    "wordnet_sense": "10297825-n",
+    "wordnet_meaning": "informal terms for a mother"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1464,7 +2279,7 @@
    "word": "more",
    "part_of_speech": "determiner",
    "level": 1,
-   "definition": "a bigger amount; extra",
+   "definition": "You say more when you want extra, so you have a bigger amount. When your crackers are gone, you ask for more.",
    "explanation": "Often one of the first words a child uses to ask for another helping or to continue an activity.",
    "forms": {},
    "example": "I want more crackers, please.",
@@ -1485,6 +2300,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "a bigger amount; extra",
+   "definition_basis": {
+    "wordnet_sense": null,
+    "note": "WordNet has no entry for this word; written by Claude"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1493,7 +2319,7 @@
    "word": "my",
    "part_of_speech": "determiner",
    "level": 1,
-   "definition": "belonging to me",
+   "definition": "You say my for things that belong to you. If a teddy bear is yours, you say it is my teddy bear.",
    "explanation": "",
    "forms": {},
    "example": "That is my teddy bear.",
@@ -1513,6 +2339,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "belonging to me",
+   "definition_basis": {
+    "wordnet_sense": null,
+    "note": "WordNet has no entry for this word; written by Claude"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   }
  ]

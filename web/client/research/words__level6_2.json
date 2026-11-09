@@ -10,7 +10,7 @@
    "word": "nebulous",
    "part_of_speech": "adjective",
    "level": 6,
-   "definition": "vague, unclear, or not well defined",
+   "definition": "Vague and unclear, with no clear shape or details.",
    "explanation": "From Latin nebula, 'cloud'. It is often used for ideas, plans, or memories.",
    "forms": {
     "comparative": "more nebulous",
@@ -19,7 +19,14 @@
    "example": "Her plans for the future were still nebulous, with no dates or details.",
    "picture_idea": "A hazy cloud of mist hiding the outline of a shape",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00705690-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -33,6 +40,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "vague, unclear, or not well defined",
+   "definition_basis": {
+    "wordnet_sense": "00705690-s",
+    "wordnet_meaning": "lacking definition or definite content"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -41,7 +59,7 @@
    "word": "nefarious",
    "part_of_speech": "adjective",
    "level": 6,
-   "definition": "wicked or criminal",
+   "definition": "Very wicked, especially in a way that is meant to cause harm.",
    "explanation": "",
    "forms": {
     "comparative": "more nefarious",
@@ -50,7 +68,14 @@
    "example": "The detective uncovered the villain's nefarious scheme to steal the museum's treasures.",
    "picture_idea": "A shadowy figure in a cloak sneaking through a dark room",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02525059-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -64,6 +89,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "wicked or criminal",
+   "definition_basis": {
+    "wordnet_sense": "02525059-s",
+    "wordnet_meaning": "extremely wicked"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -72,7 +108,7 @@
    "word": "nonchalant",
    "part_of_speech": "adjective",
    "level": 6,
-   "definition": "calm and relaxed, as if not worried or interested",
+   "definition": "Calm and relaxed, showing no worry or interest in something that others might care about.",
    "explanation": "Comes from French. It can describe someone who seems casual even in an exciting or tense moment.",
    "forms": {
     "comparative": "more nonchalant",
@@ -81,7 +117,14 @@
    "example": "He gave a nonchalant shrug when they announced he had won.",
    "picture_idea": "A person shrugging with a relaxed smile",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00547966-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -95,6 +138,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "calm and relaxed, as if not worried or interested",
+   "definition_basis": {
+    "wordnet_sense": "00547966-s",
+    "wordnet_meaning": "marked by blithe unconcern"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -103,7 +157,7 @@
    "word": "nuance",
    "part_of_speech": "noun",
    "level": 6,
-   "definition": "a small, subtle difference in meaning, tone, or color",
+   "definition": "A very small difference in meaning, feeling, or tone that is hard to notice.",
    "explanation": "",
    "forms": {
     "plural": "nuances"
@@ -111,7 +165,14 @@
    "example": "A good translator must understand the nuances of both languages.",
    "picture_idea": "Two nearly identical shades of blue side by side",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-06618544-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -125,6 +186,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "a small, subtle difference in meaning, tone, or color",
+   "definition_basis": {
+    "wordnet_sense": "06618544-n",
+    "wordnet_meaning": "a subtle difference in meaning or opinion or attitude"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -133,7 +205,7 @@
    "word": "obfuscate",
    "part_of_speech": "verb",
    "level": 6,
-   "definition": "to make something unclear or hard to understand",
+   "definition": "To make something hard to understand or unclear, often on purpose.",
    "explanation": "Often used when someone confuses a topic on purpose, such as with complicated wording.",
    "forms": {
     "past": "obfuscated",
@@ -144,7 +216,14 @@
    "example": "The company tried to obfuscate the problem with long, technical reports.",
    "picture_idea": "A person hiding a page of text behind swirling smoke",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00942245-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -158,6 +237,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to make something unclear or hard to understand",
+   "definition_basis": {
+    "wordnet_sense": "00942245-v",
+    "wordnet_meaning": "make obscure or unclear"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -166,7 +256,7 @@
    "word": "ostentatious",
    "part_of_speech": "adjective",
    "level": 6,
-   "definition": "showy in a way meant to impress others",
+   "definition": "Meant to catch people's attention and impress them, often by showing off money or things.",
    "explanation": "",
    "forms": {
     "comparative": "more ostentatious",
@@ -175,7 +265,14 @@
    "example": "The millionaire's ostentatious mansion had gold fountains on the lawn.",
    "picture_idea": "A huge mansion with gold fountains and a fancy car",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01854283-a"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -189,6 +286,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "showy in a way meant to impress others",
+   "definition_basis": {
+    "wordnet_sense": "01854283-a",
+    "wordnet_meaning": "intended to attract notice and impress others"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -197,7 +305,7 @@
    "word": "ominous",
    "part_of_speech": "adjective",
    "level": 6,
-   "definition": "suggesting that something bad is about to happen",
+   "definition": "Giving a sign that something bad may soon happen.",
    "explanation": "",
    "forms": {
     "comparative": "more ominous",
@@ -206,7 +314,14 @@
    "example": "Dark, ominous clouds gathered above the picnic.",
    "picture_idea": "Black storm clouds rolling over an empty field",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00195958-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -220,6 +335,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "suggesting that something bad is about to happen",
+   "definition_basis": {
+    "wordnet_sense": "00195958-s",
+    "wordnet_meaning": "threatening or foreshadowing evil or tragic developments"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -228,7 +354,7 @@
    "word": "paradigm",
    "part_of_speech": "noun",
    "level": 6,
-   "definition": "a typical model or pattern; a way of thinking about something",
+   "definition": "A widely accepted way of thinking about a subject; also a typical example or model.",
    "explanation": "In science, a 'paradigm shift' is a big change in how people understand a subject.",
    "forms": {
     "plural": "paradigms"
@@ -236,7 +362,14 @@
    "example": "The discovery of germs caused a paradigm shift in medicine.",
    "picture_idea": "",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-06219906-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -250,6 +383,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "a typical model or pattern; a way of thinking about something",
+   "definition_basis": {
+    "wordnet_sense": "06219906-n",
+    "wordnet_meaning": "the generally accepted perspective of a particular discipline at a given time"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -258,7 +402,7 @@
    "word": "pernicious",
    "part_of_speech": "adjective",
    "level": 6,
-   "definition": "harmful in a slow, hidden way",
+   "definition": "Harmful in a slow, hidden way that is hard to notice or stop.",
    "explanation": "",
    "forms": {
     "comparative": "more pernicious",
@@ -267,7 +411,14 @@
    "example": "Rumors can have a pernicious effect on a friendship.",
    "picture_idea": "A weed slowly strangling a healthy plant",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01165950-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -281,6 +432,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "harmful in a slow, hidden way",
+   "definition_basis": {
+    "wordnet_sense": "01165950-s",
+    "wordnet_meaning": "working or spreading in a hidden and usually injurious way"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -289,7 +451,7 @@
    "word": "petrichor",
    "part_of_speech": "noun",
    "level": 6,
-   "definition": "the pleasant smell of rain falling on dry ground",
+   "definition": "The fresh, earthy smell in the air when rain first falls on dry ground.",
    "explanation": "The word was coined in 1964 by two Australian scientists, from Greek petra 'stone' and ichor, the fluid in the veins of the gods.",
    "forms": {},
    "example": "We opened the windows to enjoy the petrichor after the first storm of summer.",
@@ -310,6 +472,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "the pleasant smell of rain falling on dry ground",
+   "definition_basis": {
+    "wordnet_sense": null,
+    "note": "WordNet has no entry for this word; written by Claude"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -318,13 +491,20 @@
    "word": "plethora",
    "part_of_speech": "noun",
    "level": 6,
-   "definition": "a large amount, more than is needed",
+   "definition": "A very large amount of something, more than is needed.",
    "explanation": "Usually used in the phrase 'a plethora of'.",
    "forms": {},
    "example": "The menu offered a plethora of choices, so it took her ages to decide.",
    "picture_idea": "A table overflowing with many different dishes",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-05127416-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -338,6 +518,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "a large amount, more than is needed",
+   "definition_basis": {
+    "wordnet_sense": "05127416-n",
+    "wordnet_meaning": "extreme excess"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -346,7 +537,7 @@
    "word": "panacea",
    "part_of_speech": "noun",
    "level": 6,
-   "definition": "a cure or solution that is said to fix all problems",
+   "definition": "A cure or answer that people claim will solve every problem.",
    "explanation": "Often used in negative sentences, such as 'there is no panacea'.",
    "forms": {
     "plural": "panaceas"
@@ -354,7 +545,14 @@
    "example": "Technology is not a panacea for every problem in schools.",
    "picture_idea": "A magic bottle labeled 'cures everything'",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-03886467-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -368,6 +566,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "a cure or solution that is said to fix all problems",
+   "definition_basis": {
+    "wordnet_sense": "03886467-n",
+    "wordnet_meaning": "hypothetical remedy for all ills or diseases; once sought by the alchemists"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -376,7 +585,7 @@
    "word": "pragmatic",
    "part_of_speech": "adjective",
    "level": 6,
-   "definition": "dealing with things in a practical, sensible way",
+   "definition": "Dealing with problems in a practical, sensible way instead of focusing on ideas or hopes.",
    "explanation": "",
    "forms": {
     "comparative": "more pragmatic",
@@ -385,7 +594,14 @@
    "example": "Taking a pragmatic approach, she chose the cheaper option that still worked well.",
    "picture_idea": "A person comparing two tools and choosing the useful one",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01841127-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -399,6 +615,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "dealing with things in a practical, sensible way",
+   "definition_basis": {
+    "wordnet_sense": "01841127-s",
+    "wordnet_meaning": "concerned with practical matters"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -407,7 +634,7 @@
    "word": "quixotic",
    "part_of_speech": "adjective",
    "level": 6,
-   "definition": "idealistic in a way that is not realistic or practical",
+   "definition": "Full of high hopes and ideals that are not practical or realistic.",
    "explanation": "From Don Quixote, the hero of a Spanish novel who fought windmills thinking they were giants.",
    "forms": {
     "comparative": "more quixotic",
@@ -416,7 +643,14 @@
    "example": "His quixotic plan to plant a forest in the desert amazed everyone.",
    "picture_idea": "A knight on a horse charging at a windmill",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01842899-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -430,6 +664,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "idealistic in a way that is not realistic or practical",
+   "definition_basis": {
+    "wordnet_sense": "01842899-s",
+    "wordnet_meaning": "not sensible about practical matters; idealistic and unrealistic"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -438,7 +683,7 @@
    "word": "quandary",
    "part_of_speech": "noun",
    "level": 6,
-   "definition": "a state of not knowing what to do in a difficult situation",
+   "definition": "A state of not knowing what to do when you face a hard choice.",
    "explanation": "",
    "forms": {
     "plural": "quandaries"
@@ -446,7 +691,14 @@
    "example": "She was in a quandary over which invitation to accept.",
    "picture_idea": "A person standing at a fork in the road scratching their head",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-05693891-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -460,6 +712,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "a state of not knowing what to do in a difficult situation",
+   "definition_basis": {
+    "wordnet_sense": "05693891-n",
+    "wordnet_meaning": "state of uncertainty or perplexity especially as requiring a choice between equally unfavorable options"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -468,7 +731,7 @@
    "word": "recalcitrant",
    "part_of_speech": "adjective",
    "level": 6,
-   "definition": "stubbornly refusing to obey or cooperate",
+   "definition": "Stubbornly refusing to obey or to do what you are told.",
    "explanation": "",
    "forms": {
     "comparative": "more recalcitrant",
@@ -477,7 +740,14 @@
    "example": "The recalcitrant mule would not move, no matter how hard we pulled.",
    "picture_idea": "A mule planting its feet while a person tugs the rope",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01618681-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -491,6 +761,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "stubbornly refusing to obey or cooperate",
+   "definition_basis": {
+    "wordnet_sense": "01618681-s",
+    "wordnet_meaning": "stubbornly resistant to authority or control"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -499,7 +780,7 @@
    "word": "reticent",
    "part_of_speech": "adjective",
    "level": 6,
-   "definition": "unwilling to share thoughts or feelings; reserved",
+   "definition": "Not willing to talk about your thoughts or feelings; quiet and reserved.",
    "explanation": "",
    "forms": {
     "comparative": "more reticent",
@@ -508,7 +789,14 @@
    "example": "He was reticent about his past and rarely spoke of his childhood.",
    "picture_idea": "A person with a finger to their lips",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02392277-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -522,6 +810,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "unwilling to share thoughts or feelings; reserved",
+   "definition_basis": {
+    "wordnet_sense": "02392277-s",
+    "wordnet_meaning": "temperamentally disinclined to talk"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -530,7 +829,7 @@
    "word": "resilient",
    "part_of_speech": "adjective",
    "level": 6,
-   "definition": "able to recover quickly from difficulty or to spring back into shape",
+   "definition": "Able to recover quickly from trouble or hard times; also able to bounce back into shape.",
    "explanation": "",
    "forms": {
     "comparative": "more resilient",
@@ -539,7 +838,14 @@
    "example": "Children are often more resilient than adults expect.",
    "picture_idea": "A bent branch springing back upright",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02288300-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -553,6 +859,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "able to recover quickly from difficulty or to spring back into shape",
+   "definition_basis": {
+    "wordnet_sense": "02288300-s",
+    "wordnet_meaning": "recovering readily from adversity, depression, or the like"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -561,13 +878,20 @@
    "word": "serendipity",
    "part_of_speech": "noun",
    "level": 6,
-   "definition": "a happy accident; finding something good by chance",
+   "definition": "Good luck in finding something good by chance when you were not looking for it.",
    "explanation": "Coined by Horace Walpole in 1754 from a fairy tale, 'The Three Princes of Serendip'.",
    "forms": {},
    "example": "It was pure serendipity that we met on the same train.",
    "picture_idea": "A person happily finding a coin on the pavement",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-11484294-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -581,6 +905,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "a happy accident; finding something good by chance",
+   "definition_basis": {
+    "wordnet_sense": "11484294-n",
+    "wordnet_meaning": "good luck in making unexpected and fortunate discoveries"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -589,7 +924,7 @@
    "word": "sycophant",
    "part_of_speech": "noun",
    "level": 6,
-   "definition": "a person who flatters important people to gain favor",
+   "definition": "A person who praises powerful people too much in order to get something from them.",
    "explanation": "",
    "forms": {
     "plural": "sycophants"
@@ -597,7 +932,14 @@
    "example": "The king was surrounded by sycophants who agreed with everything he said.",
    "picture_idea": "A group of people bowing and clapping around a king",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-10704310-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -611,6 +953,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "a person who flatters important people to gain favor",
+   "definition_basis": {
+    "wordnet_sense": "10704310-n",
+    "wordnet_meaning": "a person who tries to please someone in order to gain a personal advantage"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -619,7 +972,7 @@
    "word": "superfluous",
    "part_of_speech": "adjective",
    "level": 6,
-   "definition": "more than is needed; unnecessary",
+   "definition": "More than you need, so not necessary.",
    "explanation": "",
    "forms": {
     "comparative": "more superfluous",
@@ -628,7 +981,14 @@
    "example": "The editor cut every superfluous word from the article.",
    "picture_idea": "A red pen crossing out extra words on a page",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01585713-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -642,6 +1002,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "more than is needed; unnecessary",
+   "definition_basis": {
+    "wordnet_sense": "01585713-s",
+    "wordnet_meaning": "more than is needed, desired, or required"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -650,7 +1021,7 @@
    "word": "stoic",
    "part_of_speech": "adjective",
    "level": 6,
-   "definition": "calm and showing no emotion when facing pain or trouble",
+   "definition": "Staying calm and showing no feelings when facing pain or trouble.",
    "explanation": "From Stoicism, an ancient Greek philosophy that taught people to stay calm and accept what they cannot change.",
    "forms": {
     "comparative": "more stoic",
@@ -659,7 +1030,14 @@
    "example": "She remained stoic as the doctor explained the long recovery.",
    "picture_idea": "A calm person standing in heavy rain without flinching",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00861745-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -673,6 +1051,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "calm and showing no emotion when facing pain or trouble",
+   "definition_basis": {
+    "wordnet_sense": "00861745-s",
+    "wordnet_meaning": "seeming unaffected by pleasure or pain; impassive"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -681,7 +1070,7 @@
    "word": "spurious",
    "part_of_speech": "adjective",
    "level": 6,
-   "definition": "false or fake, though made to look real",
+   "definition": "Seeming true or real, but actually false.",
    "explanation": "Often used for claims, arguments, or evidence that sound right but are not.",
    "forms": {
     "comparative": "more spurious",
@@ -690,7 +1079,14 @@
    "example": "The scientist rejected the spurious claim because it had no evidence.",
    "picture_idea": "A magnifying glass revealing a fake signature",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02510328-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -704,6 +1100,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "false or fake, though made to look real",
+   "definition_basis": {
+    "wordnet_sense": "02510328-s",
+    "wordnet_meaning": "ostensibly valid, but not actually valid"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -712,7 +1119,7 @@
    "word": "sporadic",
    "part_of_speech": "adjective",
    "level": 6,
-   "definition": "happening now and then, not regularly",
+   "definition": "Happening now and then, at scattered times, not in a regular pattern.",
    "explanation": "",
    "forms": {
     "comparative": "more sporadic",
@@ -721,7 +1128,14 @@
    "example": "Sporadic showers fell throughout the afternoon.",
    "picture_idea": "A few scattered raindrops falling from a mostly clear sky",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00596011-a"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -735,6 +1149,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "happening now and then, not regularly",
+   "definition_basis": {
+    "wordnet_sense": "00596011-a",
+    "wordnet_meaning": "recurring in scattered and irregular or unpredictable instances"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -743,7 +1168,7 @@
    "word": "tenacious",
    "part_of_speech": "adjective",
    "level": 6,
-   "definition": "holding on firmly; refusing to give up",
+   "definition": "Holding firmly to a goal and refusing to give up.",
    "explanation": "",
    "forms": {
     "comparative": "more tenacious",
@@ -752,7 +1177,14 @@
    "example": "The tenacious climber kept going despite the freezing wind.",
    "picture_idea": "A climber gripping a cliff face with determination",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02335561-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -766,6 +1198,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "holding on firmly; refusing to give up",
+   "definition_basis": {
+    "wordnet_sense": "02335561-s",
+    "wordnet_meaning": "stubbornly unyielding"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -774,7 +1217,7 @@
    "word": "taciturn",
    "part_of_speech": "adjective",
    "level": 6,
-   "definition": "saying very little; quiet by nature",
+   "definition": "Saying very little and not liking to talk, as part of your nature.",
    "explanation": "",
    "forms": {
     "comparative": "more taciturn",
@@ -783,7 +1226,14 @@
    "example": "The old fisherman was taciturn and spoke only when necessary.",
    "picture_idea": "An old man sitting silently by a boat",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02391948-a"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -797,6 +1247,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "saying very little; quiet by nature",
+   "definition_basis": {
+    "wordnet_sense": "02391948-a",
+    "wordnet_meaning": "habitually reserved and uncommunicative"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -805,13 +1266,20 @@
    "word": "trepidation",
    "part_of_speech": "noun",
    "level": 6,
-   "definition": "a feeling of fear or worry about something that may happen",
+   "definition": "A nervous feeling of fear about something that is about to happen.",
    "explanation": "",
    "forms": {},
    "example": "She opened the exam paper with trepidation.",
    "picture_idea": "A nervous person peeking through half-closed fingers at a door",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-07537282-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -825,6 +1293,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "a feeling of fear or worry about something that may happen",
+   "definition_basis": {
+    "wordnet_sense": "07537282-n",
+    "wordnet_meaning": "a feeling of alarm or dread"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -833,7 +1312,7 @@
    "word": "tangible",
    "part_of_speech": "adjective",
    "level": 6,
-   "definition": "able to be touched or clearly seen to be real",
+   "definition": "Real and clear enough that you can see it, show it, or prove it.",
    "explanation": "The opposite is 'intangible'. Tangible results are results you can clearly see.",
    "forms": {
     "comparative": "more tangible",
@@ -842,7 +1321,14 @@
    "example": "The project produced tangible results: three new classrooms.",
    "picture_idea": "A hand touching a solid object",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00013681-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -856,6 +1342,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "able to be touched or clearly seen to be real",
+   "definition_basis": {
+    "wordnet_sense": "00013681-s",
+    "wordnet_meaning": "capable of being treated as fact"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -864,7 +1361,7 @@
    "word": "ubiquitous",
    "part_of_speech": "adjective",
    "level": 6,
-   "definition": "seeming to be everywhere at once",
+   "definition": "Found everywhere, or seeming to be everywhere at the same time.",
    "explanation": "From Latin ubique, 'everywhere'.",
    "forms": {
     "comparative": "more ubiquitous",
@@ -873,7 +1370,14 @@
    "example": "Smartphones have become ubiquitous in modern life.",
    "picture_idea": "A crowd of people all looking at phones",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01853443-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -887,6 +1391,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "seeming to be everywhere at once",
+   "definition_basis": {
+    "wordnet_sense": "01853443-s",
+    "wordnet_meaning": "being present everywhere at once"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -895,7 +1410,7 @@
    "word": "unequivocal",
    "part_of_speech": "adjective",
    "level": 6,
-   "definition": "clear and firm, with no doubt",
+   "definition": "Clear and firm, leaving no doubt about what is meant.",
    "explanation": "",
    "forms": {
     "comparative": "more unequivocal",
@@ -904,7 +1419,14 @@
    "example": "The judge gave an unequivocal answer: the rule applied to everyone.",
    "picture_idea": "A person firmly pointing and nodding",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00899848-a"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -918,6 +1440,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "clear and firm, with no doubt",
+   "definition_basis": {
+    "wordnet_sense": "00899848-a",
+    "wordnet_meaning": "admitting of no doubt or misunderstanding; having only one meaning or interpretation and leading to only one conclusion"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -926,7 +1459,7 @@
    "word": "usurp",
    "part_of_speech": "verb",
    "level": 6,
-   "definition": "to take power or a position by force or without the right",
+   "definition": "To take someone's power or place unfairly, often by force, when it is not yours to take.",
    "explanation": "",
    "forms": {
     "past": "usurped",
@@ -937,7 +1470,14 @@
    "example": "The prince's uncle tried to usurp the throne.",
    "picture_idea": "A man snatching a crown from a king's head",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02279327-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -951,6 +1491,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to take power or a position by force or without the right",
+   "definition_basis": {
+    "wordnet_sense": "02279327-v",
+    "wordnet_meaning": "seize and take control without authority and possibly with force; take as one's right or possession"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -959,7 +1510,7 @@
    "word": "venerate",
    "part_of_speech": "verb",
    "level": 6,
-   "definition": "to treat with great respect and honor",
+   "definition": "To respect someone or something very deeply and treat them with great honor.",
    "explanation": "",
    "forms": {
     "past": "venerated",
@@ -970,7 +1521,14 @@
    "example": "Many cultures venerate their elders for their wisdom.",
    "picture_idea": "Young people bowing respectfully to an elderly person",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01782485-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -984,6 +1542,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to treat with great respect and honor",
+   "definition_basis": {
+    "wordnet_sense": "01782485-v",
+    "wordnet_meaning": "regard with feelings of respect and reverence; consider hallowed or exalted or be in awe of"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -992,7 +1561,7 @@
    "word": "vicarious",
    "part_of_speech": "adjective",
    "level": 6,
-   "definition": "felt or experienced through someone else rather than yourself",
+   "definition": "Felt by watching or hearing about other people, instead of by doing something yourself.",
    "explanation": "",
    "forms": {
     "comparative": "more vicarious",
@@ -1001,7 +1570,14 @@
    "example": "He got vicarious pleasure from watching his sister's travel videos.",
    "picture_idea": "A person at home smiling while watching a friend's trip on a screen",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01861516-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1015,6 +1591,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "felt or experienced through someone else rather than yourself",
+   "definition_basis": {
+    "wordnet_sense": "01861516-s",
+    "wordnet_meaning": "experienced at secondhand"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1023,7 +1610,7 @@
    "word": "vestige",
    "part_of_speech": "noun",
    "level": 6,
-   "definition": "a small trace of something that once existed",
+   "definition": "A small sign or trace that is left of something that was once there.",
    "explanation": "",
    "forms": {
     "plural": "vestiges"
@@ -1031,7 +1618,14 @@
    "example": "Only a few vestiges of the ancient wall remain.",
    "picture_idea": "A crumbling stone fragment of an old wall in a field",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-06659391-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1045,6 +1639,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "a small trace of something that once existed",
+   "definition_basis": {
+    "wordnet_sense": "06659391-n",
+    "wordnet_meaning": "an indication that something has been present"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1053,7 +1658,7 @@
    "word": "volatile",
    "part_of_speech": "adjective",
    "level": 6,
-   "definition": "likely to change suddenly or become violent; evaporating quickly",
+   "definition": "Likely to change suddenly, especially by becoming angry or violent.",
    "explanation": "Used for tempers, markets, and situations, and in chemistry for liquids that turn to gas easily.",
    "forms": {
     "comparative": "more volatile",
@@ -1062,7 +1667,14 @@
    "example": "The volatile situation could turn violent at any moment.",
    "picture_idea": "A bubbling flask with vapor rising quickly",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02300305-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1076,6 +1688,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "likely to change suddenly or become violent; evaporating quickly",
+   "definition_basis": {
+    "wordnet_sense": "02300305-s",
+    "wordnet_meaning": "liable to lead to sudden change or violence"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1084,7 +1707,7 @@
    "word": "vindicate",
    "part_of_speech": "verb",
    "level": 6,
-   "definition": "to clear someone of blame or show that they were right",
+   "definition": "To clear someone of blame by showing with proof that they were right or innocent.",
    "explanation": "",
    "forms": {
     "past": "vindicated",
@@ -1095,7 +1718,14 @@
    "example": "The new evidence vindicated the accused man.",
    "picture_idea": "A person being declared innocent in a courtroom",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00906447-v"
+    }
+   ],
    "status": "unverified",
    "ai_words": null,
    "ai_written": true,
@@ -1110,6 +1740,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to clear someone of blame or show that they were right",
+   "definition_basis": {
+    "wordnet_sense": "00906447-v",
+    "wordnet_meaning": "clear of accusation, blame, suspicion, or doubt with supporting proof"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1118,7 +1759,7 @@
    "word": "wane",
    "part_of_speech": "verb",
    "level": 6,
-   "definition": "to gradually become smaller, weaker, or less",
+   "definition": "To slowly become smaller, weaker, or less.",
    "explanation": "Used for the moon when it shows less of its face each night. The opposite is 'wax'.",
    "forms": {
     "past": "waned",
@@ -1129,7 +1770,14 @@
    "example": "Her interest in the hobby began to wane after a few months.",
    "picture_idea": "The moon shrinking from full to a thin crescent",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00432779-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1143,6 +1791,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "to gradually become smaller, weaker, or less",
+   "definition_basis": {
+    "wordnet_sense": "00432779-v",
+    "wordnet_meaning": "grow smaller"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1151,7 +1810,7 @@
    "word": "whimsical",
    "part_of_speech": "adjective",
    "level": 6,
-   "definition": "playful and unusual in a charming way",
+   "definition": "Playful and a little strange in a charming way.",
    "explanation": "",
    "forms": {
     "comparative": "more whimsical",
@@ -1174,6 +1833,18 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "playful and unusual in a charming way",
+   "definition_basis": {
+    "wordnet_sense": null,
+    "note": "no WordNet meaning fit; written by Claude",
+    "batch_note": "The only WordNet meaning (acting on a sudden whim, unpredictable) does not match our definition or example, which mean playful and charming."
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1182,7 +1853,7 @@
    "word": "wistful",
    "part_of_speech": "adjective",
    "level": 6,
-   "definition": "feeling a quiet, sad longing for something",
+   "definition": "Quietly sad as you think about something you miss or wish you had.",
    "explanation": "",
    "forms": {
     "comparative": "more wistful",
@@ -1191,7 +1862,14 @@
    "example": "He gave a wistful smile as he looked at old photographs.",
    "picture_idea": "A person gazing out a window holding an old photo",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01365866-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1205,6 +1883,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "feeling a quiet, sad longing for something",
+   "definition_basis": {
+    "wordnet_sense": "01365866-s",
+    "wordnet_meaning": "showing pensive sadness"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1213,13 +1902,20 @@
    "word": "xenophobia",
    "part_of_speech": "noun",
    "level": 6,
-   "definition": "dislike or fear of people from other countries or cultures",
+   "definition": "Fear or strong dislike of people from other countries or ways of life.",
    "explanation": "From Greek xenos 'stranger' and phobos 'fear'.",
    "forms": {},
    "example": "The campaign aimed to fight xenophobia by celebrating cultural diversity.",
    "picture_idea": "",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-14409427-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1233,6 +1929,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "dislike or fear of people from other countries or cultures",
+   "definition_basis": {
+    "wordnet_sense": "14409427-n",
+    "wordnet_meaning": "a fear of foreigners or strangers"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1241,7 +1948,7 @@
    "word": "yoke",
    "part_of_speech": "noun",
    "level": 6,
-   "definition": "a wooden bar that joins two animals so they can pull a load together; something that oppresses",
+   "definition": "A wooden bar that goes across the necks of two animals so they can pull together.",
    "explanation": "Figuratively, 'the yoke of tyranny' means harsh control over people.",
    "forms": {
     "plural": "yokes"
@@ -1249,7 +1956,14 @@
    "example": "The oxen wore a heavy wooden yoke as they pulled the plow.",
    "picture_idea": "Two oxen joined by a wooden bar pulling a plow",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-04620197-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1263,6 +1977,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "a wooden bar that joins two animals so they can pull a load together; something that oppresses",
+   "definition_basis": {
+    "wordnet_sense": "04620197-n",
+    "wordnet_meaning": "stable gear that joins two draft animals at the neck so they can work together as a team"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1271,7 +1996,7 @@
    "word": "zeitgeist",
    "part_of_speech": "noun",
    "level": 6,
-   "definition": "the spirit or mood of a particular period in history",
+   "definition": "The main ideas and mood of a certain time in history.",
    "explanation": "A German word meaning 'time spirit', borrowed into English.",
    "forms": {
     "plural": "zeitgeists"
@@ -1293,6 +2018,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "the spirit or mood of a particular period in history",
+   "definition_basis": {
+    "wordnet_sense": null,
+    "note": "WordNet has no entry for this word; written by Claude"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1301,7 +2037,7 @@
    "word": "zenith",
    "part_of_speech": "noun",
    "level": 6,
-   "definition": "the highest point; the point in the sky directly overhead",
+   "definition": "The highest point or best time of something.",
    "explanation": "",
    "forms": {
     "plural": "zeniths"
@@ -1323,6 +2059,18 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "the highest point; the point in the sky directly overhead",
+   "definition_basis": {
+    "wordnet_sense": null,
+    "note": "no WordNet meaning fit; written by Claude",
+    "batch_note": "WordNet only lists the astronomical sense (point in the sky overhead), which does not match our example about the highest point of something."
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1331,7 +2079,7 @@
    "word": "zealous",
    "part_of_speech": "adjective",
    "level": 6,
-   "definition": "full of energy and strong enthusiasm for a cause",
+   "definition": "Very eager and full of energy for something you strongly believe in.",
    "explanation": "",
    "forms": {
     "comparative": "more zealous",
@@ -1340,7 +2088,14 @@
    "example": "The zealous volunteers cleaned the whole beach before noon.",
    "picture_idea": "Eager volunteers picking up litter on a beach",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00889495-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1354,6 +2109,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "full of energy and strong enthusiasm for a cause",
+   "definition_basis": {
+    "wordnet_sense": "00889495-s",
+    "wordnet_meaning": "marked by active interest and enthusiasm"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1362,7 +2128,7 @@
    "word": "nadir",
    "part_of_speech": "noun",
    "level": 6,
-   "definition": "the lowest point of something",
+   "definition": "The lowest or worst point of something.",
    "explanation": "The opposite of zenith. It comes from Arabic and also means the point in the sky directly below you.",
    "forms": {
     "plural": "nadirs"
@@ -1370,7 +2136,14 @@
    "example": "Losing his job was the nadir of an awful year.",
    "picture_idea": "A graph line dropping to its lowest point",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-14510223-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1384,6 +2157,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "the lowest point of something",
+   "definition_basis": {
+    "wordnet_sense": "14510223-n",
+    "wordnet_meaning": "an extreme state of adversity; the lowest point of anything"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1392,7 +2176,7 @@
    "word": "obstinate",
    "part_of_speech": "adjective",
    "level": 6,
-   "definition": "stubbornly refusing to change your mind",
+   "definition": "Refusing to change your mind or your way of doing things, even when others ask you to.",
    "explanation": "",
    "forms": {
     "comparative": "more obstinate",
@@ -1401,7 +2185,14 @@
    "example": "The obstinate child refused to wear a coat even in the snow.",
    "picture_idea": "A child with folded arms shaking their head",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02334687-a"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1415,6 +2206,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "stubbornly refusing to change your mind",
+   "definition_basis": {
+    "wordnet_sense": "02334687-a",
+    "wordnet_meaning": "tenaciously unwilling or marked by tenacious unwillingness to yield"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1423,7 +2225,7 @@
    "word": "palpable",
    "part_of_speech": "adjective",
    "level": 6,
-   "definition": "so strong that it can almost be felt; easy to notice",
+   "definition": "So strong that you can almost feel it; very easy to notice.",
    "explanation": "",
    "forms": {
     "comparative": "more palpable",
@@ -1432,7 +2234,14 @@
    "example": "The tension in the room was palpable.",
    "picture_idea": "People sitting stiffly in a silent, tense room",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01516397-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1446,6 +2255,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "so strong that it can almost be felt; easy to notice",
+   "definition_basis": {
+    "wordnet_sense": "01516397-s",
+    "wordnet_meaning": "so intense as to be almost touched or felt"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1454,7 +2274,7 @@
    "word": "sanguine",
    "part_of_speech": "adjective",
    "level": 6,
-   "definition": "hopeful and optimistic, especially in a difficult situation",
+   "definition": "Hopeful and cheerful about how things will turn out, even when things are hard.",
    "explanation": "From Latin sanguis, 'blood'. Medieval people believed a lot of blood made someone cheerful.",
    "forms": {
     "comparative": "more sanguine",
@@ -1463,7 +2283,14 @@
    "example": "Despite the delays, she remained sanguine about the project's success.",
    "picture_idea": "A smiling person looking up at a sunrise",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01668920-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1477,6 +2304,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "hopeful and optimistic, especially in a difficult situation",
+   "definition_basis": {
+    "wordnet_sense": "01668920-s",
+    "wordnet_meaning": "confidently optimistic and cheerful"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1485,7 +2323,7 @@
    "word": "truculent",
    "part_of_speech": "adjective",
    "level": 6,
-   "definition": "eager to argue or fight; aggressively defiant",
+   "definition": "Ready to argue or fight, and rude or angry toward others.",
    "explanation": "",
    "forms": {
     "comparative": "more truculent",
@@ -1494,7 +2332,14 @@
    "example": "The truculent customer shouted at everyone in the shop.",
    "picture_idea": "A scowling person with clenched fists",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00085264-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1508,6 +2353,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "eager to argue or fight; aggressively defiant",
+   "definition_basis": {
+    "wordnet_sense": "00085264-s",
+    "wordnet_meaning": "defiantly aggressive"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1516,7 +2372,7 @@
    "word": "winsome",
    "part_of_speech": "adjective",
    "level": 6,
-   "definition": "charming and attractive in an innocent way",
+   "definition": "Sweet and charming in an innocent way that makes people like them.",
    "explanation": "",
    "forms": {
     "comparative": "more winsome",
@@ -1525,7 +2381,14 @@
    "example": "The little girl gave a winsome smile and won over the whole class.",
    "picture_idea": "A child with a bright, charming smile",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00170318-s"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1539,6 +2402,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "charming and attractive in an innocent way",
+   "definition_basis": {
+    "wordnet_sense": "00170318-s",
+    "wordnet_meaning": "charming in a childlike or naive way"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   }
  ]

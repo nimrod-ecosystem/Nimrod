@@ -10,7 +10,7 @@
    "word": "angry",
    "part_of_speech": "adjective",
    "level": 2,
-   "definition": "Feeling that you want to shout because something is not fair or is bad.",
+   "definition": "You are angry when something unfair or bad makes you want to shout. A broken toy can make you angry.",
    "explanation": "",
    "forms": {
     "comparative": "angrier",
@@ -19,7 +19,14 @@
    "example": "Dad was angry when the milk spilled on the floor.",
    "picture_idea": "A person with a red face, frowning eyebrows and a tight mouth.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00114629-a"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -32,6 +39,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "Feeling that you want to shout because something is not fair or is bad.",
+   "definition_basis": {
+    "wordnet_sense": "00114629-a",
+    "wordnet_meaning": "feeling or showing anger"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -40,7 +58,7 @@
    "word": "arm",
    "part_of_speech": "noun",
    "level": 2,
-   "definition": "The part of your body between your shoulder and your hand.",
+   "definition": "Your arm joins your shoulder to your hand. You use your arms to hold and carry things.",
    "explanation": "",
    "forms": {
     "plural": "arms"
@@ -48,7 +66,14 @@
    "example": "She carried the box in her arms.",
    "picture_idea": "A child lifting one arm up high.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-05571403-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -61,6 +86,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "The part of your body between your shoulder and your hand.",
+   "definition_basis": {
+    "wordnet_sense": "05571403-n",
+    "wordnet_meaning": "a human limb; technically the part of the superior limb between the shoulder and the elbow but commonly used to refer to the whole superior limb"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -69,7 +105,7 @@
    "word": "bathroom",
    "part_of_speech": "noun",
    "level": 2,
-   "definition": "A room in a house where you wash and where there is a toilet.",
+   "definition": "A bathroom is the room where you wash, have a bath or shower, and use the toilet.",
    "explanation": "",
    "forms": {
     "plural": "bathrooms"
@@ -77,7 +113,14 @@
    "example": "I brush my teeth in the bathroom.",
    "picture_idea": "A room with a bath, a sink and a toilet.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02810916-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -91,6 +134,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "A room in a house where you wash and where there is a toilet.",
+   "definition_basis": {
+    "wordnet_sense": "02810916-n",
+    "wordnet_meaning": "a room (as in a residence) containing a bathtub or shower and usually a washbasin and toilet"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -99,7 +153,7 @@
    "word": "bed",
    "part_of_speech": "noun",
    "level": 2,
-   "definition": "A piece of furniture that you sleep on.",
+   "definition": "A bed is where you lie down to sleep at night. It is soft, with sheets and a blanket on top.",
    "explanation": "",
    "forms": {
     "plural": "beds"
@@ -107,7 +161,14 @@
    "example": "The cat is asleep on my bed.",
    "picture_idea": "A bed with a pillow and a blanket.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02821967-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -120,6 +181,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "A piece of furniture that you sleep on.",
+   "definition_basis": {
+    "wordnet_sense": "02821967-n",
+    "wordnet_meaning": "a piece of furniture that provides a place to sleep"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -128,7 +200,7 @@
    "word": "big",
    "part_of_speech": "adjective",
    "level": 2,
-   "definition": "Large in size; not small.",
+   "definition": "You say big when something takes up a lot of space. An elephant is big, but a mouse is small.",
    "explanation": "",
    "forms": {
     "comparative": "bigger",
@@ -137,7 +209,14 @@
    "example": "They have a big dog.",
    "picture_idea": "A large elephant next to a small mouse.",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01385012-a"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -150,6 +229,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "Large in size; not small.",
+   "definition_basis": {
+    "wordnet_sense": "01385012-a",
+    "wordnet_meaning": "above average in size or number or quantity or magnitude or extent"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -158,7 +248,7 @@
    "word": "bring",
    "part_of_speech": "verb",
    "level": 2,
-   "definition": "To carry something with you to a place.",
+   "definition": "Bring means to carry something with you when you come to a place. You bring a bag to school.",
    "explanation": "",
    "forms": {
     "past": "brought",
@@ -169,7 +259,14 @@
    "example": "Please bring your coat to school.",
    "picture_idea": "A child carrying a bag toward a door.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02081903-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -182,6 +279,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "To carry something with you to a place.",
+   "definition_basis": {
+    "wordnet_sense": "02081903-v",
+    "wordnet_meaning": "take something or somebody with oneself somewhere"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -190,7 +298,7 @@
    "word": "brush",
    "part_of_speech": "verb",
    "level": 2,
-   "definition": "To clean or tidy something with a brush.",
+   "definition": "You brush when you rub something with a brush to make it clean or neat. You brush your hair.",
    "explanation": "",
    "forms": {
     "past": "brushed",
@@ -201,7 +309,14 @@
    "example": "I brush my teeth every morning.",
    "picture_idea": "A child brushing teeth in front of a mirror.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01246546-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -215,6 +330,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "To clean or tidy something with a brush.",
+   "definition_basis": {
+    "wordnet_sense": "01246546-v",
+    "wordnet_meaning": "clean with a brush"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -223,7 +349,7 @@
    "word": "buy",
    "part_of_speech": "verb",
    "level": 2,
-   "definition": "To get something by giving money for it.",
+   "definition": "When you buy something, you give money to get it. You buy food at a shop.",
    "explanation": "",
    "forms": {
     "past": "bought",
@@ -234,7 +360,14 @@
    "example": "We buy bread at the shop.",
    "picture_idea": "A person handing money to a shop worker and taking a loaf of bread.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02211988-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -247,6 +380,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "To get something by giving money for it.",
+   "definition_basis": {
+    "wordnet_sense": "02211988-v",
+    "wordnet_meaning": "obtain by purchase; acquire by means of a financial transaction"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -255,7 +399,7 @@
    "word": "chair",
    "part_of_speech": "noun",
    "level": 2,
-   "definition": "A seat for one person, with a back and usually four legs.",
+   "definition": "A chair is something you sit on. It has a back and legs, and has room for one person.",
    "explanation": "",
    "forms": {
     "plural": "chairs"
@@ -263,7 +407,14 @@
    "example": "Sit on the chair, please.",
    "picture_idea": "A wooden chair beside a table.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-03005231-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -276,6 +427,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "A seat for one person, with a back and usually four legs.",
+   "definition_basis": {
+    "wordnet_sense": "03005231-n",
+    "wordnet_meaning": "a seat for one person, with a support for the back"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -284,7 +446,7 @@
    "word": "clean",
    "part_of_speech": "adjective",
    "level": 2,
-   "definition": "Not dirty.",
+   "definition": "You say clean when something has no dirt on it. Soap and water make your hands clean.",
    "explanation": "Clean can also be a verb meaning to make something not dirty.",
    "forms": {
     "comparative": "cleaner",
@@ -293,7 +455,14 @@
    "example": "My hands are clean now.",
    "picture_idea": "A pair of shiny clean hands with soap bubbles.",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00418932-a"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -307,6 +476,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "Not dirty.",
+   "definition_basis": {
+    "wordnet_sense": "00418932-a",
+    "wordnet_meaning": "free from dirt or impurities; or having clean habits"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -315,7 +495,7 @@
    "word": "close",
    "part_of_speech": "verb",
    "level": 2,
-   "definition": "To shut something, like a door or a book.",
+   "definition": "When you close a door, you move it to cover the gap. You can also close a book or a box.",
    "explanation": "This verb is said like 'cloze'. The adjective 'close' meaning 'near' is said differently, like 'clohss'.",
    "forms": {
     "past": "closed",
@@ -326,7 +506,14 @@
    "example": "Please close the door.",
    "picture_idea": "A hand pushing a door shut.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01347791-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -340,6 +527,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "To shut something, like a door or a book.",
+   "definition_basis": {
+    "wordnet_sense": "01347791-v",
+    "wordnet_meaning": "move so that an opening or passage is obstructed; make shut"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -348,7 +546,7 @@
    "word": "coat",
    "part_of_speech": "noun",
    "level": 2,
-   "definition": "A warm piece of clothing that you wear over other clothes outside.",
+   "definition": "A coat is warm clothing with sleeves. You put it on over your other clothes to go out in the cold.",
    "explanation": "",
    "forms": {
     "plural": "coats"
@@ -356,7 +554,14 @@
    "example": "Put on your coat because it is cold.",
    "picture_idea": "A thick winter coat hanging on a hook.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-03061006-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -369,6 +574,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "A warm piece of clothing that you wear over other clothes outside.",
+   "definition_basis": {
+    "wordnet_sense": "03061006-n",
+    "wordnet_meaning": "an outer garment that has sleeves and covers the body from shoulder down; worn outdoors"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -377,7 +593,7 @@
    "word": "cold",
    "part_of_speech": "adjective",
    "level": 2,
-   "definition": "Having a low temperature; not warm or hot.",
+   "definition": "You say cold when something has very little heat, like ice. You feel cold in winter without a coat.",
    "explanation": "",
    "forms": {
     "comparative": "colder",
@@ -386,7 +602,14 @@
    "example": "The water is very cold.",
    "picture_idea": "A shivering child in snow with a blue scarf.",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01254201-a"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -400,6 +623,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "Having a low temperature; not warm or hot.",
+   "definition_basis": {
+    "wordnet_sense": "01254201-a",
+    "wordnet_meaning": "having a low or inadequate temperature or feeling a sensation of coldness or having been made cold by e.g. ice or refrigeration"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -408,7 +642,7 @@
    "word": "cook",
    "part_of_speech": "verb",
    "level": 2,
-   "definition": "To make food ready to eat by heating it.",
+   "definition": "To cook is to heat food so it is ready to eat. You cook rice in a pot on the stove.",
    "explanation": "",
    "forms": {
     "past": "cooked",
@@ -419,7 +653,14 @@
    "example": "My mother cooks rice for dinner.",
    "picture_idea": "A person stirring a pot on a stove.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01668067-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -433,6 +674,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "To make food ready to eat by heating it.",
+   "definition_basis": {
+    "wordnet_sense": "01668067-v",
+    "wordnet_meaning": "prepare for eating by applying heat"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -441,7 +693,7 @@
    "word": "cry",
    "part_of_speech": "verb",
    "level": 2,
-   "definition": "To have tears come from your eyes because you are sad or hurt.",
+   "definition": "When you cry, tears come out of your eyes. You may cry when you are sad or hurt.",
    "explanation": "",
    "forms": {
     "past": "cried",
@@ -452,7 +704,14 @@
    "example": "The baby began to cry.",
    "picture_idea": "A small child with tears on their cheeks.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00065962-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -466,6 +725,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "To have tears come from your eyes because you are sad or hurt.",
+   "definition_basis": {
+    "wordnet_sense": "00065962-v",
+    "wordnet_meaning": "shed tears because of sadness, rage, or pain"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -474,7 +744,7 @@
    "word": "door",
    "part_of_speech": "noun",
    "level": 2,
-   "definition": "The part you open and close to go into or out of a room, house or car.",
+   "definition": "A door opens and closes to let you in or out of a room, house or car.",
    "explanation": "",
    "forms": {
     "plural": "doors"
@@ -482,7 +752,14 @@
    "example": "Someone is at the door.",
    "picture_idea": "A closed front door with a handle.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-03226423-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -495,6 +772,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "The part you open and close to go into or out of a room, house or car.",
+   "definition_basis": {
+    "wordnet_sense": "03226423-n",
+    "wordnet_meaning": "a swinging or sliding barrier that will close the entrance to a room or building or vehicle"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -503,7 +791,7 @@
    "word": "dress",
    "part_of_speech": "noun",
    "level": 2,
-   "definition": "A piece of clothing for a woman or girl that covers the body and part of the legs.",
+   "definition": "A dress is one piece of clothing that covers your body and hangs down over your legs.",
    "explanation": "",
    "forms": {
     "plural": "dresses"
@@ -511,7 +799,14 @@
    "example": "She wore a blue dress to the party.",
    "picture_idea": "A blue dress on a hanger.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-03241438-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -524,6 +819,18 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "A piece of clothing for a woman or girl that covers the body and part of the legs.",
+   "definition_basis": {
+    "wordnet_sense": "03241438-n",
+    "wordnet_meaning": "a one-piece garment for a woman; has skirt and bodice",
+    "batch_note": "Current definition assumes who wears a dress (\"for a woman or girl\"); new definition describes the clothing itself."
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -532,7 +839,7 @@
    "word": "drink",
    "part_of_speech": "verb",
    "level": 2,
-   "definition": "To take liquid into your mouth and swallow it.",
+   "definition": "You drink when you take water or juice into your mouth and swallow it. You drink when you are thirsty.",
    "explanation": "Drink can also be a noun, meaning the liquid itself.",
    "forms": {
     "past": "drank",
@@ -543,7 +850,14 @@
    "example": "I drink water after I run.",
    "picture_idea": "A child drinking from a glass of water.",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01172332-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -557,6 +871,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "To take liquid into your mouth and swallow it.",
+   "definition_basis": {
+    "wordnet_sense": "01172332-v",
+    "wordnet_meaning": "take in liquids"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -565,7 +890,7 @@
    "word": "ear",
    "part_of_speech": "noun",
    "level": 2,
-   "definition": "The part of your body on the side of your head that you hear with.",
+   "definition": "Your ears are on the sides of your head. You use them to hear sounds.",
    "explanation": "",
    "forms": {
     "plural": "ears"
@@ -573,7 +898,14 @@
    "example": "The rabbit has two long ears.",
    "picture_idea": "The side of a head with a clear ear.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-05328447-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -586,6 +918,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "The part of your body on the side of your head that you hear with.",
+   "definition_basis": {
+    "wordnet_sense": "05328447-n",
+    "wordnet_meaning": "the sense organ for hearing and equilibrium"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -594,7 +937,7 @@
    "word": "eat",
    "part_of_speech": "verb",
    "level": 2,
-   "definition": "To put food in your mouth and swallow it.",
+   "definition": "You eat when you put food in your mouth, chew it and swallow it. You eat when you are hungry.",
    "explanation": "",
    "forms": {
     "past": "ate",
@@ -605,7 +948,14 @@
    "example": "We eat lunch at noon.",
    "picture_idea": "A child eating a sandwich.",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01170802-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -619,6 +969,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "To put food in your mouth and swallow it.",
+   "definition_basis": {
+    "wordnet_sense": "01170802-v",
+    "wordnet_meaning": "take in solid food"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -627,7 +988,7 @@
    "word": "eye",
    "part_of_speech": "noun",
    "level": 2,
-   "definition": "The part of your face that you see with.",
+   "definition": "You see with your eyes. You have two eyes, on your face above your nose.",
    "explanation": "",
    "forms": {
     "plural": "eyes"
@@ -635,7 +996,14 @@
    "example": "She has bright green eyes.",
    "picture_idea": "A close picture of an open eye.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-05318579-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -648,6 +1016,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "The part of your face that you see with.",
+   "definition_basis": {
+    "wordnet_sense": "05318579-n",
+    "wordnet_meaning": "the organ of sight"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -656,7 +1035,7 @@
    "word": "face",
    "part_of_speech": "noun",
    "level": 2,
-   "definition": "The front part of your head, with your eyes, nose and mouth.",
+   "definition": "Your face is the front of your head, with your eyes, nose and mouth. You wash it with water.",
    "explanation": "",
    "forms": {
     "plural": "faces"
@@ -664,7 +1043,14 @@
    "example": "I wash my face every morning.",
    "picture_idea": "A smiling face showing eyes, nose and mouth.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-05608392-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -677,6 +1063,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "The front part of your head, with your eyes, nose and mouth.",
+   "definition_basis": {
+    "wordnet_sense": "05608392-n",
+    "wordnet_meaning": "the front of the human head from the forehead to the chin and ear to ear"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -685,7 +1082,7 @@
    "word": "fall",
    "part_of_speech": "verb",
    "level": 2,
-   "definition": "To drop down to the ground by accident.",
+   "definition": "To fall is to drop down to the ground without meaning to. A cup can fall off a table.",
    "explanation": "",
    "forms": {
     "past": "fell",
@@ -696,7 +1093,14 @@
    "example": "Be careful, or you will fall.",
    "picture_idea": "A child tripping and falling on the grass.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01976312-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -709,6 +1113,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "To drop down to the ground by accident.",
+   "definition_basis": {
+    "wordnet_sense": "01976312-v",
+    "wordnet_meaning": "descend in free fall under the influence of gravity"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -717,7 +1132,7 @@
    "word": "foot",
    "part_of_speech": "noun",
    "level": 2,
-   "definition": "The part of your body at the end of your leg that you stand on.",
+   "definition": "Your foot is the part of your body at the bottom of your leg. You stand and walk on your feet.",
    "explanation": "The plural is irregular: one foot, two feet.",
    "forms": {
     "plural": "feet"
@@ -725,7 +1140,14 @@
    "example": "My left foot hurts.",
    "picture_idea": "A bare foot on the floor.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-05570899-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -738,6 +1160,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "The part of your body at the end of your leg that you stand on.",
+   "definition_basis": {
+    "wordnet_sense": "05570899-n",
+    "wordnet_meaning": "the part of the leg of a human being below the ankle joint"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -746,7 +1179,7 @@
    "word": "friend",
    "part_of_speech": "noun",
    "level": 2,
-   "definition": "A person you know well and like.",
+   "definition": "A friend is someone you know well and like a lot. You play and talk with your friends.",
    "explanation": "",
    "forms": {
     "plural": "friends"
@@ -754,7 +1187,14 @@
    "example": "My friend lives next door.",
    "picture_idea": "Two children smiling and holding hands.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-10132360-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -767,6 +1207,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "A person you know well and like.",
+   "definition_basis": {
+    "wordnet_sense": "10132360-n",
+    "wordnet_meaning": "a person you know well and regard with affection and trust"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -775,7 +1226,7 @@
    "word": "garden",
    "part_of_speech": "noun",
    "level": 2,
-   "definition": "A piece of land near a house where flowers, grass or vegetables grow.",
+   "definition": "A garden is a place outside where people grow flowers or vegetables. You can dig and plant things there.",
    "explanation": "",
    "forms": {
     "plural": "gardens"
@@ -783,7 +1234,14 @@
    "example": "The children play in the garden.",
    "picture_idea": "A small lawn with flowers and a fence behind a house.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-03422255-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -797,6 +1255,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "A piece of land near a house where flowers, grass or vegetables grow.",
+   "definition_basis": {
+    "wordnet_sense": "03422255-n",
+    "wordnet_meaning": "a plot of ground where plants are cultivated"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -805,7 +1274,7 @@
    "word": "give",
    "part_of_speech": "verb",
    "level": 2,
-   "definition": "To hand something to another person so they have it.",
+   "definition": "Give means to hand something to someone so they have it. You say give me when you want something.",
    "explanation": "",
    "forms": {
     "past": "gave",
@@ -816,7 +1285,14 @@
    "example": "Please give me the book.",
    "picture_idea": "One hand holding out a present to another hand.",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02204104-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -829,6 +1305,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "To hand something to another person so they have it.",
+   "definition_basis": {
+    "wordnet_sense": "02204104-v",
+    "wordnet_meaning": "transfer possession of something concrete or abstract to somebody"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -837,7 +1324,7 @@
    "word": "go",
    "part_of_speech": "verb",
    "level": 2,
-   "definition": "To move from one place to another.",
+   "definition": "You say go when you move from here to another place. We go to school, or we go home.",
    "explanation": "",
    "forms": {
     "past": "went",
@@ -848,7 +1335,14 @@
    "example": "We go to school by bus.",
    "picture_idea": "A child walking toward a school with an arrow pointing ahead.",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01839438-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -861,6 +1355,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "To move from one place to another.",
+   "definition_basis": {
+    "wordnet_sense": "01839438-v",
+    "wordnet_meaning": "change location; move, travel, or proceed, also metaphorically"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -869,7 +1374,7 @@
    "word": "hand",
    "part_of_speech": "noun",
    "level": 2,
-   "definition": "The part of your body at the end of your arm, with fingers.",
+   "definition": "Your hand is at the end of your arm. You hold things with it, and it has fingers.",
    "explanation": "",
    "forms": {
     "plural": "hands"
@@ -877,7 +1382,14 @@
    "example": "Raise your hand if you know the answer.",
    "picture_idea": "An open hand with five fingers.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-05572223-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -890,6 +1402,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "The part of your body at the end of your arm, with fingers.",
+   "definition_basis": {
+    "wordnet_sense": "05572223-n",
+    "wordnet_meaning": "the (prehensile) extremity of the superior limb"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -898,7 +1421,7 @@
    "word": "happy",
    "part_of_speech": "adjective",
    "level": 2,
-   "definition": "Feeling good and pleased.",
+   "definition": "You say you are happy when you feel good and glad inside. You may smile or laugh when you are happy.",
    "explanation": "",
    "forms": {
     "comparative": "happier",
@@ -907,7 +1430,14 @@
    "example": "I am happy to see you.",
    "picture_idea": "A smiling child with open arms.",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01151786-a"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -920,6 +1450,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "Feeling good and pleased.",
+   "definition_basis": {
+    "wordnet_sense": "01151786-a",
+    "wordnet_meaning": "enjoying or showing or marked by joy or pleasure"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -928,7 +1469,7 @@
    "word": "hat",
    "part_of_speech": "noun",
    "level": 2,
-   "definition": "A piece of clothing that you wear on your head.",
+   "definition": "A hat is something you put on your head. It can keep off the sun, the rain or the cold.",
    "explanation": "",
    "forms": {
     "plural": "hats"
@@ -936,7 +1477,14 @@
    "example": "He wears a red hat in the sun.",
    "picture_idea": "A red hat on a table.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-03502782-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -949,6 +1497,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "A piece of clothing that you wear on your head.",
+   "definition_basis": {
+    "wordnet_sense": "03502782-n",
+    "wordnet_meaning": "headdress that protects the head from bad weather; has shaped crown and usually a brim"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -957,7 +1516,7 @@
    "word": "head",
    "part_of_speech": "noun",
    "level": 2,
-   "definition": "The top part of your body, with your face and brain.",
+   "definition": "Your head is the top part of your body. Your eyes, nose, mouth and brain are in it.",
    "explanation": "",
    "forms": {
     "plural": "heads"
@@ -965,7 +1524,14 @@
    "example": "I hit my head on the shelf.",
    "picture_idea": "A person touching the top of their head.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-05546258-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -978,6 +1544,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "The top part of your body, with your face and brain.",
+   "definition_basis": {
+    "wordnet_sense": "05546258-n",
+    "wordnet_meaning": "the upper part of the human body or the front part of the body in animals; contains the face and brains"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -986,7 +1563,7 @@
    "word": "help",
    "part_of_speech": "verb",
    "level": 2,
-   "definition": "To do something useful for someone so their job is easier.",
+   "definition": "Help means to do something so a job is easier for someone. Say 'help me' when you cannot do it alone.",
    "explanation": "Help can also be a noun, and people call out 'Help!' when they need it.",
    "forms": {
     "past": "helped",
@@ -997,7 +1574,14 @@
    "example": "Can you help me carry this bag?",
    "picture_idea": "A child helping an older person carry shopping bags.",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02553283-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1010,6 +1594,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "To do something useful for someone so their job is easier.",
+   "definition_basis": {
+    "wordnet_sense": "02553283-v",
+    "wordnet_meaning": "give help or assistance; be of service"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1018,7 +1613,7 @@
    "word": "home",
    "part_of_speech": "noun",
    "level": 2,
-   "definition": "The place where you live.",
+   "definition": "Your home is the place where you live. You go there to sleep, eat and rest.",
    "explanation": "Home is also used as an adverb: 'I go home.'",
    "forms": {
     "plural": "homes"
@@ -1026,7 +1621,14 @@
    "example": "I am at home today.",
    "picture_idea": "A small house with a smoking chimney and a path to the door.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-08577045-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1040,6 +1642,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "The place where you live.",
+   "definition_basis": {
+    "wordnet_sense": "08577045-n",
+    "wordnet_meaning": "where you live at a particular time"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1048,7 +1661,7 @@
    "word": "hospital",
    "part_of_speech": "noun",
    "level": 2,
-   "definition": "A place where doctors and nurses look after people who are sick or hurt.",
+   "definition": "A hospital is a big building where doctors and nurses care for people who are sick or hurt.",
    "explanation": "",
    "forms": {
     "plural": "hospitals"
@@ -1056,7 +1669,14 @@
    "example": "My aunt works at the hospital.",
    "picture_idea": "A large building with a red cross sign and an ambulance.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-08071169-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1069,6 +1689,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "A place where doctors and nurses look after people who are sick or hurt.",
+   "definition_basis": {
+    "wordnet_sense": "08071169-n",
+    "wordnet_meaning": "a medical institution where sick or injured people are given medical or surgical care"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1077,7 +1708,7 @@
    "word": "hot",
    "part_of_speech": "adjective",
    "level": 2,
-   "definition": "Having a very high temperature; very warm.",
+   "definition": "Hot means very warm. You say it about things like soup, a stove or a sunny day.",
    "explanation": "",
    "forms": {
     "comparative": "hotter",
@@ -1086,7 +1717,14 @@
    "example": "Be careful, the soup is hot.",
    "picture_idea": "A steaming bowl of soup or a bright sun.",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01250274-a"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1100,6 +1738,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "Having a very high temperature; very warm.",
+   "definition_basis": {
+    "wordnet_sense": "01250274-a",
+    "wordnet_meaning": "used of physical heat; having a high or higher than desirable temperature or giving off heat or feeling or causing a sensation of heat or burning"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1108,7 +1757,7 @@
    "word": "house",
    "part_of_speech": "noun",
    "level": 2,
-   "definition": "A building where people live.",
+   "definition": "A house is a building where people live. It has rooms, a roof and a front door.",
    "explanation": "",
    "forms": {
     "plural": "houses"
@@ -1116,7 +1765,14 @@
    "example": "Their house has a green door.",
    "picture_idea": "A house with a roof, windows and a door.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-03549540-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1130,6 +1786,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "A building where people live.",
+   "definition_basis": {
+    "wordnet_sense": "03549540-n",
+    "wordnet_meaning": "a dwelling that serves as living quarters for one or more families"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1138,7 +1805,7 @@
    "word": "hungry",
    "part_of_speech": "adjective",
    "level": 2,
-   "definition": "Wanting to eat food.",
+   "definition": "You are hungry when you want to eat food. Your tummy may feel empty or make noises.",
    "explanation": "",
    "forms": {
     "comparative": "hungrier",
@@ -1147,7 +1814,14 @@
    "example": "I am hungry, so I want a sandwich.",
    "picture_idea": "A child holding their stomach next to an empty plate.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01272183-a"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1161,6 +1835,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "Wanting to eat food.",
+   "definition_basis": {
+    "wordnet_sense": "01272183-a",
+    "wordnet_meaning": "feeling hunger; feeling a need or desire to eat food"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1169,7 +1854,7 @@
    "word": "I",
    "part_of_speech": "pronoun",
    "level": 2,
-   "definition": "The word you use to talk about yourself.",
+   "definition": "You say I when you talk about yourself. When you say 'I am happy', you tell how you feel.",
    "explanation": "I is always written with a capital letter. After a verb or preposition, use 'me'.",
    "forms": {
     "object": "me",
@@ -1191,6 +1876,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "The word you use to talk about yourself.",
+   "definition_basis": {
+    "wordnet_sense": null,
+    "note": "WordNet has no entry for this word; written by Claude"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1199,7 +1895,7 @@
    "word": "jacket",
    "part_of_speech": "noun",
    "level": 2,
-   "definition": "A short coat that you wear on the top part of your body.",
+   "definition": "A jacket goes over your other clothes to keep you warm. It has sleeves and stops near your waist.",
    "explanation": "",
    "forms": {
     "plural": "jackets"
@@ -1207,7 +1903,14 @@
    "example": "He put on his jacket and went outside.",
    "picture_idea": "A zipped blue jacket.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-03594978-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1220,6 +1923,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "A short coat that you wear on the top part of your body.",
+   "definition_basis": {
+    "wordnet_sense": "03594978-n",
+    "wordnet_meaning": "a short coat"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1228,7 +1942,7 @@
    "word": "jump",
    "part_of_speech": "verb",
    "level": 2,
-   "definition": "To push your body up off the ground into the air.",
+   "definition": "When you jump, you push off the ground with your legs and go up in the air.",
    "explanation": "",
    "forms": {
     "past": "jumped",
@@ -1239,7 +1953,14 @@
    "example": "The children jump over the rope.",
    "picture_idea": "A child in the air above a skipping rope.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01967949-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1252,6 +1973,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "To push your body up off the ground into the air.",
+   "definition_basis": {
+    "wordnet_sense": "01967949-v",
+    "wordnet_meaning": "move forward by leaps and bounds"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1260,7 +1992,7 @@
    "word": "kitchen",
    "part_of_speech": "noun",
    "level": 2,
-   "definition": "The room in a house where you make food.",
+   "definition": "A kitchen is a room in a home where food is cooked. It has a stove and a sink.",
    "explanation": "",
    "forms": {
     "plural": "kitchens"
@@ -1268,7 +2000,14 @@
    "example": "Mum is cooking in the kitchen.",
    "picture_idea": "A room with a stove, a fridge and a sink.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-03625099-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1282,6 +2021,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "The room in a house where you make food.",
+   "definition_basis": {
+    "wordnet_sense": "03625099-n",
+    "wordnet_meaning": "a room equipped for preparing meals"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1290,7 +2040,7 @@
    "word": "knee",
    "part_of_speech": "noun",
    "level": 2,
-   "definition": "The part in the middle of your leg where it bends.",
+   "definition": "Your knee is in the middle of your leg. It is the part that bends when you sit or walk.",
    "explanation": "The k in 'knee' is silent. It is said like 'nee'.",
    "forms": {
     "plural": "knees"
@@ -1298,7 +2048,14 @@
    "example": "He hurt his knee when he fell.",
    "picture_idea": "A bent leg with a plaster on the knee.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-05581233-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1311,6 +2068,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "The part in the middle of your leg where it bends.",
+   "definition_basis": {
+    "wordnet_sense": "05581233-n",
+    "wordnet_meaning": "hinge joint in the human leg connecting the tibia and fibula with the femur and protected in front by the patella"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1319,7 +2087,7 @@
    "word": "laugh",
    "part_of_speech": "verb",
    "level": 2,
-   "definition": "To make a happy sound with your voice when something is funny.",
+   "definition": "You laugh when something is funny. You make happy sounds with your voice, like ha ha.",
    "explanation": "",
    "forms": {
     "past": "laughed",
@@ -1330,7 +2098,14 @@
    "example": "We laugh at the funny clown.",
    "picture_idea": "Two children laughing with open mouths.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-00031813-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1344,6 +2119,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "To make a happy sound with your voice when something is funny.",
+   "definition_basis": {
+    "wordnet_sense": "00031813-v",
+    "wordnet_meaning": "produce laughter"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1352,15 +2138,22 @@
    "word": "leg",
    "part_of_speech": "noun",
    "level": 2,
-   "definition": "The part of your body you use to walk and run.",
+   "definition": "Your leg is the part of your body you stand, walk and run on. You have two.",
    "explanation": "",
    "forms": {
     "plural": "legs"
    },
-   "example": "The table has four legs.",
+   "example": "My leg is tired after the long walk.",
    "picture_idea": "A person standing, with one leg highlighted.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-05568420-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1373,6 +2166,19 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "The part of your body you use to walk and run.",
+   "example_previous": "The table has four legs.",
+   "definition_basis": {
+    "wordnet_sense": "05568420-n",
+    "wordnet_meaning": "a human limb; commonly used to refer to a whole limb but technically only the part of the limb between the knee and ankle",
+    "batch_note": "Current example shows a table leg, which is a different meaning from the body-part definition."
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1381,7 +2187,7 @@
    "word": "like",
    "part_of_speech": "verb",
    "level": 2,
-   "definition": "To enjoy something or think that someone or something is good.",
+   "definition": "You like something when you enjoy it or think it is good. Say 'I like it' when you are pleased.",
    "explanation": "Like can also be a preposition meaning 'the same as', as in 'a cat like a tiger'.",
    "forms": {
     "past": "liked",
@@ -1392,7 +2198,14 @@
    "example": "I like pizza.",
    "picture_idea": "A child smiling and holding up a slice of pizza with a thumbs up.",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01781131-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1406,6 +2219,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "To enjoy something or think that someone or something is good.",
+   "definition_basis": {
+    "wordnet_sense": "01781131-v",
+    "wordnet_meaning": "find enjoyable or agreeable"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1414,7 +2238,7 @@
    "word": "look",
    "part_of_speech": "verb",
    "level": 2,
-   "definition": "To use your eyes to see something.",
+   "definition": "You look when you point your eyes at something to see it. Say 'look!' to make someone see something.",
    "explanation": "We say 'look at' something.",
    "forms": {
     "past": "looked",
@@ -1425,7 +2249,14 @@
    "example": "Look at the bird in the tree!",
    "picture_idea": "A child pointing up at a bird and looking at it.",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-02134989-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1438,6 +2269,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "To use your eyes to see something.",
+   "definition_basis": {
+    "wordnet_sense": "02134989-v",
+    "wordnet_meaning": "perceive with attention; direct one's gaze towards; look"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1446,7 +2288,7 @@
    "word": "make",
    "part_of_speech": "verb",
    "level": 2,
-   "definition": "To create something or get something ready.",
+   "definition": "You make something when you put things together to get something new, like a cake or a card.",
    "explanation": "",
    "forms": {
     "past": "made",
@@ -1457,7 +2299,14 @@
    "example": "Dad will make breakfast.",
    "picture_idea": "A person putting together a sandwich on a table.",
    "aac_core": true,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-01624592-v"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1470,6 +2319,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "To create something or get something ready.",
+   "definition_basis": {
+    "wordnet_sense": "01624592-v",
+    "wordnet_meaning": "create or manufacture a man-made product"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1478,7 +2338,7 @@
    "word": "market",
    "part_of_speech": "noun",
    "level": 2,
-   "definition": "A place where people buy and sell things like fruit, vegetables and clothes.",
+   "definition": "A market is a place where people sell things like fruit, vegetables and clothes. You go there to buy them.",
    "explanation": "",
    "forms": {
     "plural": "markets"
@@ -1486,7 +2346,14 @@
    "example": "We buy fresh fruit at the market.",
    "picture_idea": "Stalls with fruit and vegetables and people shopping.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-03727779-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1499,6 +2366,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "A place where people buy and sell things like fruit, vegetables and clothes.",
+   "definition_basis": {
+    "wordnet_sense": "03727779-n",
+    "wordnet_meaning": "an area in a town where a public mercantile establishment is set up"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   },
   {
@@ -1507,7 +2385,7 @@
    "word": "mouth",
    "part_of_speech": "noun",
    "level": 2,
-   "definition": "The part of your face that you use to eat and speak.",
+   "definition": "Your mouth is the opening in your face. You eat, drink and talk with it.",
    "explanation": "",
    "forms": {
     "plural": "mouths"
@@ -1515,7 +2393,14 @@
    "example": "Open your mouth and say 'ah'.",
    "picture_idea": "A face with the mouth wide open.",
    "aac_core": false,
-   "sources": [],
+   "sources": [
+    {
+     "title": "Open English WordNet 2025",
+     "publisher": "Global WordNet Association",
+     "licence": "CC BY 4.0",
+     "url": "https://en-word.net/id/oewn-05309998-n"
+    }
+   ],
    "status": "unverified",
    "ai_written": true,
    "tags": [
@@ -1528,6 +2413,17 @@
     "by": "claude-sonnet-5-5",
     "on": "2026-11-06",
     "batch": "msgbatch_01XxTPu3rnkcGqNwWtrxLuNZ"
+   },
+   "definition_previous": "The part of your face that you use to eat and speak.",
+   "definition_basis": {
+    "wordnet_sense": "05309998-n",
+    "wordnet_meaning": "the opening through which food is taken in and vocalizations emerge"
+   },
+   "rewritten": {
+    "by": "claude-sonnet-5-5",
+    "on": "2026-11-08",
+    "batch": "msgbatch_017vqwfL8taQygPcN6qfpGD1",
+    "row": "2.249"
    }
   }
  ]
