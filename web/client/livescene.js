@@ -2373,7 +2373,7 @@ function makeSeasonScenes({ tree, haze, vignette, spread }) {
     },
 
     harvest: {
-      label: 'Harvest (Thanksgiving)', group: 'holiday',
+      label: 'Harvest', group: 'holiday',
       ground: 'linear-gradient(180deg,#f0b46a 0%,#f2c98a 30%,#e8a868 50%)',
       tokens: DARK('#2a1c10', '#3a2818', '#c9a070', '#f2c46a', 0.82), halo: 'dark', base: 'fall',
       site: SITE(false, '#fbf3e6', '#ffffff', '#f4e6cf', '#3a2414', '#5c3f28', '#e6d2b4', '#a8561e', '#ffffff', '#7a4a1a', '#ffffff'),

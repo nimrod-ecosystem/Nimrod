@@ -98,7 +98,8 @@ try {
     const kinds = Object.fromEntries(['everyday', 'season', 'holiday'].map((k) => [k, ids.filter((id) => themeKind(id) === k)]));
     check('*** the four seasons are Seasons, in any group (Fall and Winter came first, without one) ***',
       J(kinds.season.slice().sort()) === J(['fall', 'spring', 'summer', 'winter']), J(kinds.season));
-    check('the eleven holidays are Holidays', kinds.holiday.length === 11 && HOLIDAY_IDS.length === 11, J(kinds.holiday));
+    // Twelve holidays on the checklist, eleven themes so far: Thanksgiving shows Harvest's until Design's own arrives (row 2.259, item 75).
+    check('the holidays are Holidays', kinds.holiday.length === 11 && HOLIDAY_IDS.length === 12, J(kinds.holiday));
     check('everything else is Everyday (Nimrod, Dusk, High contrast, Warm, Forge, and the live worlds)',
       kinds.everyday.length === ids.length - 15 && ['default', 'dusk', 'contrast', 'warm', 'forge', 'cyberpunk', 'night'].every((id) => kinds.everyday.includes(id)), J(kinds.everyday));
     check('"With the seasons" is the follow choice, not a kind; a stranger is nothing', themeKind('seasons') === 'follow' && themeKind('nope') === null);

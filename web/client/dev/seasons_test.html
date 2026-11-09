@@ -108,6 +108,7 @@ try {
       ['july4', 2026, [7, 2], [7, 4]], ['july4', 2027, [7, 2], [7, 4]],
       ['halloween', 2026, [10, 25], [10, 31]], ['halloween', 2027, [10, 25], [10, 31]], ['halloween', 2028, [10, 25], [10, 31]],
       ['diwali', 2026, [11, 6], [11, 10]], ['diwali', 2027, [10, 27], [10, 31]], ['diwali', 2028, [10, 15], [10, 19]],
+      ['harvest', 2026, [9, 22], [9, 28]],   // row 2.259: Harvest and Thanksgiving are two
       ['thanksgiving', 2026, [11, 23], [11, 27]], ['thanksgiving', 2027, [11, 22], [11, 26]], ['thanksgiving', 2028, [11, 20], [11, 24]],
       ['hanukkah', 2026, [12, 4], [12, 12]], ['hanukkah', 2028, [12, 12], [12, 20]],
       ['christmas', 2026, [12, 18], [12, 26]], ['christmas', 2027, [12, 18], [12, 26]], ['christmas', 2028, [12, 18], [12, 26]],
@@ -165,19 +166,22 @@ try {
   {
     const starter = HOLIDAY_IDS.filter((id) => HOLIDAYS[id].starter);
     check('*** every holiday is in the starter set (row 2.241, Mike 2026-11-07: all on by default) ***',
-      J(starter) === J(HOLIDAY_IDS) && starter.length === 11);
+      J(starter) === J(HOLIDAY_IDS) && starter.length === 12);
     check('Lunar New Year, Diwali and Hanukkah are on by default too (they were offered, off, until 2026-11-07)', ['lunarNewYear', 'diwali', 'hanukkah'].every((id) => HOLIDAYS[id] && HOLIDAYS[id].starter));
     check('holidayPrefs: nothing saved is the starter set; false is none; ticks win over the starter',
       J(holidayPrefs(undefined)) === J(SCHEDULE_DEFAULTS.holidays) && Object.values(holidayPrefs(false)).every((v) => v === false)
       && holidayPrefs({ diwali: true, halloween: false }).diwali === true && holidayPrefs({ diwali: true, halloween: false }).halloween === false
       && holidayPrefs({ diwali: true }).christmas === true);
-    check('*** one row per holiday: eleven toggles, default the starter set, plain labels ***',
-      HOLIDAY_FIELDS.length === 11 && HOLIDAY_FIELDS.every((f) => f.kind === 'toggle' && f.default === !!HOLIDAYS[f.holiday].starter && /look$/.test(f.label))
-      && new Set(HOLIDAY_FIELDS.map((f) => f.key)).size === 11 && !/her screen|cici/i.test(J(HOLIDAY_FIELDS)));
+    check('*** Harvest and Thanksgiving are two (row 2.259): two ticks, the same scene until Design draws Thanksgiving\'s ***',
+      HOLIDAYS.harvest.label === 'Harvest' && HOLIDAYS.thanksgiving.label === 'Thanksgiving' && HOLIDAYS.harvest.starter && HOLIDAYS.thanksgiving.starter
+      && holidayKey('harvest') !== holidayKey('thanksgiving'));
+    check('*** one row per holiday: twelve toggles, default the starter set, plain labels ***',
+      HOLIDAY_FIELDS.length === 12 && HOLIDAY_FIELDS.every((f) => f.kind === 'toggle' && f.default === !!HOLIDAYS[f.holiday].starter && /look$/.test(f.label))
+      && new Set(HOLIDAY_FIELDS.map((f) => f.key)).size === 12 && !/her screen|cici/i.test(J(HOLIDAY_FIELDS)));
     check('the keys: holidayHalloween, holidayLunarNewYear, ...', holidayKey('halloween') === 'holidayHalloween' && holidayKey('lunarNewYear') === 'holidayLunarNewYear');
     check('holidaysFrom a row: the ticks; the old single "Holiday looks: Off" means every holiday not ticked is off',
       J(holidaysFrom({ holidayHalloween: false, holidayDiwali: true })) === J({ halloween: false, diwali: true })
-      && Object.values(holidaysFrom({ holidayLooks: false })).length === 11 && Object.values(holidaysFrom({ holidayLooks: false })).every((v) => v === false)
+      && Object.values(holidaysFrom({ holidayLooks: false })).length === 12 &&Object.values(holidaysFrom({ holidayLooks: false })).every((v) => v === false)
       && holidaysFrom({ holidayLooks: false, holidayChristmas: true }).christmas === true && J(holidaysFrom({})) === '{}');
     check('*** Halloween ticked off: October 27 is fall; Diwali ticked off: November 8 is fall, and by default it is Diwali ***',
       resolveSeasonal(day(10, 27), { holidays: { halloween: false } }).key === 'fall'

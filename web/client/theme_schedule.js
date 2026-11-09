@@ -93,6 +93,11 @@ export const HOLIDAYS = {
   july4: { label: 'Fourth of July', scene: 'july4', starter: true, span: (y) => [new Date(y, 6, 2), new Date(y, 6, 4)] },
   halloween: { label: 'Halloween', scene: 'halloween', starter: true, span: (y) => [new Date(y, 9, 25), new Date(y, 9, 31)] },
   diwali: { label: 'Diwali', scene: 'diwali', starter: true, span: (y) => { const t = DIWALI_DATES[y]; if (!t) return null; const d = new Date(y, t[0], t[1]); return [addDays(d, -2), addDays(d, 2)]; } },
+  // HARVEST AND THANKSGIVING ARE TWO (Mike, 2026-11-09, row 2.259: "I would have Harvest and Thanksgiving. Move the turkey to thanksgiving.").
+  // Harvest's week is Code's guess, on Mike's list: from the autumn equinox, seven days, like the other holidays' short spans. FOR the whole of
+  // autumn: a harvest is a season. AGAINST, and it decides: it would take the place of the Fall theme for a month. Thanksgiving shows
+  // the Harvest scene until Design's own arrives (item 75, with the turkey): then this one line changes.
+  harvest: { label: 'Harvest', scene: 'harvest', starter: true, span: (y) => [new Date(y, 8, 22), new Date(y, 8, 28)] },
   thanksgiving: { label: 'Thanksgiving', scene: 'harvest', starter: true, span: (y) => { const t = thanksgiving(y); return [addDays(t, -3), addDays(t, 1)]; } },
   hanukkah: { label: 'Hanukkah', scene: 'hanukkah', starter: true, test: (d) => hanukkahNight(d) > 0 || hanukkahNight(new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23)) > 0 },
   christmas: { label: 'Christmas', scene: 'christmas', starter: true, span: (y) => [new Date(y, 11, 18), new Date(y, 11, 26)] },
