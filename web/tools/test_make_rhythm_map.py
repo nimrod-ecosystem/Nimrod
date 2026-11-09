@@ -1,6 +1,7 @@
 """Tests for make_rhythm_map.py on songs made here, whose beats are known: py -3.13 web/tools/test_make_rhythm_map.py   (needs ffmpeg)"""
 import json
 import os
+import subprocess
 import sys
 import tempfile
 import wave
@@ -89,6 +90,10 @@ with tempfile.TemporaryDirectory() as d:
         w.setsampwidth(2)
         w.setframerate(M.RATE)
         w.writeframes((np.clip(clicks(steady, 40), -1, 1) * 32767).astype(np.int16).tobytes())
+    tagged = os.path.join(d, 'tagged.wav')
+    subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', wav, '-metadata', 'comment=made with a test', tagged], check=True)
+    with zipfile.ZipFile(M.make_map(tagged, os.path.join(d, 'tags'))['zip']) as z:
+        check('*** the song\'s own tags are not stripped ***', b'made with a test' in z.read('song.egg')[:4096])
     out = M.make_map(wav, os.path.join(d, 'maps'))
     check('it makes a zip named for the song', os.path.basename(out['zip']) == 'My Song.zip' and abs(out['bpm'] - 120) < 1.5, out)
     with zipfile.ZipFile(out['zip']) as z:

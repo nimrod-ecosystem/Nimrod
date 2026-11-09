@@ -7,7 +7,7 @@ people's maps and these go through one reader. A DRAFT: the machine finds where 
   py -3.13 web/tools/make_rhythm_map.py <song> [<song> ...] --out <folder>
   options: --gaps 600,350,200 (the shortest time between notes in Easy, Normal, Hard, ms)  --quality 4 (Ogg Vorbis, ffmpeg's -q:a)
 
-Offline; nothing is uploaded. The song goes into the zip, so a zip is as shareable as its song is, and no more; this makes no map public.
+Offline; nothing is uploaded. The song goes into the zip with its tags, so a zip is as shareable as its song is, and no more; this makes no map public.
 
 Needs: ffmpeg on PATH, and numpy.
 
@@ -234,7 +234,9 @@ def make_map(song, out_dir, gaps_ms=GAPS_MS, quality=4):
     target = os.path.join(out_dir, safe_name(title) + '.zip')
     with tempfile.TemporaryDirectory() as tmp:
         ogg = os.path.join(tmp, 'song.ogg')
-        run = subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', song, '-vn', '-map_metadata', '-1', '-c:a', 'libvorbis', '-q:a', str(quality), '-f', 'ogg', ogg], capture_output=True)
+        # THE SONG'S TAGS COME ALONG (-map_metadata 0). Suno's terms ask that its provenance is not stripped to hide where a song came from, so a
+        # converter does not decide that. They can hold an account name and the lyrics: a reason to look before sharing a zip, not to strip here.
+        run = subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', song, '-vn', '-map_metadata', '0', '-c:a', 'libvorbis', '-q:a', str(quality), '-f', 'ogg', ogg], capture_output=True)
         if run.returncode != 0:
             raise ValueError(f'ffmpeg could not make the Ogg: {run.stderr.decode(errors="replace").strip()[:200]}')
         if os.path.getsize(ogg) > MAP_ZIP_MAX - 1024 * 1024:
