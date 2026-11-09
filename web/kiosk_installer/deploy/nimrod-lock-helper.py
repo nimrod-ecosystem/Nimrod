@@ -204,6 +204,77 @@ def swap_rc(locked, log=print):
     return 'swapped'
 
 
+# ---- THE COMPUTER'S OWN DEFAULT SPEAKER (row 2.232, Mike's answer 2026-11-09, row 2.259; proposal_audio_output, gated) ------------------------
+# "All sound plays on" under Devices. The default speaker is the one thing that moves EVERYTHING, YouTube's and Spotify's frames and the local voice
+# included, because they all use it, and no page can reach it. So the page asks here. PipeWire keeps the choice across a restart, on the computer: it
+# never syncs, so nobody elsewhere can move or silence this room.
+# NODE NAMES, NEVER wpctl's NUMBERS: those change on a restart or a replug, so the number is looked up fresh, and only a name in the current list is
+# accepted. `now` is the speaker playing NOW, not the one chosen: unplugged, WirePlumber falls back and returns to it later.
+AUDIO_PATH = '/audio'
+AUDIO_DEFAULT_PATH = '/audio/default'
+PATHS = (PATH, AUDIO_PATH, AUDIO_DEFAULT_PATH)
+
+
+def run_tool(args, timeout=5):
+    """(returncode, stdout), or (None, '') when the tool is not there or hangs. A seam for the tests."""
+    try:
+        r = subprocess.run(args, capture_output=True, text=True, timeout=timeout, check=False)
+        return r.returncode, r.stdout
+    except (OSError, subprocess.SubprocessError):
+        return None, ''
+
+
+def sinks_from_dump(dump):
+    """pw-dump's objects -> { sinks: [{ id, name, description }], now: name or None }. PURE."""
+    sinks, now = [], None
+    for o in dump if isinstance(dump, list) else []:
+        if not isinstance(o, dict):
+            continue
+        if o.get('type') == 'PipeWire:Interface:Node':
+            props = ((o.get('info') or {}).get('props') or {})
+            if props.get('media.class') == 'Audio/Sink' and props.get('node.name'):
+                sinks.append({'id': o.get('id'), 'name': str(props['node.name']),
+                              'description': str(props.get('node.description') or props.get('node.nick') or props['node.name'])})
+        elif o.get('type') == 'PipeWire:Interface:Metadata' and (o.get('props') or {}).get('metadata.name') == 'default':
+            for m in o.get('metadata') or []:
+                if isinstance(m, dict) and m.get('key') == 'default.audio.sink':
+                    v = m.get('value')
+                    if isinstance(v, str):
+                        try:
+                            v = json.loads(v)
+                        except ValueError:
+                            v = None
+                    now = v.get('name') if isinstance(v, dict) else None
+    return {'sinks': sinks, 'now': now}
+
+
+def read_audio():
+    code, out = run_tool(['pw-dump'])
+    if code != 0:
+        return None
+    try:
+        return sinks_from_dump(json.loads(out))
+    except ValueError:
+        return None
+
+
+def public_audio(a):
+    """What the page sees: names and words, no numbers."""
+    return {'ok': True, 'sinks': [{'name': s['name'], 'description': s['description']} for s in a['sinks']], 'now': a['now']}
+
+
+def set_default_sink(name):
+    """-> (ok, reason). Only a name PipeWire lists right now."""
+    a = read_audio()
+    if a is None:
+        return False, 'no-pipewire'
+    hit = next((s for s in a['sinks'] if s['name'] == name), None)
+    if not hit or not isinstance(hit['id'], int):
+        return False, 'unknown'
+    code, _ = run_tool(['wpctl', 'set-default', str(hit['id'])])
+    return (True, None) if code == 0 else (False, 'wpctl')
+
+
 class Handler(BaseHTTPRequestHandler):
     server_version = 'nimrod-lock-helper'
 
@@ -238,18 +309,28 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_OPTIONS(self):
         origin = self._origin_ok()
-        if urlsplit(self.path).path != PATH or not origin:
+        if urlsplit(self.path).path not in PATHS or not origin:
             return self._reply(403, {'ok': False, 'reason': 'origin'})
         self._reply(204, origin=origin)
 
     def do_GET(self):
-        if urlsplit(self.path).path != PATH:
+        path = urlsplit(self.path).path
+        if path == AUDIO_PATH:          # unlike the lock's state, what speakers a room has is the site's business only
+            origin = self._origin_ok()
+            if not origin:
+                return self._reply(403, {'ok': False, 'reason': 'origin'})
+            a = read_audio()
+            if a is None:
+                return self._reply(503, {'ok': False, 'reason': 'no-pipewire'}, origin)
+            return self._reply(200, public_audio(a), origin)
+        if path != PATH:
             return self._reply(404, {'ok': False})
         s = read_state()
         self._reply(200, {'state': s, 'fresh': is_fresh(s)}, origin=self._origin_ok())
 
     def do_POST(self):
-        if urlsplit(self.path).path != PATH:
+        path = urlsplit(self.path).path
+        if path not in (PATH, AUDIO_DEFAULT_PATH):
             return self._reply(404, {'ok': False})
         origin = self._origin_ok()
         if not origin:
@@ -264,6 +345,14 @@ class Handler(BaseHTTPRequestHandler):
             body = json.loads(self.rfile.read(n).decode('utf-8'))
         except (ValueError, UnicodeDecodeError):
             return self._reply(400, {'ok': False, 'reason': 'json'}, origin)
+        if path == AUDIO_DEFAULT_PATH:
+            if not isinstance(body, dict) or not isinstance(body.get('name'), str) or not body['name']:
+                return self._reply(400, {'ok': False, 'reason': 'shape'}, origin)
+            ok, reason = set_default_sink(body['name'])
+            if not ok:
+                return self._reply(409 if reason == 'unknown' else 503, {'ok': False, 'reason': reason}, origin)
+            a = read_audio()
+            return self._reply(200, public_audio(a) if a else {'ok': True}, origin)
         if not isinstance(body, dict) or not isinstance(body.get('locked'), bool) or not isinstance(body.get('stayOut', False), bool):
             return self._reply(400, {'ok': False, 'reason': 'shape'}, origin)
         locked = body['locked']

@@ -65,6 +65,34 @@ export function playOnWords(v, { inherit = 'This screen' } = {}) {
 
 const norm = (s) => String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
 
+// ---- "ALL SOUND PLAYS ON": THE COMPUTER'S OWN DEFAULT SPEAKER (row 2.232; Mike's answer 2026-11-09, row 2.259) -------------------
+// The one thing that moves everything, YouTube's and Spotify's frames and the local voice included, and no page can reach it. So where the
+// launcher named a helper on this computer (`?lockHelper=`, loopback only; nimrod-lock-helper.py), the page asks it. The choice lives on the
+// computer and is not a setting: it never syncs, so nobody elsewhere can move or silence this room. No helper, or an older one: no row.
+export const ALL_SOUND_ROW = 'all-sound';
+/** The helper's speaker address, from its lock address. PURE. */
+export function audioHelperUrl(lockUrl) {
+  try { const u = new URL(lockUrl); u.pathname = '/audio'; u.search = ''; return u.href; } catch { return null; }
+}
+/** The row's words for a speaker. PURE. */
+export const sinkWords = (s) => String(s?.description || s?.name || 'A speaker');
+/** Talks to the helper. `read()` -> { sinks: [{ name, description }], now } or null; `choose(name)` -> the same, or null. Neither throws. */
+export function createSystemAudio({ url, fetchImpl = (...a) => fetch(...a) } = {}) {
+  const parse = async (res) => {
+    if (!res || !res.ok) return null;
+    const j = await res.json().catch(() => null);
+    return j && j.ok && Array.isArray(j.sinks) ? { sinks: j.sinks, now: j.now || null } : null;
+  };
+  return {
+    async read() { try { return await parse(await fetchImpl(url)); } catch { return null; } },
+    async choose(name) {
+      try {
+        return await parse(await fetchImpl(`${url}/default`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) }));
+      } catch { return null; }
+    },
+  };
+}
+
 // ---- this computer's speakers -------------------------------------------------------------------------------
 let outputs = [];          // [{ deviceId, label }], the last list read; sync for the settings menu (fieldsFor's rule)
 let listening = false;

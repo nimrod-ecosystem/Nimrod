@@ -450,6 +450,57 @@ const pressChord = () => { chord('keydown'); chord('keyup'); };
     }
     const ids = (k) => k.menu.items().filter((i) => i.kind === 'item').map((i) => i.id);
 
+    // "All sound plays on" (row 2.232): the same helper, asked about the computer's own default speaker.
+    {
+      const realFetch = window.fetch;
+      const sent = [];
+      let now = 'hdmi-sink', answers = true;
+      const sinks = [{ name: 'hdmi-sink', description: 'The TV' }, { name: 'emeet-sink', description: 'EMEET speakerphone' }];
+      window.fetch = async (u, o) => {
+        const url = String(u);
+        if (url.startsWith('http://127.0.0.1:8765/audio')) {
+          if (!answers) return new Response('{"ok":false}', { status: 404 });
+          if (o?.method === 'POST') { now = JSON.parse(o.body).name; sent.push(now); }
+          return new Response(JSON.stringify({ ok: true, sinks, now }), { status: 200 });
+        }
+        if (url.startsWith('http://127.0.0.1:8765/')) return new Response('{}', { status: 200 });
+        return realFetch(u, o);
+      };
+      storage.setItem(LOCK_HELPER_KEY, 'http://127.0.0.1:8765/screen-lock');
+      try {
+        const s = await screen();
+        s.k.menu.open();
+        const row = () => s.k.menu.items().find((i) => i.id === 'set:all-sound');
+        check('*** where a helper answers, Devices has "All sound plays on" ***', await until(() => !!row(), 3000) && row().tab === 'devices' && row().label === 'All sound plays on', J(row()));
+        check('...saying the speaker playing now, in words', /The TV/.test(row().hint || ''), row().hint);
+        check('...and nothing is changed by reading it', sent.length === 0);
+        row().run?.();
+        check('*** a press changes the computer\'s own default, by name ***', await until(() => sent[0] === 'emeet-sink', 2000), J(sent));
+        check('...and the row says so', await until(() => /EMEET/.test(row()?.hint || ''), 2000), row()?.hint);
+        check('it is not a setting: nothing of it is on this screen\'s row', !(await profiles.get(P.id)).settings?.['all-sound']);
+        s.k.menu.close();
+        s.done();
+        answers = false;
+        const old = await screen();
+        old.k.menu.open();
+        await sleep(300);
+        check('*** an older helper, or none: no row, nothing else changes ***', !old.k.menu.items().some((i) => i.id === 'set:all-sound') && old.k.menu.items().some((i) => i.id === 'speaker-test'));
+        old.k.menu.close();
+        old.done();
+        answers = true;
+        sinks.pop();
+        const one = await screen();
+        one.k.menu.open();
+        await sleep(300);
+        check('one speaker: nothing to choose, so no row', !one.k.menu.items().some((i) => i.id === 'set:all-sound'));
+        one.k.menu.close();
+        one.done();
+      } finally {
+        window.fetch = realFetch;
+        storage.removeItem(LOCK_HELPER_KEY);
+      }
+    }
+
     {
       const s = await screen();
       const L = s.k.screenLock();

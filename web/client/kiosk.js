@@ -150,7 +150,8 @@ import { attachCursorDrive } from './cursor_drive.js';
 import {
   watchFavourites, musicSpeechRoutes, musicSpeechActions, musicSpeechBindings, favouritesSignature,
 } from './music_favourites.js';
-import { speakerFields, speakerKey, refreshOutputs, SPEAKER_KINDS, panelSpeakerField, openSpeakerTester, knownOutputs } from './speakers.js';   // play on (row 2.68)
+import { speakerFields, speakerKey, refreshOutputs, SPEAKER_KINDS, panelSpeakerField, openSpeakerTester, knownOutputs, watchOutputs,
+  ALL_SOUND_ROW, audioHelperUrl, createSystemAudio, sinkWords } from './speakers.js';   // play on (row 2.68)
 import { backupScreenField, listedSources, BACKUP_KEY } from './media_sources.js';   // backup source (2026-10-08)
 import { createStallSwitch, standInSource, probeFor, SWITCH_TARGETS } from './playback_stall.js';   // stalled playback
 import { createMissStore, MISS_FIELDS } from './speech_misses.js';
@@ -4184,6 +4185,30 @@ export async function mountKiosk(root, {
   controlsEl.querySelector(`[data-act="${WHO_ACT}"]`).addEventListener('click', pressWho);
   try { settings.subscribe?.(() => paintWhoBar()); } catch (err) { console.error('kiosk: person button', err); }
 
+  // "ALL SOUND PLAYS ON" (row 2.232, Mike's answer 2026-11-09; speakers.js argues it): the computer's own default speaker, by way of the helper on
+  // this computer. Not a setting: it lives on the computer. Read at boot, when a speaker comes or goes, and after a choice; no helper, or an
+  // older one: no row, and nothing else changes.
+  let systemAudio = null, systemAudioNow = null;
+  async function readSystemAudio(p = null) {
+    if (!systemAudio) return;
+    const got = await (p || systemAudio.read());
+    if (torn) return;
+    if (got || !p) systemAudioNow = got;
+    try { menu.refresh(); } catch { /* not up yet */ }
+  }
+  function allSoundRows() {
+    const a = systemAudioNow;
+    if (!a || a.sinks.length < 2) return [];   // one speaker: nothing to choose, and a stop on a switch's walk for nothing
+    const options = a.sinks.map((s) => ({ value: s.name, label: sinkWords(s) }));
+    if (a.now && !options.some((o) => o.value === a.now)) options.push({ value: a.now, label: 'A speaker this list does not show' });
+    return fieldItems([normalizeField({ key: ALL_SOUND_ROW, label: 'All sound plays on', kind: 'choice', level: 'standard', default: a.now || options[0].value, options,
+      note: 'This computer’s own speaker: videos, music, calls and the voice all follow it, unless one is sent elsewhere below. It stays with this computer.' })].filter(Boolean), {
+      values: () => ({ [ALL_SOUND_ROW]: a.now }),
+      level: complexity(),
+      onStep: (k, v) => { readSystemAudio(systemAudio.choose(String(v))); },
+    }).map((it) => ({ ...it, ...MENU_TAB.devices(4) }));
+  }
+
   // ---- THE MENU'S TABS (2026-10-02; settings.js "TABS" is the mechanism) -------------------------------
   //
   // Mike: "The settings menu needs to be broken up into tabs. The choice for what to show should be at
@@ -7189,6 +7214,7 @@ export async function mountKiosk(root, {
       { kind: 'heading', id: 'switch-hold-head', label: 'Switches', ...MENU_TAB.devices(1) },
       { kind: 'heading', id: 'bar-key-head', label: 'The bar', ...MENU_TAB.devices(2) },   // bar toggle
       { kind: 'heading', id: 'speakers-head', label: 'Speakers', ...MENU_TAB.devices(4) },   // play on (row 2.68)
+      ...allSoundRows(),   // row 2.232: the computer's own default, where a helper answers
       // 2026-10-26 (note CX, "Same for speakers"): every speaker with a sound to hear and Calls here / Music here.
       { kind: 'item', id: 'speaker-test', label: 'Test the speakers…', hint: 'hear which one is which, and choose', ...MENU_TAB.devices(4),
         run: () => { openSpeakerChooser(); } },
@@ -9698,6 +9724,15 @@ export async function mountKiosk(root, {
     lockChip = mountLockChip(kioskEl);
     const helperUrl = lockHelperFrom({ storage });
     lockReporter = helperUrl ? createLockReporter({ url: helperUrl }) : null;
+    // "All sound plays on": the same helper, the same rule (loopback, named by the launcher).
+    if (helperUrl && !embedded) {
+      const audioUrl = audioHelperUrl(helperUrl);
+      if (audioUrl) {
+        systemAudio = createSystemAudio({ url: audioUrl });
+        readSystemAudio();
+        offsScreen.push(watchOutputs(() => { readSystemAudio(); }));
+      }
+    }
     // A password box somebody is in when it locks is put down (the guards refuse it from then on).
     const closeForLock = () => {
       try {

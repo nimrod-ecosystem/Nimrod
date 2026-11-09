@@ -79,6 +79,89 @@ class LockHelperTest(unittest.TestCase):
         except urllib.error.HTTPError as e:
             return e.code, dict(e.headers), e.read()
 
+    # ---- the computer's own default speaker (row 2.232) ----
+    DUMP = [
+        {'id': 41, 'type': 'PipeWire:Interface:Node', 'info': {'props': {'media.class': 'Audio/Sink', 'node.name': 'hdmi-sink', 'node.description': 'TV'}}},
+        {'id': 57, 'type': 'PipeWire:Interface:Node', 'info': {'props': {'media.class': 'Audio/Sink', 'node.name': 'emeet-sink', 'node.description': 'EMEET speakerphone'}}},
+        {'id': 60, 'type': 'PipeWire:Interface:Node', 'info': {'props': {'media.class': 'Audio/Source', 'node.name': 'a-mic'}}},
+        {'id': 30, 'type': 'PipeWire:Interface:Metadata', 'props': {'metadata.name': 'default'}, 'metadata': [
+            {'subject': 0, 'key': 'default.configured.audio.sink', 'type': 'Spa:String:JSON', 'value': {'name': 'emeet-sink'}},
+            {'subject': 0, 'key': 'default.audio.sink', 'type': 'Spa:String:JSON', 'value': {'name': 'hdmi-sink'}}]},
+    ]
+
+    def audio(self, method, path, body=None, origin=SITE):
+        data = None if body is None else (body if isinstance(body, bytes) else json.dumps(body).encode())
+        base = self.base[:-len(H.PATH)]
+        r = urllib.request.Request(base + path, data=data, method=method)
+        if origin:
+            r.add_header('Origin', origin)
+        if data is not None:
+            r.add_header('Content-Type', 'application/json')
+        try:
+            with urllib.request.urlopen(r, timeout=5) as resp:
+                return resp.status, dict(resp.headers), json.loads(resp.read() or b'null')
+        except urllib.error.HTTPError as e:
+            raw = e.read()
+            return e.code, dict(e.headers), json.loads(raw) if raw else None
+
+    def fake_tools(self, dump=None):
+        calls = []
+        def run(args, timeout=5):
+            calls.append(args)
+            if args[0] == 'pw-dump':
+                return (0, json.dumps(self.DUMP if dump is None else dump)) if dump != 'gone' else (None, '')
+            return 0, ''
+        was = H.run_tool
+        H.run_tool = run
+        self.addCleanup(lambda: setattr(H, 'run_tool', was))
+        return calls
+
+    def test_speakers_are_read_by_name_and_playing_now(self):
+        got = H.sinks_from_dump(self.DUMP)
+        self.assertEqual([s['name'] for s in got['sinks']], ['hdmi-sink', 'emeet-sink'])     # not the microphone
+        self.assertEqual(got['now'], 'hdmi-sink')                                            # playing now, not the one configured
+        self.assertEqual(H.sinks_from_dump('nonsense'), {'sinks': [], 'now': None})
+
+    def test_the_page_sees_no_numbers(self):
+        self.fake_tools()
+        code, h, j = self.audio('GET', '/audio')
+        self.assertEqual(code, 200)
+        self.assertEqual(h.get('Access-Control-Allow-Origin'), SITE)
+        self.assertEqual(j['now'], 'hdmi-sink')
+        self.assertEqual(j['sinks'][1], {'name': 'emeet-sink', 'description': 'EMEET speakerphone'})
+
+    def test_another_site_cannot_read_or_change_the_speakers(self):
+        calls = self.fake_tools()
+        self.assertEqual(self.audio('GET', '/audio', origin='https://evil.example')[0], 403)
+        self.assertEqual(self.audio('GET', '/audio', origin=None)[0], 403)
+        self.assertEqual(self.audio('POST', '/audio/default', {'name': 'hdmi-sink'}, origin='https://evil.example')[0], 403)
+        self.assertEqual(self.audio('OPTIONS', '/audio/default', origin='https://evil.example')[0], 403)
+        self.assertEqual(calls, [])
+
+    def test_the_preflight_for_a_speaker_change_is_answered(self):
+        code, h, _ = self.audio('OPTIONS', '/audio/default')
+        self.assertEqual(code, 204)
+        self.assertEqual(h.get('Access-Control-Allow-Private-Network'), 'true')
+
+    def test_choosing_a_speaker_looks_up_its_number_fresh(self):
+        calls = self.fake_tools()
+        code, _, j = self.audio('POST', '/audio/default', {'name': 'emeet-sink'})
+        self.assertEqual(code, 200)
+        self.assertTrue(j['ok'])
+        self.assertIn(['wpctl', 'set-default', '57'], calls)
+
+    def test_only_a_name_it_lists_is_accepted(self):
+        calls = self.fake_tools()
+        self.assertEqual(self.audio('POST', '/audio/default', {'name': '57; rm -rf /'})[0], 409)
+        self.assertEqual(self.audio('POST', '/audio/default', {'name': 57})[0], 400)
+        self.assertEqual(self.audio('POST', '/audio/default', b'x' * 2000)[0], 413)
+        self.assertFalse([c for c in calls if c[0] == 'wpctl'])
+
+    def test_no_pipewire_is_said_not_a_crash(self):
+        self.fake_tools('gone')
+        self.assertEqual(self.audio('GET', '/audio')[0], 503)
+        self.assertEqual(self.audio('POST', '/audio/default', {'name': 'x'})[0], 503)
+
     def test_origin_is_the_kiosk_sites(self):
         self.assertEqual(H.allowed_origins(), {SITE})
         os.environ['NIMROD_LOCK_ORIGINS'] = 'https://a.example, http://127.0.0.1:8440/x'
