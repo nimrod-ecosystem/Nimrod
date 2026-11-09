@@ -2,7 +2,7 @@
 //
 // Mike: custom maps in the Rhythm game. Nimrod ships no maps and no songs (most maps are of copyrighted songs): a person opens a
 // map zip of their own, on their own device, and it never travels (not in a shared game, screen sync or a shared folder). This
-// file only READS one: Info.dat, a difficulty's notes and its song's name, into timed notes. Rhythm plays them (a later step).
+// file only READS one: Info.dat, a difficulty's notes and its song's name, into timed notes. rhythm_song.js plays them.
 //
 // THE FORMATS (bsmg.wiki), all read here:
 //   Info.dat      v2: `_version`, `_songFilename`, `_beatsPerMinute`, `_songTimeOffset`, `_difficultyBeatmapSets[]`

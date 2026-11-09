@@ -44,6 +44,14 @@
 .rh-bar{display:flex;flex-wrap:wrap;gap:.2rem 1.2rem;align-items:baseline;justify-content:center;min-height:2.2em}
 .rh-say{margin:0;font-size:clamp(16px, 5cqh, 36px);font-weight:700;color:var(--rh-ink)}
 .rh-score{margin:0;font-size:clamp(14px, 4cqh, 28px);color:var(--text)}
+/* A map somebody brought (rhythm_song.js). Its buttons have the theme's look, as every other panel's. */
+.rh-map,.rh-levels{display:flex;flex-wrap:wrap;gap:.3rem;align-items:center;justify-content:center}
+.rh-map button{min-height:max(44px,8cqh);padding:0 1em;border-radius:10px;border:2px solid var(--border);background:var(--surface);
+  color:var(--text);font:700 clamp(14px,3.5cqh,28px)/1.1 var(--font, inherit);cursor:pointer}
+.rh-map button:hover{background:var(--surface-alt, var(--surface))}
+.rh-map button[aria-pressed="true"]{border-color:var(--accent);border-width:4px}
+.rh-map button:focus-visible{outline:3px solid var(--scan-ring, var(--focus, var(--link)));outline-offset:2px}
+.rh-map-say{font-size:clamp(14px,3.5cqh,28px);font-weight:700;color:var(--rh-ink)}
 
 .rh[data-motion="full"] .rh-tile{transition:background-color 60ms linear}
 .rh[data-motion="reduce"] *{transition:none !important;animation:none !important}

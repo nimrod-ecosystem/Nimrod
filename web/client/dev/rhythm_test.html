@@ -44,6 +44,9 @@ import {
 import { GAME, DEFAULTS, STATUS_GAP_MS, IDLE_BEATS, VERDICT_WORDS, statusGapMs, markGapMs } from '../modules/rhythm.js';
 import { maxBpmFor } from '../rhythm_beat.js';
 import { worstInAnySecond, maxPerMinute, FRAME_MS } from '../flash_limit.js';
+import { createSongRun, autoGapMs, gapInForce, lightTimes, tilesFor, tileOfNote } from '../rhythm_song.js';
+import { thinNotes } from '../beatmap.js';
+import { zipBlob } from '../zip_store.js';
 import { PLAY_STATE_TOPIC, START_LINES } from '../game_start.js';
 
 const out = document.getElementById('results');
@@ -720,6 +723,244 @@ try {
     const six = mount({ saved: { tiles: 6 } });
     check('the number of tiles is a setting', six.host.querySelectorAll('.rh-tile').length === 6);
     six.inst.destroy();
+  }
+
+  // ---- A MAP SOMEBODY BROUGHT (rhythm_song.js): made-up notes, and a stand-in for the song's <audio> ----
+  const fakeSong = () => {
+    const on = {};
+    const el = { src: '', currentTime: 0, paused: true, volume: 1, preload: '', plays: 0, pauses: 0, sink: null, refuse: false,
+      addEventListener: (k, f) => { (on[k] = on[k] || []).push(f); },
+      fire: (k) => (on[k] || []).forEach((f) => f()),
+      play() { if (el.refuse) return Promise.reject(new Error('no')); el.paused = false; el.plays += 1; return Promise.resolve(); },
+      pause() { el.paused = true; el.pauses += 1; }, removeAttribute() { el.src = ''; }, load() {},
+      setSinkId(id) { el.sink = id; return Promise.resolve(); } };
+    return el;
+  };
+  const noteAt = (ms, lane = 0, colour = 0) => ({ ms, lane, row: 0, colour, cut: 8 });
+  const notesEvery = (gap, count, from = 2000) => Array.from({ length: count }, (_, i) => noteAt(from + i * gap, i % 4, i % 2));
+
+  section('a song: the pure parts');
+  {
+    check('one button works out a gap from the window (generous: 250 / 0.4)', autoGapMs('generous', 'one') === 625, autoGapMs('generous', 'one'));
+    check('two buttons and four lanes keep the map\'s own notes', autoGapMs('generous', 'two') === 0 && autoGapMs('tight', 'four') === 0);
+    check('a chosen gap wins over the worked-out one', gapInForce({ gapMs: 1000, windowSetting: 'generous', mode: 'one' }) === 1000);
+    check('*** the flash limit is a floor under a chosen gap ***', gapInForce({ gapMs: 200, mode: 'two', flashLimit: 1 }) === 60000 / maxPerMinute(1), gapInForce({ gapMs: 200, mode: 'two', flashLimit: 1 }));
+    check('with no limit a gap of nothing is nothing', gapInForce({ gapMs: 0, mode: 'four' }) === 0);
+    check('two buttons: two tiles, by colour', tilesFor('two', 6) === 2 && tileOfNote(noteAt(0, 3, 1), 'two', 6) === 1 && tileOfNote(noteAt(0, 3, 0), 'two', 6) === 0);
+    check('four lanes: four tiles, by lane', tilesFor('four', 6) === 4 && tileOfNote(noteAt(0, 2), 'four', 6) === 2);
+    check('one button: the panel\'s own row of tiles', tilesFor('one', 6) === 6 && tileOfNote(noteAt(0, 3), 'one', 2) === 1);
+    const uneven = [0, 350, 700, 1040, 1400, 1760, 2100].map((ms) => noteAt(ms + 5000));
+    for (const limit of [3, 2, 1]) {
+      const thin = thinNotes(uneven, gapInForce({ gapMs: 0, mode: 'four', flashLimit: limit }));
+      const lights = lightTimes(thin, { leadMs: 1000, flashLimit: limit });
+      check(`*** at ${limit} a second no second has more lights than that, however the notes fall ***`, thin.length > 0 && worstInAnySecond(lights.map((l) => l.on)) <= limit,
+        `${worstInAnySecond(lights.map((l) => l.on))} in ${JSON.stringify(lights)}`);
+      check(`...and each note at ${limit} is lit before its light ends`, lights.every((l) => l.on < l.off));
+    }
+    const lights = lightTimes(notesEvery(625, 5), { leadMs: 500 });
+    check('a tile lights half a second before its note by default, one tile at a time', lights[0].on === 1500 && lights.every((l, i) => !i || l.on >= lights[i - 1].off), JSON.stringify(lights));
+  }
+
+  section('a song: the song\'s own clock judges');
+  {
+    const el = fakeSong();
+    const ended = [];
+    const regs = [];
+    const audio = { register: (id, o) => regs.push({ id, ...o }), setActive() {}, unregister() {} };
+    const run = createSongRun({ url: 'x', notes: notesEvery(1000, 4), window: 'generous', audio, audioId: 't1', makeAudio: () => el, onEnded: (r) => ended.push(r) });
+    await run.start();
+    check('it plays', el.plays === 1 && run.state().playing);
+    check('it is on the audio bus, as music on the media tier', regs[0]?.tier === 'media' && regs[0]?.group === 'music' && regs[0]?.channel === 'media', JSON.stringify(regs[0]));
+    regs[0].onGain(0);
+    check('*** a call or Hush silences it, and nothing is judged meanwhile ***', el.paused && run.state().playing === false);
+    regs[0].onGain(0.4);
+    check('...and it comes back, at the level it was given', !el.paused && el.volume === 0.4);
+    regs[0].onGain(1);
+    el.currentTime = 1.0;
+    check('nothing is lit before a note\'s lead', run.lit() === null);
+    el.currentTime = 1.6;
+    check('a note\'s tile lights ahead of it', run.lit()?.i === 0, JSON.stringify(run.lit()));
+    el.currentTime = 2.05;
+    check('*** a press on the note is a hit ***', run.press({})?.verdict === 'hit' && run.result().hits === 1);
+    check('the hit shows on the tile that stays lit', run.lit()?.hit === true);
+    check('a second press on the same note takes nothing away', run.press({}) === null && run.result().hits === 1, JSON.stringify(run.result()));
+    el.fire('waiting');
+    el.currentTime = 9;
+    run.step();
+    check('*** buffering: nothing is missed, and a press is not judged ***', run.result().misses === 0 && run.press({}) === null && run.lit() === null);
+    el.currentTime = 2.6;
+    el.fire('playing');
+    check('a press early for the next note says so', run.press({})?.verdict === 'early');
+    el.pause();
+    el.currentTime = 9;
+    run.step();
+    check('*** paused: nothing is missed either ***', run.result().misses === 0);
+    el.paused = false;
+    el.currentTime = 5.5;
+    run.step();
+    check('after the moment, unpressed notes are missed', run.result().misses === 2, JSON.stringify(run.result()));
+    el.fire('ended');
+    el.fire('ended');
+    check('*** the song ending ends it, once, and the rest are missed ***', ended.length === 1 && ended[0].total === 4 && ended[0].hits === 1, JSON.stringify(ended));
+    run.stop();
+    check('stopping lets the speaker go', el.paused === true);
+
+    const late = fakeSong();
+    const r2 = createSongRun({ url: 'x', notes: notesEvery(2000, 2), window: 'generous', makeAudio: () => late });
+    await r2.start();
+    late.currentTime = 2.3;
+    r2.step();
+    check('a press just after its window closed still hears "late", not silence', r2.result().misses === 1 && r2.press({})?.verdict === 'late' && r2.result().misses === 0, JSON.stringify(r2.result()));
+    const r3 = fakeSong();
+    r3.refuse = true;
+    const blocked = createSongRun({ url: 'x', notes: notesEvery(2000, 2), makeAudio: () => r3 });
+    check('a browser refusing sound is said', (await blocked.start()).reason === 'blocked');
+    const none = createSongRun({ url: 'x', notes: notesEvery(2000, 2), makeAudio: () => null });
+    check('no audio at all is said, and nothing throws', (await none.start()).reason === 'no-audio');
+
+    const dense = createSongRun({ url: 'x', notes: notesEvery(100, 100), mode: 'one', window: 'generous', makeAudio: () => fakeSong() });
+    check('*** one button thins a dense map, and a note left out is not counted ***', dense.state().total === 15, dense.state().total);
+    const lanes = createSongRun({ url: 'x', notes: notesEvery(100, 100), mode: 'four', makeAudio: () => fakeSong() });
+    check('four lanes keep all of them', lanes.state().total === 100);
+
+    const f4 = fakeSong();
+    const four = createSongRun({ url: 'x', notes: [noteAt(1000, 2), noteAt(3000, 1), noteAt(5000, 3)], mode: 'four', makeAudio: () => f4 });
+    await four.start();
+    f4.currentTime = 1;
+    check('four lanes: the right tile hits', four.press({ tile: 2 })?.verdict === 'hit');
+    f4.currentTime = 3;
+    check('four lanes: the wrong tile does not', four.press({ tile: 0 })?.verdict === 'wrong');
+    f4.currentTime = 5;
+    check('*** a switch that names no tile always counts ***', four.press({})?.verdict === 'hit');
+    const f2 = fakeSong();
+    const two = createSongRun({ url: 'x', notes: [noteAt(1000, 0, 1), noteAt(3000, 0, 0)], mode: 'two', makeAudio: () => f2 });
+    await two.start();
+    f2.currentTime = 1;
+    check('two buttons: the matching side hits', two.press({ side: 1 })?.verdict === 'hit');
+    f2.currentTime = 3;
+    check('two buttons: the other side does not', two.press({ side: 1 })?.verdict === 'wrong');
+  }
+
+  section('a song on the panel');
+  {
+    const made = [];
+    const makeSongAudio = () => { const el = fakeSong(); made.push(el); return el; };
+    const reader = (notes = notesEvery(1000, 3), difficulties = [{ characteristic: 'Standard', difficulty: 'Expert', file: 'E.dat' }, { characteristic: 'Standard', difficulty: 'Easy', file: 'e.dat' }]) => async () => ({
+      info: { difficulties }, song: async () => new Blob(['ogg'], { type: 'audio/ogg' }), difficulty: async () => ({ notes, problems: [] }) });
+    const zip = new File(['zip'], 'My Song.zip');
+    const t = mount({ demo: false, extra: { readMapZip: reader(), makeSongAudio } });
+    const bar = t.host.querySelector('[data-rh-map]');
+    check('the panel offers to open a map', !!bar?.querySelector('[data-rh-open]') && !bar.hidden);
+    check('it takes a zip, and the button is a plain button', t.host.querySelector('[data-rh-file]')?.accept.includes('.zip'));
+    t.host.querySelector('[data-rh-open]').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+    check('*** touching a map button is not a press in the game ***', t.probe().started === false && !t.probe().running);
+    await t.inst.impl.__openMap(zip);
+    check('a map opens on its easiest level', t.probe().map?.picked === 1 && t.probe().map.ready === true, JSON.stringify(t.probe().map));
+    check('and says it is ready, on the Start screen too', /My Song is ready/.test(t.host.querySelector('[data-rh-map-say]').textContent));
+    check('it offers the levels', [...t.host.querySelectorAll('[data-rh-diff]')].map((b) => b.textContent).join() === 'Expert,Easy');
+    check('the panel\'s state keeps nothing of the map', !/My Song|blob:/.test(JSON.stringify(t.state.get())), JSON.stringify(t.state.get()));
+    t.pub('select');
+    await sleep(0);
+    const el = made[made.length - 1];
+    check('*** any press plays the song, not the beat ***', !!t.probe().song && !t.probe().running && !el.paused && el.plays >= 1, JSON.stringify(t.probe().song));
+    check('the demo is not running either', t.probe().demoRun === false);
+    el.currentTime = 1.7;
+    t.inst.impl.__tick();
+    check('the song\'s note lights a tile', t.host.querySelectorAll('[data-lit="1"]').length === 1 && t.probe().lit?.k === 0);
+    el.currentTime = 2.0;
+    t.pub('select');
+    t.inst.impl.__tick();
+    check('*** a press on the note scores, and the tile says so ***', t.probe().round.hits === 1 && t.host.querySelector('[data-mark="hit"]') != null, JSON.stringify(t.probe().round));
+    check('the score counts the song\'s notes', /1 of 3 on the beat/.test(t.host.querySelector('[data-score]').textContent), t.host.querySelector('[data-score]').textContent);
+    t.pub('pause');
+    t.clock.run(1000);
+    check('pause pauses the song, and says so', el.paused && /Paused/.test(t.say()) && t.host.querySelectorAll('[data-lit="1"]').length === 0, t.say());
+    t.pub('play');
+    await sleep(0);
+    check('play goes on', !el.paused && !!t.probe().song);
+    el.fire('ended');
+    await sleep(0);
+    check('*** a song played along to ends with how it went ***', !t.probe().song && t.probe().lastResult?.beats === 3 && t.probe().stats.songs === 1, JSON.stringify(t.probe().lastResult));
+    check('...and the song let go of the speaker', el.paused);
+    t.inst.destroy();
+
+    const quiet = mount({ extra: { readMapZip: reader(), makeSongAudio } });
+    await quiet.inst.impl.__openMap(zip);
+    quiet.pub('select');
+    await sleep(0);
+    const qel = made[made.length - 1];
+    qel.currentTime = 500;
+    quiet.inst.impl.__tick();
+    check('*** nobody pressing does not cut the song ***', !!quiet.probe().song && !qel.paused);
+    qel.fire('ended');
+    check('*** a song nobody played along to goes back to Start, the map still open ***', quiet.probe().started === false && quiet.probe().map?.ready === true);
+    quiet.inst.destroy();
+
+    const bad = mount({ extra: { readMapZip: async () => ({ problem: 'There is no Info.dat in it, so it is not a Beat Saber map.' }), makeSongAudio } });
+    await bad.inst.impl.__openMap(zip);
+    check('a file that is not a map is said, in a sentence', bad.probe().map === null && /no Info\.dat/.test(bad.host.querySelector('[data-rh-map-say]').textContent));
+    bad.inst.destroy();
+
+    const empty = mount({ extra: { readMapZip: reader([]), makeSongAudio } });
+    await empty.inst.impl.__openMap(zip);
+    check('a level with no notes does not become a silent game', empty.probe().map?.ready === false);
+    empty.pub('select');
+    await sleep(0);
+    check('...a press plays the beat instead', !empty.probe().song && empty.probe().running);
+    empty.inst.destroy();
+
+    const lanes = mount({ saved: { playMode: 'four', tiles: 6 }, extra: { readMapZip: reader([noteAt(2000, 2)]), makeSongAudio } });
+    await lanes.inst.impl.__openMap(zip);
+    lanes.pub('select');
+    await sleep(0);
+    check('four lanes draw four tiles', lanes.host.querySelectorAll('.rh-tile').length === 4);
+    lanes.inst.destroy();
+    const hide = mount({ saved: { mapButton: false } });
+    check('the button can be hidden', hide.host.querySelector('[data-rh-map]').hidden === true);
+    hide.inst.destroy();
+
+    let limit = 3;
+    const lim = mount({ flashLimitPerSecond: () => limit, extra: { readMapZip: reader(notesEvery(2000, 3)), makeSongAudio } });
+    await lim.inst.impl.__openMap(zip);
+    lim.pub('select');
+    await sleep(0);
+    const before = made[made.length - 1];
+    limit = 1;
+    lim.inst.impl.__tick();
+    check('*** a flash limit changed during a song starts it again under the limit ***', made[made.length - 1] !== before && before.paused && !!lim.probe().song);
+    lim.inst.impl.onHide();
+    check('a hidden panel stops the song', !lim.probe().song);
+    lim.inst.destroy();
+  }
+
+  section('a song, for real: a real zip read, a real media element played to its end (a short silent WAV in the Ogg\'s place)');
+  {
+    const seconds = 0.9, rate = 8000, n = Math.round(seconds * rate);
+    const wav = new Uint8Array(44 + n).fill(128);
+    const dv = new DataView(wav.buffer);
+    const tag = (at, s) => [...s].forEach((c, i) => { wav[at + i] = c.charCodeAt(0); });
+    tag(0, 'RIFF'); dv.setUint32(4, 36 + n, true); tag(8, 'WAVEfmt '); dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, 1, true);
+    dv.setUint32(24, rate, true); dv.setUint32(28, rate, true); dv.setUint16(32, 1, true); dv.setUint16(34, 8, true); tag(36, 'data'); dv.setUint32(40, n, true);
+    const zip = zipBlob([
+      { name: 'Info.dat', text: JSON.stringify({ _version: '2.0.0', _songFilename: 'song.egg', _beatsPerMinute: 60,
+        _difficultyBeatmapSets: [{ _beatmapCharacteristicName: 'Standard', _difficultyBeatmaps: [{ _difficulty: 'Easy', _beatmapFilename: 'Easy.dat' }] }] }) },
+      { name: 'Easy.dat', text: JSON.stringify({ _version: '2.0.0', _notes: [{ _time: 0.4, _lineIndex: 1, _lineLayer: 0, _type: 0, _cutDirection: 8 }] }) },
+      { name: 'song.egg', bytes: wav },
+    ]);
+    // A muted <video> (the same media element underneath) only because a suite has no real click to unlock sound with, and this
+    // browser refuses even a muted <audio> without one. Somebody opening a map has just clicked.
+    const t = mount({ injectClock: false, extra: { makeSongAudio: (src) => { const a = document.createElement('video'); a.muted = true; a.src = src; return a; } } });
+    await t.inst.impl.__openMap(new File([zip], 'Real Song.zip'));
+    check('the real reader opened it, ready to play', t.probe().map?.ready === true && t.probe().map.notes === 1, JSON.stringify(t.probe().map));
+    t.pub('select');
+    const until = async (f, ms) => { const end = Date.now() + ms; while (Date.now() < end && !f()) await sleep(10); return f(); };
+    const playing = await until(() => t.probe().song?.playing && t.probe().song.at > 0.2, 2000);
+    check('*** the real media element plays, on the song\'s own clock ***', playing, `${JSON.stringify(t.probe().song)} say=${t.say()}`);
+    t.pub('select');
+    check('*** a press on its note is a hit ***', t.probe().round?.hits === 1, JSON.stringify(t.probe().song));
+    const over = await until(() => !t.probe().song, 3000);
+    check('*** the song ends by itself, and says how it went ***', over && t.probe().lastResult?.hits === 1 && t.probe().lastResult.beats === 1 && t.probe().stats.songs === 1, JSON.stringify(t.probe().lastResult));
+    t.inst.destroy();
   }
 } catch (err) {
   check('the suite ran to the end without throwing', false, String(err && err.stack || err));

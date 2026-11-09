@@ -54,8 +54,17 @@
 // beat that stopped because nobody was playing brings the demo back after `attractAfterMs`.
 // PAUSE / PLAY (the bar's button, Space, "pause"): `rhythm/pause` stops the beat; `rhythm/play` starts it
 // (or starts the game). The verb map entries are actions.js's (lines handed to its owner).
+//
+// *** A MAP SOMEBODY BROUGHT (row 2.222; `../beatmap.js` reads it, `../rhythm_song.js` plays it). *** "Open a map..." takes a Beat
+// Saber map's zip from this device. Nimrod ships no maps and no songs; the map is held in memory only, is never saved or sent, and
+// goes when the panel does. With one opened, a real game plays the SONG instead of the beat, on the same tiles and the same
+// settings; the demo keeps to the silent beat. Nobody playing along: the song plays out, then back to Start.
 
 import { followPanelSpeaker } from '../speakers.js';
+import { readMapZip } from '../beatmap.js';
+import {
+  createSongRun, tilesFor, PLAY_MODE_DEFAULT, LEAD_CHOICES, LEAD_DEFAULT, GAP_CHOICES,
+} from '../rhythm_song.js';
 import { registerModule } from '../module.js';
 import { createScoreSource, ownScoreField, ownScoreMode, showOwnScore } from '../score_source.js';
 import { createPointsLedger } from '../points.js';
@@ -121,6 +130,13 @@ export const DEFAULTS = Object.freeze({
   //   So a setting pays Play points for a round with at least `goodRoundPct` on the beat.
   roundPoints: 0,
   goodRoundPct: 75,
+  // A map somebody brought (rhythm_song.js argues all three).
+  playMode: PLAY_MODE_DEFAULT,
+  minGapMs: 0,
+  leadMs: LEAD_DEFAULT,
+  // The button is there by default, FOR: nobody finds a feature that is off. AGAINST: a screen nobody brings a map to carries a button
+  // it will not use, and a system file picker is a poor thing to open by accident on a kiosk. So it is a row.
+  mapButton: true,
 });
 
 const SETTINGS = [
@@ -169,6 +185,20 @@ const SETTINGS = [
     level: 'advanced', note: '0 means rounds pay nothing.' },
   { key: 'goodRoundPct', label: 'A good round is at least', kind: 'choice', default: 75, level: 'advanced',
     options: [50, 75, 90, 100].map((v) => ({ value: v, label: `${v}% on the beat` })) },
+  { key: 'mapButton', label: 'The "Open a map" button', default: true, level: 'standard', onLabel: 'Shown', offLabel: 'Hidden',
+    note: 'Plays a Beat Saber map (a .zip) from this device: its song, and a tile for each note. It stays on this device.' },
+  { key: 'playMode', label: 'How to play a song', kind: 'choice', default: PLAY_MODE_DEFAULT, level: 'standard',
+    options: [
+      { value: 'one', label: 'One button: any press, for every note' },
+      { value: 'two', label: 'Two buttons: the map\'s two colours, left and right' },
+      { value: 'four', label: 'Four lanes: touch the lit tile' },
+    ],
+    note: 'For two buttons, Back is left and Next is right. A single switch always counts.' },
+  { key: 'minGapMs', label: 'Shortest time between notes in a song', kind: 'choice', default: 0, level: 'advanced',
+    options: GAP_CHOICES.map((v) => ({ value: v, label: v ? `${v / 1000} seconds` : 'Worked out from "How close to the beat counts"' })),
+    note: 'A busy map plays fewer notes. A note left out is not counted. A flashing limit on the screen can make this longer.' },
+  { key: 'leadMs', label: 'A note\'s tile lights before its moment by', kind: 'choice', default: LEAD_DEFAULT, level: 'advanced',
+    options: LEAD_CHOICES.map((v) => ({ value: v, label: v ? `${v / 1000} seconds` : 'Nothing: it lights on the moment' })) },
 ];
 
 const esc = (s) => String(s == null ? '' : s)
@@ -182,7 +212,7 @@ registerModule(
   { type: GAME, title: 'Rhythm tiles', core: 'new', routesSound: true,
     canFlash: true,   // row 2.124: up to five beats a second with no limit set (flash_warning.js shows a note, once)
     description: 'Tiles light up to a beat; press on the beat. One switch is all it takes. It '
-      + 'is slow and forgiving by default. It keeps to the screen\'s flashing limit when one is set.',
+      + 'is slow and forgiving by default. It keeps to the screen\'s flashing limit when one is set. It can also play a Beat Saber map from your own device.',
     dependsOn: 'local', importance: 'optional', settings: SETTINGS, voice: START_VOICE },
   (ctx) => {
     const { mount, bus, state } = ctx;
@@ -231,6 +261,16 @@ registerModule(
     let agent = null;
     let restTimer = null;
     let overlayEl = null, lastOverlay = null;
+    // ---- a map somebody brought: memory only (rhythm_song.js) ----
+    let map = null;               // { name, read, info, picked, notes, url, problem }
+    let song = null;              // the song playing; `run` is null meanwhile
+    let songLimit = null;         // the flash limit it was started under
+    let sinkId = null;            // the panel's speaker
+    let mapEl = null, fileEl = null, diffsEl = null, forgetEl = null, openEl = null, mapSayEl = null;
+    const readZip = ctx.readMapZip || readMapZip;
+    const makeSongAudio = ctx.makeSongAudio || null;
+    const songSink = { setSink(id) { sinkId = id; song?.setSink(id); } };
+    const mapReady = () => !!map?.url && !!map.notes?.length;
     const report = createPlayReporter(bus, ctx);
     const setT = typeof ctx.setTimer === 'function' ? ctx.setTimer : (fn, ms) => setTimeout(fn, ms);
     const clearT = typeof ctx.clearTimer === 'function' ? ctx.clearTimer : (h) => clearTimeout(h);
@@ -287,6 +327,7 @@ registerModule(
     // ---- start and stop ----------------------------------------------------------------------------
     function start({ demo: isDemo = false } = {}) {
       if (dead) return;
+      if (!isDemo && mapReady()) { startSong(); return; }
       const tp = tempoNow();
       const interval = 60000 / tp.bpm;
       const t = now();
@@ -315,7 +356,175 @@ registerModule(
       render(reason);
       ensureLoop();                  // only if the words under the tiles are still waiting their turn
     }
-    const restart = () => { if (run) { const a = armed; const d = run.demo; stop(); armed = a; start({ demo: d }); } };
+    const restart = () => {
+      if (song) { stopSong(); startSong(); return; }
+      if (run) { const a = armed; const d = run.demo; stop(); armed = a; start({ demo: d }); }
+    };
+
+    // ---- a song ----------------------------------------------------------------------------------------
+    function startSong() {
+      if (dead || !mapReady()) return;
+      if (run) stop();
+      songLimit = limitNow();
+      const made = createSongRun({ url: map.url, notes: map.notes, mode: cfg.playMode, tiles: cfg.tiles, window: cfg.window,
+        offsetMs: Number(cfg.pressOffset) || 0, gapMs: Number(cfg.minGapMs) || 0, leadMs: Number(cfg.leadMs) || 0, flashLimit: songLimit,
+        audio, audioId: `${GAME}:song:${ctx.instanceId || 'rh'}`, onEnded: songEnded, onFailed: songFailed,
+        ...(makeSongAudio ? { makeAudio: makeSongAudio } : {}) });
+      song = made;
+      if (sinkId != null) song.setSink(sinkId);
+      judged = new Map(); lit = null; streak = 0; markedK = null; lastResult = null;
+      round = { index: 0, hits: 0, presses: 0, beats: song.state().total };
+      tones?.setActive(armed && cfg.hitSound === true);
+      clearRest();
+      report(true);
+      status = ''; statusAt = -1e9;
+      sayMap('');
+      wantStatus(`Playing ${map.name}`);
+      render();
+      ensureLoop();
+      Promise.resolve(made.start()).then((r) => {
+        if (song !== made || r?.ok) return;
+        wantStatus(r?.reason === 'no-audio' ? 'This screen cannot play the song.' : 'Press to hear the song.');
+        ensureLoop();
+      }).catch((err) => console.error('rhythm: song', err));
+    }
+    function stopSong() {
+      const s = song;
+      song = null; lit = null; round = null;
+      try { s?.stop(); } catch (err) { console.error('rhythm: song stop', err); }
+      tones?.setActive(false);
+      if (s) report(false);
+    }
+    function songEnded(r) {
+      const pressed = (round?.presses || 0) > 0;
+      stopSong();
+      lastResult = pressed ? { hits: r.hits, beats: r.total } : null;
+      if (!pressed) { if (!dead) toStartScreen(); return; }     // a song nobody played along to: back to Start, the map still open
+      stats = { ...stats, songs: (Number(stats.songs) || 0) + 1 };
+      try { state?.set?.({ stats }); } catch (err) { console.error('rhythm: save', err); }
+      const pts = Math.round(Number(cfg.roundPoints) || 0);
+      if (pts > 0 && ledger && r.total > 0 && r.hits >= Math.ceil((Number(cfg.goodRoundPct) || 75) / 100 * r.total)) {
+        Promise.resolve(ledger.award({ amount: pts, source: GAME, type: 'Play', tags: [GAME],
+          note: `Rhythm: ${r.hits} of ${r.total} on the beat in a song` })).catch((err) => console.error('rhythm: points', err));
+      }
+      scheduleDemo();
+      render('ended');
+      ensureLoop();
+    }
+    function songFailed() {
+      stopSong();
+      wantStatus('This song will not play here.');
+      render();
+      ensureLoop();
+    }
+    function songPress(tile, side) {
+      if (!song.state().playing) {                  // paused, or the browser refused sound until a press: this is that press
+        Promise.resolve(song.resume()).catch(() => {});
+        wantStatus(`Playing ${map?.name || ''}`);
+        render(); ensureLoop();
+        return;
+      }
+      if (round) round.presses++;
+      const j = song.press({ tile, side });
+      if (!j) { render(); return; }                 // nowhere near a note: not an answer
+      if (j.verdict === 'hit') {
+        streak++;
+        if (round) round.hits++;
+        if (cfg.hitSound && tones) tones.tone(HIT_BLIP.f, HIT_BLIP.ms, { type: 'sine', level: 0.5 });
+      } else streak = 0;
+      wantStatus(VERDICT_WORDS[j.verdict]);
+      render();
+      ensureLoop();
+    }
+
+    // ---- opening a map --------------------------------------------------------------------------------
+    function forgetMap() {
+      if (song) stopSong();
+      try { if (map?.url) URL.revokeObjectURL(map.url); } catch { /* gone */ }
+      map = null;
+    }
+    const mapName = (file) => String(file?.name || 'the song').replace(/\.zip$/i, '') || 'the song';
+    const diffLabel = (d) => (d.characteristic && d.characteristic !== 'Standard' ? `${d.difficulty} (${d.characteristic})` : d.difficulty);
+    function paintMap() {
+      if (!mapEl) return;
+      mapEl.hidden = cfg.mapButton === false && !map;
+      if (openEl) openEl.hidden = cfg.mapButton === false;
+      if (forgetEl) forgetEl.hidden = !map;
+      if (!diffsEl) return;
+      const list = map?.info?.difficulties || [];
+      diffsEl.innerHTML = list.length > 1 ? list.map((d, i) => `<button type="button" data-rh-diff="${i}"`
+        + `${map.picked === i ? ' aria-pressed="true"' : ' aria-pressed="false"'}>${esc(diffLabel(d))}</button>`).join('') : '';
+    }
+    // The map's own line, beside its buttons: the words under the tiles belong to the game, and say "Start" until it starts.
+    const sayMap = (text) => { if (mapSayEl) { mapSayEl.textContent = text; mapSayEl.hidden = !text; } };
+    async function openMapFile(file) {
+      if (dead || !file) return;
+      if (song) { stopSong(); render('back'); }
+      sayMap('Reading the map…');
+      let read;
+      try { read = await readZip(file); } catch (err) { console.error('rhythm: map', err); read = { problem: 'That map could not be read.' }; }
+      if (dead) return;
+      if (read.problem) { sayMap(read.problem); return; }
+      if (!read.info?.difficulties?.length) { sayMap('That map has no levels in it.'); return; }
+      forgetMap();
+      map = { name: mapName(file), read, info: read.info, picked: null, notes: null, url: null };
+      paintMap();
+      await pickDifficulty(read.info.difficulties.length === 1 ? 0 : easiest(read.info.difficulties));
+    }
+    // Opens on the map's easiest level: FOR the hardest: the map's own showpiece. AGAINST, and it wins: this game starts forgiving.
+    const DIFF_ORDER = ['Easy', 'Normal', 'Hard', 'Expert', 'ExpertPlus'];
+    const easiest = (list) => list.reduce((best, d, i) => (rankOf(d) < rankOf(list[best]) ? i : best), 0);
+    function rankOf(d) { const r = DIFF_ORDER.indexOf(d?.difficulty); return r < 0 ? DIFF_ORDER.length : r; }
+    async function pickDifficulty(i) {
+      const m = map;
+      const d = m?.info?.difficulties?.[i];
+      if (!d || dead) return;
+      if (song) { stopSong(); render('back'); }
+      sayMap('Reading the map…');
+      let got;
+      try { got = await m.read.difficulty(d); } catch (err) { console.error('rhythm: map', err); got = { notes: [], problems: ['This level could not be read.'] }; }
+      if (dead || map !== m) return;
+      if (!got?.notes?.length) {
+        m.picked = null; m.notes = null;
+        sayMap(got?.problems?.[0] || 'This level has no notes to play.');
+        paintMap();
+        return;
+      }
+      if (!m.url) {
+        let blob = null;
+        try { blob = await m.read.song(); } catch (err) { console.error('rhythm: song', err); }
+        if (dead || map !== m) return;
+        if (!blob) { sayMap('The song in that map could not be read.'); paintMap(); return; }
+        // Ogg does not play everywhere (older Safari): said here, not found out on the first note.
+        const probe = makeSongAudio ? null : (typeof Audio === 'function' ? new Audio() : null);
+        if (probe && !probe.canPlayType?.('audio/ogg')) { sayMap('This browser cannot play that map\'s song.'); paintMap(); return; }
+        m.url = URL.createObjectURL(blob);
+      }
+      m.picked = i;
+      m.notes = got.notes;
+      if (run && !run.demo) stop();     // a beat going: the next press plays the song
+      paintMap();
+      sayMap(`${m.name} is ready. Any press plays it.`);
+      render();
+      ensureLoop();
+    }
+    function onMapClick(e) {
+      if (dead || !(e.target instanceof Element)) return;
+      if (e.target.closest('[data-rh-open]')) { try { fileEl?.click(); } catch (err) { console.error('rhythm: open', err); } return; }
+      if (e.target.closest('[data-rh-forget]')) {
+        forgetMap(); paintMap(); sayMap('');
+        lastResult = null;
+        render('forgot'); ensureLoop();
+        return;
+      }
+      const b = e.target.closest('[data-rh-diff]');
+      if (b) pickDifficulty(Number(b.dataset.rhDiff));
+    }
+    function onMapFile() {
+      const file = fileEl?.files?.[0];
+      if (file) openMapFile(file);
+      if (fileEl) fileEl.value = '';      // the same file can be opened again
+    }
 
     // ---- Start, and back to the Start screen ----------------------------------------------------------
     function clearRest() { if (restTimer != null) { try { clearT(restTimer); } catch { /* gone */ } restTimer = null; } }
@@ -329,6 +538,7 @@ registerModule(
       if (dead) return;
       clearRest();
       if (run) stop();
+      if (song) stopSong();
       started = false;
       demo = demoWanted();
       demoAt = now(); demoRested = false; demoMemory = {};
@@ -368,7 +578,7 @@ registerModule(
     // ---- the loop ----------------------------------------------------------------------------------
     function ensureLoop() {
       if (loopHandle != null || dead || hidden) return;
-      if (!run && statusWant === status) return;
+      if (!run && !song && statusWant === status) return;
       loopHandle = clock.request(frame);
     }
     function stopLoop() {
@@ -383,6 +593,15 @@ registerModule(
     }
 
     function tick(t) {
+      // A limit changed during a song: it starts again under the new limit, as the beat does just below.
+      if (song && limitNow() !== songLimit) restart();
+      if (song) {
+        song.step();
+        const l = song.lit();
+        lit = l ? { k: l.i, tile: l.tile, hit: l.hit, until: Infinity } : null;
+        render();
+        return;
+      }
       // A limit lowered (or raised) while the beat runs: the beat is re-made at the new cap at once,
       // rather than finishing the round too fast for the person the new limit is for.
       if (run && limitNow() !== run.limit) restart();
@@ -452,9 +671,10 @@ registerModule(
     }
 
     // ---- a press ------------------------------------------------------------------------------------
-    function press(tile = null) {
+    function press(tile = null, side = null) {
       if (dead) return;
       if (startGame()) return;       // waiting for Start: any press is Start, and the beat begins
+      if (song) { songPress(tile, side); return; }
       if (!armed) { armed = true; tones?.resume(); if (run) tones?.setActive(cfg.sound !== 'off'); }
       quietBeats = 0;
       clearRest();
@@ -491,7 +711,8 @@ registerModule(
 
     // ---- drawing --------------------------------------------------------------------------------------
     function buildTiles() {
-      const n = Math.max(1, Math.round(Number(cfg.tiles) || 4));
+      // With a map open and playing, the way of playing says how many tiles; the beat and its demo keep the row.
+      const n = (song || (started && mapReady())) ? tilesFor(cfg.playMode, cfg.tiles) : Math.max(1, Math.round(Number(cfg.tiles) || 4));
       if (tileEls.length === n) return;
       tilesEl.innerHTML = Array.from({ length: n }, (_, i) => `<div class="rh-tile" data-tile="${i}" role="img" aria-label="tile ${i + 1}">`
         + '<span class="rh-dot" aria-hidden="true"></span><span class="rh-mark" data-mark-text></span></div>').join('');
@@ -503,7 +724,8 @@ registerModule(
       const root = rootEl.querySelector('[data-rh]');
       if (root) {
         root.dataset.motion = reducedMotion() ? 'reduce' : 'full';
-        root.dataset.running = run ? '1' : '0';
+        root.dataset.running = run || song ? '1' : '0';
+        root.dataset.song = song ? '1' : '0';
         root.dataset.started = started ? '1' : '0';
         root.dataset.demo = demoRun() ? '1' : '0';
       }
@@ -515,7 +737,7 @@ registerModule(
       // the lights: at the fastest tempos a hit whose mark would come too soon after the last one is
       // still counted, sounded and tallied - it just does not draw a mark. No limit: every hit is marked.
       const tNow = now();
-      if (lit && judged.get(lit.k) === 'hit' && markedK !== lit.k && tNow - lastMarkAt >= markGapMs(limitNow())) {
+      if (lit && (song ? lit.hit : judged.get(lit.k) === 'hit') && markedK !== lit.k && tNow - lastMarkAt >= markGapMs(limitNow())) {
         markedK = lit.k; lastMarkAt = tNow;
       }
       tileEls.forEach((el, i) => {
@@ -531,11 +753,14 @@ registerModule(
       // the words
       if (!started) {
         wantStatus(startLine());
+      } else if (song) {
+        // A song's words are set by its own events (startSong, songPress, the pause verb).
       } else if (!run) {
         if (reason || !status) {
+          const what = mapReady() ? 'the song' : 'the beat';
           wantStatus(lastResult ? `${lastResult.hits} of ${lastResult.beats} on the beat. Press to play again.`
-            : (reason === 'back' ? 'Stopped. Press to start the beat again.'
-              : reason === 'paused' ? 'Paused. Press to go on.' : 'Press to start the beat.'));
+            : (reason === 'back' ? `Stopped. Press to start ${what} again.`
+              : reason === 'paused' ? 'Paused. Press to go on.' : `Press to start ${what}.`));
         }
       } else if (lastSeen < run.k0 && reason === 'start') wantStatus('Get ready…');
       flushStatus();
@@ -556,6 +781,7 @@ registerModule(
 
     function onPointerDown(e) {
       if (dead || !(e.target instanceof Element) || !mount.contains(e.target)) return;
+      if (e.target.closest('[data-rh-map]')) return;     // its own buttons, not a press in the game
       const t = e.target.closest('[data-tile]');
       press(t ? Number(t.dataset.tile) : null);
     }
@@ -564,8 +790,11 @@ registerModule(
       __probe: () => ({ cfg: { ...cfg }, running: !!run, run: run ? { ...run } : null, lit: lit ? { ...lit } : null,
         round: round ? { ...round } : null, lastResult, streak, armed, looping: loopHandle != null, status,
         judged: new Map(judged), stats: { ...stats }, tones: tones?.state() || null,
-        started, demo, demoRun: demoRun(), demoRested, agent: agent?.id || null, restPending: restTimer != null }),
+        started, demo, demoRun: demoRun(), demoRested, agent: agent?.id || null, restPending: restTimer != null,
+        song: song ? song.state() : null, map: map ? { name: map.name, picked: map.picked, notes: map.notes?.length || 0, ready: mapReady() } : null }),
       __tick: () => { if (!dead) tick(now()); },
+      __openMap: (file) => openMapFile(file),
+      __pickLevel: (i) => pickDifficulty(i),
       init() {
         let cssHref = '';
         try { cssHref = new URL('../rhythm.css', import.meta.url).href; } catch { /* unstyled, still works */ }
@@ -573,13 +802,25 @@ registerModule(
         mount.innerHTML = `${cssHref ? `<link rel="stylesheet" data-rh-css href="${esc(cssHref)}">` : ''}`
           + '<div class="rh-wrap gs-host" data-rh-root><div class="rh" data-rh>'
           + '<div class="rh-tiles" data-tiles></div>'
-          + '<div class="rh-bar"><p class="rh-say" role="status" aria-live="polite"></p><p class="rh-score" data-score hidden></p></div>'
+          + '<div class="rh-bar"><p class="rh-say" role="status" aria-live="polite"></p><p class="rh-score" data-score hidden></p>'
+          + '<div class="rh-map" data-rh-map><button type="button" data-rh-open title="A Beat Saber map, as a .zip, from this device. It stays on this device.">Open a map…</button>'
+          + '<input type="file" accept=".zip,application/zip" data-rh-file hidden aria-label="A Beat Saber map, as a .zip">'
+          + '<span class="rh-levels" data-rh-diffs></span><button type="button" data-rh-forget hidden>Back to the beat</button>'
+          + '<span class="rh-map-say" data-rh-map-say role="status" aria-live="polite" hidden></span></div></div>'
           + '</div><div data-start-host hidden></div></div>';
         rootEl = mount.querySelector('[data-rh-root]');
         overlayEl = mount.querySelector('[data-start-host]');
         tilesEl = mount.querySelector('[data-tiles]');
         sayEl = mount.querySelector('.rh-say');
         scoreEl = mount.querySelector('[data-score]');
+        mapEl = mount.querySelector('[data-rh-map]');
+        fileEl = mount.querySelector('[data-rh-file]');
+        diffsEl = mount.querySelector('[data-rh-diffs]');
+        forgetEl = mount.querySelector('[data-rh-forget]');
+        openEl = mount.querySelector('[data-rh-open]');
+        mapSayEl = mount.querySelector('[data-rh-map-say]');
+        mapEl.addEventListener('click', onMapClick);
+        fileEl.addEventListener('change', onMapFile);
         mount.addEventListener('pointerdown', onPointerDown);
 
         try { ledger = typeof ctx.makeEvents === 'function' ? createPointsLedger({ makeEvents: ctx.makeEvents, bus }) : null; }
@@ -603,14 +844,17 @@ registerModule(
           cfg = next;
           if (s.stats && typeof s.stats === 'object') stats = { ...stats, ...s.stats };
           if (tileEls.length && Number(next.tiles) !== tileEls.length) { tileEls = []; }
-          return ['tempo', 'tiles', 'pattern', 'beatFrom', 'countIn', 'roundBeats', 'restBeats']
-            .some((k) => next[k] !== was[k]);
+          // A song restarts on the rows it is worked out from; the beat, on its own.
+          const rows = song ? ['tiles', 'playMode', 'minGapMs', 'leadMs', 'window', 'pressOffset']
+            : ['tempo', 'tiles', 'pattern', 'beatFrom', 'countIn', 'roundBeats', 'restBeats'];
+          return rows.some((k) => next[k] !== was[k]);
         };
         applyCfg(state?.get?.());
         // Row 2.97: "Its sound comes out of" (the Sound tab) sends this game's sound to that speaker.
-        unSpeaker = followPanelSpeaker(state, () => [tones]);
+        unSpeaker = followPanelSpeaker(state, () => [tones, songSink]);
         state?.subscribe?.((s) => {
           if (applyCfg(s)) restart();
+          paintMap();
           // "While nobody is playing" changed while it waits for Start: the demo follows at once.
           if (!started && demoWanted() !== demo) { toStartScreen(); return; }
           tones?.setActive(!!run && armed && cfg.sound !== 'off' && (!run.demo || cfg.attractSound === true));
@@ -626,17 +870,29 @@ registerModule(
         });
         // Every press verb is a tap: one switch, two switches, or the scanning "next" switch all play.
         bus.subscribe(`${GAME}/select`, () => press());
-        bus.subscribe(`${GAME}/next`, () => press());
-        bus.subscribe(`${GAME}/prev`, () => press());
+        // In a song played on two buttons, Next is the right tile and Prev the left (rhythm_song.js).
+        bus.subscribe(`${GAME}/next`, () => press(null, cfg.playMode === 'two' ? 1 : null));
+        bus.subscribe(`${GAME}/prev`, () => press(null, cfg.playMode === 'two' ? 0 : null));
         // back stops the beat (a person stopping it, not a gate: nothing waits behind it).
-        bus.subscribe(`${GAME}/back`, () => { if (run && !run.demo) stop('back'); });
+        bus.subscribe(`${GAME}/back`, () => {
+          if (song) { stopSong(); render('back'); ensureLoop(); return; }
+          if (run && !run.demo) stop('back');
+        });
         // PAUSE / PLAY: the bar's button, Space, "pause" / "play" (once actions.js maps the verbs here).
         // Pause stops the beat; play starts it - or, waiting for Start, starts the game.
-        bus.subscribe(`${GAME}/pause`, () => { if (started && run && !run.demo) stop('paused'); });
-        bus.subscribe(`${GAME}/play`, () => { if (startGame()) return; if (!run) { quietBeats = 0; clearRest(); start(); } });
+        bus.subscribe(`${GAME}/pause`, () => {
+          if (song) { song.pause(); lit = null; wantStatus('Paused. Press to go on.'); render(); ensureLoop(); return; }
+          if (started && run && !run.demo) stop('paused');
+        });
+        bus.subscribe(`${GAME}/play`, () => {
+          if (startGame()) return;
+          if (song) { if (!song.state().playing) songPress(null, null); return; }
+          if (!run) { quietBeats = 0; clearRest(); start(); }
+        });
         // Back to the Start screen (and the demo).
         bus.subscribe(`${GAME}/attract`, () => toStartScreen());
 
+        paintMap();
         render();
         // OPENS WAITING FOR START, unless this panel starts by itself (game_start.js).
         if (shouldAutostart(cfg, { fallback: DEFAULTS.autostart, alone: panelAlone(ctx) })) { started = true; start(); }
@@ -645,6 +901,7 @@ registerModule(
       onResize() {},
       onHide() {
         hidden = true;
+        if (song) { stopSong(); render('hidden'); }
         if (run) stop(run.demo ? '' : 'hidden');
         try { state?.flush?.(); } catch { /* nothing */ }
       },
@@ -652,10 +909,13 @@ registerModule(
       onShow() { hidden = false; if (!started && demo && !demoRested && !run) start({ demo: true }); render(); },
       destroy() {
         try { unSpeaker?.(); } catch { /* gone */ } unSpeaker = null;
+        forgetMap();          // the map goes when the panel does: nothing of it is kept
         dead = true;
         clearRest();
         stopLoop();
         run = null;
+        mapEl?.removeEventListener('click', onMapClick);
+        fileEl?.removeEventListener('change', onMapFile);
         mount.removeEventListener('pointerdown', onPointerDown);
         try { tones?.destroy(); } catch { /* gone */ }
         tones = null;
