@@ -44,7 +44,8 @@ import {
 import { GAME, DEFAULTS, STATUS_GAP_MS, IDLE_BEATS, VERDICT_WORDS, statusGapMs, markGapMs } from '../modules/rhythm.js';
 import { maxBpmFor } from '../rhythm_beat.js';
 import { worstInAnySecond, maxPerMinute, FRAME_MS } from '../flash_limit.js';
-import { createSongRun, autoGapMs, gapInForce, lightTimes, tilesFor, tileOfNote } from '../rhythm_song.js';
+import { createSongRun, autoGapMs, gapInForce, lightTimes, targetsFor, tileOfNote } from '../rhythm_song.js';
+import { songFrame, stageLayout, nearestTarget, skinFor, arriveFor, NOTE_LEFT_DEFAULT, NOTE_RIGHT_DEFAULT } from '../rhythm_stage.js';
 import { thinNotes } from '../beatmap.js';
 import { zipBlob } from '../zip_store.js';
 import { PLAY_STATE_TOPIC, START_LINES } from '../game_start.js';
@@ -746,9 +747,9 @@ try {
     check('a chosen gap wins over the worked-out one', gapInForce({ gapMs: 1000, windowSetting: 'generous', mode: 'one' }) === 1000);
     check('*** the flash limit is a floor under a chosen gap ***', gapInForce({ gapMs: 200, mode: 'two', flashLimit: 1 }) === 60000 / maxPerMinute(1), gapInForce({ gapMs: 200, mode: 'two', flashLimit: 1 }));
     check('with no limit a gap of nothing is nothing', gapInForce({ gapMs: 0, mode: 'four' }) === 0);
-    check('two buttons: two tiles, by colour', tilesFor('two', 6) === 2 && tileOfNote(noteAt(0, 3, 1), 'two', 6) === 1 && tileOfNote(noteAt(0, 3, 0), 'two', 6) === 0);
-    check('four lanes: four tiles, by lane', tilesFor('four', 6) === 4 && tileOfNote(noteAt(0, 2), 'four', 6) === 2);
-    check('one button: the panel\'s own row of tiles', tilesFor('one', 6) === 6 && tileOfNote(noteAt(0, 3), 'one', 2) === 1);
+    check('two buttons: two targets, by colour', targetsFor('two') === 2 && tileOfNote(noteAt(0, 3, 1), 'two') === 1 && tileOfNote(noteAt(0, 3, 0), 'two') === 0);
+    check('four lanes: four targets, by lane', targetsFor('four') === 4 && tileOfNote(noteAt(0, 2), 'four') === 2);
+    check('one button: one target, whatever the note', targetsFor('one') === 1 && tileOfNote(noteAt(0, 3, 1), 'one') === 0);
     const uneven = [0, 350, 700, 1040, 1400, 1760, 2100].map((ms) => noteAt(ms + 5000));
     for (const limit of [3, 2, 1]) {
       const thin = thinNotes(uneven, gapInForce({ gapMs: 0, mode: 'four', flashLimit: limit }));
@@ -758,7 +759,48 @@ try {
       check(`...and each note at ${limit} is lit before its light ends`, lights.every((l) => l.on < l.off));
     }
     const lights = lightTimes(notesEvery(625, 5), { leadMs: 500 });
-    check('a tile lights half a second before its note by default, one tile at a time', lights[0].on === 1500 && lights.every((l, i) => !i || l.on >= lights[i - 1].off), JSON.stringify(lights));
+    check('a ring starts its lead before its note, one at a time', lights[0].on === 1500 && lights.every((l, i) => !i || l.on >= lights[i - 1].off), JSON.stringify(lights));
+  }
+
+  section('a song\'s stage (Design, note 74): where everything is');
+  {
+    const w = 1600, h = 900;
+    const one = stageLayout('one', w, h);
+    check('*** one button: one target, a third of the height, readable from a bed ***', one.length === 1 && one[0].r === h / 6 && one[0].x === w / 2);
+    check('two targets and four, side by side, none overlapping', stageLayout('two', w, h).length === 2 && stageLayout('four', w, h).every((t, i, a) => !i || t.x - a[i - 1].x > t.r * 2));
+    const narrow = stageLayout('four', 300, 900);
+    check('a narrow panel keeps them apart', narrow.every((t, i, a) => !i || t.x - a[i - 1].x > t.r * 2), JSON.stringify(narrow));
+    check('a touch goes to the nearest target', nearestTarget(stageLayout('four', w, h), w * 0.62, 10) === 2);
+    const left = noteAt(10000, 0, 0), right = noteAt(10000, 3, 1);
+    const frameAt = (t, notes, extra = {}) => songFrame({ t, notes, mode: 'one', arrive: 'slide', leadMs: 2000, layout: one, w, targetOf: () => 0, lights: lightTimes(notes, { leadMs: 2000 }), ...extra });
+    const noteOf = (f) => f.draw.find((d) => d.kind === 'note');
+    check('before its lead a note is not on the stage', frameAt(7000, [left]).draw.length === 0);
+    check('*** left notes come in from the left ***', noteOf(frameAt(8000, [left])).x < 0 && noteOf(frameAt(9000, [left])).x > noteOf(frameAt(8500, [left])).x);
+    check('*** right notes from the right ***', noteOf(frameAt(8000, [right])).x > w && noteOf(frameAt(9000, [right])).x < noteOf(frameAt(8500, [right])).x);
+    check('*** on its moment a note is on the target ***', noteOf(frameAt(10000, [left])).x === one[0].x && noteOf(frameAt(10000, [right])).x === one[0].x);
+    check('left and right are told apart by more than colour: the side goes to the painter', noteOf(frameAt(9000, [left])).side === 0 && noteOf(frameAt(9000, [right])).side === 1);
+    check('one button shows no cut arrow; it would ask for what any press satisfies', noteOf(frameAt(9000, [{ ...left, cut: 1 }])).cut === 8);
+    const four = stageLayout('four', w, h);
+    const fall = songFrame({ t: 9000, notes: [{ ...left, lane: 2, cut: 1 }], mode: 'four', arrive: 'slide', leadMs: 2000, layout: four, w, targetOf: (n) => n.lane });
+    check('four lanes: a note falls in its lane, showing its arrow', noteOf(fall).x === four[2].x && noteOf(fall).y < four[2].y && noteOf(fall).cut === 1, JSON.stringify(noteOf(fall)));
+    check('a note answered is gone', frameAt(9900, [left], { answered: () => true }).draw.length === 0);
+    const fade = (t) => noteOf(frameAt(t, [left], { missed: () => true }));
+    check('*** a miss fades as it passes, and goes ***', fade(10300).alpha > fade(10600).alpha && fade(10600).alpha > 0 && !fade(10800), JSON.stringify(fade(10300)));
+    check('...marked as a miss, with no arrow', fade(10300).missed === true && fade(10300).cut === 8);
+    const many = Array.from({ length: 2000 }, (_, i) => noteAt(i * 700));
+    const f1 = frameAt(700000, many);
+    check('a long song need not walk its whole past each frame', f1.from > 900 && noteOf(frameAt(700000, many, { from: f1.from })).i === noteOf(f1).i, f1.from);
+
+    const ringAt = (t, notes) => frameAt(t, notes, { arrive: 'ring' });
+    const ringOf = (f) => f.draw.find((d) => d.kind === 'ring');
+    check('*** motion off: nothing travels; every note is drawn on its target ***', [8500, 9500, 9900].every((t) => ringAt(t, [left]).draw.every((d) => d.x === one[0].x && d.y === one[0].y)));
+    check('*** the ring fills like a clock, full on the moment ***', ringOf(ringAt(9000, [left])).fill === 0.5 && ringOf(ringAt(10000, [left])).fill === 1 && ringOf(ringAt(10100, [left])).fill === 1, JSON.stringify(ringOf(ringAt(9000, [left]))));
+    const close = notesEvery(625, 6, 10000);
+    check('one ring at a time, however close the notes', [10100, 10900, 11500].every((t) => ringAt(t, close).draw.filter((d) => d.kind === 'ring').length <= 1));
+    check('"auto" follows the device', arriveFor('auto', true) === 'ring' && arriveFor('auto', false) === 'slide' && arriveFor('slide', true) === 'slide' && arriveFor('ring', false) === 'ring');
+    const skin = skinFor('steampunk');
+    check('a theme skins the notes and the ground', skin.look === 'gear' && skin.ring !== skinFor('nope').ring && skinFor('nope').look === 'plain');
+    check('a person\'s own color wins over a theme\'s; the default means the theme\'s', skinFor('steampunk', { left: '#123456' }).left === '#123456' && skinFor('steampunk', { left: NOTE_LEFT_DEFAULT }).left === skin.left && skin.right === skinFor('steampunk', { right: NOTE_RIGHT_DEFAULT }).right);
   }
 
   section('a song: the song\'s own clock judges');
@@ -776,18 +818,14 @@ try {
     regs[0].onGain(0.4);
     check('...and it comes back, at the level it was given', !el.paused && el.volume === 0.4);
     regs[0].onGain(1);
-    el.currentTime = 1.0;
-    check('nothing is lit before a note\'s lead', run.lit() === null);
-    el.currentTime = 1.6;
-    check('a note\'s tile lights ahead of it', run.lit()?.i === 0, JSON.stringify(run.lit()));
     el.currentTime = 2.05;
     check('*** a press on the note is a hit ***', run.press({})?.verdict === 'hit' && run.result().hits === 1);
-    check('the hit shows on the tile that stays lit', run.lit()?.hit === true);
+    check('the song says what was answered, for the stage', run.view().answered(0) === true && run.view().answered(1) === false && run.view().t === 2050);
     check('a second press on the same note takes nothing away', run.press({}) === null && run.result().hits === 1, JSON.stringify(run.result()));
     el.fire('waiting');
     el.currentTime = 9;
     run.step();
-    check('*** buffering: nothing is missed, and a press is not judged ***', run.result().misses === 0 && run.press({}) === null && run.lit() === null);
+    check('*** buffering: nothing is missed, and a press is not judged ***', run.result().misses === 0 && run.press({}) === null);
     el.currentTime = 2.6;
     el.fire('playing');
     check('a press early for the next note says so', run.press({})?.verdict === 'early');
@@ -857,6 +895,13 @@ try {
     await t.inst.impl.__openMap(zip);
     check('a map opens on its easiest level', t.probe().map?.picked === 1 && t.probe().map.ready === true, JSON.stringify(t.probe().map));
     check('and says it is ready, on the Start screen too', /My Song is ready/.test(t.host.querySelector('[data-rh-map-say]').textContent));
+    await cssReady(t.host);
+    const startRect = t.host.querySelector('[data-start]').getBoundingClientRect();
+    const covered = [...t.host.querySelectorAll('[data-rh-map] button:not([hidden])')].filter((b) => {
+      const r = b.getBoundingClientRect();
+      return r.left < startRect.right && r.right > startRect.left && r.top < startRect.bottom && r.bottom > startRect.top;
+    });
+    check('*** the Start button covers none of the map\'s buttons ***', startRect.height > 0 && covered.length === 0, covered.map((b) => b.textContent).join());
     check('it offers the levels', [...t.host.querySelectorAll('[data-rh-diff]')].map((b) => b.textContent).join() === 'Expert,Easy');
     check('the panel\'s state keeps nothing of the map', !/My Song|blob:/.test(JSON.stringify(t.state.get())), JSON.stringify(t.state.get()));
     t.pub('select');
@@ -864,17 +909,27 @@ try {
     const el = made[made.length - 1];
     check('*** any press plays the song, not the beat ***', !!t.probe().song && !t.probe().running && !el.paused && el.plays >= 1, JSON.stringify(t.probe().song));
     check('the demo is not running either', t.probe().demoRun === false);
-    el.currentTime = 1.7;
+    await cssReady(t.host);
+    check('*** the stage takes the tiles\' place ***', getComputedStyle(t.host.querySelector('[data-tiles]')).display === 'none' && getComputedStyle(t.host.querySelector('[data-rh-stage]')).display === 'block');
+    el.currentTime = 1.0;
     t.inst.impl.__tick();
-    check('the song\'s note lights a tile', t.host.querySelectorAll('[data-lit="1"]').length === 1 && t.probe().lit?.k === 0);
+    const noteNow = () => t.probe().stage.frame.draw.find((d) => d.kind === 'note');
+    check('the song\'s note is on the way, by the song\'s clock', noteNow()?.i === 0 && noteNow().x < t.host.querySelector('[data-rh-stage]').getBoundingClientRect().width / 2, JSON.stringify(noteNow()));
+    const stageEl = t.host.querySelector('[data-rh-stage]');
+    const inked = () => { const c = stageEl.getContext('2d'); const b = c.getImageData(0, 0, stageEl.width, stageEl.height).data; let n = 0; for (let i = 3; i < b.length; i += 4) if (b[i]) n += 1; return n; };
+    check('*** it is really drawn: the canvas has something on it ***', stageEl.width > 0 && inked() > 1000, `${stageEl.width}x${stageEl.height}`);
     el.currentTime = 2.0;
     t.pub('select');
     t.inst.impl.__tick();
-    check('*** a press on the note scores, and the tile says so ***', t.probe().round.hits === 1 && t.host.querySelector('[data-mark="hit"]') != null, JSON.stringify(t.probe().round));
+    check('*** a press on the note scores, lights the target and says so ***', t.probe().round.hits === 1 && t.probe().stage.lit[0] != null && t.probe().stage.pops[0]?.word === 'Great', JSON.stringify(t.probe().stage.pops));
+    check('the note it hit has gone from the stage', !t.probe().stage.frame.draw.some((d) => d.i === 0));
     check('the score counts the song\'s notes', /1 of 3 on the beat/.test(t.host.querySelector('[data-score]').textContent), t.host.querySelector('[data-score]').textContent);
     t.pub('pause');
     t.clock.run(1000);
-    check('pause pauses the song, and says so', el.paused && /Paused/.test(t.say()) && t.host.querySelectorAll('[data-lit="1"]').length === 0, t.say());
+    check('pause pauses the song, and says so', el.paused && /Paused/.test(t.say()), t.say());
+    const ticksPaused = t.probe().stage.ticks;
+    t.clock.run(1000);
+    check('*** a song standing still draws nothing new ***', t.probe().stage.ticks === ticksPaused, `${ticksPaused} -> ${t.probe().stage.ticks}`);
     t.pub('play');
     await sleep(0);
     check('play goes on', !el.paused && !!t.probe().song);
@@ -913,8 +968,29 @@ try {
     await lanes.inst.impl.__openMap(zip);
     lanes.pub('select');
     await sleep(0);
-    check('four lanes draw four tiles', lanes.host.querySelectorAll('.rh-tile').length === 4);
+    made[made.length - 1].currentTime = 1;
+    lanes.inst.impl.__tick();
+    check('four lanes: the note comes to its own target, whatever the tiles row says', lanes.probe().stage.frame.draw[0]?.x === stageLayout('four', lanes.host.querySelector('[data-rh-stage]').getBoundingClientRect().width, 1)[2].x, JSON.stringify(lanes.probe().stage.frame.draw[0]));
     lanes.inst.destroy();
+
+    const rm = mount({ reducedMotion: true, extra: { readMapZip: reader(notesEvery(1000, 3)), makeSongAudio } });
+    await rm.inst.impl.__openMap(zip);
+    rm.pub('select');
+    await sleep(0);
+    made[made.length - 1].currentTime = 1.5;
+    rm.inst.impl.__tick();
+    check('*** a device asking for less motion gets the ring, by itself ***', rm.probe().stage.frame.draw.some((d) => d.kind === 'ring'), JSON.stringify(rm.probe().stage.frame.draw));
+    rm.inst.destroy();
+
+    let limited = 1;
+    const mash = mount({ flashLimitPerSecond: () => limited, extra: { readMapZip: reader(notesEvery(5000, 3)), makeSongAudio } });
+    await mash.inst.impl.__openMap(zip);
+    mash.pub('select');
+    await sleep(0);
+    const lightsAt = new Set();
+    for (let i = 0; i < 40; i += 1) { mash.clock.run(50); mash.pub('select'); const at = mash.probe().stage.lit[0]; if (at != null) lightsAt.add(at); }
+    check('*** mashing cannot strobe a target past the flash limit ***', lightsAt.size >= 1 && worstInAnySecond([...lightsAt]) <= 1, [...lightsAt].join());
+    mash.inst.destroy();
     const hide = mount({ saved: { mapButton: false } });
     check('the button can be hidden', hide.host.querySelector('[data-rh-map]').hidden === true);
     hide.inst.destroy();

@@ -57,14 +57,16 @@
 //
 // *** A MAP SOMEBODY BROUGHT (row 2.222; `../beatmap.js` reads it, `../rhythm_song.js` plays it). *** "Open a map..." takes a Beat
 // Saber map's zip from this device. Nimrod ships no maps and no songs; the map is held in memory only, is never saved or sent, and
-// goes when the panel does. With one opened, a real game plays the SONG instead of the beat, on the same tiles and the same
-// settings; the demo keeps to the silent beat. Nobody playing along: the song plays out, then back to Start.
+// goes when the panel does. With one opened, a real game plays the SONG instead of the beat, on Design's stage (`../rhythm_stage.js`),
+// with the same timing settings; the demo keeps to the silent beat on the tiles. Nobody playing along: the song plays out, then back to Start.
 
 import { followPanelSpeaker } from '../speakers.js';
 import { readMapZip } from '../beatmap.js';
+import { createSongRun, tileOfNote, PLAY_MODE_DEFAULT, LEAD_CHOICES, LEAD_DEFAULT, GAP_CHOICES } from '../rhythm_song.js';
 import {
-  createSongRun, tilesFor, PLAY_MODE_DEFAULT, LEAD_CHOICES, LEAD_DEFAULT, GAP_CHOICES,
-} from '../rhythm_song.js';
+  songFrame, paintFrame, stageLayout, nearestTarget, skinFor, themeAt, arriveFor, NOTE_LEFT_DEFAULT, NOTE_RIGHT_DEFAULT,
+  POP_MS, TARGET_LIT_MS, GREAT_MS,
+} from '../rhythm_stage.js';
 import { registerModule } from '../module.js';
 import { createScoreSource, ownScoreField, ownScoreMode, showOwnScore } from '../score_source.js';
 import { createPointsLedger } from '../points.js';
@@ -134,6 +136,9 @@ export const DEFAULTS = Object.freeze({
   playMode: PLAY_MODE_DEFAULT,
   minGapMs: 0,
   leadMs: LEAD_DEFAULT,
+  noteArrive: 'auto',
+  noteLeft: NOTE_LEFT_DEFAULT,
+  noteRight: NOTE_RIGHT_DEFAULT,
   // The button is there by default, FOR: nobody finds a feature that is off. AGAINST: a screen nobody brings a map to carries a button
   // it will not use, and a system file picker is a poor thing to open by accident on a kiosk. So it is a row.
   mapButton: true,
@@ -191,14 +196,25 @@ const SETTINGS = [
     options: [
       { value: 'one', label: 'One button: any press, for every note' },
       { value: 'two', label: 'Two buttons: the map\'s two colours, left and right' },
-      { value: 'four', label: 'Four lanes: touch the lit tile' },
+      { value: 'four', label: 'Four lanes: touch the target' },
     ],
     note: 'For two buttons, Back is left and Next is right. A single switch always counts.' },
+  { key: 'noteArrive', label: 'How a song\'s notes arrive', kind: 'choice', default: 'auto', level: 'standard',
+    options: [
+      { value: 'auto', label: 'Slide in, unless this device asks for less motion' },
+      { value: 'slide', label: 'Slide in' },
+      { value: 'ring', label: 'Nothing moves: a ring fills' },
+    ] },
+  { key: 'noteLeft', label: 'The color of left notes (circles)', kind: 'color', default: NOTE_LEFT_DEFAULT, level: 'advanced',
+    note: 'Left as it is, a theme may use its own.' },
+  { key: 'noteRight', label: 'The color of right notes (diamonds)', kind: 'color', default: NOTE_RIGHT_DEFAULT, level: 'advanced',
+    note: 'Left as it is, a theme may use its own.' },
   { key: 'minGapMs', label: 'Shortest time between notes in a song', kind: 'choice', default: 0, level: 'advanced',
     options: GAP_CHOICES.map((v) => ({ value: v, label: v ? `${v / 1000} seconds` : 'Worked out from "How close to the beat counts"' })),
     note: 'A busy map plays fewer notes. A note left out is not counted. A flashing limit on the screen can make this longer.' },
-  { key: 'leadMs', label: 'A note\'s tile lights before its moment by', kind: 'choice', default: LEAD_DEFAULT, level: 'advanced',
-    options: LEAD_CHOICES.map((v) => ({ value: v, label: v ? `${v / 1000} seconds` : 'Nothing: it lights on the moment' })) },
+  { key: 'leadMs', label: 'How early a song\'s notes show', kind: 'choice', default: LEAD_DEFAULT, level: 'standard',
+    options: LEAD_CHOICES.map((v) => ({ value: v, label: `${v / 1000} seconds` })),
+    note: 'Longer gives more warning. Shorter is harder.' },
 ];
 
 const esc = (s) => String(s == null ? '' : s)
@@ -267,6 +283,8 @@ registerModule(
     let songLimit = null;         // the flash limit it was started under
     let sinkId = null;            // the panel's speaker
     let mapEl = null, fileEl = null, diffsEl = null, forgetEl = null, openEl = null, mapSayEl = null;
+    let stageEl = null, stageSkin = null, stageFrom = 0, stageFrame = null, stageFrameTick = 0, stagePainted = false;
+    let targetLitAt = [], lastTargetLitAt = -1e9, pops = [];
     const readZip = ctx.readMapZip || readMapZip;
     const makeSongAudio = ctx.makeSongAudio || null;
     const songSink = { setSink(id) { sinkId = id; song?.setSink(id); } };
@@ -366,13 +384,15 @@ registerModule(
       if (dead || !mapReady()) return;
       if (run) stop();
       songLimit = limitNow();
-      const made = createSongRun({ url: map.url, notes: map.notes, mode: cfg.playMode, tiles: cfg.tiles, window: cfg.window,
+      const made = createSongRun({ url: map.url, notes: map.notes, mode: cfg.playMode, window: cfg.window,
         offsetMs: Number(cfg.pressOffset) || 0, gapMs: Number(cfg.minGapMs) || 0, leadMs: Number(cfg.leadMs) || 0, flashLimit: songLimit,
         audio, audioId: `${GAME}:song:${ctx.instanceId || 'rh'}`, onEnded: songEnded, onFailed: songFailed,
         ...(makeSongAudio ? { makeAudio: makeSongAudio } : {}) });
       song = made;
       if (sinkId != null) song.setSink(sinkId);
-      judged = new Map(); lit = null; streak = 0; markedK = null; lastResult = null;
+      paintSkin();
+      stageFrom = 0; stageFrame = null; stagePainted = false; targetLitAt = []; pops = [];
+      judged = new Map(); lit = null; streak = 0; lastResult = null;
       round = { index: 0, hits: 0, presses: 0, beats: song.state().total };
       tones?.setActive(armed && cfg.hitSound === true);
       clearRest();
@@ -426,15 +446,70 @@ registerModule(
       }
       if (round) round.presses++;
       const j = song.press({ tile, side });
+      lightTarget(j ? (tile ?? side ?? j.tile) : (tile ?? side ?? 0));
       if (!j) { render(); return; }                 // nowhere near a note: not an answer
       if (j.verdict === 'hit') {
         streak++;
         if (round) round.hits++;
         if (cfg.hitSound && tones) tones.tone(HIT_BLIP.f, HIT_BLIP.ms, { type: 'sine', level: 0.5 });
+        pops.push({ word: Math.abs(j.delta) < GREAT_MS ? 'Great' : 'Good', target: j.tile, at: now() });
       } else streak = 0;
       wantStatus(VERDICT_WORDS[j.verdict]);
       render();
       ensureLoop();
+    }
+
+    // ---- the song's stage (rhythm_stage.js) ----------------------------------------------------------------
+    // A press lights its target, the only thing on the stage that ever lights; a flash limit holds how often (mashing cannot strobe it).
+    function lightTarget(i) {
+      const t = now();
+      if (t - lastTargetLitAt < minFlashPeriodMs(limitNow())) return;
+      lastTargetLitAt = t;
+      targetLitAt[i] = t;
+    }
+    function paintSkin() {
+      stageSkin = skinFor(themeAt(mount), { left: cfg.noteLeft, right: cfg.noteRight });
+      if (stageEl) stageEl.style.background = `linear-gradient(${stageSkin.ground[0]}, ${stageSkin.ground[1]})`;
+    }
+    const stageSize = () => {
+      const r = stageEl?.getBoundingClientRect?.();
+      return { w: Math.max(1, r?.width || 960), h: Math.max(1, r?.height || 540) };
+    };
+    function paintStage() {
+      if (!song || !stageEl) return;
+      const t = now();
+      const { playing } = song.state();
+      pops = pops.filter((p) => t - p.at < POP_MS);
+      const fading = pops.length > 0 || targetLitAt.some((at) => at != null && t - at < TARGET_LIT_MS);
+      // A song standing still (paused, buffering) draws nothing new: a stopped screen costs a Pi nothing.
+      if (!playing && !fading && stagePainted) return;
+      const { w, h } = stageSize();
+      const layout = stageLayout(cfg.playMode, w, h);
+      const v = song.view();
+      stageFrame = songFrame({ t: v.t, notes: v.notes, lights: v.lights, answered: v.answered, missed: v.missed, mode: cfg.playMode,
+        arrive: arriveFor(cfg.noteArrive, reducedMotion()), leadMs: Number(cfg.leadMs) || LEAD_DEFAULT, windowSetting: cfg.window,
+        offsetMs: Number(cfg.pressOffset) || 0, targetOf: (n) => tileOfNote(n, cfg.playMode), layout, w, from: stageFrom });
+      stageFrom = stageFrame.from;
+      stageFrameTick += 1;
+      stagePainted = true;
+      let c = null;
+      try {
+        // Sharp on a big screen, but no more pixels than two to a point: this is a Pi's whole budget at 60 frames a second.
+        const scale = Math.min(2, (typeof devicePixelRatio === 'number' && devicePixelRatio) || 1);
+        const pw = Math.round(w * scale), ph = Math.round(h * scale);
+        if (stageEl.width !== pw || stageEl.height !== ph) { stageEl.width = pw; stageEl.height = ph; }
+        c = stageEl.getContext('2d');
+        if (!c) return;
+        c.setTransform(scale, 0, 0, scale, 0, 0);
+        paintFrame(c, { frame: stageFrame, layout, mode: cfg.playMode, skin: stageSkin, w, h, reducedMotion: reducedMotion(),
+          font: getComputedStyle(stageEl).fontFamily || 'sans-serif',
+          lit: layout.map((_, i) => targetLitAt[i] != null && t - targetLitAt[i] < TARGET_LIT_MS),
+          labels: cfg.playMode === 'one' ? ['Press'] : cfg.playMode === 'two' ? ['Back', 'Next'] : [],
+          pops: pops.map((p) => {
+            const tg = layout[p.target] || layout[0];
+            return { word: p.word, x: tg.x, y: tg.y - tg.r * 1.1, size: tg.r * 0.45, age: (t - p.at) / POP_MS };
+          }) });
+      } catch (err) { console.error('rhythm: stage', err); }
     }
 
     // ---- opening a map --------------------------------------------------------------------------------
@@ -597,8 +672,7 @@ registerModule(
       if (song && limitNow() !== songLimit) restart();
       if (song) {
         song.step();
-        const l = song.lit();
-        lit = l ? { k: l.i, tile: l.tile, hit: l.hit, until: Infinity } : null;
+        paintStage();
         render();
         return;
       }
@@ -711,8 +785,7 @@ registerModule(
 
     // ---- drawing --------------------------------------------------------------------------------------
     function buildTiles() {
-      // With a map open and playing, the way of playing says how many tiles; the beat and its demo keep the row.
-      const n = (song || (started && mapReady())) ? tilesFor(cfg.playMode, cfg.tiles) : Math.max(1, Math.round(Number(cfg.tiles) || 4));
+      const n = Math.max(1, Math.round(Number(cfg.tiles) || 4));
       if (tileEls.length === n) return;
       tilesEl.innerHTML = Array.from({ length: n }, (_, i) => `<div class="rh-tile" data-tile="${i}" role="img" aria-label="tile ${i + 1}">`
         + '<span class="rh-dot" aria-hidden="true"></span><span class="rh-mark" data-mark-text></span></div>').join('');
@@ -737,7 +810,7 @@ registerModule(
       // the lights: at the fastest tempos a hit whose mark would come too soon after the last one is
       // still counted, sounded and tallied - it just does not draw a mark. No limit: every hit is marked.
       const tNow = now();
-      if (lit && (song ? lit.hit : judged.get(lit.k) === 'hit') && markedK !== lit.k && tNow - lastMarkAt >= markGapMs(limitNow())) {
+      if (lit && judged.get(lit.k) === 'hit' && markedK !== lit.k && tNow - lastMarkAt >= markGapMs(limitNow())) {
         markedK = lit.k; lastMarkAt = tNow;
       }
       tileEls.forEach((el, i) => {
@@ -782,6 +855,11 @@ registerModule(
     function onPointerDown(e) {
       if (dead || !(e.target instanceof Element) || !mount.contains(e.target)) return;
       if (e.target.closest('[data-rh-map]')) return;     // its own buttons, not a press in the game
+      if (song && e.target === stageEl && cfg.playMode !== PLAY_MODE_DEFAULT) {
+        const r = stageEl.getBoundingClientRect();
+        press(nearestTarget(stageLayout(cfg.playMode, r.width, r.height), e.clientX - r.left, e.clientY - r.top));
+        return;
+      }
       const t = e.target.closest('[data-tile]');
       press(t ? Number(t.dataset.tile) : null);
     }
@@ -791,7 +869,8 @@ registerModule(
         round: round ? { ...round } : null, lastResult, streak, armed, looping: loopHandle != null, status,
         judged: new Map(judged), stats: { ...stats }, tones: tones?.state() || null,
         started, demo, demoRun: demoRun(), demoRested, agent: agent?.id || null, restPending: restTimer != null,
-        song: song ? song.state() : null, map: map ? { name: map.name, picked: map.picked, notes: map.notes?.length || 0, ready: mapReady() } : null }),
+        song: song ? song.state() : null, map: map ? { name: map.name, picked: map.picked, notes: map.notes?.length || 0, ready: mapReady() } : null,
+        stage: song ? { frame: stageFrame, ticks: stageFrameTick, skin: stageSkin, lit: targetLitAt.slice(), pops: pops.slice() } : null }),
       __tick: () => { if (!dead) tick(now()); },
       __openMap: (file) => openMapFile(file),
       __pickLevel: (i) => pickDifficulty(i),
@@ -801,12 +880,13 @@ registerModule(
         ensureStartStyle(mount.ownerDocument || (typeof document !== 'undefined' ? document : null));
         mount.innerHTML = `${cssHref ? `<link rel="stylesheet" data-rh-css href="${esc(cssHref)}">` : ''}`
           + '<div class="rh-wrap gs-host" data-rh-root><div class="rh" data-rh>'
-          + '<div class="rh-tiles" data-tiles></div>'
-          + '<div class="rh-bar"><p class="rh-say" role="status" aria-live="polite"></p><p class="rh-score" data-score hidden></p>'
+          // The map's row is on top: the Start button (game_start.js) sits along the bottom of a panel and would cover it.
           + '<div class="rh-map" data-rh-map><button type="button" data-rh-open title="A Beat Saber map, as a .zip, from this device. It stays on this device.">Open a map…</button>'
           + '<input type="file" accept=".zip,application/zip" data-rh-file hidden aria-label="A Beat Saber map, as a .zip">'
           + '<span class="rh-levels" data-rh-diffs></span><button type="button" data-rh-forget hidden>Back to the beat</button>'
-          + '<span class="rh-map-say" data-rh-map-say role="status" aria-live="polite" hidden></span></div></div>'
+          + '<span class="rh-map-say" data-rh-map-say role="status" aria-live="polite" hidden></span></div>'
+          + '<div class="rh-tiles" data-tiles></div><canvas class="rh-stage" data-rh-stage aria-label="The song: notes coming to a target"></canvas>'
+          + '<div class="rh-bar"><p class="rh-say" role="status" aria-live="polite"></p><p class="rh-score" data-score hidden></p></div>'
           + '</div><div data-start-host hidden></div></div>';
         rootEl = mount.querySelector('[data-rh-root]');
         overlayEl = mount.querySelector('[data-start-host]');
@@ -819,6 +899,7 @@ registerModule(
         forgetEl = mount.querySelector('[data-rh-forget]');
         openEl = mount.querySelector('[data-rh-open]');
         mapSayEl = mount.querySelector('[data-rh-map-say]');
+        stageEl = mount.querySelector('[data-rh-stage]');
         mapEl.addEventListener('click', onMapClick);
         fileEl.addEventListener('change', onMapFile);
         mount.addEventListener('pointerdown', onPointerDown);
@@ -845,8 +926,9 @@ registerModule(
           if (s.stats && typeof s.stats === 'object') stats = { ...stats, ...s.stats };
           if (tileEls.length && Number(next.tiles) !== tileEls.length) { tileEls = []; }
           // A song restarts on the rows it is worked out from; the beat, on its own.
-          const rows = song ? ['tiles', 'playMode', 'minGapMs', 'leadMs', 'window', 'pressOffset']
+          const rows = song ? ['playMode', 'minGapMs', 'leadMs', 'window', 'pressOffset']
             : ['tempo', 'tiles', 'pattern', 'beatFrom', 'countIn', 'roundBeats', 'restBeats'];
+          if (song && (next.noteLeft !== was.noteLeft || next.noteRight !== was.noteRight)) { paintSkin(); stagePainted = false; }
           return rows.some((k) => next[k] !== was[k]);
         };
         applyCfg(state?.get?.());

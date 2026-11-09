@@ -13,18 +13,18 @@
 //   one   ONE BUTTON: every note is one press of anything. The default, Code's guess while Mike rules (on his list): the only way
 //         a single switch can play, and one a beginner finishes. AGAINST: it ignores the map's colours and lanes, which are the
 //         game for an experienced player; they are one setting away.
-//   two   TWO BUTTONS: the map's two colours are the left and right tiles. A touch on a tile, or Back for left and Next for right.
+//   two   TWO BUTTONS: the map's two colours are the left and right targets. A touch on one, or Back for left and Next for right.
 //         Opt-in, because it changes what a scanning person's two switches mean.
-//   four  FOUR LANES: the map's four columns are four tiles to touch.
+//   four  FOUR LANES: the map's four columns are four targets to touch.
 //   A press that names no side (one switch, in any way of playing) always counts: the panel's own rule, "a switch or a key always
 //   counts".
 //
 // NOTHING ENDS A SONG BUT THE SONG (no fail, as the game has always been): a miss is just not a hit. A song nobody plays along to
 // plays to its end (the gate: the beat's idle stop would cut the music mid-song).
 //
-// THINNING: `thinNotes` with a minimum gap, and a note thinned away is never lit and never judged. The gap's default is worked out,
-// not fixed (`autoGapMs`), and the screen's flash limit sets a floor under it. WHEN A TILE LIGHTS is worked out once, ahead
-// (`lightTimes`), and does not depend on the presses, so a run of presses can never make the lights come faster.
+// THINNING: `thinNotes` with a minimum gap, and a note thinned away is never shown and never judged. The gap's default is worked out,
+// not fixed (`autoGapMs`), and the screen's flash limit sets a floor under it. WHEN A RING FILLS (rhythm_stage.js, with motion off) is
+// worked out once, ahead (`lightTimes`), and does not depend on the presses, so a run of presses can never make them come faster.
 import { judgeNote, missedNotes, noteWindowMs, WINDOWS, WINDOW_MAX_FRACTION } from './rhythm_beat.js';
 import { thinNotes, LANES } from './beatmap.js';
 import { MUSIC_GROUP, VIDEO_PRIORITY } from './audio_bus.js';
@@ -32,21 +32,21 @@ import { maxPerMinute, minFlashPeriodMs, normalizeFlashLimit, FLASH_LIMIT_DEFAUL
 
 export const PLAY_MODES = Object.freeze(['one', 'two', 'four']);
 export const PLAY_MODE_DEFAULT = 'one';
-// How early a note's tile lights before its moment. Half a second by default. FOR less: closer to the music. AGAINST, and it sets
-// it: a press that takes effort needs warning, and unlike the beat game's steady tick a map's next note cannot be felt coming.
-export const LEAD_CHOICES = Object.freeze([0, 250, 500, 1000]);
-export const LEAD_DEFAULT = 500;
+// How early notes show before their moment. Two seconds by default (Design). FOR less: harder, and a busy map is less crowded. AGAINST, and it
+// sets it: a press that takes effort needs warning, and unlike the beat game's steady tick a map's next note cannot be felt coming.
+export const LEAD_CHOICES = Object.freeze([500, 1000, 1500, 2000, 3000, 4000]);
+export const LEAD_DEFAULT = 2000;
 // The minimum gap between notes. 0 is "worked out for this person" (`autoGapMs`); the rest are chosen.
 export const GAP_CHOICES = Object.freeze([0, 200, 300, 400, 600, 800, 1000, 1500]);
 
-/** The tiles a song is drawn on: two for colours, four for lanes, or the panel's own number for one button. PURE. */
-export const tilesFor = (mode, tiles) => (mode === 'two' ? 2 : mode === 'four' ? LANES : Math.max(1, Math.round(Number(tiles) || LANES)));
-/** Which tile a note lights. PURE. */
-export function tileOfNote(note, mode, tiles) {
+/** The targets a song is played on: one, two for the colours, four for the lanes. PURE. */
+export const targetsFor = (mode) => (mode === 'two' ? 2 : mode === 'four' ? LANES : 1);
+/** Which target a note comes to. PURE. */
+export function tileOfNote(note, mode) {
   if (!note) return null;
   if (mode === 'two') return note.colour === 1 ? 1 : 0;
   if (mode === 'four') return note.lane;
-  return note.lane % tilesFor(mode, tiles);
+  return 0;
 }
 /**
  * The gap "worked out for this person": for one button, the gap at which a note keeps the person's whole window (a window is capped
@@ -89,13 +89,13 @@ export function lightTimes(notes, { leadMs = LEAD_DEFAULT, window: windowSetting
  *   start() -> Promise<{ ok, reason? }>   (a browser may refuse sound before a press: reason 'blocked')
  *   pause() resume() stop()
  *   step()        catch up: the notes that have been missed; call every frame
- *   press({ tile?, side? }) -> { verdict, i } | null   null: not judged (paused, buffering, or nowhere near a note)
- *   lit() -> { i, tile, hit } | null
+ *   press({ tile?, side? }) -> { verdict, i, delta, tile } | null   null: not judged (paused, buffering, or nowhere near a note)
+ *   view() -> { t, notes, lights, answered(i), missed(i) }   what rhythm_stage.js draws from
  *   result() -> { hits, total, misses, presses }, state()
  * `onEnded(result)` once, when the song plays out; `onFailed()` once, when the song will not play.
  */
 export function createSongRun({
-  url, notes = [], mode = PLAY_MODE_DEFAULT, tiles = LANES, window: windowSetting = 'generous', offsetMs = 0, gapMs = 0,
+  url, notes = [], mode = PLAY_MODE_DEFAULT, window: windowSetting = 'generous', offsetMs = 0, gapMs = 0,
   flashLimit = FLASH_LIMIT_DEFAULT, leadMs = LEAD_DEFAULT, audio = null, audioId = 'rhythm:song', channel = 'media',
   makeAudio = (src) => (typeof Audio === 'function' ? new Audio(src) : null), onEnded = null, onFailed = null,
 } = {}) {
@@ -105,7 +105,7 @@ export function createSongRun({
   const answered = new Map();     // i -> verdict: a press has been judged against this note
   const missed = new Set();       // no press came in its window (a press a little later still gets told "late")
   const closed = { has: (i) => answered.has(i) || missed.has(i) };
-  let hits = 0, presses = 0, gain = 1, wanted = false, buffering = false, finished = false, dead = false, cursor = 0;
+  let hits = 0, presses = 0, gain = 1, wanted = false, buffering = false, finished = false, dead = false;
   const el = makeAudio(url);
   if (el) { try { el.preload = 'auto'; } catch { /* a fake */ } }
   const enact = () => {
@@ -173,20 +173,13 @@ export function createSongRun({
       if (j.verdict !== 'hit' && Math.abs(j.delta) > 2 * noteWindowMs(list, j.i, windowSetting)) return null;
       const named = tile != null ? tile : side;
       let verdict = j.verdict;
-      if (verdict === 'hit' && named != null && m !== PLAY_MODE_DEFAULT && named !== tileOfNote(list[j.i], m, tiles)) verdict = 'wrong';
+      if (verdict === 'hit' && named != null && m !== PLAY_MODE_DEFAULT && named !== tileOfNote(list[j.i], m)) verdict = 'wrong';
       if (verdict === 'hit') hits += 1;
       answered.set(j.i, verdict);
       missed.delete(j.i);
-      return { verdict, i: j.i };
+      return { verdict, i: j.i, delta: j.delta, tile: tileOfNote(list[j.i], m) };
     },
-    /** The note lit now. The lights go on whether or not anybody presses: a hit shows on the tile until the note's light ends. */
-    lit() {
-      if (!judgeable()) return null;
-      const t = songNow();
-      while (cursor < lights.length && t > lights[cursor].off) cursor += 1;
-      if (cursor >= lights.length || t < lights[cursor].on) return null;
-      return { i: cursor, tile: tileOfNote(list[cursor], m, tiles), hit: answered.get(cursor) === 'hit' };
-    },
+    view: () => ({ t: songNow(), notes: list, lights, answered: (i) => answered.has(i), missed: (i) => missed.has(i) }),
     result,
     state: () => ({ mode: m, total: list.length, ...result(), wanted, buffering, finished, playing: judgeable(),
       at: el ? Number(el.currentTime || 0) : 0 }),

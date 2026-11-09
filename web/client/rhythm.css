@@ -21,7 +21,7 @@
   width:100%;height:100%;min-height:0;color:var(--text);
 }
 .rh-wrap *{box-sizing:border-box}
-.rh{height:100%;display:grid;grid-template-rows:minmax(0,1fr) auto;gap:.5rem;padding:.6rem;
+.rh{height:100%;display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:.5rem;padding:.6rem;
   background:var(--rh-grout);font-family:var(--font);container-type:size}
 /* SEE-THROUGH, LIKE EVERY OTHER PANEL (row 2.170's audit, after Solitaire's 2.169). This used to paint the grout
    colour over the whole panel, a solid sheet the "Panel backgrounds" setting (solid / veil / clear) could not reach.
@@ -44,6 +44,13 @@
 .rh-bar{display:flex;flex-wrap:wrap;gap:.2rem 1.2rem;align-items:baseline;justify-content:center;min-height:2.2em}
 .rh-say{margin:0;font-size:clamp(16px, 5cqh, 36px);font-weight:700;color:var(--rh-ink)}
 .rh-score{margin:0;font-size:clamp(14px, 4cqh, 28px);color:var(--text)}
+/* A song's stage (rhythm_stage.js) takes the tiles' place while a song plays; its colours are the skin's, set from there. */
+.rh-map{grid-row:1}
+.rh-tiles,.rh-stage{grid-row:2}
+.rh-bar{grid-row:3}
+.rh-stage{display:none;width:100%;height:100%;min-height:0;border-radius:8px;touch-action:manipulation;cursor:pointer;font-family:var(--font)}
+.rh[data-song="1"] .rh-tiles{display:none}
+.rh[data-song="1"] .rh-stage{display:block}
 /* A map somebody brought (rhythm_song.js). Its buttons have the theme's look, as every other panel's. */
 .rh-map,.rh-levels{display:flex;flex-wrap:wrap;gap:.3rem;align-items:center;justify-content:center}
 .rh-map button{min-height:max(44px,8cqh);padding:0 1em;border-radius:10px;border:2px solid var(--border);background:var(--surface);
