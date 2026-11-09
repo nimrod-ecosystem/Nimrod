@@ -82,10 +82,12 @@
 // SCHOOL TIME IS STILL NOT PAID TWICE. The weekly banding (x1.5 stretch / x2 overtime) is
 // a TOP-UP on the stretch/overtime portion only — it must never re-pay the base.
 //
-// KNOWN BOUND: totals here are derived from the most-recent `limit` events (default
-// 1000). That is months of a real school year, but it IS a window — when it is
-// outgrown the fix is a server-side rollup/aggregate endpoint, not a client cache
-// of the total (a cached total can drift from an immutable log; a derived one can't).
+// THE WHOLE LOG COUNTS, THOUGH A LIST READ IS CAPPED (the server returns the newest 500, whatever `limit` asks; found
+// 2026-11-08: past that the oldest points dropped out of every balance, silently). When the server says there are more than
+// it sent, the ledger asks once for the rest ADDED UP (db.py `points_rollup`) and keeps every event it has seen since, so a
+// window that slides loses nothing. The groups read as events with no id or date, oldest, and every sum below works on them
+// unchanged; never a client cache of the total (a cached total can drift from an immutable log; a derived one can't).
+// A DAILY OR WEEKLY FIGURE AND "WAS THIS ALREADY PAID" ONLY SEE EVENTS, NOT GROUPS: the second looks back only as far as the window.
 
 // The ledger's categories. The first four mirror the points-tracker spreadsheet's "Type"
 // column; `School` is focused school time (carries `minutes`); `Reward` is a purchase.
@@ -562,7 +564,45 @@ export function createPointsLedger({ makeEvents, bus = null, limit = 1000, pollM
     throw new Error('createPointsLedger: ctx.makeEvents is required');
   }
   const stream = makeEvents(POINTS_STREAM, { limit, pollMs });
-  const all = () => stream.get().events || [];
+
+  // ---- what the capped list leaves out (the header above) ----
+  let older = [];                 // the groups, as events
+  let boundary = null;            // the oldest event's id when the ledger asked; everything from here on is in `held`
+  const held = new Map();         // id -> event
+  let seenCache = null, merged = null;
+  let askedAt = -Infinity;
+  let gotOlder = false, dead = false;
+  const rolledListeners = new Set();
+  const ROLLUP_RETRY_MS = 60000;  // a failed ask is tried again on a later refresh, no sooner than this: it is a read of the whole log
+  function askForOlder(cache) {
+    const list = cache.events || [];
+    if (gotOlder || typeof stream.rollup !== 'function' || !list.length) return;
+    if (boundary == null && !(Number(cache.total) > list.length)) return;   // the server sent the whole log: nothing to ask
+    const t = Date.now();
+    if (t - askedAt < ROLLUP_RETRY_MS) return;
+    askedAt = t;
+    if (boundary == null) boundary = list[0].id;
+    Promise.resolve(stream.rollup(boundary)).then((r) => {
+      if (dead) return;
+      older = (r?.groups || []).map((g) => ({ id: null, kind: g.kind, data: g.data, created_at: null, rolled: g.n }));
+      gotOlder = true;
+      merged = null;
+      for (const fn of [...rolledListeners]) { try { fn(); } catch (err) { console.error('points: subscriber', err); } }
+    }).catch((err) => console.error('points: the older points could not be read', err));
+  }
+  function all() {
+    const cache = stream.get() || {};
+    if (cache === seenCache && merged) return merged;
+    seenCache = cache;
+    askForOlder(cache);
+    const list = cache.events || [];
+    if (boundary == null) { merged = list; return merged; }
+    for (const e of list) if (e && e.id >= boundary) held.set(e.id, e);
+    merged = [...older, ...[...held.values()].sort((a, b) => a.id - b.id)];
+    return merged;
+  }
+  const view = () => ({ ...stream.get(), events: all() });
+  const offOwn = stream.subscribe?.(() => { all(); });
 
   async function award({ amount, source, mult = 1, type = 'Bonus', tags = [], note = '',
                          minutes = null, subject = null, latencyMs = null, currency = null } = {}) {
@@ -648,18 +688,27 @@ export function createPointsLedger({ makeEvents, bus = null, limit = 1000, pollM
     balances: () => balancesByCurrency(all(), currencies),
     load: () => stream.load(),
     startPolling: () => stream.startPolling(),
-    subscribe: (fn) => stream.subscribe(fn),
-    get: () => stream.get(),
-    events: () => pointsEvents(stream.get().events || []),
-    total: () => sumPoints(stream.get().events || []),          // the balance
-    earned: () => sumEarned(stream.get().events || []),
-    spent: () => sumSpent(stream.get().events || []),
-    totalToday: (now = Date.now()) => sumPointsOn(stream.get().events || [], todayKey(now)),
-    minutesThisWeek: (now = Date.now()) => sumMinutes(stream.get().events || [], weekStart(now)),
-    subjectsThisWeek: (now = Date.now()) => minutesBySubject(stream.get().events || [], weekStart(now)),
-    todayFrom: (source, now = Date.now()) =>
-      sumPointsOnBySource(stream.get().events || [], todayKey(now), source),
-    bySource: () => sumBySource(stream.get().events || []),
-    destroy: () => stream.destroy(),
+    subscribe: (fn) => {
+      const tell = () => fn(view());
+      rolledListeners.add(tell);
+      const off = stream.subscribe(tell);
+      return () => { rolledListeners.delete(tell); off?.(); };
+    },
+    get: view,
+    events: () => pointsEvents(all()),
+    total: () => sumPoints(all()),          // the balance
+    earned: () => sumEarned(all()),
+    spent: () => sumSpent(all()),
+    totalToday: (now = Date.now()) => sumPointsOn(all(), todayKey(now)),
+    minutesThisWeek: (now = Date.now()) => sumMinutes(all(), weekStart(now)),
+    subjectsThisWeek: (now = Date.now()) => minutesBySubject(all(), weekStart(now)),
+    todayFrom: (source, now = Date.now()) => sumPointsOnBySource(all(), todayKey(now), source),
+    bySource: () => sumBySource(all()),
+    destroy: () => {
+      dead = true;
+      rolledListeners.clear();
+      try { if (typeof offOwn === 'function') offOwn(); } catch { /* gone */ }
+      return stream.destroy();
+    },
   };
 }

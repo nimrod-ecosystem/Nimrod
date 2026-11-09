@@ -1266,6 +1266,15 @@ def list_person_events(person_id: str, stream: str, limit: int = 50, user: str =
     return store.list_events(user, person_scope(person_id), stream, max(1, min(limit, 500)))
 
 
+# What the capped list above leaves out of a points balance, added up (db.py `points_rollup`; points.js asks once).
+@app.get("/api/people/{person_id}/events/{stream}/rollup")
+def person_events_rollup(person_id: str, stream: str, before: int, user: str = Depends(current_user)):
+    _check(person_id, ID_RE, "person id")
+    _check(stream, ID_RE, "event stream")
+    owned_person(user, person_id)
+    return store.points_rollup(user, person_scope(person_id), stream, before)
+
+
 @app.post("/api/people/{person_id}/events/{stream}")
 def append_person_event(person_id: str, stream: str, body: EventPost, request: Request,
                         user: str = Depends(current_user)):
@@ -1428,6 +1437,14 @@ def list_events(pid: str, stream: str, limit: int = 50, user: str = Depends(curr
     _check(stream, ID_RE, "event stream")
     owned_profile(user, pid)
     return store.list_events(user, pid, stream, max(1, min(limit, 500)))
+
+
+@app.get("/api/profiles/{pid}/events/{stream}/rollup")
+def events_rollup(pid: str, stream: str, before: int, user: str = Depends(current_user)):
+    _check(pid, ID_RE, "profile id")
+    _check(stream, ID_RE, "event stream")
+    owned_profile(user, pid)
+    return store.points_rollup(user, pid, stream, before)
 
 
 @app.post("/api/profiles/{pid}/events/{stream}")

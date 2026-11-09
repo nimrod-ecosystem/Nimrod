@@ -122,6 +122,14 @@ export function createEvents({ url, user, pollMs = 1500, limit = null,
     return true;
   }
 
+  // Everything older than event `before` in a points stream, added up (db.py `points_rollup`). points.js asks, once.
+  async function rollup(before) {
+    const [path, query] = url.split('?');
+    const res = await fetch(`${path}/rollup?before=${encodeURIComponent(before)}${query ? `&${query}` : ''}`, { headers: authHeaders(user) });
+    if (!res.ok) throw httpError(res, `rollup ${url} -> ${res.status}`);
+    return res.json();
+  }
+
   // *** BACKS OFF ON FAILURE, RESETS ON SUCCESS. *** Found 2026-09-15, same root cause and
   // fix as state.js's own polling loop — see poll_backoff.js for the reasoning and the
   // math. A bare `setInterval` here kept every open kiosk polling every `pollMs` (default
@@ -184,5 +192,5 @@ export function createEvents({ url, user, pollMs = 1500, limit = null,
     unsubscribePush?.(); unsubscribePush = null;
   }
 
-  return { load: refresh, append, attest, get: () => cache, subscribe, startPolling, destroy };
+  return { load: refresh, append, attest, rollup, get: () => cache, subscribe, startPolling, destroy };
 }

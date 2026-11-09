@@ -30,6 +30,7 @@ import contextlib
 import hmac
 import json
 import logging
+import math
 import secrets
 import sqlite3
 import threading
@@ -2198,6 +2199,50 @@ class _Store:
              "attested_by": r[7], "attested_at": r[8], "producer_version": r[9]} for r in rows
         ][::-1]  # chronological (oldest first) for display
         return {"events": events, "total": total}
+
+    # The fields a points event's worth depends on. Everything else (a note, tags, a game's own detail) is left behind.
+    ROLLUP_FIELDS = ("type", "source", "currency", "from", "to", "rate", "mult", "subject")
+
+    def points_rollup(self, user_id: str, pid: str, stream: str, before: int) -> dict:
+        """Every `points` event older than id `before`, folded into groups a client adds up like events.
+
+        *** A POINTS BALANCE IS THE WHOLE LOG, AND A LIST READ IS CAPPED (found 2026-11-08). *** points.js sums what it holds, so
+        past the cap the oldest points dropped out of every balance, silently. A cached total could drift from the log; this
+        is still derived from it. THE GROUPS KNOW NO RULES: rows with the same fields are added up, amounts of opposite sign apart so
+        a malformed negative exchange can never cancel a good one, and points.js applies its rules to a group exactly as to one event.
+        """
+        with self._tx() as cur:
+            cur.execute(self._q("SELECT data FROM events WHERE user_id=? AND profile_id=? AND stream=? AND kind=? AND id<?"),
+                        (user_id, pid, stream, "points", int(before)))
+            rows = cur.fetchall()
+
+        def number(v):
+            try:
+                n = float(v)
+            except (TypeError, ValueError):
+                return None
+            return n if math.isfinite(n) else None
+
+        groups: dict = {}
+        for r in rows:
+            d = json.loads(r[0])
+            amount = number(d.get("amount")) if isinstance(d, dict) else None
+            if amount is None:
+                continue                    # worth nothing to points.js either
+            key = (amount < 0, *(json.dumps(d.get(f), sort_keys=True) for f in self.ROLLUP_FIELDS))
+            g = groups.get(key)
+            if g is None:
+                g = groups[key] = {"data": {f: d[f] for f in self.ROLLUP_FIELDS if d.get(f) is not None}, "amount": 0.0, "minutes": 0.0, "n": 0}
+            g["amount"] += amount
+            g["minutes"] += max(0.0, number(d.get("minutes")) or 0.0)
+            g["n"] += 1
+        out = []
+        for g in groups.values():
+            data = {**g["data"], "amount": g["amount"]}
+            if g["minutes"] > 0:
+                data["minutes"] = g["minutes"]
+            out.append({"kind": "points", "data": data, "n": g["n"]})
+        return {"groups": out, "before": int(before), "count": len(rows)}
 
     def events_before(self, user_id: str, profile_ids: list[str], streams: tuple[str, ...] | list[str], kind: str,
                       *, before: int | None = None, limit: int = 50) -> list[dict]:

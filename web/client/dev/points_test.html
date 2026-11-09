@@ -28,8 +28,10 @@ import {
   pointsValue, sumPoints, sumEarned, sumSpent, sumBySource, sumMinutes, minutesBySubject,
   sumPointsOn, sumPointsOnBySource, dayKey, fmtPoints, createPointsLedger,
   INFLATION_DEFAULTS, INFLATION_PERIODS, addPeriods, periodsBetween, inflatedPrice, priceHistory,
-  inflationConfig, planSpend,
+  inflationConfig, planSpend, POINTS_STREAM,
 } from '../points.js';
+import { createEvents } from '../events.js';
+import { authHeaders } from '../auth.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -72,8 +74,92 @@ function memoryEvents(seed = []) {
   });
 }
 
+// A stand-in for the real stream past the server's cap: `window` newest events, `total` in the log, the older ones added up.
+function cappedEvents({ window: list, total, groups, fail = false }) {
+  const asked = [];
+  const subs = [];
+  let cache = { events: list, total };
+  return {
+    asked,
+    slide(next) { cache = { events: next, total: cache.total + 1 }; subs.forEach((f) => f(cache)); },
+    make: () => ({
+      get: () => cache,
+      subscribe: (f) => { subs.push(f); return () => subs.splice(subs.indexOf(f), 1); },
+      rollup: async (before) => { asked.push(before); if (fail) throw new Error('no'); return { groups, before, count: 1 }; },
+      load: async () => cache, append: async () => {}, startPolling() {}, destroy() {},
+    }),
+  };
+}
+
 (async () => {
   try {
+    // ---- 2026-11-08: past the server's cap the oldest points dropped out of every balance, silently ----
+    {
+      const at = (id, amount, type = 'School', extra = {}) => ({ id, kind: 'points', created_at: new Date().toISOString(),
+        data: { amount, mult: 1, type, source: 'trivia', ...extra } });
+      const groups = [
+        { kind: 'points', n: 40, data: { amount: 40, mult: 1.5, type: 'School', source: 'trivia', minutes: 40, subject: 'Math' } },
+        { kind: 'points', n: 3, data: { amount: -9, mult: 1, type: 'Reward', source: 'quests', currency: 'play' } },
+        { kind: 'points', n: 2, data: { amount: 6, mult: 1, type: 'Exchange', source: 'quests', from: 'school', to: 'play', rate: 2 } },
+        { kind: 'points', n: 1, data: { amount: -5, mult: 1, type: 'Exchange', source: 'quests', from: 'school', to: 'play', rate: 2 } },
+      ];
+      const s = cappedEvents({ window: [at(501, 1), at(502, 2)], total: 548, groups });
+      const led = createPointsLedger({ makeEvents: s.make });
+      let told = 0;
+      led.subscribe(() => { told += 1; });
+      check('the first read asks for what the list left out, from its oldest event', led.total() === 3 && s.asked.join() === '501', s.asked.join());
+      await new Promise((r) => setTimeout(r, 0));
+      const expected = 40 * 1.5 - 9 + (6 * 2 - 6) + 3;
+      check('*** THE BALANCE IS THE WHOLE LOG ***', led.total() === expected, led.total());
+      check('the subscribers are told when it arrives', told >= 1 && led.get().events.length === 6, told);
+      check('the currencies still sum to the total', Object.values(led.balances()).reduce((a, b) => a + b, 0) === expected, JSON.stringify(led.balances()));
+      check('a malformed negative exchange still counts for nothing', led.balances().play === -9 + 12, JSON.stringify(led.balances()));
+      check('earned and spent see them too', led.earned() === 63 && led.spent() === 9, `${led.earned()} ${led.spent()}`);
+      check('by source too', led.bySource().trivia === 63, JSON.stringify(led.bySource()));
+      check('today is events only: an old group has no day', led.totalToday() === 3, led.totalToday());
+      check('this week\'s minutes are events only', led.minutesThisWeek() === 0, led.minutesThisWeek());
+      check('a group never reads as a row of history: no id, no date', led.events()[0].id === null && led.events()[0].created_at === null);
+      s.slide([at(502, 2), at(503, 10)]);
+      check('*** a window that slides loses nothing, and does not ask again ***', led.total() === expected + 10 && s.asked.length === 1, `${led.total()} ${s.asked.length}`);
+      s.slide([at(503, 10), at(504, 20), at(505, 0.5)]);
+      check('...however far', led.total() === expected + 30.5, led.total());
+      led.destroy();
+
+      const whole = cappedEvents({ window: [at(1, 4), at(2, 5)], total: 2, groups: [] });
+      const w = createPointsLedger({ makeEvents: whole.make });
+      check('*** a log the list holds whole asks for nothing ***', w.total() === 9 && whole.asked.length === 0);
+      w.destroy();
+
+      const down = cappedEvents({ window: [at(7, 4)], total: 9, groups: [], fail: true });
+      const errs = console.error; console.error = () => {};
+      const d = createPointsLedger({ makeEvents: down.make });
+      check('a failed read leaves what is held, and throws nothing', d.total() === 4);
+      await new Promise((r) => setTimeout(r, 0));
+      console.error = errs;
+      check('...and is not asked again on every read', d.total() === 4 && down.asked.length === 1, down.asked.length);
+      d.destroy();
+
+      // The real thing: past the real cap on the real server, through the real stream.
+      const user = `rollup-${Date.now()}`;
+      const headers = { ...authHeaders(user), 'Content-Type': 'application/json' };
+      const made = await (await fetch('/api/profiles', { method: 'POST', headers, body: JSON.stringify({ name: 'P' }) })).json();
+      const url = `/api/profiles/${made.id}/events/${POINTS_STREAM}`;
+      const count = 520;
+      for (let i = 0; i < count; i += 1) {
+        await fetch(url, { method: 'POST', headers, body: JSON.stringify({ kind: 'points', data: { amount: 1, mult: 1, type: i % 2 ? 'Play' : 'School', source: 'test' } }) });
+      }
+      const real = createPointsLedger({ makeEvents: (key, opts) => createEvents({ url: `/api/profiles/${made.id}/events/${key}`, user, ...opts }) });
+      await real.load();
+      const held = real.get().events.filter((e) => e.id != null).length;
+      check('the real list is capped: this log is longer than it sends', held === 500 && real.get().total === count, `${held} of ${real.get().total}`);
+      await new Promise((r) => setTimeout(r, 300));
+      real.total();
+      await new Promise((r) => setTimeout(r, 300));
+      check('*** ON THE REAL SERVER, EVERY POINT PAST THE CAP COUNTS ***', real.total() === count, real.total());
+      check('...in the right currencies', real.balances().school === count / 2 && real.balances().play === count / 2, JSON.stringify(real.balances()));
+      real.destroy();
+    }
+
     // ============================================================
     section('currencies are DATA, not two hard-coded names (register 263)');
     check('two default currencies, School then Play',
