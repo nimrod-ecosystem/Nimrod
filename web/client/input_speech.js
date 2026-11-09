@@ -181,6 +181,9 @@ export const PHRASES = {
   close:  ['close', 'close it', 'close the menu', 'close menu', 'close settings', 'close the settings'],
   // Previous page / Next page (row 2.190, 2026-11-02): the picked module's boards or faces. Whole utterances like every
   // row here, so "next page" never fires `next`, and "next" never turns a page.
+  // (2026-11-08) A jump in the song playing (the Music panel's Rewind and Fast forward).
+  rewind: ['rewind', 'rewind it', 'back a bit'],
+  forward: ['fast forward', 'skip ahead', 'forward a bit'],
   'page-next': ['next page', 'turn the page', 'page forward', 'next board'],
   'page-prev': ['previous page', 'last page', 'page back', 'go back a page', 'previous board'],
 };

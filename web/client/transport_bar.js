@@ -105,6 +105,27 @@ export function paintPlayPause(btn, s = {}) {
   btn.title = !can ? `${name} has nothing to pause` : paused ? `play ${name} again` : `pause ${name}`;
 }
 
+// *** STOP, REWIND, FAST FORWARD (Mike, 2026-11-08), both bars. *** Hidden unless the picked panel has them (`mediaControls`,
+// the Music panel today), as the page pair is, so every other panel's bar and switch walk are as they were. Dimmed, not
+// hidden, while that panel cannot act (nothing playing; a player that cannot jump), so they do not move under a switch.
+// `root` holds the buttons; `s` is kiosk.js `mediaState()`, or null.
+export function paintMediaButtons(root, s) {
+  const set = (act, off, title, label) => {
+    const b = root?.querySelector?.(`[data-act="${act}"]`);
+    if (!b) return;
+    b.hidden = !s;
+    b.disabled = !!off;
+    if (title) b.title = title;
+    if (label) b.textContent = label;
+  };
+  const name = s?.name || 'the panel you picked';
+  const jump = s ? `${s.seekSec} seconds` : '';
+  const seekWhy = !s?.playing ? 'nothing is playing' : (s?.canSeek ? '' : 'this plays somewhere that cannot jump from here');
+  set('mediastop', !s?.playing, s?.playing ? `stop ${name}` : 'nothing is playing');
+  set('mediarewind', !s?.canSeek, seekWhy || `back ${jump}`, s ? `⏪ Rewind ${s.seekSec}s` : null);
+  set('mediaforward', !s?.canSeek, seekWhy || `on ${jump}`, s ? `Fast forward ${s.seekSec}s ⏩` : null);
+}
+
 // ---------------------------------------------------------------------------------------------------
 // *** BIGGER / SMALLER, FOR THE SELECTED PANEL (2026-10-02 evening). *** The panel corner's press
 // (arrangement.js `promote`, kiosk.js `promotePanel`), on both bars: one level at a time, and at the top
@@ -640,6 +661,7 @@ export const BAR_GROUP_NAMES = Object.freeze({
 export const BAR_ACT_GROUPS = Object.freeze({
   gohome: 'go', home: 'go',
   back: 'play', playpause: 'play', next: 'play', pageprev: 'play', pagenext: 'play', panel: 'play',
+  mediarewind: 'play', mediastop: 'play', mediaforward: 'play',
   arrange: 'arrange', switch: 'arrange', save: 'arrange', swap: 'arrange', bigger: 'arrange', smaller: 'arrange',
   editpanel: 'arrange', mirror: 'arrange',
   hush: 'screen', help: 'screen', settings: 'screen', fs: 'screen', hidebar: 'screen',

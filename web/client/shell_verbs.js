@@ -24,6 +24,10 @@ export const SHELL_GO_HOME = 'shell/go-home';
 // Previous page / Next page (row 2.190): the picked panel's boards or views. kiosk.js turnPagePanel.
 export const SHELL_PAGE_NEXT = 'shell/page-next';
 export const SHELL_PAGE_PREV = 'shell/page-prev';
+// Stop, Rewind and Fast forward (Mike, 2026-11-08): the picked panel's, while it has them. kiosk.js mediaPress.
+export const SHELL_MEDIA_STOP = 'shell/media-stop';
+export const SHELL_MEDIA_REWIND = 'shell/media-rewind';
+export const SHELL_MEDIA_FORWARD = 'shell/media-forward';
 export const SHELL_MIRROR = 'shell/mirror';        // the camera full screen
 // Nimrod, the context help (row 2.37): the shell's one cat explains whatever is picked. One cat per
 // screen, whichever bar was pressed -- two bars each bringing their own would be two cats.

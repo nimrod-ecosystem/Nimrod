@@ -799,6 +799,46 @@ const FAVS = normalizeFavourites([
     }
 
     // ============================================================================================
+    section('(Mike, 2026-11-08) play/pause, stop, rewind and fast forward, in the router');
+    {
+      const seeks = [];
+      const local = {
+        async playFile() { return { ok: true }; }, async playFolder() { return { ok: true }; }, stop() {}, pause() {}, resume() {},
+        seekBy(s) { seeks.push(s); return true; },
+      };
+      const bus = createBus();
+      const r = createMusicRouter({ bus, favourites: () => FAVS, local, seekSeconds: () => 30, ownYoutube: { play() {}, stop() {}, seekBy(s) { seeks.push(['yt', s]); return true; } } });
+      check('nothing playing: nothing to jump in', (await r.seek(1)).ok === false && r.status().canSeek === false);
+      await r.resume();
+      check('*** Play with nothing playing starts something: the first favourite ***', r.status().playing && r.status().name === FAVS[0].name, JSON.stringify(r.status()));
+      await r.play({ name: 'Morning hymn' });
+      check('a music file can jump', r.status().canSeek === true);
+      await r.seek(1); await r.seek(-1);
+      check('*** fast forward and rewind go by the panel\'s jump, each way ***', JSON.stringify(seeks) === '[30,-30]', JSON.stringify(seeks));
+      await r.pause();
+      check('paused says so', r.status().paused === true && r.status().playing === true);
+      await r.resume();
+      check('...and Play carries on', r.status().paused === false);
+      bus.publish('music/rewind');
+      await tick();
+      check('a switch or the bar reaches it on the bus', seeks.at(-1) === -30, JSON.stringify(seeks));
+      await r.stop();
+      check('Stop: nothing playing, not paused, nothing to jump in', !r.status().playing && !r.status().paused && !r.status().canSeek);
+      await r.resume();
+      check('Play after Stop: what played last, again', r.status().name === 'Morning hymn', r.status().name);
+      await r.stop();
+      r.destroy();
+      // A favourite handed to the screen's YouTube panel cannot be jumped in from here: said by a dimmed button.
+      const b2 = createBus();
+      b2.subscribe('youtube/who', () => b2.publish('youtube/here', { instanceId: 'y' }));
+      const r2 = createMusicRouter({ bus: b2, favourites: () => FAVS, youtubeWhere: () => 'panel' });
+      await r2.play({ name: 'the Beatles' });
+      check('playing in the YouTube panel: no jump from here, refused without a throw', r2.status().playing && !r2.status().canSeek && (await r2.seek(1)).ok === false);
+      r2.destroy();
+      const opt = MUSIC_SETTINGS.find((s) => s.key === 'seekSeconds');
+      check('the jump is a row, 15 seconds by default', opt && opt.default === 15 && opt.options.length === 5, JSON.stringify(opt));
+    }
+
     section('shuffle all my favourites (note FT 3): a bounded run, each by its own player');
     {
       const bus = createBus();
@@ -941,11 +981,29 @@ const FAVS = normalizeFavourites([
     // The switch walk.
     rootBus.publish('music/select');
     check('the first select only shows the highlight', probe().lit === 0);
-    rootBus.publish('music/next'); rootBus.publish('music/next');
+    // (Mike, 2026-11-08, DELIBERATELY: the transport row, Rewind, Pause, Stop, Fast forward: Stop is two stops further on.)
+    rootBus.publish('music/next'); rootBus.publish('music/next'); rootBus.publish('music/next'); rootBus.publish('music/next');
     check('next walks the buttons', probe().litAct === 'stop', probe().litAct);
     rootBus.publish('music/select');
     await tick();
     check('select presses the lit one (Stop)', !probe().status.playing && audio.state()['music:mu1:local']?.active === false && alog.at(-1).startsWith('pause:'), J(probe().status));
+    // (Mike, 2026-11-08) "There should also be those buttons on the module."
+    {
+      const act = (a) => host.querySelector(`[data-transport] [data-act="${a}"]`);
+      check('*** stopped: the row is all there; Stop and the jumps dimmed, Play ready ***',
+        act('rewind')?.disabled && act('stop')?.disabled && act('forward')?.disabled && act('resume') && !act('resume').disabled);
+      act('resume').click();
+      await tick(); await tick();
+      check('*** Play plays; the row now offers Pause and Stop ***', probe().status.playing && !!act('pause') && !act('stop').disabled, JSON.stringify(probe().status));
+      act('pause').click();
+      await tick();
+      check('Pause pauses, the row says Play, the line says Paused', probe().status.paused && !!act('resume') && /^Paused/.test(host.querySelector('[data-now]').textContent));
+      act('resume').click();
+      await tick();
+      act('stop').click();
+      await tick(); await tick();
+      check('Stop stops', !probe().status.playing);
+    }
     // note FT 3: the panel's own "Shuffle all my favorites", right after Stop on the switch walk.
     host.querySelector('[data-act="shuffle-all"]')?.click();
     await tick(); await tick();

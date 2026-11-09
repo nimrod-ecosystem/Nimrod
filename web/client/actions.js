@@ -333,12 +333,15 @@ export const MASTER_VERBS = ['volume-up', 'volume-down'];
 // routes them to the focused panel exactly like the nine; remote drive (drive.js) is untouched.
 export const ACTION_VERBS = [
   { id: 'launch', label: 'Launch', hint: 'start the ball (or whatever goes)' },
-  { id: 'stop',   label: 'Stop moving', hint: 'stop what is moving, without pausing the game' },
+  { id: 'stop',   label: 'Stop', hint: 'stop what is moving or playing (a game is not paused by it)' },
   { id: 'close',  label: 'Close the menu', hint: 'closes it; never opens it' },
   // (row 2.190; Mike, 2026-11-02: "Maybe it should be previous/next page and keep back and next for highlighting buttons on
   // the board.") A module's PAGES: its boards, its faces. Back and Next keep moving through what is on the page.
   { id: 'page-next', label: 'Next page', hint: 'the next board or view of the panel you picked' },
   { id: 'page-prev', label: 'Previous page', hint: 'the board or view before it' },
+  // (2026-11-08) A song's own jumps, for the panel you picked (the Music panel today). `stop` above serves it too.
+  { id: 'rewind', label: 'Rewind', hint: 'jump back in what is playing' },
+  { id: 'forward', label: 'Fast forward', hint: 'jump on in what is playing' },
 ];
 
 export const verbTopic = (id) => `verb/${id}`;
@@ -821,7 +824,9 @@ export const MODULE_VERBS = {
   // Row 2.37 item 5. Avatar maker: next / prev walk the parts (or a part's options), select opens / keeps, back undoes / cancels.
   avatar:        { next: 'avatar/next', prev: 'avatar/prev', select: 'avatar/select', back: 'avatar/back' },
   // Row 2.32. Music: next / prev walk the favourites, select plays the lit one, back stops; play/pause resume/pause.
-  music:         { next: 'music/next', prev: 'music/prev', select: 'music/select', back: 'music/back', play: 'music/resume', pause: 'music/pause' },
+  // (2026-11-08) ...and stop, rewind and fast forward: the bar's and the panel's, and a bound switch's.
+  music:         { next: 'music/next', prev: 'music/prev', select: 'music/select', back: 'music/back', play: 'music/resume', pause: 'music/pause',
+                   stop: 'music/stop', rewind: 'music/rewind', forward: 'music/forward' },
   // Row 2.69. The Internet Archive: next / prev move through an item's files (past the last, the next item), play /
   // pause are the media verbs, and select is Play or Pause, so one switch has something to do there.
   archive:       { next: 'archive/next', prev: 'archive/prev', select: 'archive/select', play: 'archive/play', pause: 'archive/pause' },

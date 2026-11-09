@@ -92,13 +92,15 @@ import { createMusicPicker } from '../music_pick.js';
 import { panelPlays } from '../plays.js';
 import { spotifyRef, thumbOk, PREVIEW_URL } from '../recommend.js';
 import { authHeaders } from '../auth.js';
-import { createMusicRouter, NEAR_MATCH_MODES, YOUTUBE_WHERE, messageFor, SHUFFLE_MINUTES, SHUFFLE_MINUTES_DEFAULT } from '../music_player.js';
+import { createMusicRouter, NEAR_MATCH_MODES, YOUTUBE_WHERE, messageFor, SHUFFLE_MINUTES, SHUFFLE_MINUTES_DEFAULT,
+  SEEK_SECONDS, SEEK_SECONDS_DEFAULT } from '../music_player.js';
 // play on (rows 2.61, 2.68)
 import { createEmbedPlayer, EMBED_WORDS } from '../spotify_embed.js';
 import { parsePlayOn, playOnWords, playOnChoices, sinkIdFor, refreshOutputs, watchOutputs, rememberSpotifySpeakers,
   knownSpotifySpeakers, PLAY_ON_HERE, SPOTIFY_PREFIX } from '../speakers.js';
 
 export const MUSIC_VOLUME_MIN = 10;
+export const MUSIC_CONTROLS_TOPIC = 'music/controls-changed';   // what the bars can offer changed (kiosk.js syncPlayPause)
 
 const DEFAULTS = {
   nearMatch: 'ask',
@@ -117,6 +119,7 @@ const DEFAULTS = {
   whenElsewhere: 'ask',    // play on (note BK item 4)
   backupSource: '',        // backup source: '' follows the screen's "Backup folder for this screen"
   shuffleMinutes: String(SHUFFLE_MINUTES_DEFAULT),   // note FT 3: music_player.js argues the hour
+  seekSeconds: SEEK_SECONDS_DEFAULT,                 // 2026-11-08: music_player.js argues the 15 seconds
 };
 
 // (note FT 3) What a shuffle of every favourite is doing, and when it ends by itself.
@@ -218,6 +221,9 @@ export const SETTINGS = [
     level: 'standard',
     options: SHUFFLE_MINUTES.map((m) => ({ value: String(m),
       label: m === 0 ? 'until Stop is pressed' : m < 60 ? `${m} minutes` : m === 60 ? '1 hour' : `${m / 60} hours` })) },
+  // (Mike, 2026-11-08) How far Rewind and Fast forward jump, on this panel and the bar.
+  { key: 'seekSeconds', label: 'Rewind and fast forward jump', kind: 'choice', default: SEEK_SECONDS_DEFAULT, level: 'standard',
+    options: SEEK_SECONDS.map((s) => ({ value: s, label: s === 60 ? '1 minute' : `${s} seconds` })) },
 ];
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) =>
@@ -261,18 +267,23 @@ registerModule(
     let speakersFound = [];        // play on: the Spotify speakers the last "Find speakers" listed
     let offOutputs = null;
 
+    const seekSecondsNow = () => { const n = Number(cfg.seekSeconds); return SEEK_SECONDS.includes(n) ? n : SEEK_SECONDS_DEFAULT; };
     const volume = () => {
       const n = Number(cfg.volume);
       return Number.isFinite(n) ? Math.max(MUSIC_VOLUME_MIN, Math.min(100, n)) / 100 : 1;
     };
 
     // ---- the list ------------------------------------------------------------------------------
-    function adoptList(list) { favs = normalizeFavourites(list); if (!dead) render(); }
+    // (2026-11-08) The bars' Play is live only with something to play: they are told when the list changes, however late it
+    // arrives (a person's list loads after the panel has drawn). Measured by the bar suite: without this, Play stayed dimmed.
+    const tellBars = () => { try { bus.publish(MUSIC_CONTROLS_TOPIC, { instanceId }); } catch { /* the next repaint draws it */ } };
+    function adoptList(list) { favs = normalizeFavourites(list); if (!dead) { render(); tellBars(); } }
     function saveList(next) {
       const clean = normalizeFavourites(next);
       if (personList) personList.set(clean); else { favs = clean; state?.set?.({ favourites: clean }); }
       favs = clean;
       render();
+      tellBars();
     }
     // WHOSE LIST: the screen's person, followed (person_known.js `followPerson`, 2026-10-02). The person
     // may not be known when this mounts (kiosk.js resolves it in the background); this panel used to look
@@ -309,6 +320,7 @@ registerModule(
       // Nobody's screen (or a host with no per-person state): the panel keeps its own list.
       favs = normalizeFavourites(state?.get?.()?.favourites);
       render();
+      tellBars();
     }
 
     // ---- players -------------------------------------------------------------------------------
@@ -601,6 +613,13 @@ registerModule(
       stop() { try { yt?.stop?.(); } catch { /* fine */ } ytList = []; ytAt = -1; ytActive(false); if (stageEl) stageEl.hidden = true; },
       pause() { try { yt?.pause?.(); } catch { /* fine */ } ytActive(false); },
       resume() { try { yt?.resume?.(); } catch { /* fine */ } },
+      // (2026-11-08) Rewind or fast forward: `sec` from where the video is now.
+      seekBy(sec) {
+        const t = yt?.currentTime?.();
+        if (t == null || typeof yt?.seek !== 'function') return false;
+        yt.seek(Math.max(0, t + sec));
+        return true;
+      },
     };
 
     const say = (text) => {
@@ -632,6 +651,7 @@ registerModule(
       // memory for this panel's life (no second play log beside the panel's Spotify and folder ones).
       picker: favPicker,
       shuffleMinutes: () => Number(cfg.shuffleMinutes),
+      seekSeconds: () => seekSecondsNow(),   // (2026-11-08) how far Rewind and Fast forward jump
       setTimer: setT, clearTimer: clearT,
       onChange: (s) => {
         const was = status;
@@ -668,8 +688,22 @@ registerModule(
           ${who ? `<p class="mu-song-who" data-song-who>${esc(who)}</p>` : ''}<p class="mu-hint">from Spotify</p></div></div>`;
     }
 
+    // *** THE TRANSPORT, ON THE PANEL (Mike, 2026-11-08; music_player.js argues the jump). *** Rewind, Play or Pause, Stop, Fast
+    // forward. The same four the bar shows while this panel is picked, doing the same things. Dimmed when they cannot act, never
+    // hidden: the row does not move under a switch. A press on a dimmed one is not possible, and the walk skips it.
+    function transportHtml() {
+      const playing = !!status.playing;
+      const off = ' disabled';
+      const why = playing && !status.canSeek ? ' title="this favorite plays somewhere that cannot jump from here"' : '';
+      const seekOff = playing && status.canSeek ? '' : off;
+      const pp = playing && !status.paused ? btn('pause', '⏸ Pause') : btn('resume', '▶ Play', favs.length || playing ? '' : off);
+      return `<div class="mu-btns" data-transport role="group" aria-label="Play controls">
+          ${btn('rewind', `⏪ Rewind ${seekSecondsNow()}s`, seekOff + why)}${pp}${btn('stop', '⏹ Stop', playing ? '' : off)}${btn('forward', `Fast forward ${seekSecondsNow()}s ⏩`, seekOff + why)}
+        </div>`;
+    }
+
     function mainHtml() {
-      const now = status.playing ? `Playing: ${status.name}` : 'Nothing playing';
+      const now = status.playing ? `${status.paused ? 'Paused' : 'Playing'}: ${status.name}` : 'Nothing playing';
       const msg = status.reason && status.reason !== 'did-you-mean' && status.reason !== 'playing-elsewhere' ? status.message : '';
       const why = status.playing && status.kind === 'spotify' ? (spotifyPlayer?.state().note || '') : '';
       // play on: what Spotify's own player here should be known about - previews, its order, its speaker.
@@ -701,7 +735,8 @@ registerModule(
           ? favs.map((f) => btn('play', f.name, ` data-id="${esc(f.id)}"`)).join('')
           : '<p class="mu-empty">No favorites yet. Add some with “Change the list”.</p>'}</div>
         ${status.shuffle ? `<p class="mu-hint" data-shuffle-note role="status">${esc(shuffleWords(status.shuffle))}</p>` : ''}
-        <div class="mu-btns">${btn('stop', 'Stop')}${favs.length > 1 ? btn('shuffle-all', 'Shuffle all my favorites') : ''}${btn('play-on', `Play on: ${playOnWords(playOnValue())}`, ' data-play-on')}${btn('edit', 'Change the list')}</div>`;
+        ${transportHtml()}
+        <div class="mu-btns">${favs.length > 1 ? btn('shuffle-all', 'Shuffle all my favorites') : ''}${btn('play-on', `Play on: ${playOnWords(playOnValue())}`, ' data-play-on')}${btn('edit', 'Change the list')}</div>`;
     }
 
     // *** THE "PLAY ON" CHOOSER (play on, rows 2.61 and 2.68). *** One press on the panel opens it; one press on a
@@ -934,6 +969,10 @@ registerModule(
       if (!a) return;
       if (a === 'play') { router.play({ id: b.dataset.id, name: favs.find((f) => f.id === b.dataset.id)?.name }); return; }
       if (a === 'stop') { router.stop(); return; }
+      if (a === 'pause') { router.pause(); return; }             // 2026-11-08: the panel's transport row
+      if (a === 'resume') { router.resume(); return; }
+      if (a === 'rewind') { router.seek(-1); return; }
+      if (a === 'forward') { router.seek(1); return; }
       if (a === 'shuffle-all') { router.shuffleAll(); return; }   // note FT 3
       if (a === 'confirm') { router.confirm(); return; }
       if (a === 'try-here') { tryHere(); return; }   // desktop prompt
@@ -1012,12 +1051,17 @@ registerModule(
       local.setOrder(FOLDER_ORDERS.includes(cfg.folderOrder) ? cfg.folderOrder : 'shuffle');
       ytPush();
       applySinkNow();   // play on
-      if (!personList) favs = normalizeFavourites(snap.favourites);
+      if (!personList) { favs = normalizeFavourites(snap.favourites); tellBars(); }
       // (row 2.61) Only a panel with Spotify on asks the server for the Client ID.
       if (cfg.spotifyOn) { loadClientId(); adoptOldId(); }
     }
 
     return {
+      // (2026-11-08) What the bars' Stop, Rewind and Fast forward need to know while this panel is picked (kiosk.js `mediaState`).
+      // A module with no such function shows none of them, so every other panel's bar is as it was. `paused` is also "not
+      // playing": the bar's one Pause / Play then says Play, and a press starts something (music_player.js `resume`).
+      mediaControls: () => ({ playing: !!status.playing, paused: !status.playing || !!status.paused, canSeek: !!status.canSeek,
+        seekSec: seekSecondsNow(), canPlay: !!status.playing || favs.length > 0 }),
       __probe: () => ({ view, lit, favs: favs.map((f) => ({ ...f })), status: { ...status }, cfg: { ...cfg },
         local: local.state(), leader: router.isLeader(), personList: !!personList,
         litAct: lit >= 0 ? walk()[lit]?.dataset.act : null, hasYt: !!yt }),

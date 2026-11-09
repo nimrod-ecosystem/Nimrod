@@ -46,6 +46,7 @@ export const MUSIC_TOPICS = Object.freeze({
   play: MUSIC_PLAY_TOPIC, stop: MUSIC_STOP_TOPIC, pause: 'music/pause', resume: 'music/resume',
   confirm: 'music/confirm', now: 'music/now', didYouMean: 'music/did-you-mean',
   shuffle: 'music/shuffle',      // (note FT 3) shuffle every favourite, a bounded run
+  rewind: 'music/rewind', forward: 'music/forward',   // (2026-11-08) a jump back or on, in the song playing
 
   // (row 2.107, 2026-10-18) "is there a Music panel on this screen, and what can it play?" - asked by a game that plays
   // a favourite while somebody plays (game_music_host.js); answered by the leader with the favourites' names.
@@ -66,6 +67,16 @@ export const MUSIC_TOPICS = Object.freeze({
 // Starting anything else (a favourite by name, Stop) ends the run.
 export const SHUFFLE_MINUTES_DEFAULT = 60;
 export const SHUFFLE_MINUTES = Object.freeze([30, 60, 120, 240, 0]);
+// *** REWIND AND FAST FORWARD (Mike, 2026-11-08: "There should be play/pause, stop, fast forward, and rewind buttons on the
+// transport bar when the music module is selected. There should also be those buttons on the module."). *** A press jumps
+// within the song, 15 seconds by default (the panel's "Rewind and fast forward jump" row). FOR longer: an hour-long radio
+// show. AGAINST, and it sets 15: most of what plays here is songs of about three minutes, and a switch user can press again.
+// Which players can: music files, the Internet Archive, this panel's own YouTube player and Spotify's own player here. NOT a
+// favourite handed to the screen's YouTube panel (it has no seek verb yet) or the Spotify app route on another speaker: for
+// those the two buttons are dimmed and say why. Dimmed, never hidden, so they do not move under a switch.
+export const SEEK_SECONDS = Object.freeze([5, 10, 15, 30, 60]);
+export const SEEK_SECONDS_DEFAULT = 15;
+const SEEKS = Object.freeze(['local', 'youtube-here', 'spotify-here']);
 export const NEAR_MATCH_MODES = Object.freeze(['ask', 'play', 'off']);
 export const YOUTUBE_WHERE = Object.freeze(['panel', 'here']);
 
@@ -114,6 +125,7 @@ export function createMusicRouter({
   // favourites; `shuffleMinutes()` how long a run lasts (0: until Stop). Timers are the suites' seams.
   picker = null,
   shuffleMinutes = () => SHUFFLE_MINUTES_DEFAULT,
+  seekSeconds = () => SEEK_SECONDS_DEFAULT,   // (2026-11-08) how far rewind and fast forward jump
   setTimer = (fn, ms) => setTimeout(fn, ms),
   clearTimer = (id) => clearTimeout(id),
   now = () => Date.now(),
@@ -134,6 +146,7 @@ export function createMusicRouter({
   let seq = 0;
   let run = null;                // (note FT 3) { endsAt|null, timer } while every favourite is being shuffled
   let quiet = false;             // a run is trying a favourite: a failure is passed over, not said
+  let pausedNow = false;         // (2026-11-08) somebody paused what is playing: the buttons say Play
 
   const read = (f, dflt) => { try { const v = typeof f === 'function' ? f() : f; return v ?? dflt; } catch { return dflt; } };
 
@@ -142,7 +155,8 @@ export function createMusicRouter({
              reason: lastReason, message: lastReason ? messageFor(lastReason, pending?.name || '', pendingDevice || '') : '',
              asking: pending ? pending.name : null,
              askingWhy: pending ? (pendingDevice != null ? 'elsewhere' : 'near') : null, device: pendingDevice,
-             shuffle: run ? { endsAt: run.endsAt } : null };
+             shuffle: run ? { endsAt: run.endsAt } : null,
+             paused: !!current && pausedNow, canSeek: !!current && SEEKS.includes(current.kind) };
   }
   function changed() {
     const s = status();
@@ -187,6 +201,7 @@ export function createMusicRouter({
     const src = entry && entry.source;
     lastEntry = entry || null;
     const my = ++seq;
+    pausedNow = false;
     pending = null;
     pendingDevice = null;
     lastReason = null;
@@ -342,10 +357,26 @@ export function createMusicRouter({
     return fail('not-found', name);
   }
 
-  async function stop() { endRun(); pending = null; pendingDevice = null; lastReason = null; ++seq; await stopCurrent(); changed(); return { ok: true }; }
+  async function stop() { endRun(); pending = null; pendingDevice = null; lastReason = null; pausedNow = false; ++seq; await stopCurrent(); changed(); return { ok: true }; }
+  // Rewind or fast forward: `dir` -1 or 1, by the panel's jump. Refused, with nothing moved, by a player that cannot.
+  async function seek(dir) {
+    const c = current;
+    if (!c || !SEEKS.includes(c.kind)) return { ok: false, reason: 'cannot-seek' };
+    const n = Number(read(seekSeconds, SEEK_SECONDS_DEFAULT));
+    const sec = (Number.isFinite(n) && n > 0 ? n : SEEK_SECONDS_DEFAULT) * (dir < 0 ? -1 : 1);
+    let ok = false;
+    try {
+      if (c.kind === 'local') ok = local?.seekBy?.(sec);
+      else if (c.kind === 'youtube-here') ok = ownYoutube?.seekBy?.(sec);
+      else if (c.kind === 'spotify-here') ok = read(spotifyHere, null)?.seekBy?.(sec);
+    } catch (err) { console.error('music: seek', err); ok = false; }
+    return { ok: !!ok, ...(ok ? { sec } : { reason: 'cannot-seek' }) };
+  }
   async function pause() {
     const c = current;
     if (!c) return { ok: false };
+    pausedNow = true;
+    changed();
     if (c.kind === 'youtube-panel') bus.publish(instanceTopic(c.instanceId, 'youtube/pause'));
     else if (c.kind === 'youtube-here') ownYoutube?.pause?.();
     else if (c.kind === 'local') local?.pause?.();
@@ -355,7 +386,14 @@ export function createMusicRouter({
   }
   async function resume() {
     const c = current;
-    if (!c) return { ok: false };
+    // (2026-11-08) Play with nothing playing starts something: what played last, else the first favourite. It used to do
+    // nothing, and a Play button that does nothing is the failure this module's buttons exist to prevent.
+    if (!c) {
+      const first = lastEntry || (read(favourites, []) || [])[0];
+      return first ? dispatch(first) : { ok: false, reason: 'nothing-to-play' };
+    }
+    pausedNow = false;
+    changed();
     if (c.kind === 'youtube-panel') bus.publish(instanceTopic(c.instanceId, 'youtube/play'));
     else if (c.kind === 'youtube-here') ownYoutube?.resume?.();
     else if (c.kind === 'local') local?.resume?.();
@@ -381,6 +419,8 @@ export function createMusicRouter({
     bus.subscribe(MUSIC_TOPICS.resume, guard(resume)),
     bus.subscribe(MUSIC_TOPICS.confirm, guard(confirm)),
     bus.subscribe(MUSIC_TOPICS.shuffle, guard(shuffleAll)),
+    bus.subscribe(MUSIC_TOPICS.rewind, guard(() => seek(-1))),
+    bus.subscribe(MUSIC_TOPICS.forward, guard(() => seek(1))),
     bus.subscribe(MUSIC_TOPICS.who, () => {
       if (!leader() || dead) return;
       let names = [];
@@ -390,7 +430,7 @@ export function createMusicRouter({
   ];
 
   return {
-    play, stop, pause, resume, confirm, status, shuffleAll,
+    play, stop, pause, resume, confirm, status, shuffleAll, seek,
     isLeader: leader,
     // desktop prompt (2026-10-10): the favourite last asked for, again - after "Try on this computer" reached its folder.
     again() { return lastEntry ? dispatch(lastEntry) : Promise.resolve({ ok: false, reason: 'nothing-asked' }); },
@@ -399,6 +439,7 @@ export function createMusicRouter({
     ended(kind) {
       if (!current || current.kind !== kind) return;
       current = null;
+      pausedNow = false;
       if (run) { nextInRun(run).catch((err) => console.error('music: shuffle', err)); return; }
       changed();
     },

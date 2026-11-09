@@ -418,6 +418,17 @@ export function createLocalMusic({
       return true;
     },
     next() { if (!wanted || queue.length < 2) return false; playAt(at + 1, gen); return true; },
+    /** (2026-11-08) Rewind or fast forward: `sec` from here, stopping short of the song's very end so a jump past it plays out
+     *  its last moment rather than cutting. False when nothing is loaded. */
+    seekBy(sec) {
+      if (!el) return false;
+      try {
+        const d = Number(el.duration);
+        const to = (Number(el.currentTime) || 0) + (Number(sec) || 0);
+        el.currentTime = Math.max(0, Number.isFinite(d) && d > 0 ? Math.min(to, Math.max(0, d - 0.5)) : to);
+        return true;
+      } catch { return false; }
+    },
     setVolume(v) { vol = clamp01(v); enact(); return vol; },
     setOrder(o) { order = FOLDER_ORDERS.includes(o) ? o : 'shuffle'; return order; },
     /** play on: the speaker for this music ('' = the computer's default), applied now and to every next song. */

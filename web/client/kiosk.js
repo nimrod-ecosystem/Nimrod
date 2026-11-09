@@ -45,7 +45,7 @@ import { REMOTE_STREAM } from './output_remote.js';
 import { createArrangement, classifyLayoutChange as layoutChange, ROOM_PANEL_ID, ROOM_PIECE_PREFIX,
   PLACE_REQUEST_TOPIC, SMALL_CLOCK_FIELD, SMALL_CLOCK_KEY, CLOCK_CORNERS, clockCornerOf } from './arrangement.js';
 import {
-  barModel, drawChips, drawHelpButton, mountBarHelp, helpOn, paintPlayPause, paintBigger, paintSmaller, drawCallControls, paintPieceInert, PIECE_SWITCH_TITLE,
+  barModel, drawChips, drawHelpButton, mountBarHelp, helpOn, paintPlayPause, paintMediaButtons, paintBigger, paintSmaller, drawCallControls, paintPieceInert, PIECE_SWITCH_TITLE,
   paintMirror, paintEditPanel, drawArrangeToggle, paintBarGroups, arrangeOpenFrom, arrangeWaiting, ARRANGE_OPEN_FIELD,
   paintSave as paintSaveBtn, paintSwap as paintSwapBtn,
   sitOutWakePress,
@@ -65,6 +65,7 @@ import {
   SHELL_NEXT, SHELL_PREV, SHELL_PANEL, SHELL_HUSH, SHELL_MENU, SHELL_FULLSCREEN, SHELL_HOME, SHELL_GO_HOME, SHELL_MIRROR,
   SHELL_STATE, SHELL_HELP, SHELL_HOST, PLAIN_BAR_SHOW, PLAIN_BAR_RING, PLAIN_BAR_RING_END, PLAIN_BAR_MOUNT_GRACE_MS,
   PLAIN_BAR_HOLD_DEFAULT_MS, SHELL_PLAY_PAUSE, SHELL_PROMOTE, SHELL_DEMOTE, SHELL_SAVE, SHELL_PAGE_NEXT, SHELL_PAGE_PREV,
+  SHELL_MEDIA_STOP, SHELL_MEDIA_REWIND, SHELL_MEDIA_FORWARD,
 } from './shell_verbs.js';
 import {
   SYSTEM_TOPICS, verbTopic, SWITCH_MODULE_TOPIC, QUICK_SWAP_TOPIC, verbsFor, verbTarget, CALL_CONTROL_TOPIC, CALL_CONTROLS_TOPIC,
@@ -690,7 +691,11 @@ export async function mountKiosk(root, {
                turns the next word into a bare JS identifier, which is exactly what broke
                here (SyntaxError: Unexpected identifier 'prevInPrimary'). -->
           <button data-act="back" title="back — the one before this (↑)">◂ Back</button>
+          <!-- STOP, REWIND, FAST FORWARD (Mike, 2026-11-08): only while the picked panel has them, around Pause. See mediaState. -->
+          <button data-act="mediarewind" title="jump back in what is playing" hidden>⏪ Rewind</button>
           <button data-act="playpause" title="pause or play the panel you picked" disabled>⏸ Pause</button>
+          <button data-act="mediastop" title="stop what is playing" hidden>⏹ Stop</button>
+          <button data-act="mediaforward" title="jump on in what is playing" hidden>Fast forward ⏩</button>
           <button data-act="next" title="next (→ / ↓)">Next ▸</button>
           <!-- ROW 2.190 (Mike, 2026-11-02): Previous page / Next page switch the picked panel's boards or views; Back and
                Next keep moving through what is on the page. Shown only while that panel has more than one page; dimmed
@@ -4015,6 +4020,10 @@ export async function mountKiosk(root, {
   controlsEl.querySelector('[data-act="playpause"]')?.addEventListener('click', () => { playPauseSelected(); });
   controlsEl.querySelector('[data-act="pageprev"]')?.addEventListener('click', () => { turnPagePanel(-1); });
   controlsEl.querySelector('[data-act="pagenext"]')?.addEventListener('click', () => { turnPagePanel(1); });
+  // (2026-11-08) Stop, Rewind and Fast forward, for the picked panel.
+  for (const [act, verb] of [['mediastop', 'stop'], ['mediarewind', 'rewind'], ['mediaforward', 'forward']]) {
+    controlsEl.querySelector(`[data-act="${act}"]`)?.addEventListener('click', () => { mediaPress(verb); });
+  }
   controlsEl.querySelector('[data-act="bigger"]')?.addEventListener('click', () => { promotePanel(); });
   controlsEl.querySelector('[data-act="save"]')?.addEventListener('click', () => { saveDashboard(); });
   controlsEl.querySelector('[data-act="swap"]')?.addEventListener('click', () => { quickSwap(); });
@@ -6062,7 +6071,31 @@ export async function mountKiosk(root, {
   function playPauseState() {
     let rec = null;
     try { rec = panelSubject(); } catch { rec = null; }      // (none while a piece of the room is selected)
-    return { can: canPausePanel(rec), paused: !!rec && pausedPanels.has(rec.id), name: rec ? panelName(rec) : null, id: rec ? rec.id : null };
+    // (2026-11-08) A panel that SAYS whether it is paused (`mediaControls`, Music today) is believed over the shell's memory: it
+    // may have been paused on the panel itself, by voice, or have stopped.
+    const m = mediaOf(rec);
+    return { can: m ? m.canPlay !== false : canPausePanel(rec), paused: m ? !!m.paused : (!!rec && pausedPanels.has(rec.id)),
+      name: rec ? panelName(rec) : null, id: rec ? rec.id : null };
+  }
+  // *** STOP, REWIND, FAST FORWARD (Mike, 2026-11-08: "There should be play/pause, stop, fast forward, and rewind buttons on the
+  // transport bar when the music module is selected."). *** The pages' pattern: the panel's own `mediaControls()` says what it
+  // can do, the bars show the three only for such a panel (so every other panel's bar and switch walk are as they were), and
+  // a press goes to the panel as a verb (actions.js MODULE_VERBS), the same one a bound switch sends.
+  function mediaOf(rec) {
+    try { return rec?.instance?.impl?.mediaControls?.() || null; } catch { return null; }
+  }
+  function mediaState() {
+    let rec = null;
+    try { rec = voiceOpen.rec() || panelSubject(); } catch { rec = null; }
+    const m = mediaOf(rec);
+    return m ? { ...m, id: rec.id, name: panelName(rec) } : null;
+  }
+  function mediaPress(verb) {
+    if (torn) return false;
+    let rec = null;
+    try { rec = voiceOpen.rec() || panelSubject(); } catch { rec = null; }
+    if (!rec || !mediaOf(rec)) return false;
+    return sendPanelVerb(rec, verb);
   }
   function sendPanelVerb(rec, verb) {
     const t = verbTarget(rec.type, verb);
@@ -6076,7 +6109,8 @@ export async function mountKiosk(root, {
     let rec = null;
     try { rec = id ? (menuPanelRecs().find((r) => r.id === id) || null) : panelSubject(); } catch { rec = null; }
     if (!canPausePanel(rec)) return null;
-    const verb = pausedPanels.has(rec.id) ? 'play' : 'pause';
+    const said = mediaOf(rec);
+    const verb = (said ? said.paused : pausedPanels.has(rec.id)) ? 'play' : 'pause';
     sendPanelVerb(rec, verb);
     if (verb === 'pause') pausedPanels.add(rec.id); else pausedPanels.delete(rec.id);
     syncPlayPause();
@@ -6117,6 +6151,10 @@ export async function mountKiosk(root, {
     let pg = null;
     try { pg = pagesState(); paintPages(pg); } catch { pg = null; /* not drawn yet */ }
     if (useDashboard) { try { bus.publish(SHELL_STATE, { pages: pg }); } catch { /* not load-bearing */ } }
+    // (2026-11-08) Stop, Rewind and Fast forward follow the same selection.
+    let md = null;
+    try { md = mediaState(); paintMediaButtons(controlsEl, md); } catch { md = null; /* not drawn yet */ }
+    if (useDashboard) { try { bus.publish(SHELL_STATE, { media: md }); } catch { /* not load-bearing */ } }
     // (row 2.191) Mirror: dimmed on a dashboard with no camera panel, where it used to look live and do nothing.
     let mi = null;
     try { mi = mirrorState(); paintMirror(controlsEl.querySelector('[data-act="mirror"]'), mi); } catch { mi = null; /* not drawn yet */ }
@@ -9394,6 +9432,14 @@ export async function mountKiosk(root, {
   // Previous page / Next page from a placed bar (row 2.190).
   offsScreen.push(bus.subscribe(SHELL_PAGE_NEXT, (p) => { claimed(p); turnPagePanel(1); }));
   offsScreen.push(bus.subscribe(SHELL_PAGE_PREV, (p) => { claimed(p); turnPagePanel(-1); }));
+  // Stop, Rewind and Fast forward from a placed bar (2026-11-08); and the bars follow what Music says about itself, whichever
+  // way it changed (the panel's own buttons, voice, a song ending).
+  offsScreen.push(bus.subscribe(SHELL_MEDIA_STOP, (p) => { claimed(p); mediaPress('stop'); }));
+  offsScreen.push(bus.subscribe(SHELL_MEDIA_REWIND, (p) => { claimed(p); mediaPress('rewind'); }));
+  offsScreen.push(bus.subscribe(SHELL_MEDIA_FORWARD, (p) => { claimed(p); mediaPress('forward'); }));
+  for (const t of ['music/now', 'music/controls-changed']) {
+    offsScreen.push(bus.subscribe(t, () => { try { syncPlayPause(); } catch { /* not drawn yet */ } }));
+  }
   // A spoken or switched pause / play reached the selected panel through the router: the button follows.
   const notePause = (verb) => () => {
     // Only when the verb went to the PANEL: with the menu open when it arrived, the router held it.
@@ -9809,6 +9855,7 @@ export async function mountKiosk(root, {
           // 2026-10-02: what the placed bar's Pause / Play and a live call's controls show at mount.
           playPause: () => playPauseState(), callControls: () => callState,
           pages: () => pagesState(),   // row 2.190: Previous page / Next page at mount (then SHELL_STATE `pages`)
+          media: () => mediaState(),   // 2026-11-08: Stop, Rewind and Fast forward at mount (then SHELL_STATE `media`)
     mirror: () => mirrorState(), // row 2.191: Mirror dimmed with no camera, at mount (then SHELL_STATE `mirror`)
           bigger: () => biggerState(),
           editPanel: () => editPanelState(), // row 2.191: ✎ Edit panel at mount (then SHELL_STATE `editPanel`)

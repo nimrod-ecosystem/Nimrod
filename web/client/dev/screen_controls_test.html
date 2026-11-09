@@ -522,8 +522,11 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
       kiosk = await mountKiosk(root, { user: USER, profileId: p.id, profiles, bus, ...seams(fakeStorage()) });
       await sleep(500);
       const ppBtn = () => root.querySelector('.k-actions [data-act="playpause"]');
+      // (2026-11-08, DELIBERATELY: Rewind, Stop and Fast forward sit around it in the markup, hidden unless the picked panel has
+      // them; on any other panel the bar a person sees is the same.)
+      const seenBeside = (el, dir) => { let e = el?.[dir]; while (e && e.hidden) e = e[dir]; return e?.dataset.act; };
       check('the plain bar has Pause / Play between Back and Next',
-        ppBtn() && ppBtn().previousElementSibling?.dataset.act === 'back' && ppBtn().nextElementSibling?.dataset.act === 'next');
+        ppBtn() && seenBeside(ppBtn(), 'previousElementSibling') === 'back' && seenBeside(ppBtn(), 'nextElementSibling') === 'next');
       root.querySelector(`[data-mods] .k-dot[data-id="${ids[0]}"]`)?.click();
       await sleep(50);
       // 2026-10-02: a slideshow pauses (its "When it opens" row and the photos/play, photos/pause verbs), so

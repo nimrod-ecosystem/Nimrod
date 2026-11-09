@@ -42,12 +42,13 @@
 import { registerModule } from '../module.js';
 import {
   barModel, drawChips, drawHelpButton, helpOn, paintPlayPause, paintBigger, paintSmaller, drawCallControls, pieceOf, paintPieceInert, PIECE_SWITCH_TITLE,
-  sitOutWakePress, paintSave, paintSwap, paintMirror, paintEditPanel, drawArrangeToggle, paintBarGroups, arrangeWaiting,
+  sitOutWakePress, paintSave, paintSwap, paintMirror, paintEditPanel, drawArrangeToggle, paintBarGroups, arrangeWaiting, paintMediaButtons,
 } from '../transport_bar.js';
 import {
   SHELL_NEXT, SHELL_PREV, SHELL_PANEL, SHELL_HUSH, SHELL_MENU, SHELL_FULLSCREEN, SHELL_HOME, SHELL_GO_HOME,
   SHELL_MIRROR, SHELL_STATE, SHELL_HELP, SHELL_HOST, FULLSCREEN_BAR_HIDE_DEFAULT_MS, SHELL_SWITCH_MODULE,
   SHELL_PLAY_PAUSE, SHELL_PROMOTE, SHELL_DEMOTE, SHELL_SAVE, SHELL_PAGE_NEXT, SHELL_PAGE_PREV,
+  SHELL_MEDIA_STOP, SHELL_MEDIA_REWIND, SHELL_MEDIA_FORWARD,
 } from '../shell_verbs.js';
 import { CALL_CONTROL_TOPIC, CALL_CONTROLS_TOPIC, CALL_HANGUP_TOPIC, QUICK_SWAP_TOPIC, EDIT_PANEL_TOPIC } from '../actions.js';
 import { EDGE_TOPIC } from '../input.js';
@@ -70,7 +71,11 @@ const BUTTONS = [
   { act: 'back', verb: SHELL_PREV, label: '◂ Back', title: 'back — the one before this' },
   // Pause / Play (2026-10-02): the selected panel's, between Back and Next where a transport has it. The
   // shell says whether it can and which way it is (SHELL_STATE `playPause`); dimmed until it says so.
+  // Stop, Rewind and Fast forward (2026-11-08): only while the picked panel has them (SHELL_STATE `media`), around Pause.
+  { act: 'mediarewind', verb: SHELL_MEDIA_REWIND, label: '⏪ Rewind', title: 'jump back in what is playing' },
   { act: 'playpause', verb: SHELL_PLAY_PAUSE, label: '⏸ Pause', title: 'pause or play the panel you picked' },
+  { act: 'mediastop', verb: SHELL_MEDIA_STOP, label: '⏹ Stop', title: 'stop what is playing' },
+  { act: 'mediaforward', verb: SHELL_MEDIA_FORWARD, label: 'Fast forward ⏩', title: 'jump on in what is playing' },
   { act: 'next', verb: SHELL_NEXT, label: 'Next ▸', title: 'next' },
   // Previous page / Next page (row 2.190): only while the picked panel has more than one page (SHELL_STATE `pages`).
   { act: 'pageprev', verb: SHELL_PAGE_PREV, label: '◂ Previous page', title: 'the board or view before this one' },
@@ -124,6 +129,8 @@ registerModule(
     let playPause = (() => { try { return ctx.shell?.playPause?.() || null; } catch { return null; } })();
     // (row 2.190) the picked panel's pages, or null (the shell's getter at mount, then SHELL_STATE `pages`).
     let pages = (() => { try { return ctx.shell?.pages?.() || null; } catch { return null; } })();
+    // (2026-11-08) the picked panel's Stop, Rewind and Fast forward, or null (the same way: getter, then SHELL_STATE `media`).
+    let media = (() => { try { return ctx.shell?.media?.() || null; } catch { return null; } })();
     // (row 2.191) whether this dashboard has a camera for Mirror (the shell's getter, then SHELL_STATE `mirror`).
     let mirrorS = (() => { try { return ctx.shell?.mirror?.() || null; } catch { return null; } })();
     // Bigger / Smaller (2026-10-02 evening): the same, for the selected panel's corner press.
@@ -331,6 +338,7 @@ registerModule(
         pb.hidden = !pages;
         pb.disabled = !!pages?.locked;
       }
+      paintMediaButtons(shell, media);   // (2026-11-08) Stop, Rewind and Fast forward
       paintBigger(root.querySelector('.tb-actions:not(.tb-host) [data-act="bigger"]'), bigger || {});
       paintSmaller(root.querySelector('.tb-actions:not(.tb-host) [data-act="smaller"]'), bigger || {});
       paintSave(shell?.querySelector('[data-act="save"]'), saveS || {});
@@ -421,12 +429,13 @@ registerModule(
           if ('save' in s) saveS = s.save || null;
           if ('swap' in s) swapS = s.swap || null;
           if ('pages' in s) pages = s.pages || null;
+          if ('media' in s) media = s.media || null;
           if ('mirror' in s) mirrorS = s.mirror || null;
           if ('editPanel' in s) editS = s.editPanel || null;
           if ('arrangeAlways' in s) { arrangeAlways = !!s.arrangeAlways; draw(); }
           if ('arrangeFold' in s && arrangeOpen) { arrangeOpen = false; draw(); }   // the switch scan let go of the bar
           if ('hushed' in s || 'help' in s || 'menuOpen' in s || 'playPause' in s || 'bigger' in s || 'save' in s || 'swap' in s
-            || 'pages' in s || 'mirror' in s || 'editPanel' in s) draw();
+            || 'pages' in s || 'media' in s || 'mirror' in s || 'editPanel' in s) draw();
           if ('barHeld' in s) { held = !!s.barHeld; reveal(); }
           // bar toggle: the key put the bar away (tucked, whether or not in full screen) or brought it back.
           if (BAR_KEY_HIDDEN in s) {

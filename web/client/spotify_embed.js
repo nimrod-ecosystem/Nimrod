@@ -290,6 +290,13 @@ export function createEmbedPlayer({
     },
     async pause() { st.busPaused = false; try { ctl?.pause(); } catch { /* gone */ } return { ok: true }; },
     async resume() { try { ctl?.resume(); } catch { /* gone */ } return { ok: true }; },
+    /** (2026-11-08) Rewind or fast forward: `sec` from where the last report said it was (Spotify's own `seek`, in seconds). */
+    seekBy(sec) {
+      if (!ctl || typeof ctl.seek !== 'function' || !(st.durationMs > 0)) return false;
+      const to = st.positionMs / 1000 + (Number(sec) || 0);
+      const end = Math.max(0, st.durationMs / 1000 - 1);
+      try { ctl.seek(Math.max(0, Math.min(to, end))); return true; } catch { return false; }
+    },
     /** Finished with: pause, stop steering, and put the frame away. */
     async stop() {
       gen++; clearWait(); run = null;

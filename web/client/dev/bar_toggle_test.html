@@ -466,6 +466,13 @@ const mouseNearBar = async (bar) => {
         /^always/.test(hint('set:cursor_show') || ''), hint('set:cursor_show'));
       k.menu.close();
     }
+    // (Mike, 2026-11-08: "There should be play/pause, stop, fast forward, and rewind buttons on the transport bar when the music
+    // module is selected.") A clock panel has none of them on its bar: this screen has one.
+    {
+      const bar = root.querySelector('.k-controls');
+      check('a panel with no song has no Stop, Rewind or Fast forward on the bar',
+        ['mediastop', 'mediarewind', 'mediaforward'].every((a) => bar.querySelector(`[data-act="${a}"]`)?.hidden === true));
+    }
     // A bar placed in a room's cabinet fits its box itself (room_bar.js); on a screen at 200% it must still fit, measured.
     {
       const scr = document.createElement('div');
@@ -486,6 +493,33 @@ const mouseNearBar = async (bar) => {
       scr.remove();
     }
     k.destroy(); root.innerHTML = '';
+    // ...and with a real Music panel picked, whose person has a favourite: the bar's whole transport, pressed.
+    {
+      const mp = await profiles.create('BT-music');
+      await profiles.addModule(mp.id, 'music');
+      const mFull = await profiles.get(mp.id);
+      const fs = createState({ url: profiles.personStateURL(mFull.person_id, 'music-favourites'), user: USER });
+      await fs.load().catch(() => {});
+      fs.set({ favourites: [{ id: 'fa', name: 'Tune', source: { kind: 'youtube', videoId: 'dQw4w9WgXcQ' } }] });
+      await fs.flush();
+      fs.destroy?.();
+      const km = await mountKiosk(root, { user: USER, profileId: mp.id, profiles, bus: createBus(), screenKey: true });
+      const mb = (a) => root.querySelector(`.k-controls [data-act="${a}"]`);
+      check('*** Music picked: Stop, Rewind and Fast forward are on the bar ***',
+        await until(() => mb('mediastop') && !mb('mediastop').hidden && !mb('mediarewind').hidden && !mb('mediaforward').hidden, 6000), root.querySelector('.k-controls')?.textContent);
+      check('nothing playing: the three are dimmed, and the one button says Play',
+        await until(() => mb('mediastop').disabled && mb('mediarewind').disabled && mb('mediaforward').disabled && /Play/.test(mb('playpause').textContent), 6000), mb('playpause').textContent);
+      check('(setup) the person\'s favourite has arrived: Play is live', await until(() => !mb('playpause').disabled, 9000));
+      mb('playpause').click();
+      check('*** Play on the bar plays: Stop and the jumps come up, and it says Pause ***',
+        await until(() => !mb('mediastop').disabled && !mb('mediarewind').disabled && !mb('mediaforward').disabled && /Pause/.test(mb('playpause').textContent), 6000),
+        `${mb('playpause').textContent} stop off: ${mb('mediastop').disabled}`);
+      mb('playpause').click();
+      check('Pause pauses, and it says Play', await until(() => /Play/.test(mb('playpause').textContent), 3000), mb('playpause').textContent);
+      mb('mediastop').click();
+      check('*** Stop stops: the three dim again ***', await until(() => mb('mediastop').disabled && mb('mediarewind').disabled, 3000));
+      km.destroy(); root.innerHTML = '';
+    }
   }
 
   // =====================================================================================
