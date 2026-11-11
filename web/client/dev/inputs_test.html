@@ -216,8 +216,9 @@ const logText = (r) => r.q('[data-log]').textContent;
       const { ACTION_VERBS } = await import('../actions.js');
       // (row 2.190, 2026-11-02) and Next page / Previous page: a module's boards or views, bindable to a switch.
       // (2026-11-08, DELIBERATELY) and Rewind and Fast forward, for the Music panel's jumps. Seven.
-      check('seven, with the ids the phrase table and the modules use (Next page, Previous page, Rewind and Fast forward joined them)',
-        JSON.stringify(ACTION_VERBS.map((v) => v.id)) === '["launch","stop","close","page-next","page-prev","rewind","forward"]');
+      // (Mike, 2026-11-10, DELIBERATELY) and Previous track and Next track, for the Music panel's songs. Nine.
+      check('nine, with the ids the phrase table and the modules use (Next page, Previous page, Rewind, Fast forward, Previous track and Next track joined them)',
+        JSON.stringify(ACTION_VERBS.map((v) => v.id)) === '["launch","stop","close","page-next","page-prev","rewind","forward","track-prev","track-next"]');
       check('not in the nine (the everyday list stays short)', ACTION_VERBS.every((a) => !VERBS.some((v) => v.id === a.id)));
       const reg = createDefaultRegistry();
       check('real actions, so a switch or a phrase bound to one fires', ACTION_VERBS.every((a) => reg.has(verbTopic(a.id))));

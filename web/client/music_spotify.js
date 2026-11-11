@@ -518,6 +518,19 @@ export function createSpotify({
       return start({ uris: list }, device);
     },
 
+    /** (2026-11-10) The next (`dir` 1) or the previous (-1) song in what plays, on the device it was started on. */
+    async skip(dir) {
+      const dev = lastDeviceId ? `?device_id=${encodeURIComponent(lastDeviceId)}` : '';
+      const r = await api('POST', `/me/player/${dir < 0 ? 'previous' : 'next'}${dev}`);
+      return r.ok ? { ok: true } : { ok: false, reason: r.reason };
+    },
+    /** (2026-11-10) To this point in the song playing (ms), on the device it was started on. */
+    async seekTo(ms) {
+      const dev = lastDeviceId ? `&device_id=${encodeURIComponent(lastDeviceId)}` : '';
+      const r = await api('PUT', `/me/player/seek?position_ms=${Math.max(0, Math.round(Number(ms) || 0))}${dev}`);
+      return r.ok ? { ok: true } : { ok: false, reason: r.reason };
+    },
+
     /** One song after the one playing now, on the device it was started on. */
     async queue(uri) {
       const u = parseSpotifyUri(uri);
@@ -805,7 +818,7 @@ export function createSpotifyPlayer({
           if (g !== gen || dead) return { ok: false, reason: 'superseded' };
           if (!r.ok) return r;
           picker.played(first);
-          run = { ours: true, pool: t.tracks, current: first, queued: null, fails: 0, idles: 0 };
+          run = { ours: true, pool: t.tracks, current: first, queued: null, fails: 0, idles: 0, back: [], device };
           later(FIRST_LOOK_MS, g);
           return { ok: true, device: r.device, order: 'ours', note: '' };
         }
@@ -824,6 +837,37 @@ export function createSpotifyPlayer({
       const r = await spotify.resume();
       if (run && (run.ours || read(songInfo, false))) later(FIRST_LOOK_MS, gen);
       return r;
+    },
+    /** (2026-11-10) Previous or next track. In Spotify's own order, Spotify's own next and previous. In the site's order:
+     *  next plays the song already queued (queued now if it was not), which the watch then counts as ours; previous plays
+     *  the one before it again, or starts this one again when there is none (Spotify's own "previous" would play a song the
+     *  watch did not choose, and it would take that as somebody else choosing). */
+    canSkip: () => !!run,
+    async skip(dir) {
+      if (!run || dead || typeof spotify.skip !== 'function') return false;
+      const g = gen;
+      if (!run.ours) {
+        const r = await spotify.skip(dir);
+        if (r.ok && g === gen && read(songInfo, false)) later(FIRST_LOOK_MS, g);
+        return !!r.ok;
+      }
+      if (dir > 0) {
+        if (!run.queued) await queueNext(g);
+        if (!run || g !== gen || !run.queued) return false;
+        const was = run.current;
+        const r = await spotify.skip(1);
+        if (!r.ok || !run || g !== gen) return false;
+        run.back.push(was);
+        later(FIRST_LOOK_MS, g);
+        return true;
+      }
+      const prev = run.back.pop();
+      if (!prev) return !!(await spotify.seekTo?.(0))?.ok;
+      const r = await spotify.playTracks({ uris: [prev], device: run.device || '' });
+      if (!r.ok || !run || g !== gen) return false;
+      run.current = prev;
+      later(FIRST_LOOK_MS, g);
+      return true;
     },
     /** Finished with: stop steering, then pause Spotify. */
     async stop() { quit(false); tell(null); return spotify.pause(); },

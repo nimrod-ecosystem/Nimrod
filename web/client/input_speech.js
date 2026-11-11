@@ -184,6 +184,9 @@ export const PHRASES = {
   // (2026-11-08) A jump in the song playing (the Music panel's Rewind and Fast forward).
   rewind: ['rewind', 'rewind it', 'back a bit'],
   forward: ['fast forward', 'skip ahead', 'forward a bit'],
+  // (2026-11-10) The song before or after it (the Music panel's Previous track and Next track). Bare "skip" stays `next`.
+  'track-next': ['next song', 'next track', 'skip this song', 'skip the song'],
+  'track-prev': ['previous song', 'previous track', 'last song', 'go back a song'],
   'page-next': ['next page', 'turn the page', 'page forward', 'next board'],
   'page-prev': ['previous page', 'last page', 'page back', 'go back a page', 'previous board'],
 };

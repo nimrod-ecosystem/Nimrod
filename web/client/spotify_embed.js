@@ -168,6 +168,7 @@ export function createEmbedPlayer({
     const pool = run.pool.filter((t) => t.id !== run.current);
     const nxt = picker.next(pool.length ? pool : run.pool);
     if (!nxt) return false;
+    (run.back ||= []).push(run.current);   // (2026-11-10) what Previous track goes back to
     run.current = nxt;
     try { ctl.loadUri(nxt); ctl.play(); } catch { return false; }
     return true;
@@ -296,6 +297,22 @@ export function createEmbedPlayer({
       const to = st.positionMs / 1000 + (Number(sec) || 0);
       const end = Math.max(0, st.durationMs / 1000 - 1);
       try { ctl.seek(Math.max(0, Math.min(to, end))); return true; } catch { return false; }
+    },
+    /** (2026-11-10) Previous or next track: only in the site's own order (the songs were listed through the app). Spotify's
+     *  player here has no "next" to ask for, so in Spotify's own order it cannot, and the buttons say so. Previous with
+     *  nothing before it starts this song again. */
+    canSkip: () => !!(ctl && run?.ours),
+    skip(dir) {
+      if (!ctl || !run?.ours) return false;
+      run.endedFor = null;
+      if (dir > 0) return nextOurs();
+      const prev = run.back?.pop();
+      try {
+        if (!prev) { ctl.seek(0); return true; }
+        run.current = prev;
+        ctl.loadUri(prev); ctl.play();
+        return true;
+      } catch { return false; }
     },
     /** Finished with: pause, stop steering, and put the frame away. */
     async stop() {

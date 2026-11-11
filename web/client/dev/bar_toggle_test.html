@@ -471,7 +471,7 @@ const mouseNearBar = async (bar) => {
     {
       const bar = root.querySelector('.k-controls');
       check('a panel with no song has no Stop, Rewind or Fast forward on the bar',
-        ['mediastop', 'mediarewind', 'mediaforward'].every((a) => bar.querySelector(`[data-act="${a}"]`)?.hidden === true));
+        ['mediastop', 'mediarewind', 'mediaforward', 'mediatrackprev', 'mediatracknext'].every((a) => bar.querySelector(`[data-act="${a}"]`)?.hidden === true));
     }
     // A bar placed in a room's cabinet fits its box itself (room_bar.js); on a screen at 200% it must still fit, measured.
     {
@@ -514,6 +514,12 @@ const mouseNearBar = async (bar) => {
       check('*** Play on the bar plays: Stop and the jumps come up, and it says Pause ***',
         await until(() => !mb('mediastop').disabled && !mb('mediarewind').disabled && !mb('mediaforward').disabled && /Pause/.test(mb('playpause').textContent), 6000),
         `${mb('playpause').textContent} stop off: ${mb('mediastop').disabled}`);
+      // (Mike, 2026-11-10) Previous track and Next track are on the bar too. One video: back to its start, nothing after it.
+      check('*** Previous track and Next track are on the bar, either side of the jumps ***',
+        !mb('mediatrackprev').hidden && !mb('mediatracknext').hidden
+        && mb('mediatrackprev').nextElementSibling === mb('mediarewind') && mb('mediaforward').nextElementSibling === mb('mediatracknext'));
+      check('one video: Previous track live, Next track dimmed and says why',
+        !mb('mediatrackprev').disabled && mb('mediatracknext').disabled && /no other song/.test(mb('mediatracknext').title), mb('mediatracknext').title);
       mb('playpause').click();
       check('Pause pauses, and it says Play', await until(() => /Play/.test(mb('playpause').textContent), 3000), mb('playpause').textContent);
       mb('mediastop').click();

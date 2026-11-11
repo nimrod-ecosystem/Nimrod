@@ -342,6 +342,9 @@ export const ACTION_VERBS = [
   // (2026-11-08) A song's own jumps, for the panel you picked (the Music panel today). `stop` above serves it too.
   { id: 'rewind', label: 'Rewind', hint: 'jump back in what is playing' },
   { id: 'forward', label: 'Fast forward', hint: 'jump on in what is playing' },
+  // (Mike, 2026-11-10) The song before or after it, for the panel you picked (the Music panel today).
+  { id: 'track-prev', label: 'Previous track', hint: 'the song before this one' },
+  { id: 'track-next', label: 'Next track', hint: 'the next song' },
 ];
 
 export const verbTopic = (id) => `verb/${id}`;
@@ -826,7 +829,8 @@ export const MODULE_VERBS = {
   // Row 2.32. Music: next / prev walk the favourites, select plays the lit one, back stops; play/pause resume/pause.
   // (2026-11-08) ...and stop, rewind and fast forward: the bar's and the panel's, and a bound switch's.
   music:         { next: 'music/next', prev: 'music/prev', select: 'music/select', back: 'music/back', play: 'music/resume', pause: 'music/pause',
-                   stop: 'music/stop', rewind: 'music/rewind', forward: 'music/forward' },
+                   stop: 'music/stop', rewind: 'music/rewind', forward: 'music/forward',
+                   'track-prev': 'music/track-prev', 'track-next': 'music/track-next' },   // (2026-11-10)
   // Row 2.69. The Internet Archive: next / prev move through an item's files (past the last, the next item), play /
   // pause are the media verbs, and select is Play or Pause, so one switch has something to do there.
   archive:       { next: 'archive/next', prev: 'archive/prev', select: 'archive/select', play: 'archive/play', pause: 'archive/pause' },

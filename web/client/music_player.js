@@ -47,6 +47,7 @@ export const MUSIC_TOPICS = Object.freeze({
   confirm: 'music/confirm', now: 'music/now', didYouMean: 'music/did-you-mean',
   shuffle: 'music/shuffle',      // (note FT 3) shuffle every favourite, a bounded run
   rewind: 'music/rewind', forward: 'music/forward',   // (2026-11-08) a jump back or on, in the song playing
+  trackPrev: 'music/track-prev', trackNext: 'music/track-next',   // (2026-11-10) the song before or after it
 
   // (row 2.107, 2026-10-18) "is there a Music panel on this screen, and what can it play?" - asked by a game that plays
   // a favourite while somebody plays (game_music_host.js); answered by the leader with the favourites' names.
@@ -77,6 +78,14 @@ export const SHUFFLE_MINUTES = Object.freeze([30, 60, 120, 240, 0]);
 export const SEEK_SECONDS = Object.freeze([5, 10, 15, 30, 60]);
 export const SEEK_SECONDS_DEFAULT = 15;
 const SEEKS = Object.freeze(['local', 'youtube-here', 'spotify-here']);
+// *** PREVIOUS TRACK AND NEXT TRACK (Mike, 2026-11-10: "The rewind ff buttons you added just do 15 seconds. There should also
+// be buttons for previous track and next track."). *** Within the favourite playing: a folder's or an Archive item's songs, a
+// YouTube playlist, the songs of a Spotify playlist or album. In a shuffle of every favourite, Next track with nothing more
+// inside this favourite goes on to the next favourite. Previous track with nothing before it starts the song again, where the
+// player can. Which players can: music files and the Archive (round past either end), this panel's own YouTube player (a
+// playlist), the screen's YouTube panel (its own list), Spotify on another speaker (Spotify's next and previous), and
+// Spotify's own player here only in the site's order: that player has no "next" of its own to ask for. Dimmed, never
+// hidden, as Rewind is.
 export const NEAR_MATCH_MODES = Object.freeze(['ask', 'play', 'off']);
 export const YOUTUBE_WHERE = Object.freeze(['panel', 'here']);
 
@@ -156,7 +165,25 @@ export function createMusicRouter({
              asking: pending ? pending.name : null,
              askingWhy: pending ? (pendingDevice != null ? 'elsewhere' : 'near') : null, device: pendingDevice,
              shuffle: run ? { endsAt: run.endsAt } : null,
-             paused: !!current && pausedNow, canSeek: !!current && SEEKS.includes(current.kind) };
+             paused: !!current && pausedNow, canSeek: !!current && SEEKS.includes(current.kind), ...skips() };
+  }
+  // (2026-11-10) Whether Previous track and Next track can act now, asked of the player that is playing.
+  function canSkipNow() {
+    const c = current;
+    if (!c) return false;
+    try {
+      if (c.kind === 'local') return !!local?.canSkip?.();
+      if (c.kind === 'youtube-here') return !!ownYoutube?.canSkip?.();
+      if (c.kind === 'youtube-panel') return true;
+      if (c.kind === 'spotify-here') return !!read(spotifyHere, null)?.canSkip?.();
+      if (c.kind === 'spotify') return !!read(spotify, null)?.canSkip?.();
+    } catch { /* cannot */ }
+    return false;
+  }
+  function skips() {
+    if (!current) return { canNext: false, canPrev: false };
+    const can = canSkipNow();
+    return { canNext: can || !!run, canPrev: can || SEEKS.includes(current.kind) };
   }
   function changed() {
     const s = status();
@@ -372,6 +399,35 @@ export function createMusicRouter({
     } catch (err) { console.error('music: seek', err); ok = false; }
     return { ok: !!ok, ...(ok ? { sec } : { reason: 'cannot-seek' }) };
   }
+  // Previous track or next track: `dir` -1 or 1. SKIPS above says what each player does.
+  async function skip(dir) {
+    const c = current;
+    if (!c) return { ok: false, reason: 'cannot-skip' };
+    const d = dir < 0 ? -1 : 1;
+    let ok = false;
+    if (canSkipNow()) {
+      try {
+        if (c.kind === 'local') ok = local?.skip?.(d);
+        else if (c.kind === 'youtube-here') ok = ownYoutube?.skip?.(d);
+        else if (c.kind === 'youtube-panel') { bus.publish(instanceTopic(c.instanceId, d < 0 ? 'youtube/prev' : 'youtube/next')); ok = true; }
+        else if (c.kind === 'spotify-here') ok = await read(spotifyHere, null)?.skip?.(d);
+        else if (c.kind === 'spotify') ok = await read(spotify, null)?.skip?.(d);
+      } catch (err) { console.error('music: skip', err); ok = false; }
+    }
+    if (current !== c) return { ok: false, reason: 'superseded' };
+    if (!ok && d > 0 && run) return nextInRun(run);                   // a shuffle of every favourite: the next one
+    if (!ok && d < 0 && SEEKS.includes(c.kind)) {                     // nothing before it: this song from the start
+      try {
+        if (c.kind === 'local') ok = local?.seekBy?.(-1e9);
+        else if (c.kind === 'youtube-here') ok = ownYoutube?.seekBy?.(-1e9);
+        else ok = read(spotifyHere, null)?.seekBy?.(-1e9);
+      } catch { ok = false; }
+    }
+    if (!ok) return { ok: false, reason: 'cannot-skip' };
+    pausedNow = false;
+    changed();
+    return { ok: true, dir: d };
+  }
   async function pause() {
     const c = current;
     if (!c) return { ok: false };
@@ -421,6 +477,8 @@ export function createMusicRouter({
     bus.subscribe(MUSIC_TOPICS.shuffle, guard(shuffleAll)),
     bus.subscribe(MUSIC_TOPICS.rewind, guard(() => seek(-1))),
     bus.subscribe(MUSIC_TOPICS.forward, guard(() => seek(1))),
+    bus.subscribe(MUSIC_TOPICS.trackPrev, guard(() => skip(-1))),
+    bus.subscribe(MUSIC_TOPICS.trackNext, guard(() => skip(1))),
     bus.subscribe(MUSIC_TOPICS.who, () => {
       if (!leader() || dead) return;
       let names = [];
@@ -430,7 +488,7 @@ export function createMusicRouter({
   ];
 
   return {
-    play, stop, pause, resume, confirm, status, shuffleAll, seek,
+    play, stop, pause, resume, confirm, status, shuffleAll, seek, skip,
     isLeader: leader,
     // desktop prompt (2026-10-10): the favourite last asked for, again - after "Try on this computer" reached its folder.
     again() { return lastEntry ? dispatch(lastEntry) : Promise.resolve({ ok: false, reason: 'nothing-asked' }); },

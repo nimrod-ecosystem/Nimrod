@@ -418,6 +418,16 @@ export function createLocalMusic({
       return true;
     },
     next() { if (!wanted || queue.length < 2) return false; playAt(at + 1, gen); return true; },
+    /** (2026-11-10) Previous or next track (`dir` -1 or 1) in the folder or Archive item, round past either end, and playing
+     *  even if it was paused: a person who asks for another song wants to hear it. False with one song or none. */
+    skip(dir) {
+      if (!wanted || queue.length < 2) return false;
+      paused = false; blocked = false;
+      active(true);
+      playAt(at + (dir < 0 ? -1 : 1), gen);
+      return true;
+    },
+    canSkip() { return !!wanted && queue.length > 1; },
     /** (2026-11-08) Rewind or fast forward: `sec` from here, stopping short of the song's very end so a jump past it plays out
      *  its last moment rather than cutting. False when nothing is loaded. */
     seekBy(sec) {

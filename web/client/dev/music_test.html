@@ -745,6 +745,33 @@ const FAVS = normalizeFavourites([
       check('a single song plays as itself', r3.ok && r3.order === 'spotify');
       player.destroy(); off.destroy();
     }
+    {
+      // (Mike, 2026-11-10: "There should also be buttons for previous track and next track.") On another speaker.
+      const T2 = heldTimers();
+      const c = fakeConnector();
+      c.skip = async (d) => { c.log.push(['skip', d]); return { ok: true }; };
+      c.seekTo = async (ms) => { c.log.push(['seekTo', ms]); return { ok: true }; };
+      const player = createSpotifyPlayer({ spotify: c, picker: createMusicPicker({ rand: mulberry32(9) }), setTimer: T2.setTimer, clearTimer: T2.clearTimer });
+      await player.play({ uri: PL, device: 'kitchen' });
+      const first = c.log.find((l) => l[0] === 'playTracks')[1];
+      check('the site\'s order: it can change track', player.canSkip() === true);
+      check('*** Previous track with nothing before it: this song from the start, NOT Spotify\'s own previous (a song the watch did not choose) ***',
+        (await player.skip(-1)) === true && c.log.at(-1)[0] === 'seekTo' && c.log.at(-1)[1] === 0 && !c.log.some((l) => l[0] === 'skip'), J(c.log));
+      check('*** Next track: the next pick is queued, then Spotify moves on to it ***', (await player.skip(1)) === true
+        && c.log.at(-2)[0] === 'queue' && c.log.at(-1)[0] === 'skip' && c.log.at(-1)[1] === 1, J(c.log.slice(-3)));
+      const queued = c.log.filter((l) => l[0] === 'queue').at(-1)[1];
+      c.setNow({ uri: queued });
+      await T2.fire();
+      check('...and the watch counts it as ours (the run goes on)', player.state().steering && player.state().current === queued, J(player.state()));
+      check('*** Previous track: the song before it, played again on the same speaker ***', (await player.skip(-1)) === true
+        && c.log.at(-1)[0] === 'playTracks' && c.log.at(-1)[1] === first && c.log.at(-1)[2] === 'kitchen' && player.state().current === first, J(c.log.slice(-2)));
+      await player.play({ uri: 'spotify:track:6rqhFgbbKwnb9MLmUQDhG6' });
+      check('*** Spotify\'s own order: Spotify\'s own next and previous ***', (await player.skip(1)) === true && c.log.at(-1)[0] === 'skip'
+        && (await player.skip(-1)) === true && c.log.at(-1)[1] === -1, J(c.log.slice(-2)));
+      await player.stop();
+      check('stopped: nothing to change', player.canSkip() === false && (await player.skip(1)) === false);
+      player.destroy();
+    }
 
     // ============================================================================================
     section('the router: one verb, the right player, one answer per screen');
@@ -837,6 +864,72 @@ const FAVS = normalizeFavourites([
       r2.destroy();
       const opt = MUSIC_SETTINGS.find((s) => s.key === 'seekSeconds');
       check('the jump is a row, 15 seconds by default', opt && opt.default === 15 && opt.options.length === 5, JSON.stringify(opt));
+    }
+
+    section('(Mike, 2026-11-10) previous track and next track, in the router');
+    {
+      // A real local player over a folder of three songs: the songs it plays are what the fake audio logs.
+      const log = [];
+      const items = ['Jazz/1 One.mp3', 'Jazz/2 Two.mp3', 'Jazz/3 Three.mp3'].map((p) => ({ path: p, name: p, kind: 'audio', url: `u:${p}` }));
+      const local = createLocalMusic({ sources: SOURCES, resolve: async () => ({ items }), resolveItem, makeAudio: fakeAudioFactory(log), order: 'inorder' });
+      const songs = () => log.filter((l) => l.startsWith('play:'));
+      const bus = createBus();
+      const r = createMusicRouter({ bus, favourites: () => FAVS, local });
+      check('nothing playing: neither can act, refused without a throw',
+        !r.status().canNext && !r.status().canPrev && (await r.skip(1)).ok === false);
+      await r.play({ name: 'Jazz' });
+      check('(setup) a folder of three plays the first', /1 One/.test(songs().at(-1) || ''), J(log));
+      check('a folder of songs: both can act', r.status().canNext && r.status().canPrev);
+      await r.skip(1);
+      check('*** Next track: the second song ***', /2 Two/.test(songs().at(-1) || ''), J(songs()));
+      bus.publish('music/track-next');
+      await tick();
+      check('*** a switch, the bar or "next song" reaches it on the bus ***', /3 Three/.test(songs().at(-1) || ''), J(songs()));
+      await r.skip(1);
+      check('past the last: round to the first', /1 One/.test(songs().at(-1) || ''), J(songs()));
+      await r.skip(-1);
+      check('*** Previous track: round the other way, to the last ***', /3 Three/.test(songs().at(-1) || ''), J(songs()));
+      await r.pause();
+      await r.skip(-1);
+      check('*** a person who asks for another song wants to hear it: paused no longer ***', !r.status().paused && /2 Two/.test(songs().at(-1) || ''), J(r.status()));
+      // One song: no next song inside it; Previous starts it again.
+      const seeks = [];
+      const one = { async playFile() { return { ok: true }; }, stop() {}, pause() {}, resume() {}, canSkip: () => false, skip: () => false,
+        seekBy(s) { seeks.push(s); return true; } };
+      const r1 = createMusicRouter({ bus: createBus(), favourites: () => FAVS, local: one });
+      await r1.play({ name: 'Morning hymn' });
+      check('one song: Next track dimmed, Previous track live', !r1.status().canNext && r1.status().canPrev, J(r1.status()));
+      check('*** Previous track with nothing before it: the song from the start ***', (await r1.skip(-1)).ok && seeks.at(-1) <= -1e6, J(seeks));
+      check('Next track refused, nothing moved', (await r1.skip(1)).ok === false && seeks.length === 1);
+      r1.destroy();
+      await r.stop();
+      r.destroy();
+      local.destroy();
+      // The screen's YouTube panel keeps its own list: the press goes to it.
+      const b2 = createBus();
+      const sent = [];
+      b2.subscribe('youtube/who', () => b2.publish('youtube/here', { instanceId: 'y' }));
+      b2.subscribe('youtube/next#y', () => sent.push('next'));
+      b2.subscribe('youtube/prev#y', () => sent.push('prev'));
+      const r2 = createMusicRouter({ bus: b2, favourites: () => FAVS, youtubeWhere: () => 'panel' });
+      await r2.play({ name: 'the Beatles' });
+      await r2.skip(1); await r2.skip(-1);
+      check('*** a favourite in the YouTube panel: Next and Previous go to that panel ***', J(sent) === '["next","prev"]', J(sent));
+      r2.destroy();
+      // A shuffle of every favourite: one song inside, so Next track is the next favourite.
+      const played = [];
+      const b3 = createBus();
+      const r3 = createMusicRouter({ bus: b3, favourites: () => FAVS.filter((f) => f.id === 'fhymn' || f.id === 'fbeatles'),
+        local: { async playFile() { played.push('hymn'); return { ok: true }; }, stop() {}, canSkip: () => false, skip: () => false },
+        ownYoutube: { play() { played.push('yt'); }, stop() {}, canSkip: () => false, skip: () => false },
+        picker: createMusicPicker({ rand: mulberry32(3) }), setTimer: () => 0, clearTimer: () => {} });
+      await r3.shuffleAll();
+      const before = played.length;
+      check('in a shuffle of every favourite, Next track is live even for one song', r3.status().canNext === true);
+      await r3.skip(1);
+      check('*** ...and it plays the next favourite ***', played.length === before + 1 && r3.status().shuffle, J(played));
+      await r3.stop();
+      r3.destroy();
     }
 
     section('shuffle all my favourites (note FT 3): a bounded run, each by its own player');
@@ -982,7 +1075,9 @@ const FAVS = normalizeFavourites([
     rootBus.publish('music/select');
     check('the first select only shows the highlight', probe().lit === 0);
     // (Mike, 2026-11-08, DELIBERATELY: the transport row, Rewind, Pause, Stop, Fast forward: Stop is two stops further on.)
+    // (Mike, 2026-11-10, DELIBERATELY: Previous track now starts the row, so Stop is one stop further again.)
     rootBus.publish('music/next'); rootBus.publish('music/next'); rootBus.publish('music/next'); rootBus.publish('music/next');
+    rootBus.publish('music/next');
     check('next walks the buttons', probe().litAct === 'stop', probe().litAct);
     rootBus.publish('music/select');
     await tick();
@@ -995,6 +1090,11 @@ const FAVS = normalizeFavourites([
       act('resume').click();
       await tick(); await tick();
       check('*** Play plays; the row now offers Pause and Stop ***', probe().status.playing && !!act('pause') && !act('stop').disabled, JSON.stringify(probe().status));
+      // (Mike, 2026-11-10) Previous track and Next track either end of the row. One music file: nothing after it, the start before.
+      check('*** the row starts with Previous track and ends with Next track ***',
+        act('track-prev')?.parentElement.firstElementChild === act('track-prev') && act('track-next')?.parentElement.lastElementChild === act('track-next'));
+      check('one music file: Previous track live (back to its start), Next track dimmed and says why',
+        !act('track-prev').disabled && act('track-next').disabled && /no other song/.test(act('track-next').title), act('track-next')?.outerHTML);
       act('pause').click();
       await tick();
       check('Pause pauses, the row says Play, the line says Paused', probe().status.paused && !!act('resume') && /^Paused/.test(host.querySelector('[data-now]').textContent));

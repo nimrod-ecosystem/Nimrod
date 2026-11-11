@@ -48,7 +48,7 @@ import {
   SHELL_NEXT, SHELL_PREV, SHELL_PANEL, SHELL_HUSH, SHELL_MENU, SHELL_FULLSCREEN, SHELL_HOME, SHELL_GO_HOME,
   SHELL_MIRROR, SHELL_STATE, SHELL_HELP, SHELL_HOST, FULLSCREEN_BAR_HIDE_DEFAULT_MS, SHELL_SWITCH_MODULE,
   SHELL_PLAY_PAUSE, SHELL_PROMOTE, SHELL_DEMOTE, SHELL_SAVE, SHELL_PAGE_NEXT, SHELL_PAGE_PREV,
-  SHELL_MEDIA_STOP, SHELL_MEDIA_REWIND, SHELL_MEDIA_FORWARD, SHELL_WHO,
+  SHELL_MEDIA_STOP, SHELL_MEDIA_REWIND, SHELL_MEDIA_FORWARD, SHELL_MEDIA_TRACK_PREV, SHELL_MEDIA_TRACK_NEXT, SHELL_WHO,
 } from '../shell_verbs.js';
 import { CALL_CONTROL_TOPIC, CALL_CONTROLS_TOPIC, CALL_HANGUP_TOPIC, QUICK_SWAP_TOPIC, EDIT_PANEL_TOPIC } from '../actions.js';
 import { EDGE_TOPIC } from '../input.js';
@@ -74,10 +74,13 @@ const BUTTONS = [
   // Pause / Play (2026-10-02): the selected panel's, between Back and Next where a transport has it. The
   // shell says whether it can and which way it is (SHELL_STATE `playPause`); dimmed until it says so.
   // Stop, Rewind and Fast forward (2026-11-08): only while the picked panel has them (SHELL_STATE `media`), around Pause.
+  // Previous track and Next track (2026-11-10): the same way, either side of them.
+  { act: 'mediatrackprev', verb: SHELL_MEDIA_TRACK_PREV, label: '⏮ Previous track', title: 'the song before this one' },
   { act: 'mediarewind', verb: SHELL_MEDIA_REWIND, label: '⏪ Rewind', title: 'jump back in what is playing' },
   { act: 'playpause', verb: SHELL_PLAY_PAUSE, label: '⏸ Pause', title: 'pause or play the panel you picked' },
   { act: 'mediastop', verb: SHELL_MEDIA_STOP, label: '⏹ Stop', title: 'stop what is playing' },
   { act: 'mediaforward', verb: SHELL_MEDIA_FORWARD, label: 'Fast forward ⏩', title: 'jump on in what is playing' },
+  { act: 'mediatracknext', verb: SHELL_MEDIA_TRACK_NEXT, label: 'Next track ⏭', title: 'the next song' },
   { act: 'next', verb: SHELL_NEXT, label: 'Next ▸', title: 'next' },
   // Previous page / Next page (row 2.190): only while the picked panel has more than one page (SHELL_STATE `pages`).
   { act: 'pageprev', verb: SHELL_PAGE_PREV, label: '◂ Previous page', title: 'the board or view before this one' },

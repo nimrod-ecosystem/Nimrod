@@ -97,6 +97,7 @@ function fakeIframeApi() {
         emit: (k, data) => { for (const fn of ls[k] || []) fn({ data }); },
         loadUri(u) { this.log.push(['loadUri', u]); },
         play() { this.log.push(['play']); }, pause() { this.log.push(['pause']); }, resume() { this.log.push(['resume']); },
+        seek(s) { this.log.push(['seek', s]); },
         destroy() { this.log.push(['destroy']); },
       };
       rec.ctl = ctl;
@@ -170,6 +171,19 @@ try {
     check('repeated end reports choose only once (measured: the frame repeats it)', fi.ctl.log.filter((l) => l[0] === 'loadUri').length === 2);
     fi.ctl.emit('playback_update', upd(second));
     check('...and that one is counted when it starts', picker.state().recent.at(-1) === second);
+    // (Mike, 2026-11-10) "There should also be buttons for previous track and next track." In our order, both act.
+    {
+      const loads = () => fi.ctl.log.filter((l) => l[0] === 'loadUri').map((l) => l[1]);
+      check('our order: Previous track and Next track can act', emb.canSkip() === true);
+      check('*** Next track: our picker chooses another song, and the frame plays it ***',
+        emb.skip(1) === true && loads().length === 3 && loads().at(-1) !== second && fi.ctl.log.at(-1)[0] === 'play', J(loads()));
+      check('*** Previous track: the song before, again ***', emb.skip(-1) === true && loads().at(-1) === second, J(loads()));
+      check('...and the one before that', emb.skip(-1) === true && loads().at(-1) === first, J(loads()));
+      const n = loads().length;
+      check('*** nothing before it: this song from the start, nothing else loaded ***',
+        emb.skip(-1) === true && loads().length === n && fi.ctl.log.at(-1)[0] === 'seek' && fi.ctl.log.at(-1)[1] === 0, J(fi.ctl.log.slice(-2)));
+      fi.ctl.emit('playback_update', upd(second));   // as it was, for the bus checks below
+    }
 
     section('2b. the audio bus pauses it under a spoken cue, and only the bus starts it again');
     audio.register('cue', { tier: 'talk' });
@@ -194,6 +208,8 @@ try {
       r2.ok && r2.order === 'spotify' && fi2.ctl.log.find((l) => l[0] === 'loadUri')[1] === PL && r2.note === EMBED_WORDS['own-order'], J(r2));
     fi2.ctl.emit('playback_update', upd(T2));
     check('*** each song Spotify plays is still counted by our shuffle ***', p2.state().recent.at(-1) === T2);
+    check('(2026-11-10) Spotify\'s own order here: no "next" to ask its player for, so no track skipping, refused quietly',
+      emb2.canSkip() === false && emb2.skip(1) === false && !fi2.ctl.log.some((l) => l[0] === 'seek'));
     fi2.ctl.emit('playback_update', upd(T2, { pos: 200000 }));
     check('an end in Spotify\'s order waits for Spotify to move on by itself', T2b.live.size === 1 && [...T2b.live.values()][0].ms === NEXT_WAIT_MS && ended2 === 0);
     fi2.ctl.emit('playback_update', upd(T3));

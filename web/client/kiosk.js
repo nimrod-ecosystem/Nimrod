@@ -66,7 +66,7 @@ import {
   SHELL_NEXT, SHELL_PREV, SHELL_PANEL, SHELL_HUSH, SHELL_MENU, SHELL_FULLSCREEN, SHELL_HOME, SHELL_GO_HOME, SHELL_MIRROR,
   SHELL_STATE, SHELL_HELP, SHELL_HOST, PLAIN_BAR_SHOW, PLAIN_BAR_RING, PLAIN_BAR_RING_END, PLAIN_BAR_MOUNT_GRACE_MS,
   PLAIN_BAR_HOLD_DEFAULT_MS, SHELL_PLAY_PAUSE, SHELL_PROMOTE, SHELL_DEMOTE, SHELL_SAVE, SHELL_PAGE_NEXT, SHELL_PAGE_PREV,
-  SHELL_MEDIA_STOP, SHELL_MEDIA_REWIND, SHELL_MEDIA_FORWARD, SHELL_WHO,
+  SHELL_MEDIA_STOP, SHELL_MEDIA_REWIND, SHELL_MEDIA_FORWARD, SHELL_MEDIA_TRACK_PREV, SHELL_MEDIA_TRACK_NEXT, SHELL_WHO,
 } from './shell_verbs.js';
 import {
   SYSTEM_TOPICS, verbTopic, SWITCH_MODULE_TOPIC, QUICK_SWAP_TOPIC, verbsFor, verbTarget, CALL_CONTROL_TOPIC, CALL_CONTROLS_TOPIC,
@@ -696,10 +696,13 @@ export async function mountKiosk(root, {
                here (SyntaxError: Unexpected identifier 'prevInPrimary'). -->
           <button data-act="back" title="back — the one before this (↑)">◂ Back</button>
           <!-- STOP, REWIND, FAST FORWARD (Mike, 2026-11-08): only while the picked panel has them, around Pause. See mediaState. -->
+          <!-- PREVIOUS TRACK, NEXT TRACK (Mike, 2026-11-10): the same way, either side of them. -->
+          <button data-act="mediatrackprev" title="the song before this one" hidden>⏮ Previous track</button>
           <button data-act="mediarewind" title="jump back in what is playing" hidden>⏪ Rewind</button>
           <button data-act="playpause" title="pause or play the panel you picked" disabled>⏸ Pause</button>
           <button data-act="mediastop" title="stop what is playing" hidden>⏹ Stop</button>
           <button data-act="mediaforward" title="jump on in what is playing" hidden>Fast forward ⏩</button>
+          <button data-act="mediatracknext" title="the next song" hidden>Next track ⏭</button>
           <button data-act="next" title="next (→ / ↓)">Next ▸</button>
           <!-- ROW 2.190 (Mike, 2026-11-02): Previous page / Next page switch the picked panel's boards or views; Back and
                Next keep moving through what is on the page. Shown only while that panel has more than one page; dimmed
@@ -4025,7 +4028,8 @@ export async function mountKiosk(root, {
   controlsEl.querySelector('[data-act="pageprev"]')?.addEventListener('click', () => { turnPagePanel(-1); });
   controlsEl.querySelector('[data-act="pagenext"]')?.addEventListener('click', () => { turnPagePanel(1); });
   // (2026-11-08) Stop, Rewind and Fast forward, for the picked panel.
-  for (const [act, verb] of [['mediastop', 'stop'], ['mediarewind', 'rewind'], ['mediaforward', 'forward']]) {
+  for (const [act, verb] of [['mediastop', 'stop'], ['mediarewind', 'rewind'], ['mediaforward', 'forward'],
+    ['mediatrackprev', 'track-prev'], ['mediatracknext', 'track-next']]) {   // (2026-11-10) Previous track, Next track
     controlsEl.querySelector(`[data-act="${act}"]`)?.addEventListener('click', () => { mediaPress(verb); });
   }
   controlsEl.querySelector('[data-act="bigger"]')?.addEventListener('click', () => { promotePanel(); });
@@ -9529,6 +9533,8 @@ export async function mountKiosk(root, {
   offsScreen.push(bus.subscribe(SHELL_MEDIA_STOP, (p) => { claimed(p); mediaPress('stop'); }));
   offsScreen.push(bus.subscribe(SHELL_MEDIA_REWIND, (p) => { claimed(p); mediaPress('rewind'); }));
   offsScreen.push(bus.subscribe(SHELL_MEDIA_FORWARD, (p) => { claimed(p); mediaPress('forward'); }));
+  offsScreen.push(bus.subscribe(SHELL_MEDIA_TRACK_PREV, (p) => { claimed(p); mediaPress('track-prev'); }));
+  offsScreen.push(bus.subscribe(SHELL_MEDIA_TRACK_NEXT, (p) => { claimed(p); mediaPress('track-next'); }));
   for (const t of ['music/now', 'music/controls-changed']) {
     offsScreen.push(bus.subscribe(t, () => { try { syncPlayPause(); } catch { /* not drawn yet */ } }));
   }

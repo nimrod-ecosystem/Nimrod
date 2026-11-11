@@ -124,6 +124,10 @@ export function paintMediaButtons(root, s) {
   set('mediastop', !s?.playing, s?.playing ? `stop ${name}` : 'nothing is playing');
   set('mediarewind', !s?.canSeek, seekWhy || `back ${jump}`, s ? `⏪ Rewind ${s.seekSec}s` : null);
   set('mediaforward', !s?.canSeek, seekWhy || `on ${jump}`, s ? `Fast forward ${s.seekSec}s ⏩` : null);
+  // (Mike, 2026-11-10) Previous track and Next track, the same way: shown with the others, dimmed when they cannot act.
+  const one = !s?.playing ? 'nothing is playing' : 'this favorite has no other song to go to from here';
+  set('mediatrackprev', !(s?.playing && s?.canPrev), s?.playing && s?.canPrev ? 'the song before this one' : one);
+  set('mediatracknext', !(s?.playing && s?.canNext), s?.playing && s?.canNext ? 'the next song' : one);
 }
 
 // *** THE PERSON BUTTON (Mike, 2026-11-06, ruling 34; Design's who_is_here_bar_20261106). *** Who this screen is for, on the bar, and one
@@ -690,7 +694,7 @@ export const BAR_GROUP_NAMES = Object.freeze({
 export const BAR_ACT_GROUPS = Object.freeze({
   who: 'go', gohome: 'go', home: 'go',
   back: 'play', playpause: 'play', next: 'play', pageprev: 'play', pagenext: 'play', panel: 'play',
-  mediarewind: 'play', mediastop: 'play', mediaforward: 'play',
+  mediarewind: 'play', mediastop: 'play', mediaforward: 'play', mediatrackprev: 'play', mediatracknext: 'play',
   arrange: 'arrange', switch: 'arrange', save: 'arrange', swap: 'arrange', bigger: 'arrange', smaller: 'arrange',
   editpanel: 'arrange', mirror: 'arrange',
   hush: 'screen', help: 'screen', settings: 'screen', fs: 'screen', hidebar: 'screen',

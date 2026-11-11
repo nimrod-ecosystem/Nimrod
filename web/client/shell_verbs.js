@@ -28,6 +28,9 @@ export const SHELL_PAGE_PREV = 'shell/page-prev';
 export const SHELL_MEDIA_STOP = 'shell/media-stop';
 export const SHELL_MEDIA_REWIND = 'shell/media-rewind';
 export const SHELL_MEDIA_FORWARD = 'shell/media-forward';
+// Previous track and Next track (Mike, 2026-11-10): the same way, either side of them. kiosk.js mediaPress.
+export const SHELL_MEDIA_TRACK_PREV = 'shell/media-track-prev';
+export const SHELL_MEDIA_TRACK_NEXT = 'shell/media-track-next';
 export const SHELL_MIRROR = 'shell/mirror';        // the camera full screen
 // Nimrod, the context help (row 2.37): the shell's one cat explains whatever is picked. One cat per
 // screen, whichever bar was pressed -- two bars each bringing their own would be two cats.

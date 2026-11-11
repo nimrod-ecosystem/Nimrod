@@ -585,7 +585,8 @@ registerModule(
     function ytEnsure() {
       if (yt || !stageEl) return yt;
       yt = makePlayer(stageEl, {
-        onPlaylist: (ids) => { ytList = Array.from(new Set(ids || [])); ytAt = 0; if (ytList.length) yt?.load(ytList[0]); },
+        // (2026-11-10) a playlist's list arrives after it starts: Previous track and Next track come alive with it.
+        onPlaylist: (ids) => { ytList = Array.from(new Set(ids || [])); ytAt = 0; if (ytList.length) yt?.load(ytList[0]); if (!dead) { render(); tellBars(); } },
         onPlaying: () => { ytActive(true); ytPush(); },
         onIdle: () => ytActive(false),
         onEnded: () => ytNext(),
@@ -618,6 +619,14 @@ registerModule(
         const t = yt?.currentTime?.();
         if (t == null || typeof yt?.seek !== 'function') return false;
         yt.seek(Math.max(0, t + sec));
+        return true;
+      },
+      // (2026-11-10) Previous or next video of a playlist, round past either end.
+      canSkip: () => ytList.length > 1,
+      skip(dir) {
+        if (ytList.length < 2) return false;
+        ytAt = (((ytAt + (dir < 0 ? -1 : 1)) % ytList.length) + ytList.length) % ytList.length;
+        yt?.load(ytList[ytAt]);
         return true;
       },
     };
@@ -697,8 +706,12 @@ registerModule(
       const why = playing && !status.canSeek ? ' title="this favorite plays somewhere that cannot jump from here"' : '';
       const seekOff = playing && status.canSeek ? '' : off;
       const pp = playing && !status.paused ? btn('pause', '⏸ Pause') : btn('resume', '▶ Play', favs.length || playing ? '' : off);
+      // (Mike, 2026-11-10) Previous track and Next track, either end of the row (music_player.js SKIPS says which players can).
+      const oneSong = ' title="this favorite has no other song to go to from here"';
+      const prevOff = playing && status.canPrev ? '' : off + (playing ? oneSong : '');
+      const nextOff = playing && status.canNext ? '' : off + (playing ? oneSong : '');
       return `<div class="mu-btns" data-transport role="group" aria-label="Play controls">
-          ${btn('rewind', `⏪ Rewind ${seekSecondsNow()}s`, seekOff + why)}${pp}${btn('stop', '⏹ Stop', playing ? '' : off)}${btn('forward', `Fast forward ${seekSecondsNow()}s ⏩`, seekOff + why)}
+          ${btn('track-prev', '⏮ Previous track', prevOff)}${btn('rewind', `⏪ Rewind ${seekSecondsNow()}s`, seekOff + why)}${pp}${btn('stop', '⏹ Stop', playing ? '' : off)}${btn('forward', `Fast forward ${seekSecondsNow()}s ⏩`, seekOff + why)}${btn('track-next', 'Next track ⏭', nextOff)}
         </div>`;
     }
 
@@ -973,6 +986,8 @@ registerModule(
       if (a === 'resume') { router.resume(); return; }
       if (a === 'rewind') { router.seek(-1); return; }
       if (a === 'forward') { router.seek(1); return; }
+      if (a === 'track-prev') { router.skip(-1); return; }         // 2026-11-10
+      if (a === 'track-next') { router.skip(1); return; }
       if (a === 'shuffle-all') { router.shuffleAll(); return; }   // note FT 3
       if (a === 'confirm') { router.confirm(); return; }
       if (a === 'try-here') { tryHere(); return; }   // desktop prompt
@@ -1060,8 +1075,13 @@ registerModule(
       // (2026-11-08) What the bars' Stop, Rewind and Fast forward need to know while this panel is picked (kiosk.js `mediaState`).
       // A module with no such function shows none of them, so every other panel's bar is as it was. `paused` is also "not
       // playing": the bar's one Pause / Play then says Play, and a press starts something (music_player.js `resume`).
-      mediaControls: () => ({ playing: !!status.playing, paused: !status.playing || !!status.paused, canSeek: !!status.canSeek,
-        seekSec: seekSecondsNow(), canPlay: !!status.playing || favs.length > 0 }),
+      // (2026-11-10) ...and Previous track and Next track, asked of the router now (a playlist's list arrives late).
+      mediaControls: () => {
+        let live = status;
+        try { live = router.status(); } catch { /* the last word stands */ }
+        return { playing: !!status.playing, paused: !status.playing || !!status.paused, canSeek: !!status.canSeek,
+          seekSec: seekSecondsNow(), canPlay: !!status.playing || favs.length > 0, canPrev: !!live.canPrev, canNext: !!live.canNext };
+      },
       __probe: () => ({ view, lit, favs: favs.map((f) => ({ ...f })), status: { ...status }, cfg: { ...cfg },
         local: local.state(), leader: router.isLeader(), personList: !!personList,
         litAct: lit >= 0 ? walk()[lit]?.dataset.act : null, hasYt: !!yt }),
