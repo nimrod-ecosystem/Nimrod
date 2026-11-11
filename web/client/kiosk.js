@@ -98,7 +98,7 @@ import {
 import {
   createScreenLock, attachLockGuards, mountLockChip, mountPinStrip, keepWhileLocked, LOCK_PAGE_DROPS, LOCKED_PAGE,
   LOCK_KEY_BINDINGS, missingLockBindings, lockControlOf, chordWords, lockedLine, SCREEN_LOCK_TOPIC, LOCK_STATE_TOPIC,
-  RELOCK_CHOICES, lockHelperFrom, createLockReporter, ensureLockCss,
+  RELOCK_CHOICES, lockHelperFrom, createLockReporter, ensureLockCss, desktopHelperUrl, createDesktopExit,
 } from './screen_lock.js';
 // Row 2.34: the ready-made dashboards (data + the maker + their spoken routes) and the picker's tray.
 import {
@@ -7872,6 +7872,15 @@ export async function mountKiosk(root, {
     pinStrip.open(mode);
     return pinStrip;
   }
+  let desktopExit = null, desktopReady = false;   // "Go to the desktop" (2026-11-10): only where the helper says it can
+  async function goToDesktop() {
+    if (!desktopExit || lockRefuses('leaving it')) return;
+    try { menu.close(); } catch { /* already closed */ }
+    const r = await desktopExit.go();
+    if (r.ok || torn) return;   // on success this page is about to close
+    try { sayNote(r.reason === 'locked' ? lockedLine('leaving it', lockControlNow())
+      : 'This computer did not answer. Ctrl+Alt+Shift+Esc goes to the desktop too.'); } catch { /* a courtesy */ }
+  }
   function lockMenuRows() {
     if (!screenLock) return [];
     const words = chordWords(lockControlNow());
@@ -7885,7 +7894,16 @@ export async function mountKiosk(root, {
     // Not at "Just the essentials" (legibility and the ways out); the chord works at every level.
     if (complexity() === 'essential') return [];
     const t = MENU_TAB.screen(-1);
+    // "GO TO THE DESKTOP" (Mike, 2026-11-10; screen_lock.js createDesktopExit). Not on a locked screen (above) and not at "Just the
+    // essentials" (a brushed press would leave a bare desktop); the chord still works everywhere it did.
+    const desk = desktopExit && desktopReady ? [
+      { kind: 'heading', id: 'desktop-head', label: 'This computer', ...t },
+      { kind: 'item', id: 'go-desktop', label: 'Go to the desktop', ...t,
+        hint: 'closes the dashboard so this computer works like any other; “Nimrod dashboard” in the computer’s menu brings it back',
+        run: () => { goToDesktop(); } },
+    ] : [];
     return [
+      ...desk,
       { kind: 'heading', id: 'screen-lock-head', label: 'Locking this screen', ...t },
       { kind: 'item', id: 'screen-lock', label: 'Lock this screen', ...t,
         hint: `everything on it keeps working, editing too; leaving it and the account’s keys wait for ${words}${pin ? ' and the PIN' : ''}`,
@@ -9737,6 +9755,11 @@ export async function mountKiosk(root, {
         systemAudio = createSystemAudio({ url: audioUrl });
         readSystemAudio();
         offsScreen.push(watchOutputs(() => { readSystemAudio(); }));
+      }
+      const deskUrl = desktopHelperUrl(helperUrl);
+      if (deskUrl) {
+        desktopExit = createDesktopExit({ url: deskUrl });
+        desktopExit.can().then((ok) => { if (torn) return; desktopReady = ok; try { menu.refresh(); } catch { /* not up yet */ } });
       }
     }
     // A password box somebody is in when it locks is put down (the guards refuse it from then on).

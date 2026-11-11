@@ -68,6 +68,20 @@ if [ "$LOCK" = "1" ]; then
   cp "$HERE/nimrod-kiosk-back.sh" "$BACK_DST"
   cp "$HERE/nimrod-tv.sh" "$TV_DST"
   chmod +x "$HELPER_DST" "$BACK_DST" "$TV_DST"
+  # (2026-11-10, Mike: "just like a regular Pi") The way back is in the computer's own menu, like any other program, not
+  # only a four-key chord: "Nimrod dashboard" runs nimrod-kiosk-back.sh. The settings menu's "Go to the desktop" names it.
+  APPS_DIR="$HOME/.local/share/applications"
+  mkdir -p "$APPS_DIR"
+  cat > "$APPS_DIR/nimrod-dashboard.desktop" <<EOF
+[Desktop Entry]
+Type=Application
+Name=Nimrod dashboard
+Comment=Bring the dashboard back to this screen
+Exec=$BACK_DST
+Icon=video-display
+Terminal=false
+Categories=Utility;
+EOF
 fi
 
 # 2. the unit, with the real URL and the real script path filled in.

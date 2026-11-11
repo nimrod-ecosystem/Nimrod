@@ -212,7 +212,8 @@ def swap_rc(locked, log=print):
 # accepted. `now` is the speaker playing NOW, not the one chosen: unplugged, WirePlumber falls back and returns to it later.
 AUDIO_PATH = '/audio'
 AUDIO_DEFAULT_PATH = '/audio/default'
-PATHS = (PATH, AUDIO_PATH, AUDIO_DEFAULT_PATH)
+DESKTOP_PATH = '/desktop'
+PATHS = (PATH, AUDIO_PATH, AUDIO_DEFAULT_PATH, DESKTOP_PATH)
 
 
 def run_tool(args, timeout=5):
@@ -275,6 +276,37 @@ def set_default_sink(name):
     return (True, None) if code == 0 else (False, 'wpctl')
 
 
+# ---- "GO TO THE DESKTOP" (Mike, 2026-11-10: "It's supposed to operate just like a regular Pi, not be locked into Nimrod";
+# then, the chord known, "I still can't get out of full screen to sign into spotify") -----------------------------------------
+# The settings menu's button asks here, and this runs the SAME script the Ctrl+Alt+Shift+Esc chord runs (one way out, two doors):
+# it stops the kiosk's service, which Restart= never undoes. Refused while locked, like the chord. No terminal from the button
+# (NIMROD_PAUSE_TERMINAL=0): the person asked for the desktop. "Nimrod dashboard" in the computer's menu brings it back.
+PAUSE_SCRIPT = os.environ.get('NIMROD_KIOSK_PAUSE') or os.path.join(os.path.expanduser('~'), '.local', 'bin', 'nimrod-kiosk-pause.sh')
+
+
+def spawn(args, env):
+    """Start and forget: stopping the kiosk ends the page that asked, so nothing here waits on it. A seam for the tests."""
+    subprocess.Popen(args, env=env, start_new_session=True,
+                     stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+def can_leave():
+    return os.path.isfile(PAUSE_SCRIPT) and os.access(PAUSE_SCRIPT, os.X_OK)
+
+
+def go_to_desktop():
+    """-> (ok, reason)."""
+    if check('locked'):
+        return False, 'locked'
+    if not can_leave():
+        return False, 'no-pause'
+    try:
+        spawn([PAUSE_SCRIPT], dict(os.environ, NIMROD_PAUSE_TERMINAL='0'))
+    except OSError:
+        return False, 'spawn'
+    return True, None
+
+
 class Handler(BaseHTTPRequestHandler):
     server_version = 'nimrod-lock-helper'
 
@@ -323,6 +355,11 @@ class Handler(BaseHTTPRequestHandler):
             if a is None:
                 return self._reply(503, {'ok': False, 'reason': 'no-pipewire'}, origin)
             return self._reply(200, public_audio(a), origin)
+        if path == DESKTOP_PATH:        # the page asks once whether to show the button: an older helper says 404, so no button
+            origin = self._origin_ok()
+            if not origin:
+                return self._reply(403, {'ok': False, 'reason': 'origin'})
+            return self._reply(200, {'ok': can_leave()}, origin)
         if path != PATH:
             return self._reply(404, {'ok': False})
         s = read_state()
@@ -330,7 +367,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         path = urlsplit(self.path).path
-        if path not in (PATH, AUDIO_DEFAULT_PATH):
+        if path not in (PATH, AUDIO_DEFAULT_PATH, DESKTOP_PATH):
             return self._reply(404, {'ok': False})
         origin = self._origin_ok()
         if not origin:
@@ -345,6 +382,11 @@ class Handler(BaseHTTPRequestHandler):
             body = json.loads(self.rfile.read(n).decode('utf-8'))
         except (ValueError, UnicodeDecodeError):
             return self._reply(400, {'ok': False, 'reason': 'json'}, origin)
+        if path == DESKTOP_PATH:
+            if not isinstance(body, dict) or body.get('go') is not True:
+                return self._reply(400, {'ok': False, 'reason': 'shape'}, origin)
+            ok, reason = go_to_desktop()
+            return self._reply(200 if ok else (409 if reason == 'locked' else 503), {'ok': ok, 'reason': reason}, origin)
         if path == AUDIO_DEFAULT_PATH:
             if not isinstance(body, dict) or not isinstance(body.get('name'), str) or not body['name']:
                 return self._reply(400, {'ok': False, 'reason': 'shape'}, origin)

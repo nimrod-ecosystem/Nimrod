@@ -33,7 +33,7 @@ import {
   LOCK_CONTROL, SCREEN_LOCK_ACTION, SCREEN_LOCK_TOPIC, LOCK_STATE_TOPIC, LOCK_STORE_KEY, keepWhileLocked, isAccountRow,
   isLeaveKey, isLeavingLink, attachLockGuards, mountPinStrip, mountLockChip, isLoopbackUrl, lockHelperFrom,
   createLockReporter, LOCK_HELPER_KEY, PIN_TRIES, PIN_WAIT_MS, isPinShape, RELOCK_CHOICES, LOCK_MENU_DROPS,
-  LOCK_PAGE_DROPS, LOCK_SECRET_KEYS, screenLockedHere,
+  LOCK_PAGE_DROPS, LOCK_SECRET_KEYS, screenLockedHere, desktopHelperUrl, createDesktopExit,
 } from '../screen_lock.js';
 import { createSpotify } from '../music_spotify.js';
 import { SPEECH_PASS_FIELDS } from '../speech_engines.js';
@@ -411,6 +411,24 @@ const pressChord = () => { chord('keydown'); chord('keyup'); };
       failing.report({ locked: false });
       await sleep(10);
       check('a missing helper is not an error (nothing thrown)', true);
+
+      // "Go to the desktop" (Mike, 2026-11-10)
+      check('the desktop address is the helper\'s, loopback only', desktopHelperUrl('http://127.0.0.1:8765/screen-lock') === 'http://127.0.0.1:8765/desktop'
+        && desktopHelperUrl('https://evil.example/screen-lock') === null && desktopHelperUrl('nonsense') === null);
+      const asked = [];
+      const reply = (status, body) => ({ ok: status < 300, status, json: async () => body });
+      const de = createDesktopExit({ url: 'http://127.0.0.1:8765/desktop', fetchImpl: async (u, o) => { asked.push([u, o?.method || 'GET', o?.body]); return reply(200, { ok: true }); } });
+      check('it asks once whether to show the button', (await de.can()) === true && asked[0][1] === 'GET');
+      const went = await de.go();
+      check('the button posts { go: true }', went.ok && asked[1][1] === 'POST' && JSON.parse(asked[1][2]).go === true, J(asked));
+      const old = createDesktopExit({ url: 'http://127.0.0.1:8765/desktop', fetchImpl: async () => reply(404, { ok: false }) });
+      check('an older helper (404): no button', (await old.can()) === false);
+      const lockedHelper = createDesktopExit({ url: 'http://127.0.0.1:8765/desktop', fetchImpl: async () => reply(409, { ok: false, reason: 'locked' }) });
+      check('a locked screen is said, not a crash', J(await lockedHelper.go()) === J({ ok: false, reason: 'locked' }));
+      const gone = createDesktopExit({ url: 'http://127.0.0.1:8765/desktop', fetchImpl: () => Promise.reject(new Error('no helper')) });
+      check('no helper: no button, and a press says so', (await gone.can()) === false && (await gone.go()).reason === 'helper');
+      const evil = createDesktopExit({ url: 'https://evil.example/desktop', fetchImpl: async () => { asked.push('no'); return reply(200, { ok: true }); } });
+      check('never anywhere but this computer', (await evil.can()) === false && !(await evil.go()).ok && !asked.includes('no'));
     }
 
     // =====================================================================================================

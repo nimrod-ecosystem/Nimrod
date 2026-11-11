@@ -779,3 +779,28 @@ export function createLockReporter({
     destroy() { if (timer && clearIntervalFn) clearIntervalFn(timer); },
   };
 }
+
+// "GO TO THE DESKTOP" (Mike, 2026-11-10: "It's supposed to operate just like a regular Pi, not be locked into Nimrod"; then
+// "I still can't get out of full screen to sign into spotify"). A page cannot close the kiosk - its service starts it again -
+// so the same helper runs the chord's own script (nimrod-lock-helper.py, "GO TO THE DESKTOP"). `can()` asks once whether to
+// show the button: no helper, or an older one, and there is no button. `go()` -> { ok, reason }; neither throws.
+export function desktopHelperUrl(lockUrl) {
+  try { const u = new URL(lockUrl); u.pathname = '/desktop'; u.search = ''; return isLoopbackUrl(u.href) ? u.href : null; } catch { return null; }
+}
+export function createDesktopExit({ url, fetchImpl = (...a) => globalThis.fetch(...a) } = {}) {
+  const ok = !!url && isLoopbackUrl(url);
+  return {
+    async can() {
+      if (!ok) return false;
+      try { const r = await fetchImpl(url); if (!r || !r.ok) return false; const j = await r.json().catch(() => null); return !!(j && j.ok); } catch { return false; }
+    },
+    async go() {
+      if (!ok) return { ok: false, reason: 'helper' };
+      try {
+        const r = await fetchImpl(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ go: true }) });
+        const j = await r?.json?.().catch(() => null);
+        return { ok: !!(r && r.ok && j && j.ok), reason: j?.reason || (r && r.ok ? null : 'helper') };
+      } catch { return { ok: false, reason: 'helper' }; }
+    },
+  };
+}

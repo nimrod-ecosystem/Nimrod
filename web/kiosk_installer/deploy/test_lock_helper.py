@@ -162,6 +162,51 @@ class LockHelperTest(unittest.TestCase):
         self.assertEqual(self.audio('GET', '/audio')[0], 503)
         self.assertEqual(self.audio('POST', '/audio/default', {'name': 'x'})[0], 503)
 
+    # ---- "Go to the desktop" (Mike, 2026-11-10) ----
+    def fake_pause(self, present=True):
+        p = os.path.join(self.tmp, 'nimrod-kiosk-pause.sh')
+        if present:
+            with open(p, 'w') as f:
+                f.write('#!/bin/sh\n')
+            os.chmod(p, 0o755)
+        runs = []
+        was_p, was_s = H.PAUSE_SCRIPT, H.spawn
+        H.PAUSE_SCRIPT = p
+        H.spawn = lambda args, env: runs.append((args, env.get('NIMROD_PAUSE_TERMINAL')))
+        self.addCleanup(lambda: (setattr(H, 'PAUSE_SCRIPT', was_p), setattr(H, 'spawn', was_s)))
+        return p, runs
+
+    def test_the_desktop_button_runs_the_chords_script_without_a_terminal(self):
+        p, runs = self.fake_pause()
+        code, h, j = self.audio('GET', '/desktop')
+        self.assertEqual((code, j), (200, {'ok': True}))
+        self.assertEqual(h.get('Access-Control-Allow-Origin'), SITE)
+        self.assertEqual(self.audio('OPTIONS', '/desktop')[0], 204)
+        code, _, j = self.audio('POST', '/desktop', {'go': True})
+        self.assertEqual((code, j['ok']), (200, True))
+        self.assertEqual(runs, [([p], '0')])
+
+    def test_the_desktop_button_is_refused_while_locked(self):
+        _, runs = self.fake_pause()
+        self.assertEqual(self.req('POST', {'locked': True})[0], 200)
+        code, _, j = self.audio('POST', '/desktop', {'go': True})
+        self.assertEqual((code, j['reason']), (409, 'locked'))
+        self.assertEqual(runs, [])
+
+    def test_the_desktop_button_only_for_the_site_and_only_on_purpose(self):
+        _, runs = self.fake_pause()
+        self.assertEqual(self.audio('GET', '/desktop', origin='https://evil.example')[0], 403)
+        self.assertEqual(self.audio('POST', '/desktop', {'go': True}, origin='https://evil.example')[0], 403)
+        self.assertEqual(self.audio('POST', '/desktop', {'go': 1})[0], 400)
+        self.assertEqual(self.audio('POST', '/desktop', [])[0], 400)
+        self.assertEqual(runs, [])
+
+    def test_no_pause_script_no_button(self):
+        _, runs = self.fake_pause(present=False)
+        self.assertEqual(self.audio('GET', '/desktop')[2], {'ok': False})
+        self.assertEqual(self.audio('POST', '/desktop', {'go': True})[0], 503)
+        self.assertEqual(runs, [])
+
     def test_origin_is_the_kiosk_sites(self):
         self.assertEqual(H.allowed_origins(), {SITE})
         os.environ['NIMROD_LOCK_ORIGINS'] = 'https://a.example, http://127.0.0.1:8440/x'

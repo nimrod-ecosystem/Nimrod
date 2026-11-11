@@ -38,6 +38,9 @@ systemctl --user stop nimrod-kiosk.service || true
 # terminal in front of whoever just did this, gracefully degrading rather than failing if none
 # of these happen to be installed. Not required for the fix to work: the kiosk is already
 # stopped by the line above regardless of what happens from here down.
+# (2026-11-10) The settings menu's "Go to the desktop" runs this too, through the lock helper, with NIMROD_PAUSE_TERMINAL=0:
+# that person asked for the desktop, not a terminal.
+[ "${NIMROD_PAUSE_TERMINAL:-1}" = "1" ] || exit 0
 for term in lxterminal x-terminal-emulator xterm foot alacritty; do
   if command -v "$term" >/dev/null 2>&1; then
     "$term" >/dev/null 2>&1 &
