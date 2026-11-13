@@ -16,6 +16,7 @@ import argparse
 import hashlib
 import html
 import json
+import math
 import os
 import re
 import subprocess
@@ -28,7 +29,9 @@ REVIEWED_NAME = 'reviewed.json'
 AUDIO = ('.mp3', '.ogg', '.flac', '.wav', '.m4a')
 TAKE_RE = re.compile(r'^(.*?)\s*\((\d+)\)$')
 # Only these go in a public manifest (the gate: no plan, no source id, no download or review dates).
-PUBLIC_FIELDS = ('id', 'song', 'take', 'path', 'pack', 'kind', 'title', 'tags', 'licence', 'credit', 'ai_written', 'bytes', 'sha256', 'seconds', 'type', 'hosted')
+PUBLIC_FIELDS = ('id', 'song', 'take', 'path', 'pack', 'kind', 'title', 'tags', 'licence', 'credit', 'ai_written', 'bytes', 'sha256', 'seconds', 'type',
+                 'loudness_lufs', 'hosted')
+INPUT_I_RE = re.compile(r'"input_i"\s*:\s*"([^"]*)"')
 
 
 def slug(text):
@@ -86,6 +89,20 @@ def probe(path):
     return json.loads(r.stdout.decode('utf-8', 'replace') or '{}') if r.returncode == 0 else {}
 
 
+def loudness_of(path):
+    """Integrated loudness in LUFS (EBU R128, ffmpeg's loudnorm measuring only; the file is read, never written), or None for silence
+    or a file ffmpeg cannot read. WHY (the 11-09 gate, change 6): songs come out much louder than the game's bed, and evening them out
+    at playback from this number changes no file, where re-encoding would change every hash and add an encoder's delay."""
+    r = subprocess.run(['ffmpeg', '-hide_banner', '-nostats', '-i', path, '-vn', '-af', 'loudnorm=print_format=json', '-f', 'null', '-'],
+                       capture_output=True)
+    m = INPUT_I_RE.search(r.stderr.decode('utf-8', 'replace'))
+    try:
+        v = float(m.group(1)) if m else None
+    except ValueError:
+        return None
+    return round(v, 1) if v is not None and math.isfinite(v) else None
+
+
 def sha256_of(path):
     h = hashlib.sha256()
     with open(path, 'rb') as f:
@@ -94,10 +111,12 @@ def sha256_of(path):
     return h.hexdigest()
 
 
-def scan(tree, names=None, account=None, reviewed=None):
-    """The private manifest for a tree: every audio file, with what it carries. Takes `reviewed` ticks by file hash."""
+def scan(tree, names=None, account=None, reviewed=None, known_loudness=None):
+    """The private manifest for a tree: every audio file, with what it carries. Takes `reviewed` ticks by file hash, and a loudness
+    already measured for the same hash (`known_loudness`, from the last run), since measuring reads the whole song."""
     assets = []
     reviewed = reviewed or {}
+    known_loudness = known_loudness or {}
     for dp, dirs, files in os.walk(tree):
         dirs[:] = sorted(d for d in dirs if not d.startswith('.'))
         for f in sorted(files):
@@ -119,6 +138,7 @@ def scan(tree, names=None, account=None, reviewed=None):
                 'kind': 'music', 'title': song, 'tags': ['words'] if sung_lines(lyrics) else [], 'licence': None, 'credit': None,
                 'ai_written': 'suno' in str(tags.get('comment') or '').lower() or None,
                 'bytes': os.path.getsize(p), 'sha256': sha, 'seconds': round(float(fmt.get('duration') or 0), 1), 'type': f'audio/{ext[1:].lower()}',
+                'loudness_lufs': known_loudness[sha] if sha in known_loudness else loudness_of(p),
                 'status': 'checked' if reviewed.get(sha) else 'unreviewed', 'reviewed': reviewed.get(sha) or None, 'hosted': [],
                 'sources': [source_of(tags)], 'carries': sorted(tags), 'cover_art': has_art,
                 'blocked_names': name_hits(carried, names), 'account_found': bool(account and name_hits(carried, [account])),
@@ -209,7 +229,13 @@ def main(argv=None):
             reviewed = json.load(f)
     except (OSError, ValueError):
         reviewed = {}
-    manifest = scan(tree, names, a.account, reviewed)
+    known = {}
+    try:
+        with open(os.path.join(tree, PRIVATE_NAME), encoding='utf-8') as f:
+            known = {x['sha256']: x['loudness_lufs'] for x in json.load(f).get('assets', []) if 'loudness_lufs' in x and x.get('sha256')}
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
+        known = {}
+    manifest = scan(tree, names, a.account, reviewed, known)
     with open(os.path.join(tree, PRIVATE_NAME), 'w', encoding='utf-8', newline='\n') as f:
         json.dump(manifest, f, indent=1)
     with open(os.path.join(tree, PAGE_NAME), 'w', encoding='utf-8', newline='\n') as f:

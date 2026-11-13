@@ -86,6 +86,42 @@ with tempfile.TemporaryDirectory() as tree:
     check('saved ticks come in by hash, so a changed file is unchecked again', [x['path'] for x in checked] == ['music/games/Quiet.flac'] and checked[0]['reviewed'] == '2026-11-09')
     check('a run with no names list says so', again['names_checked'] is False and 'No names list was read' in open(os.path.join(tree, M.PAGE_NAME), encoding='utf-8').read())
 
+# ---- loudness (the 11-09 gate, change 6) ----
+with tempfile.TemporaryDirectory() as tree:
+    def tone(name, vol):
+        p = os.path.join(tree, name)
+        subprocess.run(['ffmpeg', '-v', 'error', '-y', '-f', 'lavfi', '-i', 'sine=frequency=440:sample_rate=48000', '-t', '4',
+                        '-af', f'volume={vol}', p], check=True)
+        return p
+    loud, soft = M.loudness_of(tone('loud.flac', 1)), M.loudness_of(tone('soft.flac', 0.5))
+    check('a tone is measured in LUFS', isinstance(loud, float) and -30 < loud < -10, loud)
+    check('*** half the level reads about 6 LU quieter ***', loud is not None and soft is not None and 5.5 < loud - soft < 6.5, (loud, soft))
+    song(os.path.join(tree, 'silent.flac'))
+    check('silence has no loudness (None), not minus infinity', M.loudness_of(os.path.join(tree, 'silent.flac')) is None)
+    check('a file ffmpeg cannot read has none either', M.loudness_of(os.path.join(tree, 'nope.flac')) is None)
+    M.main([tree])
+    m = json.load(open(os.path.join(tree, M.PRIVATE_NAME), encoding='utf-8'))
+    by = {a['path']: a for a in m['assets']}
+    check('the manifest carries it', by['loud.flac']['loudness_lufs'] == loud and by['silent.flac']['loudness_lufs'] is None)
+    check('*** a public view carries it too: a player evens songs out from it ***', 'loudness_lufs' in M.PUBLIC_FIELDS)
+    measured = []
+    was = M.loudness_of
+    M.loudness_of = lambda p: measured.append(p) or -99.0
+    try:
+        M.main([tree])
+    finally:
+        M.loudness_of = was
+    again = {a['path']: a for a in json.load(open(os.path.join(tree, M.PRIVATE_NAME), encoding='utf-8'))['assets']}
+    check('*** a file already measured is not read again (same hash) ***', measured == [] and again['loud.flac']['loudness_lufs'] == loud, measured)
+    with open(os.path.join(tree, 'loud.flac'), 'ab') as f:
+        f.write(b'\0')
+    M.loudness_of = lambda p: measured.append(p) or -99.0
+    try:
+        M.main([tree])
+    finally:
+        M.loudness_of = was
+    check('a changed file is measured again', [os.path.basename(p) for p in measured] == ['loud.flac'], measured)
+
 site = os.path.join(tempfile.gettempdir(), 'web', 'client', 'x')
 os.makedirs(site, exist_ok=True)
 try:
