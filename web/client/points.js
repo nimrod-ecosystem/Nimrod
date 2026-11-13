@@ -87,7 +87,8 @@
 // it sent, the ledger asks once for the rest ADDED UP (db.py `points_rollup`) and keeps every event it has seen since, so a
 // window that slides loses nothing. The groups read as events with no id or date, oldest, and every sum below works on them
 // unchanged; never a client cache of the total (a cached total can drift from an immutable log; a derived one can't).
-// A DAILY OR WEEKLY FIGURE AND "WAS THIS ALREADY PAID" ONLY SEE EVENTS, NOT GROUPS: the second looks back only as far as the window.
+// A DAILY OR WEEKLY FIGURE ONLY SEES EVENTS, NOT GROUPS (a group has no date). "WAS THIS ALREADY PAID" SEES BOTH (2026-11-12): a
+// group keeps every tag its events carried, so a tour step, a video's quiz or a review paid long ago is not paid again.
 
 // The ledger's categories. The first four mirror the points-tracker spreadsheet's "Type"
 // column; `School` is focused school time (carries `minutes`); `Reward` is a purchase.

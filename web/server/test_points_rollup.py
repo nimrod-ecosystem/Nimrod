@@ -43,8 +43,8 @@ def add(data, kind="points", who="pat", to=url):
     return r.json()["id"]
 
 
-first = add({"amount": 2, "mult": 1, "type": "School", "source": "trivia", "note": "one", "minutes": 2, "subject": "Math", "tags": ["a"]})
-add({"amount": 3, "mult": 1, "type": "School", "source": "trivia", "note": "a different note", "minutes": 3, "subject": "Math"})
+first = add({"amount": 2, "mult": 1, "type": "School", "source": "trivia", "note": "one", "minutes": 2, "subject": "Math", "tags": ["a", "step:x"]})
+add({"amount": 3, "mult": 1, "type": "School", "source": "trivia", "note": "a different note", "minutes": 3, "subject": "Math", "tags": ["a", "b", None, {"no": 1}]})
 add({"amount": 2, "mult": 1.5, "type": "School", "source": "trivia", "subject": "Math"})
 add({"amount": 5, "mult": 1, "type": "Play", "source": "rhythm"})
 add({"amount": -4, "mult": 1, "type": "Reward", "source": "quests", "currency": "play"})
@@ -70,7 +70,10 @@ def find(**want):
 school = find(type="School", mult=1)
 check("*** rows with the same fields are added up, whatever else they carry ***", len(school) == 1 and school[0]["data"]["amount"] == 5 and school[0]["n"] == 2, json.dumps(school))
 check("...their minutes too", school[0]["data"]["minutes"] == 5 and school[0]["data"]["subject"] == "Math")
-check("a note, tags and the like stay behind", "note" not in school[0]["data"] and "tags" not in school[0]["data"])
+check("a note and the like stay behind", "note" not in school[0]["data"])
+check("*** every tag its events carried stays, once each (\"was this already paid\" reads them) ***",
+      school[0]["data"].get("tags") == ["a", "b", "step:x"], json.dumps(school[0]["data"]))
+check("a group whose events had no tags has none", "tags" not in find(type="Play")[0]["data"])
 check("another multiplier is its own group: the client applies it", find(type="School", mult=1.5)[0]["data"]["amount"] == 2)
 check("each type is its own group", find(type="Play")[0]["data"]["amount"] == 5 and find(type="Reward")[0]["data"]["currency"] == "play")
 xs = find(type="Exchange")

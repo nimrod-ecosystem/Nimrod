@@ -2210,6 +2210,9 @@ class _Store:
         past the cap the oldest points dropped out of every balance, silently. A cached total could drift from the log; this
         is still derived from it. THE GROUPS KNOW NO RULES: rows with the same fields are added up, amounts of opposite sign apart so
         a malformed negative exchange can never cancel a good one, and points.js applies its rules to a group exactly as to one event.
+        A GROUP KEEPS EVERY TAG ITS EVENTS CARRIED (2026-11-12): "was this already paid" (a tour step, a video's quiz, a review) asks
+        whether any points event carries a tag, and before this the oldest payments answered "no" once they fell out of the window.
+        Tags are read by nothing that adds up, so a group holding all of them changes no sum.
         """
         with self._tx() as cur:
             cur.execute(self._q("SELECT data FROM events WHERE user_id=? AND profile_id=? AND stream=? AND kind=? AND id<?"),
@@ -2232,15 +2235,20 @@ class _Store:
             key = (amount < 0, *(json.dumps(d.get(f), sort_keys=True) for f in self.ROLLUP_FIELDS))
             g = groups.get(key)
             if g is None:
-                g = groups[key] = {"data": {f: d[f] for f in self.ROLLUP_FIELDS if d.get(f) is not None}, "amount": 0.0, "minutes": 0.0, "n": 0}
+                g = groups[key] = {"data": {f: d[f] for f in self.ROLLUP_FIELDS if d.get(f) is not None}, "amount": 0.0, "minutes": 0.0, "n": 0,
+                                   "tags": set()}
             g["amount"] += amount
             g["minutes"] += max(0.0, number(d.get("minutes")) or 0.0)
             g["n"] += 1
+            if isinstance(d.get("tags"), list):
+                g["tags"].update(str(t) for t in d["tags"] if isinstance(t, (str, int, float)) and str(t))
         out = []
         for g in groups.values():
             data = {**g["data"], "amount": g["amount"]}
             if g["minutes"] > 0:
                 data["minutes"] = g["minutes"]
+            if g["tags"]:
+                data["tags"] = sorted(g["tags"])
             out.append({"kind": "points", "data": data, "n": g["n"]})
         return {"groups": out, "before": int(before), "count": len(rows)}
 

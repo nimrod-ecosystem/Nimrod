@@ -31,6 +31,8 @@ import {
   inflationConfig, planSpend, POINTS_STREAM,
 } from '../points.js';
 import { createEvents } from '../events.js';
+import { tourStepPaid, TOUR_SOURCE } from '../unlocks.js';
+import { isPaid } from '../transcript_quiz.js';
 import { authHeaders } from '../auth.js';
 
 const out = document.getElementById('results');
@@ -146,7 +148,9 @@ function cappedEvents({ window: list, total, groups, fail = false }) {
       const url = `/api/profiles/${made.id}/events/${POINTS_STREAM}`;
       const count = 520;
       for (let i = 0; i < count; i += 1) {
-        await fetch(url, { method: 'POST', headers, body: JSON.stringify({ kind: 'points', data: { amount: 1, mult: 1, type: i % 2 ? 'Play' : 'School', source: 'test' } }) });
+        // The oldest one is a paid tour step and a paid video quiz (2026-11-12: "was this already paid" past the cap).
+        const first = i === 0 ? { source: TOUR_SOURCE, tags: ['tour', 'step:first', 'transcript:vid1'] } : { source: 'test' };
+        await fetch(url, { method: 'POST', headers, body: JSON.stringify({ kind: 'points', data: { amount: 1, mult: 1, type: i % 2 ? 'Play' : 'School', ...first } }) });
       }
       const real = createPointsLedger({ makeEvents: (key, opts) => createEvents({ url: `/api/profiles/${made.id}/events/${key}`, user, ...opts }) });
       await real.load();
@@ -157,6 +161,9 @@ function cappedEvents({ window: list, total, groups, fail = false }) {
       await new Promise((r) => setTimeout(r, 300));
       check('*** ON THE REAL SERVER, EVERY POINT PAST THE CAP COUNTS ***', real.total() === count, real.total());
       check('...in the right currencies', real.balances().school === count / 2 && real.balances().play === count / 2, JSON.stringify(real.balances()));
+      check('*** A TOUR STEP PAID PAST THE CAP IS STILL PAID (it is not paid twice) ***',
+        tourStepPaid(real.events(), 'first') && !tourStepPaid(real.events(), 'never'));
+      check('*** ...and a video\'s quiz too ***', isPaid([], 'vid1', real.events()) && !isPaid([], 'vid2', real.events()));
       real.destroy();
     }
 
