@@ -22,6 +22,18 @@
 // NOTHING ENDS A SONG BUT THE SONG (no fail, as the game has always been): a miss is just not a hit. A song nobody plays along to
 // plays to its end (the gate: the beat's idle stop would cut the music mid-song).
 //
+// *** THE SONG WAITS (an option, off by default; proposal_rhythm_levels_20261108, the five kinds' "novel", gate change 5). *** For a
+// person who cannot keep time: on each note's moment the song stops, the note stays lit, and any press answers it (the right target,
+// in two buttons or four lanes; a switch that names none always counts) and the song goes on. It is a game, so waiting for a press is
+// the game itself (CLAUDE.md, the windmill case). But it has an EXIT, the gate's condition, because a song stopped on a note with
+// nobody there is a silent screen forever: a note waits `waitMs`, then is missed and the song goes on; after `giveUpAfter` notes in
+// a row like that the song stops waiting and plays to its end as any song does (a song nobody played along to then goes back to
+// Start). A press brings the waiting back. The wait's clock is the wall clock (the song's own is standing still), and it does not
+// run while the song is paused, silenced by a call, or not yet started.
+//   Why OFF by default: it changes the song itself, stopping the music on every note, which a player who keeps time does not want;
+//   FOR on: the person it is for cannot turn it on. It is one row away, on the panel and in "every Rhythm panel".
+//   The wait (10 s) and the give-up count (3) are rows, argued where they are declared below.
+//
 // THINNING: `thinNotes` with a minimum gap, and a note thinned away is never shown and never judged. The gap's default is worked out,
 // not fixed (`autoGapMs`), and the screen's flash limit sets a floor under it. WHEN A RING FILLS (rhythm_stage.js, with motion off) is
 // worked out once, ahead (`lightTimes`), and does not depend on the presses, so a run of presses can never make them come faster.
@@ -38,6 +50,16 @@ export const LEAD_CHOICES = Object.freeze([500, 1000, 1500, 2000, 3000, 4000]);
 export const LEAD_DEFAULT = 2000;
 // The minimum gap between notes. 0 is "worked out for this person" (`autoGapMs`); the rest are chosen.
 export const GAP_CHOICES = Object.freeze([0, 200, 300, 400, 600, 800, 1000, 1500]);
+// THE SONG WAITS: how long one note waits for its press. 10 seconds by default. FOR shorter: the music keeps moving, and stop-start
+// music is hard to listen to. FOR longer: a switch press can take somebody several seconds to make. 10 s is long enough for a slow,
+// deliberate press and short enough that a song with nobody playing is not mostly silence; a missed note costs nothing (no fail).
+export const WAIT_CHOICES = Object.freeze([5000, 10000, 20000, 30000, 60000]);
+export const WAIT_DEFAULT = 10000;
+// ...and how many notes in a row may go by unpressed before the song stops waiting. 3 by default. FOR 1: a person who walked away
+// does not leave the room listening to a song that stops every ten seconds. FOR more: a slow player who misses two still gets the
+// third. 3 notes is half a minute of stopping at the default wait, then the song plays on; a press brings the waiting back.
+export const GIVE_UP_CHOICES = Object.freeze([1, 2, 3, 5, 10]);
+export const GIVE_UP_DEFAULT = 3;
 
 /** The targets a song is played on: one, two for the colours, four for the lanes. PURE. */
 export const targetsFor = (mode) => (mode === 'two' ? 2 : mode === 'four' ? LANES : 1);
@@ -93,11 +115,16 @@ export function lightTimes(notes, { leadMs = LEAD_DEFAULT, window: windowSetting
  *   view() -> { t, notes, lights, answered(i), missed(i) }   what rhythm_stage.js draws from
  *   result() -> { hits, total, misses, presses }, state()
  * `onEnded(result)` once, when the song plays out; `onFailed()` once, when the song will not play.
+ * The song waits (`waits: true`): `onWait(i)` when a note stops the song, `onWaitOver(i, why)` when it goes on ('press' | 'timeout'),
+ * `onGiveUp()` when it stops waiting; state() says `waiting`.
  */
 export function createSongRun({
   url, notes = [], mode = PLAY_MODE_DEFAULT, window: windowSetting = 'generous', offsetMs = 0, gapMs = 0,
   flashLimit = FLASH_LIMIT_DEFAULT, leadMs = LEAD_DEFAULT, audio = null, audioId = 'rhythm:song', channel = 'media',
   makeAudio = (src) => (typeof Audio === 'function' ? new Audio(src) : null), onEnded = null, onFailed = null,
+  waits = false, waitMs = WAIT_DEFAULT, giveUpAfter = GIVE_UP_DEFAULT,
+  wallNow = () => (typeof performance !== 'undefined' ? performance.now() : Date.now()),
+  onWait = null, onWaitOver = null, onGiveUp = null,
 } = {}) {
   const m = PLAY_MODES.includes(mode) ? mode : PLAY_MODE_DEFAULT;
   const list = thinNotes(notes, gapInForce({ gapMs, windowSetting, mode: m, flashLimit }));
@@ -106,13 +133,33 @@ export function createSongRun({
   const missed = new Set();       // no press came in its window (a press a little later still gets told "late")
   const closed = { has: (i) => answered.has(i) || missed.has(i) };
   let hits = 0, presses = 0, gain = 1, wanted = false, buffering = false, finished = false, dead = false;
+  // The song waits. `held`: the note the song is stopped on (-1: none); `heldSince`: when the wait (wall clock) began or last resumed.
+  const waitFor = Math.max(1000, Number(waitMs) || WAIT_DEFAULT);
+  const giveUp = Math.max(1, Math.round(Number(giveUpAfter) || GIVE_UP_DEFAULT));
+  let waiting = !!waits, held = -1, heldSince = 0, unpressed = 0;
   const el = makeAudio(url);
   if (el) { try { el.preload = 'auto'; } catch { /* a fake */ } }
+  const tell = (f, ...a) => { try { f?.(...a); } catch (err) { console.error('rhythm song: waits', err); } };
   const enact = () => {
     if (!el) return;
     try { el.volume = Math.max(0, Math.min(1, gain)); } catch { /* not ready */ }
-    if (gain === 0) { try { el.pause?.(); } catch { /* fine */ } } else if (wanted && el.paused) { try { el.play?.()?.catch?.(() => {}); } catch { /* fine */ } }
+    if (gain === 0) { try { el.pause?.(); } catch { /* fine */ } } else if (wanted && held < 0 && el.paused) { try { el.play?.()?.catch?.(() => {}); } catch { /* fine */ } }
   };
+  // The wait runs only while the song is wanted and audible; anything else (a pause, a call) starts it again when it ends.
+  const waitRuns = () => wanted && gain !== 0 && !finished && !dead;
+  function hold(i) {
+    held = i; heldSince = wallNow();
+    try { el?.pause?.(); } catch { /* fine */ }
+    tell(onWait, i);
+  }
+  function letGo(why) {
+    const i = held;
+    held = -1;
+    if (why === 'press') unpressed = 0;
+    else if (++unpressed >= giveUp) { waiting = false; tell(onGiveUp); }
+    enact();
+    tell(onWaitOver, i, why);
+  }
   try {
     audio?.register?.(audioId, { tier: 'media', group: MUSIC_GROUP, groupPriority: VIDEO_PRIORITY, channel,
       onGain: (level) => { gain = Number(level) || 0; enact(); } });
@@ -120,9 +167,21 @@ export function createSongRun({
   const active = (on) => { try { audio?.setActive?.(audioId, on); } catch { /* advice only */ } };
   const result = () => ({ hits, total: list.length, misses: missed.size, presses });
   const songNow = () => Number(el?.currentTime || 0) * 1000;
-  const judgeable = () => !!el && wanted && !el.paused && !buffering && !finished && !dead;
+  // While the song waits on a note it is stopped by us, not paused: a press there is an answer, not "go on".
+  const judgeable = () => !!el && wanted && !finished && !dead && (held >= 0 || (!el.paused && !buffering));
+  let cursor = 0;                 // the first note not yet answered or missed, for the waits' look-ahead
   function step(atEnd = false) {
+    if (atEnd) held = -1;
+    if (held >= 0) {
+      if (!waitRuns()) { heldSince = wallNow(); return; }      // paused or silenced: the wait starts again when it is back
+      if (wallNow() - heldSince >= waitFor) { missed.add(held); letGo('timeout'); }
+      return;
+    }
     if (!atEnd && !judgeable()) return;
+    if (waiting && !atEnd) {
+      while (cursor < list.length && closed.has(cursor)) cursor += 1;
+      if (cursor < list.length && Number(list[cursor].ms) + (Number(offsetMs) || 0) <= songNow()) { hold(cursor); return; }
+    }
     for (const i of missedNotes(atEnd ? Infinity : songNow(), list, { window: windowSetting, offset: offsetMs, judged: closed })) missed.add(i);
   }
   el?.addEventListener?.('waiting', () => { buffering = true; });
@@ -151,6 +210,7 @@ export function createSongRun({
     async resume() {
       if (finished || dead || !el) return { ok: false };
       wanted = true; active(true);
+      if (held >= 0) { heldSince = wallNow(); return { ok: true }; }   // back to the note it was waiting on
       try { await el.play?.(); return { ok: true }; } catch { return { ok: false, reason: 'blocked' }; }
     },
     stop() {
@@ -167,7 +227,18 @@ export function createSongRun({
     press({ tile = null, side = null } = {}) {
       if (!judgeable()) return null;
       presses += 1;
-      step();
+      step();                         // catch up first: a note whose moment has just come is waited on, and this press answers it
+      if (held >= 0) {                // the song is waiting on this note: any press answers it, and the song goes on
+        const i = held;
+        const named = tile != null ? tile : side;
+        const verdict = named != null && m !== PLAY_MODE_DEFAULT && named !== tileOfNote(list[i], m) ? 'wrong' : 'hit';
+        if (verdict === 'hit') hits += 1;
+        answered.set(i, verdict);
+        letGo('press');
+        return { verdict, i, delta: 0, tile: tileOfNote(list[i], m) };
+      }
+      // Somebody is back: the song waits again, from the next note (after this press is judged, so it cannot stop on this one).
+      if (waits && !waiting) { waiting = true; unpressed = 0; }
       const j = judgeNote(songNow(), list, { window: windowSetting, offset: offsetMs, judged: { has: (i) => answered.has(i) } });
       if (j.i < 0) return null;
       if (j.verdict !== 'hit' && Math.abs(j.delta) > 2 * noteWindowMs(list, j.i, windowSetting)) return null;
@@ -179,9 +250,10 @@ export function createSongRun({
       missed.delete(j.i);
       return { verdict, i: j.i, delta: j.delta, tile: tileOfNote(list[j.i], m) };
     },
-    view: () => ({ t: songNow(), notes: list, lights, answered: (i) => answered.has(i), missed: (i) => missed.has(i) }),
+    view: () => ({ t: songNow(), notes: list, lights, answered: (i) => answered.has(i), missed: (i) => missed.has(i), held }),
     result,
     state: () => ({ mode: m, total: list.length, ...result(), wanted, buffering, finished, playing: judgeable(),
+      waiting: held >= 0 && wanted, waits: waiting,
       at: el ? Number(el.currentTime || 0) : 0 }),
   };
 }

@@ -62,7 +62,8 @@
 
 import { followPanelSpeaker } from '../speakers.js';
 import { readMapZip } from '../beatmap.js';
-import { createSongRun, tileOfNote, PLAY_MODE_DEFAULT, LEAD_CHOICES, LEAD_DEFAULT, GAP_CHOICES } from '../rhythm_song.js';
+import { createSongRun, tileOfNote, PLAY_MODE_DEFAULT, LEAD_CHOICES, LEAD_DEFAULT, GAP_CHOICES,
+  WAIT_CHOICES, WAIT_DEFAULT, GIVE_UP_CHOICES, GIVE_UP_DEFAULT } from '../rhythm_song.js';
 import {
   songFrame, paintFrame, stageLayout, nearestTarget, skinFor, themeAt, arriveFor, NOTE_LEFT_DEFAULT, NOTE_RIGHT_DEFAULT,
   POP_MS, TARGET_LIT_MS, GREAT_MS,
@@ -139,6 +140,10 @@ export const DEFAULTS = Object.freeze({
   noteArrive: 'auto',
   noteLeft: NOTE_LEFT_DEFAULT,
   noteRight: NOTE_RIGHT_DEFAULT,
+  // The song waits for each press: off, and its wait and give-up count (rhythm_song.js argues all three).
+  songWaits: false,
+  songWaitMs: WAIT_DEFAULT,
+  songGiveUp: GIVE_UP_DEFAULT,
   // The button is there by default, FOR: nobody finds a feature that is off. AGAINST: a screen nobody brings a map to carries a button
   // it will not use, and a system file picker is a poor thing to open by accident on a kiosk. So it is a row.
   mapButton: true,
@@ -215,6 +220,14 @@ const SETTINGS = [
   { key: 'leadMs', label: 'How early a song\'s notes show', kind: 'choice', default: LEAD_DEFAULT, level: 'standard',
     options: LEAD_CHOICES.map((v) => ({ value: v, label: `${v / 1000} seconds` })),
     note: 'Longer gives more warning. Shorter is harder.' },
+  { key: 'songWaits', label: 'A song waits for each press', default: false, level: 'standard', onLabel: 'Waits', offLabel: 'Plays on',
+    note: 'For a player who cannot keep time: the song stops on each note until a press comes, then goes on.' },
+  { key: 'songWaitMs', label: 'How long a song waits on a note', kind: 'choice', default: WAIT_DEFAULT, level: 'advanced',
+    options: WAIT_CHOICES.map((v) => ({ value: v, label: `${v / 1000} seconds` })),
+    note: 'Then the note is missed and the song goes on.' },
+  { key: 'songGiveUp', label: 'Notes in a row with no press before a song stops waiting', kind: 'choice', default: GIVE_UP_DEFAULT,
+    level: 'advanced', options: GIVE_UP_CHOICES.map((v) => ({ value: v, label: String(v) })),
+    note: 'Then the song plays to its end. A press makes it wait again.' },
 ];
 
 const esc = (s) => String(s == null ? '' : s)
@@ -387,6 +400,11 @@ registerModule(
       const made = createSongRun({ url: map.url, notes: map.notes, mode: cfg.playMode, window: cfg.window,
         offsetMs: Number(cfg.pressOffset) || 0, gapMs: Number(cfg.minGapMs) || 0, leadMs: Number(cfg.leadMs) || 0, flashLimit: songLimit,
         audio, audioId: `${GAME}:song:${ctx.instanceId || 'rh'}`, onEnded: songEnded, onFailed: songFailed,
+        waits: cfg.songWaits === true, waitMs: Number(cfg.songWaitMs) || WAIT_DEFAULT, giveUpAfter: Number(cfg.songGiveUp) || GIVE_UP_DEFAULT,
+        wallNow: now,
+        onWait: () => { if (song === made) { wantStatus('Waiting for a press'); ensureLoop(); } },
+        onWaitOver: (i, why) => { if (song === made && why === 'timeout') { wantStatus(`Playing ${map?.name || ''}`); ensureLoop(); } },
+        onGiveUp: () => { if (song === made) { wantStatus('Playing on. A press makes it wait again.'); ensureLoop(); } },
         ...(makeSongAudio ? { makeAudio: makeSongAudio } : {}) });
       song = made;
       if (sinkId != null) song.setSink(sinkId);
@@ -478,11 +496,11 @@ registerModule(
     function paintStage() {
       if (!song || !stageEl) return;
       const t = now();
-      const { playing } = song.state();
+      const { playing, waiting } = song.state();
       pops = pops.filter((p) => t - p.at < POP_MS);
       const fading = pops.length > 0 || targetLitAt.some((at) => at != null && t - at < TARGET_LIT_MS);
-      // A song standing still (paused, buffering) draws nothing new: a stopped screen costs a Pi nothing.
-      if (!playing && !fading && stagePainted) return;
+      // A song standing still (paused, buffering, waiting on a note) draws nothing new: a stopped screen costs a Pi nothing.
+      if ((!playing || waiting) && !fading && stagePainted) return;
       const { w, h } = stageSize();
       const layout = stageLayout(cfg.playMode, w, h);
       const v = song.view();
@@ -926,7 +944,7 @@ registerModule(
           if (s.stats && typeof s.stats === 'object') stats = { ...stats, ...s.stats };
           if (tileEls.length && Number(next.tiles) !== tileEls.length) { tileEls = []; }
           // A song restarts on the rows it is worked out from; the beat, on its own.
-          const rows = song ? ['playMode', 'minGapMs', 'leadMs', 'window', 'pressOffset']
+          const rows = song ? ['playMode', 'minGapMs', 'leadMs', 'window', 'pressOffset', 'songWaits', 'songWaitMs', 'songGiveUp']
             : ['tempo', 'tiles', 'pattern', 'beatFrom', 'countIn', 'roundBeats', 'restBeats'];
           if (song && (next.noteLeft !== was.noteLeft || next.noteRight !== was.noteRight)) { paintSkin(); stagePainted = false; }
           return rows.some((k) => next[k] !== was[k]);

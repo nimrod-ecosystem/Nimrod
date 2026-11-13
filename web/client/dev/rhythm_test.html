@@ -879,6 +879,79 @@ try {
     check('two buttons: the other side does not', two.press({ side: 1 })?.verdict === 'wrong');
   }
 
+  section('a song that waits for each press (off by default)');
+  {
+    let wall = 0;
+    const ev = [];
+    const el = fakeSong();
+    const regs = [];
+    const audio = { register: (id, o) => regs.push({ id, ...o }), setActive() {}, unregister() {} };
+    const run = createSongRun({ url: 'x', notes: notesEvery(1000, 7), window: 'generous', waits: true, waitMs: 10000, giveUpAfter: 2,
+      audio, makeAudio: () => el, wallNow: () => wall,
+      onWait: (i) => ev.push(`wait${i}`), onWaitOver: (i, why) => ev.push(`${why}${i}`), onGiveUp: () => ev.push('giveup') });
+    await run.start();
+    el.currentTime = 1.9; run.step();
+    check('before a note\'s moment the song plays', !el.paused && !run.state().waiting);
+    el.currentTime = 2.0; run.step();
+    check('*** on the note\'s moment the song stops and waits ***', el.paused && run.state().waiting && ev.join() === 'wait0', ev.join());
+    check('waiting is not a pause: a press there is an answer', run.state().playing === true);
+    regs[0].onGain(1);
+    check('the audio bus giving its level back does not start the song under a waiting note', el.paused);
+    wall = 9000; run.step();
+    check('it goes on waiting', el.paused && run.result().misses === 0);
+    const j = run.press({});
+    check('*** a press answers the note as a hit, and the song goes on ***', j?.verdict === 'hit' && j.i === 0 && !el.paused && run.result().hits === 1 && ev.includes('press0'), JSON.stringify(j));
+    el.currentTime = 3.0; run.step();
+    check('the next note waits too', el.paused && run.view().held === 1);
+    run.pause();
+    wall += 60000; run.step();
+    check('*** paused, the wait does not run out ***', run.result().misses === 0 && run.state().waiting === false);
+    await run.resume();
+    check('going on from a pause comes back to the note it waited on, still waiting', el.paused && run.state().waiting);
+    regs[0].onGain(0);
+    wall += 60000; run.step();
+    regs[0].onGain(1);
+    check('silenced by a call, the wait does not run out either', run.result().misses === 0 && el.paused);
+    wall += 9999; run.step();
+    check('not before its time', run.result().misses === 0);
+    wall += 1; run.step();
+    check('*** after the wait the note is missed and the song goes on (the exit) ***', run.result().misses === 1 && !el.paused && !run.state().waiting && ev.includes('timeout1'), ev.join());
+    el.currentTime = 4.0; run.step();
+    wall += 10000; run.step();
+    check('*** after notes in a row with no press it stops waiting ***', ev.includes('giveup') && !el.paused && run.state().waits === false && run.result().misses === 2, ev.join());
+    el.currentTime = 5.0; run.step();
+    check('...and plays on as any song: no stop on the next note', !el.paused && !run.state().waiting);
+    el.currentTime = 5.05;
+    check('a press on that note is judged as any song judges it', run.press({})?.verdict === 'hit' && !el.paused);
+    check('*** a press brings the waiting back ***', run.state().waits === true);
+    el.currentTime = 6.0; run.step();
+    check('...from the next note', el.paused && run.view().held === 4);
+    el.currentTime = 6.0;
+    check('a press there answers it', run.press({})?.i === 4 && !el.paused);
+    el.currentTime = 7.02;
+    const caught = run.press({});
+    check('*** a press just after a moment the frames have not caught up to answers that note, and never leaves it stuck ***', caught?.i === 5 && caught.verdict === 'hit' && !el.paused && !run.state().waiting, JSON.stringify(caught));
+    el.currentTime = 7.6;
+    check('a press before a moment is judged as usual (early here), and the song does not stop on a note answered', run.press({})?.verdict === 'early' && !el.paused);
+    el.currentTime = 8.0; run.step();
+    check('...so it plays on through it', !el.paused && !run.state().waiting);
+    el.fire('ended');
+    check('the song ending ends it as any song', run.state().finished && run.result().total === 7);
+
+    const f4 = fakeSong();
+    const four = createSongRun({ url: 'x', notes: [noteAt(1000, 2), noteAt(2000, 1)], mode: 'four', waits: true, makeAudio: () => f4, wallNow: () => 0 });
+    await four.start();
+    f4.currentTime = 1.0; four.step();
+    check('four lanes: the wrong target answers it as wrong, and the song goes on', four.press({ tile: 0 })?.verdict === 'wrong' && !f4.paused);
+    f4.currentTime = 2.0; four.step();
+    check('four lanes: a switch that names no target counts', four.press({})?.verdict === 'hit');
+    const off = fakeSong();
+    const plain = createSongRun({ url: 'x', notes: notesEvery(1000, 2), makeAudio: () => off });
+    await plain.start();
+    off.currentTime = 2.0; plain.step();
+    check('*** by default a song never waits ***', !off.paused && plain.state().waits === false && DEFAULTS.songWaits === false);
+  }
+
   section('a song on the panel');
   {
     const made = [];
@@ -972,6 +1045,25 @@ try {
     lanes.inst.impl.__tick();
     check('four lanes: the note comes to its own target, whatever the tiles row says', lanes.probe().stage.frame.draw[0]?.x === stageLayout('four', lanes.host.querySelector('[data-rh-stage]').getBoundingClientRect().width, 1)[2].x, JSON.stringify(lanes.probe().stage.frame.draw[0]));
     lanes.inst.destroy();
+
+    const waits = mount({ saved: { songWaits: true, songWaitMs: 5000 }, extra: { readMapZip: reader(notesEvery(1000, 3)), makeSongAudio } });
+    await waits.inst.impl.__openMap(zip);
+    waits.pub('select');
+    await sleep(0);
+    const wel = made[made.length - 1];
+    wel.currentTime = 2.0;
+    waits.inst.impl.__tick();
+    waits.clock.run(1000);
+    check('*** the row on: the panel stops on the note, and says it is waiting ***', wel.paused && waits.probe().song?.waiting === true && /Waiting for a press/.test(waits.say()), waits.say());
+    waits.pub('select');
+    await sleep(0);
+    check('*** a press there is a hit and the song goes on (not "go on from a pause") ***', !wel.paused && waits.probe().round.hits === 1 && waits.probe().song.waiting === false);
+    wel.currentTime = 3.0;
+    waits.inst.impl.__tick();
+    check('the next note waits', wel.paused && waits.probe().song.waiting === true);
+    waits.clock.run(6000);
+    check('*** with nobody there, the wait runs out on the screen\'s own clock and the song goes on ***', !wel.paused && waits.probe().song.misses === 1, JSON.stringify(waits.probe().song));
+    waits.inst.destroy();
 
     const rm = mount({ reducedMotion: true, extra: { readMapZip: reader(notesEvery(1000, 3)), makeSongAudio } });
     await rm.inst.impl.__openMap(zip);
