@@ -299,6 +299,98 @@ class LockHelperTest(unittest.TestCase):
     def test_rc_swap_off_unless_asked(self):
         self.assertEqual(H.swap_rc(True), 'off')
 
+    # ---- the "Aw, Snap" watchdog (2026-11-13) ----
+    def says(self, s, **kw):
+        base = dict(now_mono=10_000.0, unit_active=True, unit_since_mono=1_000.0, crash_at=None, restarts=[], stale_s=180)
+        base.update(kw)
+        return H.watchdog_says(s, **base)
+
+    def beat(self, mono=9_700.0, wall=1_700_000_000.0, **extra):
+        return {'v': 1, 'locked': True, 'stayOut': False, 'heard': wall, 'heardMono': mono, **extra}
+
+    def test_a_crashed_page_that_went_quiet_is_restarted(self):
+        s = self.beat()
+        self.assertEqual(self.says(s, crash_at=s['heard'] + 30), (True, 'page-crashed'))
+
+    def test_quiet_without_a_crash_report_is_left_alone(self):
+        # leaving for Home or a sign-in page stops the reports too, and writes no crash report
+        self.assertEqual(self.says(self.beat()), (False, 'quiet-but-no-crash'))
+        s = self.beat()
+        self.assertEqual(self.says(s, crash_at=s['heard'] - 5), (False, 'quiet-but-no-crash'), 'a crash from before the last report')
+
+    def test_still_reporting_is_left_alone_even_after_a_crash_report(self):
+        # a video frame inside the page crashed: the page itself is still reporting
+        s = self.beat(mono=9_900.0)
+        self.assertEqual(self.says(s, crash_at=s['heard'] + 30), (False, 'reporting'))
+
+    def test_a_page_that_never_reported_is_never_restarted(self):
+        self.assertEqual(self.says(None, crash_at=1e12), (False, 'never-reported'))
+        self.assertEqual(self.says({'locked': True, 'heard': 1.0}, crash_at=1e12), (False, 'never-reported'))
+
+    def test_only_a_page_that_reported_during_this_run(self):
+        s = self.beat(mono=500.0)
+        self.assertEqual(self.says(s, crash_at=s['heard'] + 30), (False, 'not-reported-this-run'))
+
+    def test_a_kiosk_stopped_on_purpose_stays_stopped(self):
+        s = self.beat()
+        self.assertEqual(self.says(s, crash_at=s['heard'] + 30, unit_active=False), (False, 'kiosk-not-running'))
+
+    def test_never_in_a_loop(self):
+        s = self.beat()
+        crash = s['heard'] + 30
+        self.assertEqual(self.says(s, crash_at=crash, restarts=[9_800.0]), (False, 'just-restarted'))
+        self.assertEqual(self.says(s, crash_at=crash, restarts=[7_000.0, 8_000.0, 9_000.0]), (False, 'too-many-this-hour'))
+        self.assertEqual(self.says(s, crash_at=crash, restarts=[5_000.0, 6_000.0, 9_000.0]), (True, 'page-crashed'), 'an hour ago does not count')
+
+    def test_a_report_keeps_the_monotonic_time(self):
+        self.req('POST', {'locked': True})
+        s = H.read_state()
+        self.assertIsInstance(s.get('heardMono'), float)
+        self.assertLessEqual(abs(s['heardMono'] - time.monotonic()), 5)
+
+    def test_renderer_crash_reports_are_told_from_others(self):
+        d = os.path.join(self.tmp, 'Crash Reports')
+        os.makedirs(os.path.join(d, 'pending'))
+        def dump(name, ptype, mtime):
+            p = os.path.join(d, 'pending', name)
+            with open(p, 'wb') as f:
+                f.write(b'MDMP\x00' * 50 + b'ptype\x00\x00\x00' + ptype + b'\x00' * 100)
+            os.utime(p, (mtime, mtime))
+        self.assertIsNone(H.newest_renderer_crash(d))
+        dump('a.dmp', b'gpu-process', 3000)
+        self.assertIsNone(H.newest_renderer_crash(d), 'a GPU crash is not the page')
+        dump('b.dmp', b'renderer', 2000)
+        dump('c.dmp', b'renderer', 2500)
+        self.assertEqual(H.newest_renderer_crash(d), 2500)
+        with open(os.path.join(d, 'pending', 'c.meta'), 'w') as f:
+            f.write('x')
+        self.assertEqual(H.newest_renderer_crash(d), 2500, 'only .dmp files')
+
+    def test_one_tick_restarts_through_systemctl(self):
+        calls = []
+        def run(args, timeout=5):
+            calls.append(args)
+            if args[:3] == ['systemctl', '--user', 'is-active']:
+                return 0, ''
+            if args[:3] == ['systemctl', '--user', 'show']:
+                return 0, '1000000\n'           # started at 1 s on the monotonic clock
+            return 0, ''
+        was_run, was_crash = H.run_tool, H.newest_renderer_crash
+        H.run_tool = run
+        self.addCleanup(lambda: setattr(H, 'run_tool', was_run))
+        self.req('POST', {'locked': True})
+        s = H.read_state()
+        s['heardMono'] -= 600                   # ten minutes quiet
+        H.write_atomic(H.runtime_file(), json.dumps(s))
+        H.newest_renderer_crash = lambda crash_dir=None: s['heard'] + 1
+        self.addCleanup(lambda: setattr(H, 'newest_renderer_crash', was_crash))
+        restarts, said = [], []
+        self.assertEqual(H.watchdog_tick(restarts, said.append), 'page-crashed')
+        self.assertIn(['systemctl', '--user', 'restart', H.WATCH_UNIT], calls)
+        self.assertEqual(len(restarts), 1)
+        self.assertEqual(H.watchdog_tick(restarts, said.append), 'just-restarted')
+        self.assertEqual(sum(1 for c in calls if c[:3] == ['systemctl', '--user', 'restart']), 1, 'once, not every tick')
+
 
 if __name__ == '__main__':
     unittest.main()

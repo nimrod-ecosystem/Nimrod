@@ -28,9 +28,12 @@ somebody answers. install-linux.sh writes that policy only when asked (NIMROD_LO
 passes the page `lockHelper=off` until it exists - so without it nothing here is ever asked anything, and the kiosk
 behaves exactly as before.
 
-NOT BUILT, argued: a heartbeat watchdog (restart the kiosk when the page stops reporting). A page that never reports
-(no policy, an old site, a pairing screen) would be restarted forever; `heard` is kept in lock.json so one can be
-added on top of real numbers later.
+THE "AW, SNAP" WATCHDOG (2026-11-13; see "THE PAGE CRASHED" below). Mike: "Both Pis have been going to the aww snap
+something went wrong page when I leave them on." Measured that day: the page's renderer crashed about once a day on both
+(Crash Reports/pending, ptype=renderer), the kernel killed nothing, and the browser stayed up, so nothing brought the page back
+until somebody pressed Reload. The earlier worry ("a page that never reports would be restarted forever") is why the beat ALONE
+is not the trigger: the kiosk is restarted only when Chromium wrote a renderer crash report AND the page that had been reporting
+has gone quiet.
 
 HARD-CODED, each with its reason:
     port 8765      matches the launcher's default `?lockHelper=` address; free on both Pis (8080 is the old dashboard).
@@ -47,6 +50,7 @@ import signal
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import xml.etree.ElementTree as ET
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -307,6 +311,134 @@ def go_to_desktop():
     return True, None
 
 
+# ---- THE PAGE CRASHED: "AW, SNAP" (2026-11-13) --------------------------------------------------------------------------------
+# A crashed page shows Chromium's "Aw, Snap! Something went wrong" until somebody presses Reload. On a screen whose person cannot
+# press anything that is a screen in a state only an input can leave (CLAUDE.md's invariant), all night. So this restarts the
+# kiosk's service (the launcher brings the page back on "After a restart, open", boot=1) when ALL of these hold:
+#   1. the kiosk's service is running (a pause, "Go to the desktop" or "stay out" stopped it on purpose: never undone here);
+#   2. the page reported during THIS run of the service (a page that never reports - no policy, an old site - is never touched);
+#   3. it has not reported for WATCH_STALE_S (it reports every 60 s);
+#   4. Chromium wrote a RENDERER crash report after that last report. Leaving the page for another (Home, a sign-in) writes no
+#      crash report, and a crashed video frame inside the page does not stop the page's reports, so neither restarts anything;
+#   5. not more than once in WATCH_GAP_S, nor more than WATCH_MAX_PER_HOUR an hour: a page that crashes as it loads is not
+#      restarted in a loop (it says so in the journal and waits).
+# NOT covered, said here: a page that hangs without crashing (no report is written), and a renderer the kernel kills for memory
+# (none seen; it writes no report either).
+# ON BY DEFAULT, argued. FOR off: the computer restarting its own browser surprises a person using it. AGAINST, and it decides:
+# it acts only after the page has already crashed, so there is nothing left to interrupt; NIMROD_WATCHDOG=0 turns it off.
+# THE NUMBERS: 180 s = three missed reports, so a slow minute is not a crash; at most once in 10 minutes and 3 an hour, so a
+# page that cannot load is tried three times, not forever. Each is an environment setting.
+WATCH_ON = os.environ.get('NIMROD_WATCHDOG', '1') != '0'
+WATCH_UNIT = os.environ.get('NIMROD_KIOSK_UNIT', 'nimrod-kiosk.service')
+WATCH_STALE_S = int(os.environ.get('NIMROD_WATCHDOG_STALE_S', '180'))
+WATCH_GAP_S = int(os.environ.get('NIMROD_WATCHDOG_GAP_S', '600'))
+WATCH_MAX_PER_HOUR = int(os.environ.get('NIMROD_WATCHDOG_MAX_PER_HOUR', '3'))
+WATCH_EVERY_S = 30
+CRASH_DIR = os.path.join(os.environ.get('NIMROD_KIOSK_PROFILE') or os.path.join(os.path.expanduser('~'), '.config', 'chromium'),
+                         'Crash Reports')
+
+
+def is_renderer_dump(path):
+    """A crashpad minidump whose process type annotation says renderer. Unreadable: no."""
+    try:
+        with open(path, 'rb') as f:
+            data = f.read(4 * 1024 * 1024)
+    except OSError:
+        return False
+    at = data.find(b'ptype')
+    while at >= 0:
+        if b'renderer' in data[at:at + 64]:
+            return True
+        at = data.find(b'ptype', at + 5)
+    return False
+
+
+def newest_renderer_crash(crash_dir=None):
+    """The wall-clock time of the newest renderer crash report, or None."""
+    best = None
+    for sub in ('pending', 'new', 'completed'):
+        d = os.path.join(crash_dir or CRASH_DIR, sub)
+        try:
+            names = os.listdir(d)
+        except OSError:
+            continue
+        for n in names:
+            if not n.endswith('.dmp'):
+                continue
+            p = os.path.join(d, n)
+            try:
+                t = os.path.getmtime(p)
+            except OSError:
+                continue
+            if (best is None or t > best) and is_renderer_dump(p):
+                best = t
+    return best
+
+
+def watchdog_says(s, *, now_mono, unit_active, unit_since_mono, crash_at, restarts, stale_s=None):
+    """-> (restart, why). PURE: every fact is handed in."""
+    stale_s = WATCH_STALE_S if stale_s is None else stale_s
+    if not unit_active:
+        return False, 'kiosk-not-running'
+    if not s or not isinstance(s.get('heardMono'), (int, float)) or not isinstance(s.get('heard'), (int, float)):
+        return False, 'never-reported'
+    if unit_since_mono is not None and s['heardMono'] < unit_since_mono:
+        return False, 'not-reported-this-run'
+    if now_mono - s['heardMono'] <= stale_s:
+        return False, 'reporting'
+    if crash_at is None or crash_at <= s['heard']:
+        return False, 'quiet-but-no-crash'
+    recent = [t for t in restarts if now_mono - t < 3600]
+    if recent and now_mono - max(recent) < WATCH_GAP_S:
+        return False, 'just-restarted'
+    if len(recent) >= WATCH_MAX_PER_HOUR:
+        return False, 'too-many-this-hour'
+    return True, 'page-crashed'
+
+
+def unit_facts():
+    """(active, since) for the kiosk's service: since = when it last started, on the monotonic clock in seconds, or None."""
+    code, _ = run_tool(['systemctl', '--user', 'is-active', '--quiet', WATCH_UNIT])
+    if code != 0:
+        return False, None
+    code, out = run_tool(['systemctl', '--user', 'show', '-p', 'ActiveEnterTimestampMonotonic', '--value', WATCH_UNIT])
+    try:
+        us = int((out or '').strip())
+    except ValueError:
+        return True, None
+    return True, (us / 1e6 if us > 0 else None)
+
+
+def watchdog_tick(restarts, log=print):
+    """One look. Restarts the kiosk when `watchdog_says` does; appends to `restarts` (monotonic seconds). -> why."""
+    active, since = unit_facts()
+    now = time.monotonic()
+    go, why = watchdog_says(read_state(), now_mono=now, unit_active=active, unit_since_mono=since,
+                            crash_at=newest_renderer_crash() if active else None, restarts=restarts)
+    if why in ('just-restarted', 'too-many-this-hour'):
+        log(f'lock helper: the page crashed again and was not restarted ({why}); press Reload, or restart the computer')
+    if go:
+        restarts.append(now)
+        log('lock helper: the page crashed ("Aw, Snap") and stopped reporting; restarting the kiosk')
+        run_tool(['systemctl', '--user', 'restart', WATCH_UNIT], timeout=60)
+    return why
+
+
+def watch_forever(stop_event):
+    restarts = []
+    last_said = None
+    def log(m):
+        nonlocal last_said
+        if m != last_said:            # the same refusal every 30 s is said once
+            sys.stderr.write(m + '\n')
+            last_said = m
+    while not stop_event.wait(WATCH_EVERY_S):
+        try:
+            watchdog_tick(restarts, log)
+        except Exception as err:     # the watchdog never takes the helper down
+            log(f'lock helper: watchdog: {err}')
+
+
 class Handler(BaseHTTPRequestHandler):
     server_version = 'nimrod-lock-helper'
 
@@ -401,7 +533,7 @@ class Handler(BaseHTTPRequestHandler):
         prev = read_state()
         s = {'v': 1, 'locked': locked, 'stayOut': (not locked) and body.get('stayOut', False) is True,
              'at': body.get('at') if isinstance(body.get('at'), (int, float)) else None,
-             'heard': time.time(), 'origin': origin_of(origin)}
+             'heard': time.time(), 'heardMono': time.monotonic(), 'origin': origin_of(origin)}
         data = json.dumps(s)
         write_atomic(runtime_file(), data)
         try:
@@ -433,11 +565,16 @@ def serve():
         raise KeyboardInterrupt
     signal.signal(signal.SIGTERM, stop)
     sys.stderr.write(f'lock helper: on 127.0.0.1:{PORT}{PATH} for {", ".join(sorted(origins)) or "nobody"}\n')
+    stop_watch = threading.Event()
+    if WATCH_ON:
+        threading.Thread(target=watch_forever, args=(stop_watch,), daemon=True).start()
+        sys.stderr.write(f'lock helper: "Aw, Snap" watchdog on ({WATCH_UNIT}, {WATCH_STALE_S} s quiet + a renderer crash report)\n')
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
         pass
     finally:
+        stop_watch.set()
         httpd.server_close()
 
 
