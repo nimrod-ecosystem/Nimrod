@@ -142,6 +142,11 @@
      buttons in a tall panel would each become a quarter of the panel. The 58px touch target is
      deliberate (somebody pressing with poor aim) and must not grow into a slab either. */
   .tv .tv-opts{align-content:start}
+  /* NEVER SHRUNK TO NOTHING (found 2026-11-12, the full sweep, a 420x300 panel): a picture and a long question can take the
+     whole box, and `min-height:0` then squeezed the answers to 0px, a scroller with no room to scroll, so three answers could
+     not be reached at all. A floor of one answer (the 58px touch target and its gap) keeps one in view and the rest a scroll
+     away; the panel itself scrolls past the question, as the host contract says. */
+  .tv .tv-opts{min-height:68px}
   /* The bank is the same shape wearing different clothes: heading and help at the top, the
      paste area in the middle, validation output underneath. So the TEXTAREA is its body, and it
      takes whatever room is left rather than demanding a fixed 300px — which alone overflowed a

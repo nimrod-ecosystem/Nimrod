@@ -220,6 +220,23 @@ function signature(host) {
       `${gone.length} unreachable — ${gone.slice(0, 3).join(' · ')}`);
   }
 
+  // The pass above draws whichever question comes up; this one is the worst case on purpose (2026-11-12: a sweep drew a
+  // question whose picture and words filled the box, and three answers could not be reached).
+  {
+    const c = makeCell(420, 300);
+    c.cap.textContent = 'trivia, a question that fills the box — 420x300';
+    c.host.classList.add('mod-host');   // what mountModule adds: the host scrolls
+    c.host.innerHTML = `<div class="tv"><p class="tv-count">1 of 9</p><div style="height:220px">a picture</div>
+      <h3 class="tv-q">${'A long question about who made the famous jewelled eggs and the porcelain, '.repeat(2)}</h3>
+      <ol class="tv-opts" data-opts>${['Meissen', 'Tiffany & Co.', 'House of Fabergé', 'Wedgwood']
+        .map((o, i) => `<li><button type="button" class="tv-opt" data-opt="${i}">${o}</button></li>`).join('')}</ol></div>`;
+    await sleep(50);
+    const opts = c.host.querySelector('.tv-opts').getBoundingClientRect().height;
+    check('*** trivia: a question that fills the box still leaves room for an answer ***', opts >= 58, `${Math.round(opts)}px`);
+    const gone = unreachable(c.host);
+    check('*** ...and every answer can be scrolled to ***', !gone.length, gone.slice(0, 3).join(' · '));
+  }
+
   // =====================================================================================
   section('*** every host that hands a module a fixed box says so ***');
   {
