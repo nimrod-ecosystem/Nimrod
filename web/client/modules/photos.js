@@ -1453,7 +1453,9 @@ registerModule(
       for (const rel of rels) {
         try {
           const res = await fetchImpl(mediaUrl(source.base_url, rel), { cache: 'no-store' });
-          if (!res || !res.ok) continue;
+          // A missing file's reply is cancelled, not left unread: an unread body holds a 2 MB pipe until garbage
+          // collection (screen_lock.js dropBody, "Aw, Snap" 2026-11-13).
+          if (!res || !res.ok) { try { res?.body?.cancel?.()?.catch?.(() => {}); } catch { /* none */ } continue; }
           const got = readPullStatus(await res.json());
           if (got) return got;
         } catch { /* not there, or not reachable: no line */ }

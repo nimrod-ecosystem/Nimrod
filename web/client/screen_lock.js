@@ -763,21 +763,41 @@ export function createLockReporter({
 } = {}) {
   if (!url || !isLoopbackUrl(url)) return { report() {}, last: () => null, destroy() {} };
   let last = null;
+  // *** THE REPLY IS CANCELLED, NOT LEFT UNREAD ("Aw, Snap", 2026-11-13). *** Chromium gives every response body a 2 MB
+  // shared-memory pipe, and an unread one is only freed when garbage collection finalises the Response. A quiet page
+  // (a slideshow) almost never collects, so this beat left one 2 MB pipe in /tmp per minute: measured on the TV at 419 of
+  // them (0 KB read) after 7 hours, until /tmp's 1.9 GB ran out and the renderer crashed (15-19 h, daily, both Pis).
+  let sent = 0;
+  let dropped = 0;
   function send() {
     if (!last) return;
+    sent += 1;
     try {
       Promise.resolve(fetchImpl(url, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, keepalive: true,
         body: JSON.stringify({ ...last, at: now() }),
-      })).catch(() => {});
+      })).then((r) => { if (dropBody(r)) dropped += 1; }).catch(() => {});
     } catch { /* a helper that is not there is not a crash */ }
   }
   const timer = setIntervalFn && beatMs > 0 ? setIntervalFn(send, beatMs) : null;
   return {
     report(s) { last = { locked: !!s?.locked, stayOut: !!s?.stayOut }; send(); },
     last: () => (last ? { ...last } : null),
+    counts: () => ({ sent, dropped }),
     destroy() { if (timer && clearIntervalFn) clearIntervalFn(timer); },
   };
+}
+
+// A response whose body nobody will read: cancel it, so its pipe is released now rather than at some later garbage
+// collection (see createLockReporter). True when there was a body to cancel. Never throws.
+export function dropBody(res) {
+  try {
+    const b = res && res.body;
+    if (!b || typeof b.cancel !== 'function' || b.locked) return false;
+    const p = b.cancel();
+    if (p && typeof p.catch === 'function') p.catch(() => {});
+    return true;
+  } catch { return false; }
 }
 
 // "GO TO THE DESKTOP" (Mike, 2026-11-10: "It's supposed to operate just like a regular Pi, not be locked into Nimrod"; then

@@ -32,7 +32,7 @@ import {
   createScreenLock, normalizeLockRecord, missingLockBindings, chordWords, lockControlOf, lockedLine, LOCK_KEY_BINDINGS,
   LOCK_CONTROL, SCREEN_LOCK_ACTION, SCREEN_LOCK_TOPIC, LOCK_STATE_TOPIC, LOCK_STORE_KEY, keepWhileLocked, isAccountRow,
   isLeaveKey, isLeavingLink, attachLockGuards, mountPinStrip, mountLockChip, isLoopbackUrl, lockHelperFrom,
-  createLockReporter, LOCK_HELPER_KEY, PIN_TRIES, PIN_WAIT_MS, isPinShape, RELOCK_CHOICES, LOCK_MENU_DROPS,
+  createLockReporter, dropBody, LOCK_HELPER_KEY, PIN_TRIES, PIN_WAIT_MS, isPinShape, RELOCK_CHOICES, LOCK_MENU_DROPS,
   LOCK_PAGE_DROPS, LOCK_SECRET_KEYS, screenLockedHere, desktopHelperUrl, createDesktopExit,
 } from '../screen_lock.js';
 import { createSpotify } from '../music_spotify.js';
@@ -407,6 +407,19 @@ const pressChord = () => { chord('keydown'); chord('keyup'); };
       const none = createLockReporter({ url: 'https://evil.example/x', fetchImpl: async () => { posts.push('no'); } });
       none.report({ locked: true });
       check('a reporter for a non-loopback address does nothing', posts.length === 2);
+      // "Aw, Snap" (2026-11-13): every reply's body is cancelled, so no 2 MB pipe waits on garbage collection.
+      let cancels = 0;
+      const withBody = () => ({ ok: true, body: { locked: false, cancel() { cancels += 1; return Promise.resolve(); } } });
+      const rep2 = createLockReporter({ url: 'http://127.0.0.1:8765/screen-lock', fetchImpl: async () => withBody(),
+        setIntervalFn: (f) => { beats.push(f); return 2; }, clearIntervalFn: () => {} });
+      rep2.report({ locked: false });
+      beats[beats.length - 1]();
+      beats[beats.length - 1]();
+      await sleep(10);
+      check('*** each beat\'s reply body is cancelled, not left unread ***', cancels === 3 && rep2.counts().sent === 3 && rep2.counts().dropped === 3, J(rep2.counts()));
+      check('dropBody: no response, no body, or a body already being read are left alone', dropBody(null) === false && dropBody({ ok: true }) === false
+        && dropBody({ body: { locked: true, cancel() { throw new Error('read'); } } }) === false
+        && dropBody({ body: { locked: false, cancel() { throw new Error('boom'); } } }) === false);
       const failing = createLockReporter({ url: 'http://127.0.0.1:1/x', fetchImpl: () => Promise.reject(new Error('no helper')), setIntervalFn: null });
       failing.report({ locked: false });
       await sleep(10);
