@@ -163,17 +163,19 @@ class LockHelperTest(unittest.TestCase):
         self.assertEqual(self.audio('POST', '/audio/default', {'name': 'x'})[0], 503)
 
     # ---- "Go to the desktop" (Mike, 2026-11-10) ----
-    def fake_pause(self, present=True):
+    def fake_pause(self, present=True, kiosk=True):
         p = os.path.join(self.tmp, 'nimrod-kiosk-pause.sh')
         if present:
             with open(p, 'w') as f:
                 f.write('#!/bin/sh\n')
             os.chmod(p, 0o755)
         runs = []
-        was_p, was_s = H.PAUSE_SCRIPT, H.spawn
+        was_p, was_s, was_k = H.PAUSE_SCRIPT, H.spawn, H.kiosk_running
         H.PAUSE_SCRIPT = p
         H.spawn = lambda args, env: runs.append((args, env.get('NIMROD_PAUSE_TERMINAL')))
-        self.addCleanup(lambda: (setattr(H, 'PAUSE_SCRIPT', was_p), setattr(H, 'spawn', was_s)))
+        H.kiosk_running = lambda: kiosk
+        self.addCleanup(lambda: (setattr(H, 'PAUSE_SCRIPT', was_p), setattr(H, 'spawn', was_s),
+                                 setattr(H, 'kiosk_running', was_k)))
         return p, runs
 
     def test_the_desktop_button_runs_the_chords_script_without_a_terminal(self):
@@ -203,6 +205,13 @@ class LockHelperTest(unittest.TestCase):
 
     def test_no_pause_script_no_button(self):
         _, runs = self.fake_pause(present=False)
+        self.assertEqual(self.audio('GET', '/desktop')[2], {'ok': False})
+        self.assertEqual(self.audio('POST', '/desktop', {'go': True})[0], 503)
+        self.assertEqual(runs, [])
+
+    def test_no_kiosk_running_no_button(self):
+        # (2026-11-20, row 2.273) An ordinary window is already on the desktop: nothing to leave, so no button.
+        _, runs = self.fake_pause(kiosk=False)
         self.assertEqual(self.audio('GET', '/desktop')[2], {'ok': False})
         self.assertEqual(self.audio('POST', '/desktop', {'go': True})[0], 503)
         self.assertEqual(runs, [])

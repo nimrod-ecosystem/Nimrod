@@ -15,6 +15,17 @@ set -euo pipefail
 
 URL="${NIMROD_KIOSK_URL:?set NIMROD_KIOSK_URL in the systemd units Environment= line}"
 PROFILE="${NIMROD_KIOSK_PROFILE:-$HOME/.config/chromium}"
+# HOW THE PAGE OPENS (2026-11-20, row 2.273; Mike: "I want the pies to not be locked into Nimrod... just use Nimrod like a
+# website"). NIMROD_LAUNCH_MODE:
+#   kiosk       (default, as before) full screen with no browser around it, supervised by nimrod-kiosk.service, which
+#               relaunches it after any exit but a deliberate one.
+#   window      an ORDINARY Chromium window, maximised: tabs, address bar, every other website. Run by nimrod-browser.service,
+#               which never relaunches it: closed is closed.
+#   fullscreen  the same ordinary window started full screen (F11 leaves it). For a screen nobody at it can use a mouse on.
+# The network wait, the profile clean-up and the address below are the same in all three, so a window opens on the same
+# page, with the same voice, helper and name, as the kiosk did.
+MODE="${NIMROD_LAUNCH_MODE:-kiosk}"
+case "$MODE" in kiosk|window|fullscreen) ;; *) echo "nimrod-kiosk: NIMROD_LAUNCH_MODE '$MODE' is not kiosk, window or fullscreen" >&2; exit 2 ;; esac
 # LOCK THIS SCREEN (2026-10-05; nimrod-lock-helper.py). Where the page reports its lock, and the helper's own path.
 # Empty NIMROD_LOCK_HELPER_URL: no report, and this launcher behaves exactly as it did before.
 LOCK_HELPER_URL="${NIMROD_LOCK_HELPER_URL:-}"
@@ -29,7 +40,8 @@ EXIT_STAY_OUT=75     # = the unit's RestartPreventExitStatus / SuccessExitStatus
 # attempt, not just the first — systemd's Restart=always calls this whole script again on a
 # crash, and if THAT crash was network-related, re-checking before relaunching is correct, not
 # wasted work.
-for _ in $(seq 1 120); do
+# NIMROD_NET_WAIT_S (default 120, the cap described above): how many one-second tries. 0 = do not wait.
+for _ in $(seq 1 "${NIMROD_NET_WAIT_S:-120}"); do
   curl -fsS --max-time 2 "$URL" -o /dev/null && break
   sleep 1
 done
@@ -38,8 +50,23 @@ done
 # Singleton lock aborts the launch silently, and (b) Chromium launches, sees the dirty profile,
 # and EXITS/crashes on the first try. Both cleared before EVERY launch attempt, not just the
 # first — the same reasoning as the network wait above.
-rm -f "$PROFILE/SingletonLock" "$PROFILE/SingletonSocket" "$PROFILE/SingletonCookie" 2>/dev/null || true
-if [ -f "$PROFILE/Default/Preferences" ]; then
+# *** BUT ONLY A STALE LOCK (2026-11-20). *** With an ordinary browser on this computer, the profile may be held by a
+# Chromium somebody opened from the menu. SingletonLock is a link to "<host>-<pid>": a live pid is a real browser, and
+# removing its lock would start a second Chromium on the same profile. So: a live holder in kiosk mode means "close the
+# browser first" - exit 75, which the kiosk unit does not relaunch (a kiosk launched into a running browser only opens a
+# tab there and exits, and Restart=always would open another every 3 seconds). In window mode the running browser simply
+# gets a new window for the page, which is what somebody pressing "Nimrod" in the menu expects.
+HOLDER="$(readlink "$PROFILE/SingletonLock" 2>/dev/null || true)"
+HOLDER_PID="${HOLDER##*-}"
+HELD=0
+if [ -n "$HOLDER" ] && [ "$HOLDER_PID" != "$HOLDER" ] && kill -0 "$HOLDER_PID" 2>/dev/null; then HELD=1; fi
+if [ "$HELD" = "1" ] && [ "$MODE" = "kiosk" ]; then
+  echo "nimrod-kiosk: a Chromium window is already open on this profile (pid $HOLDER_PID); close it, then start the kiosk again." >&2
+  command -v notify-send >/dev/null 2>&1 && notify-send "Close Chromium first" "Then choose Nimrod full screen again." || true
+  exit 75
+fi
+[ "$HELD" = "1" ] || rm -f "$PROFILE/SingletonLock" "$PROFILE/SingletonSocket" "$PROFILE/SingletonCookie" 2>/dev/null || true
+if [ "$HELD" = "0" ] && [ -f "$PROFILE/Default/Preferences" ]; then
   sed -i 's/"exited_cleanly":false/"exited_cleanly":true/g; s/"exit_type":"[^"]*"/"exit_type":"Normal"/g' \
     "$PROFILE/Default/Preferences" 2>/dev/null || true
 fi
@@ -101,6 +128,27 @@ fi
 # systemd still sees the truth: this script is the unit's main process and Chromium is in the unit's cgroup, so a
 # `systemctl --user stop` stops both (KillMode=control-group, the default), and the TERM is passed on to Chromium so
 # it closes its profile cleanly rather than being killed.
+# *** AN ORDINARY WINDOW (window / fullscreen, 2026-11-20). *** `exec`, because nothing here decides anything after it:
+# nimrod-browser.service never relaunches, so closing the window is the end of it. Two kiosk switches are left out on
+# purpose, because on an ordinary browser they would reach EVERY website, not just this one:
+#   --use-fake-ui-for-media-stream  gives any site the camera and microphone with no question asked;
+#   --autoplay-policy=...           lets any site play sound before a press.
+# The site's own share of both comes from a browser policy that names only this site (install-linux.sh step 6b,
+# NIMROD_SITE_POLICY=1: nimrod-site.json). Without that policy the window would ask "Allow camera?" on the first call and
+# wait for a press, so until it exists the autoplay switch is passed (sound is what a screen without it loses at once)
+# and the camera is asked for once; Chromium remembers the answer for this site.
+SITE_POLICY="${NIMROD_SITE_POLICY_FILE:-/etc/chromium/policies/managed/nimrod-site.json}"
+if [ "$MODE" != "kiosk" ]; then
+  WIN_FLAGS=(--ozone-platform=wayland --no-first-run --start-maximized --password-store=basic --disable-session-crashed-bubble)
+  [ "$MODE" = "fullscreen" ] && WIN_FLAGS+=(--start-fullscreen)
+  if [ ! -f "$SITE_POLICY" ]; then
+    echo "nimrod-browser: no $SITE_POLICY; sound may play before a press on any site (install-linux.sh NIMROD_SITE_POLICY=1 narrows it to this one)."
+    WIN_FLAGS+=(--autoplay-policy=no-user-gesture-required)
+  fi
+  echo "nimrod-browser: opening $MODE window (Chromium already open: $([ "$HELD" = "1" ] && echo yes || echo no))."
+  exec chromium "${WIN_FLAGS[@]}" "$PAGE"
+fi
+
 chromium \
   --ozone-platform=wayland \
   --kiosk \

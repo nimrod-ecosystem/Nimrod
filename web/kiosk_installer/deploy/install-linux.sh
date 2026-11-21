@@ -72,11 +72,12 @@ if [ "$LOCK" = "1" ]; then
   # only a four-key chord: "Nimrod dashboard" runs nimrod-kiosk-back.sh. The settings menu's "Go to the desktop" names it.
   APPS_DIR="$HOME/.local/share/applications"
   mkdir -p "$APPS_DIR"
+  # (2026-11-20, row 2.273) Named "Nimrod full screen" now that an ordinary window is the other way to open it.
   cat > "$APPS_DIR/nimrod-dashboard.desktop" <<EOF
 [Desktop Entry]
 Type=Application
-Name=Nimrod dashboard
-Comment=Bring the dashboard back to this screen
+Name=Nimrod full screen
+Comment=Nimrod on the whole screen, no browser around it (Ctrl+Alt+Shift+Esc leaves it)
 Exec=$BACK_DST
 Icon=video-display
 Terminal=false
@@ -89,12 +90,13 @@ fi
 #    unlocked the screen" (kiosk-launch.sh) - is neither relaunched nor counted as a failure. Every other exit, a
 #    clean close included, is relaunched exactly as before.
 mkdir -p "$UNIT_DIR"
+# (2026-11-20) 75 is written with or without the lock now: the launcher also exits 75 when an ordinary Chromium window
+# already holds the profile ("close it first"), and relaunching that every 3 seconds would open a tab every 3 seconds.
+LOCK_UNIT_LINES="RestartPreventExitStatus=75
+SuccessExitStatus=75"
 if [ "$LOCK" = "1" ]; then
   LOCK_UNIT_LINES="Environment=NIMROD_LOCK_HELPER_URL=$LOCK_URL
-RestartPreventExitStatus=75
-SuccessExitStatus=75"
-else
-  LOCK_UNIT_LINES=""
+$LOCK_UNIT_LINES"
 fi
 # (2026-10-14) With the voice (step 10, NIMROD_TTS=1): the launcher tells the page to use it (kiosk-launch.sh).
 if [ "${NIMROD_TTS:-0}" = "1" ]; then
@@ -260,6 +262,23 @@ if [ "$LOCK" = "1" ] && [ "${NIMROD_LOCK_POLICY:-0}" = "1" ]; then
   sudo mkdir -p "$(dirname "$POLICY_FILE")"
   echo "$POLICY_JSON" | sudo tee "$POLICY_FILE" >/dev/null
   echo "wrote $POLICY_FILE (allows $SITE_ORIGIN to reach this computer's helper); restart the kiosk to apply"
+fi
+
+# 6b. (2026-11-20, row 2.273) THE SITE'S SOUND, CAMERA AND START PAGE IN AN ORDINARY WINDOW. The kiosk gets sound before a
+#     press and the camera without a question from two launch switches; in an ordinary browser those switches would reach
+#     every website (kiosk-launch.sh says why they are left out there). These two policies name ONLY the site:
+#       managed/nimrod-site.json       AutoplayAllowlist, VideoCaptureAllowedUrls, AudioCaptureAllowedUrls = the site.
+#                                      Managed, because a camera question nobody can answer is the box CLAUDE.md forbids.
+#       recommended/nimrod-start.json  the start page and home button = the dashboard address. RECOMMENDED, not managed:
+#                                      the person can change their start page in Chromium's settings like anybody else.
+#     System-wide (sudo), so only when asked: NIMROD_SITE_POLICY=1. Undo: delete the two files.
+if [ "${NIMROD_SITE_POLICY:-0}" = "1" ]; then
+  sudo mkdir -p /etc/chromium/policies/managed /etc/chromium/policies/recommended
+  printf '{ "AutoplayAllowlist": ["%s"], "VideoCaptureAllowedUrls": ["%s"], "AudioCaptureAllowedUrls": ["%s"] }\n' \
+    "$SITE_ORIGIN" "$SITE_ORIGIN" "$SITE_ORIGIN" | sudo tee /etc/chromium/policies/managed/nimrod-site.json >/dev/null
+  printf '{ "RestoreOnStartup": 4, "RestoreOnStartupURLs": ["%s"], "HomepageLocation": "%s", "ShowHomeButton": true }\n' \
+    "$URL" "$URL" | sudo tee /etc/chromium/policies/recommended/nimrod-start.json >/dev/null
+  echo "wrote nimrod-site.json and nimrod-start.json (only $SITE_ORIGIN); applies the next time Chromium starts"
 fi
 
 # 7. (2026-10-09, Mike: "yes to the watchdog and keeping the log") THE NETWORK WATCHDOG AND A LOG THAT SURVIVES A POWER
@@ -469,8 +488,19 @@ if [ "${NIMROD_VPN:-0}" = "1" ]; then
   fi
 fi
 
+# 12. (2026-11-20, row 2.273) WHAT OPENS AT LOGIN: NIMROD_AT_LOGIN = kiosk (the default, as every install before) | window
+#     (an ordinary Chromium window on Nimrod) | fullscreen (the same, started full screen) | none. nimrod-login-mode.sh does
+#     it, and stays installed, so the choice can be changed later without this installer: ~/.local/bin/nimrod-login-mode.sh.
+#     ARGUED, the default: kiosk, because a screen whose person cannot press anything is who this installer was first for,
+#     and an install that changed what it does without being asked would surprise everybody who ran it before. Mike's own
+#     Pis are ordinary computers now (his ruling, 2026-11-19); for them it is one word.
+if [ -f "$HERE/nimrod-login-mode.sh" ]; then
+  install -m 0755 "$HERE/nimrod-login-mode.sh" "$BIN_DIR/nimrod-login-mode.sh"
+  "$BIN_DIR/nimrod-login-mode.sh" "${NIMROD_AT_LOGIN:-kiosk}"
+fi
+
 echo
-echo "installed. kiosk will launch $URL via systemd --user on next boot."
+echo "installed. At login: ${NIMROD_AT_LOGIN:-kiosk} ($URL); change it any time: ~/.local/bin/nimrod-login-mode.sh window|fullscreen|kiosk|none"
 echo "  start it now:  systemctl --user start nimrod-kiosk"
 echo "  status:        systemctl --user status nimrod-kiosk"
 echo "  logs:          journalctl --user -u nimrod-kiosk -f"

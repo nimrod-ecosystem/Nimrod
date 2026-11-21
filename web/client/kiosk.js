@@ -7899,7 +7899,7 @@ export async function mountKiosk(root, {
     const desk = desktopExit && desktopReady ? [
       { kind: 'heading', id: 'desktop-head', label: 'This computer', ...t },
       { kind: 'item', id: 'go-desktop', label: 'Go to the desktop', ...t,
-        hint: 'closes the dashboard so this computer works like any other; “Nimrod dashboard” in the computer’s menu brings it back',
+        hint: 'closes the dashboard so this computer works like any other; “Nimrod full screen” in the computer’s menu brings it back',
         run: () => { goToDesktop(); } },
     ] : [];
     return [

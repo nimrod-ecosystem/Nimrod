@@ -284,7 +284,7 @@ def set_default_sink(name):
 # then, the chord known, "I still can't get out of full screen to sign into spotify") -----------------------------------------
 # The settings menu's button asks here, and this runs the SAME script the Ctrl+Alt+Shift+Esc chord runs (one way out, two doors):
 # it stops the kiosk's service, which Restart= never undoes. Refused while locked, like the chord. No terminal from the button
-# (NIMROD_PAUSE_TERMINAL=0): the person asked for the desktop. "Nimrod dashboard" in the computer's menu brings it back.
+# (NIMROD_PAUSE_TERMINAL=0): the person asked for the desktop. "Nimrod full screen" in the computer's menu brings it back.
 PAUSE_SCRIPT = os.environ.get('NIMROD_KIOSK_PAUSE') or os.path.join(os.path.expanduser('~'), '.local', 'bin', 'nimrod-kiosk-pause.sh')
 
 
@@ -294,8 +294,15 @@ def spawn(args, env):
                      stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
+def kiosk_running():
+    """Is the kiosk's service running? A seam for the tests."""
+    return unit_facts()[0]
+
+
 def can_leave():
-    return os.path.isfile(PAUSE_SCRIPT) and os.access(PAUSE_SCRIPT, os.X_OK)
+    # (2026-11-20, row 2.273) Only while the KIOSK is what is on the screen. In an ordinary browser window
+    # (nimrod-login-mode.sh window) the desktop is already there, and the button would stop nothing.
+    return os.path.isfile(PAUSE_SCRIPT) and os.access(PAUSE_SCRIPT, os.X_OK) and kiosk_running()
 
 
 def go_to_desktop():
