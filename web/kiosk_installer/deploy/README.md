@@ -96,25 +96,28 @@ this installer.
 What opens at login is a choice per computer, and the kiosk is only one of four:
 
 ```
-~/.local/bin/nimrod-login-mode.sh window        # an ordinary Chromium window on Nimrod, maximised; closed is closed
+~/.local/bin/nimrod-login-mode.sh window        # an ordinary Chromium window on Nimrod, maximised
 ~/.local/bin/nimrod-login-mode.sh fullscreen    # the same window started full screen (F11 leaves it)
 ~/.local/bin/nimrod-login-mode.sh kiosk         # the kiosk: no browser around it, relaunched after any exit
 ~/.local/bin/nimrod-login-mode.sh none          # nothing; Nimrod is a website like any other
 ```
 
 Add `--now` to switch at once. The installer takes the same word as `NIMROD_AT_LOGIN=` (default `kiosk`).
+
+A window is not locked and is not left dead: **a person closing it closes it**; Chromium dying (a crash, killed for memory)
+brings it back in 3 seconds; and the "Aw, Snap" watchdog watches the window instead of the kiosk, restarting the whole
+browser (other tabs too) after Nimrod's page has crashed. `--no-watch` turns the watchdog off for a computer where other
+tabs matter more.
 Whatever is chosen, **Nimrod full screen** in the computer's menu (or Ctrl+Alt+Shift+Return) starts the kiosk; it
 refuses, with a message, while an ordinary Chromium window is open on the same profile (close that first).
 
 The window opens the same address, voice, helper and name as the kiosk (it is written from the kiosk unit's own
 settings), and uses the same Chromium profile, so the screen's pairing and its own settings carry over.
 
-**For the window, run once with `NIMROD_SITE_POLICY=1`** (sudo). It lets only the site play sound before a press and use
-the camera and microphone without asking, and makes Nimrod Chromium's start page (a recommended policy, so it can still be
-changed in Chromium's settings). Without it the window lets every site play sound, and asks once for the camera.
-
-**Only in the kiosk:** the "Aw, Snap" watchdog. A page that crashes in an ordinary window shows Chromium's Reload button
-until somebody presses it.
+**For the window, run once `bash nimrod-site-policy.sh <dashboard url>`** (sudo; or the installer's `NIMROD_SITE_POLICY=1`).
+It lets only the site play sound before a press and use the camera and microphone without asking, and makes Nimrod
+Chromium's start page (a recommended policy, so it can still be changed in Chromium's settings). Without it the window lets
+every site play sound, and asks once for the camera. Check it took: `chrome://policy`.
 
 ## Pictures from Google Drive (Raspberry Pi, opt-in)
 

@@ -273,12 +273,7 @@ fi
 #                                      the person can change their start page in Chromium's settings like anybody else.
 #     System-wide (sudo), so only when asked: NIMROD_SITE_POLICY=1. Undo: delete the two files.
 if [ "${NIMROD_SITE_POLICY:-0}" = "1" ]; then
-  sudo mkdir -p /etc/chromium/policies/managed /etc/chromium/policies/recommended
-  printf '{ "AutoplayAllowlist": ["%s"], "VideoCaptureAllowedUrls": ["%s"], "AudioCaptureAllowedUrls": ["%s"] }\n' \
-    "$SITE_ORIGIN" "$SITE_ORIGIN" "$SITE_ORIGIN" | sudo tee /etc/chromium/policies/managed/nimrod-site.json >/dev/null
-  printf '{ "RestoreOnStartup": 4, "RestoreOnStartupURLs": ["%s"], "HomepageLocation": "%s", "ShowHomeButton": true }\n' \
-    "$URL" "$URL" | sudo tee /etc/chromium/policies/recommended/nimrod-start.json >/dev/null
-  echo "wrote nimrod-site.json and nimrod-start.json (only $SITE_ORIGIN); applies the next time Chromium starts"
+  bash "$HERE/nimrod-site-policy.sh" "$URL"      # one writer of these files (nimrod-site-policy.sh)
 fi
 
 # 7. (2026-10-09, Mike: "yes to the watchdog and keeping the log") THE NETWORK WATCHDOG AND A LOG THAT SURVIVES A POWER

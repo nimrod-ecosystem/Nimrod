@@ -67,7 +67,14 @@ systemctl --user daemon-reload
 systemctl --user start nimrod-kiosk.service
 """
 
-STUB_SYSTEMCTL = '#!/bin/bash\necho "$*" >> "$FAKE_LOG"\n'
+STUB_SYSTEMCTL = r'''#!/bin/bash
+echo "$*" >> "$FAKE_LOG"
+case "$*" in
+  *is-enabled*) [ "${FAKE_STILL_ENABLED:-0}" = 1 ] && echo enabled || echo disabled ;;
+  *is-active*) [ "${FAKE_INACTIVE:-0}" = 1 ] && exit 3 ;;
+esac
+exit 0
+'''
 STUB_CHROMIUM = '#!/bin/bash\nfor a in "$@"; do echo "$a"; done > "$FAKE_CHROMIUM_ARGS"\nexit 0\n'
 STUB_CURL = '#!/bin/bash\nexit 0\n'
 
@@ -92,9 +99,13 @@ class LoginModeTest(unittest.TestCase):
             f.write(STUB_SYSTEMCTL)
         os.chmod(self.stub, 0o755)
 
-    def run_mode(self, *args):
-        env = dict(os.environ, HOME=posix(self.home), NIMROD_SYSTEMCTL=posix(self.stub), FAKE_LOG=posix(self.log))
+    def run_mode(self, *args, **fake):
+        env = dict(os.environ, HOME=posix(self.home), NIMROD_SYSTEMCTL=posix(self.stub), FAKE_LOG=posix(self.log),
+                   NIMROD_NOW_WAIT_S='0', **fake)
         return subprocess.run([BASH, posix(MODE_SCRIPT), *args], env=env, capture_output=True, text=True)
+
+    def dropin(self):
+        return os.path.join(self.units, 'nimrod-lock-helper.service.d', 'watch.conf')
 
     def read(self, *parts):
         with open(os.path.join(*parts)) as f:
@@ -103,7 +114,7 @@ class LoginModeTest(unittest.TestCase):
     def calls(self):
         return self.read(self.log).splitlines() if os.path.exists(self.log) else []
 
-    def test_window_writes_a_browser_unit_from_the_kiosks_settings_that_never_relaunches(self):
+    def test_window_writes_a_browser_unit_from_the_kiosks_settings_that_comes_back_only_after_a_crash(self):
         r = self.run_mode('window')
         self.assertEqual(r.returncode, 0, r.stderr)
         unit = self.read(self.units, 'nimrod-browser.service')
@@ -112,10 +123,38 @@ class LoginModeTest(unittest.TestCase):
                      'Environment=NIMROD_LOCK_HELPER_URL=http://127.0.0.1:8765/screen-lock',
                      'Environment=NIMROD_LAUNCH_MODE=window',
                      'ExecStart=/home/u/.local/bin/nimrod-kiosk-launch.sh',
-                     'Restart=no'):
+                     'Restart=on-failure'):
             self.assertIn(line, unit.splitlines())
-        self.assertNotIn('Restart=always', unit)
+        self.assertNotIn('Restart=always', unit)     # a person closing it is not relaunched
         self.assertIn('--user disable nimrod-kiosk.service', self.calls())
+
+    def test_the_watchdog_follows_the_window_unless_told_not_to(self):
+        self.run_mode('window')
+        self.assertIn('Environment=NIMROD_KIOSK_UNIT=nimrod-browser.service', self.read(self.dropin()).splitlines())
+        self.run_mode('window', '--no-watch')
+        self.assertFalse(os.path.exists(self.dropin()))
+        self.run_mode('fullscreen')
+        self.assertTrue(os.path.exists(self.dropin()))
+        self.run_mode('kiosk')
+        self.assertFalse(os.path.exists(self.dropin()))
+
+    def test_a_kiosk_left_enabled_stops_it_before_autostart_changes(self):
+        r = self.run_mode('window', FAKE_STILL_ENABLED='1')
+        self.assertEqual(r.returncode, 1)
+        self.assertEqual(self.read(self.autostart), AUTOSTART)
+
+    def test_now_says_so_when_the_unit_did_not_start(self):
+        r = self.run_mode('kiosk', '--now', FAKE_INACTIVE='1')
+        self.assertEqual(r.returncode, 1)
+        self.assertIn('close it first', r.stderr)
+
+    def test_a_start_line_inside_a_longer_line_goes_too(self):
+        with open(self.autostart, 'a', newline='\n') as f:
+            f.write('systemctl --user daemon-reload && systemctl --user start nimrod-kiosk.service  # mine\n')
+        self.run_mode('window')
+        text = self.read(self.autostart)
+        self.assertNotIn('nimrod-kiosk.service', text)
+        self.assertEqual(text.count('systemctl --user start nimrod-browser.service'), 1)
 
     def test_window_changes_only_the_nimrod_line_of_autostart_and_keeps_a_backup(self):
         self.run_mode('window')
@@ -216,6 +255,8 @@ class LaunchModeTest(unittest.TestCase):
         self.assertNotIn('--use-fake-ui-for-media-stream', args)
         self.assertNotIn('--start-fullscreen', args)
         self.assertIn('--start-maximized', args)
+        self.assertIn('--no-default-browser-check', args)
+        self.assertIn('--noerrdialogs', args)
         self.assertEqual(args[-1], 'https://site.example/kiosk.html?lockHelper=http://127.0.0.1:8765/screen-lock'
                                    '&localVoice=on&boot=1')
 
@@ -243,17 +284,27 @@ class LaunchModeTest(unittest.TestCase):
         self.assertEqual(r.returncode, 2)
         self.assertIsNone(args)
 
-    def make_lock(self, pid):
-        r = subprocess.run([BASH, '-c', f'ln -s "testhost-{pid}" "{posix(self.profile)}/SingletonLock" && '
-                                        f'[ "$(readlink "{posix(self.profile)}/SingletonLock")" = "testhost-{pid}" ]'],
+    def make_lock(self, pid, host=None):
+        if not os.path.isdir('/proc'):
+            self.skipTest('no /proc here: a lock is never "held" without one')
+        target = f'{host or subprocess.run(["hostname"], capture_output=True, text=True).stdout.strip()}-{pid}'
+        r = subprocess.run([BASH, '-c', f'ln -s "{target}" "{posix(self.profile)}/SingletonLock" && '
+                                        f'[ "$(readlink "{posix(self.profile)}/SingletonLock")" = "{target}" ]'],
                            capture_output=True)
         if r.returncode != 0:
             self.skipTest('this bash cannot make a symlink')
 
-    def live_pid(self):
-        p = subprocess.Popen([BASH, '-c', 'echo $$; exec sleep 30'], stdout=subprocess.PIPE, text=True)
-        self.addCleanup(lambda: (p.kill(), p.wait(), p.stdout.close()))
-        return int(p.stdout.readline())
+    def live_pid(self, name='chromium'):
+        """A live process whose /proc/<pid>/comm is `name` (a copy of `sleep` under that name)."""
+        if os.name == 'nt' or not os.path.isdir('/proc') or not shutil.which('sleep'):
+            self.skipTest('needs Linux: /proc and a sleep program')
+        exe = os.path.join(self.tmp, 'holder', name)
+        os.makedirs(os.path.dirname(exe), exist_ok=True)
+        shutil.copy(shutil.which('sleep'), exe)
+        os.chmod(exe, 0o755)
+        p = subprocess.Popen([exe, '30'])
+        self.addCleanup(lambda: (p.kill(), p.wait()))
+        return p.pid
 
     def test_a_kiosk_into_an_open_browser_stays_out_instead_of_looping(self):
         self.make_lock(self.live_pid())
@@ -275,6 +326,20 @@ class LaunchModeTest(unittest.TestCase):
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertIn('--kiosk', args)
         self.assertFalse(os.path.lexists(os.path.join(self.profile, 'SingletonLock')))
+
+    def test_a_reused_pid_after_a_power_cut_is_not_a_browser(self):
+        # The gate's case: the stale lock's pid now belongs to some other program. The kiosk must still start.
+        self.make_lock(self.live_pid('sleep'))
+        r, args = self.launch()
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn('--kiosk', args)
+        self.assertFalse(os.path.lexists(os.path.join(self.profile, 'SingletonLock')))
+
+    def test_a_lock_from_another_computer_is_not_held_here(self):
+        self.make_lock(self.live_pid(), host='some-other-pi')
+        r, args = self.launch()
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn('--kiosk', args)
 
 
 if __name__ == '__main__':

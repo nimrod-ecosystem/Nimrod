@@ -56,10 +56,17 @@ done
 # browser first" - exit 75, which the kiosk unit does not relaunch (a kiosk launched into a running browser only opens a
 # tab there and exits, and Restart=always would open another every 3 seconds). In window mode the running browser simply
 # gets a new window for the page, which is what somebody pressing "Nimrod" in the menu expects.
+# A LIVE pid is not enough (found by the gate, 2026-11-20): after a power cut the stale lock's pid number may belong to some
+# other program by now, and treating that as "Chromium is open" would keep the kiosk out for good. So the lock counts as
+# held only when it names THIS computer and the pid is a Chromium (/proc/<pid>/comm). No /proc (not Linux): not held.
 HOLDER="$(readlink "$PROFILE/SingletonLock" 2>/dev/null || true)"
 HOLDER_PID="${HOLDER##*-}"
+HOLDER_HOST="${HOLDER%-*}"
 HELD=0
-if [ -n "$HOLDER" ] && [ "$HOLDER_PID" != "$HOLDER" ] && kill -0 "$HOLDER_PID" 2>/dev/null; then HELD=1; fi
+if [ -n "$HOLDER" ] && [ "$HOLDER_PID" != "$HOLDER" ] && [ "$HOLDER_HOST" = "$(hostname 2>/dev/null)" ] \
+   && kill -0 "$HOLDER_PID" 2>/dev/null; then
+  case "$(cat "/proc/$HOLDER_PID/comm" 2>/dev/null)" in chromium*|chrome*) HELD=1 ;; esac
+fi
 if [ "$HELD" = "1" ] && [ "$MODE" = "kiosk" ]; then
   echo "nimrod-kiosk: a Chromium window is already open on this profile (pid $HOLDER_PID); close it, then start the kiosk again." >&2
   command -v notify-send >/dev/null 2>&1 && notify-send "Close Chromium first" "Then choose Nimrod full screen again." || true
@@ -139,7 +146,8 @@ fi
 # and the camera is asked for once; Chromium remembers the answer for this site.
 SITE_POLICY="${NIMROD_SITE_POLICY_FILE:-/etc/chromium/policies/managed/nimrod-site.json}"
 if [ "$MODE" != "kiosk" ]; then
-  WIN_FLAGS=(--ozone-platform=wayland --no-first-run --start-maximized --password-store=basic --disable-session-crashed-bubble)
+  WIN_FLAGS=(--ozone-platform=wayland --no-first-run --no-default-browser-check --noerrdialogs --start-maximized
+             --password-store=basic --disable-session-crashed-bubble)
   [ "$MODE" = "fullscreen" ] && WIN_FLAGS+=(--start-fullscreen)
   if [ ! -f "$SITE_POLICY" ]; then
     echo "nimrod-browser: no $SITE_POLICY; sound may play before a press on any site (install-linux.sh NIMROD_SITE_POLICY=1 narrows it to this one)."
