@@ -139,9 +139,12 @@ if [ "$NOW" = "1" ]; then
     kiosk) "$SYSTEMCTL" --user stop nimrod-browser.service 2>/dev/null || true
            "$SYSTEMCTL" --user reset-failed nimrod-kiosk.service 2>/dev/null || true
            "$SYSTEMCTL" --user start nimrod-kiosk.service; WANT=nimrod-kiosk.service ;;
+    # RESTART, not start (2026-11-22): switching window <-> fullscreen while the window is open must reopen it in the new
+    # mode; `start` on a running unit does nothing, so the old window stayed and "(and now)" was not true.
     window|fullscreen) "$SYSTEMCTL" --user stop nimrod-kiosk.service 2>/dev/null || true
-           "$SYSTEMCTL" --user start nimrod-browser.service; WANT=nimrod-browser.service ;;
-    none)  "$SYSTEMCTL" --user stop nimrod-kiosk.service 2>/dev/null || true; WANT="" ;;
+           "$SYSTEMCTL" --user restart nimrod-browser.service; WANT=nimrod-browser.service ;;
+    none)  "$SYSTEMCTL" --user stop nimrod-kiosk.service 2>/dev/null || true
+           "$SYSTEMCTL" --user stop nimrod-browser.service 2>/dev/null || true; WANT="" ;;
   esac
   if [ -n "$WANT" ]; then
     sleep "$NOW_WAIT_S"

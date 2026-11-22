@@ -12,6 +12,7 @@ relaunched) instead of opening a tab every 3 seconds; a stale lock is still clea
 Needs a bash: /bin/bash on Linux, Git for Windows' bash on Windows (never the WSL launcher in System32). Skips without.
 The two lock tests need real symlinks, so they skip where bash cannot make one (Git bash without developer mode).
 """
+import json
 import os
 import shutil
 import subprocess
@@ -195,7 +196,17 @@ class LoginModeTest(unittest.TestCase):
     def test_now_stops_the_kiosk_and_opens_the_window(self):
         self.run_mode('window', '--now')
         c = self.calls()
-        self.assertLess(c.index('--user stop nimrod-kiosk.service'), c.index('--user start nimrod-browser.service'))
+        self.assertLess(c.index('--user stop nimrod-kiosk.service'), c.index('--user restart nimrod-browser.service'))
+
+    def test_now_from_window_to_fullscreen_reopens_the_running_window(self):
+        # Found 2026-11-22: `start` on a running window did nothing, so the old mode stayed on the screen.
+        self.run_mode('fullscreen', '--now')
+        self.assertIn('--user restart nimrod-browser.service', self.calls())
+        self.assertNotIn('--user start nimrod-browser.service', self.calls())
+
+    def test_now_none_closes_the_window_too(self):
+        self.run_mode('none', '--now')
+        self.assertIn('--user stop nimrod-browser.service', self.calls())
 
     def test_now_back_to_kiosk_closes_the_window_it_opened_first(self):
         self.run_mode('kiosk', '--now')
@@ -272,6 +283,104 @@ class LaunchModeTest(unittest.TestCase):
         _, args = self.launch('fullscreen')
         self.assertIn('--start-fullscreen', args)
         self.assertNotIn('--kiosk', args)
+
+    # Found on the first real run (2026-11-22): full screen kept the size Chromium remembered for its last ordinary window.
+    def prefs(self, placement):
+        os.makedirs(os.path.join(self.profile, 'Default'), exist_ok=True)
+        path = os.path.join(self.profile, 'Default', 'Preferences')
+        with open(path, 'w') as f:
+            json.dump({'browser': {'window_placement': placement}, 'other': {'kept': True}}, f)
+        return path
+
+    def stub_randr(self, out):
+        p = os.path.join(self.bin, 'wlr-randr')
+        with open(p, 'w', newline='\n') as f:
+            f.write('#!/usr/bin/env bash\ncat <<\'EOF\'\n' + out + 'EOF\n')
+        os.chmod(p, 0o755)
+
+    def needs_python3(self):
+        if os.name == 'nt' or subprocess.run([BASH, '-c', 'python3 -c "import json"'], capture_output=True).returncode != 0:
+            self.skipTest('needs a python3 that bash can run on its own paths (Linux)')
+
+    HALF = {'left': 0, 'top': 0, 'right': 960, 'bottom': 1018, 'maximized': True,
+            'work_area_left': 0, 'work_area_top': 0, 'work_area_right': 1920, 'work_area_bottom': 1080}
+
+    def test_fullscreen_sets_the_remembered_window_to_the_current_screen(self):
+        self.needs_python3()
+        path = self.prefs(dict(self.HALF))
+        self.stub_randr('HDMI-A-1 "Some screen"\n  Modes:\n    1280x720 px, 60.000000 Hz\n'
+                        '    2560x1440 px, 59.951000 Hz (preferred, current)\n')
+        r, args = self.launch('fullscreen')
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn('--start-fullscreen', args)
+        with open(path) as f:
+            p = json.load(f)
+        wp = p['browser']['window_placement']
+        self.assertEqual((wp['left'], wp['top'], wp['right'], wp['bottom'], wp['maximized']), (0, 0, 2560, 1440, False))
+        self.assertEqual(p['other'], {'kept': True})
+
+    def test_fullscreen_falls_back_to_the_work_area_chromium_saw(self):
+        self.needs_python3()
+        path = self.prefs(dict(self.HALF))
+        self.stub_randr('')
+        r, _ = self.launch('fullscreen')
+        self.assertEqual(r.returncode, 0, r.stderr)
+        with open(path) as f:
+            wp = json.load(f)['browser']['window_placement']
+        self.assertEqual((wp['right'], wp['bottom'], wp['maximized']), (1920, 1080, False))
+
+    def test_a_failing_wlr_randr_never_stops_the_launch(self):
+        # The gate's blocking case: under set -e a failed screen read must not leave the screen without a browser.
+        self.prefs(dict(self.HALF))
+        p = os.path.join(self.bin, 'wlr-randr')
+        with open(p, 'w', newline='\n') as f:
+            f.write('#!/usr/bin/env bash\nexit 1\n')
+        os.chmod(p, 0o755)
+        r, args = self.launch('fullscreen')
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn('--start-fullscreen', args)
+
+    def test_a_damaged_preferences_file_never_stops_the_launch(self):
+        os.makedirs(os.path.join(self.profile, 'Default'), exist_ok=True)
+        with open(os.path.join(self.profile, 'Default', 'Preferences'), 'w') as f:
+            f.write('{"browser": {"window_pla')
+        r, args = self.launch('fullscreen')
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn('--start-fullscreen', args)
+
+    def placement_after(self, randr):
+        self.needs_python3()
+        path = self.prefs(dict(self.HALF))
+        self.stub_randr(randr)
+        r, _ = self.launch('fullscreen')
+        self.assertEqual(r.returncode, 0, r.stderr)
+        with open(path) as f:
+            wp = json.load(f)['browser']['window_placement']
+        return wp['right'], wp['bottom']
+
+    def test_a_scaled_screen_uses_chromiums_own_pixels(self):
+        self.assertEqual(self.placement_after(
+            'HDMI-A-1 "x"\n  Enabled: yes\n  Modes:\n    3840x2160 px, 60.000000 Hz (preferred, current)\n'
+            '  Position: 0,0\n  Transform: normal\n  Scale: 2.000000\n'), (1920, 1080))
+
+    def test_a_turned_screen_swaps_width_and_height(self):
+        self.assertEqual(self.placement_after(
+            'HDMI-A-1 "x"\n  Enabled: yes\n  Modes:\n    1920x1080 px, 60.000000 Hz (current)\n'
+            '  Position: 0,0\n  Transform: 90\n  Scale: 1.000000\n'), (1080, 1920))
+
+    def test_two_screens_take_the_one_at_the_corner_and_skip_a_disabled_one(self):
+        self.assertEqual(self.placement_after(
+            'HDMI-A-1 "off"\n  Enabled: no\n  Modes:\n    800x600 px, 60.0 Hz (current)\n'
+            'HDMI-A-2 "right"\n  Enabled: yes\n  Modes:\n    1280x1024 px, 60.0 Hz (current)\n  Position: 1920,0\n'
+            'DSI-1 "main"\n  Enabled: yes\n  Modes:\n    1920x1080 px, 60.0 Hz (current)\n  Position: 0,0\n'), (1920, 1080))
+
+    def test_a_window_keeps_its_remembered_size(self):
+        path = self.prefs(dict(self.HALF))
+        self.stub_randr('    2560x1440 px, 59.951000 Hz (preferred, current)\n')
+        self.launch('window')
+        with open(path) as f:
+            wp = json.load(f)['browser']['window_placement']
+        self.assertEqual((wp['right'], wp['maximized']), (960, True))
 
     def test_the_kiosk_is_unchanged(self):
         r, args = self.launch()

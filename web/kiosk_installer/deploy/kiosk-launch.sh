@@ -77,6 +77,90 @@ if [ "$HELD" = "0" ] && [ -f "$PROFILE/Default/Preferences" ]; then
   sed -i 's/"exited_cleanly":false/"exited_cleanly":true/g; s/"exit_type":"[^"]*"/"exit_type":"Normal"/g' \
     "$PROFILE/Default/Preferences" 2>/dev/null || true
 fi
+# *** FULL SCREEN NEEDS THE REMEMBERED WINDOW TO BE THE SCREEN (2026-11-22, found on the first real run). *** On labwc,
+# --start-fullscreen hides the browser's bars but the window keeps the size Chromium remembered from its last ordinary
+# window (browser.window_placement in Preferences): on one Pi that was half the screen, so the page filled the left half
+# with the desktop beside it. Measured on a 4K screen: remembered 1004x706 -> the page got 1004x706 with or without
+# --start-maximized; remembered as the whole screen -> 3840x2160 and the taskbar covered (real full screen). So before a
+# full-screen start, the remembered window is set to the whole screen, not maximised. The screen's size, in Chromium's own
+# (logical) pixels: NIMROD_SCREEN_SIZE=WxH if set; else wlr-randr's output in use (the one at 0,0 when there are several),
+# its mode divided by its Scale and turned for a 90/270 Transform; else the work area Chromium itself last measured.
+# Only when no Chromium holds the profile (a running one would overwrite the file on exit anyway).
+# EVERYTHING HERE IS ALLOWED TO FAIL (gate, 2026-11-22): it is all inside one python3 guarded by `||`, so no failure of
+# wlr-randr, a missing python3 or a damaged Preferences can stop the launch below; at worst the window is the old size.
+if [ "$MODE" = "fullscreen" ] && [ "$HELD" = "0" ] && [ -f "$PROFILE/Default/Preferences" ]; then
+  python3 - "$PROFILE/Default/Preferences" "${NIMROD_SCREEN_SIZE:-}" <<'PY' || echo "nimrod-browser: could not set the remembered window to the screen; full screen may not fill it." >&2
+import json, os, re, shutil, subprocess, sys
+path, override = sys.argv[1], sys.argv[2]
+
+def from_randr():
+    exe = shutil.which('wlr-randr')
+    if not exe:
+        return None, 'no wlr-randr'
+    try:
+        r = subprocess.run([exe], capture_output=True, text=True, timeout=5)
+    except Exception as e:
+        return None, 'wlr-randr: %s' % e
+    if r.returncode != 0:
+        return None, 'wlr-randr exited %d' % r.returncode
+    outs, cur = [], None
+    for line in r.stdout.splitlines():
+        if line and not line[0].isspace():
+            cur = {'enabled': True}; outs.append(cur); continue
+        if cur is None:
+            continue
+        s = line.strip()
+        m = re.match(r'(\d+)x(\d+) px\b.*\bcurrent\b', s)
+        if m: cur['mode'] = (int(m.group(1)), int(m.group(2)))
+        if s.startswith('Enabled:'): cur['enabled'] = s.split(':', 1)[1].strip() == 'yes'
+        if s.startswith('Position:'): cur['pos'] = s.split(':', 1)[1].strip()
+        if s.startswith('Transform:'): cur['transform'] = s.split(':', 1)[1].strip()
+        if s.startswith('Scale:'):
+            try: cur['scale'] = float(s.split(':', 1)[1])
+            except ValueError: cur['scale'] = None
+    live = [o for o in outs if o['enabled'] and 'mode' in o]
+    if not live:
+        return None, 'wlr-randr shows no output in use'
+    pick = next((o for o in live if o.get('pos') in ('0,0', None)), live[0]) if len(live) > 1 else live[0]
+    scale = pick.get('scale', 1.0)
+    if not scale or scale <= 0:
+        return None, 'wlr-randr scale unreadable'
+    w, h = pick['mode']
+    if pick.get('transform', 'normal').endswith(('90', '270')):
+        w, h = h, w
+    return (round(w / scale), round(h / scale)), 'wlr-randr'
+
+with open(path, encoding='utf-8') as f:
+    prefs = json.load(f)
+wp = prefs.setdefault('browser', {}).setdefault('window_placement', {})
+size, why = None, ''
+m = re.fullmatch(r'(\d+)x(\d+)', override)
+if m:
+    size, why = (int(m.group(1)), int(m.group(2))), 'NIMROD_SCREEN_SIZE'
+else:
+    if override:
+        print('nimrod-browser: NIMROD_SCREEN_SIZE %r is not WxH; ignored' % override)
+    size, why = from_randr()
+if size is None:
+    note = why
+    try:
+        size = (int(wp['work_area_right']) - int(wp.get('work_area_left', 0)),
+                int(wp['work_area_bottom']) - int(wp.get('work_area_top', 0)))
+        why = 'the work area Chromium last saw (%s)' % note
+    except (KeyError, TypeError, ValueError):
+        sys.exit('no screen size known (%s)' % note)
+w, h = size
+if w <= 0 or h <= 0:
+    sys.exit('no screen size known')
+wp.update(left=0, top=0, right=w, bottom=h, maximized=False)
+tmp = path + '.nimrod-tmp'
+with open(tmp, 'w', encoding='utf-8') as f:
+    json.dump(prefs, f, separators=(',', ':'))
+os.chmod(tmp, os.stat(path).st_mode & 0o777)
+os.replace(tmp, path)
+print('nimrod-browser: remembered window set to the whole screen, %dx%d, from %s' % (w, h, why))
+PY
+fi
 
 # The address the page loads: the unit's URL, plus `lockHelper=` when a helper is configured (the page keeps it in
 # its own storage after the first load, screen_lock.js `lockHelperFrom`, so a pairing reload that drops it is fine).
@@ -154,6 +238,7 @@ if [ "$MODE" != "kiosk" ]; then
     WIN_FLAGS+=(--autoplay-policy=no-user-gesture-required)
   fi
   echo "nimrod-browser: opening $MODE window (Chromium already open: $([ "$HELD" = "1" ] && echo yes || echo no))."
+  [ "$HELD" = "1" ] && [ "$MODE" = "fullscreen" ] && echo "nimrod-browser: the open Chromium keeps its own window size, so full screen may not fill the screen; close it and start again." || true
   exec chromium "${WIN_FLAGS[@]}" "$PAGE"
 fi
 
