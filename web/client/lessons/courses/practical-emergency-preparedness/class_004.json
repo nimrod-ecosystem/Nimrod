@@ -1,0 +1,774 @@
+{
+ "about": {
+  "title": "The One-Page Medical Sheet for the ER",
+  "course": "practical-emergency-preparedness",
+  "class_n": 4,
+  "audience": [
+   "adult",
+   "caregiver"
+  ],
+  "minutes": 12,
+  "length_note": "About 12 minutes. This class has six short parts and a fill-in template. You can stop after any beat and pick up again. Filling in your own sheet will take longer than the class itself, so treat that as homework."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "People with Disabilities (Make a Plan; Build a Kit)",
+   "publisher": "Ready.gov (FEMA)",
+   "date": "n.d.",
+   "link": "https://www.ready.gov/people-disabilities",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s2",
+   "title": "Emergency Preparedness for Children with Special Health Care Needs",
+   "publisher": "American Academy of Pediatrics",
+   "date": "n.d.",
+   "link": "https://www.aap.org/en/get-involved/aap-committees/committee-on-pediatric-emergency-medicine/emergency-preparedness-for-children-with-special-health-care-needs/",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s3",
+   "title": "Emergency Information Form for Children With Special Health Care Needs",
+   "publisher": "American College of Emergency Physicians",
+   "date": "n.d.",
+   "link": "https://www.acep.org/by-medical-focus/pediatrics/medical-forms/emergency-information-form-for-children-with-special-health-care-needs",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s4",
+   "title": "Older Adults Emergency Preparedness",
+   "publisher": "American Red Cross",
+   "date": "n.d.",
+   "link": "https://www.redcross.org/get-help/how-to-prepare-for-emergencies/older-adults.html",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s5",
+   "title": "My Medications List",
+   "publisher": "Centers for Disease Control and Prevention",
+   "date": "n.d.",
+   "link": "https://www.cdc.gov/older-adult-drivers/media/pdfs/MyMedications-List-Tribal.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s6",
+   "title": "Going to the Hospital: Tips for Dementia Caregivers (Alzheimer's Caregiving)",
+   "publisher": "National Institute on Aging (copy hosted by UCLA Easton Center)",
+   "date": "n.d.",
+   "link": "https://eastonad.ucla.edu/sites/default/files/media/documents/Going%20to%20the%20Hospital_Tips%20for%20Dementia%20Caregivers%20(NIA).pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s7",
+   "title": "ICU Assisted Communication Toolkit",
+   "publisher": "Northern Health (British Columbia)",
+   "date": "n.d.",
+   "link": "https://physicians.northernhealth.ca/sites/physicians/files/physician-resources/covid-19/ICU-assisted-communication-toolkit.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s8",
+   "title": "Hospital Passport",
+   "publisher": "Royal Devon University Healthcare NHS Foundation Trust",
+   "date": "n.d.",
+   "link": "https://www.royaldevon.nhs.uk/media/yxfpq3vc/hospital-passport.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s9",
+   "title": "Emergency Preparedness for Children with Special Health Care Needs: Emergency Information Form instructions for parents",
+   "publisher": "Children's Hospital Los Angeles (with AAP)",
+   "date": "n.d.",
+   "link": "https://www.chla.org/sites/default/files/atoms/files/CHLA-AAP-Emergency-Information-Form-Instructions-for-Parents_0.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s10",
+   "title": "Prepare for Emergencies Now: Information for People with Disabilities (FEMA R-6)",
+   "publisher": "FEMA / Ready.gov",
+   "date": "2012-06",
+   "link": "https://www.ready.gov/sites/default/files/FEMA_Disabilities_R-6_web_june2012.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s11",
+   "title": "Health Care Proxy: Appointing Your Health Care Agent in New York State",
+   "publisher": "New York State Department of Health",
+   "date": "n.d.",
+   "link": "https://www.health.ny.gov/publications/1430.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s12",
+   "title": "About Your Medications - Patient Guide",
+   "publisher": "Sentara Health",
+   "date": "n.d.",
+   "link": "https://www.sentara.com/en/health-care/patient-guide/what-to-expect/about-your-medications",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s13",
+   "title": "A Prescription for Preparedness",
+   "publisher": "CDC Public Health Matters blog",
+   "date": "2019-09",
+   "link": "https://blogs.cdc.gov/publichealthmatters/2019/09/prescription-preparedness/",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s14",
+   "title": "Planning for Emergencies (Emergency Information Form)",
+   "publisher": "Medical Home Portal",
+   "date": "n.d.",
+   "link": "https://www.medicalhomeportal.org/living-with-child/after-a-diagnosis-or-problem-is-identified/caring-for-children-with-special-health-care-needs/managing-and-coordinating-care/planning-for-emergencies",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s15",
+   "title": "Hospital Passport template",
+   "publisher": "London Borough of Camden",
+   "date": "n.d.",
+   "link": "https://www.camden.gov.uk/documents/20142/1006768/Hospital+passport+template.pdf/491b52ba-d31b-fe0c-d358-206fe80ec0b5?t=1622102893497",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s16",
+   "title": "How do you communicate?",
+   "publisher": "Airedale NHS Foundation Trust",
+   "date": "2021-11",
+   "link": "https://www.airedale-trust.nhs.uk/wp-content/uploads/2021/11/How-do-you-communicate-web.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s17",
+   "title": "Taking someone with dementia to the emergency department? Expert advice to help ease the stress",
+   "publisher": "The Globe and Mail",
+   "date": "n.d.",
+   "link": "https://www.theglobeandmail.com/life/advice/article-taking-someone-with-dementia-to-the-emergency-department-expert-advice/",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s18",
+   "title": "Emergency Information Forms and Emergency Preparedness for Children With Special Health Care Needs",
+   "publisher": "Pediatrics (American Academy of Pediatrics)",
+   "date": "2010",
+   "link": "https://publications.aap.org/pediatrics/article/125/4/829/73164/Emergency-Information-Forms-and-Emergency",
+   "read": "2026-11-21"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Today we make one page. It tells ER staff the things a person cannot say for themselves."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "One page that speaks up for the person"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Know this first. The page does not replace the person's own doctors, and it does not replace a hands-on first-aid or CPR class."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A helper, not a replacement"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why a page at all? ER staff usually do not know the person. If the person cannot speak, nobody can fill the gaps."
+   },
+   "show": {
+    "kind": "list",
+    "text": "ER staff do not know the history\nThe person may not be able to tell them\nThe page tells them first"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Pediatric and emergency doctors' groups warn that missing information can mean delays, extra tests and serious errors. They made a form for children with special health needs. The same idea works for adults."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Delays, unnecessary tests, and sometimes serious errors"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why does a one-page sheet help in an ER?",
+    "right": "The staff do not know the person, and the person may not be able to tell them.",
+    "wrong": [
+     "It replaces the person's own doctors.",
+     "It means you do not need to call 911.",
+     "It is only needed for children."
+    ],
+    "why": "The sheet carries the person's story to staff who have never met them. It does not replace doctors or 911."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Keep it to one page, in big plain print. Short is easier to read in a hurry. We will build six parts."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Who and how to reach\n2. How the person communicates\n3. Allergies\n4. Medicines and doses\n5. Conditions and doctors\n6. What is normal, and who decides"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Start at the top with the name, the name the person likes to be called, the date of birth, and the date you last updated the page."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Name: Sam (made-up example)\nLikes to be called: Sam\nDate of birth: ____\nPage updated: ____"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Part one: how does the person say yes and no? People do it in many ways. Write down exactly what this person does."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "YES could be: a nod, thumbs up, a blink, looking up, a tap.\nNO could be: a head shake, thumbs down, closing the eyes, looking down."
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "For Sam, you might write: Yes is one blink. No is two blinks. Use the signals the person really uses, not the ones from this list."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Sam says YES: one blink\nSam says NO: two blinks (example only)"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What belongs on the sheet about yes and no?",
+    "right": "The exact signals this person uses.",
+    "wrong": [
+     "Only the words 'cannot communicate'.",
+     "The signals most people use, from a list.",
+     "Nothing. Staff will work it out."
+    ],
+    "why": "Each person's signals are their own. If staff know them, they can ask questions and get real answers."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next: signs of pain or distress. If a person cannot say 'it hurts', what do you see and hear? Write that down."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Face: ____\nSounds: ____\nBody: ____\nBehaviour: ____\nExample: Sam grips the chair arm and goes quiet."
+   },
+   "cite": [
+    "s6",
+    "s8"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Hospital passports used in the UK ask for the same thing. They ask what the person looks like, sounds like and moves like when unwell or in pain."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "What does pain look like for this person?"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Sam cannot say 'it hurts'. What helps staff most?",
+    "right": "A note on Sam's face, sounds and movements when Sam is in pain.",
+    "wrong": [
+     "A note saying Sam is never in pain.",
+     "Nothing. Staff will guess.",
+     "Only Sam's date of birth."
+    ],
+    "why": "Signs of pain are personal. A caregiver who has seen them can describe them."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Then add devices and what helps. List glasses, hearing aids, a speech device or a picture board. Say if the person needs extra time to answer."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Devices: glasses, hearing aids, picture or letter board, speech device\nNeeds extra time to answer: yes / no\nBest way to ask: short yes/no questions, one at a time"
+   },
+   "cite": [
+    "s1",
+    "s15",
+    "s16"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "What helps staff talk with a person who answers slowly?",
+    "right": "Give extra time and ask short yes/no questions, one at a time.",
+    "wrong": [
+     "Ask long open questions quickly.",
+     "Talk only to the caregiver and ignore the person.",
+     "Skip the questions."
+    ],
+    "why": "Short yes/no questions are easier to answer. Staff should still speak to the person, not only to the caregiver."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Part two: allergies. List medicines, foods and anything else a doctor has named. Add what happens, if you know."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Allergy: ____ What happens: ____\nAllergy: ____ What happens: ____\nIf none are known, write: No known allergies"
+   },
+   "cite": [
+    "s1",
+    "s4"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Sam has no known allergies. What should the sheet say?",
+    "right": "No known allergies.",
+    "wrong": [
+     "Leave the space blank.",
+     "Allergic to nothing, guaranteed.",
+     "Ask the ER to check."
+    ],
+    "why": "A blank space looks like nobody checked. Writing 'no known allergies' shows you did."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Part three: medicines. Copy each one from its label. Add the dose, how often, what it is for, and how it is given."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Name | strength | how much | when | what for | how given\nSample (invented): Medicine 1 | 10 mg | 1 tablet | morning | reason | by mouth"
+   },
+   "cite": [
+    "s1",
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Include the over-the-counter ones, the vitamins and the supplements too. If you are unsure of a dose, ask the pharmacist to check the list."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Prescription AND over-the-counter AND vitamins"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which belongs on the medicine list?",
+    "right": "Prescription and over-the-counter medicines, vitamins and supplements, with dose and how often.",
+    "wrong": [
+     "Only prescription medicines.",
+     "Medicine names with no doses.",
+     "Only what was taken today."
+    ],
+    "why": "Staff need the full picture, with doses, to avoid mix-ups."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A list only helps if it is current. The CDC's own list form says to update it any time you make a change."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "40%"
+   },
+   "cite": [
+    "s5",
+    "s13"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "When should you update the medicine list?",
+    "right": "Any time a medicine or dose changes.",
+    "wrong": [
+     "Once a year, on New Year's Day.",
+     "Only after a hospital stay.",
+     "Never. The pharmacy keeps it."
+    ],
+    "why": "An old list can mislead staff. The CDC says to update it whenever the medicines change."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "That 40% is from one survey the CDC cited. It found that 40 percent could list all their prescription details if they were without their medicines in an evacuation."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "40 in 100"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Part four: conditions and doctors. Write the diagnoses in the words the doctors use. Add medical devices, the doctors' names and numbers, and the pharmacy."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Conditions: ____\nMedical devices (style, serial number): ____\nDoctors and phone numbers: ____\nPharmacy: ____"
+   },
+   "cite": [
+    "s1",
+    "s4"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why list the person's own doctors?",
+    "right": "So staff know who holds the person's medical history.",
+    "wrong": [
+     "So staff do not need to treat the person.",
+     "So the doctors can skip the next visit.",
+     "It is only for tidy paperwork."
+    ],
+    "why": "The person's own doctors know the history. The sheet points staff to them. It does not replace them."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Part five: what is normal. Doctors call this baseline. It is the person's usual abilities, behaviour and signs."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Baseline = what is usual for this person"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why? A caregiver can say: this is how Sam usually is. Staff can then see what has changed."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Usual for Sam: answers by blinking, sits up in a wheelchair, calm in the morning, likes the radio.\nNot usual: unusually sleepy, quiet, restless or upset (example only)."
+   },
+   "cite": [
+    "s6",
+    "s17"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why write down what is normal for the person?",
+    "right": "So staff can tell what has changed.",
+    "wrong": [
+     "So staff can skip the exam.",
+     "So the person never needs an ER.",
+     "So the sheet replaces the doctor's notes."
+    ],
+    "why": "Staff meet the person once. You know the usual, so you can show the change."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Add what calms the person, what upsets them, and how they like to be addressed. A familiar voice or a favourite blanket can matter."
+   },
+   "show": {
+    "kind": "list",
+    "text": "What calms: ____\nWhat upsets: ____\nHow to address me: ____\nWho should stay with me: ____"
+   },
+   "cite": [
+    "s6",
+    "s8"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Part six: contacts and who decides. List two people, in case the first does not answer. Say who decides if the person cannot, and where the paperwork is kept."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Contact 1: ____ phone ____\nContact 2: ____ phone ____\nHealth care decision maker: ____\nPaperwork kept at: ____"
+   },
+   "cite": [
+    "s1",
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The decision maker is often called a health care agent or proxy. The rules differ by place. Ask the person's doctor, or check with your local resources."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Who decides? Rules vary by place."
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What goes on the sheet about the decision maker?",
+    "right": "Their name, their phone number, and where the paperwork is kept.",
+    "wrong": [
+     "Just 'my family'.",
+     "Nothing. Staff will guess.",
+     "Only the doctor's name."
+    ],
+    "why": "Staff need a name and a number. They also need to know where to find the paperwork. Keep a copy where people can reach it."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is the whole page. The top half: name, communication, and allergies."
+   },
+   "show": {
+    "kind": "list",
+    "text": "NAME / likes to be called / date of birth / DATE UPDATED\nHOW I COMMUNICATE: yes = ___ no = ___\nPAIN OR DISTRESS LOOKS LIKE: ___\nDEVICES AND WHAT HELPS: ___\nALLERGIES (and what happens): ___"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The bottom half: medicines, conditions, what is normal, and contacts."
+   },
+   "show": {
+    "kind": "list",
+    "text": "MEDICINES: name | strength | how much | when | what for | how given\nCONDITIONS and DEVICES: ___\nDOCTORS and PHARMACY: ___\nWHAT IS NORMAL: abilities, behaviour, usual signs, what calms\nCONTACTS (two) and WHO DECIDES: ___ paperwork at ___"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Where should copies live? In more than one place. Put one on the fridge, one in the go-bag, and a photo on your phone."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Fridge or by the phone\nGo-bag\nPhoto on your phone\nWith a trusted contact\nHand a copy to the crew or ER staff"
+   },
+   "cite": [
+    "s2",
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A children's hospital advises keeping a copy with the emergency contact person too. Then someone else can find it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "More than one copy, in more than one place"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Where should copies of the sheet be kept?",
+    "right": "In more than one place, such as the fridge, the go-bag, your phone and with a trusted contact.",
+    "wrong": [
+     "Only in a locked safe.",
+     "Only in a filing cabinet upstairs.",
+     "Only at the doctor's office."
+    ],
+    "why": "Nobody knows where you will be in an emergency. Copies in several easy places are more likely to be found."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Update the page when anything changes: a medicine, a dose, a diagnosis, a doctor or a contact. Replace every copy, not just one. Also check it at medical visits."
+   },
+   "show": {
+    "kind": "list",
+    "text": "New or changed medicine\nNew condition or device\nNew doctor or contact\nCheck at each medical visit"
+   },
+   "cite": [
+    "s5",
+    "s18"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Sam's doctor changes a dose today. What do you do?",
+    "right": "Update the sheet and replace every copy.",
+    "wrong": [
+     "Wait until next year.",
+     "Write the new dose on the fridge copy only.",
+     "Tell staff to ask Sam."
+    ],
+    "why": "An out-of-date copy can mislead staff. Replace all of them."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A reminder. In an emergency, call 911 first. Grab the sheet only if it is quick. Never stop to fill it in or update it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "911 first. The sheet second."
+   },
+   "cite": [],
+   "move": "title-rise",
+   "ask": {
+    "q": "Something frightening is happening. What comes first?",
+    "right": "Call 911, and grab the sheet only if it is quick.",
+    "wrong": [
+     "Finish updating the sheet.",
+     "Email the sheet to all the relatives.",
+     "Look for the doctor's number."
+    ],
+    "why": "Getting help is the priority. The sheet can travel with the person afterwards."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To finish, ask the person's doctor or pharmacist to look over your sheet. Laws and services vary by place, so check with your local 911 center or fire department about what they offer."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Ask the doctor or pharmacist to check it\nTake a hands-on first-aid class (Red Cross, American Heart Association)\nCheck with your local 911 center or fire department"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Your task: fill in just one part this week. Start with allergies, or with how the person says yes and no. Next class: the 911 card by the phone."
+   },
+   "show": {
+    "kind": "list",
+    "text": "This week: fill in one part\nNext: Class 5, The 911 Card by the Phone and Telling Your Fire Department"
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "One-page medical sheet",
+   "links": [
+    "[[911 card by the phone]]",
+    "[[Go-bag and medication supply]]",
+    "[[Family contact plans]]"
+   ]
+  },
+  {
+   "topic": "How the person communicates (yes, no, pain)",
+   "links": [
+    "[[What 911 call-takers ask]]",
+    "[[Calling 911]]"
+   ]
+  },
+  {
+   "topic": "Medicine list kept current",
+   "links": [
+    "[[Go-bag and medication supply]]",
+    "[[Power cuts and medical devices]]"
+   ]
+  },
+  {
+   "topic": "Baseline: what is normal for this person",
+   "links": [
+    "[[Recovery position: what first-aid courses teach]]"
+   ]
+  },
+  {
+   "topic": "Who decides (health care proxy)",
+   "links": [
+    "[[Family contact plans]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "The sheet should fit on one page.",
+   "other_view": "The widely used AAP and ACEP Emergency Information Form is two pages, and families fill it in with the child's doctors. A one-page version is easier to read quickly. A longer form can hold more detail. Both approaches are used. Ask the person's own doctors which they prefer.",
+   "cite": [
+    "s14",
+    "s9",
+    "s3"
+   ]
+  },
+  {
+   "claim": "A written list of medicines is enough to take to the ER.",
+   "other_view": "One hospital guide says physicians prefer the actual medicine bottles. If you bring only a list, it must be up to date and include daily doses. So bring both if you can.",
+   "cite": [
+    "s12"
+   ]
+  },
+  {
+   "claim": "Paper sheet versus a medical alert tag or bracelet.",
+   "other_view": "FEMA suggests either medical alert tags or written descriptions of a disability and support needs. The emergency physicians' group also says children with special health needs should wear medical jewelry. The two work together. A tag is always on the person. A sheet holds far more detail.",
+   "cite": [
+    "s10",
+    "s3"
+   ]
+  }
+ ]
+}

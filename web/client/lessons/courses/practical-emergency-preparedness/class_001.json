@@ -1,0 +1,677 @@
+{
+ "about": {
+  "title": "Calling 911: Address First, Stay on the Line",
+  "course": "practical-emergency-preparedness",
+  "class_n": 1,
+  "audience": [
+   "adult",
+   "caregiver"
+  ],
+  "minutes": 12,
+  "length_note": "This class has seven small topics and a short check after most of them. That comes to about 12 minutes, a little over the 10-minute aim. You can stop after any step and pick up again later."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Calling 911",
+   "publisher": "National 911 Program, 911.gov",
+   "date": "n.d.",
+   "link": "https://www.911.gov/calling-911/",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s2",
+   "title": "FAQ About Calling 911",
+   "publisher": "National 911 Program, 911.gov",
+   "date": "n.d.",
+   "link": "https://www.911.gov/calling-911/frequently-asked-questions/",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s3",
+   "title": "9-1-1 Tips & Guidelines",
+   "publisher": "National Emergency Number Association (NENA)",
+   "date": "n.d.",
+   "link": "https://www.nena.org/page/911tipsguidelines",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s4",
+   "title": "Wireless 911 Service",
+   "publisher": "Federal Communications Commission (FCC)",
+   "date": "n.d.",
+   "link": "https://www.fcc.gov/consumers/guides/wireless-911-service",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s5",
+   "title": "How to use 9-1-1",
+   "publisher": "City of Eugene, Oregon",
+   "date": "n.d.",
+   "link": "https://www.eugene-or.gov/578/How-to-use-9-1-1",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s6",
+   "title": "Do's and Don'ts of 911",
+   "publisher": "Public Safety Communications (fcva.us)",
+   "date": "n.d.",
+   "link": "https://www.fcva.us/departments/public-safety-communications/do-s-and-don-ts-of-911",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s7",
+   "title": "What to Expect When Calling 911",
+   "publisher": "City of Raleigh, North Carolina, Emergency Communications",
+   "date": "n.d.",
+   "link": "https://raleighnc.gov/emergency-communications-911/services/what-expect-when-calling-911",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s8",
+   "title": "Helpful Tips for Calling 911",
+   "publisher": "Burke County, North Carolina",
+   "date": "n.d.",
+   "link": "https://www.burkenc.org/1161/Helpful-Tips-for-Calling-911",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s9",
+   "title": "Calling 911",
+   "publisher": "Washington State Department of Health",
+   "date": "n.d.",
+   "link": "https://doh.wa.gov/emergencies/be-prepared-be-safe/get-ready/calling-911",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s10",
+   "title": "When to Call 9-1-1 Medical Emergencies",
+   "publisher": "Washington State DSHS, Developmental Disabilities Administration",
+   "date": "n.d.",
+   "link": "https://www.dshs.wa.gov/sites/default/files/DDA/dda/documents/When%20to%20Call%20911.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s11",
+   "title": "When to call 9-1-1",
+   "publisher": "City of Portland, Oregon, 911",
+   "date": "n.d.",
+   "link": "https://www.portland.gov/911/when-call-9-1-1",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s12",
+   "title": "What Happens If You Call 911 and Hang Up?",
+   "publisher": "Statesville (NC) Police Department",
+   "date": "2024-05-14",
+   "link": "https://police.statesvillenc.net/2024/05/14/12537/what-happens-if-you-call-911-and-hang-up",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s13",
+   "title": "Silent calls haunt 911 dispatchers: Prank or tragedy? (first published in The New York Times)",
+   "publisher": "NBC News",
+   "date": "n.d.",
+   "link": "https://www.nbcnews.com/id/wbna46378606",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s14",
+   "title": "Know How and When to Contact 911",
+   "publisher": "Commonwealth of Pennsylvania, Ready PA",
+   "date": "n.d.",
+   "link": "https://www.pa.gov/agencies/ready/get-prepared/contact-911",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s15",
+   "title": "What to Say to 911",
+   "publisher": "University of Colorado Denver, Center for Inclusive Design and Engineering",
+   "date": "n.d.",
+   "link": "https://www.ucdenver.edu/center-for-innovative-design-and-engineering/community-engagement/emergency-preparedness-services-new/resources---activities/interactive-activities/what-to-say-to-911",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s16",
+   "title": "Help Us Help You: Your Guide to Calling 9-1-1 Emergency Services",
+   "publisher": "ycom911.gov",
+   "date": "n.d.",
+   "link": "https://www.ycom911.gov/wp-content/uploads/2020/10/911N2K_911outage.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s17",
+   "title": "What to Expect When Calling 911",
+   "publisher": "Washington County Consolidated Communications Agency (WCCCA)",
+   "date": "n.d.",
+   "link": "https://www.wccca.com/what-to-expect-when-calling-911",
+   "read": "2026-11-21"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome. In this class you will learn a simple way to make a 911 call: address first, stay on the line, follow the call-taker's instructions."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Calling 911: Address First, Stay on the Line"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "You can stop after any step. Let's start with what an emergency is: a situation that needs help right away from the police, the fire department or an ambulance."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Emergency = help needed right now"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here are some examples a caregiver might see: smoke or fire, someone who is unresponsive or has fainted, severe trouble breathing, chest pain, or a serious fall. This is a list of examples, not every case."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Smoke or fire | Someone unresponsive or who has fainted | Severe trouble breathing | Chest pain | A serious fall or injury"
+   },
+   "cite": [
+    "s9",
+    "s10"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "911 is not for questions or tests. Please do not call as a joke, to ask for information, or to see if 911 is working. Those lines must stay free for real emergencies."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Call 911: fire, serious injury, someone unresponsive | Do not call 911: jokes, information, testing the line"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which of these is a good reason to call 911?",
+    "right": "A family member is unresponsive and you cannot wake them",
+    "wrong": [
+     "To ask what time the pharmacy opens",
+     "To check that 911 is working",
+     "To ask for general information"
+    ],
+    "why": "911 is for emergencies that need police, fire or medical help right away. It is not for information, jokes or tests."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "What if you are not sure? Call. The call-taker can work out whether you need emergency help, and can point you to the right place."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Not sure? Call."
+   },
+   "cite": [
+    "s3",
+    "s9"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "You are not sure if a change in someone's condition is an emergency. What do the 911 guides say to do?",
+    "right": "Call 911 and describe what is happening. The call-taker will help decide.",
+    "wrong": [
+     "Wait an hour and see",
+     "Search the internet first",
+     "Only call if it gets much worse"
+    ],
+    "why": "911 centers say that if you are unsure, you should call and let the call-taker decide."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "There is one exception to calling right away. If there is a fire, get to a place of safety first, then call 911. Class 9 covers how to plan this when someone cannot walk."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Fire: get to safety, then call 911."
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the call itself. Many call-takers begin by asking for the address of the emergency. So say the address first, before anything else."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "\"911, what is the address of your emergency?\""
+   },
+   "cite": [
+    "s15",
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why first? Help cannot be sent if the call-taker does not know where you are. In a big building, add the apartment or room number, and say if you are inside or outside."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Street address | City or town | Apartment, floor or room | Inside or outside | The phone number you are calling from"
+   },
+   "cite": [
+    "s5",
+    "s2",
+    "s6",
+    "s4"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What should you say first when the call-taker answers?",
+    "right": "The address of the emergency",
+    "wrong": [
+     "A long story of how it started",
+     "The person's full medical history",
+     "How worried you feel"
+    ],
+    "why": "Help cannot be sent without a location, so the address comes first."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "After the address, say what is happening right now, in a few plain words. You do not need the whole story. Here is a made-up example: Sam says an address, then \"My family member is not waking up.\""
+   },
+   "show": {
+    "kind": "picture",
+    "text": "Sam stands in a kitchen holding a phone to one ear. A large-print card with the home address sits by the phone."
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which is the best way for Sam to begin?",
+    "right": "\"42 Maple Road, apartment 3, Springfield. My family member is not waking up.\"",
+    "wrong": [
+     "\"Sorry to bother you, it's a long story, it started on Tuesday...\"",
+     "\"Hello? Is anyone there? I think something is wrong somewhere.\"",
+     "\"I need help. Please hurry!\" (and nothing else)"
+    ],
+    "why": "It gives the address first and then a short, plain description of what is happening now."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Then the call-taker will ask more questions, such as what you see. Answer as best you can. It may feel slow, but in many centers help is being sent while you talk."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Answer each question | Short, plain answers | Typing sounds or pauses are normal"
+   },
+   "cite": [
+    "s1",
+    "s17"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "You hear typing and a quiet pause on the line. What does this probably mean?",
+    "right": "The call-taker is entering your details so help can be sent. Stay on the line.",
+    "wrong": [
+     "The call dropped, so you should hang up",
+     "Nobody is helping you",
+     "You should call again right away"
+    ],
+    "why": "Call-takers may be typing or looking things up. Hanging up and calling again can lose your place in line."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the second habit: stay on the line. Do not hang up until the call-taker tells you to. Sometimes that is until responders arrive."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Stay on the line"
+   },
+   "cite": [
+    "s1",
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "If 911 does not answer right away, stay on the line. The call will be answered in the order it came in. If the call is cut off, call back. If they call you, pick up."
+   },
+   "show": {
+    "kind": "list",
+    "text": "No answer yet: keep holding | Cut off: call back | They call you: answer"
+   },
+   "cite": [
+    "s7",
+    "s8",
+    "s12"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Your 911 call drops. What is the best next step?",
+    "right": "Call 911 again and explain, and answer if they call you back",
+    "wrong": [
+     "Wait ten minutes",
+     "Send a text to a friend and wait",
+     "Assume help is already coming"
+    ],
+    "why": "The advice is to call back if you are disconnected. Call-takers also try to call you back."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Also, if you call 911 by mistake, do not just hang up. Stay on the line and say it was a mistake. If you hang up, they may have to call you back or send someone to check."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Called by mistake? Say so."
+   },
+   "cite": [
+    "s3",
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The third habit: follow the call-taker's instructions. Many centers can talk you through what to do until help arrives, such as for choking or CPR."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Do what the call-taker tells you, step by step."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "If it is hard to follow, hand the phone to someone else at the scene, if you can. And please take a hands-on first-aid class, such as one from the Red Cross or the American Heart Association. This course does not replace that, or the person's own doctors."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Call-taker's instructions first. Hands-on class too."
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "The call-taker gives you instructions while you wait. What do you do?",
+    "right": "Follow their instructions and stay on the line",
+    "wrong": [
+     "Hang up and look up instructions online",
+     "Ignore them if they differ from a class you once took",
+     "Wait until you finish a first-aid course"
+    ],
+    "why": "The call-taker knows the situation and is trained to guide you until help arrives."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What if the caller cannot speak? This may be a medical emergency, a speech or hearing disability, or it may be unsafe to talk. Stay on the line and leave it open. If the call-taker is not sure you are OK, they will usually send help or try to call you back, depending on the center."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Cannot speak? Stay on the line."
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A caller cannot speak. What does one 911 center advise?",
+    "right": "Stay on the line and leave it open",
+    "wrong": [
+     "Hang up so they can call back",
+     "Hang up and try again in an hour",
+     "Put the phone away"
+    ],
+    "why": "One center says to leave the line open. If they are not sure you are OK, they may send help or call back."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Some call-takers can guide a caller with simple yes or no questions. And if you cannot speak, texting 911 may be an option. The rule is: call if you can, text if you can't. Class 3 covers texting, and where it is offered."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Call if you can | Text if you can't | Text where it is offered (Class 3)"
+   },
+   "cite": [
+    "s6",
+    "s15",
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What does a center do with an open line? This depends on where you live. Some call back first. Some send an officer or other responders. Check with your local 911 center."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Open lines: it varies. Check locally."
+   },
+   "cite": [
+    "s12",
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next, which phone you use. A mobile phone moves around, so it is not tied to one address. A landline is fixed, and the call-taker may see its address on screen."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "phone",
+    "count": 2,
+    "layout": "row",
+    "text": "Two phones: a fixed landline and a mobile phone"
+   },
+   "cite": [
+    "s4",
+    "s6",
+    "s8"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "But do not hunt for a landline. Use the phone you have. And ask your phone provider how a home phone that runs over the internet shares your address."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Use the nearest working phone | Do not delay the call | Ask about internet (VoIP) home phones"
+   },
+   "cite": [
+    "s8",
+    "s16"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Even when a screen shows a location, still say your address. The call-taker must confirm it, and may need the floor or room. Some mobile calls are routed to a center in another county."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Always say your location"
+   },
+   "cite": [
+    "s6",
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why say your address even if your phone may share your location?",
+    "right": "The call-taker needs to confirm it, and may need more detail such as the room or floor",
+    "wrong": [
+     "Because phones never share a location",
+     "Because the call-taker will not send help otherwise",
+     "Because saying it twice is a rule you can skip"
+    ],
+    "why": "Call-takers confirm the displayed address and may ask for more detail. Mobile calls can also reach a center in another county."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Things vary by place. Ask your local 911 center or fire department: Can we text 911? How do you handle open lines? Which address should we give for our home?"
+   },
+   "show": {
+    "kind": "list",
+    "text": "Can we text 911 here? | How are open lines handled? | Which address should we give for our home?"
+   },
+   "cite": [
+    "s13",
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let's put it together. Know when to call. Say the address first. Say what is happening. Stay on the line. Follow the call-taker's instructions."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Know when to call (not sure? call) | 2. Address first | 3. What is happening now | 4. Stay on the line | 5. Follow instructions"
+   },
+   "cite": [
+    "s1",
+    "s3",
+    "s5"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which order is right for a 911 call?",
+    "right": "Address, then what is happening, then answer questions, and stay on the line until told to hang up",
+    "wrong": [
+     "What happened last week, then the address, then hang up",
+     "Hang up quickly so the line is free, then the address",
+     "Medical history, then the address, then hang up"
+    ],
+    "why": "The address comes first, then what is happening. Answer the questions, and stay on the line until the call-taker says you can end the call."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Well done. In Class 2 we look at the questions call-takers ask, and how to answer them calmly."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: What 911 Call-Takers Ask"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "What 911 call-takers ask",
+   "links": [
+    "[[Class 2: What 911 Call-Takers Ask, and How to Answer]]"
+   ]
+  },
+  {
+   "topic": "Texting 911 where it is offered",
+   "links": [
+    "[[Class 3: Texting 911 Where It Is Offered]]"
+   ]
+  },
+  {
+   "topic": "911 card by the phone and telling the fire department",
+   "links": [
+    "[[Class 5: The 911 Card by the Phone and Telling Your Fire Department]]"
+   ]
+  },
+  {
+   "topic": "Choking and recovery position (what first-aid courses teach)",
+   "links": [
+    "[[Class 6: Recovery (Side) Position]]",
+    "[[Class 7: Choking First Aid]]"
+   ]
+  },
+  {
+   "topic": "Fire and evacuation plans",
+   "links": [
+    "[[Class 9: Fire and Evacuation Plans for Someone Who Uses a Wheelchair or Cannot Walk]]"
+   ]
+  },
+  {
+   "topic": "Source note",
+   "links": [
+    "Sources were read as search-result excerpts, not whole pages. Many are local 911 centers, so details differ by place. Check with your local 911 center."
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Stay on the line until the call-taker tells you to hang up.",
+   "other_view": "For a fire, one state guide says to get to a place of safety first and then call 911. Safety comes before the call. Class 9 covers how to plan for this when someone cannot walk.",
+   "cite": [
+    "s14",
+    "s1"
+   ]
+  },
+  {
+   "claim": "If a caller cannot speak, leave the line open and the center will send help if unsure.",
+   "other_view": "Practices differ. News reporting says open-line policies vary with the size and resources of the city, and one police department says some places send an officer while others send several kinds of responders. Check with your local 911 center.",
+   "cite": [
+    "s13",
+    "s12",
+    "s5"
+   ]
+  },
+  {
+   "claim": "A landline can show the call-taker your address on screen, so it may be better than a mobile phone.",
+   "other_view": "One county advises a landline where possible, but says not to delay calling to look for one. A mobile phone in your hand is better than no call.",
+   "cite": [
+    "s8",
+    "s6"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,577 @@
+{
+ "about": {
+  "title": "Fire and Evacuation Plans for Someone Who Uses a Wheelchair or Cannot Walk",
+  "course": "practical-emergency-preparedness",
+  "class_n": 9,
+  "audience": [
+   "adult",
+   "caregiver"
+  ],
+  "minutes": 14,
+  "length_note": "About 14 minutes: 16 short beats, one idea each. You can stop after any beat and pick up again. The topics (exits, helpers, being trapped, carries, practice) each need their own step, so this class sits near the top of the 5 to 15 minute range."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "How to make a home fire escape plan",
+   "publisher": "National Fire Protection Association (NFPA)",
+   "date": "n.d.",
+   "link": "https://www.nfpa.org/education-and-research/home-fire-safety/escape-planning",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s2",
+   "title": "Fire Safety for People with Disabilities",
+   "publisher": "U.S. Fire Administration (FEMA)",
+   "date": "n.d.",
+   "link": "https://www.usfa.fema.gov/prevention/home-fires/at-risk-audiences/people-with-disabilities/",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s3",
+   "title": "Join the American Red Cross to Sound the Alarm. Save a Life.",
+   "publisher": "American Red Cross",
+   "date": "n.d.",
+   "link": "https://www.redcross.org/sound-the-alarm.html",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s4",
+   "title": "Fire Prevention Week: 20 Ways to Help You Avoid a Home Fire",
+   "publisher": "American Red Cross",
+   "date": "2026 (Fire Prevention Week, October 4-10)",
+   "link": "https://www.redcross.org/about-us/news-and-events/news/2026/20-ways-to-prevent-a-home-fire.html",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s5",
+   "title": "Emergency Evacuation Planning Guide for People with Disabilities (large-print edition)",
+   "publisher": "National Fire Protection Association (NFPA)",
+   "date": "n.d.",
+   "link": "https://www.nfpa.org/-/media/Project/Storefront/Catalog/Files/Home-Fire-Safety/Disabilities/EvacuationGuideLargePrint.pdf?rev=13d4c71ce8834a239b0d86fd676278cf&hash=2D4345EB79A3E85C1BFC2067214B699C",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s6",
+   "title": "Fire Safety for the Disabled",
+   "publisher": "Fairfax County Fire and Rescue Department (Virginia)",
+   "date": "n.d.",
+   "link": "https://www.fairfaxcounty.gov/fire-ems/fire-safety-disabled",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s7",
+   "title": "Fire Safety for People with Disabilities",
+   "publisher": "Town of West Seneca (New York)",
+   "date": "n.d.",
+   "link": "https://www.westseneca.gov/223/Fire-Safety-for-People-with-Disabilities",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s8",
+   "title": "Fire Safety Factsheet for People with Disabilities and their Caregivers (USFA and Disabled American Veterans), hosted by Fort Worth Fire Department",
+   "publisher": "U.S. Fire Administration / City of Fort Worth",
+   "date": "n.d.",
+   "link": "https://www.fortworthtexas.gov/files/assets/public/v/1/fire/documents/removingthebarriers.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s9",
+   "title": "Preparing for Disaster for People with Disabilities and other Special Needs",
+   "publisher": "FEMA and American Red Cross",
+   "date": "n.d.",
+   "link": "https://www.fema.gov/pdf/library/pfd_all.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s10",
+   "title": "Disaster Readiness Tips for People with Mobility Disabilities",
+   "publisher": "BrainLine",
+   "date": "n.d.",
+   "link": "https://www.brainline.org/article/disaster-readiness-tips-people-mobility-disabilities",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s11",
+   "title": "Fire Safety Law: The Evacuation of Disabled People from Buildings",
+   "publisher": "Northern Ireland Fire and Rescue Service (guidance, UK)",
+   "date": "n.d.",
+   "link": "https://www.nifrs.org/wp-content/uploads/2021/02/Fire-Safety-Law-The-Evacuation-of-Disabled-People-from-Buildings.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s12",
+   "title": "Fire Prevention Week: Install Smoke Alarms & Create Home Fire Escape Plan",
+   "publisher": "American Red Cross New Jersey Region",
+   "date": "2025-10-08",
+   "link": "https://njredcross.wordpress.com/2025/10/08/fire-prevention-week-install-smoke-alarms-create-home-fire-escape-plan/",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s13",
+   "title": "Emergency Evacuation Planning Guide for People with Disabilities (NFPA guide, hosted by the Indiana Department of Health)",
+   "publisher": "NFPA / Indiana Department of Health",
+   "date": "n.d.",
+   "link": "https://www.in.gov/health/files/Emergency_Evacuation_Planning_Guide_for_People_with_Disabilities.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s14",
+   "title": "People with Disabilities Fire Safety Checklist (from the U.S. Fire Administration)",
+   "publisher": "City of St. Charles, Missouri",
+   "date": "n.d.",
+   "link": "https://www.stcharlescitymo.gov/280/People-with-Disabilities-Fire-Safety-Che",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s15",
+   "title": "Fire Safety for Kids",
+   "publisher": "American Red Cross",
+   "date": "n.d.",
+   "link": "https://www.redcross.org/get-help/how-to-prepare-for-emergencies/types-of-emergencies/fire/fire-safety-for-kids.html",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s16",
+   "title": "Household Preparedness Workbook",
+   "publisher": "American Red Cross",
+   "date": "n.d.",
+   "link": "https://www.redcross.org/content/dam/redcross/get-help/youth/Household-Preparedness-Workbook.pdf",
+   "read": "2026-11-21"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class nine. Today you will draw a home fire escape plan that works for someone who uses a wheelchair or cannot walk. You can stop after any step."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "A fire escape plan built around the person"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One promise first. This is planning help. It does not replace a first-aid class, the person's own doctors, or advice from your local fire department."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Check with your local fire department"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why plan ahead at all? The Red Cross says you may have less than two minutes to get out of a burning home."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Less than 2 minutes"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "The Red Cross says about how long you may have to escape a burning home?",
+    "right": "Less than two minutes",
+    "wrong": [
+     "About ten minutes",
+     "About half an hour",
+     "As long as you need"
+    ],
+    "why": "Fire can spread fast, so the plan has to be made before a fire, not during one."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First idea: two ways out of each room, where possible. If fire blocks one way, you use the other."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "door",
+    "count": 2,
+    "layout": "row",
+    "text": "Two ways out of each room"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is an example. Sam uses a wheelchair. Sam's bedroom has a door to the hall and a patio door. A way out only counts if Sam can really get through it."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A simple floor plan: Sam's bedroom with a hall door and a patio door, each marked with an arrow"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "How do you test whether the patio door counts as a second way out for Sam?",
+    "right": "Check that Sam can get through it in the wheelchair",
+    "wrong": [
+     "Assume any door counts",
+     "Count it even if a couch always blocks it",
+     "Count it without anyone ever trying it"
+    ],
+    "why": "The U.S. Fire Administration advises people who use a wheelchair or walker to check every exit to be sure they get through the doorway."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Second idea: where the bedroom is. The U.S. Fire Administration says that in a multistory home, sleep on the first floor. Being on the ground floor and near an exit makes escape easier."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ground floor, near an exit"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which bedroom spot makes escape easier, according to the U.S. Fire Administration?",
+    "right": "On the ground floor, near an exit",
+    "wrong": [
+     "Upstairs, as far from the door as possible",
+     "In the room farthest from every exit",
+     "It makes no difference"
+    ],
+    "why": "Being on the ground floor and near an exit makes escape easier. If you cannot move rooms, the rest of this class still helps."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Home changes can help too, such as exit ramps and wider doorways. Keep furniture from blocking a quick exit."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Exit ramps | Wider doorways | Furniture out of the way"
+   },
+   "cite": [
+    "s8",
+    "s10"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now draw it. NFPA has a free escape grid. Draw the floor plan, show all doors and windows, and mark two ways out of every room."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A grid page with rooms, doors and windows, and two coloured arrows leaving each room"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Red Cross map also has a meeting spot outside. You need one so you know everyone in the home is out."
+   },
+   "show": {
+    "kind": "map",
+    "text": "Floor plan with a red path to the front yard and a star for the meeting spot"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Third idea: who helps. If someone cannot escape alone, name a helper in the household. Name a backup too, in case the helper is not home."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Helper | Backup"
+   },
+   "cite": [
+    "s6",
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Why name a backup helper?",
+    "right": "The first helper might not be home when the fire starts",
+    "wrong": [
+     "Because one helper is never enough for any plan",
+     "So nobody has to practise",
+     "So the plan can skip the meeting spot"
+    ],
+    "why": "The fire department and NFPA both suggest a backup in case the first person is away."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Pick a meeting spot at a safe distance, such as a neighbour's home or a specific tree. Once everyone is out, call 911. Never go back inside for people, pets or things."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Get out | Stay out | Call 911 from outside"
+   },
+   "cite": [
+    "s4",
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "If everyone can get out, when do you call 911?",
+    "right": "Once you are out, at the meeting spot",
+    "wrong": [
+     "After going back for valuables",
+     "After searching every room again",
+     "Only after the fire is out"
+    ],
+    "why": "The Red Cross says to get out and then dial 911, and never to go back inside."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What if someone cannot get out, because smoke or fire blocks the way? NFPA says to close all doors between you and the fire. A closed door may slow smoke, heat and fire."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Close the doors"
+   },
+   "cite": [
+    "s1",
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The Red Cross adds a warning. Do not open a door that feels warm to the back of your hand. Use another way out instead."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Warm door? Use a second way out."
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Then call the fire department, even if someone has already reported the fire. Say exactly where you are trapped. If you can, wave a flashlight or light-coloured cloth at the window."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Close doors | Call and say exactly where | Signal at the window"
+   },
+   "cite": [
+    "s6",
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "You are trapped in a back bedroom. What should you tell the call-taker?",
+    "right": "Your address, the exact room and side of the house, and that you cannot leave",
+    "wrong": [
+     "Just the word 'help'",
+     "Only that there is a fire",
+     "Nothing, because someone else already called"
+    ],
+    "why": "Firefighters need to know exactly where you are, even if someone else has already reported the fire."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To make that call possible, sleep near a phone. Keep a working flashlight in the sleeping area. If the person cannot speak, the helper outside can give the room and window. Write both on your map."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Phone within reach | Flashlight by the bed | Room and window written on the map"
+   },
+   "cite": [
+    "s6",
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In larger buildings you may hear 'area of refuge'. It is a space that serves as a temporary haven from fire. In your own home, a safe room to wait in is something to talk through with your fire department."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Area of refuge"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now a safety line. Do not try lifts or carries down stairs without training. NFPA says people who need assisted rescue should talk with the fire department about how they will be carried so they are not injured. An occupational therapist can help you plan this too."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Ask first. Do not improvise a carry."
+   },
+   "cite": [
+    "s5",
+    "s11"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "No one in the home is trained to carry Sam down stairs. What is the safest plan?",
+    "right": "Talk with the fire department or an occupational therapist before a fire",
+    "wrong": [
+     "Practise a carry on your own at night",
+     "Decide on the day of the fire",
+     "Never tell anyone about the plan"
+    ],
+    "why": "Carries can injure the person being moved, so the method is worked out with trained people in advance."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Tell your local fire department the plan. Many departments take non-emergency calls. Explain the needs, and they may suggest escape ideas and look at your home. Services vary, so check with your local fire department."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Call the non-emergency line | Describe who lives here and what they need | Ask for advice on your own home"
+   },
+   "cite": [
+    "s14",
+    "s6",
+    "s7"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last step: practise. NFPA says to practise twice a year and make the drill as realistic as possible. Practise at different times of day. Time it, to learn what to improve. Do not treat the time as a pass or fail."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "2 drills a year"
+   },
+   "cite": [
+    "s1",
+    "s15",
+    "s4"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Practise again whenever the plan changes. A new chair, a new bedroom or a new helper all count. FEMA and the Red Cross say to practise as often as you update your plan."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Draw the plan, practise, change something, update the plan, practise again"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Besides twice a year, when should you practise again?",
+    "right": "Whenever you update the plan, for example after a change in equipment or helpers",
+    "wrong": [
+     "Only if a fire happens",
+     "Never, once the map is drawn",
+     "Only when the fire department visits"
+    ],
+    "why": "FEMA and the Red Cross say to practise as often as you update your escape plan."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To finish, here is your checklist: two ways out of each room, a ground-floor bedroom if you can, clear exits, helper and backup, a meeting spot, a phone and flashlight, advice on carries, a call to the fire department, and drills. Well done."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Two ways out | Ground floor | Clear exits | Helper and backup | Meeting spot | Phone and flashlight | No untrained carries | Tell the fire department | Practise twice a year"
+   },
+   "cite": [
+    "s1",
+    "s2",
+    "s5",
+    "s6",
+    "s9"
+   ],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Escape plan for wheelchair users",
+   "links": [
+    "[[Calling 911: address first]]",
+    "[[Texting 911 where it is offered]]",
+    "[[Smoke and carbon monoxide alarms]]"
+   ]
+  },
+  {
+   "topic": "Telling the fire department",
+   "links": [
+    "[[The 911 card by the phone]]",
+    "[[Family contact plans: who calls whom]]"
+   ]
+  },
+  {
+   "topic": "Power cuts and equipment that must travel",
+   "links": [
+    "[[Power cuts and medical devices]]",
+    "[[Go-bag and medication supply]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "A safe room or area of refuge to wait for firefighters can be part of the plan.",
+   "other_view": "BrainLine reports that many fire chiefs support areas of refuge. It also reports that, since September 11, many people with disabilities have been reluctant to rely on them and want to leave with everyone else. NFPA's guide says waiting with the person for first responders would likely be a last choice when there is an imminent threat. Talk it through with your fire department. This is why the class treats it as a backup idea.",
+   "cite": [
+    "s10",
+    "s13"
+   ]
+  },
+  {
+   "claim": "Trained helpers or evacuation devices can carry a person down stairs.",
+   "other_view": "NFPA says such devices and carries need trained people and a talk with the fire department. Fire-service guidance from Northern Ireland (UK, so local rules may differ) warns that carry-down methods put some people at risk of injury. It says every carry-down method needs a risk assessment. So experts agree on training and advance planning, not on one best method.",
+   "cite": [
+    "s5",
+    "s11"
+   ]
+  }
+ ]
+}

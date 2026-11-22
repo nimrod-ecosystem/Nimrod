@@ -1,0 +1,251 @@
+{
+ "course_id": "practical-emergency-preparedness",
+ "title": "Practical Emergency Preparedness at Home",
+ "audience": [
+  "adult",
+  "caregiver"
+ ],
+ "length_note": "15 short classes, about 139 minutes in total, each 7 to 14 minutes so a learner can stop after any one. The subject has separate jobs, and each job gets its own class. The course starts with reaching help (calling 911, what call-takers ask, texting 911), because everything else depends on it. It then moves to the paperwork that speeds help up (medical sheet, 911 card, fire department heads-up). Next come first-aid basics, taught as 'what first-aid courses teach', with a clear line to take a hands-on class and to follow the 911 call-taker. Then come home hazards and plans: alarms, fire and evacuation, power cuts, go-bag and medications, winter storms, extreme heat. The course ends with family contact plans and a final checklist. The first-aid topics are split into two classes, and so are winter and heat, so each stays calm and short. Every class repeats that laws and services vary by place, so the learner should check with their local 911 center or fire department. The course does not replace first-aid or CPR training or the person's own doctors. Sources to research: ready.gov and FEMA, American Red Cross, CDC, NFPA, the National Weather Service, and the FCC on 911 and text-to-911. No learner or patient is named; examples use neutral names such as Sam.",
+ "classes": [
+  {
+   "n": 1,
+   "title": "Calling 911: Address First, Stay on the Line",
+   "goal": "Say the address first, stay on the line, and follow the call-taker's instructions. Know when to call 911 and what to do if the caller cannot speak.",
+   "minutes": 10,
+   "topics": [
+    "When to call 911, and what to do if unsure (the call-taker can help decide)",
+    "Say the address first, then what is happening",
+    "Stay on the line and do not hang up until told to",
+    "Follow the call-taker's instructions",
+    "If the caller cannot speak: stay on the line, and what call centers may do with open lines (check with your local 911 center)",
+    "Calling from a mobile phone versus a landline, and why saying your location still matters",
+    "Check with your local 911 center for how things work in your area"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 2,
+   "title": "What 911 Call-Takers Ask, and How to Answer",
+   "goal": "Answer the usual call-taker questions calmly, including when speaking for someone who cannot speak, move easily, or call for help.",
+   "minutes": 8,
+   "topics": [
+    "Typical questions: location, phone number, what happened, who needs help, is the person awake and breathing",
+    "Why the questions are asked, and that asking them does not delay help",
+    "Speaking for someone else: use a neutral example such as Sam",
+    "Telling the call-taker about a disability, communication needs, or equipment in the home",
+    "Staying calm: short, plain answers, and it is fine to say 'I don't know'",
+    "Check with your local 911 center about what they ask and how"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 3,
+   "title": "Texting 911 Where It Is Offered",
+   "goal": "Explain 'call if you can, text if you can't' and send a clear text to 911 with location first, in plain words, with no photos. Check whether texting is offered locally.",
+   "minutes": 7,
+   "topics": [
+    "Call if you can, text if you can't",
+    "Text-to-911 is not available everywhere: check with your local 911 center",
+    "Location first, then the emergency, in plain words",
+    "No photos, no emoji, no abbreviations",
+    "Expect questions back, and keep the text thread open",
+    "Who may need texting: people who are deaf, hard of hearing, or have speech difficulty, or anyone who cannot safely speak",
+    "If the text does not go through: what the learner may see and what to do next",
+    "FCC guidance on text-to-911"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 4,
+   "title": "The One-Page Medical Sheet for the ER",
+   "goal": "Build a one-page sheet that tells ER staff how the person communicates, their allergies, medications and doses, conditions, what is normal for them, and who to contact.",
+   "minutes": 12,
+   "topics": [
+    "Why one page helps when the person cannot speak for themselves",
+    "Communication: how the person says yes and no, signs of pain or distress, devices used",
+    "Allergies",
+    "Medications and doses, kept current",
+    "Conditions, and the names of the person's own doctors",
+    "What is normal for this person (baseline abilities, behaviour, usual signs)",
+    "Emergency contacts and the person who makes decisions",
+    "Where to keep copies (fridge, go-bag, phone) and when to update",
+    "Uses a neutral example (Sam), with a fill-in template",
+    "This sheet does not replace the person's own doctors"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 5,
+   "title": "The 911 Card by the Phone and Telling Your Fire Department",
+   "goal": "Make a 911 card for the phone and ask the local fire department how to tell them that someone with a disability lives at the address.",
+   "minutes": 8,
+   "topics": [
+    "What goes on the card: address, nearest cross street, phone number, who lives here and what help they need",
+    "Large print, and kept by every phone and where a babysitter or visitor can see it",
+    "Contacting the local fire department (non-emergency line) to say that someone with a disability lives at the address",
+    "Ask what the department offers, such as voluntary registries (these vary by place)",
+    "Check with your local 911 center or fire department"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 6,
+   "title": "Recovery (Side) Position: What First-Aid Courses Teach",
+   "goal": "Describe the side (recovery) position as first-aid courses teach it for someone who is vomiting or unresponsive but breathing. Know to follow the 911 call-taker and to take a hands-on class.",
+   "minutes": 8,
+   "topics": [
+    "Framed as 'what first-aid courses teach', not as medical advice",
+    "When courses teach it: unresponsive but breathing, or vomiting",
+    "Call 911 first, and follow the call-taker's instructions over anything in this class",
+    "Outline of the steps as taught by the Red Cross and American Heart Association",
+    "Why practice matters, and why this class is not enough on its own",
+    "Take a hands-on class with the Red Cross or American Heart Association",
+    "Limits: some people have injuries or medical conditions that change what is safe, so ask the person's doctors and the 911 call-taker"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 7,
+   "title": "Choking First Aid: What First-Aid Courses Teach",
+   "goal": "Describe choking first aid as courses teach it, know to call 911 and follow the call-taker, and plan to take a hands-on class.",
+   "minutes": 8,
+   "topics": [
+    "Framed as 'what first-aid courses teach', not as medical advice",
+    "Recognising choking versus coughing, as courses teach it",
+    "Call 911 and follow the call-taker's instructions",
+    "Overview of the steps taught by the Red Cross and American Heart Association, and how they differ for adults, children, and infants",
+    "Caregiver note: if the person has swallowing difficulty or uses a feeding tube, ask their doctors for their own plan",
+    "Take a hands-on class (Red Cross, American Heart Association), including CPR",
+    "This class does not replace first-aid or CPR training"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 8,
+   "title": "Smoke and Carbon Monoxide Alarms",
+   "goal": "Check that the home has working smoke and carbon monoxide alarms in the right places, and plan for people who cannot hear them.",
+   "minutes": 10,
+   "topics": [
+    "Where alarms go, and how many (NFPA)",
+    "Testing, battery changes, and replacement dates",
+    "Carbon monoxide: why it matters, sources at home, and what to do when the alarm sounds",
+    "Alarms for people who are deaf or hard of hearing (strobe, bed-shaker, and similar), and what to ask the fire department",
+    "Alarms for someone who cannot get out of bed or cannot call for help",
+    "Check with your local fire department about local rules and any free alarm programmes"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 9,
+   "title": "Fire and Evacuation Plans for Someone Who Uses a Wheelchair or Cannot Walk",
+   "goal": "Draw a home fire escape plan that works for a person who uses a wheelchair or cannot walk, and know when to practise it.",
+   "minutes": 14,
+   "topics": [
+    "Two ways out of each room where possible (NFPA)",
+    "Ground-floor bedrooms, ramps, and clear exits",
+    "Who helps, who calls 911, and where everyone meets outside",
+    "If someone cannot get out: how to tell 911 and the fire department exactly where they are (area of refuge ideas, closed doors)",
+    "Practising the plan, and updating it as needs change",
+    "Tell the local fire department what the plan is",
+    "Check with your local fire department for advice on your own home",
+    "Do not take unsafe lifts or carries without training: ask the fire department or an occupational therapist"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 10,
+   "title": "Power Cuts and Medical Devices",
+   "goal": "Make a plan for a power cut when someone relies on a medical device: register with the electric company, plan backup power, and know who to call.",
+   "minutes": 12,
+   "topics": [
+    "List devices that need power, and how long each battery lasts",
+    "Register with the electric company if it has a medical or life-support programme (varies by place)",
+    "Backup options: batteries, generators, and the safety rules for each (generator carbon monoxide risk)",
+    "Ask the device supplier and the person's doctors for a plan: what to do if power is out for hours or days",
+    "When to call 911 versus the electric company",
+    "Medication storage that needs cold, and what to ask a pharmacist",
+    "Check with your local electric company and local 911 center"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 11,
+   "title": "Go-Bag and Medication Supply",
+   "goal": "Pack a go-bag and decide how to keep a medication supply, including papers, devices, and comfort items.",
+   "minutes": 10,
+   "topics": [
+    "What goes in the bag (ready.gov and Red Cross checklists)",
+    "Medication supply: ask the person's doctors and pharmacist how much extra to keep and how to rotate it",
+    "Copies of the one-page medical sheet and medication list",
+    "Chargers, batteries, spare equipment, and supplies for the person's daily care",
+    "Water, food, and comfort items, including for service animals",
+    "Where to store the bag and when to check it",
+    "Check with your local 911 center or emergency management office"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 12,
+   "title": "Winter Storms",
+   "goal": "Prepare a home for a winter storm and keep a person with limited movement or communication warm and safe.",
+   "minutes": 9,
+   "topics": [
+    "Reading National Weather Service watches and warnings",
+    "Staying warm safely: heating safety and carbon monoxide",
+    "Supplies for several days at home",
+    "Special risks for people who cannot move easily or tell you they are cold",
+    "Travel and getting to appointments, and when to stay in",
+    "Check in on a regular basis, and what to do if heating or power is lost",
+    "Check with your local emergency management office"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 13,
+   "title": "Extreme Heat",
+   "goal": "Spot the risks of extreme heat for people who cannot say they are too hot, and plan to stay cool.",
+   "minutes": 9,
+   "topics": [
+    "National Weather Service heat alerts",
+    "CDC guidance on heat-related illness and the warning signs",
+    "Who is at higher risk, including people who cannot speak, move easily, or take certain medications (ask the person's doctors or pharmacist)",
+    "Staying cool at home, and cooling centres where offered",
+    "Fans and air conditioning if the power fails",
+    "When to call 911 and follow the call-taker's instructions",
+    "Check with your local health department"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 14,
+   "title": "Family Contact Plans: Who Calls Whom",
+   "goal": "Write a contact plan that says who calls whom, where to meet, and who takes care of the person who needs help.",
+   "minutes": 8,
+   "topics": [
+    "Choose an out-of-area contact (ready.gov)",
+    "Who calls whom, in what order, and a backup for each person",
+    "Texting may work when calls do not, and why",
+    "Meeting places near home and outside the neighbourhood",
+    "Who is responsible for the person who needs extra help, and a backup carer",
+    "Share the plan, the 911 card, and the medical sheet",
+    "Practise, and update at least once a year"
+   ],
+   "needs_research": true
+  },
+  {
+   "n": 15,
+   "title": "Putting It Together: Your Home Plan Checklist",
+   "goal": "Finish with a one-page checklist of what is done and what is next, and set a date to review it.",
+   "minutes": 8,
+   "topics": [
+    "Review checklist covering calling and texting 911, the 911 card, the medical sheet, the fire department heads-up, alarms, evacuation plan, power plan, go-bag, weather plans, and contact plan",
+    "Pick the next two things to do this week",
+    "Book a hands-on first-aid and CPR class (Red Cross, American Heart Association)",
+    "Set a review date",
+    "Reminder: check with your local 911 center or fire department, and talk to the person's own doctors about their needs",
+    "Kind note: doing a little is better than doing nothing, and it is fine to go at your own pace"
+   ],
+   "needs_research": false
+  }
+ ]
+}

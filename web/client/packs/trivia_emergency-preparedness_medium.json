@@ -1,0 +1,464 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "Emergency preparedness trivia (medium)",
+ "description": "25 questions drawn only from Nimrod's fact-checked course Practical emergency preparedness at home; each cites a page the course cites. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Practical emergency preparedness at home (Nimrod course) and the pages it cites",
+  "kind": "ai-written-from-checked-course"
+ },
+ "ai_written": true,
+ "generated": "2026-11-21",
+ "items": [
+  {
+   "question": "If a fire breaks out at home, what does Class 1 say to do before calling 911?",
+   "answers": [
+    "Get to a place of safety first",
+    "Dial 911 from the room where it started",
+    "Wait for the smoke alarm to repeat",
+    "Look for a landline to call from"
+   ],
+   "correct": "Get to a place of safety first",
+   "difficulty": "medium",
+   "category": "Emergency preparedness",
+   "explain": "Fire is the one exception to calling right away. Get to safety first, then call 911.",
+   "source": {
+    "url": "https://www.pa.gov/agencies/ready/get-prepared/contact-911",
+    "title": "Know How and When to Contact 911"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "You realize you have called 911 by mistake. What does the course say to do?",
+   "answers": [
+    "Hang up quickly to free the line",
+    "Stay on the line and say it was a mistake",
+    "Hang up and wait for a call back",
+    "Hang up and text 911 to explain"
+   ],
+   "correct": "Stay on the line and say it was a mistake",
+   "difficulty": "medium",
+   "category": "Emergency preparedness",
+   "explain": "Do not just hang up. If you hang up, 911 may have to call you back or send someone to check.",
+   "source": {
+    "url": "https://police.statesvillenc.net/2024/05/14/12537/what-happens-if-you-call-911-and-hang-up",
+    "title": "What Happens If You Call 911 and Hang Up?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "According to the course, why does a 911 call-taker ask so many questions?",
+   "answers": [
+    "To decide whether your call qualifies for a response",
+    "To choose the type and level of help to send",
+    "To check that you really need an ambulance",
+    "To fill in a form before help can be sent"
+   ],
+   "correct": "To choose the type and level of help to send",
+   "difficulty": "medium",
+   "category": "Emergency preparedness",
+   "explain": "The questions are not a test. They are used to choose the right type and level of help.",
+   "source": {
+    "url": "https://southsound911.org/hrf_faq/why-does-the-911-call-taker-ask-so-many-questions/",
+    "title": "Why does the 911 call taker ask so many questions?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Alex is on a 911 call and cannot tell whether Sam is awake or breathing. What does the course say to do?",
+   "answers": [
+    "Give the most likely guess",
+    "Say that you can't tell",
+    "Wait to answer until you are sure",
+    "Describe the whole story at length"
+   ],
+   "correct": "Say that you can't tell",
+   "difficulty": "medium",
+   "category": "Emergency preparedness",
+   "explain": "It is fine to say \"I don't know\" or \"I can't tell.\" Do not guess or make something up.",
+   "source": {
+    "url": "https://patch.com/maryland/towson/get-the-411-on-calling-911",
+    "title": "Get the 411 on calling 911"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "When you text 911, what should come first in your message?",
+   "answers": [
+    "Your name",
+    "Where you are",
+    "A short greeting",
+    "Which service you need"
+   ],
+   "correct": "Where you are",
+   "difficulty": "medium",
+   "category": "Emergency preparedness",
+   "explain": "A text does not tell the call center exactly where you are, so put your location first. Then say what is wrong and what help you need.",
+   "source": {
+    "url": "https://ocfa.org/residents/text-911/",
+    "title": "Text 911 (repeats FCC guidelines)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Where texting 911 is not offered, what does the FCC require to happen when you try?",
+   "answers": [
+    "A call-taker phones you back within minutes",
+    "An automatic reply says your text did not go through",
+    "The text is saved until service is available",
+    "The text is forwarded to the nearest call center"
+   ],
+   "correct": "An automatic reply says your text did not go through",
+   "difficulty": "medium",
+   "category": "Emergency preparedness",
+   "explain": "The FCC requires a bounce-back message. It says the text did not go through and tells you to use another way, such as a voice call.",
+   "source": {
+    "url": "https://www.fcc.gov/consumers/guides/what-you-need-know-about-text-911",
+    "title": "Text to 911: What You Need to Know"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "On the one-page medical sheet, what does \"baseline\" mean?",
+   "answers": [
+    "The lowest dose of each medicine",
+    "The person's usual abilities, behaviour and signs",
+    "The first reading taken at the hospital",
+    "The date the page was last updated"
+   ],
+   "correct": "The person's usual abilities, behaviour and signs",
+   "difficulty": "medium",
+   "category": "Emergency preparedness",
+   "explain": "Baseline is what is usual for this person. It lets staff see what has changed.",
+   "source": {
+    "url": "https://eastonad.ucla.edu/sites/default/files/media/documents/Going%20to%20the%20Hospital_Tips%20for%20Dementia%20Caregivers%20(NIA).pdf",
+    "title": "Going to the Hospital: Tips for Dementia Caregivers (Alzheimer's Caregiving)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Where does the course suggest keeping copies of the one-page medical sheet?",
+   "answers": [
+    "Only on your phone, to avoid losing paper",
+    "Only in the go-bag, so it stays together",
+    "On the fridge, in the go-bag, and as a photo on your phone",
+    "Only in the wallet of the person you care for"
+   ],
+   "correct": "On the fridge, in the go-bag, and as a photo on your phone",
+   "difficulty": "medium",
+   "category": "Emergency preparedness",
+   "explain": "Keep copies in more than one place. A copy with the emergency contact person also helps, so someone else can find it.",
+   "source": {
+    "url": "https://www.chla.org/sites/default/files/atoms/files/CHLA-AAP-Emergency-Information-Form-Instructions-for-Parents_0.pdf",
+    "title": "Emergency Preparedness for Children with Special Health Care Needs: Emergency Information Form instructions for parents"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "To tell your fire department that someone with a disability lives at your address, which number should you use?",
+   "answers": [
+    "911, so the call is logged",
+    "The fire department's non-emergency number",
+    "Any 911 text line in your area",
+    "The number of the nearest hospital"
+   ],
+   "correct": "The fire department's non-emergency number",
+   "difficulty": "medium",
+   "category": "Emergency preparedness",
+   "explain": "Look up the non-emergency number first. 911.gov says not to call 911 just to get a non-emergency number.",
+   "source": {
+    "url": "https://www.911.gov/calling-911/frequently-asked-questions/",
+    "title": "FAQ About Calling 911"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "According to the course, how many firefighters usually help someone out of a burning home?",
+   "answers": [
+    "One firefighter",
+    "At least two firefighters",
+    "At least four firefighters",
+    "A full crew of six"
+   ],
+   "correct": "At least two firefighters",
+   "difficulty": "medium",
+   "category": "Emergency preparedness",
+   "explain": "At least two firefighters usually help someone out. If the agency knows early, it can call for backup.",
+   "source": {
+    "url": "https://www.iaedjournal.org/accessibility-in-fire-emergencies",
+    "title": "Accessibility In Fire Emergencies"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In Class 6, what does \"blended\" mean for a first aid class?",
+   "answers": [
+    "Half video lessons and half written quiz",
+    "Online work plus a hands-on session",
+    "Two instructors teaching together",
+    "Adults and children in the same class"
+   ],
+   "correct": "Online work plus a hands-on session",
+   "difficulty": "medium",
+   "category": "Emergency preparedness",
+   "explain": "The Red Cross offers first aid training online, in person, and blended. Blended means online work plus a hands-on session.",
+   "source": {
+    "url": "https://www.redcross.org/take-a-class/first-aid/first-aid-training",
+    "title": "First Aid Training"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Why does the course say first-aid courses teach the side (recovery) position for a person who is unresponsive but breathing normally?",
+   "answers": [
+    "It makes the person wake up sooner",
+    "It may lower the risk of a blocked airway and lets fluid drain",
+    "It helps the call-taker hear the person breathe",
+    "It keeps the person from getting too hot"
+   ],
+   "correct": "It may lower the risk of a blocked airway and lets fluid drain",
+   "difficulty": "medium",
+   "category": "Emergency preparedness",
+   "explain": "The AHA and Red Cross guidelines say this position may lower the risk of a blocked airway. It also lets fluid drain from the mouth.",
+   "source": {
+    "url": "https://cpr.heart.org/en/resuscitation-science/2024-first-aid-guidelines",
+    "title": "2024 American Heart Association and American Red Cross Guidelines for First Aid"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "For a baby who is choking, what do courses teach after the five firm back blows?",
+   "answers": [
+    "Five abdominal thrusts",
+    "Five chest thrusts, with the baby face-up",
+    "Five more back blows",
+    "Hang the baby upside down"
+   ],
+   "correct": "Five chest thrusts, with the baby face-up",
+   "difficulty": "medium",
+   "category": "Emergency preparedness",
+   "explain": "For infants, courses teach five back blows, then five chest thrusts. Never abdominal thrusts.",
+   "source": {
+    "url": "https://www.redcross.org/take-a-class/resources/learn-first-aid/infant-choking",
+    "title": "Infant Choking: How To Help"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Why does the Red Cross say its online-only classes fall short for first aid skills?",
+   "answers": [
+    "They do not cover choking",
+    "They cost more than in-person classes",
+    "They are written only for children",
+    "They do not let you show your skills to an instructor"
+   ],
+   "correct": "They do not let you show your skills to an instructor",
+   "difficulty": "medium",
+   "category": "Emergency preparedness",
+   "explain": "This is why the course stresses a hands-on class, where you practise with an instructor.",
+   "source": {
+    "url": "https://www.redcross.org/take-a-class/online-safety-classes",
+    "title": "Online Safety Classes & Training"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "After how many years from the manufacture date should a smoke alarm be replaced?",
+   "answers": [
+    "5 years",
+    "7 years",
+    "10 years",
+    "15 years"
+   ],
+   "correct": "10 years",
+   "difficulty": "medium",
+   "category": "Emergency preparedness",
+   "explain": "Replace each smoke alarm 10 years after its manufacture date, which is printed on the back label.",
+   "source": {
+    "url": "https://www.nfpa.org/education-and-research/home-fire-safety/smoke-alarms",
+    "title": "Smoke Alarm Information (Learn More About Smoke Alarms)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "During a power cut, where does the course say to use a generator?",
+   "answers": [
+    "Outdoors, more than 20 feet from doors and windows",
+    "Outdoors, about 5 feet from the house wall",
+    "In the garage with the door open",
+    "In the basement near a window"
+   ],
+   "correct": "Outdoors, more than 20 feet from doors and windows",
+   "difficulty": "medium",
+   "category": "Emergency preparedness",
+   "explain": "Generators make carbon monoxide. Use one only outside, more than 20 feet from your home, doors and windows.",
+   "source": {
+    "url": "https://blogs.cdc.gov/yourhealthyourenvironment/2016/10/31/carbon-monoxide-co-poisoning-prevention-5/",
+    "title": "Carbon Monoxide (CO) Poisoning Prevention"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "During a fire, what does the Red Cross say about a door that feels warm to the back of your hand?",
+   "answers": [
+    "Open it quickly and run through",
+    "Open it a little to check the hall",
+    "Do not open it; use another way out",
+    "Open it only if you have a flashlight"
+   ],
+   "correct": "Do not open it; use another way out",
+   "difficulty": "medium",
+   "category": "Emergency preparedness",
+   "explain": "Do not open a door that feels warm to the back of your hand. Use a second way out instead.",
+   "source": {
+    "url": "https://njredcross.wordpress.com/2025/10/08/fire-prevention-week-install-smoke-alarms-create-home-fire-escape-plan/",
+    "title": "Fire Prevention Week: Install Smoke Alarms & Create Home Fire Escape Plan"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How often does NFPA say to practise your home fire escape plan?",
+   "answers": [
+    "Once a year",
+    "Twice a year",
+    "Every month",
+    "Only when the plan changes"
+   ],
+   "correct": "Twice a year",
+   "difficulty": "medium",
+   "category": "Emergency preparedness",
+   "explain": "NFPA says to practise twice a year and make the drill as realistic as possible. Practise again whenever the plan changes.",
+   "source": {
+    "url": "https://www.nfpa.org/education-and-research/home-fire-safety/escape-planning",
+    "title": "How to make a home fire escape plan"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In a power cut, how long does a closed fridge keep food cold, according to the course?",
+   "answers": [
+    "About one hour",
+    "About four hours",
+    "About twelve hours",
+    "About 48 hours"
+   ],
+   "correct": "About four hours",
+   "difficulty": "medium",
+   "category": "Emergency preparedness",
+   "explain": "A fridge keeps food cold for about four hours, and a full freezer about 48. Those figures are for food, so for medicine ask your pharmacist.",
+   "source": {
+    "url": "https://www.ready.gov/kids/disaster-facts/power-outages",
+    "title": "Power Outages (Ready Kids)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Why must you never plug a generator into a wall outlet or the house wiring?",
+   "answers": [
+    "The current can flow back into power lines and endanger utility workers",
+    "It can overload the generator's fuel tank",
+    "It makes the generator louder",
+    "It voids the generator's warranty"
+   ],
+   "correct": "The current can flow back into power lines and endanger utility workers",
+   "difficulty": "medium",
+   "category": "Emergency preparedness",
+   "explain": "Plug devices directly into the generator instead. Ask a licensed electrician or your utility about safe hookups.",
+   "source": {
+    "url": "https://www.cnn.com/2024/01/09/health/how-to-use-a-generator-power-outage-wellness",
+    "title": "How to safely use a generator during a power outage (reporting CDC advice)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How often does the CDC say to check your emergency kit so the contents are current and working?",
+   "answers": [
+    "Every month",
+    "Every 6 months",
+    "Once every two years",
+    "Only after using it"
+   ],
+   "correct": "Every 6 months",
+   "difficulty": "medium",
+   "category": "Emergency preparedness",
+   "explain": "Check kits every 6 months. Replace old food, water, medicines and batteries.",
+   "source": {
+    "url": "https://www.cdc.gov/disability-emergency-preparedness/people-with-disabilities/build-a-kit.html",
+    "title": "Building an Emergency Kit"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What does a winter storm watch mean?",
+   "answers": [
+    "Dangerous winter weather is possible, so get ready",
+    "Dangerous winter weather is imminent",
+    "A less severe event, but travel may still be dangerous",
+    "The storm has passed and roads are clearing"
+   ],
+   "correct": "Dangerous winter weather is possible, so get ready",
+   "difficulty": "medium",
+   "category": "Emergency preparedness",
+   "explain": "A watch usually comes first, about 12 to 36 hours ahead. A warning means the dangerous weather is imminent.",
+   "source": {
+    "url": "https://www.weather.gov/phi/winterwx",
+    "title": "Winter Weather (watches, warnings, advisories)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What does Ready.gov say about relying on a fan during extreme heat?",
+   "answers": [
+    "A fan lowers body temperature enough to replace cooling",
+    "A fan is the best main cooling during a power cut",
+    "A fan creates airflow and false comfort but does not reduce body temperature",
+    "A fan cools a closed room by several degrees"
+   ],
+   "correct": "A fan creates airflow and false comfort but does not reduce body temperature",
+   "difficulty": "medium",
+   "category": "Emergency preparedness",
+   "explain": "Do not rely on a fan as your main cooling. A fan moves air; it does not cool the room.",
+   "source": {
+    "url": "https://www.ready.gov/heat",
+    "title": "Extreme Heat"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "If a phone call fails during a crisis, how long does the course say to wait before redialing?",
+   "answers": [
+    "Redial immediately",
+    "10 seconds",
+    "1 minute",
+    "30 minutes"
+   ],
+   "correct": "10 seconds",
+   "difficulty": "medium",
+   "category": "Emergency preparedness",
+   "explain": "Redialing too fast adds to the jam. You can also try a text, email, or a landline.",
+   "source": {
+    "url": "https://www.fcc.gov/reports-research/guides/tips-communicating-emergency",
+    "title": "Tips for Communicating in an Emergency"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "If your electric company has a priority list or medical registry, what does the checklist say about backup power?",
+   "answers": [
+    "Keep your own backup, because a registry does not promise power",
+    "The registry will restore your power first",
+    "You can skip a backup plan once registered",
+    "A registry replaces the need for a power plan"
+   ],
+   "correct": "Keep your own backup, because a registry does not promise power",
+   "difficulty": "medium",
+   "category": "Emergency preparedness",
+   "explain": "A registry means you tell the company about your needs. You still plan your own batteries or other power.",
+   "source": {
+    "url": "https://adata.org/factsheet/emergency-power/",
+    "title": "Emergency Power Planning for People Who Use Electricity and Battery-Dependent Assistive Technology and Medical Devices"
+   },
+   "ai_written": true
+  }
+ ]
+}

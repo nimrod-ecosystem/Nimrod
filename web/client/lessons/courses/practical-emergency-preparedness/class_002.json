@@ -1,0 +1,557 @@
+{
+ "about": {
+  "title": "What 911 Call-Takers Ask, and How to Answer",
+  "course": "practical-emergency-preparedness",
+  "class_n": 2,
+  "audience": [
+   "adult",
+   "caregiver"
+  ],
+  "minutes": 8,
+  "length_note": "About 8 minutes. The material fits in one sitting, and you can stop after any beat. Each of the five usual questions gets its own short step, with a check question after some of them."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Wireless 911 Service (consumer guide)",
+   "publisher": "Federal Communications Commission (FCC)",
+   "date": "n.d.",
+   "link": "https://www.fcc.gov/consumers/guides/wireless-911-service",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s2",
+   "title": "Text to 911: What You Need to Know",
+   "publisher": "Federal Communications Commission (FCC)",
+   "date": "n.d.",
+   "link": "https://www.fcc.gov/sites/default/files/text-to-911_-_what_you_need_to_know.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s3",
+   "title": "People with Disabilities",
+   "publisher": "Ready.gov (FEMA)",
+   "date": "n.d.",
+   "link": "https://www.ready.gov/people-disabilities",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s4",
+   "title": "What to Expect When Calling 911",
+   "publisher": "City of Raleigh Emergency Communications",
+   "date": "n.d.",
+   "link": "https://raleighnc.gov/emergency-communications-911/services/what-expect-when-calling-911",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s5",
+   "title": "Do's and Don'ts of 911",
+   "publisher": "Public Safety Communications (fcva.us, a local government 911 center)",
+   "date": "n.d.",
+   "link": "https://www.fcva.us/departments/public-safety-communications/do-s-and-don-ts-of-911",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s6",
+   "title": "What to Expect When Calling 911",
+   "publisher": "UMC Health System, EMS",
+   "date": "n.d.",
+   "link": "https://www.umchealthsystem.com/services/emergency-care/emergency-care-services-and-programs/ems/ems-services-programs-and-resources/what-to-expect-when-calling-911/",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s7",
+   "title": "Get the 411 on calling 911",
+   "publisher": "Baltimore County 9-1-1 (via Patch)",
+   "date": "n.d.",
+   "link": "https://patch.com/maryland/towson/get-the-411-on-calling-911",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s8",
+   "title": "Notify 911 dispatchers of disability needs in your household",
+   "publisher": "City of Philadelphia",
+   "date": "n.d.",
+   "link": "https://www.phila.gov/services/safety-emergency-preparedness/notify-911-dispatchers-of-disability-needs-in-your-household/",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s9",
+   "title": "Why does the 911 call taker ask so many questions?",
+   "publisher": "South Sound 911",
+   "date": "n.d.",
+   "link": "https://southsound911.org/hrf_faq/why-does-the-911-call-taker-ask-so-many-questions/",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s10",
+   "title": "What to Expect When You Call 911",
+   "publisher": "Caldwell County, North Carolina",
+   "date": "n.d.",
+   "link": "https://www.caldwellcountync.org/187/What-to-Expect-When-You-Call-911",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s11",
+   "title": "What to Expect When Calling 911",
+   "publisher": "City of Grand Junction",
+   "date": "n.d.",
+   "link": "https://www.gjcity.org/451/What-to-Expect-When-Calling-911",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s12",
+   "title": "Why do the dispatchers ask so many questions when I call 911? (info sheet)",
+   "publisher": "Dorchester County, Maryland",
+   "date": "n.d.",
+   "link": "https://www.dorchestercountymd.com/wp-content/uploads/2017/12/911-Info-sheet-2.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s13",
+   "title": "How to Talk to the Emergency Dispatcher",
+   "publisher": "UPMC Minutes Matter",
+   "date": "n.d.",
+   "link": "https://minutesmatter.upmc.com/how-to-talk-to-the-emergency-dispatcher/",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s14",
+   "title": "What to Say When You Call 911",
+   "publisher": "Surefire CPR",
+   "date": "n.d.",
+   "link": "https://surefirecpr.com/emergency-tips/say-call-911/",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s15",
+   "title": "9-1-1 - Cell Phones & Voice Over IP Service",
+   "publisher": "Nash County, North Carolina",
+   "date": "n.d.",
+   "link": "https://nashcountync.gov/109/9-1-1---Cell-Phones-Voice-Over-IP-Servic",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s16",
+   "title": "What to Expect When Calling 9-1-1",
+   "publisher": "Long Beach Police Department",
+   "date": "n.d.",
+   "link": "https://www.longbeach.gov/police/contact-us/what-to-expect-when-calling-911/",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s17",
+   "title": "Emergency preparedness (Emergencies and 911)",
+   "publisher": "Minnesota Commission of the Deaf, DeafBlind and Hard of Hearing",
+   "date": "n.d.",
+   "link": "https://mn.gov/deaf-hard-of-hearing/communication-access/emergency/",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s18",
+   "title": "Frequently Asked Questions: Emergency Communications E 9-1-1",
+   "publisher": "Bucks County, Pennsylvania",
+   "date": "n.d.",
+   "link": "https://www.bucoks.gov/m/faq?cat=16",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s19",
+   "title": "First Aid Quiz (tip library)",
+   "publisher": "American Red Cross, Illinois chapter site",
+   "date": "n.d.",
+   "link": "https://americanredcrossillinois.wordpress.com/tiplibrary/first-aid-essentials/first-aid-quiz/",
+   "read": "2026-11-21"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "In class 1 you learned to give the address first and stay on the line. Now: what will the person on the other end ask you, and how can you answer?"
+   },
+   "show": {
+    "kind": "heading",
+    "text": "What 911 Call-Takers Ask, and How to Answer"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A trained call-taker answers your call. Their job is to ask the right questions so the right help is sent. You don't have to run the call. They guide it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Call-taker: a trained person who answers 911 and guides you"
+   },
+   "cite": [
+    "s10",
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here are the five usual questions. Where are you? What is your phone number? What happened? Who needs help? Are they awake and breathing? We'll take them one at a time."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Where is the emergency?\n2. What is your phone number?\n3. What happened?\n4. Who needs help, and how many people?\n5. Are they awake and breathing?"
+   },
+   "cite": [
+    "s6",
+    "s11",
+    "s13",
+    "s19"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, where. Say the full address, and a landmark or room if you can. Do this even if you think your phone already told them."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Question 1: Where? Say the address."
+   },
+   "cite": [
+    "s11",
+    "s18",
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why say it again? On a cell phone the call-taker may not know exactly where you are. Even when an address shows on their screen, they ask you to say it so they get it right."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A person on a phone in a living room. A call-taker's screen shows a rough address, and a speech bubble reads the full street address aloud."
+   },
+   "cite": [
+    "s15",
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "The call-taker asks you to say your address, though it may already be on their screen. Why?",
+    "right": "To make sure it is heard and written down correctly",
+    "wrong": [
+     "Because they don't believe you",
+     "To make you wait before help is sent",
+     "To test whether you are calm"
+    ],
+    "why": "Help has to go to the right place. Saying the address aloud confirms it, and phone locations can be rough."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Second, your phone number. If the call drops, the call-taker can call you back. Keep the phone with you and keep it charged."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Question 2: Phone number, in case you are cut off"
+   },
+   "cite": [
+    "s15",
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Third, what happened. Use plain words. 'Sam fell and is not answering me.' You don't need a long story. The call-taker will ask more."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Example: 'My name is Alex. Sam fell and is not answering me.'"
+   },
+   "cite": [
+    "s11",
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Fourth and fifth: who needs help, and how many. Then the person's condition. Are they awake? Are they breathing? Tell what you see. If you can't tell, say that."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "What you can see: awake, talking, breathing, not answering\nWhat you can't tell: say 'I can't tell'"
+   },
+   "cite": [
+    "s13",
+    "s14",
+    "s19"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "You find Sam on the floor and can't tell if he is breathing. What do you tell the call-taker?",
+    "right": "That you can't tell, and then do what the call-taker says next",
+    "wrong": [
+     "Say yes, so they don't worry",
+     "Hang up to check and call back later",
+     "Say nothing until you are sure"
+    ],
+    "why": "A true 'I can't tell' helps more than a guess. The call-taker can then guide you."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why so many questions? Some people feel they are being asked whether they really need help. They aren't. The questions are to choose the type and level of help to send."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Questions = the right help, not a test"
+   },
+   "cite": [
+    "s6",
+    "s10",
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Do the questions slow help down? No. Call-takers say they send help while you keep answering. So keep answering."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Answering questions does not delay response."
+   },
+   "cite": [
+    "s4",
+    "s9"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "While you answer the call-taker's questions, what is usually happening?",
+    "right": "Help is being sent while you talk",
+    "wrong": [
+     "Nothing, until every question is answered",
+     "They are deciding whether you really need help",
+     "You are on hold in a queue"
+    ],
+    "why": "Call-takers enter details and send help while they ask more. The questions do not hold help back."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Sometimes the call-taker goes quiet for a moment. They may be talking to the responders. Stay on the line and wait for them to come back."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A pause is normal. Stay on the line."
+   },
+   "cite": [
+    "s12",
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Staying calm is about being short and plain. Answer only what is asked, then wait for the next question. Slow, clear words help most."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Short answers\nSlow, clear words\nOne question at a time\nWait for the next question"
+   },
+   "cite": [
+    "s5",
+    "s4",
+    "s19"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It is fine to say 'I don't know.' Don't guess or make something up. Say what you know and say that you don't know the rest."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "'I'm not sure.' 'I don't know.' 'I can't tell.'"
+   },
+   "cite": [
+    "s7",
+    "s14"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "The call-taker asks what time Sam fell. You are not sure. What is a good answer?",
+    "right": "'I'm not sure.' Add your best idea only if you have one.",
+    "wrong": [
+     "Make up a time so you sound certain",
+     "Hang up and work it out first",
+     "Stay silent and wait"
+    ],
+    "why": "Call-takers ask you not to guess. An honest 'I don't know' is a useful answer."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now, speaking for someone else. If Sam can't speak, you are Sam's voice on the call. Say who you are, who you are with, and what is wrong."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "'I'm Alex. I'm with Sam. Sam can't speak and can't stand. He fell and isn't responding the way he normally does.'"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Tell them how Sam communicates and what is normal for Sam. Examples are a device, eye blinks or gestures. This can matter for responders and for the hospital."
+   },
+   "show": {
+    "kind": "list",
+    "text": "How Sam communicates\nWhat is normal for Sam\nWhat helps Sam stay calm\nMedicines or treatments Sam needs"
+   },
+   "cite": [
+    "s8",
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Also tell them what is in the home. Say if Sam can't walk, which room he is in, and any equipment he uses. Say if anyone else, even a pet, is inside. Keep it short. The address still comes first."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Address first\nWhere in the home Sam is\nCan't walk, or uses a wheelchair\nEquipment in the home\nOther people or pets inside"
+   },
+   "cite": [
+    "s14",
+    "s8"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which is the best thing to say to the call-taker about Sam?",
+    "right": "'Sam can't speak or stand. He is in the back bedroom and uses a wheelchair.'",
+    "wrong": [
+     "Nothing. The responders will work it out.",
+     "Only your own name",
+     "Sam's whole life story, before the address"
+    ],
+    "why": "Short facts about speech, movement, and where he is help responders. The address comes first."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "What if you can't talk freely, or the call is hard to hear? Stay on the line. The call-taker can ask yes-or-no questions. Where text-to-911 is offered, class 3 covers it."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Can't talk freely? Stay on. Yes or no answers can work."
+   },
+   "cite": [
+    "s5",
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Questions and call-taker rules vary by place. Check with your local 911 center about what they ask and how they take calls. Some centers even offer a practice call."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Check with your local 911 center"
+   },
+   "cite": [
+    "s16",
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "This class does not replace a first-aid or CPR course, or the person's own doctors. If the call-taker gives you instructions, follow them."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Follow the call-taker's instructions"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why keep answering questions even after you hear help is on the way?",
+    "right": "It helps the call-taker guide you, and they may pass details to the responders",
+    "wrong": [
+     "Because they are checking your story",
+     "Because help can't leave until you finish",
+     "There is no reason to"
+    ],
+    "why": "Answers help the call-taker decide your next steps. The call-taker may also be talking to the responders."
+   }
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "The five usual questions: location, phone number, what happened, who needs help, awake and breathing",
+   "links": [
+    "[[Calling 911: address first, stay on the line]]",
+    "[[Texting 911 where it is offered]]"
+   ]
+  },
+  {
+   "topic": "Speaking for someone who cannot speak: communication needs, what is normal, equipment",
+   "links": [
+    "[[The one-page medical sheet for the ER]]",
+    "[[The 911 card by the phone]]"
+   ]
+  },
+  {
+   "topic": "Staying calm: short plain answers, 'I don't know' is fine",
+   "links": [
+    "[[Recovery (side) position: what first-aid courses teach]]",
+    "[[Choking first aid: what first-aid courses teach]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Answering every question never slows help.",
+   "other_view": "Many 911 centers say help is sent while you keep answering. Yet callers often find the questions frustrating when they want to just tell their story. Centers can differ in what they ask and in what order. That is why this class says to check with your local 911 center.",
+   "cite": [
+    "s4",
+    "s9",
+    "s16"
+   ]
+  },
+  {
+   "claim": "Tell the call-taker about a disability during the call.",
+   "other_view": "Telling them can help. But one state agency notes callers are not required to disclose a disability. Some cities also let households register disability needs ahead of time, and availability varies by place. So it is worth asking your local 911 center what is offered.",
+   "cite": [
+    "s17",
+    "s8"
+   ]
+  }
+ ]
+}

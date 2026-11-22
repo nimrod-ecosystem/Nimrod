@@ -1404,6 +1404,93 @@ export const COURSES = [
   ]
  },
  {
+  "id": "practical-emergency-preparedness",
+  "title": "Practical Emergency Preparedness at Home",
+  "audience": [
+   "adult",
+   "caregiver"
+  ],
+  "total": 15,
+  "otherSide": true,
+  "classes": [
+   {
+    "n": 1,
+    "title": "Calling 911: Address First, Stay on the Line",
+    "file": "class_001.json"
+   },
+   {
+    "n": 2,
+    "title": "What 911 Call-Takers Ask, and How to Answer",
+    "file": "class_002.json"
+   },
+   {
+    "n": 3,
+    "title": "Texting 911 Where It Is Offered",
+    "file": "class_003.json"
+   },
+   {
+    "n": 4,
+    "title": "The One-Page Medical Sheet for the ER",
+    "file": "class_004.json"
+   },
+   {
+    "n": 5,
+    "title": "The 911 Card by the Phone and Telling Your Fire Department",
+    "file": "class_005.json"
+   },
+   {
+    "n": 6,
+    "title": "Recovery (Side) Position: What First-Aid Courses Teach",
+    "file": "class_006.json"
+   },
+   {
+    "n": 7,
+    "title": "Choking First Aid: What First-Aid Courses Teach",
+    "file": "class_007.json"
+   },
+   {
+    "n": 8,
+    "title": "Smoke and Carbon Monoxide Alarms",
+    "file": "class_008.json"
+   },
+   {
+    "n": 9,
+    "title": "Fire and Evacuation Plans for Someone Who Uses a Wheelchair or Cannot Walk",
+    "file": "class_009.json"
+   },
+   {
+    "n": 10,
+    "title": "Power Cuts and Medical Devices",
+    "file": "class_010.json"
+   },
+   {
+    "n": 11,
+    "title": "Go-Bag and Medication Supply",
+    "file": "class_011.json"
+   },
+   {
+    "n": 12,
+    "title": "Winter Storms",
+    "file": "class_012.json"
+   },
+   {
+    "n": 13,
+    "title": "Extreme Heat",
+    "file": "class_013.json"
+   },
+   {
+    "n": 14,
+    "title": "Family Contact Plans: Who Calls Whom",
+    "file": "class_014.json"
+   },
+   {
+    "n": 15,
+    "title": "Putting It Together: Your Home Plan Checklist",
+    "file": "class_015.json"
+   }
+  ]
+ },
+ {
   "id": "prehistory",
   "title": "Prehistory: from the first humans to the first farms",
   "audience": [

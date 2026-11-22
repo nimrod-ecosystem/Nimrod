@@ -1,0 +1,578 @@
+{
+ "about": {
+  "title": "Extreme Heat",
+  "course": "practical-emergency-preparedness",
+  "class_n": 13,
+  "audience": [
+   "adult",
+   "caregiver"
+  ],
+  "minutes": 9,
+  "length_note": "About 9 minutes. The class teaches one idea per step and stops for a question after most steps. There are 19 short steps and 10 questions, so you can pause at any point and pick up again later."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Glossary: Extreme Heat (Extreme Heat Warning, Extreme Heat Watch, Heat Advisory, Heat Stroke)",
+   "publisher": "National Weather Service (NOAA)",
+   "date": "n.d.",
+   "link": "https://forecast.weather.gov/glossary.php?word=heat",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s2",
+   "title": "Watch/Warning/Advisory Definitions (heat alert examples for one forecast area)",
+   "publisher": "National Weather Service, Baltimore/Washington office",
+   "date": "n.d.",
+   "link": "https://www.weather.gov/lwx/warningsdefined",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s3",
+   "title": "Heat-Related Illnesses: What to Look For",
+   "publisher": "Centers for Disease Control and Prevention (CDC)",
+   "date": "n.d.",
+   "link": "https://www.cdc.gov/extreme-heat/media/pdf/Heat_Related_Illness.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s4",
+   "title": "Extreme Heat",
+   "publisher": "Ready.gov (FEMA)",
+   "date": "n.d.",
+   "link": "https://www.ready.gov/heat",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s5",
+   "title": "People with Disabilities (People Experiencing Extreme Heat)",
+   "publisher": "Ready.gov (FEMA)",
+   "date": "n.d.",
+   "link": "https://www.ready.gov/people-disabilities",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s6",
+   "title": "About Heat and Your Health",
+   "publisher": "Centers for Disease Control and Prevention (CDC)",
+   "date": "n.d.",
+   "link": "https://www.cdc.gov/heat-health/about/index.html",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s7",
+   "title": "Heat and Medications: Guidance for Clinicians",
+   "publisher": "Centers for Disease Control and Prevention (CDC)",
+   "date": "n.d.",
+   "link": "https://www.cdc.gov/heat-health/hcp/clinical-guidance/heat-and-medications-guidance-for-clinicians.html",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s8",
+   "title": "Extreme Heat and Indoor Air Quality",
+   "publisher": "U.S. Environmental Protection Agency (EPA)",
+   "date": "n.d.",
+   "link": "https://www.epa.gov/emergencies-iaq/extreme-heat-and-indoor-air-quality",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s9",
+   "title": "Red Cross issues advice to stay safe during extreme heat",
+   "publisher": "American Red Cross (Illinois Region)",
+   "date": "n.d.",
+   "link": "https://www.redcross.org/local/illinois/about-us/news-and-events/red-cross-issues-advice-to-stay-safe-during-extreme-heat-.html",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s10",
+   "title": "Social Media: Heat Safety",
+   "publisher": "National Weather Service, Weather-Ready Nation",
+   "date": "n.d.",
+   "link": "https://www.weather.gov/wrn/heat-sm",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s11",
+   "title": "Excessive Heat Awareness and Safety",
+   "publisher": "National Weather Service, Burlington office",
+   "date": "n.d.",
+   "link": "https://www.weather.gov/btv/heat",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s12",
+   "title": "Beat the Heat: Information for People with Disabilities",
+   "publisher": "City of Boston",
+   "date": "n.d.",
+   "link": "https://search.boston.gov/sites/default/files/embed/h/hot_disabilities.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s13",
+   "title": "Extreme Heat",
+   "publisher": "Ready Illinois (Illinois Emergency Management Agency)",
+   "date": "n.d.",
+   "link": "https://ready.illinois.gov/hazards/extremetempshot.html",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s14",
+   "title": "Your fan won't always help you cool down; why it can backfire during a heat wave",
+   "publisher": "The Weather Channel (weather.com)",
+   "date": "2026-06-24",
+   "link": "https://weather.com/2026/06/24/health/your-fan-wont-always-help-you-cool-down-why-it-can-backfire-during-a-heat-wave",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s15",
+   "title": "Disabled and chronically ill people are at high risk during a heat wave. Here's how you can help.",
+   "publisher": "WGBH News",
+   "date": "2026-07-01",
+   "link": "https://www.wgbh.org/news/local/2026-07-01/disabled-and-chronically-ill-people-are-at-high-risk-during-a-heat-wave-heres-how-you-can-help",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s16",
+   "title": "Extreme Heat (Kids)",
+   "publisher": "Ready.gov (FEMA)",
+   "date": "n.d.",
+   "link": "https://www.ready.gov/kids/disaster-facts/extreme-heat",
+   "read": "2026-11-21"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 13: extreme heat. Heat causes more deaths than any other kind of weather, and it is hardest to spot when a person cannot tell you they are too hot."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Extreme Heat: Spot the Risk, Plan to Stay Cool"
+   },
+   "cite": [
+    "s16",
+    "s12"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A promise first. This class is a plan, not medical treatment. It does not replace a hands-on first-aid class or the person's own doctors."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A plan, not a replacement"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "What is heat illness? The body heats up faster than it can cool itself, or it loses too much fluid and salt. Then body temperature rises."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Heat illness: the body cannot cool itself"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Picture Sam, who cannot speak. Sam sits in a closed, sunny room in the afternoon. Sam cannot say, I am hot. Someone has to notice."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A person in a chair beside a sunny window in a closed room. A fan sits in the corner."
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why must a caregiver watch more closely when the person cannot speak?",
+    "right": "The person may not be able to say or show they are too hot, so the caregiver has to notice.",
+    "wrong": [
+     "Heat only affects people who can talk.",
+     "Heat illness always gives a loud, obvious warning.",
+     "Only people outdoors can get heat illness."
+    ],
+    "why": "The City of Boston notes that people with disabilities may not be able to express discomfort or raise the alarm."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Who is at higher risk? Anyone can get heat illness. Older adults, people with heart disease, and people with asthma are at greater risk. So are people with some disabilities."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Higher risk: 65 or older | heart disease | asthma | spinal cord injury (may not cool by sweating) | trouble understanding or explaining how heat feels | some mental health medicines"
+   },
+   "cite": [
+    "s6",
+    "s5"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which is a reason a person might be at higher risk in the heat?",
+    "right": "A spinal cord injury can make it harder for the body to cool itself by sweating.",
+    "wrong": [
+     "Having a quiet voice protects the body from heat.",
+     "Staying indoors always makes heat illness impossible.",
+     "Being young always means no risk."
+    ],
+    "why": "Ready.gov lists spinal cord injury as a higher risk because the person may not be able to cool by sweating."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Some medicines add to the risk. The CDC names diuretics, sometimes called water pills, anticholinergics, and some psychotropic medicines. Ask the person's doctor or pharmacist."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ask the doctor or pharmacist about heat"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Sam takes a diuretic. What is the safest step?",
+    "right": "Ask Sam's doctor or pharmacist about hot weather, and do not stop the medicine on your own.",
+    "wrong": [
+     "Stop the medicine on the first hot day.",
+     "Do nothing, because medicines never matter in heat.",
+     "Give extra doses to stay ahead of the heat."
+    ],
+    "why": "The CDC reminds people not to stop medicines abruptly without a plan, and to review them with their clinician."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now alerts. The National Weather Service uses three. A Heat Advisory means dangerous heat is coming, below warning level. A Watch means it is possible but uncertain. A Warning means extremely dangerous heat is expected or here."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Heat Advisory: dangerous heat | Extreme Heat Watch: possible, timing uncertain | Extreme Heat Warning: extremely dangerous heat expected or occurring"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which alert means extremely dangerous heat is expected or already happening?",
+    "right": "Extreme Heat Warning",
+    "wrong": [
+     "Extreme Heat Watch",
+     "Heat Advisory",
+     "None of them; alerts only matter during a power cut"
+    ],
+    "why": "The National Weather Service issues a Warning when extremely dangerous heat is expected or occurring. A Watch means it is only possible."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The numbers differ by place. One office warns at a heat index of 110 east of the Blue Ridge and 105 to the west. Heat stroke can happen even in moderate heat. So check with your local health department."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Alert levels vary by place"
+   },
+   "cite": [
+    "s2",
+    "s1",
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next, the warning signs. Heat exhaustion and heat stroke look different, and the CDC lists both."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Heat exhaustion: heavy sweating; cold, pale, clammy skin; fast, weak pulse; nausea or vomiting; cramps; tiredness; dizziness; headache; fainting. || Heat stroke: body temperature 103°F or higher; hot, red, dry or damp skin; fast, strong pulse; headache; dizziness; nausea; confusion; passing out."
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "If Sam cannot tell you how they feel, use your eyes and hands. Look at skin colour and feel, sweating, vomiting, confusion, and fainting. Those can be seen without being told."
+   },
+   "show": {
+    "kind": "list",
+    "text": "What you can see or feel: skin hot and red, or cold, pale and clammy | heavy sweating | vomiting | confusion | fainting"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which sign can a caregiver notice without the person saying anything?",
+    "right": "Skin that is hot and red, or cold, pale and clammy.",
+    "wrong": [
+     "Whether the person has a headache.",
+     "Whether the person feels dizzy.",
+     "Whether the person wants a drink."
+    ],
+    "why": "Headache and dizziness are feelings the person must report. Skin changes, sweating, vomiting and confusion can be seen."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Staying cool at home. Cover windows with drapes or shades. Use the oven less. Take cool showers or baths. Wear loose, light clothing."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Shades on the windows | oven off or used less | cool shower or bath | loose, light-coloured clothes"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Fluids matter too. The Red Cross says to avoid sugary, caffeinated and alcoholic drinks. If a person is on a fluid-restricted diet or takes diuretics, ask their doctor first. Ask the doctors about swallowing safety too."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Fluids: ask the doctor first if restricted"
+   },
+   "cite": [
+    "s9",
+    "s13"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Sam is on a fluid-restricted diet. What should you do about extra water in the heat?",
+    "right": "Ask Sam's doctor before changing how much Sam drinks.",
+    "wrong": [
+     "Give as much water as possible, no matter what.",
+     "Switch to sugary drinks instead.",
+     "Stop all drinks to avoid a problem."
+    ],
+    "why": "Ready Illinois says people on a fluid-restricted diet or taking diuretics should consult their doctor before exposure to heat."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "If your home has no air conditioning, Ready.gov says to find a cooling centre. Libraries and malls can work too. Your local health department can tell you the cooling options near you."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A simple local map: home in the middle, with a library, a mall, a cooling centre, and a friend's air-conditioned home nearby"
+   },
+   "cite": [
+    "s4",
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Getting there can be hard. Many disabled people cannot easily reach cooling centres. Before you travel, call to ask about accommodations for limited mobility, and plan the ride in advance."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Call ahead: is it accessible?"
+   },
+   "cite": [
+    "s15",
+    "s12"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is a good step before taking someone with limited mobility to a cooling centre?",
+    "right": "Call ahead to check it has accommodations for limited mobility.",
+    "wrong": [
+     "Just go, because every centre is set up the same way.",
+     "Leave the medicines at home to save space.",
+     "Wait until heat stroke starts, then decide."
+    ],
+    "why": "The City of Boston advises calling ahead to check for accommodations for people with limited mobility."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "What about fans? Ready.gov says fans create air flow and a false sense of comfort, but do not reduce body temperature. Do not rely on a fan as your main cooling."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A fan moves air. It does not cool the room."
+   },
+   "cite": [
+    "s4",
+    "s8"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "The room is 96°F. Is a fan enough to keep Sam safe?",
+    "right": "No. In the mid-90s or higher, fans will not prevent heat illness, so move to a cooler place.",
+    "wrong": [
+     "Yes, because fans cool the air.",
+     "Yes, if the fan is pointed straight at Sam.",
+     "Yes, if the door is shut."
+    ],
+    "why": "The EPA says not to use electric fans for cooling when the room is in the mid-90s or higher, and that portable fans do not cool the air."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Heat and a power cut together are more dangerous. Go to a cool place with power if you can. Keep medicines that need cold in an ice-filled cooler. The CDC says to plan ahead for refrigerated medicines and for electric devices."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Go to a cooled place with power | ice-filled cooler for medicines that need cold | plan for oxygen concentrators and other electric devices | see class 10, Power Cuts and Medical Devices"
+   },
+   "cite": [
+    "s9",
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "When to call 911. Heat stroke is a medical emergency. If someone is confused, passes out, or has hot, red skin, call 911 right away. Give the address first, stay on the line, and follow the call-taker."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Heat stroke signs: call 911 right away"
+   },
+   "cite": [
+    "s3",
+    "s4",
+    "s10"
+   ],
+   "move": "title-rise",
+   "ask": {
+    "q": "Sam is in a hot room, suddenly confused, and then passes out. What comes first?",
+    "right": "Call 911, give the address, and follow the call-taker's instructions.",
+    "wrong": [
+     "Wait an hour to see if it passes.",
+     "Give Sam a hot drink.",
+     "Text a neighbour and wait for a reply."
+    ],
+    "why": "The CDC says to call 911 right away for heat stroke. Ready.gov says to move the person somewhere cool and shaded if possible, and to follow the call-taker."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "For heat exhaustion signs, the CDC says to move to a cool place and loosen clothing. Use cool, wet cloths. Get medical help if there is vomiting, if it gets worse, or if it lasts over an hour."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Heat exhaustion: move somewhere cool, loosen clothes, cool wet cloths. Get medical help if vomiting, worse, or over 1 hour. || Heat stroke: call 911 right away."
+   },
+   "cite": [
+    "s3",
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Finally, make the plan before the heat comes. Work with the doctor on a Heat Action Plan. Know your alerts, a cool place, and your power plan. Agree who will check on whom, which we cover in class 14."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1 Ask doctors and pharmacist about medicines and heat | 2 Know your local alerts | 3 Know a cool place and how to get there | 4 Power cut plan | 5 Neighbour or friend who will check in"
+   },
+   "cite": [
+    "s6",
+    "s12",
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Well done. A last reminder: take a hands-on first-aid class, such as the Red Cross or the American Heart Association. Ask the person's doctors, and check with your local health department. See you in class 14."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Family Contact Plans, Who Calls Whom"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "heat illness warning signs",
+   "links": [
+    "[[calling 911]]",
+    "[[what 911 call-takers ask]]",
+    "[[one-page medical sheet]]"
+   ]
+  },
+  {
+   "topic": "heat and medications",
+   "links": [
+    "[[one-page medical sheet]]",
+    "[[go-bag and medication supply]]"
+   ]
+  },
+  {
+   "topic": "power cuts in a heat wave",
+   "links": [
+    "[[power cuts and medical devices]]",
+    "[[go-bag and medication supply]]"
+   ]
+  },
+  {
+   "topic": "cooling centres and getting there",
+   "links": [
+    "[[fire and evacuation plans]]",
+    "[[family contact plans]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Do not rely on a fan once the room reaches the mid-90s, because fans will not prevent heat illness.",
+   "other_view": "The CDC and EPA advise against relying on fans in the mid-90s or higher. A newer small study from the University of Sydney, reported by The Weather Channel, found fans still helped in hot, humid conditions. Other research found a fan in dry heat can raise heart rate and body temperature, especially in older adults. Because experts differ on the exact limit, ask the person's doctors and check with your local health department.",
+   "cite": [
+    "s8",
+    "s4",
+    "s14"
+   ]
+  },
+  {
+   "claim": "If the home is too hot, go to a cooling centre.",
+   "other_view": "Cooling centres are widely recommended, but disability advocates note many disabled people cannot physically get to them, for example if they cannot use public transit. This is why the class says to call ahead about accessibility and to plan transport, or a friend's cooled home, in advance.",
+   "cite": [
+    "s4",
+    "s15",
+    "s12"
+   ]
+  }
+ ]
+}

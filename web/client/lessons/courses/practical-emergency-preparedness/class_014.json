@@ -1,0 +1,552 @@
+{
+ "about": {
+  "title": "Family Contact Plans: Who Calls Whom",
+  "course": "practical-emergency-preparedness",
+  "class_n": 14,
+  "audience": [
+   "adult",
+   "caregiver"
+  ],
+  "minutes": 9,
+  "length_note": "This class covers seven short ideas (out-of-area contact, who calls whom, texting, meeting places, who cares for the person, sharing, practice) and checks each one with a question. That fits in about 9 minutes, a little over the 8-minute aim. Each beat stands alone, so you can stop after any of them and pick up later."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Create Your Family Emergency Communication Plan",
+   "publisher": "Ready.gov / FEMA",
+   "date": "n.d.",
+   "link": "https://www.ready.gov/sites/default/files/2020-03/family-emergency-communication-planning-document.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s2",
+   "title": "Make A Plan",
+   "publisher": "Ready.gov / FEMA",
+   "date": "n.d.",
+   "link": "https://www.ready.gov/plan",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s3",
+   "title": "Disaster Preparedness Plan (Make a Plan)",
+   "publisher": "American Red Cross",
+   "date": "n.d.",
+   "link": "https://www.redcross.org/get-help/how-to-prepare-for-emergencies/make-a-plan.html",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s4",
+   "title": "Tips for Communicating in an Emergency",
+   "publisher": "Federal Communications Commission (FCC)",
+   "date": "n.d.",
+   "link": "https://www.fcc.gov/reports-research/guides/tips-communicating-emergency",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s5",
+   "title": "Get Tech Ready",
+   "publisher": "Ready.gov / FEMA",
+   "date": "n.d.",
+   "link": "https://www.ready.gov/get-tech-ready",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s6",
+   "title": "Prepare for Disasters: Information for People with Disabilities (FEMA R-6)",
+   "publisher": "Ready.gov / FEMA",
+   "date": "2012-06 (from file name)",
+   "link": "https://www.ready.gov/sites/default/files/FEMA_Disabilities_R-6_web_june2012.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s7",
+   "title": "Preparing for Disaster",
+   "publisher": "FEMA / American Red Cross",
+   "date": "n.d.",
+   "link": "https://www.fema.gov/pdf/library/pfd.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s8",
+   "title": "Preparing for Disaster for People with Disabilities and other Special Needs",
+   "publisher": "American Red Cross / FEMA",
+   "date": "n.d.",
+   "link": "https://www.redcross.org/content/dam/redcross/atg/PDF_s/Preparedness___Disaster_Recovery/General_Preparedness___Recovery/Home/A4497.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s9",
+   "title": "People with Access and Functional Needs",
+   "publisher": "Montgomery County (MD) Office of Emergency Management and Homeland Security",
+   "date": "n.d.",
+   "link": "https://www.montgomerycountymd.gov/office-emergency-management-homeland-security/planning-emergencies/people-access-functional-needs",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s10",
+   "title": "Get a kit. Make a plan. Be informed.",
+   "publisher": "American Red Cross",
+   "date": "n.d.",
+   "link": "https://www.redcross.org/content/dam/redcross/National/BE%20RED%20CROSS%20READY.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s11",
+   "title": "FCC/FEMA Tips for Communicating During an Emergency",
+   "publisher": "Federal Communications Commission (FCC) and FEMA",
+   "date": "n.d.",
+   "link": "https://www.fcc.gov/sites/default/files/fcc-fema_tips_for_communicating_during_an_emergency.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s12",
+   "title": "'Text First, Talk Second' Often Best Way to Contact Loved Ones When Disaster Strikes",
+   "publisher": "Illinois Emergency Management Agency",
+   "date": "2015",
+   "link": "https://ready.illinois.gov/news-releases/032415.html",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s13",
+   "title": "Family Disaster Plan template",
+   "publisher": "American Red Cross",
+   "date": "2012",
+   "link": "https://www.redcross.org/content/dam/redcross/atg/PDF_s/Preparedness___Disaster_Recovery/General_Preparedness___Recovery/Home/ARC_Family_Disaster_Plan_Template_r083012.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s14",
+   "title": "Disaster Preparedness Guide for Caregivers",
+   "publisher": "Ready.gov / FEMA",
+   "date": "n.d.",
+   "link": "https://www.ready.gov/sites/default/files/2024-02/ready-gov_caregivers-preparedness-guide.pdf",
+   "read": "2026-11-21"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 14. Today we write a contact plan: one short page that says who calls whom, where to meet, and who looks after the person who needs help."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "A contact plan: who calls whom, where to meet, who cares for the person"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why write it down? Your family may not be together when something happens. A plan lets everyone know how to reach each other and reconnect. We'll use made-up names: Sam needs extra help, and Alex is Sam's carer."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. How do we reach each other? 2. Where do we meet? 3. Who looks after Sam?"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Piece one is an out-of-area contact. This is one friend or relative who lives far enough away not to be hit by the same emergency. Everyone in the household knows this person's number."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Out-of-area contact"
+   },
+   "cite": [
+    "s3",
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why far away? Local phone lines often overload after an emergency, and a long-distance call or text can be easier. Ask the person first. Example: Pat, Sam's cousin in another state, agrees to be the one everyone reports to."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A map with a small house marked Sam and Alex, and a far-away dot marked Pat, with arrows from the house to Pat"
+   },
+   "cite": [
+    "s3",
+    "s7"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why do we choose an out-of-area contact?",
+    "right": "Local phone lines often overload after an emergency, and someone far away is not hit by the same event.",
+    "wrong": [
+     "Because long-distance calls are always free.",
+     "Because a far-away person can reach us faster.",
+     "Because only out-of-area numbers can be saved as emergency contacts."
+    ],
+    "why": "The Red Cross says it may be easier to text or call long distance when local phone lines are overloaded. FEMA says to ask someone out of town to be the contact."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Piece two is who calls whom. Give each person one first contact and a backup in case the first does not answer. Working as a team, with a job for each person, is the Red Cross idea."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Alex: Pat, then Jo | Jo: Alex, then Pat | Mo (neighbour): Jo, then Pat"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Read the page like this. Alex tries Pat first. If Pat does not answer, Alex tries Jo, the backup. Nobody has to decide anything in a crisis, because the page already says what to do."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Alex tries Pat. No answer? Alex tries Jo. Jo tries Alex, then Pat. Mo tries Jo, then Pat."
+   },
+   "cite": [],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Alex cannot reach Pat. What does the plan say to do?",
+    "right": "Try the backup written next to Pat's name, which is Jo.",
+    "wrong": [
+     "Keep pressing call on Pat's number as fast as possible.",
+     "Wait until tomorrow before trying anyone.",
+     "Call 911 to ask where Pat is."
+    ],
+    "why": "Each person has a backup written down, so there is always a next step."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Piece three: texting may work when calls do not. In a crisis many people use phones at once. The FCC says texts often go through when a call will not."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Text first, talk second"
+   },
+   "cite": [
+    "s4",
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The reason is that texts need much less bandwidth than calls. FEMA's Ready.gov says this too. Keep texts short and plain, such as 'I'm OK.' Be aware a text can be delayed when networks are busy."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Short and plain: 'We are OK. At home.'"
+   },
+   "cite": [
+    "s5",
+    "s11",
+    "s12"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "If a call fails, wait 10 seconds before you redial, because redialing too fast adds to the jam. You can also try email, or a landline if you have one. Ask your phone provider whether your landline works in a power cut."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Text. Wait 10 seconds before redialing. Try email. Try a landline."
+   },
+   "cite": [
+    "s4",
+    "s11"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Your call to Pat will not connect. What is a good next step?",
+    "right": "Send a short text, and wait 10 seconds before you redial.",
+    "wrong": [
+     "Redial as fast as you can, many times.",
+     "Send a long message with photos.",
+     "Stop trying and give up."
+    ],
+    "why": "The FCC says texts often get through when calls do not, and redialing too quickly can clog the network."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A reminder from earlier classes: texting family is for 'we are OK' news. If someone needs 911, follow what you learned in classes 1 to 3. Call 911 if you can, and text 911 only where it is offered."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "911 first. Family second."
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Piece four is where to meet. The Red Cross says to choose two places. One is right outside your home, for a sudden emergency like a fire."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "house",
+    "count": 2,
+    "layout": "row",
+    "text": "Two meeting places: one right outside home, one outside the neighbourhood"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The second place is outside your neighbourhood, in case you cannot return home or are asked to evacuate. Ready.gov says to pick somewhere familiar and easy to find. A library, community center or place of worship can work. Share both places with your support network."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Right outside home. 2. Outside the neighbourhood, e.g. a library or community center."
+   },
+   "cite": [
+    "s2",
+    "s3",
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Check both places for Sam. The Red Cross says to think about transport challenges for people who use mobility equipment. Can Sam get there and get in? Class 9 covers fire exits."
+   },
+   "show": {
+    "kind": "map",
+    "text": "A simple map: Sam's front door, a ramp-friendly spot across the street, and a library a few streets away"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why do we choose two meeting places instead of one?",
+    "right": "One is for a sudden emergency right at home, and one is for when you cannot go home or must evacuate.",
+    "wrong": [
+     "One is for adults and one is for children.",
+     "One is for weekdays and one is for weekends.",
+     "The second is only needed if the phones stop working."
+    ],
+    "why": "The Red Cross describes one place right outside the home and one outside the neighbourhood, for different situations."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Piece five matters most for caregivers: who looks after Sam. Write down a main carer and a backup carer. The Red Cross says to arrange for more than one person from the support network to check in."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Main carer: Alex | Backup carer: Jo"
+   },
+   "cite": [
+    "s8",
+    "s13"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The backup carer must be ready. FEMA says to give them a spare key, show them where supplies are kept, and teach them any life-saving equipment or medicine. Include Sam in the planning where you can."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Spare key. Where supplies are. How equipment works. Sam's part in the plan."
+   },
+   "cite": [
+    "s6",
+    "s14"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Alex is hurt and cannot get to Sam. Who does the plan send?",
+    "right": "Jo, the backup carer, who has a key and knows where things are.",
+    "wrong": [
+     "No one. Sam waits until Alex can get there.",
+     "Pat, who lives in another state.",
+     "Whoever happens to call first."
+    ],
+    "why": "A named backup who has been shown the supplies and equipment means Sam is not left waiting."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Piece six is sharing the plan. Make a copy for each person in the household and post one at home, such as on the fridge. Save an emergency contact in each phone under ICE, for In Case of Emergency."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Copies for everyone. One on the fridge. ICE contact in each phone."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Also share the plan with family, friends, and service providers in your support network. Tell your emergency contact about any medical needs. Your 911 card and one-page medical sheet from classes 4 and 5 go with the plan. If Sam cannot carry a card, keep copies in a bag Sam always has."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Plan + 911 card + medical sheet, shared with carers and contacts."
+   },
+   "cite": [
+    "s1",
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Piece seven is to practise. Once everyone has a copy, each person sends a practice text to the out-of-town contact. Gather everyone at the meeting places. Afterwards, talk about how it went."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Practise texting and calling. Visit the meeting places. Talk it over."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Update at least once a year, or whenever something changes, like a phone number, a carer, or a medicine. Print new copies for everyone."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "At least once a year"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Which of these should make you update the plan right away?",
+    "right": "Jo, the backup carer, gets a new phone number.",
+    "wrong": [
+     "The weather is sunny this weekend.",
+     "Nothing. Once a year is enough, whatever changes.",
+     "Someone watches a news report about storms."
+    ],
+    "why": "Ready.gov says to update at least once a year or whenever any of your information changes."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is Sam's plan on one page, made up as an example. Plans and services vary by place, so check with your local 911 center or fire department. This plan does not replace Sam's doctors or a hands-on first-aid class."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Out-of-area contact: Pat. Calls: Alex to Pat, then Jo. Meet: outside the front door; the library. Main carer: Alex. Backup: Jo. Update by next November."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Your first step today is small: ask one person if they will be your out-of-area contact. Next time, in class 15, we put the whole home plan together in one checklist."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Today's step: ask one person to be your out-of-area contact"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Out-of-area contact",
+   "links": [
+    "[[Texting when calls fail]]",
+    "[[Who calls whom]]"
+   ]
+  },
+  {
+   "topic": "Who calls whom",
+   "links": [
+    "[[Out-of-area contact]]",
+    "[[Backup carer]]"
+   ]
+  },
+  {
+   "topic": "Texting when calls fail",
+   "links": [
+    "[[Calling 911: address first]]",
+    "[[Texting 911 where it is offered]]"
+   ]
+  },
+  {
+   "topic": "Meeting places",
+   "links": [
+    "[[Fire and evacuation plans for wheelchair users]]",
+    "[[Go-bag]]"
+   ]
+  },
+  {
+   "topic": "Backup carer",
+   "links": [
+    "[[One-page medical sheet]]",
+    "[[911 card by the phone]]"
+   ]
+  },
+  {
+   "topic": "Practise and update",
+   "links": [
+    "[[Putting it together: home plan checklist]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Text first when you need to reach family in a crisis.",
+   "other_view": "The FCC says texts often go through when calls do not, but FCC/FEMA also says a text may be delayed when networks are congested. The FCC suggests trying several methods, such as email or a landline, if one fails. Texting family is also not a substitute for contacting 911 when someone needs emergency help.",
+   "cite": [
+    "s4",
+    "s11"
+   ]
+  },
+  {
+   "claim": "Review and practise the communication plan at least once a year.",
+   "other_view": "Ready.gov sets once a year, or when information changes, as the minimum. The Red Cross family plan template suggests meeting every 6 months or as needs change. A household with many changes, such as new carers or equipment, may want the more frequent schedule.",
+   "cite": [
+    "s1",
+    "s13"
+   ]
+  }
+ ]
+}

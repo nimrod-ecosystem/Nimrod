@@ -1,0 +1,464 @@
+{
+ "schema": "nimrod.pack.v1",
+ "kind": "trivia",
+ "name": "Emergency preparedness trivia (easy)",
+ "description": "25 questions drawn only from Nimrod's fact-checked course Practical emergency preparedness at home; each cites a page the course cites. Checked by a second model pass; the questions it flagged were corrected or left out.",
+ "source": {
+  "name": "Practical emergency preparedness at home (Nimrod course) and the pages it cites",
+  "kind": "ai-written-from-checked-course"
+ },
+ "ai_written": true,
+ "generated": "2026-11-21",
+ "items": [
+  {
+   "question": "When a 911 call-taker answers, what does the course say to say first?",
+   "answers": [
+    "Your full name and age",
+    "The address of the emergency",
+    "A short story of how it began",
+    "Your doctor's phone number"
+   ],
+   "correct": "The address of the emergency",
+   "difficulty": "easy",
+   "category": "Emergency preparedness",
+   "explain": "Help cannot be sent if the call-taker does not know where you are, so say the address first, before anything else.",
+   "source": {
+    "url": "https://www.eugene-or.gov/578/How-to-use-9-1-1",
+    "title": "How to use 9-1-1"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "If you call 911 by mistake, what should you do?",
+   "answers": [
+    "Hang up right away and say nothing",
+    "Hang up and switch the phone off",
+    "Stay on the line and say it was a mistake",
+    "Hang up and call back later to explain"
+   ],
+   "correct": "Stay on the line and say it was a mistake",
+   "difficulty": "easy",
+   "category": "Emergency preparedness",
+   "explain": "Do not just hang up. If you do, the center may have to call you back or send someone to check.",
+   "source": {
+    "url": "https://police.statesvillenc.net/2024/05/14/12537/what-happens-if-you-call-911-and-hang-up",
+    "title": "What Happens If You Call 911 and Hang Up?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Why does a 911 call-taker ask so many questions?",
+   "answers": [
+    "To test whether you really need help",
+    "To choose the type and level of help to send",
+    "To keep you busy until help is ready",
+    "To fill out forms before sending anyone"
+   ],
+   "correct": "To choose the type and level of help to send",
+   "difficulty": "easy",
+   "category": "Emergency preparedness",
+   "explain": "The questions are not a test. They help choose the right help, and in many centers help is sent while you keep answering.",
+   "source": {
+    "url": "https://southsound911.org/hrf_faq/why-does-the-911-call-taker-ask-so-many-questions/",
+    "title": "Why does the 911 call taker ask so many questions?"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What does the course say to do if you do not know the answer to a call-taker's question?",
+   "answers": [
+    "Make your best guess so the call can move on",
+    "Stay silent until you are sure",
+    "Say you don't know, and share what you do know",
+    "Hang up and call again later"
+   ],
+   "correct": "Say you don't know, and share what you do know",
+   "difficulty": "easy",
+   "category": "Emergency preparedness",
+   "explain": "It is fine to say 'I don't know.' Don't guess or make something up.",
+   "source": {
+    "url": "https://patch.com/maryland/towson/get-the-411-on-calling-911",
+    "title": "Get the 411 on calling 911"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What is the simple rule for choosing between calling and texting 911?",
+   "answers": [
+    "Text if you can, call if you can't",
+    "Always text first, then call",
+    "Call if you can, text if you can't",
+    "Text twice before you try calling"
+   ],
+   "correct": "Call if you can, text if you can't",
+   "difficulty": "easy",
+   "category": "Emergency preparedness",
+   "explain": "The FCC says a voice call gives the 911 call center more information than a text does.",
+   "source": {
+    "url": "https://www.fcc.gov/consumers/guides/what-you-need-know-about-text-911",
+    "title": "Text to 911: What You Need to Know"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What does the course say about sending photos or videos in a text to 911?",
+   "answers": [
+    "Send one photo of the scene first",
+    "Do not send them, because call centers cannot receive them",
+    "Send photos only of the home address",
+    "Send a short video if typing is slow"
+   ],
+   "correct": "Do not send them, because call centers cannot receive them",
+   "difficulty": "easy",
+   "category": "Emergency preparedness",
+   "explain": "Call centers cannot receive photos or videos. If you need to show something, describe it in words.",
+   "source": {
+    "url": "https://ocfa.org/residents/text-911/",
+    "title": "Text 911 (repeats FCC guidelines)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Where should copies of the one-page medical sheet be kept?",
+   "answers": [
+    "Only in the person's wallet",
+    "Only as a photo on your phone",
+    "Only at the doctor's office",
+    "In more than one place, such as the fridge and the go-bag"
+   ],
+   "correct": "In more than one place, such as the fridge and the go-bag",
+   "difficulty": "easy",
+   "category": "Emergency preparedness",
+   "explain": "Keep one on the fridge, one in the go-bag, and a photo on your phone. Having more than one copy means someone else can find it.",
+   "source": {
+    "url": "https://www.chla.org/sites/default/files/atoms/files/CHLA-AAP-Emergency-Information-Form-Instructions-for-Parents_0.pdf",
+    "title": "Emergency Preparedness for Children with Special Health Care Needs: Emergency Information Form instructions for parents"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How should you reach your local fire department to tell it that someone needing help getting out lives at your address?",
+   "answers": [
+    "Call 911 and ask for the number",
+    "Call its non-emergency number",
+    "Wait until a fire has started",
+    "Text 911 with the details"
+   ],
+   "correct": "Call its non-emergency number",
+   "difficulty": "easy",
+   "category": "Emergency preparedness",
+   "explain": "Look up the non-emergency number first. 911.gov says not to call 911 just to get a non-emergency number.",
+   "source": {
+    "url": "https://www.911.gov/calling-911/frequently-asked-questions/",
+    "title": "FAQ About Calling 911"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In the recovery position class, what comes before anything else?",
+   "answers": [
+    "Roll the person onto their side",
+    "Look up a first-aid book",
+    "Wait to see whether the person wakes up",
+    "Call 911 and follow the call-taker"
+   ],
+   "correct": "Call 911 and follow the call-taker",
+   "difficulty": "easy",
+   "category": "Emergency preparedness",
+   "explain": "The class says to call 911 first and to follow the call-taker over anything else in the class. Call-taker instructions do not delay the ambulance.",
+   "source": {
+    "url": "https://www.lifenetems.org/911call/",
+    "title": "What to Expect When You Call 9-1-1 for a Medical Emergency"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What do first-aid courses teach about a person who can cough forcefully?",
+   "answers": [
+    "They should keep coughing while you stay close and watch",
+    "Give them back blows right away",
+    "Lay them flat on the floor at once",
+    "Give abdominal thrusts straight away"
+   ],
+   "correct": "They should keep coughing while you stay close and watch",
+   "difficulty": "easy",
+   "category": "Emergency preparedness",
+   "explain": "A person who can cough forcefully should keep coughing. Choking is when they cannot speak, cry or cough forcefully.",
+   "source": {
+    "url": "https://www.mayoclinic.org/first-aid/first-aid-choking/basics/art-20056637",
+    "title": "Choking: First aid"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How often should each smoke alarm be tested?",
+   "answers": [
+    "Once a year",
+    "Once a month",
+    "Once every six months",
+    "Only when it chirps"
+   ],
+   "correct": "Once a month",
+   "difficulty": "easy",
+   "category": "Emergency preparedness",
+   "explain": "Press the test button once a month. A loud beep, beep, beep means it works.",
+   "source": {
+    "url": "https://www.nfpa.org/education-and-research/home-fire-safety/smoke-alarms",
+    "title": "Smoke Alarm Information (Learn More About Smoke Alarms)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "After how many years should a whole smoke alarm be replaced?",
+   "answers": [
+    "2 years",
+    "5 years",
+    "20 years",
+    "10 years"
+   ],
+   "correct": "10 years",
+   "difficulty": "easy",
+   "category": "Emergency preparedness",
+   "explain": "Replace each smoke alarm 10 years after its manufacture date, which is printed on the back label.",
+   "source": {
+    "url": "https://www.nfpa.org/education-and-research/home-fire-safety/smoke-alarms",
+    "title": "Smoke Alarm Information (Learn More About Smoke Alarms)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "During a power cut, where should a generator be used?",
+   "answers": [
+    "In the garage with the door open",
+    "In the basement near the furnace",
+    "Just inside the back door",
+    "Outdoors, more than 20 feet from doors and windows"
+   ],
+   "correct": "Outdoors, more than 20 feet from doors and windows",
+   "difficulty": "easy",
+   "category": "Emergency preparedness",
+   "explain": "A generator makes carbon monoxide, which you cannot see or smell. Use it only outside, well away from the home.",
+   "source": {
+    "url": "https://blogs.cdc.gov/yourhealthyourenvironment/2016/10/31/carbon-monoxide-co-poisoning-prevention-5/",
+    "title": "Carbon Monoxide (CO) Poisoning Prevention"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How many ways out of each room does the escape plan suggest, where possible?",
+   "answers": [
+    "One",
+    "Two",
+    "Three",
+    "Four"
+   ],
+   "correct": "Two",
+   "difficulty": "easy",
+   "category": "Emergency preparedness",
+   "explain": "If fire blocks one way, you use the other. A way out only counts if the person can really get through it.",
+   "source": {
+    "url": "https://www.nfpa.org/education-and-research/home-fire-safety/escape-planning",
+    "title": "How to make a home fire escape plan"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What should you use for light during a power cut?",
+   "answers": [
+    "Candles in every room",
+    "The glow of a TV screen",
+    "Flashlights, one for every person",
+    "A lit gas oven"
+   ],
+   "correct": "Flashlights, one for every person",
+   "difficulty": "easy",
+   "category": "Emergency preparedness",
+   "explain": "Use flashlights and not candles, because of the fire risk.",
+   "source": {
+    "url": "https://www.ready.gov/power-outages",
+    "title": "Power Outages"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How much water per person per day does the Red Cross list for a kit?",
+   "answers": [
+    "One cup",
+    "Half a gallon",
+    "Two gallons",
+    "One gallon"
+   ],
+   "correct": "One gallon",
+   "difficulty": "easy",
+   "category": "Emergency preparedness",
+   "explain": "The Red Cross gives water as one gallon per person per day.",
+   "source": {
+    "url": "https://www.redcross.org/content/dam/redcross/atg/PDF_s/Preparedness___Disaster_Recovery/Disaster_Preparedness/Be-Red-Cross-Ready-Preparedness-Factsheet.pdf",
+    "title": "Get a kit. Make a plan. Be informed. (Be Red Cross Ready factsheet)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How often does the CDC say to check your emergency kit?",
+   "answers": [
+    "Every month",
+    "Every 2 years",
+    "Every 6 months",
+    "Every 5 years"
+   ],
+   "correct": "Every 6 months",
+   "difficulty": "easy",
+   "category": "Emergency preparedness",
+   "explain": "Check every 6 months so the contents are current and working. Replace old food, water, medicines and batteries.",
+   "source": {
+    "url": "https://www.cdc.gov/disability-emergency-preparedness/people-with-disabilities/build-a-kit.html",
+    "title": "Building an Emergency Kit"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What does a winter storm watch mean?",
+   "answers": [
+    "Dangerous winter weather is arriving now",
+    "Dangerous winter weather is possible, so get ready",
+    "The storm has ended and roads are open",
+    "Only a minor winter event is expected"
+   ],
+   "correct": "Dangerous winter weather is possible, so get ready",
+   "difficulty": "easy",
+   "category": "Emergency preparedness",
+   "explain": "A watch usually comes first. It is your time to get ready before anything has started.",
+   "source": {
+    "url": "https://www.weather.gov/phi/winterwx",
+    "title": "Winter Weather (watches, warnings, advisories)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How far should space heaters be kept from anything that can burn?",
+   "answers": [
+    "6 inches",
+    "1 foot",
+    "At least 3 feet",
+    "At least 10 feet"
+   ],
+   "correct": "At least 3 feet",
+   "difficulty": "easy",
+   "category": "Emergency preparedness",
+   "explain": "NFPA's key rule is to keep space heaters at least 3 feet from anything that can burn.",
+   "source": {
+    "url": "https://www.nfpa.org/education-and-research/home-fire-safety/heating",
+    "title": "Safety with heating equipment"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "What does Ready.gov say about fans in extreme heat?",
+   "answers": [
+    "They cool a room as well as air conditioning",
+    "They are the best main way to cool down",
+    "They lower body temperature quickly",
+    "They move air but do not reduce body temperature"
+   ],
+   "correct": "They move air but do not reduce body temperature",
+   "difficulty": "easy",
+   "category": "Emergency preparedness",
+   "explain": "Fans create air flow and a false sense of comfort. Do not rely on a fan as your main cooling.",
+   "source": {
+    "url": "https://www.ready.gov/heat",
+    "title": "Extreme Heat"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "In a crisis, when many people are using phones at once, what does the FCC say about texts?",
+   "answers": [
+    "Calls always go through before texts",
+    "Texts only work on landlines",
+    "Texts are always slower than calls",
+    "Texts often go through when a call will not"
+   ],
+   "correct": "Texts often go through when a call will not",
+   "difficulty": "easy",
+   "category": "Emergency preparedness",
+   "explain": "The course's advice is text first, talk second. Texts need much less bandwidth than calls.",
+   "source": {
+    "url": "https://www.fcc.gov/reports-research/guides/tips-communicating-emergency",
+    "title": "Tips for Communicating in an Emergency"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Why should the out-of-area contact live far away?",
+   "answers": [
+    "So a call may get through when local lines are busy",
+    "So they can drive over quickly",
+    "So long-distance calls are free",
+    "So they know the neighbours"
+   ],
+   "correct": "So a call may get through when local lines are busy",
+   "difficulty": "easy",
+   "category": "Emergency preparedness",
+   "explain": "Local phone lines often overload after an emergency, and a long-distance call or text can be easier. Everyone in the household knows this person's number.",
+   "source": {
+    "url": "https://www.redcross.org/get-help/how-to-prepare-for-emergencies/make-a-plan.html",
+    "title": "Disaster Preparedness Plan (Make a Plan)"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "How often should you practise your home fire escape plan, at least?",
+   "answers": [
+    "Once every five years",
+    "Only when you move house",
+    "Twice a year",
+    "Never, once it is drawn"
+   ],
+   "correct": "Twice a year",
+   "difficulty": "easy",
+   "category": "Emergency preparedness",
+   "explain": "The checklist says to practise the escape plan at least twice a year, including for someone who cannot walk.",
+   "source": {
+    "url": "https://www.oregon.gov/osfm/education/pages/home-fire-escape-planning.aspx",
+    "title": "Home Fire Escape Plans"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Once everyone is out of a burning home, what should you do?",
+   "answers": [
+    "Go back inside for pets",
+    "Go back inside for important papers",
+    "Wait just inside the front door",
+    "Call 911 from outside and stay out"
+   ],
+   "correct": "Call 911 from outside and stay out",
+   "difficulty": "easy",
+   "category": "Emergency preparedness",
+   "explain": "Get out, stay out, and call 911 from outside. Never go back inside for people, pets or things.",
+   "source": {
+    "url": "https://www.redcross.org/about-us/news-and-events/news/2026/20-ways-to-prevent-a-home-fire.html",
+    "title": "Fire Prevention Week: 20 Ways to Help You Avoid a Home Fire"
+   },
+   "ai_written": true
+  },
+  {
+   "question": "Even if you sign up for the electric company's medical or priority list, what should you still do?",
+   "answers": [
+    "Skip your own backup, since the list keeps power on",
+    "Plan your own batteries or other backup power",
+    "Stop checking your devices",
+    "Put away the flashlights"
+   ],
+   "correct": "Plan your own batteries or other backup power",
+   "difficulty": "easy",
+   "category": "Emergency preparedness",
+   "explain": "A registry does not promise power, so you still plan your own backup.",
+   "source": {
+    "url": "https://adata.org/factsheet/emergency-power/",
+    "title": "Emergency Power Planning for People Who Use Electricity and Battery-Dependent Assistive Technology and Medical Devices"
+   },
+   "ai_written": true
+  }
+ ]
+}

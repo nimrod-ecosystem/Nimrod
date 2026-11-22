@@ -1,0 +1,616 @@
+{
+ "about": {
+  "title": "Choking First Aid: What First-Aid Courses Teach",
+  "course": "practical-emergency-preparedness",
+  "class_n": 7,
+  "audience": [
+   "adult",
+   "caregiver"
+  ],
+  "minutes": 9,
+  "length_note": "This class runs a little over the 8-minute aim. It covers three age groups (adult, child, infant), the 911 call, and a caregiver note on swallowing difficulty. You can stop after any beat and pick up again later."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Adult & Child Choking: Symptoms and First Aid",
+   "publisher": "American Red Cross",
+   "date": "undated on page",
+   "link": "https://www.redcross.org/take-a-class/resources/learn-first-aid/adult-child-choking",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s2",
+   "title": "Infant Choking: How To Help",
+   "publisher": "American Red Cross",
+   "date": "undated on page",
+   "link": "https://www.redcross.org/take-a-class/resources/learn-first-aid/infant-choking",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s3",
+   "title": "Updated CPR guidelines tackle choking response, opioid-related emergencies and revised chain of survival",
+   "publisher": "American Heart Association (newsroom)",
+   "date": "undated on page (about the October 2025 guidelines)",
+   "link": "https://newsroom.heart.org/news/updated-cpr-guidelines-tackle-choking-response-opioid-related-emergencies-and-a-revised-chain-of-survival",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s4",
+   "title": "What to do if someone is choking and when to start CPR",
+   "publisher": "American Heart Association (heart.org)",
+   "date": "2026-01-20",
+   "link": "https://www.heart.org/en/news/2026/01/20/cpr-and-knowing-how-to-help-someone-choking-could-prevent-a-heart-crisis",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s5",
+   "title": "Choking: First aid",
+   "publisher": "Mayo Clinic",
+   "date": "undated on page",
+   "link": "https://www.mayoclinic.org/first-aid/first-aid-choking/basics/art-20056637",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s6",
+   "title": "Obstructed Airway Care for Adults and Children (Red Cross Learning resource sheet)",
+   "publisher": "American National Red Cross",
+   "date": "2019",
+   "link": "https://www.redcrosslearning.com/course-bin/bls-healthcare-resuscitation/app/content/a/en-US/resources/SS-Obstructed-Airway-Care-for-Adults-and-Children.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s7",
+   "title": "CPR/AED Classes",
+   "publisher": "American Red Cross",
+   "date": "undated on page",
+   "link": "https://www.redcross.org/take-a-class/aed/aed-training/aed-classes",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s8",
+   "title": "Course Catalog Search (Find a Course)",
+   "publisher": "American Heart Association",
+   "date": "undated on page",
+   "link": "https://cpr.heart.org/en/course-catalog-search",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s9",
+   "title": "FAQs about AHA Training",
+   "publisher": "American Heart Association",
+   "date": "undated on page",
+   "link": "https://cpr.heart.org/en/resources/faqs/course-faqs",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s10",
+   "title": "EMS Pre-Arrival Instructions",
+   "publisher": "StatPearls, NCBI Bookshelf (National Library of Medicine)",
+   "date": "undated on page",
+   "link": "https://www.ncbi.nlm.nih.gov/sites/books/NBK470543/",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s11",
+   "title": "Calling 911 with Medical Emergencies",
+   "publisher": "Dakota 911 (Minnesota)",
+   "date": "undated on page",
+   "link": "https://dakota911mn.gov/calling-911-with-medical-emergencies/",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s12",
+   "title": "Online Safety Classes & Training",
+   "publisher": "American Red Cross",
+   "date": "undated on page",
+   "link": "https://www.redcross.org/take-a-class/online-safety-classes",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s13",
+   "title": "Eating, drinking and swallowing guidance",
+   "publisher": "Royal College of Speech and Language Therapists",
+   "date": "undated on page",
+   "link": "https://www.rcslt.org/members/clinical-guidance/eating-drinking-and-swallowing/eating-drinking-and-swallowing-guidance/",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s14",
+   "title": "New Guidelines Detail How To Respond To A Choking Emergency",
+   "publisher": "U.S. News & World Report (HealthDay)",
+   "date": "2025-10-27",
+   "link": "https://www.usnews.com/news/health-news/articles/2025-10-27/new-guidelines-detail-how-to-respond-to-a-choking-emergency",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s15",
+   "title": "Telecommunicator CPR Program Dispatch Protocols",
+   "publisher": "Medical College of Wisconsin, Emergency Medicine EMS",
+   "date": "undated on page",
+   "link": "https://www.mcw.edu/-/media/MCW/Departments/Emergency-Medicine/EMS/Telecommunicator-CPR-Program-Dispatch-Protocols-In-House.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s16",
+   "title": "How to help a child who is choking: What to know about American Heart Association's new guidelines",
+   "publisher": "WGN-TV",
+   "date": "undated on page",
+   "link": "https://wgntv.com/news/medical-watch/how-to-help-a-child-who-is-choking-what-to-know-about-american-heart-associations-new-guidelines/",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s17",
+   "title": "Choking first aid advice for an adult",
+   "publisher": "British Red Cross",
+   "date": "undated on page",
+   "link": "https://www.redcross.org.uk/first-aid/learn-first-aid/choking",
+   "read": "2026-11-21"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 7. Today we look at what first-aid courses teach about choking. Think of it as a summary to help you plan, not as medical advice."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Choking First Aid: What First-Aid Courses Teach"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "This class does not replace a hands-on first-aid or CPR class. It does not replace the person's own doctors either. We will finish by planning how to book a class."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Not a substitute for a class"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, what is choking? The airway is blocked, partly or fully. Food or a small toy can do it. So can swelling, or fluids such as vomit."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Choking = a blocked airway"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why does this matter? The Red Cross says a person who is choking can quickly become unresponsive. So it helps to know the signs early."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Act quickly"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the big question: coughing, or choking? Courses teach that a person who can cough forcefully should keep coughing. Stay close and watch."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Coughing hard: can cough, speak or cry. Let them keep coughing, and stay with them. || Choking: cannot speak, cry or cough forcefully. They need help now."
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Sam is coughing loudly and can say, \"I'm fine.\" What do courses teach?",
+    "right": "Let Sam keep coughing, stay close, and watch for any change.",
+    "wrong": [
+     "Give back blows straight away",
+     "Give abdominal thrusts straight away",
+     "Leave the room until it stops"
+    ],
+    "why": "Forceful coughing might clear the object by itself. The choking steps are for someone who cannot cough, talk, cry or laugh forcefully."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So what does choking look like? Hands clutched at the throat, and a panicked look. The person cannot talk. Breathing may be noisy, or the cough weak. The skin turns pale or bluish."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Hands at the throat • Panicked or confused look • Cannot talk • Noisy or squeaky breathing • Weak cough • Pale or bluish skin"
+   },
+   "cite": [
+    "s5",
+    "s1"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Caregiver note. Some people cannot clutch their throat or call out. Courses teach you to watch the face, the breathing and the skin colour. Ask your instructor how that looks for the person you care for."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A caregiver sitting beside a person at a table, watching their face and breathing during a meal"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now, calling 911. If two people are there, courses teach that one calls 911 while the other gives first aid. The AHA steps list calling 911 first."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Call 911"
+   },
+   "cite": [
+    "s5",
+    "s4"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "If you can, put the phone on speaker next to the person. Stay on the line. 911 call-takers are trained to give instructions for choking. Follow what they tell you."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Phone on speaker, next to the person • Stay on the line • Follow the call-taker"
+   },
+   "cite": [
+    "s10",
+    "s11",
+    "s15"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why stay on the line with 911 during a choking emergency?",
+    "right": "The call-taker can tell you what to do, step by step, until help arrives.",
+    "wrong": [
+     "Call-takers only record your name and then leave",
+     "You must hang up so that help can find you",
+     "The phone has to be free for the person to call you back"
+    ],
+    "why": "Choking is one of the emergencies where call-takers give instructions to the caller. They tell you what to do until help arrives."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Call-takers' scripts and local services differ from place to place. Check with your local 911 center about how they help callers. Class 5 shows you how to make a 911 card for the phone."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Check with your local 911 center"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the steps courses teach for an adult who cannot cough, speak or breathe. Step one: stand to the side and slightly behind. Give five back blows between the shoulder blades."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "hand",
+    "count": 5,
+    "layout": "row",
+    "text": "5 back blows"
+   },
+   "cite": [
+    "s1",
+    "s5",
+    "s17"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Step two: five abdominal thrusts. Courses teach you to make a fist just above the navel and cover it with your other hand. Then you give quick inward and upward thrusts."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A fist placed just above the navel with the other hand over it, pulling inward and upward"
+   },
+   "cite": [
+    "s6",
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Then you alternate: five back blows, then five abdominal thrusts. Keep going until the object comes out or the person becomes unresponsive. The Red Cross and the AHA teach this pattern."
+   },
+   "show": {
+    "kind": "list",
+    "text": "5 back blows • 5 abdominal thrusts • Repeat until the object is out or the person is unresponsive"
+   },
+   "cite": [
+    "s4",
+    "s5",
+    "s14"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "For an adult who cannot cough, speak or breathe, what order do these courses teach?",
+    "right": "Five back blows, then five abdominal thrusts, and keep alternating.",
+    "wrong": [
+     "Five abdominal thrusts only, and never back blows",
+     "Ten back blows in a row, then stop",
+     "Chest thrusts first, then a drink of water"
+    ],
+    "why": "The Red Cross and the AHA both teach alternating five back blows with five abdominal thrusts for adults."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Children get the same steps, with gentler force. For a small child you may need to kneel behind them. Courses also say never to hang a child upside down."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Children: same steps, gentle but firm"
+   },
+   "cite": [
+    "s5",
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "What if the person uses a wheelchair? A Red Cross resource for healthcare providers says you may need to kneel. A hands-on class is where you practise adapting."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A caregiver kneeling behind a person seated in a wheelchair"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Babies are different. Courses teach face-down along your forearm, head lower than the body, with five firm back blows. Then turn the baby face-up for five chest thrusts. Never abdominal thrusts."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Adult and child: 5 back blows, then 5 abdominal thrusts || Infant: 5 back blows, then 5 chest thrusts, never abdominal thrusts"
+   },
+   "cite": [
+    "s2",
+    "s4"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which of these is NOT taught for a choking baby?",
+    "right": "Abdominal thrusts",
+    "wrong": [
+     "Back blows",
+     "Chest thrusts",
+     "Keeping the head lower than the body"
+    ],
+    "why": "The AHA and the Red Cross both say abdominal thrusts are not used on infants. Babies get back blows and chest thrusts."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "What if the person becomes unresponsive? Courses teach you to lower them to a firm, flat surface. Then you start CPR, beginning with compressions. The call-taker will guide you."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Unresponsive: start CPR"
+   },
+   "cite": [
+    "s1",
+    "s4"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Afterwards, even if the object came out, experts say a child or infant who has had choking first aid should be checked by a doctor soon."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Get checked by a doctor"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Caregiver note. The Red Cross says some neurological or muscular conditions raise the risk of choking. Swallowing difficulty does too. Ask their doctors for their own plan, including for a feeding tube."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "People with dysphagia have a higher risk of choking."
+   },
+   "cite": [
+    "s1",
+    "s13"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "You care for someone who has trouble swallowing or uses a feeding tube. What is the best step?",
+    "right": "Ask their doctors, or their swallowing specialist, for a plan made for that person. Still call 911 in an emergency.",
+    "wrong": [
+     "Rely only on this class and skip the doctors",
+     "Copy a plan made for another person",
+     "Wait until a choking emergency happens to ask"
+    ],
+    "why": "Their own doctors know their body and their needs. This class gives general course content, not a personal plan."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A swallowing specialist can work out a plan that fits the person. Add what you learn to the one-page medical sheet from class 4."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Their doctors, their plan"
+   },
+   "cite": [
+    "s13"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the most important step: take a hands-on class. The Red Cross and the AHA both offer first aid and CPR classes. You can find them online, in person, or blended."
+   },
+   "show": {
+    "kind": "list",
+    "text": "American Red Cross: First Aid/CPR/AED • American Heart Association: Heartsaver First Aid CPR AED • Online, in person or blended"
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why hands-on? The Red Cross says its online-only classes do not let you show your skills to an instructor. The AHA says CPR classes need a hands-on skills session for a card."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Practise with an instructor"
+   },
+   "cite": [
+    "s12",
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is your plan. Look up a class near you. Ask the person's doctors about swallowing. Check with your local 911 center or fire department about local services."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Find a Red Cross or AHA class • 2. Ask their doctors about swallowing • 3. Check with your local 911 center"
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which is the best next step after this class?",
+    "right": "Book a hands-on class, and ask the person's doctors about their swallowing plan.",
+    "wrong": [
+     "Decide you are now fully trained",
+     "Practise abdominal thrusts on a friend for fun",
+     "Wait for an emergency to look for a class"
+    ],
+    "why": "This class is a summary of what courses teach. Hands-on practice with an instructor is what builds the skill."
+   }
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Choking versus coughing",
+   "links": [
+    "[[Calling 911: Address First, Stay on the Line]]",
+    "[[What 911 Call-Takers Ask, and How to Answer]]"
+   ]
+  },
+  {
+   "topic": "Back blows and abdominal thrusts (adult and child)",
+   "links": [
+    "[[Recovery (Side) Position: What First-Aid Courses Teach]]"
+   ]
+  },
+  {
+   "topic": "Infant choking: back blows and chest thrusts",
+   "links": [
+    "[[Putting It Together: Your Home Plan Checklist]]"
+   ]
+  },
+  {
+   "topic": "If the person becomes unresponsive: CPR",
+   "links": [
+    "[[Calling 911: Address First, Stay on the Line]]"
+   ]
+  },
+  {
+   "topic": "Swallowing difficulty and feeding tubes: ask their doctors",
+   "links": [
+    "[[The One-Page Medical Sheet for the ER]]"
+   ]
+  },
+  {
+   "topic": "Hands-on first aid and CPR classes",
+   "links": [
+    "[[The 911 Card by the Phone and Telling Your Fire Department]]",
+    "[[Putting It Together: Your Home Plan Checklist]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "For adults and children, current teaching is to alternate five back blows with five abdominal thrusts.",
+   "other_view": "Teaching has changed over time. When the AHA announced its 2025 update, it noted that earlier guidelines gave no choking guidance for adults and recommended only abdominal thrusts for children. Some people may have learned an older method, which is one more reason to take a current class.",
+   "cite": [
+    "s14",
+    "s4"
+   ]
+  },
+  {
+   "claim": "If you are alone with a choking person, start first aid first and call after.",
+   "other_view": "Mayo Clinic, citing the Red Cross, says a lone rescuer gives back blows and abdominal thrusts first. The AHA's choking steps begin with calling 911 immediately. Sources order the call differently, so ask your instructor and follow your 911 call-taker.",
+   "cite": [
+    "s5",
+    "s4"
+   ]
+  },
+  {
+   "claim": "Courses agree on every detail of what to do when the choking person becomes unresponsive.",
+   "other_view": "The Red Cross steps for an unresponsive person include opening the person's mouth. The AHA article says not to use your fingers to search the mouth for an object. An instructor can show exactly what the course you take teaches.",
+   "cite": [
+    "s1",
+    "s4"
+   ]
+  }
+ ]
+}

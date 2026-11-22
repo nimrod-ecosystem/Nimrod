@@ -109,8 +109,8 @@ try {
       } catch (e) { bad.push(`${p.id}: ${e.message || e}`); }
     }
     check('every pack in PACK_LIBRARY loads, validates and is the kind it is listed as', !bad.length, bad.join(' | '));
-    check('the 42 general trivia packs are listed (ancient world, mythology and religions added 2026-11-03)',
-      PACK_LIBRARY.filter((p) => /^trivia_.+_(easy|medium|hard)$/.test(p.id)).length === 42);
+    check('the 44 general trivia packs are listed (ancient world, mythology and religions added 2026-11-03; emergency preparedness easy and medium 2026-11-22)',
+      PACK_LIBRARY.filter((p) => /^trivia_.+_(easy|medium|hard)$/.test(p.id)).length === 44);
     check('built-in trivia: at least 2,338 questions across the packs (2,094 general and 244 picture, 2026-11-03)', questions >= 2338, questions);
     check('no two built-in packs share an id', new Set(PACK_LIBRARY.map((p) => p.id)).size === PACK_LIBRARY.length);
   }

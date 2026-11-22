@@ -1,0 +1,552 @@
+{
+ "about": {
+  "title": "Texting 911 Where It Is Offered",
+  "course": "practical-emergency-preparedness",
+  "class_n": 3,
+  "audience": [
+   "adult",
+   "caregiver"
+  ],
+  "minutes": 8,
+  "length_note": "About 8 minutes, a little over the 7-minute aim. Texting has several small rules (where it works, what to type, what to leave out, what to do if it fails), and each needs one idea, one example and one check. Every beat is short, so you can stop at any beat and pick up again."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Text to 911: What You Need to Know",
+   "publisher": "Federal Communications Commission (FCC)",
+   "date": "undated",
+   "link": "https://www.fcc.gov/consumers/guides/what-you-need-know-about-text-911",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s2",
+   "title": "Text to 911 consumer guide (FCC web page)",
+   "publisher": "Federal Communications Commission (FCC)",
+   "date": "undated",
+   "link": "https://www.fcc.gov/node/23971",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s3",
+   "title": "PSAP Text-to-911 Readiness and Certification Registry",
+   "publisher": "Federal Communications Commission (FCC)",
+   "date": "undated",
+   "link": "https://www.fcc.gov/general/psap-text-911-readiness-and-certification-form",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s4",
+   "title": "Text 911 (repeats FCC guidelines)",
+   "publisher": "Orange County Fire Authority, California",
+   "date": "undated",
+   "link": "https://ocfa.org/residents/text-911/",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s5",
+   "title": "Text to 9-1-1",
+   "publisher": "City of Long Beach, California",
+   "date": "undated",
+   "link": "https://www.longbeach.gov/disasterpreparedness/long-beach-9-1-1/text-to-9-1-1/",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s6",
+   "title": "Text To 9-1-1",
+   "publisher": "Fairfax County Department of Public Safety Communications, Virginia",
+   "date": "undated",
+   "link": "https://www.fairfaxcounty.gov/911/text-to-911",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s7",
+   "title": "Know How and When to Contact 911",
+   "publisher": "Commonwealth of Pennsylvania (PA Ready)",
+   "date": "undated",
+   "link": "https://www.pa.gov/agencies/ready/get-prepared/contact-911",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s8",
+   "title": "Deaf and Hard of Hearing Services (Texting 911)",
+   "publisher": "NYC311, City of New York",
+   "date": "undated",
+   "link": "https://portal.311.nyc.gov/article/?kanumber=KA-02674",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s9",
+   "title": "Emergency preparedness (Emergencies and 911)",
+   "publisher": "Minnesota Department of Human Services, Deaf and Hard of Hearing Services",
+   "date": "undated",
+   "link": "https://mn.gov/deaf-hard-of-hearing/communication-access/emergency/",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s10",
+   "title": "711 for TTY-Based Telecommunications Relay Service",
+   "publisher": "Federal Communications Commission (FCC)",
+   "date": "undated",
+   "link": "https://www.fcc.gov/consumers/guides/711-telecommunications-relay-service",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s11",
+   "title": "Text-to-911",
+   "publisher": "Monroe County 911",
+   "date": "undated",
+   "link": "https://www.monroeco911.com/911-basics/text-to-911/",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s12",
+   "title": "Call If You Can, Text If You Can't (archived news item)",
+   "publisher": "City of Santa Rosa, California",
+   "date": "undated",
+   "link": "https://www.srcity.org/m/newsflash/Archive/Item/1123?arcId=4546",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s13",
+   "title": "Text-to-911",
+   "publisher": "Minnesota Commission of the Deaf, DeafBlind and Hard of Hearing",
+   "date": "undated",
+   "link": "https://mn.gov/deaf-commission/advocacy-issues/communication-access/text-to-911.jsp",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s14",
+   "title": "Text to 911",
+   "publisher": "Office of Unified Communications, Washington, DC",
+   "date": "undated (older page)",
+   "link": "https://ouc.dc.gov/page/text-911",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s15",
+   "title": "Can You Call 911 Without Service? Satellite SOS, Wi-Fi, and Text",
+   "publisher": "FedLaws",
+   "date": "undated",
+   "link": "https://fedlaws.org/can-you-call-911-without-service-satellite-sos-wi-fi-and-text/",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s16",
+   "title": "Text-to-911 Availability by State: A Complete Guide",
+   "publisher": "Fransis",
+   "date": "undated",
+   "link": "https://www.fransis.ai/articles/text-to-911-availability-by-state",
+   "read": "2026-11-21"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 3. In class 1 you learned to call 911. Today is the other way in: a text message. It is not offered everywhere, so we will also learn how to check your area."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Texting 911 Where It Is Offered"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The rule is short: call if you can, text if you can't. The FCC says a voice call gives the 911 call center more information than a text does."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Call if you can. Text if you can't."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Your phone works and it is safe to speak. What should you do?",
+    "right": "Make a voice call to 911.",
+    "wrong": [
+     "Send a text, because texting is always faster.",
+     "Send a photo of the problem first.",
+     "Text a family member and ask them to call."
+    ],
+    "why": "A voice call gives the call center more information. Text is for when you can't call."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So what is text-to-911? You send a text message to the 911 call-takers. Type 911 in the 'to' box, with no spaces or dashes, then write your message."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A phone screen with a new message. In the 'To' box is 911. Below it is an empty box ready for typing."
+   },
+   "cite": [
+    "s1",
+    "s7",
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Who might need it? People who are deaf or hard of hearing, people with a speech disability, anyone who cannot talk during a medical emergency, and anyone for whom a call is not safe."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Deaf or hard of hearing | Speech disability | Cannot talk during a medical emergency | Not safe to call"
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which of these is a good reason to text 911 instead of calling?",
+    "right": "The person who needs to reach 911 is deaf or cannot speak, and texting is offered where they are.",
+    "wrong": [
+     "Texting feels quicker than talking.",
+     "You would rather not explain things out loud.",
+     "You want to send a photo."
+    ],
+    "why": "Texting is for people who cannot speak or hear well, or when a call is not safe. Otherwise, call."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the catch. Texting 911 is not offered everywhere. The FCC says each 911 call center decides whether and how to take texts."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Some places: one state says all its counties take texts. | Other places: not yet. Check with your local 911 center or fire department."
+   },
+   "cite": [
+    "s2",
+    "s7"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Who decides whether texts to 911 are accepted in your area?",
+    "right": "Your local 911 call center.",
+    "wrong": [
+     "The maker of your phone.",
+     "Whoever sent you your last text message.",
+     "Your phone's battery level."
+    ],
+    "why": "The FCC encourages call centers to accept texts, but each one decides."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "How do you find out? There are three ways. Use the FCC's list, which is updated monthly. Ask your local 911 center or fire department. Or ask your phone company."
+   },
+   "show": {
+    "kind": "list",
+    "text": "FCC list of call centers that take texts (updated monthly) | Your local 911 center or fire department | Your phone company"
+   },
+   "cite": [
+    "s2",
+    "s3",
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Even where texting is offered, the phone matters. You need a text or data plan, and you should use the ordinary text app. Texting 911 is not available if you are roaming."
+   },
+   "show": {
+    "kind": "list",
+    "text": "A text or data plan | The ordinary text message app, not a chat app | Not roaming | English only in many places"
+   },
+   "cite": [
+    "s4",
+    "s5",
+    "s7",
+    "s8"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which setup is most likely to work for texting 911?",
+    "right": "A phone with an active text or data plan, using its normal text app.",
+    "wrong": [
+     "A phone with no service plan.",
+     "A chat app such as WhatsApp.",
+     "Any phone while roaming."
+    ],
+    "why": "A text or data plan is needed, and chat apps are not compatible in at least one local guide. Roaming can stop it too."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now what to type. Put where you are first. A text does not tell the call center exactly where you are, and the FCC says location accuracy varies by carrier."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Where first"
+   },
+   "cite": [
+    "s4",
+    "s11"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Be as exact as you can. Give the street address with the apartment number and the city. If it helps, add the nearest cross street or a landmark."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Street address, apartment number, city | Name of the building or business | Nearest cross streets | A landmark"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Then say what is wrong and what help you need: police, fire or ambulance. Here is an example only. Notice the place comes first, and the words are plain."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Example only: 123 Maple Street, Apartment 4, Springfield. Smoke in the kitchen. Need fire department."
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which first text is best?",
+    "right": "123 Maple Street, Apartment 4, Springfield. Brother fell and cannot get up. Need ambulance.",
+    "wrong": [
+     "Please come quickly, it is very bad.",
+     "Smoke in kitchen at home 🔥",
+     "Pls send ambulance 2 123 Maple apt 4 asap"
+    ],
+    "why": "It gives the place first, then the problem and the help needed, in plain words. The others leave out the address, or use an emoji or abbreviations."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Use plain words. No abbreviations, no emoji, no slang. Short plain sentences are quick to read, and slang slows the call-taker down."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Yes: full words, short sentences, the full address | No: emoji, abbreviations, slang"
+   },
+   "cite": [
+    "s5",
+    "s7",
+    "s11"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which of these should you leave out of a text to 911?",
+    "right": "Emoji and short forms such as 'pls' or 'asap'.",
+    "wrong": [
+     "The apartment number.",
+     "The name of your city.",
+     "What is happening."
+    ],
+    "why": "Plain words work best. The address and the problem are exactly what the call-taker needs."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "No photos and no videos. Call centers cannot receive them. Send your text only to 911, not to anyone else too. If you need to show something, describe it in words."
+   },
+   "show": {
+    "kind": "list",
+    "text": "No photos or videos | Text only 911, nobody else | Describe it in words"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "You want to show the smoke. What do you do?",
+    "right": "Describe it in words in your text, and send nothing else.",
+    "wrong": [
+     "Send a photo to 911.",
+     "Send a video to 911 and to your family.",
+     "Add 911 to a group chat."
+    ],
+    "why": "Photos and videos cannot be received by 911 call centers, and 911 cannot be part of a group text."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Expect questions back, and keep the text thread open. Answer each one and follow instructions. The call-taker will close the chat when they are done. They may also ask if they can call you."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Stay with your phone | Answer each question | Follow instructions | Wait until the call-taker ends the chat"
+   },
+   "cite": [
+    "s4",
+    "s8",
+    "s9",
+    "s11",
+    "s12"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "You sent your first text. What next?",
+    "right": "Stay with your phone, answer the questions that come back, and follow the instructions.",
+    "wrong": [
+     "Close the app so it does not buzz.",
+     "Send the same text to ten relatives.",
+     "Turn the phone off to save the battery."
+    ],
+    "why": "Texting is a conversation. The call-taker needs your answers, and they end the chat when it is safe to do so."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "What if texting is not offered? The FCC requires an automatic reply, called a bounce-back message. It says your text did not go through and tells you to use another way."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A phone screen. A reply under a text to 911 says text-to-911 is not available and to make a voice call."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "You get that automatic reply. What does it mean?",
+    "right": "Your text did not reach 911. Use another way, such as a voice call.",
+    "wrong": [
+     "Help is on the way.",
+     "Wait five minutes and it will go through.",
+     "Send the text again with a photo."
+    ],
+    "why": "The reply exists so you do not wrongly believe the call center got your text."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So what next? Make a voice call if you can. If you are deaf, hard of hearing or have a speech disability, use a TTY or relay service if possible. TTY users should call 911 directly, not via 711."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Voice call to 911 if you can | TTY or relay service if possible | TTY users: call 911 directly, not 711"
+   },
+   "cite": [
+    "s1",
+    "s10"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's put it together. Check ahead if your area takes texts. In an emergency: call if you can, text if you can't. Put the place first, use plain words, send no photos, and stay on the thread. Check with your local 911 center or fire department."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Check ahead | Call if you can, text if you can't | Place first, then the problem | Plain words, no photos, only 911 | Stay on the thread"
+   },
+   "cite": [
+    "s1",
+    "s2",
+    "s4"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which sentence is true?",
+    "right": "Call if you can, text if you can't, and texting works only where your local 911 center accepts texts.",
+    "wrong": [
+     "Texting 911 works the same way everywhere.",
+     "A photo is the fastest way to explain an emergency.",
+     "Texting is always better than calling."
+    ],
+    "why": "Voice calls are preferred. Texting depends on your local 911 center, and you need to know ahead of time whether it takes texts."
+   }
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Call if you can, text if you can't",
+   "links": [
+    "[[Calling 911: address first, stay on the line]]",
+    "[[What call-takers ask]]"
+   ]
+  },
+  {
+   "topic": "Checking whether your 911 center takes texts",
+   "links": [
+    "[[The 911 card by the phone]]",
+    "[[Telling your fire department]]"
+   ]
+  },
+  {
+   "topic": "A first text: place first, plain words, no photos",
+   "links": [
+    "[[What call-takers ask]]",
+    "[[The one-page medical sheet]]"
+   ]
+  },
+  {
+   "topic": "Bounce-back message and relay or TTY options",
+   "links": [
+    "[[Family contact plans: who calls whom]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Your first text should give the location and the emergency.",
+   "other_view": "Most guides here say to put the location and a short description of the emergency in the first text. An older Washington, DC page suggests keeping the first contact very brief, such as the single word 'help'. The shared point is to be short and plain. Check with your local 911 center for its preferred way.",
+   "cite": [
+    "s4",
+    "s6",
+    "s14"
+   ]
+  },
+  {
+   "claim": "People who are deaf or hard of hearing should call if they can, and text if they can't.",
+   "other_view": "The FCC's general advice is a voice call whenever possible. Minnesota's deaf and hard of hearing commission says that people who are deaf, deafblind, hard of hearing or speech impaired may use text-to-911 as a first contact option. The right choice depends on what your local 911 center offers, so check with it.",
+   "cite": [
+    "s1",
+    "s13"
+   ]
+  },
+  {
+   "claim": "You will get an automatic reply if texting is not available.",
+   "other_view": "FCC rules require the reply, so that people are not misled. One guide warns that it should not be relied on, so check ahead and keep a backup way to reach 911.",
+   "cite": [
+    "s1",
+    "s16"
+   ]
+  },
+  {
+   "claim": "Photos and videos cannot be sent to 911.",
+   "other_view": "This is the guidance given by the FCC-based local pages in this lesson. One source says some next-generation systems are starting to accept photos and video in some areas. Unless your local 911 center says it takes them, describe things in words.",
+   "cite": [
+    "s4",
+    "s15"
+   ]
+  }
+ ]
+}

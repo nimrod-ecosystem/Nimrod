@@ -1,0 +1,962 @@
+{
+ "about": {
+  "title": "Smoke and Carbon Monoxide Alarms",
+  "course": "practical-emergency-preparedness",
+  "class_n": 8,
+  "audience": [
+   "adult",
+   "caregiver"
+  ],
+  "minutes": 10,
+  "length_note": "About 10 minutes. The class is in three parts, and you can stop after any step. Part 1 covers smoke alarms. Part 2 covers carbon monoxide. Part 3 covers people who cannot hear an alarm, cannot get out of bed, or cannot call for help. The alarm material is steady and practical, so it fits in about 10 minutes."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Installing and maintaining smoke alarms",
+   "publisher": "NFPA (National Fire Protection Association)",
+   "date": "undated page",
+   "link": "https://www.nfpa.org/education-and-research/home-fire-safety/smoke-alarms/installing-and-maintaining-smoke-alarms",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s2",
+   "title": "Smoke Alarm Information (Learn More About Smoke Alarms)",
+   "publisher": "NFPA",
+   "date": "undated page",
+   "link": "https://www.nfpa.org/education-and-research/home-fire-safety/smoke-alarms",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s3",
+   "title": "Carbon Monoxide Safety",
+   "publisher": "NFPA",
+   "date": "undated page",
+   "link": "https://www.nfpa.org/education-and-research/home-fire-safety/carbon-monoxide",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s4",
+   "title": "Carbon Monoxide Poisoning Basics",
+   "publisher": "CDC (Centers for Disease Control and Prevention)",
+   "date": "undated page",
+   "link": "https://www.cdc.gov/carbon-monoxide/about/?CDC_AAref_Val=https://www.cdc.gov/co/default.htm",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s5",
+   "title": "Carbon Monoxide (CO) Poisoning Prevention",
+   "publisher": "CDC, Your Health Your Environment blog",
+   "date": "2016-10-31",
+   "link": "https://blogs.cdc.gov/yourhealthyourenvironment/2016/10/31/carbon-monoxide-co-poisoning-prevention-5/",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s6",
+   "title": "Smoke Alarms for People who are Deaf or Hard of Hearing (safety tip sheet)",
+   "publisher": "NFPA",
+   "date": "undated page",
+   "link": "https://www.nfpa.org/-/media/Project/Storefront/Catalog/Files/Safety-tip-sheets/SmokeAlarmsDisabilitySafetyTips.pdf?rev=92eae8ad5aec46aebae90f38fcd219c7&hash=A8598C97AB941F9EF9F58C29F25D6D02",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s7",
+   "title": "Fire Safety for People with Disabilities",
+   "publisher": "U.S. Fire Administration (USFA), FEMA",
+   "date": "undated page",
+   "link": "https://www.usfa.fema.gov/prevention/home-fires/at-risk-audiences/people-with-disabilities/",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s8",
+   "title": "Home Fires",
+   "publisher": "Ready.gov (FEMA)",
+   "date": "undated page",
+   "link": "https://www.ready.gov/home-fires",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s9",
+   "title": "What Kind of Smoke Alarm Should I Buy?",
+   "publisher": "NFPA",
+   "date": "2023-03-06",
+   "link": "https://www.nfpa.org/news-blogs-and-articles/blogs/2023/03/06/what-kind-of-smoke-alarm-smoke-detector-should-i-buy",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s10",
+   "title": "Join the American Red Cross to Sound the Alarm. Save a Life.",
+   "publisher": "American Red Cross",
+   "date": "undated page",
+   "link": "https://www.redcross.org/sound-the-alarm.html",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s11",
+   "title": "Carbon Monoxide Safety Tips",
+   "publisher": "Indiana Department of Homeland Security",
+   "date": "undated page",
+   "link": "https://www.in.gov/dhs/files/Carbon-Monoxide-Safety-Tips.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s12",
+   "title": "Home Fire Safety (guide for people with mobility impairments), Fire Safety Solutions for Oklahomans with Disabilities",
+   "publisher": "Fire Safety Solutions for Oklahomans with Disabilities (file hosted by IFSTA)",
+   "date": "undated page",
+   "link": "https://www.ifsta.org/sites/default/files/mobility%20english%20regular%20print.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s13",
+   "title": "Fire Prevention 52: Fire Safety for People with Disabilities",
+   "publisher": "National Park Service",
+   "date": "undated page",
+   "link": "https://www.nps.gov/articles/p52-fire-safety-for-people-with-disabilities.htm",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s14",
+   "title": "Removing the Barriers: fire safety for people with disabilities (USFA and Disabled American Veterans leaflet)",
+   "publisher": "USFA and Disabled American Veterans (copy hosted by City of Fort Worth)",
+   "date": "undated",
+   "link": "https://www.fortworthtexas.gov/files/assets/public/v/1/fire/documents/removingthebarriers.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s15",
+   "title": "NFPA Educational Messages",
+   "publisher": "NFPA (older edition, copy hosted by University of New Haven)",
+   "date": "undated",
+   "link": "https://www.newhaven.edu/_resources/documents/about/public-safety/fire-policies/NFPA-Fire-Safety.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s16",
+   "title": "Carbon Monoxide (CO) Poisoning in Your Home",
+   "publisher": "Minnesota Department of Health",
+   "date": "undated page",
+   "link": "https://www.health.state.mn.us/communities/environment/air/toxins/index.html",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s17",
+   "title": "Carbon Monoxide Alarm Considerations for Code Authorities",
+   "publisher": "UL (Underwriters Laboratories)",
+   "date": "undated page",
+   "link": "https://www.ul.com/thecodeauthority/knowledge/carbon-monoxide-alarm-codes",
+   "read": "2026-11-21"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 8. Today we check that your home has working smoke and carbon monoxide alarms, and plan for anyone who cannot hear them."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Smoke and Carbon Monoxide Alarms"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "This class does not replace advice from your local fire department or your own doctors. You can stop after any step and pick up later."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Stop anywhere"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, what is a smoke alarm? It is a small device that senses smoke and sounds a loud warning, often before you notice the smoke yourself."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Smoke alarm"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why does it matter? In a fire you may have as little as two minutes to get out. So alarms must be in the right places."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "2 minutes"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "NFPA gives three places. Inside each bedroom. Outside each sleeping area, such as a hallway. And on every level of the home, including the basement."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Inside each bedroom\n2. Outside each sleeping area (like a hallway)\n3. On every level, including the basement"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is an example. Three bedrooms upstairs, a living room downstairs, and a basement. That is 3 in the bedrooms, 1 in the upstairs hall, 1 in the living room and 1 by the basement stairs. Six."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "dot",
+    "count": 6,
+    "layout": "group",
+    "text": "6 alarms in this example home"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Your turn. Remember that larger homes need more, but let us try a small one."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Count the alarms"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A small one-floor home has two bedrooms side by side and one hallway outside them. Using the NFPA rule, what is the minimum number of smoke alarms?",
+    "right": "3: one in each bedroom and one in the hallway outside",
+    "wrong": [
+     "1: in the hallway only",
+     "2: one in each bedroom only",
+     "6: three on every level"
+    ],
+    "why": "The rule asks for one inside each bedroom (2) and one outside the sleeping area (1). There is only one level, so no more are needed."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now, where on the wall? High. Put it on the ceiling, or on a wall no more than 12 inches from the ceiling, because smoke rises."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A hallway ceiling with a round smoke alarm mounted flat on it; a second alarm high on a wall, just below the ceiling line."
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Keep them out of kitchens and bathrooms, and away from the cooker, so cooking and steam do not set them off. And never turn one off while you cook."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Good places: bedrooms, hallways, every level | Not here: kitchen, bathroom"
+   },
+   "cite": [
+    "s2",
+    "s8"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Interconnected means that when one alarm sounds, they all sound. NFPA says this is best, so people in other rooms hear it too."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Interconnected"
+   },
+   "cite": [
+    "s2",
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Alarms only help if they work. Test each one once a month. Press the test button once. A loud beep, beep, beep means it works."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Test button: once a month"
+   },
+   "cite": [
+    "s2",
+    "s10"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "If it stays silent, change the battery. If the alarm is over ten years old, replace the whole alarm."
+   },
+   "show": {
+    "kind": "list",
+    "text": "No sound? New battery.\nOver 10 years old? New alarm."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Alarms get power in three ways. Replaceable batteries, changed at least once a year. A sealed 10-year battery. Or hardwired to the house with a backup battery."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Replaceable battery: change at least yearly\nSealed 10-year battery: no change, still test monthly\nHardwired + backup battery"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A single chirp every 30 or 60 seconds means a low battery. Fresh battery, but it still chirps? Then the alarm itself is worn out and must be replaced."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "One chirp = low battery"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Let us check that idea."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Chirp check"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "You put a fresh battery in a smoke alarm, but it keeps chirping. What does that mean?",
+    "right": "The alarm is at the end of its life and the whole unit must be replaced",
+    "wrong": [
+     "The battery must be faulty, so keep swapping batteries",
+     "It is a signal that there is smoke",
+     "Nothing: chirping after a battery change is normal"
+    ],
+    "why": "NFPA says chirping that continues after the battery is replaced means the alarm has reached the end of its life."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Smoke alarms wear out. Replace each one 10 years after its manufacture date, printed on the back label. Also replace it if it fails a monthly test or after a fire."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "10 years from the date on the back"
+   },
+   "cite": [
+    "s2",
+    "s9"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Try this. Today is in 2026. You twist an alarm off the ceiling and the back label says it was made in 2014."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "The back of a smoke alarm with a white label reading: Date of manufacture, 2014."
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "The label says made in 2014. What should you do?",
+    "right": "Replace the whole alarm now",
+    "wrong": [
+     "Put in a new battery and keep it",
+     "Wait until it starts chirping",
+     "Replace it in 10 years from today"
+    ],
+    "why": "The 10 years counts from the manufacture date on the back label. 2014 plus 10 is 2024, so this alarm is already past its date."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Put it together as a rhythm. Every month, press test. Every year, new batteries if yours are replaceable. At year ten, a new alarm."
+   },
+   "show": {
+    "kind": "timeline",
+    "text": "Every month: press test | Every year: replaceable batteries | Year 10: replace the alarm"
+   },
+   "cite": [
+    "s2",
+    "s9"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "And when a smoke alarm sounds with three loud beeps in a row, that means smoke or fire. Get out, call 911 and stay out."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Get out, call 911, and stay out."
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Part two. Carbon monoxide, called CO, is a poisonous gas. You cannot see it or smell it, so an alarm is how you find out it is there."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Carbon monoxide (CO)"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "It is serious. The CDC counts more than 400 Americans who die each year from accidental CO poisoning."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "400+ deaths a year (US, accidental CO)"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "CO comes from burning fuel. At home that means furnaces, water heaters, gas stoves and ovens, fireplaces, cars in garages, grills and generators."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Furnaces and boilers\nWater heaters\nGas stoves and ovens\nFireplaces and wood stoves\nCars running in a garage\nGrills and generators"
+   },
+   "cite": [
+    "s16",
+    "s11"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Two rules for power cuts. Never heat a house with a gas oven. Use a generator only outside, more than 20 feet from your home, doors and windows."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Never: gas oven for heat; generator in a home or garage | Instead: generator outdoors, over 20 feet from doors and windows"
+   },
+   "cite": [
+    "s4",
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Quick check on that."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Generator check"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "During a power cut, where is it safe to run a portable generator?",
+    "right": "Outside, more than 20 feet from your home, doors and windows",
+    "wrong": [
+     "In the garage with the door open",
+     "On the porch next to the front door",
+     "In the basement with a window cracked open"
+    ],
+    "why": "The CDC says never to use a generator inside your home or garage, even with doors and windows open, and to keep it outdoors more than 20 feet away."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Where do CO alarms go? In a central spot outside each separate sleeping area, and on every level. The CDC says battery-powered, or with battery backup."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Outside each sleeping area\nOn every level\nBattery or battery backup\nFollow the maker's height and spot"
+   },
+   "cite": [
+    "s3",
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Some alarms do both jobs, smoke and CO. Check the label on yours so you know which one you have. A combination alarm may need replacing sooner, at 7 to 10 years."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Read the label"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Test CO alarms monthly too. Newer ones give an end-of-life signal. The CDC says to replace a CO alarm every 5 years, and NFPA says to follow the maker's instructions."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "How long before replacing the whole alarm",
+    "chart": "c1"
+   },
+   "cite": [
+    "s3",
+    "s4",
+    "s17",
+    "s2"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the most important part. If a CO alarm sounds, move at once to fresh air: outdoors, or by an open window or door. Make sure everyone is accounted for."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Fresh air first"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Then call 911 from the fresh air and stay there until responders arrive. If anyone feels dizzy, light-headed or sick, say so."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Move to fresh air\n2. Count everyone\n3. Call 911 from there\n4. Stay out until responders say so"
+   },
+   "cite": [
+    "s3",
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Everyone counts, including someone who cannot call out or walk. Plan ahead who moves them and how. Class 9 covers that."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Plan ahead: who moves whom?"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Test yourself."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "CO alarm check"
+   },
+   "cite": [
+    "s3",
+    "s5"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A CO alarm sounds in the night. What should you do first?",
+    "right": "Move everyone to fresh air, outside or by an open window or door, then call 911",
+    "wrong": [
+     "Look for the furnace and try to find the cause",
+     "Press reset and go back to sleep",
+     "Wait to see if it sounds a second time"
+    ],
+    "why": "NFPA and the CDC both say to get to fresh air straight away and call for help from there. Do not stay inside to investigate."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Part three. Every alarm so far relies on sound. People who are deaf or hard of hearing may not be able to depend on a regular alarm."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Alarms you can feel and see"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "There are three tools. A strobe light that flashes when the alarm sounds. A pillow or bed shaker for sleep. And, for hard of hearing, a loud, low-pitched sound."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Strobe light\nPillow or bed shaker\nLoud, low-pitched sound (hard of hearing)"
+   },
+   "cite": [
+    "s6",
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Picture the bedroom. A shaker on or under the pillow or bed, and a flashing light in view. They are triggered by the sound of the smoke alarm."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A bedroom at night: a small shaker pad under the pillow, a bright strobe lamp on the bedside table, and a smoke alarm on the ceiling."
+   },
+   "cite": [
+    "s6",
+    "s2"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Try this one."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Waking someone who is deaf"
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which device is meant to wake someone who is deaf and asleep?",
+    "right": "A pillow or bed shaker",
+    "wrong": [
+     "A louder ordinary beeping alarm",
+     "A note on the fridge",
+     "A phone left on silent"
+    ],
+    "why": "NFPA says that when people who are deaf are asleep, a pillow or bed shaker can wake them so they can escape."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Choose alarms and accessories listed by a qualified testing laboratory. Add them to your monthly test, so you know they still work."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Listed by a testing laboratory"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Your local fire department can help. It may help with escape plans, check your home and advise on where alarms go. Ask what it offers for people who are deaf or hard of hearing."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Ask the fire department:\nDo you have strobe or shaker alarms for people who are deaf or hard of hearing?\nCan someone check where my alarms are?\nCan our address be noted? (Class 5)"
+   },
+   "cite": [
+    "s13",
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now someone who cannot get out of bed or call for help. Take Sam, who cannot speak or move easily. An alarm warns. It does not lift Sam or call 911."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "An alarm warns. People act."
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "So other people must hear it. Interconnect alarms so the whole home hears. A strobe outside can catch neighbours' attention, and emergency call systems exist too."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Interconnected alarms\nStrobe light outside for neighbours\nEmergency call systems"
+   },
+   "cite": [
+    "s7",
+    "s13",
+    "s14"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "In a home with more than one floor, sleeping on the first floor is safer. And if moving Sam to a chair takes time, extra alarms may give earlier warning."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Multi-storey home: sleep on the first floor | Slow to transfer: extra alarms for earlier warning"
+   },
+   "cite": [
+    "s7",
+    "s12"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Who tests the alarms? Someone who can reach them. A calendar reminder on the same day each month helps. Some alarms have a 10-year battery and test by remote control."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Name the person who tests\nSame day every month\nSealed 10-year battery and remote test: ask about them"
+   },
+   "cite": [
+    "s12",
+    "s9"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last check for this class."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Who tests the alarms?"
+   },
+   "cite": [
+    "s12",
+    "s2"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Sam cannot reach the ceiling alarms or press the test button. What is the best plan?",
+    "right": "Name a person who will test the alarms every month, and ask about easier-to-test alarms",
+    "wrong": [
+     "Skip testing because Sam cannot do it",
+     "Test only once a year",
+     "Wait for the alarm to chirp"
+    ],
+    "why": "Alarms need a monthly test to be sure they work. People with mobility problems may not be able to do it, so someone else is named for the job."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Rules vary by place. Check with your local fire department or 911 center about local alarm rules, including CO, and any free alarm programmes. Use the non-emergency number, not 911."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Check with your local fire department or 911 center."
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One example is the Red Cross. It installs free smoke alarms nationwide through Sound the Alarm, and you can sign up for a home fire safety visit."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Red Cross Sound the Alarm: free smoke alarms and a home fire safety visit\nAsk locally what is offered where you live"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Your task this week. Count your alarms. Press every test button. Read the dates on the back. Note who tests each month. Then call the fire department's non-emergency number with your questions."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Count the alarms\n2. Press every test button\n3. Read the dates on the back\n4. Name the monthly tester\n5. Call the fire department (non-emergency)"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next time, class 9: fire and evacuation plans for someone who uses a wheelchair or cannot walk. Well done for getting this far."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Next: Fire and Evacuation Plans"
+   },
+   "cite": [],
+   "move": "title-rise"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Years before replacing the whole alarm (typical guidance)",
+   "rows": [
+    {
+     "label": "Smoke alarm (NFPA: 10 years from manufacture date)",
+     "value": 10,
+     "source": "s2"
+    },
+    {
+     "label": "CO alarm (CDC: 5 years; NFPA: follow maker's instructions)",
+     "value": 5,
+     "source": "s4"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Smoke alarm placement and count",
+   "links": [
+    "[[Fire and evacuation plans]]",
+    "[[The 911 card and telling your fire department]]"
+   ]
+  },
+  {
+   "topic": "CO alarm trouble signal and 24-hour re-sound",
+   "links": [
+    "[[Calling 911: address first, stay on the line]]"
+   ]
+  },
+  {
+   "topic": "Generators and CO during power cuts",
+   "links": [
+    "[[Power cuts and medical devices]]",
+    "[[Go-bag and medication supply]]"
+   ]
+  },
+  {
+   "topic": "Alerts for people who are deaf or hard of hearing",
+   "links": [
+    "[[The 911 card and telling your fire department]]",
+    "[[Texting 911 where it is offered]]"
+   ]
+  },
+  {
+   "topic": "Someone who cannot get out of bed or call for help",
+   "links": [
+    "[[Fire and evacuation plans]]",
+    "[[Family contact plans: who calls whom]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Change replaceable smoke alarm batteries once a year.",
+   "other_view": "NFPA says replaceable batteries should be changed at least once a year. Ready.gov says to replace batteries twice a year unless you use 10-year lithium batteries. The CDC suggests checking CO alarm batteries each spring and fall when the clocks change. Agencies differ on the exact schedule. Any of these is better than leaving a battery to run down, so ask your local fire department which it prefers.",
+   "cite": [
+    "s9",
+    "s8",
+    "s4"
+   ]
+  },
+  {
+   "claim": "Replace a CO alarm every 5 years.",
+   "other_view": "The CDC says to replace a CO detector every 5 years. NFPA says to replace CO alarms according to the manufacturer's instructions, and newer alarms give an end-of-life signal. Both agree you should not keep using an old alarm. Read the date and instructions on your own alarm.",
+   "cite": [
+    "s4",
+    "s3",
+    "s17"
+   ]
+  }
+ ]
+}

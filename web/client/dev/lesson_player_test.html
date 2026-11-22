@@ -327,9 +327,9 @@ try {
     // re-make. The 67 new Grade 8 maths and Algebra 1 classes joined 2026-11-02. 2026-11-03, chat's note EQ: the rest of
     // the History of Everything and nine new courses, 240 in all; a tenth course and 56 classes wait for their answer
     // check, and a course with nothing checked is not listed. Note ER: those 56 checked, 296 in seventeen courses. Note EX:
-    // the two letters classes re-made with no real name, checked, 298.)
-    check('seventeen courses, 298 classes, bundled with the site; the other side off by default for a beginner\'s course only',
-      COURSES.length === 17 && COURSES.reduce((n, c) => n + c.classes.length, 0) === 298
+    // the two letters classes re-made with no real name, checked, 298. Note GH: + emergency preparedness, 15: 313.)
+    check('eighteen courses, 313 classes, bundled with the site; the other side off by default for a beginner\'s course only',
+      COURSES.length === 18 && COURSES.reduce((n, c) => n + c.classes.length, 0) === 313
         && COURSES.find((c) => c.id === 'numbers-0-9').otherSide === false && COURSES.find((c) => c.id === 'history-of-everything').otherSide === true);
     const st = fakeRow({ form: 'slides', lessonId: 'course:numbers-0-9' });
     const c = mountLesson(st);

@@ -1,0 +1,502 @@
+{
+ "about": {
+  "title": "The 911 Card by the Phone and Telling Your Fire Department",
+  "course": "practical-emergency-preparedness",
+  "class_n": 5,
+  "audience": [
+   "adult",
+   "caregiver"
+  ],
+  "minutes": 8,
+  "length_note": "About 8 minutes. There are two separate jobs: the card, then the fire department call. Each has its own check question, so you can stop after beat 11 (the card is done) and pick up the fire department part later. Laws and services vary by place, so check with your local 911 center or fire department."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "People with Disabilities",
+   "publisher": "Ready.gov (FEMA)",
+   "date": "undated",
+   "link": "https://www.ready.gov/people-disabilities",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s2",
+   "title": "Fire Prevention 52: Fire Safety for People with Disabilities",
+   "publisher": "National Park Service (fire safety tips for people with disabilities, linked to NFPA materials)",
+   "date": "undated",
+   "link": "https://www.nps.gov/articles/p52-fire-safety-for-people-with-disabilities.htm",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s3",
+   "title": "Accessibility In Fire Emergencies",
+   "publisher": "IAED Journal (International Academies of Emergency Dispatch)",
+   "date": "undated",
+   "link": "https://www.iaedjournal.org/accessibility-in-fire-emergencies",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s4",
+   "title": "FAQ About Calling 911",
+   "publisher": "911.gov",
+   "date": "undated",
+   "link": "https://www.911.gov/calling-911/frequently-asked-questions/",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s5",
+   "title": "Wireless 911 Services: Tips for Making Wireless 911 Calls",
+   "publisher": "Federal Communications Commission (FCC)",
+   "date": "undated",
+   "link": "https://www.fcc.gov/node/259023",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s6",
+   "title": "Wireless 911 Service",
+   "publisher": "Federal Communications Commission (FCC)",
+   "date": "undated",
+   "link": "https://www.fcc.gov/sites/default/files/911_wireless_services.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s7",
+   "title": "Create Your Family Emergency Communication Plan",
+   "publisher": "Ready.gov (FEMA)",
+   "date": "undated",
+   "link": "https://www.ready.gov/sites/default/files/2020-03/family-emergency-communication-planning-document.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s8",
+   "title": "When to call 9-1-1",
+   "publisher": "City of Portland, Oregon, 911",
+   "date": "undated",
+   "link": "https://www.portland.gov/911/when-call-9-1-1",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s9",
+   "title": "Non-emergency resources",
+   "publisher": "City of Milwaukee",
+   "date": "undated",
+   "link": "https://city.milwaukee.gov/not911",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s10",
+   "title": "Massachusetts Disability Indicator Program",
+   "publisher": "Springfield Fire Department, Emergency Communications (911)",
+   "date": "undated",
+   "link": "https://www.springfield-ma.gov/fire/emergency-comm/disability-indicator-program",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s11",
+   "title": "Special Need Request",
+   "publisher": "Frankfort Fire Protection District",
+   "date": "undated",
+   "link": "https://www.frankfortfire.org/special-need-request",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s12",
+   "title": "Special Needs Registry",
+   "publisher": "Caldwell County Sheriff's Department / County emergency management",
+   "date": "undated",
+   "link": "https://www.caldwellcosdmo.gov/special-needs-registry",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s13",
+   "title": "Emergency Evacuation Planning Guide for People with Disabilities (November 2022)",
+   "publisher": "National Fire Protection Association (NFPA)",
+   "date": "2022-11",
+   "link": "https://content.nfpa.org/-/media/Project/Storefront/Catalog/Files/Home-Fire-Safety/Disabilities/EvacuationGuidePDF.pdf?rev=bb5c4a531ca2429baab059ec05c3de97&hash=BADE2317D325AC51B1797BC9573C6296",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s14",
+   "title": "Emergency Evacuation Planning Guide for People with Disabilities (November 2022), copy of the NFPA guide",
+   "publisher": "NFPA (copy hosted by EPIC Fire & Security)",
+   "date": "2022-11",
+   "link": "https://epic-fsc.com/wp-content/uploads/NFPA-Evacuation-Guide-for-People-with-Disabilities.pdf",
+   "read": "2026-11-21"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Today you make two small things: a card to keep by the phone, and a call to your local fire department."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "The 911 Card and Your Fire Department"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Why a card? Stress can make simple facts hard to remember. A babysitter, a visitor, or a child may never have known your address."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Why a card?"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, what does 911 ask? The call-taker needs to know where you are, the number you are calling from, and what is wrong."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Where are you? (street address, and apartment number if any) | What number are you calling from? | What is the emergency?"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So line one of the card is your full street address, with the apartment or floor number if you have one. The FCC says to give the location right away."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Line 1: Full address"
+   },
+   "cite": [
+    "s4",
+    "s6"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Line two is the nearest cross street. 911 centers ask for the correct address and the closest cross streets or landmarks."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Line 2: Nearest cross street"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Line three is the phone number of that phone. The FCC advises having your number ready, so the call-taker can call back if the call drops."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Line 3: This phone's number"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Line four is who lives here and what help they need. Keep it short and plain. For example: Sam lives here. Sam uses a wheelchair and cannot speak. Sam cannot call for help."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Who lives here: Sam | What help Sam needs: Uses a wheelchair. Cannot speak. Cannot call for help. Needs help to get out."
+   },
+   "cite": [],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Last, add a neighbor and a family contact. Portland's 911 center suggests a list with the address and city, a neighbor's name and phone, and another emergency contact."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Line 5: A neighbor (name, address, phone) | Line 6: A family or friend contact (name, phone)"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Quick check before we move on."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Check"
+   },
+   "cite": [
+    "s4",
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A visitor in Sam's home has to call 911 and picks up the card. What should they read out first?",
+    "right": "The full street address, with the apartment number if there is one",
+    "wrong": [
+     "The name of Sam's favorite show",
+     "The nearest hospital",
+     "The neighbor's phone number"
+    ],
+    "why": "The call-taker needs to know where to send help. The FCC says to tell the operator the location right away. Other details come after, when the call-taker asks."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now, where does the card live? Make one for every phone, and put it where a visitor will see it without asking."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "phone",
+    "count": 3,
+    "layout": "row",
+    "text": "One card by every phone"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Write it in large, dark print. Ready.gov suggests large print for labeling emergency supplies. The same idea helps anyone reading in a hurry or with low vision. Post it where everyone can see it, as with Ready.gov's advice to post the family plan in a central place at home."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A white sheet of paper taped beside a phone. It has big black letters: the address, cross street, phone number, who lives here, and two contacts."
+   },
+   "cite": [
+    "s1",
+    "s7"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Where is the best place for the 911 card?",
+    "right": "Beside every phone, in large print, where a visitor can see it",
+    "wrong": [
+     "In a locked drawer with other papers",
+     "Only in one person's wallet",
+     "Taped inside a basement cupboard"
+    ],
+    "why": "The card only helps if someone can find and read it fast. Posting it in a central, visible place at home is the Ready.gov idea."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The card is done. Now the second job: telling your local fire department. Why? A fire department that knows ahead of time that someone uses a wheelchair or is bedridden can prepare the right resources."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Part 2: Tell your fire department"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The same source says at least two firefighters usually help someone out. If the agency knows early, it can call for backup."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Tell them before an emergency"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "How? Call the fire department's non-emergency number and explain your needs. Look the number up first. 911.gov says not to call 911 just to get a non-emergency number."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Non-emergency line, not 911"
+   },
+   "cite": [
+    "s2",
+    "s4"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Keep the call simple. Give your address. Say that someone with a disability lives there. Say what help they need to get out and to communicate. Then ask what the department offers."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Our address | 2. Someone with a disability lives here | 3. What help they need | 4. What can you offer us?"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Departments may help in several ways. The fire department may help with your escape plan, do a home fire safety inspection, and advise on smoke alarm placement and upkeep."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Help with your escape plan | Home fire safety inspection | Advice on smoke alarm placement and upkeep"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Ask about registries too. Many city and county emergency management offices keep voluntary registries. They vary by place. In Massachusetts, one program puts a flag on the call-taker's screen for that address."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ask: is there a voluntary registry here?"
+   },
+   "cite": [
+    "s1",
+    "s10",
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Time to check. Say you want the fire department to know that Sam, who cannot walk, lives at your address."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Check"
+   },
+   "cite": [
+    "s2",
+    "s3",
+    "s4"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is the right first step?",
+    "right": "Look up the fire department's non-emergency number and call it to explain",
+    "wrong": [
+     "Call 911 and ask them to make a note",
+     "Text 911 a photo of Sam's bedroom",
+     "Say nothing until there is a fire, then tell the crew"
+    ],
+    "why": "The non-emergency line is for this. 911 is for emergencies. And the fire department can prepare best when it knows before an emergency."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "While you are talking, ask about getting someone out. NFPA's guide lists questions: how would they carry a person down stairs, handle a ventilator or equipment, or handle a service animal? What about the wheelchair? That guide is written mainly for non-home buildings. Your own department can answer for your home."
+   },
+   "show": {
+    "kind": "list",
+    "text": "How would you carry Sam down stairs safely? | What about equipment that must travel with Sam? | What about a service animal? | What if the wheelchair cannot come down?"
+   },
+   "cite": [
+    "s13",
+    "s14"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One honest caution. A registry may not guarantee any particular outcome. So keep your card, your plan, and your neighbors in place too. Laws and services vary, so check with your local 911 center or fire department."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A registry helps. It is not a promise."
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "That is the class. Two jobs: put a large-print card by every phone, and call your fire department's non-emergency line. Next class we look at the recovery position, as first-aid courses teach it."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Make the card: address, cross street, phone number, who lives here, contacts | 2. Large print, by every phone | 3. Call the fire department's non-emergency line | 4. Ask what they offer, and about registries"
+   },
+   "cite": [
+    "s2",
+    "s7"
+   ],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "911 card",
+   "links": [
+    "[[Calling 911: address first]]",
+    "[[What call-takers ask]]",
+    "[[Family contact plans]]"
+   ]
+  },
+  {
+   "topic": "Telling the fire department",
+   "links": [
+    "[[Fire and evacuation plans for someone who cannot walk]]",
+    "[[Smoke and carbon monoxide alarms]]"
+   ]
+  },
+  {
+   "topic": "Voluntary registries",
+   "links": [
+    "[[Power cuts and medical devices]]",
+    "[[Go-bag and medication supply]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Joining a registry or telling the fire department means help will reach the person faster.",
+   "other_view": "One county's registry says taking part cannot guarantee a particular outcome. Registries also vary by place. A fire-dispatch expert says firefighters treat everyone alike in a rescue: if someone cannot get out, they cannot get out. The difference is that prior knowledge lets the department prepare. So tell them, but keep your own plan.",
+   "cite": [
+    "s12",
+    "s3"
+   ]
+  },
+  {
+   "claim": "You should share every detail about the person with the fire department or a registry.",
+   "other_view": "Registries are voluntary, and some are free. You choose what to share and whether to sign up. Some places also have you complete a form, so check what yours asks and who will see it.",
+   "cite": [
+    "s10",
+    "s11"
+   ]
+  }
+ ]
+}

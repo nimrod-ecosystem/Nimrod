@@ -1,0 +1,729 @@
+{
+ "about": {
+  "title": "Power Cuts and Medical Devices",
+  "course": "practical-emergency-preparedness",
+  "class_n": 10,
+  "audience": [
+   "adult",
+   "caregiver"
+  ],
+  "minutes": 12,
+  "length_note": "About 12 minutes. The class has four jobs: list what needs power, register with the electric company, plan backup power safely, and protect medicines that need to stay cold. Each job takes about three minutes, and there are natural stopping points between them."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Power Outages",
+   "publisher": "Ready.gov (FEMA)",
+   "date": "n.d.",
+   "link": "https://www.ready.gov/power-outages",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s2",
+   "title": "Be Prepared for a Power Outage (hazard information sheet)",
+   "publisher": "Ready.gov (FEMA)",
+   "date": "2024",
+   "link": "https://www.ready.gov/sites/default/files/2024-03/ready.gov_power-outage_hazard-info-sheet.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s3",
+   "title": "What to Do to Protect Yourself During a Power Outage",
+   "publisher": "Centers for Disease Control and Prevention (CDC)",
+   "date": "n.d.",
+   "link": "https://www.cdc.gov/natural-disasters/response/what-to-do-protect-yourself-during-a-power-outage.html",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s4",
+   "title": "Avoiding Carbon Monoxide Poisoning (public service announcement toolkit)",
+   "publisher": "Centers for Disease Control and Prevention (CDC)",
+   "date": "n.d.",
+   "link": "https://www.cdc.gov/natural-disasters/psa-toolkit/avoiding-carbon-monoxide-poisoning.html",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s5",
+   "title": "Safe Drug Use After a Natural Disaster",
+   "publisher": "U.S. Food and Drug Administration (FDA)",
+   "date": "n.d.",
+   "link": "https://www.fda.gov/drugs/emergency-preparedness-drugs/safe-drug-use-after-natural-disaster",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s6",
+   "title": "Power Outage Safety",
+   "publisher": "American Red Cross",
+   "date": "n.d.",
+   "link": "https://www.redcross.org/get-help/how-to-prepare-for-emergencies/types-of-emergencies/power-outage.html",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s7",
+   "title": "Home Use Devices: How to Prepare for and Handle Power Outages for Medical Devices that Require Electricity (booklet)",
+   "publisher": "U.S. Food and Drug Administration, Center for Devices and Radiological Health",
+   "date": "n.d.",
+   "link": "https://www.fda.gov/media/80782/download",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s8",
+   "title": "Home Health and Consumer Devices",
+   "publisher": "U.S. Food and Drug Administration (FDA)",
+   "date": "n.d.",
+   "link": "https://www.fda.gov/medical-devices/products-and-medical-procedures/home-health-and-consumer-devices",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s9",
+   "title": "HHS emPOWER Program Fact Sheet",
+   "publisher": "U.S. Department of Health and Human Services (HHS)",
+   "date": "n.d.",
+   "link": "https://empowerprogram.hhs.gov/Program-Impact-Fact-Sheet.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s10",
+   "title": "How Many Hours Do Portable Oxygen Concentrators Last?",
+   "publisher": "Inogen (device maker)",
+   "date": "n.d.",
+   "link": "https://www.inogen.com/resources/traveling-oxygen/how-many-hours-do-portable-oxygen-concentrators-last/",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s11",
+   "title": "30-Day Medical Certificate",
+   "publisher": "Ohio Consumers' Counsel",
+   "date": "n.d.",
+   "link": "https://www.occ.ohio.gov/factsheet/30-day-medical-certificate",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s12",
+   "title": "Medical Certificate program",
+   "publisher": "Pacific Power (electric utility)",
+   "date": "n.d.",
+   "link": "https://www.pacificpower.net/my-account/payments/bill-payment-assistance/medical-certificate.html",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s13",
+   "title": "Find or Report Electric Outages",
+   "publisher": "Pacific Gas and Electric Company (PG&E)",
+   "date": "n.d.",
+   "link": "https://www.pge.com/en/contact-us/report-an-issue/report-electric-issue.html",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s14",
+   "title": "Report Power Outage or Safety Issue",
+   "publisher": "Southern California Edison (SCE)",
+   "date": "n.d.",
+   "link": "https://www.sce.com/outages-safety/report-outage-safety-issue",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s15",
+   "title": "Power Outages (Ready Kids)",
+   "publisher": "Ready.gov (FEMA)",
+   "date": "n.d.",
+   "link": "https://www.ready.gov/kids/disaster-facts/power-outages",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s16",
+   "title": "Be Red Cross Ready: Power Outage",
+   "publisher": "American Red Cross",
+   "date": "n.d.",
+   "link": "https://www.redcross.org/content/dam/redcross/atg/PDF_s/Preparedness___Disaster_Recovery/Disaster_Preparedness/Winter_Storm/PowerOutage.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s17",
+   "title": "CPSC Warns of Dangers of Generators and Candles During Power Outage",
+   "publisher": "U.S. Consumer Product Safety Commission",
+   "date": "2003",
+   "link": "https://www.cpsc.gov/Newsroom/News-Releases/2003/CPSC-Warns-of-Dangers-of-Generators-and-Candles-During-Power-Outage",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s18",
+   "title": "How to safely use a generator during a power outage (reporting CDC advice)",
+   "publisher": "CNN",
+   "date": "2024-01-09",
+   "link": "https://www.cnn.com/2024/01/09/health/how-to-use-a-generator-power-outage-wellness",
+   "read": "2026-11-21"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 10: power cuts and medical devices. Today we build a plan for when the lights go out."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Power Cuts and Medical Devices"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "This is planning help, not medical advice. Your own doctors and device supplier decide what is right for your person. Rules and programmes vary, so check with your local electric company and local 911 center."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Plan ahead. Ask the experts."
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "First, what is a power-dependent device? It is any equipment that stops working, or runs on a limited battery, when the electricity goes off."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "4.5 million+ Medicare beneficiaries living at home rely on electricity-dependent equipment"
+   },
+   "cite": [
+    "s9"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So you are far from alone. Ventilators are one example. Many other devices, and medicines kept cold, depend on power too."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A quiet living room at dusk. A medical device with a small battery light sits by an armchair. The ceiling light is off."
+   },
+   "cite": [
+    "s9",
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Step one: take an inventory. Walk through the home and write down everything that needs electricity. Meet Sam, who cares for a family member. Sam's list starts with the breathing machine, the wheelchair charger, the phone and the medicine fridge."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Inventory: medical devices | wheelchair or scooter charger | communication device | phones | fridge for medicine | lights"
+   },
+   "cite": [
+    "s1",
+    "s6"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is the first step in a power-cut plan?",
+    "right": "Write down everything in the home that relies on electricity.",
+    "wrong": [
+     "Buy the biggest generator you can find.",
+     "Wait to see how long the outage lasts.",
+     "Switch off the main breaker and hope for the best."
+    ],
+    "why": "You cannot plan backup power until you know what needs it. Ready.gov starts with an inventory."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next to each item, write how long it runs on its own battery. That number is different for every device, so do not guess."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Battery time: look it up, do not guess"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here is why. This chart shows one maker's portable oxygen units on one setting. Look how much the hours differ between models, and between a single and a double battery."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Hours of battery on flow setting 2 (up to)",
+    "chart": "c1"
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "bars-grow"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "These are 'up to' figures for one brand. Your device may be completely different, and its setting changes the time. Check the manual and ask your supplier."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Your device. Your setting. Your number."
+   },
+   "cite": [
+    "s10"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why can't this class give you one standard battery time?",
+    "right": "Battery time depends on the model, the battery and the setting, so you must check your own device.",
+    "wrong": [
+     "All batteries last exactly four hours.",
+     "Batteries never run out.",
+     "Only generators have a time limit."
+    ],
+    "why": "The chart shows the hours differ a lot between models and between single and double batteries."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Do not forget the phone. Find out whether your home phone works in a power cut, and how long its battery backup lasts. Keep mobile phones charged ahead of time."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Does the home phone work without power? | How long does its backup last? | Charged phones | A way to recharge them"
+   },
+   "cite": [
+    "s1",
+    "s2"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now to the electric company. Some have a medical or life-support programme for customers who use powered equipment. The name and the rules vary by place."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Medical or life-support programme"
+   },
+   "cite": [
+    "s12",
+    "s11"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "For example, one utility's programme asks a qualified medical professional to complete a certificate. Others let you self-identify. Call the number on your bill and ask what your company offers."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Medical certificate: filled in by a medical professional | Self-identify: for customers without a certificate"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Here is the honest part. Being on the list may not keep your power on or bring it back sooner. One state fact sheet says to keep a backup plan anyway."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A list is not a guarantee"
+   },
+   "cite": [
+    "s11",
+    "s12"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Sam is registered with the electric company. What should Sam still do?",
+    "right": "Keep a backup plan for the equipment.",
+    "wrong": [
+     "Nothing, because registration guarantees power.",
+     "Throw away the device battery.",
+     "Stop talking to the device supplier."
+    ],
+    "why": "The utilities themselves say registration does not guarantee uninterrupted power or fast restoration."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Next, ask for a written plan. Talk to the doctors and the device supplier. Ask what to do if the power is out for hours, and what to do if it is out for days."
+   },
+   "show": {
+    "kind": "list",
+    "text": "How long does the battery last? | What backup do you advise? | What do we do if power is out for hours? For days? | Who do we call, day and night?"
+   },
+   "cite": [
+    "s2",
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The FDA has a booklet with blanks for exactly this. You write in the device, the model, the power company and the health care providers. Print it and keep it handy."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A printed one-page form on a fridge door with blank lines for device, model, power company, doctor and phone numbers."
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now backup power. Options include spare batteries, a portable charger or power bank, and a generator. Another option is somewhere else that has power."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Batteries and power banks | Generator (outdoors only) | A place with power: friend, family, shelter"
+   },
+   "cite": [
+    "s1",
+    "s6"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The Red Cross says to leave if the home is too hot or too cold, or if you have medical devices that need power. Plan ahead who could help, and how you would get there."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Know where you would go"
+   },
+   "cite": [
+    "s6",
+    "s15"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "For light, use flashlights, one for every person in the home. Do not use candles, because of the fire risk."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Flashlights, not candles"
+   },
+   "cite": [
+    "s1",
+    "s16"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A generator burns fuel, and that makes carbon monoxide, or CO. You cannot see or smell it, and it can make people ill or kill them."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "500+ Americans die from CO each year"
+   },
+   "cite": [
+    "s3",
+    "s4"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The rule is simple. Outdoors only, and at least 20 feet from any window, door or vent. Never in a garage or basement, even with the door open. Have a battery-powered CO alarm."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Outdoors only | 20+ feet from windows, doors, vents | Never in a garage or basement | Battery-powered CO alarm inside"
+   },
+   "cite": [
+    "s3",
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Where is it safe to run a portable generator?",
+    "right": "Outdoors, at least 20 feet from windows, doors and vents.",
+    "wrong": [
+     "In the garage with the big door open.",
+     "On the porch right beside a window.",
+     "In the basement near a vent."
+    ],
+    "why": "CDC says never run one in an enclosed space, even with doors or windows open, or within 20 feet of a window, door or vent."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "A person who cannot speak may not be able to tell you they feel unwell. That is why the CO alarm matters. We covered alarms in class 8. If one sounds, get everyone outside and call 911."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "The alarm speaks for them"
+   },
+   "cite": [
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "How do you connect it? Plug each device straight into the generator with a heavy-duty, outdoor-rated cord. The cord may need to be longer than 20 feet to keep the generator far away."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Plug devices directly into the generator | Heavy-duty outdoor-rated cord | A cord longer than 20 feet keeps it far away"
+   },
+   "cite": [
+    "s17",
+    "s3"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Do not feed a generator into a wall outlet or the house wiring. The current can flow back into the power lines and endanger utility workers. Ask a licensed electrician or your utility about safe hookups."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Never plug a generator into a wall outlet"
+   },
+   "cite": [
+    "s18"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now, who do you call? Call 911 for an emergency, such as a person in danger or a downed power line. Call the electric company to report an outage."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "911: someone in danger, a downed power line | Electric company: report an outage, ask about repairs"
+   },
+   "cite": [
+    "s13",
+    "s14"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "For a downed line, stay well away, call 911 first, then the utility. If you do call 911, remember class 1: address first, stay on the line, follow instructions."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Danger? 911 first."
+   },
+   "cite": [
+    "s13",
+    "s14"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Your whole street is dark and no one is in danger. A power line is NOT down. Who do you call to report it?",
+    "right": "The electric company.",
+    "wrong": [
+     "911, always.",
+     "The fire department's front desk.",
+     "No one, ever."
+    ],
+    "why": "A plain outage is reported to the utility. A downed line or someone in danger is a 911 call."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last topic: medicine that needs to stay cold. Insulin and some liquid antibiotics are examples. Keep a cooler and ice or frozen gel packs ready, and follow the label."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Insulin, some liquid antibiotics | Cooler | Ice or frozen gel packs | Follow the label"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Keep the fridge and freezer closed. A fridge keeps food cold for about four hours, and a full freezer about 48. Those figures are for food, so for medicine ask your pharmacist."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Door closed. Ask the pharmacist."
+   },
+   "cite": [
+    "s15",
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Things to ask your pharmacist now: how long can each medicine be kept above fridge temperature? How much do we have on hand? What are the emergency refill rules?"
+   },
+   "show": {
+    "kind": "list",
+    "text": "How long without a fridge? | How much do we have? | Emergency refill rules in our state | Who do we call if it got warm?"
+   },
+   "cite": [
+    "s5",
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "A medicine that should be kept cold has gotten warm in a power cut. What is the best first step?",
+    "right": "Check its storage instructions, then ask a pharmacist, health care provider or the manufacturer.",
+    "wrong": [
+     "Guess and use it anyway.",
+     "Put it in the freezer to be safe.",
+     "Ask a neighbour what they would do."
+    ],
+    "why": "FDA says to check the instructions or contact a pharmacist, provider or manufacturer to find out if it can still be used."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Put it all on one page: devices, battery times, backup, and contacts for the power company, supplier, doctor and pharmacist. Fill in the FDA blanks, keep a paper copy, and add the local fire department from class 5."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "One tidy page on the fridge door: device list, battery hours, backup plan, and a row of phone numbers."
+   },
+   "cite": [
+    "s7",
+    "s2"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To recap: list what needs power, find the real battery times, register with the electric company, plan safe backup, and know 911 from the utility. Plan for cold medicines too. Next time: the go-bag."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1 Inventory | 2 Battery times | 3 Register with utility | 4 Safe backup, generators outdoors | 5 911 vs utility | 6 Cold medicines"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Hours of battery on flow setting 2 (up to), one maker's portable oxygen units",
+   "rows": [
+    {
+     "label": "G3, single battery",
+     "value": 4.5,
+     "source": "s10"
+    },
+    {
+     "label": "G3, double battery",
+     "value": 9.6,
+     "source": "s10"
+    },
+    {
+     "label": "G4, single battery",
+     "value": 2.7,
+     "source": "s10"
+    },
+    {
+     "label": "G4, double battery",
+     "value": 4.5,
+     "source": "s10"
+    },
+    {
+     "label": "G5, single battery",
+     "value": 4.9,
+     "source": "s10"
+    },
+    {
+     "label": "G5, double battery",
+     "value": 10.3,
+     "source": "s10"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Power-dependent devices and battery runtime",
+   "links": [
+    "[[Go-bag and medication supply]]",
+    "[[The 911 card by the phone and telling your fire department]]"
+   ]
+  },
+  {
+   "topic": "Utility medical programmes",
+   "links": [
+    "[[Family contact plans: who calls whom]]",
+    "[[Winter storms]]",
+    "[[Extreme heat]]"
+   ]
+  },
+  {
+   "topic": "Generator carbon monoxide safety",
+   "links": [
+    "[[Smoke and carbon monoxide alarms]]",
+    "[[Calling 911: address first, stay on the line]]"
+   ]
+  },
+  {
+   "topic": "Refrigerated medicines",
+   "links": [
+    "[[Go-bag and medication supply]]",
+    "[[The one-page medical sheet for the ER]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "If the power is out for more than a day, throw away refrigerated medicine unless its label says otherwise.",
+   "other_view": "Ready.gov gives this as the general rule. The FDA adds that each medicine is different, so check the instructions or ask a pharmacist, provider or manufacturer. The FDA also says a medicine needed to sustain life, such as insulin, may be used until a new supply is available if no replacement can be had. Do not decide alone. Ask the pharmacist and doctor before an outage.",
+   "cite": [
+    "s1",
+    "s5"
+   ]
+  },
+  {
+   "claim": "Register with your electric company if you use powered medical equipment.",
+   "other_view": "Registering is widely advised, but the utilities themselves say it does not guarantee that power stays on or comes back first. Programme names and rules vary by place, so use registration as one layer and keep your own backup plan.",
+   "cite": [
+    "s11",
+    "s12"
+   ]
+  }
+ ]
+}

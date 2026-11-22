@@ -1,0 +1,678 @@
+{
+ "about": {
+  "title": "Putting It Together: Your Home Plan Checklist",
+  "course": "practical-emergency-preparedness",
+  "class_n": 15,
+  "audience": [
+   "adult",
+   "caregiver"
+  ],
+  "minutes": 8,
+  "length_note": "About 8 minutes. It is 16 short beats, and you can stop after any one of them. The checklist is meant to be filled in over days or weeks, not in one sitting."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Text-to-911 (FCC consumer page)",
+   "publisher": "Federal Communications Commission",
+   "date": "n.d.",
+   "link": "https://www.fcc.gov/node/23971",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s2",
+   "title": "Text-to-911 (New York City)",
+   "publisher": "City of New York",
+   "date": "n.d.",
+   "link": "https://www.nyc.gov/site/text911/index.page",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s3",
+   "title": "Text-to-911",
+   "publisher": "Monroe County 911 (Pennsylvania)",
+   "date": "n.d.",
+   "link": "https://www.monroeco911.com/911-basics/text-to-911/",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s4",
+   "title": "People with Disabilities",
+   "publisher": "Ready.gov (FEMA)",
+   "date": "n.d.",
+   "link": "https://www.ready.gov/people-disabilities",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s5",
+   "title": "Build A Kit",
+   "publisher": "Ready.gov (FEMA)",
+   "date": "Last updated 2026-07-01",
+   "link": "https://www.ready.gov/kit",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s6",
+   "title": "Learn More About Smoke Alarms",
+   "publisher": "National Fire Protection Association (NFPA)",
+   "date": "n.d.",
+   "link": "https://www.nfpa.org/education-and-research/home-fire-safety/smoke-alarms",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s7",
+   "title": "Home Fire Escape Plans",
+   "publisher": "Oregon State Fire Marshal",
+   "date": "n.d.",
+   "link": "https://www.oregon.gov/osfm/education/pages/home-fire-escape-planning.aspx",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s8",
+   "title": "First Aid Classes",
+   "publisher": "American Red Cross",
+   "date": "n.d.",
+   "link": "https://www.redcross.org/take-a-class/first-aid/first-aid-training/first-aid-classes",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s9",
+   "title": "CPR Classes",
+   "publisher": "American Red Cross",
+   "date": "n.d.",
+   "link": "https://www.redcross.org/take-a-class/cpr/cpr-training/cpr-classes",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s10",
+   "title": "FAQs about AHA Training",
+   "publisher": "American Heart Association",
+   "date": "n.d.",
+   "link": "https://cpr.heart.org/en/resources/faqs/course-faqs",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s11",
+   "title": "Heartsaver CPR AED Training",
+   "publisher": "American Heart Association",
+   "date": "n.d.",
+   "link": "https://cpr.heart.org/en/cpr-courses-and-kits/heartsaver/heartsaver-cpr-aed-training",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s12",
+   "title": "Prepare Your Health: Power Outages (CDC fact sheet)",
+   "publisher": "Centers for Disease Control and Prevention",
+   "date": "n.d.",
+   "link": "https://stacks.cdc.gov/view/cdc/139901/cdc_139901_DS1.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s13",
+   "title": "Emergency Power Planning for People Who Use Electricity and Battery-Dependent Assistive Technology and Medical Devices",
+   "publisher": "ADA National Network (adata.org)",
+   "date": "n.d.",
+   "link": "https://adata.org/factsheet/emergency-power/",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s14",
+   "title": "Create Your Family Emergency Communication Plan",
+   "publisher": "Ready.gov (FEMA)",
+   "date": "n.d.",
+   "link": "https://www.ready.gov/sites/default/files/2020-03/family-emergency-communication-planning-document.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s15",
+   "title": "Winter Preparedness at Home",
+   "publisher": "National Weather Service (Baltimore/Washington office)",
+   "date": "n.d.",
+   "link": "https://www.weather.gov/lwx/winter_home-pr",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s16",
+   "title": "People with Disabilities Fire Safety Checklist (U.S. Fire Administration checklist, as published by the City of St. Charles, MO)",
+   "publisher": "City of St. Charles, Missouri",
+   "date": "n.d.",
+   "link": "https://www.stcharlescitymo.gov/280/People-with-Disabilities-Fire-Safety-Che",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s17",
+   "title": "Go Bag",
+   "publisher": "Westchester County (NY) Emergency Services",
+   "date": "n.d.",
+   "link": "https://emergencyservices.westchestercountyny.gov/indian-point/having-a-go-bag",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s18",
+   "title": "Heartsaver Virtual",
+   "publisher": "American Heart Association",
+   "date": "n.d.",
+   "link": "https://cpr.heart.org/en/cpr-courses-and-kits/heartsaver/heartsaver-virtual",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s19",
+   "title": "Medical Devices (medical certificate and backup plan)",
+   "publisher": "United Power (electric cooperative)",
+   "date": "n.d.",
+   "link": "https://unitedpower.com/medical-devices",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s20",
+   "title": "Make a Plan",
+   "publisher": "Ready.gov (FEMA)",
+   "date": "n.d.",
+   "link": "https://www.ready.gov/kids/make-a-plan",
+   "read": "2026-11-21"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to the last class. Today you will build a one-page checklist and set a date to look at it again."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Putting It Together: Your Home Plan Checklist"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "First, a kind note. Doing a little is better than doing nothing. Go at your own pace, and stop whenever you need to."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "A little is better than nothing"
+   },
+   "cite": [],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Your checklist has three boxes: Done, Next, and Later. Every item from this course goes in one of them."
+   },
+   "show": {
+    "kind": "list",
+    "items": [
+     "Done",
+     "Next",
+     "Later"
+    ]
+   },
+   "cite": [],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Sam already made a 911 card and put it by the phone. Which box does it go in?",
+    "right": "Done",
+    "wrong": [
+     "Next",
+     "Later",
+     "It does not go on the checklist"
+    ],
+    "why": "The Done box holds what you have already finished. It is good to see it there."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Group one is reaching help. It covers the 911 call, texting 911, the 911 card by the phone, and the one-page medical sheet."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Calling 911; Texting 911 where offered; 911 card by the phone; One-page medical sheet for the ER"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Call if you can, text if you can't. A voice call gives the call-takers more information. Whether texting works depends on your local 911 center."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Call if you can, text if you can't"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Which is true about texting 911?",
+    "right": "Each local 911 center decides whether it accepts texts, so check with yours. Where texts are not accepted, you get an automatic reply telling you to call.",
+    "wrong": [
+     "It works the same everywhere in the country.",
+     "It is always better than calling.",
+     "You do not need to check anything before an emergency."
+    ],
+    "why": "The FCC says each call center decides whether to accept texts. Where it is not available, the carrier sends a bounce-back message."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "If you do text, send your location and what is wrong, in plain words. Do not send photos, and do not add other people to the text."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Location first; What is wrong, in plain words; Complete words, not short-hand; No photos, videos or emojis; Not a group text"
+   },
+   "cite": [
+    "s2",
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What belongs in a text to 911?",
+    "right": "Your address and what is wrong, in plain words",
+    "wrong": [
+     "A photo of the problem",
+     "A group text that includes your family",
+     "Emojis and short-hand"
+    ],
+    "why": "The 911 center may not know your location when you text. Photos, videos, emojis and group texts are not supported or may not arrive."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Group two is fire. Tell your local fire department, on its non-emergency number, that someone with a disability lives at your address."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Fire department heads-up"
+   },
+   "cite": [
+    "s16"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which number do you use to tell the fire department about your needs ahead of time?",
+    "right": "The fire department's non-emergency number",
+    "wrong": [
+     "911",
+     "The first number you find online",
+     "No call is needed"
+    ],
+    "why": "The U.S. Fire Administration checklist says to use the non-emergency line. The fire department may also help with your escape plan and a home safety check."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next, alarms and drills. Test smoke alarms at least once a month. Practice your escape plan at least twice a year."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Test smoke alarms monthly; Replace them every 10 years; Practice the escape plan twice a year, including for someone who cannot walk"
+   },
+   "cite": [
+    "s6",
+    "s7"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "How often should you test smoke alarms?",
+    "right": "At least once a month",
+    "wrong": [
+     "Once every 10 years",
+     "Only after a fire",
+     "Once a year"
+    ],
+    "why": "NFPA says to test all smoke alarms at least once a month. The 10 years is how long an alarm lasts before you replace it."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Group three is power. If someone uses electric medical equipment, plan for a power cut before it happens."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Make an emergency power plan; Check if the device can run on batteries or a generator; Tell the fire department and the power and water companies"
+   },
+   "cite": [
+    "s12"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Ask your electric company about a priority list or medical registry. Even so, keep your own backup. A registry does not promise power."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Registry: you tell the company about your needs. Backup: you still plan your own batteries or other power."
+   },
+   "cite": [
+    "s13",
+    "s19"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Sam has told the electric company about a medical device. What else should Sam do?",
+    "right": "Still have a backup power plan",
+    "wrong": [
+     "Nothing, the registry guarantees power",
+     "Cancel the go-bag",
+     "Wait for the next outage to decide"
+    ],
+    "why": "One power company says a medical certificate does not guarantee uninterrupted power. You still need your own backup plan."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Group four is your go-bag and medicine supply. Ready.gov says to rethink your needs every year and update the kit as they change."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Go-bag packed; Medication supply on hand; Medical sheet copy inside; Update when needs change"
+   },
+   "cite": [
+    "s5",
+    "s15"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why update a go-bag?",
+    "right": "Needs change, so what is in it should change too",
+    "wrong": [
+     "Because bags wear out every month",
+     "It only needs updating after an emergency",
+     "It never needs updating"
+    ],
+    "why": "Ready.gov says to rethink your needs each year and update the kit as your family's needs change."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Group five is weather. In a winter storm, a home may lose heat, power and phone service, and supplies may run short. Plan for extreme heat too."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Winter storm plan: heat, power, phone, supplies; Extreme heat plan; Extra medicines on hand"
+   },
+   "cite": [
+    "s15"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Group six is your contact plan. Pick an out-of-town contact, save an In Case of Emergency number in each phone, and say who calls whom."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Out-of-town contact; In Case of Emergency (ICE) number in every phone; Who calls whom; Meeting places"
+   },
+   "cite": [
+    "s14",
+    "s20"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why pick a contact who lives out of town?",
+    "right": "They may be easier to reach in a disaster",
+    "wrong": [
+     "Because local people never help",
+     "Because they can reach 911 for you",
+     "Because texts do not work locally"
+    ],
+    "why": "Ready.gov suggests someone out of town, because they may be easier to reach in a disaster."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "How often should you check each piece? Here is a quick look. Smoke alarms come up most often, so put them on a monthly reminder."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "How often to check, times per year",
+    "chart": "c1"
+   },
+   "cite": [
+    "s6",
+    "s7",
+    "s14",
+    "s5"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Which item on the chart is checked most often?",
+    "right": "Testing smoke alarms",
+    "wrong": [
+     "Rethinking the go-bag",
+     "Reviewing the family contact plan",
+     "Practicing the escape drill"
+    ],
+    "why": "NFPA says to test smoke alarms at least once a month, which is about 12 times a year."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now pick the next two things for this week. Choose one quick job and one job that matters most for your person."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "star",
+    "count": 2,
+    "layout": "row",
+    "text": "Two things this week"
+   },
+   "cite": [],
+   "move": "count-in",
+   "ask": {
+    "q": "Sam looks at the checklist and finds eight gaps. What does this class suggest?",
+    "right": "Pick two to do this week and leave the rest in Later",
+    "wrong": [
+     "Try to do all eight tonight",
+     "Give up until everything is perfect",
+     "Do nothing"
+    ],
+    "why": "Small steps count. Doing a little is better than doing nothing, and you can go at your own pace."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "One of your next things can be booking a hands-on first-aid and CPR class. Both the Red Cross and the American Heart Association offer them."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Red Cross: classes take a few hours; AHA: hands-on skills session for the card; Card valid two years; Needs a class near you: use their Find a Class tools"
+   },
+   "cite": [
+    "s9",
+    "s10",
+    "s11"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What does a hands-on class give you that reading a lesson cannot?",
+    "right": "Practice with an instructor who can watch your skills",
+    "wrong": [
+     "A replacement for calling 911",
+     "A way to skip your doctor",
+     "Nothing extra"
+    ],
+    "why": "The Red Cross says an online class does not let you show your skills to an instructor. The AHA's card for CPR classes requires a hands-on skills session."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last, set a review date. Write it on the checklist and tell one other person. On that day, move items from Next to Done and update anything that changed."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "1 date"
+   },
+   "cite": [
+    "s5",
+    "s14"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "What do you do on your review date?",
+    "right": "Look at the checklist, update what changed, and pick the next two things",
+    "wrong": [
+     "Throw the checklist away",
+     "Start the whole course again",
+     "Only check the smoke alarm"
+    ],
+    "why": "Ready.gov says to update your kit as needs change. It also says to review your family contact plan at least once a year or when information changes."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Two reminders. Check with your local 911 center or fire department, because services vary by place. Talk with the person's own doctors about their needs."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Check locally. Ask the doctors."
+   },
+   "cite": [
+    "s1",
+    "s4",
+    "s12"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Who should you ask whether a backup power source is right for a medical device?",
+    "right": "The device maker or supplier, and the person's own doctors",
+    "wrong": [
+     "Any website",
+     "A neighbor",
+     "No one, just try it"
+    ],
+    "why": "The CDC says to read the manual or contact the manufacturer. This course does not replace first-aid training or the person's doctors."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "You have done something kind and useful just by getting here. Fill in Done, Next and Later, set your date, and stop when you need to rest."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Done | Next (two things this week) | Later | Review date: ____ | Local 911 center and fire department checked | Doctors asked"
+   },
+   "cite": [],
+   "move": "fade"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "How often to check each part of your plan (times per year)",
+   "rows": [
+    {
+     "label": "Test smoke alarms (monthly)",
+     "value": 12,
+     "source": "s6"
+    },
+    {
+     "label": "Practice fire escape drill (at least)",
+     "value": 2,
+     "source": "s7"
+    },
+    {
+     "label": "Review family contact plan (at least)",
+     "value": 1,
+     "source": "s14"
+    },
+    {
+     "label": "Rethink go-bag needs",
+     "value": 1,
+     "source": "s5"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "One-page checklist (Done, Next, Later)",
+   "links": [
+    "[[911 card by the phone]]",
+    "[[One-page medical sheet]]",
+    "[[Review date]]"
+   ]
+  },
+  {
+   "topic": "Reaching help",
+   "links": [
+    "[[Calling 911]]",
+    "[[Texting 911]]"
+   ]
+  },
+  {
+   "topic": "Home fire safety",
+   "links": [
+    "[[Smoke and carbon monoxide alarms]]",
+    "[[Fire and evacuation plans]]",
+    "[[Fire department heads-up]]"
+   ]
+  },
+  {
+   "topic": "Power plan",
+   "links": [
+    "[[Power cuts and medical devices]]",
+    "[[Go-bag and medication supply]]"
+   ]
+  },
+  {
+   "topic": "Weather and contacts",
+   "links": [
+    "[[Winter storms]]",
+    "[[Extreme heat]]",
+    "[[Family contact plans]]"
+   ]
+  },
+  {
+   "topic": "Hands-on training",
+   "links": [
+    "[[Recovery position]]",
+    "[[Choking first aid]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "A go-bag should be rethought about once a year.",
+   "other_view": "Ready.gov says to rethink needs every year. One county emergency-services page says to check a kit at least twice a year so that nothing has expired. Both can work. This lesson suggests tying the check to a date you will remember, and doing it sooner if needs change.",
+   "cite": [
+    "s5",
+    "s17"
+   ]
+  },
+  {
+   "claim": "Take a hands-on class rather than only an online one.",
+   "other_view": "The Red Cross says online-only classes do not let you show your skills to an instructor. The American Heart Association also offers fully self-directed online courses and a virtual hands-on session with an instructor. The best choice depends on your needs and what you can access. This course suggests an in-person or instructor-led skills session where you can get one.",
+   "cite": [
+    "s8",
+    "s10",
+    "s18"
+   ]
+  }
+ ]
+}

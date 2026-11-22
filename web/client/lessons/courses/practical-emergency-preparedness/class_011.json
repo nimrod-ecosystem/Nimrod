@@ -1,0 +1,765 @@
+{
+ "about": {
+  "title": "Go-Bag and Medication Supply",
+  "course": "practical-emergency-preparedness",
+  "class_n": 11,
+  "audience": [
+   "adult",
+   "caregiver"
+  ],
+  "minutes": 11,
+  "length_note": "About 11 minutes. This class covers a bag, a medicine plan, papers, devices, comfort items, service animals and a check schedule, so it runs a little over 10 minutes. Each beat stands alone, so you can stop after any one and pick up later. The lists are starting points. The person's own doctors and pharmacist decide anything about medicines."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Build A Kit",
+   "publisher": "Ready.gov (FEMA)",
+   "date": "undated",
+   "link": "https://www.ready.gov/kit",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s2",
+   "title": "What Do You Need In a Survival Kit",
+   "publisher": "American Red Cross",
+   "date": "undated",
+   "link": "https://www.redcross.org/get-help/how-to-prepare-for-emergencies/survival-kit-supplies.html",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s3",
+   "title": "People with Disabilities",
+   "publisher": "Ready.gov (FEMA)",
+   "date": "undated",
+   "link": "https://www.ready.gov/people-disabilities",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s4",
+   "title": "Building an Emergency Kit",
+   "publisher": "Centers for Disease Control and Prevention (CDC)",
+   "date": "undated",
+   "link": "https://www.cdc.gov/disability-emergency-preparedness/people-with-disabilities/build-a-kit.html",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s5",
+   "title": "Preparing Your Medicine Cabinet for an Emergency: A Checklist",
+   "publisher": "CDC, Public Health Matters blog",
+   "date": "2017-10",
+   "link": "https://blogs.cdc.gov/publichealthmatters/2017/10/preparing-your-medicine-cabinet-for-an-emergency/",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s6",
+   "title": "Prepare Your Pets for Disasters",
+   "publisher": "Ready.gov (FEMA)",
+   "date": "undated",
+   "link": "https://www.ready.gov/pets",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s7",
+   "title": "Get a kit. Make a plan. Be informed. (Be Red Cross Ready factsheet)",
+   "publisher": "American Red Cross",
+   "date": "undated",
+   "link": "https://www.redcross.org/content/dam/redcross/atg/PDF_s/Preparedness___Disaster_Recovery/Disaster_Preparedness/Be-Red-Cross-Ready-Preparedness-Factsheet.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s8",
+   "title": "Prepare for Emergencies: People with Disabilities and Others with Access and Functional Needs (FEMA R-6)",
+   "publisher": "Ready.gov (FEMA)",
+   "date": "2012-06",
+   "link": "https://www.ready.gov/sites/default/files/FEMA_Disabilities_R-6_web_june2012.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s9",
+   "title": "Preparing Makes Sense for People with Disabilities and Others with Access and Functional Needs",
+   "publisher": "Ready.gov (FEMA)",
+   "date": "undated",
+   "link": "https://www.ready.gov/sites/default/files/2020-04/disabilities-special-needs_printer-friendly.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s10",
+   "title": "Get Prepared (Go Bag)",
+   "publisher": "NYC Emergency Management",
+   "date": "undated",
+   "link": "https://www.nyc.gov/site/em/ready/get-prepared.page",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s11",
+   "title": "Disaster Preparedness for Seniors by Seniors",
+   "publisher": "American Red Cross",
+   "date": "2009 (revised)",
+   "link": "https://www.redcross.org/content/dam/redcross/atg/PDF_s/Preparedness___Disaster_Recovery/Disaster_Preparedness/Disaster_Preparedness_for_Srs-English.revised_7-09.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s12",
+   "title": "Prepare Your Pets for Disasters (PDF)",
+   "publisher": "Ready.gov (FEMA)",
+   "date": "2023-06",
+   "link": "https://www.ready.gov/sites/default/files/2023-06/ready.gov_prepare-pets-for-disasters.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s13",
+   "title": "Be Red Cross Ready: Emergency Kit Check List",
+   "publisher": "American Red Cross",
+   "date": "undated",
+   "link": "https://www.redcross.org/content/dam/redcross/local/NCCR/kit_checklist.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s14",
+   "title": "Low and No Cost Preparedness",
+   "publisher": "Ready.gov (FEMA)",
+   "date": "undated",
+   "link": "https://www.ready.gov/low-and-no-cost",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s15",
+   "title": "Build a Kit (Ready Kids)",
+   "publisher": "Ready.gov (FEMA)",
+   "date": "undated",
+   "link": "https://www.ready.gov/kids/family-emergency-planning/build-a-kit",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s16",
+   "title": "Tips for People with Disabilities",
+   "publisher": "Ready.gov (FEMA)",
+   "date": "undated",
+   "link": "https://www.ready.gov/collection/tips-for-people-with-disabilities",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s17",
+   "title": "Emergency Preparedness for Service Animals and Pets",
+   "publisher": "Brigham Young University Emergency Management",
+   "date": "undated",
+   "link": "https://emergencymanagement.byu.edu/00000177-4569-d4ef-ad77-ffef767d0001/emergency-preparedness-for-service-animals-and-pets",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s18",
+   "title": "Prepare for a disaster or emergency by packing an emergency supply kit",
+   "publisher": "CDC",
+   "date": "2014",
+   "link": "https://www.cdc.gov/ccindex/pdf/emergencysupplykit.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s19",
+   "title": "How to Build a Kit for Emergencies",
+   "publisher": "FEMA",
+   "date": "2025-06-02",
+   "link": "https://www.fema.gov/press-release/20250602/how-build-kit-emergencies",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s20",
+   "title": "Inclusive Preparedness Resources",
+   "publisher": "American Red Cross",
+   "date": "undated",
+   "link": "https://www.redcross.org/get-help/how-to-prepare-for-emergencies/inclusive-preparedness-resources.html",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s21",
+   "title": "Tips for Medication",
+   "publisher": "Ready.gov (FEMA)",
+   "date": "undated",
+   "link": "https://www.ready.gov/collection/tips-for-medications",
+   "read": "2026-11-21"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Today we pack a go-bag. It is a bag you get ready ahead of time, so you can leave home fast."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Go-Bag and Medication Supply"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Ready.gov suggests two kits. A bigger one for staying home, and a smaller, lighter one to carry if you must leave."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Stay-home kit: everything for riding it out at home | Go-bag: lighter, carried if you have to leave"
+   },
+   "cite": [
+    "s8"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which kit is the go-bag?",
+    "right": "The smaller, lighter one you can carry if you have to leave home",
+    "wrong": [
+     "The big one meant for staying home",
+     "A bag that only holds medicine",
+     "A bag kept only at a neighbor's house"
+    ],
+    "why": "Ready.gov describes the go-bag as the lightweight, smaller version to take with you if you have to leave."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why bother? After a disaster you may not be able to reach a medical facility, or even a drugstore."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Daily needs"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So the bag holds what daily life needs. Start with the basics that ready.gov and the Red Cross both list."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Water · Non-perishable food · Flashlight · Battery or hand-crank radio · Extra batteries · First aid kit · Whistle · Cash"
+   },
+   "cite": [
+    "s15",
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "You do not need to buy it all at once. Ready.gov says to start with what you already have and build over time."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Build it over time"
+   },
+   "cite": [
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "How much? The Red Cross gives water as one gallon per person per day. It says 3 days for leaving and 2 weeks for home."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Days of supplies the Red Cross lists",
+    "chart": "c1"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "By the Red Cross list, how many days of water and food go in a bag for leaving?",
+    "right": "3 days",
+    "wrong": [
+     "1 day",
+     "14 days",
+     "30 days"
+    ],
+    "why": "The Red Cross lists a 3-day supply for evacuation and a 2-week supply for home."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now medicines. This part you plan with professionals. Ready.gov says to ask your doctor or pharmacist how to make an emergency supply."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Ask the doctor or pharmacist"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Who should you ask about an emergency supply of medicines?",
+    "right": "The person's doctor or pharmacist",
+    "wrong": [
+     "A neighbor",
+     "A guess from an online forum",
+     "Whoever is at the front desk of a hardware store"
+    ],
+    "why": "Ready.gov and the CDC both point to the doctor or pharmacist. Never change a dose to make medicine last longer unless they tell you to."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "How many days? The Red Cross lists 7 days. The CDC says at least one week. Ready.gov says several days. Your pharmacist can tell you what is possible."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "7 days"
+   },
+   "cite": [
+    "s7",
+    "s4",
+    "s3"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "If a full week of medicine is not possible, what do ready.gov's disability guides suggest?",
+    "right": "Keep as much as you can, and talk to the pharmacist or doctor about what else to do",
+    "wrong": [
+     "Skip the medicine part of the bag",
+     "Borrow someone else's pills",
+     "Give smaller doses to stretch it out"
+    ],
+    "why": "The guide says to keep as much on hand as possible and talk to your pharmacist or doctor about what else to do."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Medicine in a bag can expire. The CDC calls the fix 'rotate the date'. It says to check dates at least twice a year."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Rotate the date"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Example: Sam's sister sets two phone reminders, one in spring and one in autumn. Each time she checks dates and asks the pharmacist how to swap old for new."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Check the dates twice a year"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Why check the dates on medicines in the bag?",
+    "right": "So they do not expire sitting in the bag",
+    "wrong": [
+     "So they look tidy",
+     "Because the bag gets lighter",
+     "Because the pharmacy asks to see them"
+    ],
+    "why": "The CDC says not to let medicines in your emergency kit expire, and to check the dates at least twice a year."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Some medicines must stay cold. The CDC suggests a cooler for them, and ready.gov adds chemical ice packs. Ask the pharmacist how long each one may stay out."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Cooler · Chemical ice packs · Pharmacist's advice for each medicine"
+   },
+   "cite": [
+    "s4",
+    "s21",
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now paper. Keep a medicine list: each medicine, the diagnosis, the dose, how often, supplies needed, and allergies."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Medicine name · Dose · How often · Diagnosis · Supplies needed · Allergies"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which of these belongs on the medicine list?",
+    "right": "Each medicine with its dose and how often it is taken, plus allergies",
+    "wrong": [
+     "Only the names of the medicines",
+     "Only the pharmacy's street address",
+     "Only the person's favorite foods"
+    ],
+    "why": "Ready.gov says to list dosage, frequency, diagnosis, medical supply needs and allergies."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Add copies of current prescriptions, and the phone numbers for the doctors and pharmacy. Put in the one-page medical sheet from class 4 too."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Prescription copies · Doctor and pharmacy phone numbers · One-page medical sheet (class 4)"
+   },
+   "cite": [
+    "s5"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Keep papers in a waterproof container. Ready.gov also says to save contacts and medical details on paper and digitally, and not only in a cell phone."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Paper and digital copies"
+   },
+   "cite": [
+    "s8",
+    "s14"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now equipment. Pack spares of what the person uses: glasses, hearing aids and batteries, wheelchair batteries, and a backup supply of oxygen if they use it."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Spare glasses · Hearing aids and batteries · Wheelchair batteries · Backup oxygen (if used) · Phone charger and backup battery · Pen and paper"
+   },
+   "cite": [
+    "s3",
+    "s19",
+    "s16"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Also pack any instructions for running equipment or lifesaving devices. A flat-tire repair kit for a wheelchair or scooter is on New York City's go-bag list."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Written device instructions · Wheelchair or scooter tire repair kit · Label equipment with name and phone"
+   },
+   "cite": [
+    "s8",
+    "s10",
+    "s11"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Daily-care supplies come next. Ready.gov says to think about the things used every day, and which ones to add to the kit."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "What is used every day?"
+   },
+   "cite": [
+    "s3",
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Walk through Sam's normal day: waking, washing, eating, medicines, moving, talking. Write down each item touched. That list is the packing list."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Waking · Washing · Eating · Medicines · Moving · Communicating"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is a good way to decide which daily-care supplies to pack?",
+    "right": "Walk through a normal day and write down each item used",
+    "wrong": [
+     "Pack only what fits in a pocket",
+     "Copy a stranger's list exactly",
+     "Pack nothing, since shelters supply everything"
+    ],
+    "why": "Ready.gov says to consider the items used every day. A shelter may not be able to meet every need, so confirm that on arrival."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Food: choose non-perishable items that are easy to prepare, and pack a manual can opener if any food is canned. If the person needs a special diet, ask their doctors what to pack."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Non-perishable, easy-to-prepare food · Manual can opener · Water: one gallon per person per day"
+   },
+   "cite": [
+    "s7",
+    "s15"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Comfort items count as supplies. The Red Cross lists things like games, toys and family photos. New York City lists items that comfort you in a stressful moment."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Family photos · A favorite blanket or small object · Music or games · Something familiar"
+   },
+   "cite": [
+    "s13",
+    "s10"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A service animal needs a bag too. The CDC lists food, water, medicine, toys, and bags for animal waste."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Food · Water · Medicine · Toys · Waste bags"
+   },
+   "cite": [
+    "s4"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which set of items fits a service animal's bag?",
+    "right": "Food, water, medicine, toys and waste bags",
+    "wrong": [
+     "Only a collar",
+     "Only the person's own medicines",
+     "Nothing, since the animal stays behind"
+    ],
+    "why": "The CDC lists food, water, medicine, toys and bags for animal waste for pets and service animals."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "New York City adds a leash, a bowl, vaccination records, and a photo of you with your animal. Ready.gov says to review the pet kit regularly, so food and medicine stay fresh."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Leash · Bowl · Vaccination records · Photo of you and your animal · Regular review"
+   },
+   "cite": [
+    "s10",
+    "s6",
+    "s12"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Where does the bag live? In one set place that everyone in the home knows. Choose somewhere easy to reach."
+   },
+   "show": {
+    "kind": "objects",
+    "object": "door",
+    "count": 1,
+    "layout": "group"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Put an ID tag on the bag. If lifting is hard, the Red Cross says a container with wheels may help."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Easy to reach"
+   },
+   "cite": [
+    "s11"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "When to check? The CDC says check emergency kits every 6 months, so contents are current and working. Replace old food, water, medicines and batteries."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "Every 6 months"
+   },
+   "cite": [
+    "s4",
+    "s11"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "How often does the CDC suggest checking an emergency kit?",
+    "right": "Every 6 months",
+    "wrong": [
+     "Every 6 years",
+     "Only after a disaster",
+     "Never, if it was packed well"
+    ],
+    "why": "The CDC says to check kits every 6 months so everything is current and works."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Local things vary by place. Check with your local 911 center or emergency management office about alerts, shelters and local help. At a shelter, confirm it can meet the person's care needs."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Check locally"
+   },
+   "cite": [
+    "s20"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "One more note. This class does not replace the person's own doctors. It also does not replace a first-aid or CPR class. The Red Cross suggests someone in the household is trained."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Take a hands-on class"
+   },
+   "cite": [
+    "s7"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To sum up: a bag, a medicine plan made with the doctor or pharmacist, papers, spare devices, comfort items, and a check every 6 months. Next up: winter storms."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Bag · Medicine plan · Papers · Devices and chargers · Daily-care supplies · Food and water · Comfort items · Service animal items · Check every 6 months"
+   },
+   "cite": [
+    "s3",
+    "s4",
+    "s5"
+   ],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Days of supplies on the Red Cross list",
+   "rows": [
+    {
+     "label": "Water and food, bag for leaving (days)",
+     "value": 3,
+     "source": "s7"
+    },
+    {
+     "label": "Medications (days)",
+     "value": 7,
+     "source": "s7"
+    },
+    {
+     "label": "Water and food kept at home (days)",
+     "value": 14,
+     "source": "s7"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Go-bag",
+   "links": [
+    "[[The One-Page Medical Sheet for the ER]]",
+    "[[Power Cuts and Medical Devices]]",
+    "[[Fire and Evacuation Plans for Someone Who Uses a Wheelchair or Cannot Walk]]"
+   ]
+  },
+  {
+   "topic": "Medication supply",
+   "links": [
+    "[[Power Cuts and Medical Devices]]",
+    "[[Winter Storms]]",
+    "[[Extreme Heat]]"
+   ]
+  },
+  {
+   "topic": "Service animal supplies",
+   "links": [
+    "[[Family Contact Plans: Who Calls Whom]]",
+    "[[Putting It Together: Your Home Plan Checklist]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "Keep about 7 days of medicine in the bag.",
+   "other_view": "The sources do not all give the same number. The Red Cross and CDC lists use 7 days or at least one week. Ready.gov's disability page says several days. What is possible depends on the medicine, the prescriber and the pharmacy, so ask them.",
+   "cite": [
+    "s7",
+    "s4",
+    "s3"
+   ]
+  },
+  {
+   "claim": "A go-bag needs 3 days of food and water.",
+   "other_view": "Three days is the Red Cross number for leaving home, but the Red Cross lists a 2-week supply for home. Ready.gov says several days. The right amount depends on where you live and how long help may take, so ask your local emergency management office.",
+   "cite": [
+    "s7",
+    "s1"
+   ]
+  },
+  {
+   "claim": "Pet and service animal supplies for 3 days are enough.",
+   "other_view": "A CDC fact sheet lists at least 3 days of food and water for each pet. A university emergency management guide suggests 7 to 10 days of supplies for service animals and pets. Ask your veterinarian or local emergency office.",
+   "cite": [
+    "s18",
+    "s17"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,702 @@
+{
+ "about": {
+  "title": "Winter Storms",
+  "course": "practical-emergency-preparedness",
+  "class_n": 12,
+  "audience": [
+   "adult",
+   "caregiver"
+  ],
+  "minutes": 12,
+  "length_note": "About 3 minutes longer than the 9-minute target. This class has seven topics, and the heat, carbon monoxide and hypothermia ideas each need an example and a check question. It can be stopped cleanly after beat 7 (alerts and supplies), beat 11 (safe heat) or beat 14 (checking for cold)."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "Winter Weather (watches, warnings, advisories)",
+   "publisher": "National Weather Service, Mount Holly office",
+   "date": "not shown on page",
+   "link": "https://www.weather.gov/phi/winterwx",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s2",
+   "title": "Winter Weather",
+   "publisher": "Ready.gov (FEMA)",
+   "date": "not shown on page",
+   "link": "https://www.ready.gov/winter-weather",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s3",
+   "title": "Safety Guidelines: During & After a Winter Storm",
+   "publisher": "Centers for Disease Control and Prevention",
+   "date": "not shown on page",
+   "link": "https://www.cdc.gov/winter-weather/safety/stay-safe-during-after-a-winter-storm-safety.html",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s4",
+   "title": "What to Do to Protect Yourself During a Power Outage",
+   "publisher": "Centers for Disease Control and Prevention",
+   "date": "not shown on page",
+   "link": "https://www.cdc.gov/natural-disasters/response/what-to-do-protect-yourself-during-a-power-outage.html",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s5",
+   "title": "Safety with heating equipment",
+   "publisher": "National Fire Protection Association (NFPA)",
+   "date": "statistics are 2020-2024 averages; page date not shown",
+   "link": "https://www.nfpa.org/education-and-research/home-fire-safety/heating",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s6",
+   "title": "Winter Storm Preparedness Checklist (PDF)",
+   "publisher": "American Red Cross",
+   "date": "not shown on page",
+   "link": "https://www.redcross.org/content/dam/redcross/get-help/pdfs/winter-storm/EN_Winter-Storm-Preparedness-Checklist.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s7",
+   "title": "Dangerously Cold Temperatures Moving In; Follow these Steps to Help You Stay Safe",
+   "publisher": "American Red Cross",
+   "date": "2026 (exact date not shown)",
+   "link": "https://www.redcross.org/about-us/news-and-events/news/2026/steps-to-help-keep-you-safe-as-winter-storm-moves-across-u-s-.html",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s8",
+   "title": "4 Steps to Prepare Before Winter Storm Brings Dangerous Freezing Rain and Snow",
+   "publisher": "FEMA",
+   "date": "not shown on page",
+   "link": "https://www.fema.gov/blog/4-steps-prepare-winter-storm-brings-dangerous-freezing-rain-and-snow-south-midwest-and",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s9",
+   "title": "Preventing Hypothermia",
+   "publisher": "Centers for Disease Control and Prevention",
+   "date": "not shown on page",
+   "link": "https://www.cdc.gov/winter-weather/prevention/index.html",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s10",
+   "title": "Winter Weather Safety",
+   "publisher": "National Weather Service, La Crosse office",
+   "date": "not shown on page",
+   "link": "https://www.weather.gov/arx/wintersafety",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s11",
+   "title": "Severe Weather Awareness - Weather Alerts",
+   "publisher": "National Weather Service, Mobile office",
+   "date": "not shown on page",
+   "link": "https://www.weather.gov/mob/Severe_Alert",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s12",
+   "title": "Home Safety",
+   "publisher": "National Weather Service, Marquette office",
+   "date": "not shown on page",
+   "link": "https://www.weather.gov/mqt/hometips",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s13",
+   "title": "Issue 8: Hypothermia",
+   "publisher": "Care Quality Commission (England's care regulator)",
+   "date": "not shown on page",
+   "link": "https://www.cqc.org.uk/guidance-regulation/adult-social-care/learning-safety-incidents/issue-8-hypothermia",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s14",
+   "title": "Red Cross Offers Safety Tips for Winter Storm",
+   "publisher": "American Red Cross (Illinois region)",
+   "date": "not shown on page",
+   "link": "https://www.redcross.org/local/illinois/about-us/news-and-events/press-releases/red-cross-offers-safety-tips-as-winter-storm-approaches.html",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s15",
+   "title": "Hypothermia: First aid",
+   "publisher": "Mayo Clinic",
+   "date": "not shown on page",
+   "link": "https://www.mayoclinic.org/first-aid/first-aid-hypothermia/basics/art-20056624",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s16",
+   "title": "Be Prepared for a Power Outage (information sheet, PDF)",
+   "publisher": "Ready.gov (FEMA)",
+   "date": "2024 (per file path)",
+   "link": "https://www.ready.gov/sites/default/files/2024-03/ready.gov_power-outage_hazard-info-sheet.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s17",
+   "title": "Power Outages and Lung Health",
+   "publisher": "American Lung Association",
+   "date": "not shown on page",
+   "link": "https://www.lung.org/clean-air/emergencies-and-natural-disasters/power-outages",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s18",
+   "title": "Looking after a person with dementia in cold weather",
+   "publisher": "Dementia UK",
+   "date": "not shown on page",
+   "link": "https://www.dementiauk.org/information-and-support/health-advice/keeping-warm-in-cold-weather/",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s19",
+   "title": "Cold weather and people with disabilities (flyer, PDF)",
+   "publisher": "City of Boston",
+   "date": "2019 (per file path)",
+   "link": "https://search.boston.gov/sites/default/files/file/2019/12/COLD%20Disabilities.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s21",
+   "title": "If a Major Winter Storm Heads Your Way, Follow These Safety Steps",
+   "publisher": "American Red Cross",
+   "date": "not shown on page",
+   "link": "https://www.redcross.org/about-us/news-and-events/news/2021/winter-is-here-how-to-stay-safe-on-the-road-or-at-home.html",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s22",
+   "title": "Protect Your Family During the Catastrophic Winter Storms",
+   "publisher": "U.S. Consumer Product Safety Commission",
+   "date": "2021 (per URL)",
+   "link": "https://www.cpsc.gov/Newsroom/News-Releases/2021/Protect-Your-Family-During-the-Catastrophic-Winter-Storms",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s24",
+   "title": "Be Prepared for a Winter Storm (information sheet, PDF)",
+   "publisher": "Ready.gov (FEMA)",
+   "date": "2020 (per file path)",
+   "link": "https://www.ready.gov/sites/default/files/2020-03/winter-storm-information-sheet.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s25",
+   "title": "#WinterReady",
+   "publisher": "Ready.gov (FEMA)",
+   "date": "not shown on page",
+   "link": "https://www.ready.gov/winter-ready",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s26",
+   "title": "Winter Storm Partners Toolkit (PDF)",
+   "publisher": "Ready.gov (FEMA)",
+   "date": "January 2026",
+   "link": "https://www.ready.gov/sites/default/files/2026-01/ready-gov_winter-storm-partners-toolkit.pdf",
+   "read": "2026-11-21"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome to class 12. In class 11 you built a go-bag and a medication supply. Today we use that thinking for winter storms: alerts, safe heat, and checking on someone who cannot say they are cold."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Winter Storms"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The National Weather Service uses three winter alert words: watch, advisory and warning. A watch usually comes first. Let's take them one at a time."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Watch: possible, get ready | Advisory: less severe, still take care | Warning: dangerous weather coming soon"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A winter storm watch means dangerous winter weather is possible. It is usually issued 12 to 36 hours ahead. That is your time to get ready, before anything has started."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "WATCH = get ready"
+   },
+   "cite": [
+    "s1",
+    "s21"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Sam hears that a winter storm watch has been issued for tomorrow. What does that mean?",
+    "right": "Dangerous winter weather is possible, so it is time to get ready.",
+    "wrong": [
+     "The storm is already here, so everyone must stay put.",
+     "The storm is over and it is safe to travel.",
+     "Nothing is expected, so there is nothing to do."
+    ],
+    "why": "A watch is an early alert. It gives you time to check supplies and plans before the weather arrives."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "An advisory is for a less severe event, but travel can still be dangerous. A warning means dangerous winter weather is imminent. It is usually issued after a watch."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Advisory: less severe, travel may still be dangerous | Warning: dangerous weather imminent, usually after a watch"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Which of these alerts says dangerous winter weather is imminent?",
+    "right": "A winter storm warning",
+    "wrong": [
+     "A winter storm watch",
+     "A winter weather advisory",
+     "They all mean exactly the same thing"
+    ],
+    "why": "A watch means possible. An advisory means a less severe event. A warning means dangerous weather is imminent."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "You need more than one way to hear alerts, because winter storms can cut power and phone service. Use a NOAA Weather Radio, Wireless Emergency Alerts on your phone, and your community's warning system."
+   },
+   "show": {
+    "kind": "list",
+    "text": "NOAA Weather Radio | Wireless Emergency Alerts (free) | Community warning system | TV captions or scrolled warnings if you are deaf or hard of hearing"
+   },
+   "cite": [
+    "s3",
+    "s11",
+    "s12",
+    "s24"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Once an alert is out, the safest place is inside. Plan to stay home for several days without power. FEMA's list includes food that needs no cooking, drinking water, medications, first-aid supplies, flashlights and batteries."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Food that needs no cooking or fridge | Drinking water | Prescription medications and first-aid supplies | Flashlights, batteries, power banks | Blankets and warm clothing"
+   },
+   "cite": [
+    "s10",
+    "s2",
+    "s8"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now add what your person needs. The Red Cross says a stay-at-home kit has two weeks of food and water and, if possible, a month of medications. Add backup batteries and chargers for devices such as a CPAP or wheelchair."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Two weeks of food and water | One month of medications and medical supplies, if possible | Backup batteries and chargers for devices | Phones and power banks fully charged"
+   },
+   "cite": [
+    "s7",
+    "s8"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Sam uses a device that needs power. What should the winter kit include for it?",
+    "right": "Backup batteries or another way to charge it, plus a plan made with the person's doctors.",
+    "wrong": [
+     "Nothing, because power always comes back within an hour.",
+     "More candles for light near the device.",
+     "A second space heater plugged in beside the device."
+    ],
+    "why": "The Red Cross and FEMA both say to have backup batteries or another way to charge medical devices. Ready.gov says to make the device plan with a doctor."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Next, staying warm safely. Home heating is a leading cause of house fires, and the peak months are December, January and February. NFPA's key rule: keep space heaters at least 3 feet from anything that can burn."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "3 feet"
+   },
+   "cite": [
+    "s5",
+    "s14"
+   ],
+   "move": "count-in"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Space heaters and heating stoves cause about 30% of heating fires, but 73% of the deaths. Plug heaters straight into the wall and put them on a hard, level floor. Turn them off when you leave the room or go to bed. Never heat with an oven."
+   },
+   "show": {
+    "kind": "chart",
+    "text": "Space heaters and heating stoves: share of heating fires, deaths and injuries",
+    "chart": "c1"
+   },
+   "cite": [
+    "s5",
+    "s14"
+   ],
+   "move": "bars-grow",
+   "ask": {
+    "q": "Where is the safest place for a space heater?",
+    "right": "On a flat, hard floor, at least 3 feet from bedding, curtains and furniture, plugged directly into the wall.",
+    "wrong": [
+     "Right beside the bed so it warms the person best.",
+     "On a rug, with a blanket over it to hold the heat in.",
+     "On a long extension cord so it reaches the chair."
+    ],
+    "why": "NFPA and the Red Cross say to keep heaters 3 feet from anything that can burn, use a hard level surface, and never use an extension cord."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "The second heating danger is carbon monoxide, or CO. It is an odorless, colorless gas that can make people suddenly ill or kill them. It comes from burning fuel, such as generators, gas stoves, lanterns, charcoal and wood. Never ignore a CO alarm."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "CO: no color, no smell"
+   },
+   "cite": [
+    "s4",
+    "s22"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "The CDC rules: never run a generator or gasoline engine inside a home, basement or garage, even with doors open. Outside, keep it at least 20 feet from any window, door or vent. Have a battery-powered CO detector."
+   },
+   "show": {
+    "kind": "big_number",
+    "text": "20 feet"
+   },
+   "cite": [
+    "s4",
+    "s3"
+   ],
+   "move": "count-in",
+   "ask": {
+    "q": "Where can Sam's portable generator run?",
+    "right": "Outside, at least 20 feet from windows, doors and vents.",
+    "wrong": [
+     "In the garage, with the garage door open.",
+     "In the basement, away from the furnace.",
+     "Right beside the back door, so the cord is short."
+    ],
+    "why": "The CDC says never run a generator in a basement or garage, even with doors open. Keep it outside, at least 20 feet from any window, door or vent."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the people who cannot tell you they are cold. Hypothermia is when the body loses heat faster than it makes it, and body temperature falls below 95°F. People who cannot move, or cannot say they are cold, are at extra risk."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Hypothermia"
+   },
+   "cite": [
+    "s15",
+    "s13",
+    "s19"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "A care regulator in England warns that hypothermia can develop after a small drop in room temperature. So do not wait to be told. Asking 'are you cold?' may not get a reliable answer, and cold hands and feet alone do not show the core temperature."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Do not wait to be told | Put a thermometer in the room | Check the person on a schedule | Compare with what is normal for them"
+   },
+   "cite": [
+    "s13",
+    "s18",
+    "s6"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Sam cannot say whether he is cold. What is the best plan?",
+    "right": "Check the room temperature and how Sam looks and acts, on a regular schedule.",
+    "wrong": [
+     "Wait for Sam to complain.",
+     "Feel only his hands; if they are warm, all is well.",
+     "Assume he is fine as long as he is quiet."
+    ],
+    "why": "A person who cannot speak cannot report being cold. Checking the room and the person yourself, on a schedule, does not depend on them telling you."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Warning signs in adults: shivering, exhaustion, confusion, fumbling hands, memory loss, slurred speech and drowsiness. Shivering may stop as it gets worse. If you see signs, take the temperature. Below 95°F is an emergency."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Shivering | Exhaustion | Confusion | Fumbling hands | Memory loss | Slurred speech | Drowsiness"
+   },
+   "cite": [
+    "s9",
+    "s3",
+    "s15"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Sam is drowsy and confused, and his temperature reads 94°F. What does the CDC say?",
+    "right": "It is an emergency. Get medical attention immediately, and call 911 and follow the call-taker's instructions.",
+    "wrong": [
+     "Wait until morning and check again.",
+     "Give a warm alcoholic drink and let him sleep.",
+     "It only counts as an emergency below 80°F."
+    ],
+    "why": "The CDC says a temperature below 95°F is an emergency. Call 911 and do what the call-taker tells you."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "If heat or power fails, keep the warmth in. Close off unused rooms, stuff towels in cracks under doors, and cover windows at night. Use blankets, sleeping bags, warm coats and layers. Use flashlights, not candles."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Close off unused rooms | Towels under doors | Cover windows at night | Blankets, sleeping bags, layers | Flashlights, not candles"
+   },
+   "cite": [
+    "s21",
+    "s3",
+    "s6",
+    "s7"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Do this before the storm: tell your electric company if someone uses powered medical equipment. Ask your doctor for a power-cut plan, and ask the device company about backup options. Telling your fire department was class 5."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Tell the electric company | Tell the fire department | Doctor's plan for powered devices | Ask the device company about backup"
+   },
+   "cite": [
+    "s17",
+    "s16"
+   ],
+   "move": "slide-in-left"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "If you cannot keep the home warm, know where you will go before the storm. That could be a friend's house, a library or a warming center. If the person has limited mobility, call ahead and ask about access."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Friend's or family member's home | Public library | Warming center (call ahead about access)"
+   },
+   "cite": [
+    "s6",
+    "s3",
+    "s19"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Travel is the other risk. The National Weather Service says the best advice in severe winter weather is to stay inside, because roads may be treacherous. Avoid travel if you can. If you must go, check weather and traffic first."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Stay in if you can"
+   },
+   "cite": [
+    "s10",
+    "s6",
+    "s26"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "A winter storm warning is issued, and Sam has a routine appointment tomorrow. What is a sensible first step?",
+    "right": "Check the alert, then call the clinic to ask about moving the appointment or another plan.",
+    "wrong": [
+     "Drive anyway, because appointments always come first.",
+     "Say nothing and decide at the last minute.",
+     "Ignore the alert if the road looks fine from the window."
+    ],
+    "why": "The Weather Service says to stay inside in severe winter weather, and the Red Cross says to avoid travel if you can. Calling the clinic ahead is the safe way to handle the appointment."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Last idea: check in on a regular basis. Plan to check on loved ones and neighbors, especially older adults and babies. Make sure a neighbor or friend knows to check on you, too. Class 14 builds this plan."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Who checks on whom | How often | What to look for | A backup if phones fail"
+   },
+   "cite": [
+    "s6",
+    "s19"
+   ],
+   "move": "light-in-turn"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Laws and services differ from place to place. Check with your local emergency management office, 911 center or fire department about alert sign-up, warming centers and help for people with disabilities."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Check with your local emergency management office"
+   },
+   "cite": [
+    "s24"
+   ],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "This class does not replace your doctors or hands-on training. The Red Cross says to learn first aid and CPR, because emergency services may be delayed. Take a class from the Red Cross or American Heart Association."
+   },
+   "show": {
+    "kind": "quote",
+    "text": "Learn first aid and CPR. Emergency services may be delayed."
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "To sum up: know watch, advisory and warning. Heat safely, and keep CO outside. Check on people who cannot tell you they are cold, and plan check-ins. Next class: extreme heat."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Know the alert words | Heat safely, CO outside | Check on people who cannot say they are cold | Plan check-ins | Next: Extreme Heat"
+   },
+   "cite": [],
+   "move": "light-in-turn"
+  }
+ ],
+ "charts": [
+  {
+   "id": "c1",
+   "kind": "bar",
+   "title": "Space heaters and heating stoves: share of home heating equipment fire losses (percent, 2020-2024 averages)",
+   "rows": [
+    {
+     "label": "Fires",
+     "value": 30,
+     "source": "s5"
+    },
+    {
+     "label": "Deaths",
+     "value": 73,
+     "source": "s5"
+    },
+    {
+     "label": "Injuries",
+     "value": 70,
+     "source": "s5"
+    }
+   ]
+  }
+ ],
+ "notes": [
+  {
+   "topic": "Winter storm watch, advisory and warning",
+   "links": [
+    "[[NOAA Weather Radio and Wireless Emergency Alerts]]",
+    "[[Go-bag and medication supply]]"
+   ]
+  },
+  {
+   "topic": "Space heater and fire safety",
+   "links": [
+    "[[Smoke and carbon monoxide alarms]]"
+   ]
+  },
+  {
+   "topic": "Carbon monoxide and generators",
+   "links": [
+    "[[Smoke and carbon monoxide alarms]]",
+    "[[Power cuts and medical devices]]"
+   ]
+  },
+  {
+   "topic": "Hypothermia in people who cannot say they are cold",
+   "links": [
+    "[[The one-page medical sheet for the ER]]",
+    "[[Calling 911: address first, stay on the line]]"
+   ]
+  },
+  {
+   "topic": "Check-ins and warming centers",
+   "links": [
+    "[[Family contact plans: who calls whom]]",
+    "[[Telling your fire department]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "A winter storm watch is usually issued 12 to 36 hours ahead.",
+   "other_view": "The Weather Service page used here says 12 to 36 hours. Ready.gov says 12 to 48 hours, and a Red Cross page says 36 to 48. Timing varies by office and storm, so treat the numbers as rough and follow your local forecast office.",
+   "cite": [
+    "s1",
+    "s2",
+    "s21"
+   ]
+  },
+  {
+   "claim": "In severe winter weather, stay home.",
+   "other_view": "The Weather Service says the best advice is to stay inside. Ready.gov and the CDC also say that if you cannot heat your home, you should go somewhere warm, such as a community location with power. For someone with limited mobility, moving is a hard call. Make it ahead of time with the person's care team and your local emergency management office, and call the warming center first.",
+   "cite": [
+    "s10",
+    "s25",
+    "s3",
+    "s19"
+   ]
+  }
+ ]
+}

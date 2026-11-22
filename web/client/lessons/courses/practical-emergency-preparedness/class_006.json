@@ -1,0 +1,455 @@
+{
+ "about": {
+  "title": "Recovery (Side) Position: What First-Aid Courses Teach",
+  "course": "practical-emergency-preparedness",
+  "class_n": 6,
+  "audience": [
+   "adult",
+   "caregiver"
+  ],
+  "minutes": 8,
+  "length_note": "About 8 minutes. It covers one skill in 13 short beats, so you can stop after any beat. CPR and choking are left out because they need hands-on classes. Choking is class 7."
+ },
+ "sources": [
+  {
+   "id": "s1",
+   "title": "First Aid for Someone Unresponsive & Breathing",
+   "publisher": "American Red Cross",
+   "date": "undated web page",
+   "link": "https://www.redcross.org/take-a-class/resources/learn-first-aid/unresponsive-and-breathing-person",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s2",
+   "title": "Chest Injury (includes the Red Cross steps for placing a person in the recovery position)",
+   "publisher": "American Red Cross",
+   "date": "undated web page",
+   "link": "https://www.redcross.org/take-a-class/resources/learn-first-aid/chest-injury",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s3",
+   "title": "2024 American Heart Association and American Red Cross Guidelines for First Aid",
+   "publisher": "American Heart Association",
+   "date": "2024",
+   "link": "https://cpr.heart.org/en/resuscitation-science/2024-first-aid-guidelines",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s4",
+   "title": "Part 8: First Aid (recovery position steps)",
+   "publisher": "American Heart Association",
+   "date": "undated web page, based on the 2015 guidelines update",
+   "link": "https://cpr.heart.org/en/resuscitation-science/first-aid-guidelines/first-aid",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s5",
+   "title": "CPR/AED for Professional Rescuers participant manual (breathing emergencies chapter)",
+   "publisher": "American Red Cross",
+   "date": "2011, 2016",
+   "link": "https://www.redcross.org/content/dam/redcross/uncategorized/6/CPro_PM_digital.pdf",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s6",
+   "title": "What to Expect When You Call 9-1-1 for a Medical Emergency",
+   "publisher": "LifeNet EMS",
+   "date": "undated web page",
+   "link": "https://www.lifenetems.org/911call/",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s7",
+   "title": "First Aid Training",
+   "publisher": "American Red Cross",
+   "date": "undated web page",
+   "link": "https://www.redcross.org/take-a-class/first-aid/first-aid-training",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s8",
+   "title": "First Aid Classes, Training & Certification in Washington",
+   "publisher": "American Red Cross",
+   "date": "undated web page",
+   "link": "https://www.redcross.org/local/washington/take-a-class/first-aid",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s9",
+   "title": "Heartsaver First Aid CPR AED Course Options",
+   "publisher": "American Heart Association",
+   "date": "undated web page",
+   "link": "https://cpr.heart.org/en/courses/heartsaver-first-aid-cpr-aed-course-options",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s10",
+   "title": "Part 15: First Aid: 2015 American Heart Association and American Red Cross Guidelines Update for First Aid",
+   "publisher": "Circulation (American Heart Association)",
+   "date": "2015",
+   "link": "https://www.ahajournals.org/doi/10.1161/CIR.0000000000000269?doi=10.1161/CIR.0000000000000269",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s11",
+   "title": "2022 International Consensus on CPR and Emergency Cardiovascular Care Science With Treatment Recommendations",
+   "publisher": "Circulation (American Heart Association)",
+   "date": "2022",
+   "link": "https://www.ahajournals.org/doi/10.1161/CIR.0000000000001095",
+   "read": "2026-11-21"
+  },
+  {
+   "id": "s12",
+   "title": "First Aid Classes & Training in Virginia",
+   "publisher": "American Red Cross",
+   "date": "undated web page",
+   "link": "https://www.redcross.org/local/virginia/take-a-class/first-aid",
+   "read": "2026-11-21"
+  }
+ ],
+ "beats": [
+  {
+   "say": {
+    "who": "A",
+    "text": "Welcome. This class covers one first-aid skill: the side position, also called the recovery position. We teach it the way first-aid courses teach it. This is not medical advice. It does not replace a hands-on class or the person's own doctors."
+   },
+   "show": {
+    "kind": "heading",
+    "text": "Recovery (side) position: what first-aid courses teach"
+   },
+   "cite": [],
+   "move": "title-rise"
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Before anything else, call 911. Follow the call-taker over anything in this class. Call-takers give instructions while help is on the way, and those instructions do not delay the ambulance."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Call 911 first. Follow the call-taker."
+   },
+   "cite": [
+    "s6"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "The 911 call-taker tells you to do something different from this class. What do you do?",
+    "right": "Follow the call-taker's instructions.",
+    "wrong": [
+     "Follow this class, because it was planned in advance.",
+     "Hang up and look up the steps again.",
+     "Do both at the same time."
+    ],
+    "why": "Call-takers hear your situation live and give instructions for it. This class is general."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Now the first check. Unresponsive means the person does not answer when you shout their name and tap their shoulder. Courses teach a quick check of no more than 10 seconds, while you also notice their breathing. Picture Sam, who does not answer but whose chest is rising and falling."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Unresponsive but breathing"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "About how long should the first check for a response take?",
+    "right": "No more than 10 seconds.",
+    "wrong": [
+     "A full minute.",
+     "Until the person wakes up.",
+     "Two or three minutes."
+    ],
+    "why": "Courses teach shout, tap, shout, in no more than 10 seconds, while you note breathing."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Breathing decides what comes next. If the person is breathing normally, courses teach the side position. If they are not breathing, or only gasping, courses teach CPR and an AED instead, and the call-taker guides you."
+   },
+   "show": {
+    "kind": "two_columns",
+    "text": "Breathing normally: side position, as taught in this class | Not breathing, or only gasping: CPR and AED, taught in a hands-on class"
+   },
+   "cite": [
+    "s1",
+    "s3"
+   ],
+   "move": "slide-in-left",
+   "ask": {
+    "q": "Sam does not answer and is only gasping. Is this the side position situation?",
+    "right": "No. Gasping is not normal breathing. Courses teach CPR and an AED, and the call-taker will guide you.",
+    "wrong": [
+     "Yes. Roll Sam onto their side and wait.",
+     "Yes. Sit Sam up and give a drink.",
+     "No. Just wait and watch for a few minutes."
+    ],
+    "why": "The Red Cross says someone who is unresponsive and not breathing, or only gasping, needs CPR and an AED right away."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why the side? The AHA and Red Cross guidelines say this position may lower the risk of a blocked airway. It also lets fluid drain from the mouth. That matters most when nobody can watch the airway closely."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Goal: keep the airway clear and let fluid drain"
+   },
+   "cite": [
+    "s3"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "What is the main aim of the side position?",
+    "right": "To help keep the airway clear and let fluid drain from the mouth.",
+    "wrong": [
+     "To wake the person up.",
+     "To stop the person from vomiting.",
+     "To make the person sleep."
+    ],
+    "why": "The guidelines describe less airway blockage and better drainage of fluid. They do not describe waking someone or stopping vomiting."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So when do courses teach it? When a person is unresponsive but breathing, or not fully awake. And when someone in that state vomits, the Red Cross teaches turning them onto their side so the vomit does not enter the airway."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Unresponsive and breathing normally; Not fully awake and breathing; Vomiting while unresponsive or not fully awake"
+   },
+   "cite": [
+    "s2",
+    "s5"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which person fits what this class covers?",
+    "right": "Sam does not answer when called, and is breathing normally.",
+    "wrong": [
+     "Sam is awake, chatting, and asks for a glass of water.",
+     "Sam is not breathing at all.",
+     "Sam is gasping and does not answer."
+    ],
+    "why": "The side position is for someone who is unresponsive but breathing normally. Not breathing, or only gasping, is a CPR situation."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Here are the steps as the Red Cross and the American Heart Association teach them. One: extend the arm closest to you above their head. Two: roll them toward you onto their side, so their head rests on that arm. Three: bend both knees to steady the body."
+   },
+   "show": {
+    "kind": "list",
+    "text": "1. Extend the arm closest to you above their head; 2. Roll them toward you onto their side, head resting on that arm; 3. Bend both knees to steady the body"
+   },
+   "cite": [
+    "s2",
+    "s4"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "What is the job of bending both knees?",
+    "right": "It steadies the body so the person stays on their side.",
+    "wrong": [
+     "It wakes the person up.",
+     "It opens the airway.",
+     "It stops vomiting."
+    ],
+    "why": "Both the Red Cross and the AHA describe bending the legs to stabilize the body once the person is on their side."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Let's picture it. Sam lies on their side on the floor, with their head resting on the arm stretched above it. Both knees are bent, so Sam does not roll back or forward."
+   },
+   "show": {
+    "kind": "picture",
+    "text": "A person lying on their side on the floor. Their head rests on an outstretched arm. Both knees are bent so the body stays steady."
+   },
+   "cite": [
+    "s2",
+    "s4"
+   ],
+   "move": "fade"
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "After rolling, you stay. Courses teach you to keep watching breathing and responsiveness. Keep the person from getting cold or too hot. Tell them help has been called. If breathing stops or turns to gasping, that is the CPR situation, so tell the call-taker."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Stay with them; Watch breathing and responsiveness; Keep them comfortable, not cold or too hot; Tell them help is coming; Tell the call-taker if anything changes"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Sam is now on their side. What do courses teach you to do next?",
+    "right": "Stay, keep watching Sam's breathing and responsiveness, and keep talking with the call-taker.",
+    "wrong": [
+     "Leave to do other jobs and check back in an hour.",
+     "Give Sam a drink to help them wake up.",
+     "Hang up so you can concentrate."
+    ],
+    "why": "The position is only one part of care. You keep checking for changes until help arrives."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "Now the limits. If a head, neck or back injury is suspected, courses teach leaving the person as found. The exceptions are when you must move them for safety, to do CPR, or to control bleeding. Other conditions and devices can change what is safe too. Ask the person's doctors ahead of time, and tell the call-taker what you know."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "Possible head, neck or back injury: leave as found"
+   },
+   "cite": [
+    "s1"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Sam fell from a ladder, does not answer, and is breathing. A back injury is possible. What do courses teach?",
+    "right": "Leave Sam as found, unless you must move them for safety, CPR or bleeding. Follow the call-taker.",
+    "wrong": [
+     "Always roll Sam onto their side straight away.",
+     "Sit Sam up against a wall.",
+     "Roll Sam onto their stomach."
+    ],
+    "why": "The Red Cross teaches leaving a person in the position found when a head, neck or back injury is suspected."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "Why does practice matter? Rolling a person is a physical skill. A live instructor can check your hands and answer questions about your own home. AHA guidelines say first-aid education can be useful and should be available to everyone."
+   },
+   "show": {
+    "kind": "key_word",
+    "text": "This class alone is not enough"
+   },
+   "cite": [
+    "s10",
+    "s8"
+   ],
+   "move": "fade",
+   "ask": {
+    "q": "Why is this class not enough on its own?",
+    "right": "Moving a person is a hands-on skill, and an instructor can check your technique and your own situation.",
+    "wrong": [
+     "The side position is never used in first aid.",
+     "Moving a person takes no skill.",
+     "911 call-takers never give instructions."
+    ],
+    "why": "Courses include hands-on practice with an instructor. Reading or watching cannot check what your hands do."
+   }
+  },
+  {
+   "say": {
+    "who": "B",
+    "text": "So take a hands-on class. The Red Cross offers first aid training online, in person, and blended, which means online work plus a hands-on session. The AHA offers Heartsaver First Aid CPR AED with a classroom or a blended option. Red Cross class length varies, from about 2 hours to over 4. Check what is offered near you."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Red Cross first aid: online, in person, or blended; AHA Heartsaver First Aid CPR AED: classroom or blended; Choose one with hands-on skills practice"
+   },
+   "cite": [
+    "s7",
+    "s8",
+    "s9",
+    "s12"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "Which choice includes hands-on practice with an instructor?",
+    "right": "An in-person or blended class, which includes a hands-on skills session.",
+    "wrong": [
+     "Reading one lesson like this once.",
+     "Watching a video once.",
+     "Skipping a class because you read this lesson."
+    ],
+    "why": "The Red Cross notes that an online-only option has no in-person skills check. In-person and blended classes have one."
+   }
+  },
+  {
+   "say": {
+    "who": "A",
+    "text": "To sum up. Call 911 and follow the call-taker. Check breathing: normal breathing means the side position as taught, and not normal means CPR as taught. Then book a hands-on class. You can stop here, and you can come back whenever you like."
+   },
+   "show": {
+    "kind": "list",
+    "text": "Call 911, follow the call-taker; Normal breathing: side position as taught; Not breathing or only gasping: CPR and AED as taught; Take a hands-on class"
+   },
+   "cite": [
+    "s1",
+    "s6",
+    "s7",
+    "s9"
+   ],
+   "move": "light-in-turn",
+   "ask": {
+    "q": "In one line, what is the plan?",
+    "right": "Call 911, follow the call-taker, and take a hands-on class to learn the skill.",
+    "wrong": [
+     "Roll the person first and call 911 later.",
+     "Rely on this lesson alone.",
+     "Ignore the call-taker if they disagree with the lesson."
+    ],
+    "why": "911 comes first and the call-taker's instructions come before this class. A hands-on class builds the skill."
+   }
+  }
+ ],
+ "charts": [],
+ "notes": [
+  {
+   "topic": "Recovery (side) position",
+   "links": [
+    "[[Calling 911: Address First, Stay on the Line]]",
+    "[[What 911 Call-Takers Ask, and How to Answer]]",
+    "[[The One-Page Medical Sheet for the ER]]",
+    "[[Choking First Aid: What First-Aid Courses Teach]]",
+    "[[Putting It Together: Your Home Plan Checklist]]"
+   ]
+  },
+  {
+   "topic": "Hands-on first-aid classes (Red Cross, American Heart Association)",
+   "links": [
+    "[[Choking First Aid: What First-Aid Courses Teach]]"
+   ]
+  }
+ ],
+ "frame_of_reference": [],
+ "other_side": [
+  {
+   "claim": "First-aid courses teach the side position for someone who is unresponsive but breathing normally.",
+   "other_view": "Experts support it, but the evidence is modest. The 2024 AHA and Red Cross guidelines call it reasonable for decreased alertness of nontraumatic cause. A 2022 international review gave only a weak recommendation based on very low-certainty evidence. The 2015 guidelines noted little evidence for any one best version. The 2022 review describes the arm and knee positions differently from the Red Cross and AHA steps in this class. Details therefore vary between sources, which is another reason to learn from a live instructor and to follow the 911 call-taker.",
+   "cite": [
+    "s3",
+    "s10",
+    "s11",
+    "s2",
+    "s4"
+   ]
+  },
+  {
+   "claim": "If a head, neck or back injury is suspected, courses teach leaving the person as found.",
+   "other_view": "The Red Cross manual for professional rescuers makes exceptions. If fluid or vomit stops you keeping the airway open, or you are alone and must leave the person, a side-lying position helps keep the airway clear. The balance between the two risks is a judgement for trained people and call-takers. Ask the 911 call-taker and take a hands-on class.",
+   "cite": [
+    "s1",
+    "s5"
+   ]
+  }
+ ]
+}

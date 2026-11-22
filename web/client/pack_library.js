@@ -85,6 +85,10 @@ export const PACK_LIBRARY = [
   { id: 'trivia_religions_easy', kind: 'trivia', label: 'Religions trivia (easy)', url: '/packs/trivia_religions_easy.json' },
   { id: 'trivia_religions_medium', kind: 'trivia', label: 'Religions trivia (medium)', url: '/packs/trivia_religions_medium.json' },
   { id: 'trivia_religions_hard', kind: 'trivia', label: 'Religions trivia (hard)', url: '/packs/trivia_religions_hard.json' },
+  // Emergency preparedness (2026-11-21, row 2.265): 50 questions drawn only from the Practical emergency preparedness
+  // course, each citing a page the course cites, checked by a second model. Two levels (no hard pack was written).
+  { id: 'trivia_emergency-preparedness_easy', kind: 'trivia', label: 'Emergency preparedness trivia (easy)', url: '/packs/trivia_emergency-preparedness_easy.json' },
+  { id: 'trivia_emergency-preparedness_medium', kind: 'trivia', label: 'Emergency preparedness trivia (medium)', url: '/packs/trivia_emergency-preparedness_medium.json' },
   // Picture questions (2026-11-02, row 2.175): 244 about works in the Cleveland Museum of Art's open-access (CC0)
   // collection, each written from the museum's own record and checked by a second pass; of the 30 it flagged, 16 were
   // reworded (mostly a described picture that gave the answer away), two left out, and twelve stand because the full
