@@ -102,7 +102,14 @@ What opens at login is a choice per computer, and the kiosk is only one of four:
 ~/.local/bin/nimrod-login-mode.sh none          # nothing; Nimrod is a website like any other
 ```
 
-Add `--now` to switch at once. The installer takes the same word as `NIMROD_AT_LOGIN=` (default `kiosk`).
+Add `--now` to switch at once. The installer takes the same word as `NIMROD_AT_LOGIN=` (and `NIMROD_WATCH=0` for
+`--no-watch`). **A new install opens an ordinary window** (`window`, Mike 2026-11-22; it was `kiosk` before). Running the
+installer again without `NIMROD_AT_LOGIN=` keeps what that computer opens now (`nimrod-login-mode.sh --current` prints it),
+so changing the address never turns a kiosk somebody chose into a window. For a screen whose person cannot press anything:
+
+```bash
+NIMROD_AT_LOGIN=kiosk bash install-linux.sh https://nimrodecosystem.com/kiosk.html
+```
 
 A window is not locked and is not left dead: **a person closing it closes it**; Chromium dying (a crash, killed for memory)
 brings it back in 3 seconds; and the "Aw, Snap" watchdog watches the window instead of the kiosk, restarting the whole

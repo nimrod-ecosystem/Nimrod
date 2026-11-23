@@ -139,6 +139,29 @@ class LoginModeTest(unittest.TestCase):
         self.run_mode('kiosk')
         self.assertFalse(os.path.exists(self.dropin()))
 
+    # --current (2026-11-22): what install-linux.sh reads so a re-run keeps the computer's choice.
+    def current(self):
+        r = self.run_mode('--current')
+        self.assertEqual(r.returncode, 0, r.stderr)
+        return r.stdout.strip()
+
+    def test_current_reads_back_every_choice_as_the_words_that_set_it(self):
+        for words in (['window'], ['window', '--no-watch'], ['fullscreen'], ['fullscreen', '--no-watch'], ['kiosk'],
+                      ['none']):
+            self.assertEqual(self.run_mode(*words).returncode, 0)
+            self.assertEqual(self.current(), ' '.join(words))
+
+    def test_current_calls_an_install_from_before_the_choice_a_kiosk(self):
+        self.assertEqual(self.current(), 'kiosk')          # the setUp autostart is an 11-19 install's
+        self.assertEqual(self.calls(), [])                  # and reading changes nothing
+        with open(self.autostart, 'w', newline='\n') as f:
+            f.write('# somebody emptied it\n')
+        self.assertEqual(self.current(), 'kiosk')          # the kiosk unit is still enabled, so it still opens
+
+    def test_current_says_nothing_where_nimrod_is_not_installed(self):
+        os.remove(os.path.join(self.units, 'nimrod-kiosk.service'))
+        self.assertEqual(self.current(), '')
+
     def test_a_kiosk_left_enabled_stops_it_before_autostart_changes(self):
         r = self.run_mode('window', FAKE_STILL_ENABLED='1')
         self.assertEqual(r.returncode, 1)

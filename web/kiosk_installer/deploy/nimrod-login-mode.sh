@@ -10,6 +10,10 @@
 #   ./nimrod-login-mode.sh none         nothing opens; Nimrod is a website like any other.
 #   options:  --now        switch at once instead of at the next login
 #             --no-watch   (window/fullscreen) the "Aw, Snap" watchdog leaves the window alone
+#   ./nimrod-login-mode.sh --current    prints this computer's choice now, as the words that would set it again
+#                                       ("window --no-watch", "kiosk", ...), and nothing when Nimrod is not installed.
+#                                       install-linux.sh reads it first, so running the installer again (a new address,
+#                                       say) keeps what the computer opens instead of putting it back to the default.
 #
 # A WINDOW IS NOT LOCKED, AND IS NOT LEFT DEAD EITHER (the gate, 2026-11-20). Two different exits, two different answers:
 #   - A PERSON CLOSES IT (the last window closed, Chromium exits cleanly, status 0): it stays closed. That is Mike's ruling.
@@ -34,17 +38,16 @@
 # The kiosk unit itself is never deleted, so `kiosk` always works again.
 set -euo pipefail
 
-MODE=""; NOW=0; WATCH=1
+MODE=""; NOW=0; WATCH=1; CURRENT=0
 for a in "$@"; do
   case "$a" in
     --now) NOW=1 ;;
     --no-watch) WATCH=0 ;;
+    --current) CURRENT=1 ;;
     window|fullscreen|kiosk|none) MODE="$a" ;;
     *) MODE="bad" ;;
   esac
 done
-case "$MODE" in window|fullscreen|kiosk|none) ;; *)
-  echo "usage: $0 window|fullscreen|kiosk|none [--now] [--no-watch]" >&2; exit 2 ;; esac
 
 UNIT_DIR="$HOME/.config/systemd/user"
 KIOSK_UNIT="$UNIT_DIR/nimrod-kiosk.service"
@@ -56,6 +59,28 @@ APPS_DIR="$HOME/.local/share/applications"
 BACK="$HOME/.local/bin/nimrod-kiosk-back.sh"
 SYSTEMCTL="${NIMROD_SYSTEMCTL:-systemctl}"     # seams for the test
 NOW_WAIT_S="${NIMROD_NOW_WAIT_S:-6}"
+NONE_NOTE="# (nimrod-login-mode.sh none: nothing of Nimrod's opens at login)"
+
+# --current (2026-11-22): read from what step 4 below writes into autostart, so it also answers for a computer set up
+# before this option existed. No kiosk unit = not installed = nothing printed. An install from before 2026-11-20 (no
+# browser line, no none line) is a kiosk, which is what every install was then.
+if [ "$CURRENT" = "1" ]; then
+  [ -f "$KIOSK_UNIT" ] || exit 0
+  if [ -f "$AUTOSTART" ] && grep -q -x -F "$NONE_NOTE" "$AUTOSTART"; then
+    echo none
+  elif [ -f "$AUTOSTART" ] && [ -f "$BROWSER_UNIT" ] && \
+       grep -q -E 'systemctl --user start nimrod-browser\.service' "$AUTOSTART"; then
+    WM="$(sed -n 's/^Environment=NIMROD_LAUNCH_MODE=//p' "$BROWSER_UNIT" | head -n1)"
+    [ "$WM" = "fullscreen" ] || WM=window
+    if [ -f "$WATCH_DROPIN" ]; then echo "$WM"; else echo "$WM --no-watch"; fi
+  else
+    echo kiosk
+  fi
+  exit 0
+fi
+
+case "$MODE" in window|fullscreen|kiosk|none) ;; *)
+  echo "usage: $0 window|fullscreen|kiosk|none [--now] [--no-watch]   or   $0 --current" >&2; exit 2 ;; esac
 
 [ -f "$KIOSK_UNIT" ] || { echo "no $KIOSK_UNIT: run install-linux.sh first (it holds the address and the settings)" >&2; exit 1; }
 ENV_LINES="$(grep -E '^Environment=' "$KIOSK_UNIT" | grep -v '^Environment=NIMROD_LAUNCH_MODE=' || true)"
@@ -109,7 +134,6 @@ fi
 mkdir -p "$(dirname "$AUTOSTART")"
 touch "$AUTOSTART"
 cp "$AUTOSTART" "$AUTOSTART.bak.$(date +%Y%m%d%H%M%S)"
-NONE_NOTE="# (nimrod-login-mode.sh none: nothing of Nimrod's opens at login)"
 case "$MODE" in
   kiosk) START='systemctl --user start nimrod-kiosk.service' ;;
   window|fullscreen) START='systemctl --user start nimrod-browser.service' ;;

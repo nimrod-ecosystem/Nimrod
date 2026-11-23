@@ -56,6 +56,33 @@ if [ "$LOCK" = "1" ]; then
   done
 fi
 
+# WHAT OPENS AT LOGIN, decided here, before anything is written (step 12 applies it; the reasoning is there).
+#   NIMROD_AT_LOGIN=window|fullscreen|kiosk|none   asked for: that.   NIMROD_WATCH=0: the watchdog off (window/fullscreen).
+#   not asked, Nimrod already installed here:      what this computer opens now, kept (nimrod-login-mode.sh --current).
+#   not asked, a new install:                       window.
+# Read BEFORE step 3 rewrites autostart, because autostart is where the current choice is read from.
+[ -f "$HERE/nimrod-login-mode.sh" ] || { echo "nimrod-login-mode.sh not found next to this script: $HERE/nimrod-login-mode.sh" >&2; exit 1; }
+AT_LOGIN_HOW="new install, the default"
+if [ -n "${NIMROD_AT_LOGIN:-}" ]; then
+  case "$NIMROD_AT_LOGIN" in window|fullscreen|kiosk|none) ;; *)
+    echo "NIMROD_AT_LOGIN must be window, fullscreen, kiosk or none (got: $NIMROD_AT_LOGIN)" >&2; exit 2 ;; esac
+  AT_LOGIN="$NIMROD_AT_LOGIN"; AT_LOGIN_HOW="asked for"
+  [ "${NIMROD_WATCH:-1}" = "0" ] && AT_LOGIN="$AT_LOGIN --no-watch"
+else
+  AT_LOGIN="$(bash "$HERE/nimrod-login-mode.sh" --current 2>/dev/null || true)"
+  if [ -n "$AT_LOGIN" ]; then
+    AT_LOGIN_HOW="kept from before"
+  else
+    AT_LOGIN="window"
+    [ "${NIMROD_WATCH:-1}" = "0" ] && AT_LOGIN="window --no-watch"
+  fi
+fi
+AT_LOGIN_MODE="${AT_LOGIN%% *}"
+case "$AT_LOGIN_MODE" in
+  window|fullscreen) NIMROD_UNIT=nimrod-browser ;;
+  *)                 NIMROD_UNIT=nimrod-kiosk ;;
+esac
+
 # 1. the launch script, in the same $HOME every other Nimrod piece on this Pi already lives
 #    under — nothing installed system-wide, nothing needing sudo.
 mkdir -p "$BIN_DIR"
@@ -458,7 +485,7 @@ EOF
   systemctl --user restart nimrod-tts.service || true
   echo "voice on: http://127.0.0.1:$TTS_PORT (systemctl --user status nimrod-tts); settings: $TTS_ENV"
   [ -f "$POLICY_FILE" ] || echo "  NOTE: the page will be told localVoice=off until Chromium's policy exists (re-run with NIMROD_LOCK_POLICY=1)"
-  echo "  restart the kiosk to apply: systemctl --user restart nimrod-kiosk"
+  echo "  restart Nimrod to apply: systemctl --user restart $NIMROD_UNIT"
 fi
 
 # 11. (2026-11-02, row 2.167; Mike: "make it as simple as possible for everyone to set up", and decision (c) "yes") A
@@ -483,25 +510,38 @@ if [ "${NIMROD_VPN:-0}" = "1" ]; then
   fi
 fi
 
-# 12. (2026-11-20, row 2.273) WHAT OPENS AT LOGIN: NIMROD_AT_LOGIN = kiosk (the default, as every install before) | window
-#     (an ordinary Chromium window on Nimrod) | fullscreen (the same, started full screen) | none. nimrod-login-mode.sh does
-#     it, and stays installed, so the choice can be changed later without this installer: ~/.local/bin/nimrod-login-mode.sh.
-#     ARGUED, the default: kiosk, because a screen whose person cannot press anything is who this installer was first for,
-#     and an install that changed what it does without being asked would surprise everybody who ran it before. Mike's own
-#     Pis are ordinary computers now (his ruling, 2026-11-19); for them it is one word.
-if [ -f "$HERE/nimrod-login-mode.sh" ]; then
-  install -m 0755 "$HERE/nimrod-login-mode.sh" "$BIN_DIR/nimrod-login-mode.sh"
-  "$BIN_DIR/nimrod-login-mode.sh" "${NIMROD_AT_LOGIN:-kiosk}"
-fi
+# 12. (2026-11-20, row 2.273) WHAT OPENS AT LOGIN: window (an ordinary Chromium window on Nimrod) | fullscreen (the same,
+#     started full screen) | kiosk (no browser around it, relaunched after any exit) | none. Chosen at the top of this
+#     script; nimrod-login-mode.sh does it, and stays installed, so it can be changed later without this installer.
+#     THE DEFAULT IS window (Mike, 2026-11-22: "Installer should default to window"; it was kiosk 11-20 to 11-22). A computer
+#     with Nimrod on it is an ordinary computer first (his 2026-11-19 ruling); a screen whose person cannot press anything
+#     is set up as kiosk or fullscreen by whoever installs it, one word.
+#     A RE-RUN KEEPS WHAT THE COMPUTER OPENS NOW (Code's call, 2026-11-22; Mike can overrule). For: re-running is how the
+#     address is changed, and turning a kiosk that somebody chose into a window a person can close, because the address
+#     changed, is a surprise on exactly the screen that can least afford one. Against: a re-run then never picks up a new
+#     default by itself. NIMROD_AT_LOGIN= always wins, so that is one word as well.
+install -m 0755 "$HERE/nimrod-login-mode.sh" "$BIN_DIR/nimrod-login-mode.sh"
+# shellcheck disable=SC2086  # AT_LOGIN is a mode and possibly --no-watch, two words on purpose
+"$BIN_DIR/nimrod-login-mode.sh" $AT_LOGIN
 
 echo
-echo "installed. At login: ${NIMROD_AT_LOGIN:-kiosk} ($URL); change it any time: ~/.local/bin/nimrod-login-mode.sh window|fullscreen|kiosk|none"
-echo "  start it now:  systemctl --user start nimrod-kiosk"
-echo "  status:        systemctl --user status nimrod-kiosk"
-echo "  logs:          journalctl --user -u nimrod-kiosk -f"
+echo "installed. At login: $AT_LOGIN ($AT_LOGIN_HOW; $URL)"
+echo "  change it any time: ~/.local/bin/nimrod-login-mode.sh window|fullscreen|kiosk|none [--now] [--no-watch]"
+case "$AT_LOGIN_MODE" in
+  none)
+    echo "  nothing opens at login; open Nimrod from the menu (Nimrod full screen) or in any browser at $URL" ;;
+  *)
+    echo "  start it now:  systemctl --user start $NIMROD_UNIT"
+    echo "  status:        systemctl --user status $NIMROD_UNIT"
+    echo "  logs:          journalctl --user -u $NIMROD_UNIT -f" ;;
+esac
 echo "  previous autostart backed up alongside $AUTOSTART"
-echo "  press Ctrl+Alt+Shift+Esc to STOP the kiosk and reach the desktop for maintenance"
-echo "  (it will not come back on its own — start it again with: systemctl --user start nimrod-kiosk)"
+if [ "$AT_LOGIN_MODE" = "kiosk" ]; then
+  echo "  press Ctrl+Alt+Shift+Esc to STOP the kiosk and reach the desktop for maintenance"
+  echo "  (it will not come back on its own — start it again with: systemctl --user start nimrod-kiosk)"
+else
+  echo "  Nimrod full screen (the menu, or Ctrl+Alt+Shift+Return) opens the kiosk; Ctrl+Alt+Shift+Esc leaves it"
+fi
 if [ "$LOCK" = "1" ]; then
   echo "  lock: helper on $LOCK_URL (systemctl --user status nimrod-lock-helper); state: python3 $HELPER_DST --state"
   echo "  press Ctrl+Alt+Shift+Return to bring the dashboard back; Ctrl+Alt+Shift+T for a TV window (not while locked)"
