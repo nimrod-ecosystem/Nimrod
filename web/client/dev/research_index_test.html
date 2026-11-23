@@ -65,6 +65,16 @@ try {
     && /not a nimrod\.research\.v1/.test(readPack({}).problems[0]));
   check('a level outside 1-6 is no level', cleanItem({ kind: 'word', id: 'x', text: 'x', level: 9 }).item.level === null);
   check('a long text is cut, not refused', cleanItem({ kind: 'fact', id: 'x', text: 'a'.repeat(5000) }).item.text.length === 1000);
+  // (2026-11-23, note GM addendum) An item pulled out of a lesson says which course and class: a field, not a tag.
+  const fromLesson = cleanItem({ kind: 'fact', id: 'x', text: 't', tags: ['bridges'],
+    from: { course: 'History-Of-Everything', class: '23', lesson: 'How bridges stand up', secret: 'dropped' } }).item;
+  check('from a lesson: the course (lower case), the class number and its title, nothing else',
+    J(fromLesson.from) === J({ course: 'history-of-everything', class: 23, lesson: 'How bridges stand up' }), J(fromLesson.from));
+  check('and it is not a tag (so "Which topics" does not list it)', J(fromLesson.tags) === J(['bridges'])
+    && topicsOf(buildIndex([{ name: 'p', items: [fromLesson] }]), { onlyChecked: false }).some((t) => t.tag === 'bridges')
+    && !topicsOf(buildIndex([{ name: 'p', items: [fromLesson] }]), { onlyChecked: false }).some((t) => /history/.test(t.tag)));
+  check('no course: no from; an item without one is as before', !cleanItem({ kind: 'fact', id: 'x', text: 't', from: { class: 2 } }).item.from
+    && !('from' in cleanItem({ kind: 'fact', id: 'x', text: 't' }).item));
 
   section('one index');
   const ix = buildIndex([pf, readPack(quotes), readPack(words)]);

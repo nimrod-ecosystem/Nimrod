@@ -19,7 +19,10 @@
 // `select`) says it on request, and the row turns it on for a screen where a voice is wanted.
 
 import { registerModule } from '../module.js';
-import { readPack, buildIndex, find, itemLine, RESEARCH_KINDS } from '../research_index.js';
+import { find, itemLine, RESEARCH_KINDS } from '../research_index.js';
+// (2026-11-23) The loader moved to research_load.js, shared with the word games; re-exported for the suites.
+import { loadResearch, sharedResearch, forgetResearchForTest } from '../research_load.js';
+export { loadResearch, forgetResearchForTest };
 
 export const DYK_TYPE = 'didyouknow';
 export const DYK_SHOW = Object.freeze(['all', 'fact', 'quote', 'word']);
@@ -28,7 +31,6 @@ export const DYK_SHOW = Object.freeze(['all', 'fact', 'quote', 'word']);
 export const DYK_EVERY = Object.freeze([0, 15000, 30000, 60000, 120000, 300000, 900000]);
 export const DYK_DEFAULTS = Object.freeze({ show: 'all', topics: '', wordLevel: 'all', onlyChecked: true, everyMs: 60000,
   readAloud: false, showSource: true, sameOrder: false });
-const MAX_PACKS = 100;            // research/index.json names a few dozen; 100 stops a broken index fetching forever
 // The credit that stands whatever the row says (note FV): where the words' meanings come from.
 export const DYK_CREDITS = 'Word meanings are based on Open English WordNet 2025 (Global WordNet Association, CC BY 4.0), reworded.';
 
@@ -83,23 +85,7 @@ export function seedOf(id) {
   return h >>> 0;
 }
 
-// ---- the packs: research/index.json and the files it names, read once per page ----------------------------------
-let shared = null;
-export function loadResearch({ base = new URL('../research/', import.meta.url).href, fetchImpl = (...a) => fetch(...a) } = {}) {
-  const json = async (url) => { const r = await fetchImpl(url); if (!r.ok) throw new Error(`${r.status}`); return r.json(); };
-  return (async () => {
-    const b = base.endsWith('/') ? base : `${base}/`;
-    let list = [];
-    try { const ix = await json(`${b}index.json`); list = Array.isArray(ix?.packs) ? ix.packs : []; } catch { list = []; }
-    const files = list.filter((f) => typeof f === 'string' && /^[\w.-]+\.json$/.test(f)).slice(0, MAX_PACKS);
-    const packs = await Promise.all(files.map(async (f) => { try { return readPack(await json(`${b}${f}`), { fileName: f }); }
-      catch { return { name: f, items: [], problems: [`${f} could not be read`] }; } }));
-    return buildIndex(packs);
-  })();
-}
-const sharedResearch = () => (shared ||= loadResearch());
-/** For the suites: start again (a new page's worth). */
-export function forgetResearchForTest() { shared = null; }
+// ---- the packs: research_load.js (one fetch per page, shared with the word games) ----------------------------------
 
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const KIND_HEAD = { fact: 'Did you know?', quote: 'A quote', word: 'A word' };

@@ -30,7 +30,8 @@ import '../modules/think_games.js';
 import '../modules/spelling.js';
 import '../modules/word_games.js';
 import { GAME, LINES, DEFAULTS, MIN_WORD, lettersCap, judgeWord, hintText, remaining, readVoice, newSet, target, toFind } from '../modules/word_builder.js';
-import { PUZZLES, WORDS, TIER, LEFT_OUT, canMake, wordsFrom, acceptedFrom } from '../word_builder_words.js';
+import { PUZZLES, WORDS, TIER, LEFT_OUT, canMake, wordsFrom, acceptedFrom, HAND_TIER, HAND_PUZZLES, addWords, forgetAddedWordsForTest } from '../word_builder_words.js';
+import { wordsFromIndex, tierOfLevel, meaningOf, loadSharedWords, sharedWordsNow, forgetSharedWordsForTest } from '../shared_words.js';
 import { ACCEPT } from '../word_builder_accept.js';
 import { kindOf, heldBack, wordLevelFrom, allowedWords, createWordLevel, WORD_LEVEL_FIELD, DEFAULT_WORD_LEVEL } from '../word_filter.js';
 import { UNKNOWN, FLOW_LINES } from '../quiz_flow.js';
@@ -138,6 +139,41 @@ try {
     check('with no screen behind it, the default', createWordLevel({}).get() === 'everyone');
     check('the row: three choices, the default the module\'s', WORD_LEVEL_FIELD.options.length === 3 && WORD_LEVEL_FIELD.default === DEFAULT_WORD_LEVEL
       && auditFields([normalizeField(WORD_LEVEL_FIELD)]).filter((x) => x.severity !== 'info' && x.code !== 'no-essential').length === 0, JSON.stringify(auditFields([normalizeField(WORD_LEVEL_FIELD)])));
+  }
+
+  section('the shared words (shared_words.js, 2026-11-23, note GM 3)');
+  {
+    const fake = { items: [
+      { kind: 'word', id: 'w1', word: 'kitchen', text: 'kitchen', level: 1, status: 'unverified', definition: 'the room where food is cooked', tags: [] },
+      { kind: 'word', id: 'w2', word: 'ice cream', text: 'ice cream', level: 1, status: 'unverified', definition: 'cold', tags: [] },
+      { kind: 'word', id: 'w3', word: 'zealous', text: 'zealous', level: 6, status: 'flagged', definition: 'keen', tags: [] },
+      { kind: 'fact', id: 'f1', text: 'A fact.', status: 'verified', tags: [] },
+    ] };
+    const m = wordsFromIndex(fake);
+    check('the packs as words: plain a-z words only, never a flagged one, never a fact', m.size === 1 && m.get('kitchen').definition === 'the room where food is cooked',
+      JSON.stringify([...m.keys()]));
+    check('a pack level is a tier: 1-2 easy, 3-4 middle, 5-6 hard', [1, 2, 3, 4, 5, 6].map(tierOfLevel).join() === '1,1,2,2,3,3' && tierOfLevel(0) === null);
+    forgetAddedWordsForTest();
+    const fresh = ['bleats', 'stable', 'tables', 'ablest', 'blades', 'sabled'].filter((w) => !(w in HAND_TIER));
+    const n = addWords(fresh.map((word) => ({ word, tier: 2 })).concat([{ word: 'kitchen', tier: 3 }, { word: 'ice cream', tier: 1 }]));
+    check('*** words join the live list at their tier; a listed word keeps its own; a non-word is skipped ***', n === fresh.length
+      && fresh.every((w) => TIER[w] === 2) && TIER.kitchen === HAND_TIER.kitchen && !('ice cream' in TIER), `${n} of ${fresh.join(' ')}`);
+    check('the sets are rebuilt from the live list; this game\'s own stay as they were', WORDS.length === Object.keys(HAND_TIER).length + n
+      && HAND_PUZZLES.every((p) => p.all.every((w) => w in HAND_TIER)) && PUZZLES.length >= HAND_PUZZLES.length);
+    check('the same words again: nothing joins twice', addWords(fresh.map((word) => ({ word, tier: 2 }))) === 0);
+    forgetAddedWordsForTest();
+    check('forgotten: this game\'s own list again', TIER === HAND_TIER && PUZZLES === HAND_PUZZLES);
+    forgetSharedWordsForTest();
+    await loadSharedWords({ getIndex: async () => fake });
+    check('a word\'s meaning, from the packs', meaningOf('kitchen') === 'the room where food is cooked' && meaningOf('KITCHEN') === 'the room where food is cooked' && meaningOf('nothing') === '');
+    forgetSharedWordsForTest();
+    // The site's own packs, as a screen loads them: the words join, and the longest levels have sets at last.
+    const real = await loadSharedWords();
+    addWords([...real.values()].map((e) => ({ word: e.word, tier: tierOfLevel(e.level) })));
+    const top = PUZZLES.filter((p) => p.level >= 7);
+    check('*** with the site\'s packs, the shared words fill levels 7 and 8, empty on this game\'s own list ***', real.size > 300
+      && HAND_PUZZLES.every((p) => p.level <= 6) && top.length >= 1, `${real.size} words; ${top.length} sets at 7-8: ${top.slice(0, 6).map((p) => p.root).join(' ')}`);
+    check('every set still asks for at least two words, each from the live list', PUZZLES.every((p) => p.pool.length >= 2 && p.pool.every((w) => w in TIER)));
   }
 
   section('judging and hints, pure');

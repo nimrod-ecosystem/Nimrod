@@ -70,7 +70,25 @@ export function cleanItem(raw) {
     item.definition = str(raw.definition); item.example = str(raw.example); item.aacCore = raw.aac_core === true;
   }
   if (raw.check && typeof raw.check === 'object') item.problemFound = str(raw.check.problem);
+  const from = cleanFrom(raw.from);
+  if (from) item.from = from;
   return { item, problem: '' };
+}
+
+/**
+ * WHERE AN ITEM CAME FROM, WHEN IT WAS PULLED OUT OF A LESSON (2026-11-23, note GM addendum; Mike: "information gathered for
+ * lessons gets used everywhere else"). `from: { course, class, lesson }`: the course's id, the class's number, and the class's
+ * title to show ("From the class: How bridges stand up"). A FIELD, NOT A TAG, ARGUED: tags are what "Which topics" lists
+ * (`topicsOf`), so "course:history-of-everything" there would be a topic nobody chose; and a lesson asking "the items from my
+ * class" needs the course and the number as values, not a string to take apart. Optional: an item without it is as before.
+ * Anything else in it is dropped. PURE.
+ */
+export function cleanFrom(v) {
+  if (!v || typeof v !== 'object') return null;
+  const course = str(v.course, 120).toLowerCase();
+  if (!course) return null;
+  const n = Number(v.class);
+  return { course, ...(Number.isInteger(n) && n >= 1 ? { class: n } : {}), ...(str(v.lesson, 200) ? { lesson: str(v.lesson, 200) } : {}) };
 }
 
 /** A pack file's parsed JSON: `{ name, kind, items, problems }`. A file that is not a research pack: no items, said. PURE. */

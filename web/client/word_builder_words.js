@@ -92,15 +92,20 @@ function parseTier(text) {
     .filter((w) => /^[a-z]{3,8}$/.test(w) && !LEFT_OUT.includes(w));
 }
 
-/** word -> tier (1 commonest). A word listed in two tiers keeps the commoner one. */
-export const TIER = Object.freeze((() => {
+/** word -> tier (1 commonest), THIS FILE'S OWN words. A word listed in two tiers keeps the commoner one. */
+export const HAND_TIER = Object.freeze((() => {
   const out = {};
   [[1, T1], [1, T1_LONG], [2, T2], [3, T3]].forEach(([tier, text]) => {
     for (const w of parseTier(text)) if (!(w in out)) out[w] = tier;
   });
   return out;
 })());
-export const WORDS = Object.freeze(Object.keys(TIER).sort());
+// *** LIVE: THE SHARED WORDS JOIN WHEN THEY ARRIVE (2026-11-23, note GM 3; Mike: "yes to shared words"). *** `TIER`, `WORDS`
+// and `PUZZLES` start as this file's own and are REPLACED (ES module bindings are live, so every importer sees the new ones)
+// when `addWords` adds the researched words packs' words (shared_words.js), each at its level's tier. A word this file lists
+// keeps its hand tier. `HAND_PUZZLES` stays this file's own, for a panel set to "only this game's own list".
+export let TIER = HAND_TIER;
+export let WORDS = Object.freeze(Object.keys(TIER).sort());
 
 const counts = (w) => { const m = {}; for (const ch of w) m[ch] = (m[ch] || 0) + 1; return m; };
 
@@ -113,11 +118,13 @@ export function canMake(word, letters) {
 
 /** Every ACCEPT-list word of `minWord`+ letters that `letters` makes and the asked-for list does not have (bonus only).
  *  Run once per set dealt, not at load: 33,000 words against every set at load would be seconds on a Pi. */
-export function acceptedFrom(letters, { minWord = 3 } = {}) {
+export function acceptedFrom(letters, { minWord = 3, asked = TIER } = {}) {
   const ls = Array.isArray(letters) ? letters : String(letters).split('');
   const n = ls.length;
   const have = new Set(ls);
-  return ACCEPT.filter((w) => w.length >= minWord && w.length <= n && !(w in TIER)
+  // `asked`: the words that are already the set's own (an object or a Set); left out here so nothing is listed twice.
+  const isAsked = asked instanceof Set ? (w) => asked.has(w) : (w) => w in asked;
+  return ACCEPT.filter((w) => w.length >= minWord && w.length <= n && !isAsked(w)
     && [...w].every((ch) => have.has(ch)) && canMake(w, ls));
 }
 
@@ -159,7 +166,8 @@ export function mixedLetters(id, root) {
 // ---------------------------------------------------------------------------------------
 export const LONGEST = 8;
 export const TOP_LEVEL = 8;
-export function buildPuzzles({ minWord = 3 } = {}) {
+export function buildPuzzles({ minWord = 3, tier: TIER = HAND_TIER } = {}) {
+  const WORDS = Object.keys(TIER).sort();
   const bySet = new Map();
   for (const root of WORDS) {
     const key = root.split('').sort().join('');
@@ -169,7 +177,7 @@ export function buildPuzzles({ minWord = 3 } = {}) {
   }
   const out = [];
   for (const { key, root, tier } of bySet.values()) {
-    const all = wordsFrom(root, { minWord });
+    const all = wordsFrom(root, { minWord, words: WORDS });
     const pool = all.filter((w) => TIER[w] <= tier);
     if (pool.length < 2) continue;
     const id = `wb-${key}`;
@@ -187,4 +195,29 @@ export function buildPuzzles({ minWord = 3 } = {}) {
   return out.sort((a, b) => a.level - b.level || a.id.localeCompare(b.id));
 }
 
-export const PUZZLES = Object.freeze(buildPuzzles());
+export const HAND_PUZZLES = Object.freeze(buildPuzzles());
+export let PUZZLES = HAND_PUZZLES;
+
+/**
+ * Add words to the live list: `entries` is `[{ word, tier }]` (tier 1 to 3). A word already listed keeps its tier; one that is
+ * not plain a-z of three to eight letters, or is on LEFT_OUT, is skipped. Rebuilds the sets when anything joined. Returns how
+ * many joined. Safe to call again with the same words (nothing joins twice).
+ */
+export function addWords(entries) {
+  const next = { ...TIER };
+  let added = 0;
+  for (const e of entries || []) {
+    const w = String(e && e.word || '').toLowerCase();
+    const tier = Number(e && e.tier);
+    if (!/^[a-z]{3,8}$/.test(w) || LEFT_OUT.includes(w) || w in next || ![1, 2, 3].includes(tier)) continue;
+    next[w] = tier;
+    added += 1;
+  }
+  if (!added) return 0;
+  TIER = Object.freeze(next);
+  WORDS = Object.freeze(Object.keys(TIER).sort());
+  PUZZLES = Object.freeze(buildPuzzles({ tier: TIER }));
+  return added;
+}
+/** For the suites: this file's own words again. */
+export function forgetAddedWordsForTest() { TIER = HAND_TIER; WORDS = Object.freeze(Object.keys(TIER).sort()); PUZZLES = HAND_PUZZLES; }

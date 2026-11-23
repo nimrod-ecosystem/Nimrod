@@ -48,7 +48,8 @@ import { flowSettings, fill, esc, normalize, parseLetters, LETTER_WORDS } from '
 import { quizModule, up } from '../quiz_view.js';
 import { createAdaptiveSession, adaptiveSettings, ADAPTIVE_DEFAULTS, openPersonLadder, MAX_PLAYERS } from '../adaptive_play.js';
 import { createTogether, scoreWords, REMOTE_TURN_MS } from '../game_together.js';
-import { PUZZLES, TIER, canMake, acceptedFrom, LONGEST, TOP_LEVEL } from '../word_builder_words.js';
+import { PUZZLES, HAND_PUZZLES, TIER, canMake, acceptedFrom, addWords, LONGEST, TOP_LEVEL } from '../word_builder_words.js';
+import { whenSharedWords, meaningOf, tierOfLevel } from '../shared_words.js';
 import { DEFAULT_WORD_LEVEL, allowedWords, createWordLevel } from '../word_filter.js';
 // 2026-10-02 late: opens waiting for Start, silent until then (quiz_view.js start gate, game_start.js).
 // No demo yet, so no "While nobody is playing" row.
@@ -105,6 +106,9 @@ export const DEFAULTS = Object.freeze({
   // the whole word is said). Not offered as a setting for that reason.
   checkWhenFull: false,
   togetherRounds: 5,
+  sharedWords: true,
+  showMeaning: true,
+  sayMeaning: false,
   autostart: false,
   autostartAlone: 'same',
   ...ADAPTIVE_DEFAULTS,
@@ -128,6 +132,14 @@ export const DEFAULTS = Object.freeze({
 //                  length in minutes, and over while attention holds. 3, 5, 10, or no end ("keep going");
 //                  Play again for another. It changes nothing on one screen, where the game goes on until stopped.
 //                  [A guess: on Mike's list.]
+//   sharedWords on  (2026-11-23, note GM 3; Mike: "yes to shared words") the researched words packs join this game's own
+//                  list when they arrive, each at its level's tier (1-2 easy, 3-4 middle, 5-6 hard), so a word researched
+//                  once is asked for here too, and the longest levels have sets. AGAINST: somebody who chose this game for
+//                  its hand-picked everyday words meets rarer ones sooner; for them, off ("only this game's own list").
+//   showMeaning on  the last word found, with its meaning from the same packs, under the words found ("KITCHEN: the room
+//                  where food is cooked"). A line of small text, nothing to wait for. Off for a panel too small for it.
+//   sayMeaning off  the meaning read aloud after the word: worth hearing, but it adds a sentence to every word found, which
+//                  makes a long sitting slow. One press for somebody learning the words.
 const SETTINGS = [
   ...autostartFields({ on: false }),
   ownScoreField({ level: 'essential', note: 'How many words are found (for each player, when there are several). A Scoreboard on the same screen can show it instead.' }),
@@ -147,6 +159,13 @@ const SETTINGS = [
   { key: 'togetherRounds', label: 'Rounds when playing together', kind: 'choice', default: 5, level: 'standard',
     options: [3, 5, 10].map((v) => ({ value: v, label: String(v) })).concat([{ value: 0, label: 'No end: keep going' }]),
     note: 'With another screen, or on a call. A round is one word for every player. On this screen alone, the game goes on until it is stopped.' },
+  { key: 'sharedWords', label: 'Words from the shared word list', default: true, level: 'standard',
+    onLabel: 'Yes: more words, with their meanings', offLabel: 'No: only this game’s own list',
+    note: 'The words researched for the whole site, at their level. Words the screen holds back are never used.' },
+  { key: 'showMeaning', label: 'Show what a found word means', default: true, level: 'standard',
+    onLabel: 'Yes, under the words found', offLabel: 'No' },
+  { key: 'sayMeaning', label: 'Say what a found word means', default: false, level: 'standard',
+    onLabel: 'Yes, after the word', offLabel: 'No, only the word' },
   ...adaptiveSettings({ ai: false, startLevels: TOP_LEVEL }),
   ...flowSettings({ lines: LINES, labels: LINE_LABELS, sayChoice: false }),
 ];
@@ -181,8 +200,8 @@ export function newSet(q, { wordsPerSet = DEFAULTS.wordsPerSet, wordLevel = DEFA
   const required = allowedWords(q.pool, wordLevel).slice(0, n);
   // Bonus words: everything else on the asked-for list, then any word on the accept list (2026-11-22, Mike: "two
   // lists"), so a real word these letters make is a bonus instead of "not on this list".
-  const bonus = allowedWords(q.all.filter((w) => !required.includes(w))
-    .concat(acceptedFrom(q.letters, { minWord: MIN_WORD })), wordLevel);
+  const own = q.all.filter((w) => !required.includes(w));
+  const bonus = allowedWords(own.concat(acceptedFrom(q.letters, { minWord: MIN_WORD, asked: new Set(q.all) })), wordLevel);
   return { id: q.id, kind: 'letters', level: q.level, letters: q.letters.slice(), required,
     bonus, found: [], bonusFound: [], revealed: [], done: false };
 }
@@ -253,6 +272,7 @@ const CSS = `
 .wb-word[data-blank]{color:var(--text-soft);letter-spacing:.3em}
 .wb-word[data-revealed]{color:var(--text-soft)}
 .wb-bonus{margin:0;font-size:clamp(12px,3.4cqmin,40px);color:var(--text-soft)}
+.wb-meaning{margin:0;max-width:60ch;text-align:center;font-size:clamp(12px,3.2cqmin,36px);color:var(--text-soft)}
 `;
 function ensureStyle(doc) {
   if (!doc || doc.getElementById(STYLE_ID)) return;
@@ -341,12 +361,19 @@ registerModule(
     // (2026-11-23) The screen's "Words the games may use" (word_filter.js), read at each set dealt.
     const wordLevel = createWordLevel({ makeState: ctx.makeState });
     wordLevel.load();
+    // (2026-11-23, note GM 3) The researched words join the list when they arrive (shared_words.js): a board is never
+    // empty waiting for them. Once per page; a set already dealt keeps its words.
+    const stopShared = whenSharedWords((m) => {
+      const n = addWords([...m.values()].map((e) => ({ word: e.word, tier: tierOfLevel(e.level) })));
+      if (n) { try { api?.render(); } catch { /* not drawn yet */ } }
+    });
     const store = ladderRows.store;
     let ladderSeen = false;
     const maxLetters = () => lettersCap(cfgNow.maxLetters);
     const session = createAdaptiveSession({
       cfg: () => cfgNow,
-      bankFor: () => PUZZLES.filter((p) => p.letters.length <= maxLetters()),
+      // (2026-11-23) The live list (the shared words joined), or this game's own when the panel says so.
+      bankFor: () => (cfgNow.sharedWords === false ? HAND_PUZZLES : PUZZLES).filter((p) => p.letters.length <= maxLetters()),
       store,
       rand,
       now: typeof ctx.now === 'function' ? ctx.now : () => Date.now(),
@@ -594,9 +621,13 @@ registerModule(
       explain(st, answer, c) {
         const w = lettersOnly(answer);
         const word = up(w);
-        if (st.bonus.includes(w)) return fill(c.explainBonus, { word });
+        st.lastWord = w;
+        // (2026-11-23) its meaning, from the shared words, after the line when "Say what a found word means" is on
+        const means = c.sayMeaning ? meaningOf(w) : '';
+        const tail = means ? ` ${means}` : '';
+        if (st.bonus.includes(w)) return fill(c.explainBonus, { word }) + tail;
         const left = toFind(st).filter((x) => x !== w).length;
-        return left ? fill(c.explainWord, { word, left: plural(left, 'more', 'more') }) : fill(c.explainLast, { word });
+        return (left ? fill(c.explainWord, { word, left: plural(left, 'more', 'more') }) : fill(c.explainLast, { word })) + tail;
       },
       maxEntry: (st) => st.letters.length,
       vocab: (st) => [...st.required, ...st.bonus, ...Object.keys(COMMANDS), ...LETTER_WORDS],
@@ -644,7 +675,10 @@ registerModule(
           return c.showBlanks === false ? '' : `<li class="wb-word" data-blank aria-label="${w.length} letters">${'_ '.repeat(w.length).trim()}</li>`;
         }).join('');
         const bonus = st.bonusFound.length ? `<li class="wb-bonus" data-bonus>Bonus: ${esc(st.bonusFound.map(up).join(', '))}</li>` : '';
-        return `<ul class="wb-found" data-found>${rows}${bonus}</ul>`;
+        // (2026-11-23) The last word found and what it means (shared_words.js), when the panel shows meanings.
+        const means = c.showMeaning !== false && st.lastWord ? meaningOf(st.lastWord) : '';
+        const meaning = means ? `<li class="wb-meaning" data-meaning><b>${esc(up(st.lastWord))}</b>: ${esc(means)}</li>` : '';
+        return `<ul class="wb-found" data-found>${rows}${bonus}${meaning}</ul>`;
       },
       entryHtml(s, c) {
         const typed = up(s.entry).split('');
@@ -723,6 +757,7 @@ registerModule(
         try { if (typeof unsubPlay === 'function') unsubPlay(); } catch { /* gone */ }
         ladderRows.destroy();
         wordLevel.destroy();
+        stopShared();
       },
     };
 

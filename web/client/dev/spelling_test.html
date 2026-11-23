@@ -26,7 +26,8 @@ letters. Mike's miss flow, points once, the score on the shared contract.</p>
 import { harness, rig, sleep, quizMusicChecks } from './quiz_test_rig.js';
 import { getManifest } from '../module.js';
 import '../modules/spelling.js';
-import { GAME, WORDS, LINES, DEFAULTS, lettersBoard } from '../modules/spelling.js';
+import { GAME, WORDS, LINES, DEFAULTS, lettersBoard, sharedSpellingWords, SHARED_LEVELS_UP_TO, SPELLING_ADAPTER } from '../modules/spelling.js';
+import { loadSharedWords } from '../shared_words.js';
 import { hasPicture } from '../word_games_words.js';
 import { UNKNOWN, FLOW_LINES } from '../quiz_flow.js';
 import { auditFields } from '../settings_audit.js';
@@ -100,7 +101,7 @@ try {
       r.host.querySelector('.qz-row[data-on="1"]')?.dataset.row === '0');
     r.inst.destroy();
 
-    const p = R({ wordLength: 'longer' }, { rand: () => 0.999 });
+    const p = R({ wordLength: 'longer', sharedWords: false }, { rand: () => 0.999 });
     let found = null;
     for (let i = 0; i < WORDS.length && !found; i++) {
       const w = p.probe().item;
@@ -124,6 +125,26 @@ try {
     for (let i = 0; i < 40; i++) { seen.add(short.probe().item.word); short.eng.skip(); }
     check('"short words" deals only words of up to four letters', [...seen].every((w) => w.length <= 4), [...seen].join(','));
     short.inst.destroy();
+  }
+
+  section('the shared words (2026-11-23, note GM 3)');
+  {
+    const fake = new Map([['garden', { word: 'garden', level: 1 }], ['cat', { word: 'cat', level: 1 }],
+      ['zealous', { word: 'zealous', level: 6 }], ['fork', { word: 'fork', level: 2 }], ['go', { word: 'go', level: 1 }],
+      ['shit', { word: 'shit', level: 1 }]]);
+    const extra = sharedSpellingWords(fake).map((w) => w.word);
+    check('*** the everyday shared words join (levels 1-2), after the game’s own; not a word it has, a hard one, a two-letter one or a held-back one ***',
+      extra.join() === 'fork,garden', extra.join());
+    check('levels 1 and 2 only, argued in the file', SHARED_LEVELS_UP_TO === 2);
+    const on = SPELLING_ADAPTER.items({ ...DEFAULTS, wordLength: 'longer' });
+    const off = SPELLING_ADAPTER.items({ ...DEFAULTS, wordLength: 'longer', sharedWords: false });
+    check('"Words from the shared word list" off: only the game’s own words', off.length === WORDS.length && off.every((w) => !w.shared));
+    check('on (the default): the game’s own first, then the shared ones (once they have arrived)', DEFAULTS.sharedWords === true
+      && on.slice(0, WORDS.length).every((w, i) => w.word === WORDS[i].word));
+    await loadSharedWords();
+    const later = SPELLING_ADAPTER.items({ ...DEFAULTS, wordLength: 'longer' });
+    check('with the site’s packs here, the list is longer, every word a to z, at most six letters', later.length > WORDS.length
+      && later.every((w) => /^[a-z]{3,6}$/.test(w.word)), `${later.length}`);
   }
 
   // =====================================================================================

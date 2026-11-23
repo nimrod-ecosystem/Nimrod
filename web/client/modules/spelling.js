@@ -24,6 +24,8 @@ import { hasPicture } from '../word_games_words.js';
 import { ownScoreField } from '../score_source.js';
 import { flowSettings, fill, esc, parseLetters, LETTER_WORDS } from '../quiz_flow.js';
 import { quizModule, up } from '../quiz_view.js';
+import { loadSharedWords, sharedWordsNow } from '../shared_words.js';
+import { allowedWords } from '../word_filter.js';
 
 export const GAME = 'spelling';
 
@@ -37,6 +39,23 @@ const PICTURED = ['hot', 'cold', 'stop', 'wait', 'help', 'love', 'more', 'music'
 const PLAIN = ['cat', 'dog', 'sun', 'bed', 'cup', 'hat', 'book', 'tree', 'fish', 'bird', 'milk', 'home',
   'rain', 'ball', 'cake', 'door', 'hand', 'moon', 'star', 'shoe'];
 export const WORDS = Object.freeze([...PICTURED, ...PLAIN].map((word) => Object.freeze({ word })));
+
+// *** THE SHARED WORDS (2026-11-23, note GM 3; Mike: "yes to shared words"). *** The researched words packs (shared_words.js)
+// add their EVERYDAY words, levels 1 and 2, after this file's own, once they have arrived: a word researched once is spelled
+// here too. LEVELS 1-2 ONLY, ARGUED: Spelling has no ladder that climbs (every word is the same step), so a level-5 word in
+// the mix would be a sudden wall; the everyday levels are the ones a first sitting can win. The same length rule as the
+// game's own words (`wordLength`). Words a screen holds back (word_filter.js) are left out at its default, since this game's
+// questions are also asked by Quiz mix, which has no screen setting to hand. A setting turns them off.
+export const SHARED_LEVELS_UP_TO = 2;
+export function sharedSpellingWords(map = sharedWordsNow()) {
+  const own = new Set(WORDS.map((w) => w.word));
+  const out = [];
+  for (const e of map.values()) {
+    if (!e.level || e.level > SHARED_LEVELS_UP_TO || own.has(e.word) || e.word.length < 3) continue;
+    out.push(e.word);
+  }
+  return allowedWords(out.sort()).map((word) => Object.freeze({ word, shared: true }));
+}
 
 export const LINES = Object.freeze({
   askSpelling: 'Spell {word}.',
@@ -60,6 +79,7 @@ export const DEFAULTS = Object.freeze({
   // Up to four letters by default: the first sitting should be winnable. Longer words (up to six)
   // are one setting away.
   wordLength: 'short',
+  sharedWords: true,
   ...LINES,
 });
 
@@ -67,6 +87,9 @@ const SETTINGS = [
   ownScoreField({ level: 'essential', note: 'How many are right. A Scoreboard on the same screen can show it instead.' }),
   { key: 'wordLength', label: 'Words', kind: 'choice', default: 'short', level: 'essential',
     options: [{ value: 'short', label: 'Short (up to four letters)' }, { value: 'longer', label: 'Up to six letters' }] },
+  { key: 'sharedWords', label: 'Words from the shared word list', default: true, level: 'standard',
+    onLabel: 'Yes: the everyday ones too', offLabel: 'No: only this game’s own words',
+    note: 'The site’s researched everyday words, after this game’s own, the same length as above.' },
   { key: 'showWord', label: 'Show the word on screen', default: false, level: 'standard',
     onLabel: 'Yes: copy it', offLabel: 'No: spell it from hearing it',
     note: 'With speech off, the word is always shown.' },
@@ -100,7 +123,11 @@ const COMMANDS = {
 };
 
 const adapter = {
-  items: (c) => WORDS.filter((w) => w.word.length <= (c.wordLength === 'longer' ? 6 : 4)),
+  items: (c) => {
+    if (c.sharedWords !== false) loadSharedWords();   // once per page; the words join when they arrive
+    const list = c.sharedWords === false ? WORDS : [...WORDS, ...sharedSpellingWords()];
+    return list.filter((w) => w.word.length <= (c.wordLength === 'longer' ? 6 : 4));
+  },
   entry: () => 'letters',
   ask: (it, c) => fill(c.askSpelling, { word: it.word }),
   judge: (it, v) => { const s = lettersOnly(v); return s ? s === it.word : null; },
