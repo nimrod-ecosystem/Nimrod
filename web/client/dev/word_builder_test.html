@@ -30,7 +30,8 @@ import '../modules/think_games.js';
 import '../modules/spelling.js';
 import '../modules/word_games.js';
 import { GAME, LINES, DEFAULTS, MIN_WORD, lettersCap, judgeWord, hintText, remaining, readVoice, newSet, target, toFind } from '../modules/word_builder.js';
-import { PUZZLES, WORDS, TIER, LEFT_OUT, canMake, wordsFrom } from '../word_builder_words.js';
+import { PUZZLES, WORDS, TIER, LEFT_OUT, canMake, wordsFrom, acceptedFrom } from '../word_builder_words.js';
+import { ACCEPT } from '../word_builder_accept.js';
 import { UNKNOWN, FLOW_LINES } from '../quiz_flow.js';
 import { emptyLadder, LADDER_KEY, createAdaptiveSession } from '../adaptive_play.js';
 import { levelRating } from '../rating.js';
@@ -67,8 +68,13 @@ try {
     const per = [1, 2, 3, 4, 5].map((l) => PUZZLES.filter((p) => p.level === l).length);
     check('at least eight sets at each of levels 1-5', per.every((n) => n >= 8), per.join(','));
     // (2026-11-22, row 2.279) No upper limit any more: longer words are on their way. Level 1 stays three letters.
-    check('level 1 is three letters; nothing is shorter than three', PUZZLES.filter((p) => p.level === 1).every((p) => p.letters.length === 3)
-      && PUZZLES.every((p) => p.letters.length >= 3));
+    check('level 1 is three letters; nothing is shorter than three or longer than eight', PUZZLES.filter((p) => p.level === 1).every((p) => p.letters.length === 3)
+      && PUZZLES.every((p) => p.letters.length >= 3 && p.letters.length <= 8));
+    const longSets = PUZZLES.filter((p) => p.letters.length >= 6);
+    check('there are sets of six to eight letters now (Mike: "8 letters"), at levels 4 to 8', longSets.length >= 5
+      && longSets.every((p) => p.level >= 4 && p.level <= 8), `${longSets.length}: ${longSets.map((p) => p.root).join(' ')}`);
+    check('nothing of five letters or fewer changed level when the top went to 8', PUZZLES.filter((p) => p.letters.length <= 5)
+      .every((p) => p.level === Math.max(1, Math.min(5, (p.letters.length - 2) + (p.tier - 1)))));
     check('every set asks for at least two words, every one of them made from its letters',
       PUZZLES.every((p) => p.pool.length >= 2 && p.pool.every((w) => canMake(w, p.letters) && w.length >= MIN_WORD)),
       JSON.stringify(PUZZLES.find((p) => p.pool.length < 2)));
@@ -78,6 +84,20 @@ try {
     check('the letters are never shown spelling the whole word in order', PUZZLES.every((p) => p.letters.join('') !== p.root));
     check('the same every load (no random source), so ratings stay attached', PUZZLES[0].id === PUZZLES.slice()[0].id && /^wb-[a-z]+$/.test(PUZZLES[0].id));
     check('canMake uses each letter once: "bell" needs two Ls', canMake('bell', ['b', 'e', 'l', 'l']) && !canMake('bell', ['b', 'e', 'l']));
+    // THE ACCEPT LIST (2026-11-22, Mike: "two lists"): never asked for, only a bonus.
+    check('the accept list: thousands of a-z words of 3 to 8 letters, sorted, each once', ACCEPT.length > 20000
+      && ACCEPT.every((w, i) => /^[a-z]{3,8}$/.test(w) && (i === 0 || ACCEPT[i - 1] < w)), `${ACCEPT.length}`);
+    check('*** nothing on the left-out list is on the accept list ***', !LEFT_OUT.some((w) => ACCEPT.includes(w)));
+    check('*** and none of the probed words it is built to keep out (said aloud as a bonus) ***',
+      !['coma', 'stroke', 'murder', 'naked', 'cocaine', 'squaw', 'midget', 'bloody', 'shotgun', 'grave'].some((w) => ACCEPT.includes(w)));
+    const someSet = PUZZLES.find((p) => p.letters.length >= 5 && acceptedFrom(p.letters).length >= 3);
+    const extra = someSet ? acceptedFrom(someSet.letters) : [];
+    const played = someSet ? newSet(someSet) : null;
+    check('a set\'s bonus words include accept-list words its letters make, none of them asked for',
+      played && extra.every((w) => played.bonus.includes(w) && !played.required.includes(w) && canMake(w, someSet.letters) && !(w in TIER)),
+      someSet ? `${someSet.root}: ${extra.slice(0, 8).join(' ')}` : 'no set');
+    check('*** an accept-list word is right (a bonus), not "not on this list" ***', played && judgeWord(played, extra[0]) === true);
+    check('the asked-for words never come from the accept list', PUZZLES.every((p) => p.pool.every((w) => w in TIER)));
     const text = JSON.stringify(PUZZLES) + JSON.stringify(LINES);
     check('no site copy names the person this was first built for', !/cici|her screen/i.test(text));
     check('no line says she / her', !/\b(she|her|hers|herself)\b/i.test(Object.values(LINES).join(' ')));
@@ -116,8 +136,9 @@ try {
     const m = getManifest(GAME);
     check('built on the new core, needs nothing', m.core === 'new' && m.dependsOn === 'local');
     const f = (k) => m.settings.find((s) => s.key === k);
-    check('letters at most: 3, 4, 5 or Any, five by default', f('maxLetters').default === 5
-      && f('maxLetters').options.map((o) => o.value).join() === '3,4,5,0' && f('maxLetters').options[3].label === 'Any');
+    check('letters at most: 3 to 8 or Any, five by default', f('maxLetters').default === 5
+      && f('maxLetters').options.map((o) => o.value).join() === '3,4,5,6,7,8,0' && f('maxLetters').options[6].label === 'Any');
+    check('a new player can start at any of the eight levels', f('startLevel').options.length === 8);
     check('*** Any is no limit; a number is that limit, never below three; nonsense is five ***',
       lettersCap(0) === Infinity && lettersCap('0') === Infinity && lettersCap('any') === Infinity
         && lettersCap(4) === 4 && lettersCap(7) === 7 && lettersCap(1) === 3 && lettersCap('x') === 5 && lettersCap(undefined) === 5);

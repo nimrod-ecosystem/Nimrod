@@ -1,7 +1,9 @@
 // word_builder_words.js — THE WORDS AND THE LETTER SETS for the word builder (row 2.45). Data, no DOM.
 //
 // SOURCE AND LICENCE. Hand-written for this project, 2026-10-01: everyday English words of three to
-// five letters, sorted by hand into three tiers of how common they are. Nothing is taken from any
+// five letters (six to eight since 2026-11-22), sorted by hand into three tiers of how common they are.
+// The separate ACCEPT list (word_builder_accept.js, from SCOWL, under its own notice) is never asked for:
+// it only lets a real word count as a bonus word. Nothing is taken from any
 // game's puzzles or any published word list; single words are not anybody's text. The file is MIT,
 // like the rest of the repository. The tiers are a JUDGEMENT, not a frequency count: a word's tier
 // only decides which letter sets are easy and which words a set ASKS for, and every answer anybody
@@ -16,6 +18,8 @@
 // here (rats, arts, pots, owls ...) are an anagram of another listed word, which is what makes a
 // set worth searching. A word that is not on the list is never called wrong: the game says it is
 // not on this list (see `word_builder.js`), because the list is small and English is not.
+
+import { ACCEPT } from './word_builder_accept.js';
 
 const T1 = `
 act ant ape arm art ask ate bad bag bat bed bee big bit box boy bus but buy can cap car cat cow cry cup cut
@@ -44,6 +48,14 @@ apple bread chair clock dance dream drink earth eight field first floor fruit gl
 happy heart horse house juice laugh light lemon melon money mouse music night ocean paint paper party
 peach phone piano plant plate queen quiet river sheep shirt sleep smile snake sound spoon stone storm
 sugar table teeth tiger toast towel tower train truck water wheel white world write notes thing shore
+`;
+
+// LONGER WORDS, SIX TO EIGHT LETTERS (2026-11-22, row 2.279; Mike: "8 letters"). The first ones are this project's own
+// checked vocabulary (docs/from_chat/research/packs, levels 1 to 3, every one already read by a person), all everyday,
+// so tier 1. More come from the read review sheet (web/tools/word_builder_lists.py writes it; a person marks it).
+const T1_LONG = `
+banana cookie finished please thanks yellow bathroom friend garden hospital hungry jacket kitchen market pillow
+school shoulder stairs toilet umbrella window worried zipper animal brother listen morning mother number orange rabbit
 `;
 
 const T2 = `
@@ -76,14 +88,14 @@ export const LEFT_OUT = Object.freeze(['ass', 'tit', 'sex', 'fag', 'cum', 'piss'
 
 function parseTier(text) {
   return text.split(/\s+/).filter(Boolean).map((w) => w.toLowerCase())
-    // Three letters or more, no upper limit (2026-11-22, row 2.279): a longer word added to a tier becomes a set.
-    .filter((w) => /^[a-z]{3,}$/.test(w) && !LEFT_OUT.includes(w));
+    // Three to eight letters (2026-11-22, row 2.279; Mike: "8 letters"): a longer word added to a tier becomes a set.
+    .filter((w) => /^[a-z]{3,8}$/.test(w) && !LEFT_OUT.includes(w));
 }
 
 /** word -> tier (1 commonest). A word listed in two tiers keeps the commoner one. */
 export const TIER = Object.freeze((() => {
   const out = {};
-  [[1, T1], [2, T2], [3, T3]].forEach(([tier, text]) => {
+  [[1, T1], [1, T1_LONG], [2, T2], [3, T3]].forEach(([tier, text]) => {
     for (const w of parseTier(text)) if (!(w in out)) out[w] = tier;
   });
   return out;
@@ -97,6 +109,16 @@ export function canMake(word, letters) {
   const have = counts(Array.isArray(letters) ? letters.join('') : String(letters));
   const need = counts(String(word));
   return Object.entries(need).every(([ch, n]) => (have[ch] || 0) >= n);
+}
+
+/** Every ACCEPT-list word of `minWord`+ letters that `letters` makes and the asked-for list does not have (bonus only).
+ *  Run once per set dealt, not at load: 33,000 words against every set at load would be seconds on a Pi. */
+export function acceptedFrom(letters, { minWord = 3 } = {}) {
+  const ls = Array.isArray(letters) ? letters : String(letters).split('');
+  const n = ls.length;
+  const have = new Set(ls);
+  return ACCEPT.filter((w) => w.length >= minWord && w.length <= n && !(w in TIER)
+    && [...w].every((ch) => have.has(ch)) && canMake(w, ls));
 }
 
 /** Every listed word of `minWord`+ letters that `letters` makes. */
@@ -131,8 +153,12 @@ export function mixedLetters(id, root) {
 //   5 letters, tier 1  -> 3   (stone: stone, notes, one, ten ...)
 //   5 letters, tier 2  -> 4
 //   5 letters, tier 3  -> 5
+//   6 letters, tier 1  -> 4 ... 8 letters, tier 3 -> 8   (2026-11-22: the top raised from 5 to 8 for longer words;
+//                                                        nothing of five letters or fewer changed level)
 // The starting guess only: every set's rating moves with play.
 // ---------------------------------------------------------------------------------------
+export const LONGEST = 8;
+export const TOP_LEVEL = 8;
 export function buildPuzzles({ minWord = 3 } = {}) {
   const bySet = new Map();
   for (const root of WORDS) {
@@ -147,7 +173,7 @@ export function buildPuzzles({ minWord = 3 } = {}) {
     const pool = all.filter((w) => TIER[w] <= tier);
     if (pool.length < 2) continue;
     const id = `wb-${key}`;
-    const level = Math.max(1, Math.min(5, (root.length - 2) + (tier - 1)));
+    const level = Math.max(1, Math.min(TOP_LEVEL, (root.length - 2) + (tier - 1)));
     out.push(Object.freeze({
       id, kind: 'letters', level, root, tier,
       letters: Object.freeze(mixedLetters(id, root)),

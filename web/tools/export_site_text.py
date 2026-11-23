@@ -106,6 +106,7 @@ CONTENT_FILES = {
     'aac_clips.js': "the AAC board's sound clips",
     'word_games_words.js': 'word-game word lists',
     'word_builder_words.js': 'word-builder word lists',
+    'word_builder_accept.js': "the word builder's accept list (SCOWL, generated)",
 }
 
 MASK = '\ue000'

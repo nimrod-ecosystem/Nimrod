@@ -48,7 +48,7 @@ import { flowSettings, fill, esc, normalize, parseLetters, LETTER_WORDS } from '
 import { quizModule, up } from '../quiz_view.js';
 import { createAdaptiveSession, adaptiveSettings, ADAPTIVE_DEFAULTS, openPersonLadder, MAX_PLAYERS } from '../adaptive_play.js';
 import { createTogether, scoreWords, REMOTE_TURN_MS } from '../game_together.js';
-import { PUZZLES, TIER, canMake } from '../word_builder_words.js';
+import { PUZZLES, TIER, canMake, acceptedFrom, LONGEST, TOP_LEVEL } from '../word_builder_words.js';
 // 2026-10-02 late: opens waiting for Start, silent until then (quiz_view.js start gate, game_start.js).
 // No demo yet, so no "While nobody is playing" row.
 import { autostartFields, START_VOICE } from '../game_start.js';
@@ -130,10 +130,11 @@ export const DEFAULTS = Object.freeze({
 const SETTINGS = [
   ...autostartFields({ on: false }),
   ownScoreField({ level: 'essential', note: 'How many words are found (for each player, when there are several). A Scoreboard on the same screen can show it instead.' }),
-  // (2026-11-22, row 2.279; Mike: "there should be an any option") Any = no limit (0, like togetherRounds' "No end"):
-  // every set on the list, however long. The list's longest words are five letters until longer ones are added.
+  // (2026-11-22, row 2.279; Mike: "there should be an any option", then "8 letters") 3 to 8, and Any = no limit (0,
+  // like togetherRounds' "No end"): every set on the list, however long (eight letters at most today).
   { key: 'maxLetters', label: 'Letters, at most', kind: 'choice', default: 5, level: 'essential',
-    options: [3, 4, 5].map((v) => ({ value: v, label: `${v} letters` })).concat([{ value: 0, label: 'Any' }]),
+    options: Array.from({ length: LONGEST - 2 }, (_, i) => i + 3).map((v) => ({ value: v, label: `${v} letters` }))
+      .concat([{ value: 0, label: 'Any' }]),
     note: 'It starts with 3 letters. It adds more as the words come easily. Any: no limit.' },
   { key: 'wordsPerSet', label: 'Words to find in each set of letters', kind: 'choice', default: 5, level: 'standard',
     options: [3, 5, 8].map((v) => ({ value: v, label: String(v) })),
@@ -145,7 +146,7 @@ const SETTINGS = [
   { key: 'togetherRounds', label: 'Rounds when playing together', kind: 'choice', default: 5, level: 'standard',
     options: [3, 5, 10].map((v) => ({ value: v, label: String(v) })).concat([{ value: 0, label: 'No end: keep going' }]),
     note: 'With another screen, or on a call. A round is one word for every player. On this screen alone, the game goes on until it is stopped.' },
-  ...adaptiveSettings({ ai: false, startLevels: 5 }),
+  ...adaptiveSettings({ ai: false, startLevels: TOP_LEVEL }),
   ...flowSettings({ lines: LINES, labels: LINE_LABELS, sayChoice: false }),
 ];
 
@@ -175,8 +176,11 @@ export function remaining(letters, typed) {
 export function newSet(q, { wordsPerSet = DEFAULTS.wordsPerSet } = {}) {
   const n = Math.max(1, Math.floor(Number(wordsPerSet) || DEFAULTS.wordsPerSet));
   const required = q.pool.slice(0, n);
+  // Bonus words: everything else on the asked-for list, then any word on the accept list (2026-11-22, Mike: "two
+  // lists"), so a real word these letters make is a bonus instead of "not on this list".
+  const bonus = q.all.filter((w) => !required.includes(w)).concat(acceptedFrom(q.letters, { minWord: MIN_WORD }));
   return { id: q.id, kind: 'letters', level: q.level, letters: q.letters.slice(), required,
-    bonus: q.all.filter((w) => !required.includes(w)), found: [], bonusFound: [], revealed: [], done: false };
+    bonus, found: [], bonusFound: [], revealed: [], done: false };
 }
 export const toFind = (st) => st.required.filter((w) => !st.found.includes(w));
 /** The word hints are about: the first one still to find. */
