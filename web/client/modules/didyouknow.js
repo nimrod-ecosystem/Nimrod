@@ -10,8 +10,9 @@
 // WHAT IT READS: research_index.js, the one index, never a pack itself; so what may be shown is decided there (flagged never;
 // facts and quotes only when checked, unless "Only checked ones" is off; words unless flagged). The packs are the site's
 // `research/` folder (`research/index.json` names them); none there yet is an empty card that says so.
-// HOW IT MOVES: a new card every minute by default ("A new one every", or only on Next), in an order of its own (seeded by
-// the panel, so it does not repeat until it has shown them all), resumed where it was. Next / Previous / Read it are buttons,
+// HOW IT MOVES: a new card every minute by default ("A new one every", or only on Next), in a shuffled order of its own
+// (2026-11-22: a random seed on the panel's row, new every round, so it does not repeat until it has shown them all, and
+// not the same order every time), resumed where it was. Next / Previous / Read it are buttons,
 // and the verbs `next`, `prev`, `select` (read it aloud) for a switch or a voice.
 // READ ALOUD: OFF by default, argued. FOR on: a card nobody can read is no card. AGAINST, and it wins as the default: a panel
 // that talks every minute on its own interrupts everything else on the screen (a call, a video, the board); "Read it" (and
@@ -26,7 +27,7 @@ export const DYK_SHOW = Object.freeze(['all', 'fact', 'quote', 'word']);
 // to be worth a glance; slower for a panel that sits in a corner, never faster than 15 s (a card must be readable).
 export const DYK_EVERY = Object.freeze([0, 15000, 30000, 60000, 120000, 300000, 900000]);
 export const DYK_DEFAULTS = Object.freeze({ show: 'all', topics: '', wordLevel: 'all', onlyChecked: true, everyMs: 60000,
-  readAloud: false, showSource: true });
+  readAloud: false, showSource: true, sameOrder: false });
 const MAX_PACKS = 100;            // research/index.json names a few dozen; 100 stops a broken index fetching forever
 // The credit that stands whatever the row says (note FV): where the words' meanings come from.
 export const DYK_CREDITS = 'Word meanings are based on Open English WordNet 2025 (Global WordNet Association, CC BY 4.0), reworded.';
@@ -48,6 +49,11 @@ export const DYK_SETTINGS = [
     note: DYK_CREDITS },
   { key: 'onlyChecked', label: 'Only checked facts and quotes', default: true, level: 'advanced', onLabel: 'Yes', offLabel: 'No',
     note: 'Every fact and quote is checked against a source. One the check found wrong is never shown, whatever this says.' },
+  // (2026-11-22, row 2.282; Mike: "It should use the shuffle feature.") Off, the default: each panel shuffles, and nothing
+  // repeats until everything has shown, then it shuffles again. On: every screen walks one order (two screens side by side
+  // agree, a class can follow along). AGAINST on as the default: the same panel showed the same cards in the same order.
+  { key: 'sameOrder', label: 'Same order on every screen', default: false, level: 'advanced', onLabel: 'Yes',
+    offLabel: 'No, shuffled', note: 'Shuffled: nothing comes round again until everything has been shown.' },
 ];
 
 /** The settings in force, every value checked. PURE. */
@@ -59,6 +65,7 @@ export function dykConfig(s = {}) {
   c.wordLevel = Number.isInteger(lv) && lv >= 1 && lv <= 6 ? lv : 'all';
   c.topics = typeof c.topics === 'string' ? c.topics : '';
   c.onlyChecked = c.onlyChecked !== false; c.readAloud = c.readAloud === true; c.showSource = c.showSource !== false;
+  c.sameOrder = c.sameOrder === true;
   return c;
 }
 
@@ -69,7 +76,7 @@ export function dykQuery(cfg, seed) {
     ...(tags.length ? { tags } : {}), ...(cfg.wordLevel !== 'all' && (cfg.show === 'word') ? { level: cfg.wordLevel } : {}) };
 }
 
-/** A panel's own seed from its id: the same panel walks the same order. PURE. */
+/** A steady seed from a name (FNV-1a). "Same order on every screen" seeds from the module's name, so screens agree. PURE. */
 export function seedOf(id) {
   let h = 2166136261;
   for (const ch of String(id || DYK_TYPE)) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); }
@@ -139,7 +146,7 @@ export function cardWords(item) {
  * The panel, apart from the module runtime (the suites drive this). `getIndex()` resolves an index; `say(text)` speaks;
  * `state` is `{ get, set }` (the panel's own row: its settings and where it was).
  */
-export function mountDidYouKnow(mount, { getIndex, state, say = () => {}, instanceId = DYK_TYPE,
+export function mountDidYouKnow(mount, { getIndex, state, say = () => {}, instanceId = DYK_TYPE, rand = Math.random,
   setTimer = (f, ms) => setTimeout(f, ms), clearTimer = (h) => clearTimeout(h) } = {}) {
   let index = null;
   let list = [];
@@ -147,7 +154,23 @@ export function mountDidYouKnow(mount, { getIndex, state, say = () => {}, instan
   let torn = false;
   const cfg = () => dykConfig(state?.get?.() || {});
   const pos = () => { const p = Number(state?.get?.()?.pos); return Number.isInteger(p) && p >= 0 ? p : 0; };
-  function recompute() { list = index ? find(index, dykQuery(cfg(), seedOf(instanceId))) : []; }
+  // THE ORDER (2026-11-22, row 2.282). Shuffled: a random seed kept on the panel's own row, so it carries on where it was
+  // after a reload, and a NEW one each time the whole list has been shown (a "round"). Same order: one seed from the
+  // module's name and the round, so every screen with it on walks the same cards. Replaces the seed from the panel's id
+  // (instanceId), which gave the same panel the same order every time. One number on the row, not a list of seen ids:
+  // walking a shuffled list from where it was already shows nothing twice until all have been shown.
+  const newSeed = () => Math.floor(rand() * 4294967296) >>> 0;
+  function seedNow() {
+    const s = state?.get?.() || {};
+    const round = Number.isInteger(Number(s.round)) ? Number(s.round) : 0;
+    if (cfg().sameOrder) return (seedOf(DYK_TYPE) + round) >>> 0;
+    const v = Number(s.seed);
+    if (Number.isInteger(v) && v >= 0) return v;
+    const fresh = newSeed();
+    state?.set?.({ seed: fresh });
+    return fresh;
+  }
+  function recompute() { list = index ? find(index, dykQuery(cfg(), seedNow())) : []; }
   function current() { return list.length ? list[pos() % list.length] : null; }
   function arm() {
     if (timer != null) { clearTimer(timer); timer = null; }
@@ -172,7 +195,19 @@ export function mountDidYouKnow(mount, { getIndex, state, say = () => {}, instan
   function sayNow() { const it = current(); if (it) { try { say(cardWords(it)); } catch (err) { console.error('didyouknow: say', err); } } }
   function move(d, { auto = false } = {}) {
     if (!list.length) return;
-    state?.set?.({ pos: ((pos() + d) % list.length + list.length) % list.length });
+    const to = pos() % list.length + d;
+    if (to >= list.length && list.length > 1) {
+      // A ROUND IS OVER: everything has been shown. A new order, and its first card is never the one just shown.
+      const was = current()?.id;
+      const s = state?.get?.() || {};
+      const round = (Number.isInteger(Number(s.round)) ? Number(s.round) : 0) + 1;
+      state?.set?.(cfg().sameOrder ? { round, pos: 0 } : { round, seed: newSeed(), pos: 0 });
+      recompute();
+      if (list[0]?.id === was) state?.set?.({ pos: 1 });
+    } else {
+      // Previous from the first card goes to the last of this round, never into a new one.
+      state?.set?.({ pos: ((to % list.length) + list.length) % list.length });
+    }
     render();
     if (cfg().readAloud) sayNow();     // on a press and on the timer alike: "Read each one aloud" means each
     arm();
@@ -207,6 +242,7 @@ registerModule(
     return {
       init() {
         panel = mountDidYouKnow(mount, { getIndex: sharedResearch, state, instanceId: ctx.instanceId,
+          rand: typeof ctx.rand === 'function' ? ctx.rand : Math.random,
           say: (text) => { if (ctx.output?.say) ctx.output.say(text, { source: DYK_TYPE }); } });
         bus.subscribe(`${DYK_TYPE}/next`, () => panel?.next());
         bus.subscribe(`${DYK_TYPE}/prev`, () => panel?.prev());

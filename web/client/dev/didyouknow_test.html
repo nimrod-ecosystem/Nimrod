@@ -59,7 +59,7 @@ function fakeTimers() {
 try {
   section('settings');
   check('defaults: everything, a new one every minute, read aloud only on request, sources shown',
-    J(dykConfig({})) === J({ show: 'all', topics: '', wordLevel: 'all', onlyChecked: true, everyMs: 60000, readAloud: false, showSource: true }));
+    J(dykConfig({})) === J({ show: 'all', topics: '', wordLevel: 'all', onlyChecked: true, everyMs: 60000, readAloud: false, showSource: true, sameOrder: false }));
   check('a value not offered falls back', dykConfig({ show: 'poem', everyMs: 5, wordLevel: 9 }).show === 'all'
     && dykConfig({ everyMs: 5 }).everyMs === 60000 && dykConfig({ wordLevel: 9 }).wordLevel === 'all');
   check('the rows are data, "Show only these" first and essential', DYK_SETTINGS[0].key === 'show' && DYK_SETTINGS[0].level === 'essential'
@@ -124,6 +124,50 @@ try {
   said.length = 0; p.next();
   check('read each one aloud: on Next as well', said.length === 1);
   p.destroy();
+
+  // (2026-11-22, row 2.282; Mike: "Seems to show things in the same order. It should use the shuffle feature.")
+  section('*** the order: shuffled, nothing twice in a round, a new order each round ***');
+  {
+    const many = buildIndex([pack('facts', Array.from({ length: 12 }, (_, i) => ({ kind: 'fact', id: `m${String(i).padStart(2, '0')}`,
+      text: `Fact ${i}.`, topic: 'space', status: 'verified' })))]);
+    const seq = (r) => { let x = r; return () => { x = (x * 16807) % 2147483647; return x / 2147483647; }; };
+    const walk = (p, n) => { const ids = [p.current().id]; for (let i = 1; i < n; i++) { p.next(); ids.push(p.current().id); } return ids; };
+    const mk = async (st, rand, id = 'dyk-x') => { const el = document.createElement('div'); const p = mountDidYouKnow(el, { getIndex: async () => many, state: st,
+      instanceId: id, rand, setTimer: () => null, clearTimer: () => {} }); await settle(); return p; };
+    const sA = memState(); const a = await mk(sA, seq(7));
+    const sB = memState(); const b = await mk(sB, seq(99));
+    const ra = walk(a, 12); const rb = walk(b, 12);
+    check('*** the same panel id, two screens: two different orders (the seed is no longer the panel id) ***', J(ra) !== J(rb), `${ra} | ${rb}`);
+    check('*** a round shows every card once, none twice ***', new Set(ra).size === 12);
+    check('the order is kept on the panel\'s row as one number (not a list of what was seen)', Number.isInteger(sA.get().seed) && !('seen' in sA.get()));
+    a.destroy();
+    const sC = memState({ ...sA.get() });
+    const c2 = await mk(sC, seq(5));
+    check('*** after a reload it carries on: the same card, then the same next one ***', c2.current().id === ra[11]);
+    const lastShown = c2.current().id;
+    const seedBefore = sC.get().seed;
+    c2.next();
+    check('*** past the last card: a new round, in a new order, and never the card just shown first ***',
+      sC.get().seed !== seedBefore && sC.get().round === 1 && c2.current().id !== lastShown, J(sC.get()));
+    // The rest of this round, from where it started (0, or 1 when its first card was the one just shown): no card twice.
+    const startPos = sC.get().pos;
+    const r2 = [c2.current().id]; for (let i = startPos + 1; i < 12; i++) { c2.next(); r2.push(c2.current().id); }
+    check('the new round shows nothing twice either', r2.length === 12 - startPos && new Set(r2).size === r2.length && sC.get().round === 1, `${startPos}: ${r2}`);
+    c2.destroy();
+    const sBack = memState();
+    const back = await mk(sBack, seq(3));
+    const seed0 = sBack.get().seed;
+    back.prev();
+    check('Previous from the first card goes to the last of this round, not into a new one',
+      sBack.get().pos === 11 && sBack.get().seed === seed0 && !sBack.get().round, J(sBack.get()));
+    back.destroy(); b.destroy();
+    const sameA = await mk(memState({ sameOrder: true }), seq(7), 'dyk-1');
+    const sameB = await mk(memState({ sameOrder: true }), seq(99), 'dyk-2');
+    check('*** "Same order on every screen": two panels, two screens, one order ***', J(walk(sameA, 12)) === J(walk(sameB, 12)));
+    sameA.destroy(); sameB.destroy();
+    const row = DYK_SETTINGS.find((f) => f.key === 'sameOrder');
+    check('"Same order on every screen" is a setting, off by default (shuffled)', row && row.default === false && row.offLabel === 'No, shuffled');
+  }
 
   section('the empty card says why');
   const e1 = document.createElement('div');
