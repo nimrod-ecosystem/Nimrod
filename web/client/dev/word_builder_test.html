@@ -29,7 +29,7 @@ import '../modules/word_builder.js';
 import '../modules/think_games.js';
 import '../modules/spelling.js';
 import '../modules/word_games.js';
-import { GAME, LINES, DEFAULTS, MIN_WORD, judgeWord, hintText, remaining, readVoice, newSet, target, toFind } from '../modules/word_builder.js';
+import { GAME, LINES, DEFAULTS, MIN_WORD, lettersCap, judgeWord, hintText, remaining, readVoice, newSet, target, toFind } from '../modules/word_builder.js';
 import { PUZZLES, WORDS, TIER, LEFT_OUT, canMake, wordsFrom } from '../word_builder_words.js';
 import { UNKNOWN, FLOW_LINES } from '../quiz_flow.js';
 import { emptyLadder, LADDER_KEY, createAdaptiveSession } from '../adaptive_play.js';
@@ -59,15 +59,16 @@ const sameLetters = (a, b) => a.slice().sort().join('') === b.slice().sort().joi
 try {
   section('the words and the letter sets');
   {
-    check('a hand-written list of a few hundred everyday words, three to five letters, a to z only',
-      WORDS.length >= 400 && WORDS.every((w) => /^[a-z]{3,5}$/.test(w)), `${WORDS.length}`);
+    check('a hand-written list of a few hundred everyday words, three letters or more, a to z only',
+      WORDS.length >= 400 && WORDS.every((w) => /^[a-z]{3,}$/.test(w)), `${WORDS.length}`);
     check('*** nothing on the left-out list is on the word list ***', !LEFT_OUT.some((w) => WORDS.includes(w)));
     check('every word has a tier of 1, 2 or 3', WORDS.every((w) => [1, 2, 3].includes(TIER[w])));
     check('every set id is unique', new Set(PUZZLES.map((p) => p.id)).size === PUZZLES.length);
     const per = [1, 2, 3, 4, 5].map((l) => PUZZLES.filter((p) => p.level === l).length);
     check('at least eight sets at each of levels 1-5', per.every((n) => n >= 8), per.join(','));
-    check('level 1 is three letters; nothing is more than five', PUZZLES.filter((p) => p.level === 1).every((p) => p.letters.length === 3)
-      && PUZZLES.every((p) => p.letters.length >= 3 && p.letters.length <= 5));
+    // (2026-11-22, row 2.279) No upper limit any more: longer words are on their way. Level 1 stays three letters.
+    check('level 1 is three letters; nothing is shorter than three', PUZZLES.filter((p) => p.level === 1).every((p) => p.letters.length === 3)
+      && PUZZLES.every((p) => p.letters.length >= 3));
     check('every set asks for at least two words, every one of them made from its letters',
       PUZZLES.every((p) => p.pool.length >= 2 && p.pool.every((w) => canMake(w, p.letters) && w.length >= MIN_WORD)),
       JSON.stringify(PUZZLES.find((p) => p.pool.length < 2)));
@@ -115,7 +116,11 @@ try {
     const m = getManifest(GAME);
     check('built on the new core, needs nothing', m.core === 'new' && m.dependsOn === 'local');
     const f = (k) => m.settings.find((s) => s.key === k);
-    check('letters at most: 3, 4 or 5, five by default', f('maxLetters').default === 5 && f('maxLetters').options.map((o) => o.value).join() === '3,4,5');
+    check('letters at most: 3, 4, 5 or Any, five by default', f('maxLetters').default === 5
+      && f('maxLetters').options.map((o) => o.value).join() === '3,4,5,0' && f('maxLetters').options[3].label === 'Any');
+    check('*** Any is no limit; a number is that limit, never below three; nonsense is five ***',
+      lettersCap(0) === Infinity && lettersCap('0') === Infinity && lettersCap('any') === Infinity
+        && lettersCap(4) === 4 && lettersCap(7) === 7 && lettersCap(1) === 3 && lettersCap('x') === 5 && lettersCap(undefined) === 5);
     check('words per set and the blanks are settings', f('wordsPerSet').default === 5 && f('showBlanks').default === true);
     check('the ladder\'s settings are here (players; harder by level, 90% right at the easiest)', f('players')
       && f('moveUpAbove').default === 'auto' && f('upEasy').default === 0.9);

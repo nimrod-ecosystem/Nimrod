@@ -113,6 +113,9 @@ export const DEFAULTS = Object.freeze({
 // EACH SETTING'S DEFAULT, ARGUED:
 //   maxLetters 5   the ruling's "fewer letters": the ladder starts at three and climbs to five. Six
 //                  and more is a visual search again, the thing that made the original too hard.
+//                  Any (2026-11-22, Mike) lifts the limit for a player who wants longer words; the
+//                  default stays 5 for the reason above. AGAINST keeping 5: somebody who is good at
+//                  this meets the top of the list sooner. That person is one setting away from Any.
 //   wordsPerSet 5  a five-letter set can make fifteen words; asking for all of them is a long sitting
 //                  on one set. Five is a few minutes; the rest still count, as bonus words.
 //   showBlanks on  the length of each word still to find is the clue a grid gives for free.
@@ -127,9 +130,11 @@ export const DEFAULTS = Object.freeze({
 const SETTINGS = [
   ...autostartFields({ on: false }),
   ownScoreField({ level: 'essential', note: 'How many words are found (for each player, when there are several). A Scoreboard on the same screen can show it instead.' }),
+  // (2026-11-22, row 2.279; Mike: "there should be an any option") Any = no limit (0, like togetherRounds' "No end"):
+  // every set on the list, however long. The list's longest words are five letters until longer ones are added.
   { key: 'maxLetters', label: 'Letters, at most', kind: 'choice', default: 5, level: 'essential',
-    options: [3, 4, 5].map((v) => ({ value: v, label: `${v} letters` })),
-    note: 'It starts with 3 letters. It adds more as the words come easily.' },
+    options: [3, 4, 5].map((v) => ({ value: v, label: `${v} letters` })).concat([{ value: 0, label: 'Any' }]),
+    note: 'It starts with 3 letters. It adds more as the words come easily. Any: no limit.' },
   { key: 'wordsPerSet', label: 'Words to find in each set of letters', kind: 'choice', default: 5, level: 'standard',
     options: [3, 5, 8].map((v) => ({ value: v, label: String(v) })),
     note: 'Any other word the letters make still counts, as a bonus.' },
@@ -147,6 +152,11 @@ const SETTINGS = [
 // ---------------------------------------------------------------------------------------
 // PURE PIECES — exported for the suite
 // ---------------------------------------------------------------------------------------
+/** The most letters a set may have: Any (0) is no limit; anything else is at least MIN_WORD, 5 when unreadable. */
+export function lettersCap(v) {
+  if (v === 0 || v === '0' || String(v).toLowerCase() === 'any') return Infinity;
+  return Math.max(MIN_WORD, Math.floor(Number(v) || DEFAULTS.maxLetters));
+}
 export const lettersOnly = (v) => String(v == null ? '' : v).toLowerCase().replace(/[^a-z]/g, '');
 export const spaced = (letters) => letters.map((l) => l.toUpperCase()).join(', ');
 const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
@@ -322,7 +332,7 @@ registerModule(
     const ladderRows = openPersonLadder(ctx, { gameKey: GAME, onChange: () => api?.render() });
     const store = ladderRows.store;
     let ladderSeen = false;
-    const maxLetters = () =>Math.max(3, Math.floor(Number(cfgNow.maxLetters) || DEFAULTS.maxLetters));
+    const maxLetters = () => lettersCap(cfgNow.maxLetters);
     const session = createAdaptiveSession({
       cfg: () => cfgNow,
       bankFor: () => PUZZLES.filter((p) => p.letters.length <= maxLetters()),

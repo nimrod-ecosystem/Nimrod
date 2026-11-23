@@ -76,7 +76,8 @@ export const LEFT_OUT = Object.freeze(['ass', 'tit', 'sex', 'fag', 'cum', 'piss'
 
 function parseTier(text) {
   return text.split(/\s+/).filter(Boolean).map((w) => w.toLowerCase())
-    .filter((w) => /^[a-z]{3,5}$/.test(w) && !LEFT_OUT.includes(w));
+    // Three letters or more, no upper limit (2026-11-22, row 2.279): a longer word added to a tier becomes a set.
+    .filter((w) => /^[a-z]{3,}$/.test(w) && !LEFT_OUT.includes(w));
 }
 
 /** word -> tier (1 commonest). A word listed in two tiers keeps the commoner one. */
