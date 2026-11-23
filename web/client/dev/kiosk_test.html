@@ -555,8 +555,10 @@ const toTab = (m, id) => {
       // while it is on. 64.)
       // (Mike, 2026-11-08, DELIBERATELY: "Big cursor" on Devices (its four rows: show, size, shape, colour; it had no rows
       // on a screen's menu at all) and "Size of the bar" under The bar. 69.)
-      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 15 stops (was every row: 70) ***',
-        lapStops.length === 15 && oldStops.length === 70 && oldStops.some((i) => i.id === 'set:barPerson') /* the person button */
+      // (Mike, 2026-11-23, DELIBERATELY: "Words the games may use" on This screen, beside Lesson topics. 71.)
+      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 15 stops (was every row: 71) ***',
+        lapStops.length === 15 && oldStops.length === 71 && oldStops.some((i) => i.id === 'set:barPerson') /* the person button */
+        && oldStops.some((i) => i.id === 'set:wordLevel') /* words the games may use */
         && oldStops.some((i) => i.id === 'set:quietHours') /* quiet hours */
         && oldStops.some((i) => i.id === 'set:cursor_show') && oldStops.some((i) => i.id === 'set:barSize') /* 2026-11-08 */
         && oldStops.some((i) => i.id === 'mirror') /* Mirror */

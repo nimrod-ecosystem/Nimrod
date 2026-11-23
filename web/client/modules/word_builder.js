@@ -49,6 +49,7 @@ import { quizModule, up } from '../quiz_view.js';
 import { createAdaptiveSession, adaptiveSettings, ADAPTIVE_DEFAULTS, openPersonLadder, MAX_PLAYERS } from '../adaptive_play.js';
 import { createTogether, scoreWords, REMOTE_TURN_MS } from '../game_together.js';
 import { PUZZLES, TIER, canMake, acceptedFrom, LONGEST, TOP_LEVEL } from '../word_builder_words.js';
+import { DEFAULT_WORD_LEVEL, allowedWords, createWordLevel } from '../word_filter.js';
 // 2026-10-02 late: opens waiting for Start, silent until then (quiz_view.js start gate, game_start.js).
 // No demo yet, so no "While nobody is playing" row.
 import { autostartFields, START_VOICE } from '../game_start.js';
@@ -173,12 +174,15 @@ export function remaining(letters, typed) {
 }
 
 /** A set as it is played: the words it asks for, the bonus words, and what has been found. */
-export function newSet(q, { wordsPerSet = DEFAULTS.wordsPerSet } = {}) {
+export function newSet(q, { wordsPerSet = DEFAULTS.wordsPerSet, wordLevel = DEFAULT_WORD_LEVEL } = {}) {
   const n = Math.max(1, Math.floor(Number(wordsPerSet) || DEFAULTS.wordsPerSet));
-  const required = q.pool.slice(0, n);
+  // (2026-11-23, word_filter.js) The screen's "Words the games may use": a word it holds back is never asked for and
+  // never counted (it is "not on this list"), so it is never said aloud either. Slurs are held back at every setting.
+  const required = allowedWords(q.pool, wordLevel).slice(0, n);
   // Bonus words: everything else on the asked-for list, then any word on the accept list (2026-11-22, Mike: "two
   // lists"), so a real word these letters make is a bonus instead of "not on this list".
-  const bonus = q.all.filter((w) => !required.includes(w)).concat(acceptedFrom(q.letters, { minWord: MIN_WORD }));
+  const bonus = allowedWords(q.all.filter((w) => !required.includes(w))
+    .concat(acceptedFrom(q.letters, { minWord: MIN_WORD })), wordLevel);
   return { id: q.id, kind: 'letters', level: q.level, letters: q.letters.slice(), required,
     bonus, found: [], bonusFound: [], revealed: [], done: false };
 }
@@ -334,6 +338,9 @@ registerModule(
     // start in this game, else their usual one; everybody else's stays on this screen's row; a refused save merges, entry by
     // entry (adaptive_play.js openPersonLadder).
     const ladderRows = openPersonLadder(ctx, { gameKey: GAME, onChange: () => api?.render() });
+    // (2026-11-23) The screen's "Words the games may use" (word_filter.js), read at each set dealt.
+    const wordLevel = createWordLevel({ makeState: ctx.makeState });
+    wordLevel.load();
     const store = ladderRows.store;
     let ladderSeen = false;
     const maxLetters = () => lettersCap(cfgNow.maxLetters);
@@ -376,7 +383,7 @@ registerModule(
       const q = st && !st.done ? session.deal(GAME, { again: st.id, player: p }) : session.deal(GAME, { player: p });
       if (!q) { current = null; return null; }
       if (!st || st.done || q.id !== st.id) {
-        st = newSet(q, { wordsPerSet: cfgNow.wordsPerSet });
+        st = newSet(q, { wordsPerSet: cfgNow.wordsPerSet, wordLevel: wordLevel.get() });
         sets.set(p.id, st);
       }
       keyHints = 0;
@@ -715,6 +722,7 @@ registerModule(
         try { if (typeof unsubBack === 'function') unsubBack(); } catch { /* gone */ }
         try { if (typeof unsubPlay === 'function') unsubPlay(); } catch { /* gone */ }
         ladderRows.destroy();
+        wordLevel.destroy();
       },
     };
 

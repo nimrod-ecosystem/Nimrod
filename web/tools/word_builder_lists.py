@@ -7,9 +7,10 @@
 Mike, 2026-11-22: "Go for the download, 8 letters, two lists". The two lists:
 
   THE ACCEPT LIST (written here, to web/client/word_builder_accept.js). Every lowercase a-z word of 3 to 8 letters in
-  SCOWL's english-words and american-words lists at size 50 or below, minus LEFT_OUT and BLOCK below. It is never ASKED
-  for: a set only counts a word from it as a bonus word, so a real word somebody makes is not called "not on this list".
-  Nobody reads it word by word, which is why the block list matters: a bonus word is said back aloud.
+  SCOWL's english-words and american-words lists at size 50 or below, minus slurs (web/client/word_filter.js). It is
+  never ASKED for: a set only counts a word from it as a bonus word, so a real word somebody makes is not called "not
+  on this list". Nobody reads it word by word, so the games hold back the other kinds in word_filter.js by the screen's
+  setting before a bonus word is said aloud (Mike, 2026-11-23: medical words are ordinary words; slurs always out).
 
   THE CANDIDATES (--review, a TSV for a person). Words of 6 to 8 letters that are in 12dicts' 3esl (a list of the words
   a learner of English meets) AND its 2of12 (headwords in at least 2 of 12 dictionaries) AND SCOWL at size 20 or below,
@@ -43,49 +44,39 @@ REVIEW_TIERS = 2     # the review sheet holds tiers 1 and 2 (size 10 and 20); ti
 # (4.65). Everyday words below it (pillow 3.96, umbrella 3.89) stay on the sheet for the reader to mark.
 SUGGEST_ZIPF = 4.5
 
-# word_builder_words.js's LEFT_OUT, kept the same here (the suite checks the two agree).
-LEFT_OUT = ['ass', 'tit', 'sex', 'fag', 'cum', 'piss', 'damn', 'hell', 'dick', 'cock', 'slut', 'whore', 'crap', 'porn',
-            'rape', 'kill', 'dead', 'die', 'dies', 'died', 'nazi', 'shit', 'fart', 'butt']
-# More kept out of the ACCEPT list, because a bonus word is said back aloud and nobody reads that list. A word is out
-# when it IS one of these or STARTS with one marked '*'. Rude words, slurs, violence and death, the file's own rule.
-# Not a list of everything; the candidates a set asks for are read by a person as well.
-BLOCK = ('''
-arse* bastard* bitch* bollock* boob* bugger* bullshit* clit* coon* crap* cunt* dago* damn* dick* dildo* dyke* fag*
-feck* fuck* gook* homo jap japs kike* nigg* orgasm* pecker* penis* poof* prick* pube* pussy* queer* rapist* retard*
-schlong* scrotum* shag* shit* skank* slag* slut* spastic* spaz* sperm* spic spics tits titty* tosser* turd* twat*
-vagina* wank* wetback* whore* wog wogs
-kill* murder* slaughter* massacre* suicide* corpse* homicide* genocide* execut* assassin* stab* strangl* behead*
-decapitat* tortur* bomb* gun guns gunman gunmen gunfire gunshot* shoot* rifle* pistol* grenade* weapon* bullet*
-dead* death* dying die died dies coffin* funeral* corpse* cadaver* morgue* mortuary* noose* hanged gallows
-abort* rape* raped raping molest* incest* pedo* paedo* nazi* hitler*
-gyp gyps gypped gypping gypsies gypsy* chink* midget* redskin* squaw* cripple* lunatic* moron* idiot* imbecil* psycho*
-schizo* demented negro* colored coloured wench* hag hags douche* jackass* sucker* suck sucks sucked sucking bimbo*
-hooker* stripper* tranny* lesbo* savage*
-sexy sexual* horny nude nudes nudist* nudity naked* condom* erotic* erection* breast* nipple* bra bras thong* panties
-boner* hump humped humping screw screws screwed screwing smut* orgy orgies lust lusts lusty lustful seduc* piss*
-slay slays slayer* slaying slain gore gory shotgun* drown* hang hangs hanged hanging hangman war wars warfare warrior*
-victim* wound wounds wounded wounding injur* hostage* torment* poison* choke chokes choked choking suffocat* blood*
-bleed* grave graves tomb* skull* terror* enemy enemies hate hated hates hating hatred abuse* abusing bully bullied
-bullies bullying cruel*
-drug drugs drugged cocaine heroin junkie* booze* drunk*
-vomit* puke* poop* pee pees peed peeing
-cancer* tumor* tumour* coma comas dementia insane disease* plague* famine* stroke strokes
-''').split()
-# THE BLOCK LIST, ARGUED: wide on purpose. A word wrongly kept out costs a player "not on this list"; a word wrongly let
-# in is the screen praising it aloud ("Coma, a bonus word."), perhaps to somebody who is ill. So illness and injury
-# words go too (stroke, coma, dementia, injury), though they are ordinary words, and so do two-sense words whose other
-# sense is harmless (grave, stroke, hang): the game cannot tell which sense was meant. Probed 2026-11-22 against the
-# generated list with about 150 such words; every one found is above.
+FILTER_JS = os.path.join(HERE, '..', 'client', 'word_filter.js')
 
 
-def blocked(w):
-    for b in BLOCK:
-        if b.endswith('*'):
-            if w.startswith(b[:-1]):
-                return True
-        elif w == b:
-            return True
-    return w in LEFT_OUT
+def filter_lists(path=FILTER_JS):
+    """kind -> (exact words, prefixes), read from web/client/word_filter.js: ONE list, the games' own (Mike,
+    2026-11-23: "block any racial slurs and the like", and the rest by a screen setting). The accept list leaves out
+    only slurs; the screen's setting holds back the other kinds while playing."""
+    with open(path, encoding='utf-8') as f:
+        src = f.read()
+    block = src[src.index('const LISTS = {'):]
+    block = block[:block.index('};')]
+    out = {}
+    for kind, text in re.findall(r'(\w+): `([^`]*)`', block):
+        words = text.split()
+        out[kind] = ({w for w in words if not w.endswith('*')}, [w[:-1] for w in words if w.endswith('*')])
+    if 'slur' not in out:
+        sys.exit('no slur list in %s' % path)
+    return out
+
+
+LISTS = filter_lists()
+
+
+def kind_of(w):
+    """The word's kind in word_filter.js ('slur', 'swear', 'sexual', 'adult'), or None: the JS kindOf, in Python."""
+    for kind, (exact, starts) in LISTS.items():
+        if w in exact or any(w.startswith(s) for s in starts):
+            return kind
+    return None
+
+
+def is_slur(w):
+    return kind_of(w) == 'slur'
 
 
 def read_scowl(folder, sizes):
@@ -137,8 +128,9 @@ def notice(folder):
             version = ' ' + f.read().strip()
     head = ('// SOURCE AND LICENCE. Made from SCOWL%s (Spell Checker Oriented Word Lists), english-words and american-words\n'
             '// at size 50 and below, by web/tools/word_builder_lists.py. Do not edit by hand: run the tool. Filtered:\n'
-            '// lowercase a to z only, 3 to 8 letters, LEFT_OUT and the tool\'s BLOCK list kept out (rude words, slurs,\n'
-            '// violence and death). SCOWL\'s Copyright file follows, whole, as its terms ask.\n//\n' % version)
+            '// lowercase a to z only, 3 to 8 letters, slurs kept out (word_filter.js). The other kinds there (swearing,\n'
+            '// sexual words, drugs and violence) stay in, and a screen\'s "Words the games may use" holds them back while\n'
+            '// playing. SCOWL\'s Copyright file follows, whole, as its terms ask.\n//\n' % version)
     return head + '\n'.join(('//   ' + line).rstrip() for line in text.split('\n')) + '\n'
 
 
@@ -171,7 +163,7 @@ def main():
     a = ap.parse_args()
 
     scowl = read_scowl(a.scowl, ACCEPT_SIZES)
-    accept = sorted(w for w, s in scowl.items() if 3 <= len(w) <= LONGEST and not blocked(w))
+    accept = sorted(w for w, s in scowl.items() if 3 <= len(w) <= LONGEST and not is_slur(w))
     js = accept_js(accept, notice(a.scowl))
     if a.check:
         with open(OUT, encoding='utf-8') as f:
@@ -191,7 +183,7 @@ def main():
         # two commonest tiers give about 2,650, and "suggested" marks the commonest of those (below).
         cands = {w: CANDIDATE_SIZES[s] for w, s in scowl.items()
                  if s in CANDIDATE_SIZES and CANDIDATE_SIZES[s] <= REVIEW_TIERS and 6 <= len(w) <= LONGEST
-                 and w in esl and w in heads and not blocked(w)}
+                 and w in esl and w in heads and kind_of(w) is None}
         # plain "s" plurals of another candidate, or of a word the list already has, are left out (the file's rule)
         plural = {w for w in cands if w.endswith('s') and (w[:-1] in cands or w[:-1] in esl)}
         try:

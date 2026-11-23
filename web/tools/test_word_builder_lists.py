@@ -3,9 +3,9 @@
     py -3.13 -m unittest web/tools/test_word_builder_lists.py
 
 Without the downloads (SCOWL and 12dicts are not in the repository), it proves what can be proved from the repository:
-the tool's LEFT_OUT is the game's; the block list keeps out what it says and lets ordinary words through; and the
-generated web/client/word_builder_accept.js is sorted, a to z, 3 to 8 letters, free of every blocked word, and carries
-SCOWL's whole notice. With the downloads, `word_builder_lists.py --check` proves the file is what they make.
+the tool reads the games' own filter (web/client/word_filter.js); its prefixes take no ordinary word; and the
+generated web/client/word_builder_accept.js is sorted, a to z, 3 to 8 letters, free of every slur, keeps medical and
+everyday words (Mike, 2026-11-23), and carries SCOWL's whole notice. With the downloads, `word_builder_lists.py --check` proves the file is what they make.
 """
 import os
 import re
@@ -25,16 +25,28 @@ def read(name):
 
 
 class ToolTest(unittest.TestCase):
-    def test_left_out_is_the_games_own(self):
-        js = read('word_builder_words.js')
-        block = js[js.index('LEFT_OUT'):js.index('function parseTier')]
-        self.assertEqual(sorted(re.findall(r"'([a-z]+)'", block)), sorted(T.LEFT_OUT))
+    def test_the_lists_are_the_games_own(self):
+        js = read('word_filter.js')
+        self.assertEqual(sorted(T.LISTS), ['adult', 'sexual', 'slur', 'swear'])
+        for kind, (exact, starts) in T.LISTS.items():
+            self.assertTrue(exact or starts, kind)
+            self.assertIn('%s: `' % kind, js)
 
-    def test_the_block_list_keeps_out_what_it_names_and_not_ordinary_words(self):
-        for w in ('murder', 'murdered', 'coma', 'stroke', 'naked', 'shotgun', 'bloody', 'dead', 'rape', 'fucking'):
-            self.assertTrue(T.blocked(w), w)
-        for w in ('kitchen', 'garden', 'window', 'gravel', 'hanger', 'warden', 'bullion', 'peel', 'brass', 'scrape'):
-            self.assertFalse(T.blocked(w), w)
+    def test_kinds(self):
+        for w, k in (('wetback', 'slur'), ('nigger', 'slur'), ('fucking', 'swear'), ('bitchy', 'swear'),
+                     ('orgasm', 'sexual'), ('rape', 'sexual'), ('murdered', 'adult'), ('shotgun', 'adult')):
+            self.assertEqual(T.kind_of(w), k, w)
+        # Mike, 2026-11-23: "Medical terms should not be blocked." Nor death, the body, or two-sense everyday words.
+        for w in ('coma', 'stroke', 'dementia', 'cancer', 'disease', 'injury', 'funeral', 'dead', 'grave', 'naked',
+                  'penis', 'vagina', 'spastic', 'abortion', 'insane', 'hang', 'screw', 'kitchen', 'garden', 'stable'):
+            self.assertIsNone(T.kind_of(w), w)
+
+    def test_no_prefix_takes_an_ordinary_word(self):
+        # Each of these was taken by a prefix once (2026-11-22's list, or a first draft of this one).
+        for w in ('arsenal', 'arsenic', 'arson', 'psychology', 'psychic', 'bulletin', 'squawk', 'killjoy', 'killdeer',
+                  'junkier', 'stable', 'deadline', 'execute', 'bombast', 'puberty', 'lustre', 'lustrous', 'feckless',
+                  'grenadine', 'scrape', 'cocktail', 'cockpit', 'titanic', 'raccoon', 'cracker', 'hello', 'shell'):
+            self.assertIsNone(T.kind_of(w), w)
 
     def test_the_longest_word_is_eight(self):
         self.assertEqual(T.LONGEST, 8)
@@ -54,8 +66,15 @@ class AcceptFileTest(unittest.TestCase):
         self.assertEqual(self.words, sorted(set(self.words)))
         self.assertTrue(all(re.fullmatch('[a-z]{3,8}', w) for w in self.words))
 
-    def test_no_blocked_word(self):
-        self.assertEqual([w for w in self.words if T.blocked(w)], [])
+    def test_no_slur(self):
+        self.assertEqual([w for w in self.words if T.is_slur(w)], [])
+
+    def test_keeps_medical_and_everyday_words_and_leaves_the_rest_to_the_setting(self):
+        for w in ('coma', 'stroke', 'dementia', 'cancer', 'funeral', 'bulletin', 'stable', 'deadline'):
+            self.assertIn(w, self.words, w)
+        # swearing and the rest are in the file: a screen's "Words the games may use" holds them back while playing
+        self.assertIn('fuck', self.words)
+        self.assertIn('murder', self.words)
 
     def test_carries_scowls_whole_notice(self):
         for needle in ('Kevin Atkinson', 'Permission to use, copy, modify, distribute and sell these word',

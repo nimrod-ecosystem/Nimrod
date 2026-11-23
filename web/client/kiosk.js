@@ -239,6 +239,7 @@ import { mountPackLoader } from './pack_loader.js';
 import { gameSettingsPage, GAME_SETTINGS_PAGE, createUnlockGate, moduleItem } from './unlocks.js';
 // "Lesson topics" (quest / sandbox): a ⚙ menu page since 2026-10-03, moved from the Settings panel's own list.
 import { MODE_KEY, MODES, modeFrom } from './lessons.js';
+import { WORD_LEVEL_FIELD } from './word_filter.js';
 import { mountChoicePicker } from './choice_picker.js';
 import { controlPages, CONTROL_ITEMS } from './controls_view.js';
 import { connectionsPage, CONNECTION_ITEMS } from './connections.js';
@@ -7758,6 +7759,15 @@ export async function mountKiosk(root, {
         // any panel. AGAINST This screen: it is not about this screen. It sits with the two rows that decide what
         // the games ask, which is what a review decides. Not at "Just the essentials" (legibility and the ways out).
         ...(complexity() !== 'essential' ? [pageRow('reviews', { isScreen: !embedded })] : [])], 'screen', 2),
+      // *** "WORDS THE GAMES MAY USE" (2026-11-23, word_filter.js argues the row, its kinds and its default). *** Mike:
+      // "block any racial slurs and the like. Have age settings for people that want things like swear words blocked."
+      // Beside Lesson topics and the Nimrod Game, the rows that decide what the games may use here; on This screen, not
+      // a person's own, because a word a game says aloud is heard by whoever is in the room. In the same document.
+      ...tagged(fieldItems([normalizeField(WORD_LEVEL_FIELD)].filter(Boolean), {
+        values: () => settings.get() || {},
+        level: complexity(),
+        onStep: (key, value) => { settings.set({ [key]: value }); },
+      }), 'screen', 2),
       ...tagged(CONNECTION_ITEMS, 'devices', 3),
       // *** "CLAUDE ON THIS ACCOUNT…" (2026-10-04). *** Mike: "How do I go there?" -- /claude.html had no link.
       // ON DEVICES, beside "What else this can talk to", argued: there is no AI tab, and the voice rows (the

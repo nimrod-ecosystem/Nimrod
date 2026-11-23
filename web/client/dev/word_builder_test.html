@@ -32,6 +32,7 @@ import '../modules/word_games.js';
 import { GAME, LINES, DEFAULTS, MIN_WORD, lettersCap, judgeWord, hintText, remaining, readVoice, newSet, target, toFind } from '../modules/word_builder.js';
 import { PUZZLES, WORDS, TIER, LEFT_OUT, canMake, wordsFrom, acceptedFrom } from '../word_builder_words.js';
 import { ACCEPT } from '../word_builder_accept.js';
+import { kindOf, heldBack, wordLevelFrom, allowedWords, createWordLevel, WORD_LEVEL_FIELD, DEFAULT_WORD_LEVEL } from '../word_filter.js';
 import { UNKNOWN, FLOW_LINES } from '../quiz_flow.js';
 import { emptyLadder, LADDER_KEY, createAdaptiveSession } from '../adaptive_play.js';
 import { levelRating } from '../rating.js';
@@ -87,9 +88,11 @@ try {
     // THE ACCEPT LIST (2026-11-22, Mike: "two lists"): never asked for, only a bonus.
     check('the accept list: thousands of a-z words of 3 to 8 letters, sorted, each once', ACCEPT.length > 20000
       && ACCEPT.every((w, i) => /^[a-z]{3,8}$/.test(w) && (i === 0 || ACCEPT[i - 1] < w)), `${ACCEPT.length}`);
-    check('*** nothing on the left-out list is on the accept list ***', !LEFT_OUT.some((w) => ACCEPT.includes(w)));
-    check('*** and none of the probed words it is built to keep out (said aloud as a bonus) ***',
-      !['coma', 'stroke', 'murder', 'naked', 'cocaine', 'squaw', 'midget', 'bloody', 'shotgun', 'grave'].some((w) => ACCEPT.includes(w)));
+    // (2026-11-23, Mike: "block any racial slurs and the like. Have age settings for people that want things like swear
+    // words blocked." "Medical terms should not be blocked.") Slurs are not in the file; the rest waits for the setting.
+    check('*** no slur is on the accept list ***', !ACCEPT.some((w) => kindOf(w) === 'slur'));
+    check('*** medical, death and everyday words are on it (coma, stroke, dementia, cancer, funeral) ***',
+      ['coma', 'stroke', 'dementia', 'cancer', 'funeral', 'bulletin', 'stable'].every((w) => ACCEPT.includes(w)));
     const someSet = PUZZLES.find((p) => p.letters.length >= 5 && acceptedFrom(p.letters).length >= 3);
     const extra = someSet ? acceptedFrom(someSet.letters) : [];
     const played = someSet ? newSet(someSet) : null;
@@ -101,6 +104,40 @@ try {
     const text = JSON.stringify(PUZZLES) + JSON.stringify(LINES);
     check('no site copy names the person this was first built for', !/cici|her screen/i.test(text));
     check('no line says she / her', !/\b(she|her|hers|herself)\b/i.test(Object.values(LINES).join(' ')));
+  }
+
+  section('the words the games may use (word_filter.js, 2026-11-23)');
+  {
+    check('the default is "everyone": no swearing or sexual words', DEFAULT_WORD_LEVEL === 'everyone'
+      && wordLevelFrom({}) === 'everyone' && wordLevelFrom({ wordLevel: 'nonsense' }) === 'everyone' && wordLevelFrom({ wordLevel: 'adults' }) === 'adults');
+    check('*** a slur is held back at every setting, adults too ***', ['adults', 'everyone', 'children'].every((l) => heldBack('wetback', l)));
+    check('swearing: allowed for adults, held back for everyone and children',
+      !heldBack('fuck', 'adults') && heldBack('fuck', 'everyone') && heldBack('fuck', 'children'));
+    check('violence and drugs: held back only for children',
+      !heldBack('murder', 'adults') && !heldBack('murder', 'everyone') && heldBack('murder', 'children') && heldBack('cocaine', 'children'));
+    check('*** medical and death words are never held back, even for children (Mike) ***',
+      ['coma', 'stroke', 'dementia', 'cancer', 'dead', 'funeral', 'naked'].every((w) => !heldBack(w, 'children')));
+    check('no prefix takes an ordinary word', ['arsenal', 'psychology', 'bulletin', 'squawk', 'killjoy', 'stable', 'puberty', 'lustre']
+      .every((w) => kindOf(w) === null));
+    check('allowedWords keeps the order and drops only what is held back',
+      allowedWords(['cat', 'fuck', 'murder', 'dog'], 'everyone').join() === 'cat,murder,dog');
+    const set5 = PUZZLES.find((p) => p.letters.length >= 5 && acceptedFrom(p.letters).length >= 3);
+    const swearSet = { ...set5, pool: ['shit', ...set5.pool], all: ['shit', ...set5.all] };
+    const held = newSet(swearSet, { wordLevel: 'everyone' });
+    const open = newSet(swearSet, { wordLevel: 'adults' });
+    check('*** a held-back word is never asked for, and never counted (it is "not on this list") ***',
+      !held.required.includes('shit') && !held.bonus.includes('shit'),
+      `${held.required.join(' ')}`);
+    check('for adults the same word is asked for', open.required.includes('shit'));
+    check('*** at "children" every set still asks for at least one word ***', PUZZLES.every((p) => newSet(p, { wordLevel: 'children' }).required.length >= 1),
+      PUZZLES.filter((p) => !newSet(p, { wordLevel: 'children' }).required.length).map((p) => p.root).join(' '));
+    const doc = { wordLevel: 'children' };
+    const h = createWordLevel({ makeState: (k) => (k === 'settings' ? { load: async () => {}, get: () => doc, subscribe: () => () => {}, destroy() {} } : null) });
+    await h.load();
+    check('the handle reads the screen\'s settings document', h.get() === 'children');
+    check('with no screen behind it, the default', createWordLevel({}).get() === 'everyone');
+    check('the row: three choices, the default the module\'s', WORD_LEVEL_FIELD.options.length === 3 && WORD_LEVEL_FIELD.default === DEFAULT_WORD_LEVEL
+      && auditFields([normalizeField(WORD_LEVEL_FIELD)]).filter((x) => x.severity !== 'info' && x.code !== 'no-essential').length === 0, JSON.stringify(auditFields([normalizeField(WORD_LEVEL_FIELD)])));
   }
 
   section('judging and hints, pure');
