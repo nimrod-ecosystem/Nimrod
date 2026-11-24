@@ -743,7 +743,7 @@ export const CATALOG = [
     title: 'Modules',
     group: 'practice',
     use: 'touch',
-    lead: 'Everything you can put on a screen, to look through: modules, scenes, furniture and 3D bricks.',
+    lead: 'Everything you can put on a screen, to look through: modules, scenes and 3D bricks.',
     needs: 'Nothing.',
     why: 'Sort and filter by what you are after (games, learning, something to look at, people), or search. '
       + 'One press shows what a thing is and what it needs. A second press puts it where this panel is. '

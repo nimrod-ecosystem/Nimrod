@@ -26,10 +26,8 @@
 //
 // 2. WHAT IS IN IT: modules (the catalog — the same descriptions the modules page shows), SCENES (the
 //    rooms and the live scenes: each is a module with one setting chosen, so it can be put in a place
-//    like any module) and FURNITURE (the room's pieces). Furniture is shown, explained and searchable, but
-//    CANNOT BE PUT IN A PANEL'S PLACE: a sofa is not a panel, and putting one piece into a room of your own
-//    is not built yet. Its details say exactly that, rather than the library hiding it (D16: dimmed and
-//    explained, never hidden).
+//    like any module). FURNITURE (the room's pieces) WAS listed here too, never placeable; since 2026-11-24 it
+//    is not (Mike: design assets are not modules; see libraryItems). `furnitureItems` stays for the asset library.
 //    3D BRICKS (bricks module, row 2.76): ONE module, Bricks (modules/bricks.js), under the 3D chip — Mike,
 //    2026-10-09: "there shouldn't be a separate module for each brick. Just a bricks module." Until then
 //    every published part was a card of its own here (`brick:<id>`, never placeable); an old key like that
@@ -93,7 +91,7 @@ export const CATEGORIES = Object.freeze([
   // the AI set - the guide, the AI characters' card, the voice model, and two settings pages (pageItems below).
   Object.freeze({ id: 'ai', label: 'AI' }),
   Object.freeze({ id: 'scenes', label: 'Scenes' }),
-  Object.freeze({ id: 'furniture', label: 'Furniture' }),
+  // (2026-11-24) No "Furniture" chip: the furniture left this list (libraryItems, below).
   Object.freeze({ id: '3d', label: '3D bricks' }),
 ]);
 export const CATEGORY_IDS = Object.freeze(CATEGORIES.map((c) => c.id));
@@ -248,10 +246,14 @@ export function pageItems({ pages = AI_PAGES } = {}) {
 // THE FURNITURE IS THE OPEN QUESTION, NOT DECIDED HERE: it is listed because Mike named it (2026-10-02, "categories like
 // games, learning, visual, furniture, 3d"), as something to add, but nothing here can add a piece to a room yet. Either
 // it gets a "Put it in a room" or it leaves too; that is his call (MIKE_CHANGE_LIST row 2.158).
+// *** DECIDED 2026-11-24 (Mike, note GO 2): "All the design assets are still listed as individual modules on the site." ***
+// The furniture LEAVES the Modules list (and its "Furniture" chip): a piece of a scene is not something to put on a screen,
+// it belongs in the asset library (row 2.180), which is where `furnitureItems` is kept for. The rooms under Scenes still
+// come furnished.
 export const openable = (it) => !!it && (it.kind !== 'page' || !!it.path);
 export function libraryItems(opts = {}) {
   // bricks module (row 2.76): no card per published part any more -- the Bricks module (a module item) is all of them.
-  return [...moduleItems(opts), ...sceneItems(opts), ...presetItems(opts), ...pageItems(opts), ...furnitureItems(opts)].filter(openable);
+  return [...moduleItems(opts), ...sceneItems(opts), ...presetItems(opts), ...pageItems(opts)].filter(openable);
 }
 
 // *** TEXT (note FD 3, gated: a preset of Button, not a second module; Mike, row 2.218). *** A module listed again with the

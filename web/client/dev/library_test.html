@@ -72,7 +72,7 @@ const items = () => libraryItems({ manifests: ALL });
 
 try {
   // ===================================================================================================
-  section('*** what is in it: every module the catalog offers, scenes, furniture, 3D bricks ***');
+  section('*** what is in it: every module the catalog offers, scenes, 3D bricks (not the furniture) ***');
   {
     const its = items();
     const offered = CATALOG.filter((c) => !NOT_FOR_CAREGIVERS[c.type]).map((c) => c.type);
@@ -95,8 +95,11 @@ try {
       && text.title === 'Text' && text.settings.style === 'plain' && text.settings.wordsAlign === 'left' && text.settings.wordsSize === 'medium'
       && text.placeable === true, JSON.stringify(text));
     const furn = furnitureItems();
-    check('*** furniture: every piece the rooms are built from ***', furn.length === Object.keys(FURNITURE).length && furn.every((f) => f.cats.includes('furniture')));
-    check('*** ...shown and explained, never put in a panel’s place (it says why) ***', furn.every((f) => f.placeable === false && /room/.test(f.whyNot)));
+    // (2026-11-24, Mike: "All the design assets are still listed as individual modules on the site.")
+    check('*** furniture is NOT in the Modules list: a piece of a scene is an asset, not a module ***',
+      !its.some((i) => i.kind === 'furniture' || String(i.key).startsWith('furniture:')) && !CATEGORY_IDS.includes('furniture'));
+    check('...its items are still made, for the asset library: every piece the rooms are built from, none placeable',
+      furn.length === Object.keys(FURNITURE).length && furn.every((f) => f.placeable === false && /room/.test(f.whyNot)));
     // bricks module (row 2.76). Mike: "there shouldn't be a separate module for each brick. Just a bricks module."
     // brick builder (2026-10-09): the Brick builder and Build it are under 3D bricks too -- each one thing, not a card per part.
     const in3d = its.filter((i) => (i.cats || []).includes('3d'));
@@ -121,8 +124,8 @@ try {
 
   section('*** categories are tags: several per thing, from the catalog’s groups unless the table says ***');
   {
-    check('Everything first, then the kinds Mike named: games, learning, to look at, furniture, 3D',
-      CATEGORY_IDS[0] === 'all' && ['games', 'learning', 'visual', 'furniture', '3d', 'scenes'].every((c) => CATEGORY_IDS.includes(c)));
+    check('Everything first, then the kinds Mike named: games, learning, to look at, 3D (furniture left 2026-11-24)',
+      CATEGORY_IDS[0] === 'all' && ['games', 'learning', 'visual', '3d', 'scenes'].every((c) => CATEGORY_IDS.includes(c)));
     const bad = CATALOG.filter((c) => { const cs = categoriesFor(c); return !cs.length || cs.some((x) => !CATEGORY_IDS.includes(x) || x === 'all'); });
     check('*** every catalog module lands in at least one real category ***', bad.length === 0, bad.map((c) => c.type).join(','));
     const stale = Object.keys(MODULE_CATEGORIES).filter((t) => !CATALOG.some((c) => c.type === t));
@@ -141,7 +144,7 @@ try {
       filterItems(its, { query: 'pomodoro' }).some((i) => i.type === 'sprint'));
     check('...every word must appear, any order, any case', filterItems(its, { query: 'AAC board' }).some((i) => i.type === 'board')
       && filterItems(its, { query: 'board AAC zzzz' }).length === 0);
-    check('...and a category name finds what is in it', filterItems(its, { query: 'furniture sofa' }).some((i) => i.key === 'furniture:sofa'));
+    check('...and a category name finds what is in it', filterItems(its, { query: 'scenes bedroom' }).some((i) => i.kind === 'scene'));
     check('the "asks of them" filter: Runs by itself', filterItems(its, { use: 'watch' }).every((i) => i.use === 'watch')
       && filterItems(its, { use: 'watch' }).some((i) => i.type === 'photos'));
     const three = its.filter((i) => ['clock', 'calculator', 'photos'].includes(i.type));
@@ -261,9 +264,9 @@ try {
     check('*** a double click puts it there in one go ***', J(log.placed) === J(['module:calculator', 'module:clock']));
     card('scene:room:theRoom')?.dispatchEvent(new MouseEvent('dblclick', { bubbles: true })); await tick();
     check('a scene is put there like a module', log.placed.at(-1) === 'scene:room:theRoom', J(log.placed));
-    card('furniture:sofa').dispatchEvent(new MouseEvent('dblclick', { bubbles: true })); await tick();
-    check('*** furniture is not put in a panel’s place: its details say why instead ***', log.placed.at(-1) !== 'furniture:sofa'
-      && lib.__probe().detail === 'furniture:sofa' && !!b.querySelector('[data-lib-whynot]') && !b.querySelector('[data-lib-detail] [data-lib-act="place"]'));
+    card('page:claude').dispatchEvent(new MouseEvent('dblclick', { bubbles: true })); await tick();
+    check('*** a settings page is not put in a panel’s place: its details say why instead ***', log.placed.at(-1) !== 'page:claude'
+      && lib.__probe().detail === 'page:claude' && !!b.querySelector('[data-lib-whynot]') && !b.querySelector('[data-lib-detail] [data-lib-act="place"]'));
     b.querySelector('[data-lib-detail] [data-lib-act="close"]').click();
     check('"Back to the list" closes the details', lib.__probe().detail === null && b.querySelector('[data-lib-detail]').hidden);
 
