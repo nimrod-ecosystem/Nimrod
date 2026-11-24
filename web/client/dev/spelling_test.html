@@ -131,10 +131,11 @@ try {
   {
     const fake = new Map([['garden', { word: 'garden', level: 1 }], ['cat', { word: 'cat', level: 1 }],
       ['zealous', { word: 'zealous', level: 6 }], ['fork', { word: 'fork', level: 2 }], ['go', { word: 'go', level: 1 }],
-      ['shit', { word: 'shit', level: 1 }]]);
+      ['wops', { word: 'wops', level: 1 }], ['damn', { word: 'damn', level: 2 }]]);
     const extra = sharedSpellingWords(fake).map((w) => w.word);
-    check('*** the everyday shared words join (levels 1-2), after the game’s own; not a word it has, a hard one, a two-letter one or a held-back one ***',
-      extra.join() === 'fork,garden', extra.join());
+    // (2026-11-24) Mike: "Adults by default". At the default a swear word is an ordinary word; a slur never is.
+    check('*** the everyday shared words join (levels 1-2), after the game’s own; not a word it has, a hard one, a two-letter one or a slur ***',
+      extra.join() === 'damn,fork,garden', extra.join());
     check('levels 1 and 2 only, argued in the file', SHARED_LEVELS_UP_TO === 2);
     const on = SPELLING_ADAPTER.items({ ...DEFAULTS, wordLength: 'longer' });
     const off = SPELLING_ADAPTER.items({ ...DEFAULTS, wordLength: 'longer', sharedWords: false });

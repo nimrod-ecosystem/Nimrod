@@ -87,6 +87,29 @@ try {
   check('read aloud: a quote with who said it; a word, its meaning and example',
     cardWords(ix.byId.get('q1')) === 'Be <yourself>. (Oscar Wilde)' && cardWords(ix.byId.get('w1')) === 'all. every one. I ate all my peas.', cardWords(ix.byId.get('q1')));
 
+  // (2026-11-24, note GN) A fact that can change says when it was true; the screen's word row holds a marked fact back.
+  section('the research columns on a card (note GN)');
+  {
+    const gx = buildIndex([pack('facts', [
+      { kind: 'fact', id: 'g1', text: 'The tallest building is 828 m.', status: 'verified', true_as_of: '2024-03' },
+      { kind: 'fact', id: 'g2', text: 'A battle in 1066.', status: 'verified', content: ['adult'] },
+      { kind: 'fact', id: 'g3', text: 'Plain.', status: 'verified', true_as_of: '2023' }])]);
+    check('*** "As of March 2024" on the card and read aloud ***', /data-dyk-asof>As of March 2024</.test(cardHtml(gx.byId.get('g1')))
+      && cardWords(gx.byId.get('g1')) === 'The tallest building is 828 m. As of March 2024.' && /As of 2023</.test(cardHtml(gx.byId.get('g3')))
+      && !/dyk-asof/.test(cardHtml(ix.byId.get('f1'))));
+    check('the query carries the screen\'s row only when there is one', dykQuery(dykConfig({}), 1, { wordsAllowed: 'children' }).wordsAllowed === 'children'
+      && !('wordsAllowed' in dykQuery(dykConfig({}), 1)));
+    const gs = document.createElement('div'); document.body.append(gs);
+    let allowed = 'adults';
+    const gp = mountDidYouKnow(gs, { getIndex: async () => gx, state: memState({ everyMs: 0 }), wordsAllowed: () => allowed });
+    await settle();
+    const adultsSize = gp.size();
+    allowed = 'children'; gp.refresh();
+    check('*** a fact marked adult: shown for adults, held back on a screen set for children ***', adultsSize === 3 && gp.size() === 2
+      && ![...Array(2)].some(() => { const c = gp.current().id; gp.next(); return c === 'g2'; }), `${adultsSize} ${gp.size()}`);
+    gp.destroy(); gs.remove();
+  }
+
   section('*** the panel ***');
   const stage = document.getElementById('stage');
   const t = fakeTimers();

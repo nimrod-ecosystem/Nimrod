@@ -17,7 +17,7 @@
 <div id="results"></div>
 <div id="summary">running…</div>
 <script type="module">
-import { readPack, buildIndex, find, mayShow, itemLine, topicsOf, cleanItem, RESEARCH_SCHEMA } from '../research_index.js';
+import { readPack, buildIndex, find, mayShow, itemLine, topicsOf, cleanItem, RESEARCH_SCHEMA, LEVEL_FROM_DIFFICULTY, itemLanguage } from '../research_index.js';
 
 const out = document.getElementById('results');
 let passed = 0, failed = 0;
@@ -104,6 +104,42 @@ try {
   check('a quote says who said it, and where', itemLine(ix.byId.get('q1')) === '“I can resist everything except temptation.” (Oscar Wilde, Lady Windermere\'s Fan)');
   check('a word with its meaning', itemLine(ix.byId.get('w1')) === 'all: every one' && itemLine(ix.byId.get('w2')) === 'rare');
   check('topics for "Which topics", from what may be shown only', J(topicsOf(ix, { kind: 'fact' })) === J([{ tag: 'animals', count: 1 }, { tag: 'ocean', count: 1 }, { tag: 'planets', count: 1 }, { tag: 'space', count: 1 }]));
+
+  // (2026-11-24, note GN; Mike: "Add those") The columns every item may carry. All optional: an old item is unchanged.
+  section('the research columns (note GN)');
+  const col = (raw, o) => cleanItem({ kind: 'fact', id: 'c', text: 't', status: 'verified', ...raw }, o).item;
+  check('*** an item without the new columns has none of them (old packs read as they did) ***',
+    ['content', 'related', 'trueAsOf', 'symbol', 'language'].every((k) => !(k in col({}))));
+  check('level for every kind: a fact\'s own, else from its difficulty (very easy 1, easy 2, medium 3, hard 5)',
+    col({ level: 4 }).level === 4 && col({ difficulty: 'very easy' }).level === 1 && col({ difficulty: 'easy' }).level === 2
+    && col({ difficulty: 'medium' }).level === 3 && col({ difficulty: 'hard' }).level === 5 && !('level' in col({}))
+    && col({ level: 9, difficulty: 'easy' }).level === 2 && J(LEVEL_FROM_DIFFICULTY) === J({ 'very easy': 1, easy: 2, medium: 3, hard: 5 }));
+  check('a word keeps only its own level (a word with none stays out of the games)',
+    cleanItem({ kind: 'word', id: 'x', text: 'x', difficulty: 'easy' }).item.level === null);
+  check('content: only word_filter.js\'s kinds, once each', J(col({ content: ['Adult', 'rude', 'adult', 'swear'] }).content) === J(['adult', 'swear']));
+  check('related: ids, not itself, at most 20', J(col({ related: ['w1', 'c', '', 'w1', 'q1'] }).related) === J(['w1', 'q1'])
+    && col({ related: Array.from({ length: 30 }, (_, i) => `x${i}`) }).related.length === 20);
+  check('true_as_of: a year, a month or a day; anything else dropped', col({ true_as_of: '2024' }).trueAsOf === '2024'
+    && col({ true_as_of: '2024-03-09' }).trueAsOf === '2024-03-09' && !('trueAsOf' in col({ true_as_of: '2024-13' }))
+    && !('trueAsOf' in col({ true_as_of: 'last year' })));
+  check('symbol kept', col({ symbol: 'arasaac:2349' }).symbol === 'arasaac:2349');
+  check('language: the pack\'s, or the item\'s own; English is said by its absence', !('language' in col({}))
+    && col({}, { language: 'fr' }).language === 'fr' && col({ language: 'ES' }, { language: 'fr' }).language === 'es'
+    && !('language' in col({ language: 'English' })) && itemLanguage(col({})) === 'en');
+  const fr = readPack({ schema: RESEARCH_SCHEMA, language: 'fr', items: [{ kind: 'fact', id: 'p1', text: 'Bonjour', status: 'verified' }] });
+  check('a pack\'s language reaches its items', fr.language === 'fr' && fr.items[0].language === 'fr');
+  const cix = buildIndex([{ name: 'c', items: [
+    col({ id: 'plain' }), col({ id: 'war', content: ['adult'] }), col({ id: 'rude', content: ['swear'] }), col({ id: 'slur', content: ['slur'], tags: ['x'] }),
+    col({ id: 'fr', language: 'fr' }), col({ id: 'lv', level: 4 }),
+  ].map((it, i) => ({ ...it, id: ['plain', 'war', 'rude', 'slur', 'fr', 'lv'][i] })) }]);
+  check('*** content: the screen\'s "Words the games may use" holds a fact back as it holds a word ***',
+    J(ids(find(cix, { wordsAllowed: 'adults' }))) === J(['fr', 'lv', 'plain', 'rude', 'war'])
+    && J(ids(find(cix, { wordsAllowed: 'everyone' }))) === J(['fr', 'lv', 'plain', 'war'])
+    && J(ids(find(cix, { wordsAllowed: 'children' }))) === J(['fr', 'lv', 'plain']));
+  check('*** an item marked slur is never shown, with no setting given too, nor counted as a topic ***',
+    !ids(find(cix, {})).includes('slur') && !topicsOf(cix, {}).some((t) => t.tag === 'x'));
+  check('language: only items in it', J(ids(find(cix, { language: 'fr' }))) === J(['fr']) && !ids(find(cix, { language: 'en' })).includes('fr'));
+  check('level now finds a fact too', J(ids(find(cix, { level: 4 }))) === J(['lv']));
 } catch (e) {
   check('unexpected error', false, String((e && e.stack) || e));
 }

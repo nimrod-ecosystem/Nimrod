@@ -33,7 +33,8 @@ import { GAME, LINES, DEFAULTS, MIN_WORD, lettersCap, judgeWord, hintText, remai
 import { PUZZLES, WORDS, TIER, LEFT_OUT, canMake, wordsFrom, acceptedFrom, HAND_TIER, HAND_PUZZLES, addWords, forgetAddedWordsForTest } from '../word_builder_words.js';
 import { wordsFromIndex, tierOfLevel, meaningOf, loadSharedWords, sharedWordsNow, forgetSharedWordsForTest } from '../shared_words.js';
 import { ACCEPT } from '../word_builder_accept.js';
-import { kindOf, heldBack, wordLevelFrom, allowedWords, createWordLevel, WORD_LEVEL_FIELD, DEFAULT_WORD_LEVEL } from '../word_filter.js';
+import { kindOf, heldBack, wordLevelFrom, allowedWords, createWordLevel, WORD_LEVEL_FIELD, DEFAULT_WORD_LEVEL, noteContent,
+  forgetNotedContentForTest, contentHeld } from '../word_filter.js';
 import { UNKNOWN, FLOW_LINES } from '../quiz_flow.js';
 import { emptyLadder, LADDER_KEY, createAdaptiveSession } from '../adaptive_play.js';
 import { levelRating } from '../rating.js';
@@ -137,6 +138,19 @@ try {
     await h.load();
     check('the handle reads the screen\'s settings document', h.get() === 'children');
     check('with no screen behind it, the default', createWordLevel({}).get() === 'adults');
+    // (2026-11-24, note GN) A words pack can mark a word (`content`) and every game holds it back as a listed one.
+    noteContent('zorbleflap', 'swear');
+    check('*** a word a pack marked is held back as a listed word is ***', kindOf('zorbleflap') === 'swear'
+      && !heldBack('zorbleflap', 'adults') && heldBack('zorbleflap', 'everyone'));
+    noteContent('zorbleflap', 'adult');
+    check('marked twice, it keeps the stronger kind; an unknown kind is refused', kindOf('zorbleflap') === 'swear' && !noteContent('x', 'rude'));
+    check('a pack cannot take a kind away from a listed word', noteContent('fuck', 'adult') && kindOf('fuck') === 'swear');
+    forgetNotedContentForTest();
+    check('contentHeld: the same rule for facts', contentHeld(['adult'], 'children') && !contentHeld(['adult'], 'everyone')
+      && contentHeld('slur') && !contentHeld([]) && !contentHeld(['rude'], 'children'));
+    check('*** a words pack\'s slur-marked word is not taken at all ***', !wordsFromIndex({ items: [
+      { kind: 'word', id: 's', word: 'blorp', status: 'unverified', level: 1, content: ['slur'] }] }).has('blorp')
+      && wordsFromIndex({ items: [{ kind: 'word', id: 's', word: 'blorp', status: 'unverified', level: 1, content: ['swear'] }] }).get('blorp').content[0] === 'swear');
     check('the row: three choices, the default the module\'s', WORD_LEVEL_FIELD.options.length === 3 && WORD_LEVEL_FIELD.default === DEFAULT_WORD_LEVEL
       && auditFields([normalizeField(WORD_LEVEL_FIELD)]).filter((x) => x.severity !== 'info' && x.code !== 'no-essential').length === 0, JSON.stringify(auditFields([normalizeField(WORD_LEVEL_FIELD)])));
   }

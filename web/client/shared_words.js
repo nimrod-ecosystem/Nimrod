@@ -14,16 +14,20 @@
 
 import { mayShow } from './research_index.js';
 import { sharedResearch } from './research_load.js';
+import { noteContent } from './word_filter.js';
 
-/** A research index's word items as `Map(word -> entry)`: shown ones only (never flagged), plain a-z. PURE. */
+/**
+ * A research index's word items as `Map(word -> entry)`: shown ones only (never flagged), plain a-z. A word the pack marks a slur
+ * (note GN, `content`) is not taken at all, as the accept list leaves slurs out; any other mark rides along as `content`. PURE.
+ */
 export function wordsFromIndex(index) {
   const out = new Map();
   for (const it of (index && index.items) || []) {
     if (!it || it.kind !== 'word' || !mayShow(it)) continue;
     const word = String(it.word || it.text || '').trim().toLowerCase();
-    if (!/^[a-z]+$/.test(word) || out.has(word)) continue;
+    if (!/^[a-z]+$/.test(word) || out.has(word) || (it.content || []).includes('slur')) continue;
     out.set(word, Object.freeze({ word, level: it.level || null, definition: it.definition || '', example: it.example || '',
-      partOfSpeech: it.partOfSpeech || '', id: it.id }));
+      partOfSpeech: it.partOfSpeech || '', id: it.id, ...(it.content ? { content: it.content.slice() } : {}) }));
   }
   return out;
 }
@@ -42,6 +46,8 @@ export function loadSharedWords({ getIndex = sharedResearch } = {}) {
     let index = null;
     try { index = await getIndex(); } catch { index = null; }
     now = wordsFromIndex(index);
+    // A word a pack marked (swearing, sexual, adult) is held back by every game's word_filter.js check, as a listed one is.
+    for (const e of now.values()) for (const k of e.content || []) noteContent(e.word, k);
     for (const fn of [...waiting]) { try { fn(now); } catch (err) { console.error('shared words: listener', err); } }
     return now;
   })();

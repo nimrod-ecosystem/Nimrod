@@ -82,7 +82,22 @@ function parse(text) {
 const PARSED = Object.freeze(Object.fromEntries(Object.entries(LISTS).map(([k, v]) => [k, parse(v)])));
 export const KINDS = Object.freeze(Object.keys(LISTS));
 
-/** Which kind a word is ('slur', 'swear', 'sexual', 'adult'), or null for an ordinary word. PURE. */
+// WORDS A RESEARCH PACK MARKED (2026-11-24, note GN: the `content` column). A word in the words packs with `content: ['swear']`
+// is held back as a listed one is, without anybody editing the lists above. Filled by shared_words.js as the packs arrive;
+// the lists are read first, so a pack can add a kind to a word but never take one away.
+const NOTED = new Map();
+/** Mark `word` as `kind` (one of KINDS) because a research pack said so. Returns true when it was taken. */
+export function noteContent(word, kind) {
+  const w = String(word == null ? '' : word).toLowerCase().trim();
+  if (!w || !KINDS.includes(kind)) return false;
+  const was = NOTED.get(w);
+  // A word marked twice keeps the stronger kind (the one held back at more settings).
+  if (!was || KINDS.indexOf(kind) < KINDS.indexOf(was)) NOTED.set(w, kind);
+  return true;
+}
+export function forgetNotedContentForTest() { NOTED.clear(); }
+
+/** Which kind a word is ('slur', 'swear', 'sexual', 'adult'), or null for an ordinary word. The lists, then what a pack marked. */
 export function kindOf(word) {
   const w = String(word == null ? '' : word).toLowerCase();
   if (!w) return null;
@@ -90,7 +105,18 @@ export function kindOf(word) {
     const p = PARSED[k];
     if (p.exact.has(w) || p.starts.some((s) => w.startsWith(s))) return k;
   }
-  return null;
+  return NOTED.get(w) || null;
+}
+
+/**
+ * Is an item marked with these kinds held back on a screen at `level`? The research packs' `content` column (a fact about a
+ * massacre is `adult`), read with the same screen row as the words, so one setting covers everything a screen says. PURE.
+ */
+export function contentHeld(kinds, level = DEFAULT_WORD_LEVEL) {
+  const list = (Array.isArray(kinds) ? kinds : kinds ? [kinds] : []).filter((k) => KINDS.includes(k));
+  if (!list.length) return false;
+  const held = HELD[WORD_LEVELS.includes(level) ? level : DEFAULT_WORD_LEVEL];
+  return list.some((k) => held.includes(k));
 }
 
 /** A stored value as one of WORD_LEVELS; anything else (absent, old, hand-edited) is the default. PURE. */
@@ -121,7 +147,7 @@ export const WORD_LEVEL_FIELD = Object.freeze({
     { value: 'children', label: 'Also none about drugs, weapons or violence (children)' },
   ],
   note: 'Slurs are never used. Words about illness, the body and death are ordinary words and always count. '
-    + 'The word games read this, starting with Word builder.',
+    + 'The word games and Did you know read this.',
 });
 
 /**

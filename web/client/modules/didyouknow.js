@@ -22,6 +22,7 @@ import { registerModule } from '../module.js';
 import { find, itemLine, RESEARCH_KINDS } from '../research_index.js';
 // (2026-11-23) The loader moved to research_load.js, shared with the word games; re-exported for the suites.
 import { loadResearch, sharedResearch, forgetResearchForTest } from '../research_load.js';
+import { createWordLevel } from '../word_filter.js';
 export { loadResearch, forgetResearchForTest };
 
 export const DYK_TYPE = 'didyouknow';
@@ -71,10 +72,11 @@ export function dykConfig(s = {}) {
   return c;
 }
 
-/** The question this panel asks of the index. PURE. */
-export function dykQuery(cfg, seed) {
+/** The question this panel asks of the index. `wordsAllowed`: the screen's "Words the games may use" (note GN). PURE. */
+export function dykQuery(cfg, seed, { wordsAllowed } = {}) {
   const tags = cfg.topics.split(',').map((t) => t.trim().toLowerCase()).filter(Boolean);
   return { kind: cfg.show === 'all' ? [...RESEARCH_KINDS] : cfg.show, onlyChecked: cfg.onlyChecked, seed,
+    ...(wordsAllowed ? { wordsAllowed } : {}),
     ...(tags.length ? { tags } : {}), ...(cfg.wordLevel !== 'all' && (cfg.show === 'word') ? { level: cfg.wordLevel } : {}) };
 }
 
@@ -103,7 +105,9 @@ export function cardHtml(item, { showSource = true } = {}) {
       + (item.definition ? `<p class="dyk-text">${esc(item.definition)}</p>` : '')
       + (item.example ? `<p class="dyk-example">“${esc(item.example)}”</p>` : '');
   } else {
-    body = `<p class="dyk-text">${esc(item.text)}</p>`;
+    body = `<p class="dyk-text">${esc(item.text)}</p>`
+      // (note GN, `true_as_of`) A fact that can change says when it was true, rather than state an old number as today's.
+      + (item.trueAsOf ? `<p class="dyk-asof" data-dyk-asof>As of ${esc(asOfWords(item.trueAsOf))}</p>` : '');
   }
   const src = showSource && item.sources?.length ? `<p class="dyk-source" data-dyk-source>${esc(sourceWords(item))}</p>` : '';
   return `<p class="dyk-head">${KIND_HEAD[item.kind] || ''}</p>${body}${src}`;
@@ -121,11 +125,21 @@ function sourceWords(item) {
   return `From ${s.publisher || s.title || 'a source'}${s.licence ? ` (${s.licence})` : ''}`;
 }
 
-/** What is read aloud for a card: a quote with who said it; a word, then what it means. PURE. */
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+/** "2024", "2024-03" or "2024-03-09" as words: "2024", "March 2024", "9 March 2024". PURE. */
+export function asOfWords(v) {
+  const [y, m, d] = String(v || '').split('-');
+  if (!m) return y || '';
+  const month = MONTHS[Number(m) - 1] || '';
+  return d ? `${Number(d)} ${month} ${y}` : `${month} ${y}`;
+}
+
+/** What is read aloud for a card: a quote with who said it; a word, then what it means; a fact, with when it was true. PURE. */
 export function cardWords(item) {
   if (!item) return '';
   if (item.kind === 'word') return [item.word, item.definition, item.example].filter(Boolean).join('. ');
-  return itemLine(item).replace(/[“”]/g, '');
+  const line = itemLine(item).replace(/[“”]/g, '');
+  return item.kind === 'fact' && item.trueAsOf ? `${line} As of ${asOfWords(item.trueAsOf)}.` : line;
 }
 
 /**
@@ -133,7 +147,7 @@ export function cardWords(item) {
  * `state` is `{ get, set }` (the panel's own row: its settings and where it was).
  */
 export function mountDidYouKnow(mount, { getIndex, state, say = () => {}, instanceId = DYK_TYPE, rand = Math.random,
-  setTimer = (f, ms) => setTimeout(f, ms), clearTimer = (h) => clearTimeout(h) } = {}) {
+  wordsAllowed = () => null, setTimer = (f, ms) => setTimeout(f, ms), clearTimer = (h) => clearTimeout(h) } = {}) {
   let index = null;
   let list = [];
   let timer = null;
@@ -156,7 +170,11 @@ export function mountDidYouKnow(mount, { getIndex, state, say = () => {}, instan
     state?.set?.({ seed: fresh });
     return fresh;
   }
-  function recompute() { list = index ? find(index, dykQuery(cfg(), seedNow())) : []; }
+  function recompute() {
+    let allowed = null;
+    try { allowed = wordsAllowed(); } catch { allowed = null; }
+    list = index ? find(index, dykQuery(cfg(), seedNow(), { wordsAllowed: allowed })) : [];
+  }
   function current() { return list.length ? list[pos() % list.length] : null; }
   function arm() {
     if (timer != null) { clearTimer(timer); timer = null; }
@@ -225,9 +243,16 @@ registerModule(
   (ctx) => {
     const { mount, bus, state } = ctx;
     let panel = null;
+    // (note GN) The screen's "Words the games may use" row: a fact or quote marked `content` is held back as a word is.
+    const words = createWordLevel({ makeState: ctx.makeState });
+    let offWords = () => {};
     return {
       init() {
+        words.load().then(() => panel?.refresh());
+        let was = words.get();
+        offWords = words.subscribe(() => { const now = words.get(); if (now !== was) { was = now; panel?.refresh(); } });
         panel = mountDidYouKnow(mount, { getIndex: sharedResearch, state, instanceId: ctx.instanceId,
+          wordsAllowed: () => words.get(),
           rand: typeof ctx.rand === 'function' ? ctx.rand : Math.random,
           say: (text) => { if (ctx.output?.say) ctx.output.say(text, { source: DYK_TYPE }); } });
         bus.subscribe(`${DYK_TYPE}/next`, () => panel?.next());
@@ -240,7 +265,10 @@ registerModule(
       },
       onResize() {},
       onHide() { state.flush?.(); },
-      destroy() { try { panel?.destroy(); } catch { /* gone */ } panel = null; },
+      destroy() {
+        try { panel?.destroy(); } catch { /* gone */ } panel = null;
+        try { offWords(); } catch { /* gone */ } try { words.destroy(); } catch { /* gone */ }
+      },
       __probe: () => ({ size: panel?.size?.() || 0, current: panel?.current?.()?.id || null }),
     };
   },

@@ -44,8 +44,9 @@ export const WORDS = Object.freeze([...PICTURED, ...PLAIN].map((word) => Object.
 // add their EVERYDAY words, levels 1 and 2, after this file's own, once they have arrived: a word researched once is spelled
 // here too. LEVELS 1-2 ONLY, ARGUED: Spelling has no ladder that climbs (every word is the same step), so a level-5 word in
 // the mix would be a sudden wall; the everyday levels are the ones a first sitting can win. The same length rule as the
-// game's own words (`wordLength`). Words a screen holds back (word_filter.js) are left out at its default, since this game's
-// questions are also asked by Quiz mix, which has no screen setting to hand. A setting turns them off.
+// game's own words (`wordLength`). Words a screen holds back (word_filter.js) are left out at its default ("adults" since
+// 2026-11-24: slurs only), since this game's questions are also asked by Quiz mix, which has no screen setting to hand.
+// A setting turns the shared words off.
 export const SHARED_LEVELS_UP_TO = 2;
 export function sharedSpellingWords(map = sharedWordsNow()) {
   const own = new Set(WORDS.map((w) => w.word));
