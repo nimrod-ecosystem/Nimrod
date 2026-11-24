@@ -31,12 +31,11 @@
 
 export const WORD_LEVEL_KEY = 'wordLevel';
 export const WORD_LEVELS = Object.freeze(['adults', 'everyone', 'children']);
-// THE DEFAULT, ARGUED: "everyone" (no swearing, no sexual words). FOR: a bonus word is said aloud to the room, so the
-// default must suit whoever might be in it, children included; what it costs an adult is a word answered "not on
-// this list", and one setting turns it off. AGAINST: Mike's words were "for people that want things like swear words
-// blocked", which reads as off unless chosen, and an adult who makes a swear word from the letters is told it is not
-// a word. Taken as the default anyway, for the reason above, and on Mike's list to flip.
-export const DEFAULT_WORD_LEVEL = 'everyone';
+// THE DEFAULT: "adults" (every word but slurs). Mike, 2026-11-24: "Adults by default". Code had guessed "everyone" (a
+// bonus word is said aloud to the room) and put it to him; his own words from the start were "for people that want
+// things like swear words blocked", which is a choice somebody makes, not the default. A screen in a room with
+// children picks "No swearing or sexual words" or "children" on This screen.
+export const DEFAULT_WORD_LEVEL = 'adults';
 
 const HELD = Object.freeze({
   adults: Object.freeze(['slur']),

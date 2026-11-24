@@ -109,8 +109,8 @@ try {
 
   section('the words the games may use (word_filter.js, 2026-11-23)');
   {
-    check('the default is "everyone": no swearing or sexual words', DEFAULT_WORD_LEVEL === 'everyone'
-      && wordLevelFrom({}) === 'everyone' && wordLevelFrom({ wordLevel: 'nonsense' }) === 'everyone' && wordLevelFrom({ wordLevel: 'adults' }) === 'adults');
+    check('the default is "adults": every word but slurs (Mike, 2026-11-24)', DEFAULT_WORD_LEVEL === 'adults'
+      && wordLevelFrom({}) === 'adults' && wordLevelFrom({ wordLevel: 'nonsense' }) === 'adults' && wordLevelFrom({ wordLevel: 'everyone' }) === 'everyone');
     check('*** a slur is held back at every setting, adults too ***', ['adults', 'everyone', 'children'].every((l) => heldBack('wetback', l)));
     check('swearing: allowed for adults, held back for everyone and children',
       !heldBack('fuck', 'adults') && heldBack('fuck', 'everyone') && heldBack('fuck', 'children'));
@@ -136,7 +136,7 @@ try {
     const h = createWordLevel({ makeState: (k) => (k === 'settings' ? { load: async () => {}, get: () => doc, subscribe: () => () => {}, destroy() {} } : null) });
     await h.load();
     check('the handle reads the screen\'s settings document', h.get() === 'children');
-    check('with no screen behind it, the default', createWordLevel({}).get() === 'everyone');
+    check('with no screen behind it, the default', createWordLevel({}).get() === 'adults');
     check('the row: three choices, the default the module\'s', WORD_LEVEL_FIELD.options.length === 3 && WORD_LEVEL_FIELD.default === DEFAULT_WORD_LEVEL
       && auditFields([normalizeField(WORD_LEVEL_FIELD)]).filter((x) => x.severity !== 'info' && x.code !== 'no-essential').length === 0, JSON.stringify(auditFields([normalizeField(WORD_LEVEL_FIELD)])));
   }
