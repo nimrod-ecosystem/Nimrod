@@ -176,6 +176,12 @@ export const EDITOR_WORDS = Object.freeze({
   siteDefaultWhole: 'Its site default is the one the site starts with.',
   siteDefaultWholeOwner: 'Its site default is the one the site starts with. "Save as the site default" keeps this one for the site’s next update: Code puts it in, and nobody sees it until then.',
   cannotSave: 'This one cannot be saved as the site default.',
+  // (note GS, 2026-11-26) Said plainly: whether this person is an owner, and why not when it matters.
+  ownerSignedIn: 'You are signed in as one of the site’s owners. A room, a scene, a Town place, a sign’s words and a dashboard made from a ready-made one each have “Save as the site default” under Site default.',
+  ownerNoDashboardDefault: 'This dashboard was not made from a ready-made one, so the dashboard as a whole has no site default to save. Its rooms, scenes and signs can each be saved.',
+  ownerNoPanelDefault: 'This has no site default of its own to save: its settings are kept with the dashboard. Save the dashboard as a whole when it was made from a ready-made one.',
+  notOwnerScreenKey: 'Saving as the site default needs the site’s owner signed in on this browser. This page is running on a screen’s own key, and nobody is signed in here.',
+  notOwnerListed: 'Only the site’s owners can save the site default. If you run this site: your account id (“user” at /api/me) must be in NIMROD_SITE_OWNERS, exactly, and the site restarted after it was set.',
   savedTitle: 'Saved for the site',
   savedHelp: 'What the site’s owners saved as site defaults waits here for Code to put into the site. Copy it to send to Code; once the site has it, take it out of the list.',
   noneSaved: 'Nothing is waiting.',
@@ -269,7 +275,7 @@ const TOOL_LABELS = Object.freeze({ undo: 'Undo', redo: 'Redo', add: 'Add', dupl
 export function openSceneEditor(opts = {}) {
   const { arr = null, bus = null, mountIn = null, dashOpts = null, level = 'standard', notify = null, onClose = null, onActivity = null,
     words: wordsAtOpen = false, clipboard = globalThis.navigator?.clipboard, now = () => new Date(),
-    pageRoot = null, pageTargets = null, list: listAtOpen = true, siteDefaults = null, owner = false, adder = null } = opts;
+    pageRoot = null, pageTargets = null, list: listAtOpen = true, siteDefaults = null, owner = false, adder = null, ownerWhy = '' } = opts;
   const pageScope = !arr && !!pageRoot && typeof pageTargets?.tree === 'function';
   if (!arr && !pageScope) throw new Error('openSceneEditor: an arrangement (or a page and its targets) is required');
   const doc = mountIn?.ownerDocument || pageRoot?.ownerDocument || (typeof document !== 'undefined' ? document : null);
@@ -554,6 +560,11 @@ export function openSceneEditor(opts = {}) {
 
   // ---- (row 2.145 step 5c) THE SITE'S OWNERS: save as the site default, queued for Code (site_defaults.js) ----
   let ownerNow = owner === true;
+  // (note GS) Why not, when the server said (site_owner.py `owner_status`): 'screen-key' or 'not-listed' is said under Site
+  // default; 'none-set' (a site with no owners) and '' (not asked) say nothing.
+  let whyNot = typeof ownerWhy === 'string' ? ownerWhy : '';
+  const whyNotWords = () => (ownerNow ? '' : whyNot === 'screen-key' ? EDITOR_WORDS.notOwnerScreenKey
+    : whyNot === 'not-listed' ? EDITOR_WORDS.notOwnerListed : '');
   let outbox = null;
   const client = () => outbox || (outbox = siteDefaults?.client || createSiteDefaultsClient());
   let saveSaid = null;            // { nodeId, text }: the Site default section's own line for the last save
@@ -663,9 +674,11 @@ export function openSceneEditor(opts = {}) {
     fillDashboardDefault();
     return r.ok;
   }
-  function setOwner(v) {
+  function setOwner(v, why = undefined) {
     const want = v === true;
-    if (closed || want === ownerNow) return ownerNow;
+    const whyChanged = typeof why === 'string' && why !== whyNot;
+    if (typeof why === 'string') whyNot = why;
+    if (closed || (want === ownerNow && !whyChanged)) return ownerNow;
     ownerNow = want;
     render();
     return ownerNow;
@@ -904,7 +917,13 @@ export function openSceneEditor(opts = {}) {
           help = `${help} ${made?.label ? rootMadeFrom(made.label) : EDITOR_WORDS.rootNotMade}`;
         }
       }
-      head.innerHTML = `<strong class="em-title" data-se-title>${esc(node?.label || (pageScope ? 'This page' : 'This dashboard'))}</strong><p class="em-help" data-se-help>${esc(help)}</p>`;
+      // (note GS) An owner is told so, plainly, on the dashboard's own row; and when the dashboard has nothing to save whole.
+      const isDash = !pageScope && (!node || node.kind === 'dashboard');
+      const madeNow = isDash ? safe(() => siteDefaults?.madeFrom?.(), null) : null;
+      const ownerLines = ownerNow && (isDash || node?.kind === 'page')
+        ? `<p class="em-help" data-se-owner>${esc(EDITOR_WORDS.ownerSignedIn)}</p>${isDash && !madeNow?.label
+          ? `<p class="em-help" data-se-owner-none>${esc(EDITOR_WORDS.ownerNoDashboardDefault)}</p>` : ''}` : '';
+      head.innerHTML = `<strong class="em-title" data-se-title>${esc(node?.label || (pageScope ? 'This page' : 'This dashboard'))}</strong><p class="em-help" data-se-help>${esc(help)}</p>${ownerLines}`;
       // (5d) An owner, a dashboard made from a ready-made one: save it whole as that one's site default.
       if (ownerNow && !pageScope && (!node || node.kind === 'dashboard')) drawDashboardDefault();
       // (5c) The site's owners: what is waiting for Code, on the dashboard's or the page's own row.
@@ -975,9 +994,12 @@ export function openSceneEditor(opts = {}) {
     if (tf) text = `${text} ${tn ? EDITOR_WORDS.transformChanged : EDITOR_WORDS.transformSame}`.trim();
     const save = ownerNow && canSave;
     const said = save && saveSaid && saveSaid.nodeId === node.id ? saveSaid.text : '';
+    // (note GS) Plainly: an owner on something with nothing of its own to save; a person who is not an owner, and why.
+    const why = canSave ? whyNotWords() : '';
+    const none = ownerNow && !canSave && defs?.stateRow ? EDITOR_WORDS.ownerNoPanelDefault : '';
     wrap.innerHTML = `<div class="em-opts" role="group" aria-label="${esc(EDITOR_WORDS.siteDefaultTitle)}">
       <strong class="em-title">${esc(EDITOR_WORDS.siteDefaultTitle)}</strong>
-      <p class="em-help" data-se-def-help>${esc(text)}</p>
+      <p class="em-help" data-se-def-help>${esc(text)}</p>${why ? `<p class="em-help" data-se-def-why>${esc(why)}</p>` : ''}${none ? `<p class="em-help" data-se-def-none>${esc(none)}</p>` : ''}
       ${n || tn || save ? `<div class="em-act">${n || tn ? `<button type="button" class="em-btn" data-se-d="back" data-em-focus="dback">${esc(EDITOR_WORDS.putBackAll)}</button>` : ''}${save
         ? `<button type="button" class="em-btn" data-se-d="save" data-em-focus="dsave">${esc(SITE_DEFAULT_WORDS.save)}</button>` : ''}</div>` : ''}
       ${said ? `<p class="em-help" role="status" data-se-def-status>${esc(said)}</p>` : ''}</div>`;

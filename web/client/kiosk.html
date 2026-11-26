@@ -94,7 +94,9 @@ async function whoami() {
       // device key: `screen` = let in by this screen's own key, not a person's sign-in (`?pair=key`).
       // row 2.145 step 5c: `siteOwner` = one of the site's owners, signed in as a person (never a screen's key alone);
       // only the one editor reads it, and the server asks again on every save.
-      return { state: 'in', user: u, screen: j.screen === true, siteOwner: j.site_owner === true };
+      // (note GS) `ownerWhy`: why `site_owner` is what it is, for the editor to say (site_owner.py `owner_status`).
+      return { state: 'in', user: u, screen: j.screen === true, siteOwner: j.site_owner === true,
+        ownerWhy: typeof j.owner_why === 'string' ? j.owner_why : '' };
     }
     return { state: 'error' };
   } catch {
@@ -298,7 +300,7 @@ function offerCat(kiosk) {
     const profileId = await ensureProfile(profiles, who.user, wantProfile);
     // reloadSwitch (row 2.89, screen_switch.js): a person changing dashboard gets the dashboards page's own load.
     const kiosk = await mountKiosk(root, { user: who.user, profileId, profiles, reloadSwitch: true, siteOwner: who.siteOwner === true,
-    screenKey: who.screen === true });   // row 2.172: a screen's own key has no Home page; its Home is its first dashboard
+    ownerWhy: who.ownerWhy || '', screenKey: who.screen === true });   // row 2.172: a screen's own key has no Home page; its Home is its first dashboard
     boot.remove();
     offerTour(kiosk);
   } catch (e) {

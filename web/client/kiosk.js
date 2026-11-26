@@ -469,6 +469,8 @@ export async function mountKiosk(root, {
   // reads -- no request of its own). Only the one editor reads it, to draw "Save as the site default"; the server asks
   // again on every save. A screen's own key is never an owner (web/server/site_owner.py), so a bedside screen has it false.
   siteOwner = false,
+  // (note GS, 2026-11-26) Why `siteOwner` is what it is ('owner' / 'none-set' / 'screen-key' / 'not-listed'), said by the editor.
+  ownerWhy = '',
   // ROW 2.172 (2026-11-01): let in by this screen's own key (/api/me `screen`, which kiosk.html already reads), not a
   // person's sign-in. ⌂ Home then goes to the screen's first dashboard: a screen has no Home page of its own (goHomePage).
   screenKey = false,
@@ -3778,6 +3780,7 @@ export async function mountKiosk(root, {
           // (row 2.145 step 5) The site default of each panel: how the ready-made dashboard this one was made from starts it.
           // (5c) And whether this person may save one as the site's (only queued for Code; the server asks again).
           owner: siteOwner === true,
+          ownerWhy: typeof ownerWhy === 'string' ? ownerWhy : '',
           siteDefaults: {
             startOf: (id) => prebuiltStartOf(dashOpts.settingsNow(), id),
             madeFrom: () => prebuiltMadeFrom(dashOpts.settingsNow()),

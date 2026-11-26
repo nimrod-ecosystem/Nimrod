@@ -88,6 +88,15 @@ check("...the key with a DIFFERENT account's sign-in is not",
       not site_owner.is_site_owner(FakeReq(headers=KEY, session={"user": "someone"}), "ownerone", env))
 check("no user, or the list unset: never", not site_owner.is_site_owner(FakeReq(), None, env)
       and not site_owner.is_site_owner(FakeReq(session={"user": "ownerone"}), "ownerone", {}))
+# (note GS, 2026-11-26) A browser that keeps ANOTHER account's screen key: the page runs as that account, and the owner
+# signed in on it is still the owner (Mike: a screen page showed "Copy as the default" while /api/me said owner).
+check("*** a screen key of ANOTHER account, with an owner signed in on this browser: the owner ***",
+      site_owner.owner_status(FakeReq(headers=KEY, session={"user": "ownerone"}), "someone", env) == ("ownerone", site_owner.OWNER))
+check("...the reasons: none set / a screen key alone / signed in but not listed",
+      site_owner.owner_status(FakeReq(session={"user": "ownerone"}), "ownerone", {})[1] == site_owner.NONE_SET
+      and site_owner.owner_status(FakeReq(headers=KEY), "ownerone", env)[1] == site_owner.SCREEN_KEY
+      and site_owner.owner_status(FakeReq(headers=KEY, session={"user": "someone"}), "ownerone", env)[1] == site_owner.NOT_LISTED
+      and site_owner.owner_status(FakeReq(session={"user": "someone"}), "someone", env)[1] == site_owner.NOT_LISTED)
 
 # ------------------------------------------------------------------------------------------------ the flag on the routes
 section("*** site_owner on /api/me and /api/whoami ***")
@@ -97,7 +106,9 @@ check("*** NIMROD_SITE_OWNERS unset: /api/me says site_owner false ***", me.get(
 set_owners("ownerone, ownertwo")
 me = c.get("/api/me", headers=H("ownerone")).json()
 check("*** an owner (dev sign-in, no screen key): /api/me site_owner true ***", me.get("site_owner") is True, str(me))
-check("...and /api/whoami says the same", c.get("/api/whoami", headers=H("ownerone")).json() == {"user": "ownerone", "site_owner": True})
+check("...and /api/whoami says the same, with why", c.get("/api/whoami", headers=H("ownerone")).json()
+      == {"user": "ownerone", "site_owner": True, "owner_why": "owner"})
+check("/api/me says why too", me.get("owner_why") == "owner", str(me))
 check("somebody else: false on both", c.get("/api/me", headers=H("someone")).json().get("site_owner") is False
       and c.get("/api/whoami", headers=H("someone")).json().get("site_owner") is False)
 me = c.get("/api/me", headers=KEY).json()

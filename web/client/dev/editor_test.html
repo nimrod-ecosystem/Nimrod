@@ -813,6 +813,19 @@ try {
       && (sec(e, 'd')?.querySelector('[data-se-def-help]')?.textContent || '') === EDITOR_WORDS.siteDefaultWhole, sec(e, 'd')?.textContent);
     row(e, ROOT_ID).click();
     check('...and no "Saved for the site" on the dashboard’s row', !sec(e, 'o') && e.owner() === false);
+    check('...and nothing about owners said when the server gave no reason', !e.el.querySelector('[data-se-owner], [data-se-def-why]'));
+    e.close();
+    // (note GS, 2026-11-26) Why not, said plainly where the Save would be.
+    e = so.open({ siteDefaults: { client }, ownerWhy: 'screen-key' });
+    row(e, roomId).click();
+    check('*** not an owner because the page runs on a screen’s key: said under Site default ***',
+      (sec(e, 'd')?.querySelector('[data-se-def-why]')?.textContent || '') === EDITOR_WORDS.notOwnerScreenKey, sec(e, 'd')?.textContent);
+    e.setOwner(false, 'not-listed');
+    row(e, roomId).click();
+    check('...signed in but not listed: what to check', (sec(e, 'd')?.querySelector('[data-se-def-why]')?.textContent || '') === EDITOR_WORDS.notOwnerListed);
+    e.setOwner(false, 'none-set');
+    row(e, roomId).click();
+    check('...a site with no owners at all: nothing said', !sec(e, 'd')?.querySelector('[data-se-def-why]'));
     e.close();
     // An owner.
     e = so.open({ owner: true, siteDefaults: { client }, clipboard: clip });
@@ -842,8 +855,12 @@ try {
     // A panel's settings are not a thing saved whole.
     row(e, 'panel:b1').click();
     check('a sign (settings, not a whole thing) has no Save', !sec(e, 'd')?.querySelector('[data-se-d="save"]'));
+    check('*** ...and an owner is told so, plainly (note GS) ***', !sec(e, 'd') || (sec(e, 'd').querySelector('[data-se-def-none]')?.textContent || '') === EDITOR_WORDS.ownerNoPanelDefault,
+      sec(e, 'd')?.textContent);
     // The dashboard's own row: what is waiting.
     row(e, ROOT_ID).click();
+    check('*** the dashboard’s row says plainly that this person is an owner (note GS) ***',
+      (e.el.querySelector('[data-se-owner]')?.textContent || '') === EDITOR_WORDS.ownerSignedIn);
     check('*** the dashboard’s row: "Saved for the site", with Copy and Take out ***', !!sec(e, 'o')?.querySelector('[data-se-d="copyall"]')
       && !!sec(e, 'o').querySelector('[data-se-d="tidy"]'));
     sec(e, 'o').querySelector('[data-se-d="copyall"]').click();

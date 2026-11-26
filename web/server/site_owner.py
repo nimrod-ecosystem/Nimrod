@@ -14,9 +14,9 @@ THE RULES:
      told who owns it has no owner, rather than everybody or the first person to sign in. Anything in the list that is
      not an account id (a stray quote, a word with spaces in it) is dropped, never guessed at.
   3. A SCREEN'S DEVICE KEY NEVER COUNTS. A request let in only by a screen's own key - a screen in a room, which anybody
-     walking past can press - is not the owner, even when the screen is on the owner's own account. The same line
-     renaming a screen draws (app.py `_screen_may_change`): a browser that holds a screen's key AND the same account's own
-     sign-in (identity.signed_in_here: somebody typed their way in on it) is a person, so it counts.
+     walking past can press - is not the owner, even when the screen is on the owner's own account. A browser that holds
+     a screen's key AND an owner's own sign-in (somebody typed their way in on it) is that person, so it counts, whichever
+     account the key is (2026-11-26, note GS: it used to need the key's own account; see `owner_status`).
   4. EVERY ROUTE ASKS AGAIN. The page's `site_owner` flag (/api/me, /api/whoami) only decides whether a Save button is
      drawn; the routes that keep anything check this themselves, on every request, and never trust the page.
 
@@ -33,7 +33,7 @@ from __future__ import annotations
 import os
 import re
 
-from identity import signed_in_here, via_device_key
+from identity import via_device_key
 
 ENV = "NIMROD_SITE_OWNERS"
 ID_MAX = 300
@@ -54,14 +54,46 @@ def owners(environ=None) -> frozenset:
     return frozenset(out)
 
 
-def is_site_owner(request, user: str | None, environ=None) -> bool:
-    """True only when `user` is in the owners list AND the request is a person, not a screen's key alone (rule 3).
-    False on any doubt."""
-    if not user or not isinstance(user, str):
-        return False
+# WHY THE ANSWER IS WHAT IT IS (note GS, 2026-11-26), for the editor to say in plain words. Mike set the owners list and
+# saw no Save on a screen page while /api/me in another tab said site_owner true. A browser that once opened a screen
+# page keeps that screen's key and sends it on every request, and a key always decides whose account the page runs on
+# (identity.current_user). Before this, rule 3 asked whether the SCREEN'S ACCOUNT was an owner signed in here, so the
+# owner signed in on that browser was refused whenever the key was another account's. The person is who saves a site
+# default (it changes nobody's screen: it is queued for Code), so rule 3 now asks about the PERSON SIGNED IN ON THIS
+# BROWSER: a key alone still never counts, and a key with an owner's own sign-in does, whichever account the key is.
+OWNER = "owner"
+NONE_SET = "none-set"        # NIMROD_SITE_OWNERS is unset or holds no account id
+SCREEN_KEY = "screen-key"    # let in by a screen's key, and nobody is signed in on this browser
+NOT_LISTED = "not-listed"    # signed in, and that account is not in the list
+
+
+def owner_status(request, user: str | None, environ=None) -> tuple:
+    """(the owner's account id, or None; why: OWNER / NONE_SET / SCREEN_KEY / NOT_LISTED). None on any doubt."""
     try:
-        if user not in owners(environ):
-            return False
-        return (not via_device_key(request)) or signed_in_here(request, user)
+        listed = owners(environ)
+        if not listed:
+            return None, NONE_SET
+        if via_device_key(request):
+            person = _person_signed_in(request)
+            if not person:
+                return None, SCREEN_KEY
+            return (person, OWNER) if person in listed else (None, NOT_LISTED)
+        if user and isinstance(user, str) and user in listed:
+            return user, OWNER
+        return None, NOT_LISTED
     except Exception:   # a request that cannot be read is not an owner
-        return False
+        return None, NOT_LISTED
+
+
+def is_site_owner(request, user: str | None, environ=None) -> bool:
+    """True only when the person asking is in the owners list, and a person, not a screen's key alone (rule 3)."""
+    return owner_status(request, user, environ)[0] is not None
+
+
+def _person_signed_in(request) -> str | None:
+    """The account signed in on this browser (its session), whatever a screen's key says."""
+    try:
+        sess = request.session.get("user")
+    except (AssertionError, AttributeError):
+        return None
+    return sess if isinstance(sess, str) and sess else None

@@ -114,7 +114,7 @@ export function openPageEditor({ win = globalThis.window, words = true, list = n
   win.__nimrodPageEditor = api;
   // (5c) Now that it is open, and only now: is this person one of the site's owners? (`ready` resolves once answered.)
   api.ready = Promise.resolve().then(() => fetchMe?.()).then((me) => {
-    if (ownerFrom(me) && ed.isOpen()) ed.setOwner(true);
+    if (ed.isOpen()) ed.setOwner(ownerFrom(me), typeof me?.owner_why === 'string' ? me.owner_why : undefined);
     return ed.owner();
   }).catch(() => false);
   return api;

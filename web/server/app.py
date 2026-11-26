@@ -434,9 +434,14 @@ def _site_owner_flag(request: Request, user: str) -> bool:
     return site_owner.is_site_owner(request, user)
 
 
+def _site_owner_why(request: Request, user: str) -> str:
+    """`owner_why` (note GS): why `site_owner` is what it is, for the editor to say (site_owner.py `owner_status`)."""
+    return site_owner.owner_status(request, user)[1]
+
+
 @app.get("/api/whoami")
 def whoami(request: Request, user: str = Depends(current_user)):
-    return {"user": user, "site_owner": _site_owner_flag(request, user)}
+    return {"user": user, "site_owner": _site_owner_flag(request, user), "owner_why": _site_owner_why(request, user)}
 
 
 # ----------------------------------------------------------- the site's defaults outbox (row 2.145 step 5c)
@@ -473,7 +478,9 @@ def save_site_default(request: Request, payload: dict = Body(...), user: str = D
     have = {site_defaults.entry_key(s["kind"], s["path"]) for s in store.site_default_waiting()}
     if len(have | {site_defaults.entry_key(k, p) for k, p, _ in entries}) > site_defaults.WAITING_MAX:
         raise HTTPException(status_code=507, detail=site_defaults.SAY_FULL)
-    replaced = sum(1 for k, p, b in entries if store.site_default_put(k, p, b, user)["replaced"])
+    # `by` is the owner who saved it (the person signed in here), not a screen's account the page happens to run on.
+    by = site_owner.owner_status(request, user)[0] or user
+    replaced = sum(1 for k, p, b in entries if store.site_default_put(k, p, b, by)["replaced"])
     return {"ok": True, "saved": len(entries), "replaced": replaced, "waiting": store.site_default_count()}
 
 
@@ -3470,7 +3477,8 @@ def api_me(request: Request, user: str = Depends(current_user)):
     # key alone (site_owner.py). The editor draws "Save as the site default" only then; the save routes ask again.
     return {"user": user, "email": request.session.get("email"), "google": GOOGLE_OK,
             "display_name": _display_name(user), "signed_in": signed_in_here(request, user),
-            "screen": via_device_key(request), "site_owner": _site_owner_flag(request, user)}
+            "screen": via_device_key(request), "site_owner": _site_owner_flag(request, user),
+            "owner_why": _site_owner_why(request, user)}
 
 
 def _safe_next(path: str | None) -> str | None:
