@@ -66,6 +66,7 @@ import { explainModule, selectionAt, explain } from './cat_help.js';
 import { cornerShowCss } from './panel_corners.js';   // corner on hover (2026-10-09): when the ✎ corner shows
 import { stageOf } from './modules_catalog.js';      // live and beta (2026-10-14): the Beta tag beside Done
 import { BETA_WORDS } from './beta.js';
+import { OWN_FLAG } from './shared_settings.js';   // row 2.189: where a panel's settings are kept, said and changed here
 import { wordsElementAt, recordChange, showWordsInPlace, norm, LINE_MAX } from './wording_edit.js';   // the site's words (note FC 2)
 
 export const EDIT_PANEL_TOPIC = 'shell/edit-panel';   // { id?, on?: true|false } -- absent `on` toggles
@@ -184,11 +185,24 @@ export function selectionFor(rec, target = null, { pressed = null } = {}) {
   let help = target?.help || null;
   if (!help && pressed) { try { const s = selectionAt(pressed); if (s && s.kind !== 'module') help = explain(s).text; } catch { /* no words */ } }
   if (!help) { try { help = explainModule(type, { chat: 'few' }).text; } catch { help = ''; } }
+  // (row 2.189, 2026-11-26) WHERE A CHANGE HERE IS KEPT, said, with the one press that changes it. Only for the panel's own
+  // settings on a screen that has a shared set for its module (shared_settings.js): "Shared with every Trivia panel", or
+  // "Just this panel". Mike: "When editing something, it shouldn't be dashboard specific. That could be an option."
+  const st = rec?.state;
+  const sharedHere = typeof target?.values !== 'function' && (() => { try { return !!st?.hasShared?.(); } catch { return false; } })();
+  const justThis = sharedHere && (() => { try { return !!st.justThisPanel?.(); } catch { return false; } })();
+  const kept = sharedHere ? (justThis ? 'panel' : 'shared') : null;
+  const keptWords = kept === 'shared' ? `Shared: a change here changes every ${title} panel on this person’s screens.`
+    : kept === 'panel' ? 'Just this panel: a change here changes this one only.' : '';
+  const keptAction = sharedHere ? [{ id: 'kept', label: justThis ? `Share with every ${title} panel` : 'Just this panel',
+    note: justThis ? 'its settings become the shared ones again' : 'this panel keeps what it shows, and changes alone from now on',
+    run: () => { try { st.set({ [OWN_FLAG]: !justThis }); } catch (err) { console.error('edit mode: kept', err); } } }] : [];
   return {
     panelId: rec?.id || null, type, title,
     target: target ? { id: target.id, label: target.label } : null,
     label: target ? `${title}: ${target.label}` : title,
-    help: help || '',
+    help: [help || '', keptWords].filter(Boolean).join(' '),
+    kept,
     fields,
     // (row 2.145 step 1: which fields are its Transform -- the contract above. Only keys it really has.)
     transformKeys: Array.isArray(target?.transformKeys)
@@ -197,7 +211,7 @@ export function selectionFor(rec, target = null, { pressed = null } = {}) {
     // drawn under the rows as ordinary links that open in a new tab. Not settings: nothing is written.
     // And its BUTTONS (row 2.110, 2026-10-21: a room piece's "Take it out" and "Undo"): `{ id, label, run, note? }`,
     // a press that does one thing and is not a setting with a value to step through.
-    actions: (Array.isArray(target?.actions) ? target.actions : [])
+    actions: [...(Array.isArray(target?.actions) ? target.actions : []), ...keptAction]
       .filter((a) => a && a.id && a.label && (typeof a.run === 'function' || (typeof a.href === 'string' && /^(\/|https?:)/.test(a.href))))
       .map((a) => ({ id: String(a.id), label: String(a.label),
         ...(typeof a.run === 'function' ? { run: a.run } : { href: a.href }), note: a.note ? String(a.note) : '' })),

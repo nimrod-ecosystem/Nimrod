@@ -20,6 +20,7 @@ server needed: the rows are fakes.</p>
 <script type="module">
 import { shareableKeys, withSharedLayer, OWN_FLAG, sharedRowKey, DEVICE_KEY_RE } from '../shared_settings.js';
 import { getManifest } from '../module.js';
+import { selectionFor } from '../edit_mode.js';
 import '../modules/board.js';
 import '../modules/clock.js';
 const out = document.getElementById('results');
@@ -97,6 +98,18 @@ function fakeRow(initial = {}) {
     E.set({ categories: 'music', level: 6 });
     check('*** a key the dashboard sets for every panel of its kind: written to the panel, not hidden under the dashboard\'s value ***',
       ownE.get().categories === 'music' && shared.get().categories === 'art' && shared.get().level === 6 && E.landsOn('categories') === 'panel', J({ e: ownE.get(), s: shared.get() }));
+    // The editor and the in-panel card say where a change is kept, with the one press that changes it.
+    const ownF = fakeRow();
+    const F = withSharedLayer(ownF, shared, { keys: shareableKeys(getManifest('clock')) });
+    let selF = selectionFor({ id: 'c1', type: 'clock', state: F, instance: null });
+    check('*** the options say where a change is kept: shared with every Clock panel ***', selF.kept === 'shared' && /Shared: a change here changes every/.test(selF.help), selF.help);
+    const keptBtn = selF.actions.find((a) => a.id === 'kept');
+    check('...with a "Just this panel" button', keptBtn?.label === 'Just this panel', J(selF.actions.map((a) => a.label)));
+    keptBtn.run();
+    selF = selectionFor({ id: 'c1', type: 'clock', state: F, instance: null });
+    check('*** pressed: just this panel, said, and the button now shares them again ***', selF.kept === 'panel' && ownF.get()[OWN_FLAG] === true
+      && /^Share with every/.test(selF.actions.find((a) => a.id === 'kept')?.label || ''));
+    check('nobody\'s screen: nothing said, no button', selectionFor({ id: 'c2', type: 'clock', state: withSharedLayer(fakeRow(), null, { keys }), instance: null }).kept === null);
     A.destroy();
     check('destroying a panel\'s layer closes the shared handle it was given (the host counts them)', shared.destroyed === 1);
   } catch (err) {
