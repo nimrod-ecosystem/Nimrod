@@ -636,6 +636,51 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
       kiosk.destroy(); root.innerHTML = '';
     }
 
+    // (2026-11-26) Mike: "Panels behind did you know should be visible when it is set to a see through background."
+    section('*** bigger, a see-through Did you know keeps the panels behind it in view ***');
+    {
+      const p = await profiles.create('SC-dyk');
+      await profiles.addModule(p.id, 'didyouknow');
+      await profiles.addModule(p.id, 'photos');
+      const full = await profiles.get(p.id);
+      const ids = full.modules.map((m) => m.id);
+      stashPreviewLayout(p.id, { preset: 'side', slots: [ids[0], ids[1]] });
+      kiosk = await mountKiosk(root, { user: USER, profileId: p.id, profiles, bus: createBus(), ...seams(fakeStorage()) });
+      await sleep(500);
+      const k = root.querySelector('.kiosk');
+      const cells = [...root.querySelectorAll('.k-stage > .k-cell')];
+      const vis = (el) => getComputedStyle(el).visibility;
+      check('the screen: Did you know and Photos side by side', cells.length === 2 && cells[0].dataset.kind === 'didyouknow', J(cells.map((c) => c.dataset.kind)));
+      k.dataset.panelSurface = 'clear';
+      kiosk.promote(ids[0]);
+      await sleep(30);
+      check('*** clear background: Did you know fills the dashboard and Photos stays visible behind it ***',
+        kiosk.promoted().dashboard === ids[0] && k.dataset.showsBehind === '1' && vis(cells[1]) === 'visible', `${vis(cells[1])} ${J(k.dataset)}`);
+      check('...and a press there reaches Did you know, not the panel behind', getComputedStyle(cells[1]).pointerEvents === 'none');
+      kiosk.demote();
+      await sleep(30);
+      check('smaller again: the mark is gone', !k.dataset.showsBehind && vis(cells[1]) === 'visible', J(k.dataset));
+      k.dataset.panelSurface = 'veil';
+      kiosk.promote(ids[0]);
+      await sleep(30);
+      check('veil (see-through too): the same', k.dataset.showsBehind === '1' && vis(cells[1]) === 'visible');
+      kiosk.demote();
+      await sleep(30);
+      k.dataset.panelSurface = 'solid';
+      kiosk.promote(ids[0]);
+      await sleep(30);
+      check('*** solid background: the other panel steps aside as for any panel ***', !k.dataset.showsBehind && vis(cells[1]) === 'hidden', J(k.dataset));
+      kiosk.demote();
+      await sleep(30);
+      k.dataset.panelSurface = 'clear';
+      kiosk.promote(ids[1]);
+      await sleep(30);
+      check('*** a panel that does not ask for it (Photos) still has the others step aside on a clear background ***',
+        !k.dataset.showsBehind && vis(cells[0]) === 'hidden', J(k.dataset));
+      kiosk.demote();
+      kiosk.destroy(); root.innerHTML = '';
+    }
+
     section('*** (3) a REAL press reaches the corner -- touch and mouse, on a 2x2 -- and the bar has its own Bigger ***');
     {
       const p = await profiles.create('SC-quad');

@@ -776,6 +776,59 @@ try {
   }
 
   // ============================================================================================
+  // (note GS 2, 2026-11-26) Mike: "edit just looks like stuff from the settings menu. It's supposed to be so you can move
+  // the objects around."
+  section('*** a PLACED panel, chosen as a whole: a Move grip, size and turn handles, saved as its place ***');
+  {
+    const store = new Map([['settings', { kiosk: { layout: { preset: 'full', slots: [null],
+      placed: [{ id: 'pc', place: 'screen', x: 50, y: 50, w: 30, h: 24 }] } } }]]);
+    const subs = new Map();
+    const makeState = (key) => {
+      if (!subs.has(key)) subs.set(key, new Set());
+      return { load: () => Promise.resolve(), get: () => store.get(key) || {},
+        set: (p) => { store.set(key, { ...(store.get(key) || {}), ...p }); for (const f of subs.get(key)) f(store.get(key)); return Promise.resolve(); },
+        subscribe: (f) => { subs.get(key).add(f); return () => subs.get(key).delete(f); }, startPolling() {}, flush: () => Promise.resolve(), destroy() {} };
+    };
+    const pbus = createBus();
+    const host = document.createElement('div');
+    host.style.cssText = 'position:relative;width:880px;height:500px';
+    document.getElementById('host').append(host);
+    const view = mountModule('dashboard', { mount: host, bus: pbus, rootBus: pbus, viewId: 'PD', user: 'u', personId: null,
+      arrangement: { id: 'PD', name: 'Placed', modules: [{ id: 'pc', type: 'clock', state: {} }] }, profiles: { list: async () => [{ id: 'PD', name: 'Placed' }] },
+      makeState, makeEvents: noEvents, storage: { getItem: () => null, setItem() {}, removeItem() {} }, state: memState(), instanceId: 'dash-placed' });
+    await view.init();
+    const d = view.impl;
+    const wrap = () => host.querySelector('.k-pcell[data-placed="pc"]');
+    const savedPlace = () => (store.get('settings')?.kiosk?.layout?.placed || []).find((e) => e.id === 'pc') || null;
+    check('(setup) the clock is placed on the dashboard', await until(() => !!wrap(), 6000));
+    d.editPanel('pc', true);
+    const hd = () => host.querySelector('[data-room-handles]');
+    check('*** chosen as a whole: a Move grip, a size handle and a turn knob over the panel ***',
+      await until(() => !!hd()?.querySelector('.emh-grip[data-emh="move"]') && !!hd().querySelector('[data-emh="scale"]') && !!hd().querySelector('[data-emh="rotate"]'), 3000),
+      hd()?.outerHTML?.slice(0, 200));
+    check('...its body is not the drag: a press inside still chooses what is pressed', !hd().querySelector('.emh-box[data-emh]')
+      && getComputedStyle(hd().querySelector('.emh-box')).pointerEvents === 'none');
+    const grip = hd().querySelector('.emh-grip');
+    const r = grip.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    const ev = (el, type, x, y) => el.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, pointerId: 9, button: 0 }));
+    const stage = wrap().parentElement.getBoundingClientRect();
+    ev(grip, 'pointerdown', cx, cy); ev(grip, 'pointermove', cx + stage.width * 0.1, cy); ev(grip, 'pointerup', cx + stage.width * 0.1, cy);
+    check('*** dragging the grip a tenth of the dashboard across moves it 10% across, saved as its place ***',
+      await until(() => Math.abs((savedPlace()?.x ?? 0) - 60) <= 0.6, 3000), J(savedPlace()));
+    check('...and the handles are back on it', await until(() => !!hd()?.querySelector('.emh-grip'), 3000));
+    const sc = hd().querySelector('[data-emh="scale"]');
+    const sr = sc.getBoundingClientRect();
+    const box = wrap().getBoundingClientRect(), mid = { x: box.left + box.width / 2, y: box.top + box.height / 2 };
+    const sx = sr.left + sr.width / 2, sy = sr.top + sr.height / 2;
+    ev(sc, 'pointerdown', sx, sy); ev(sc, 'pointermove', mid.x + (sx - mid.x) * 1.5, mid.y + (sy - mid.y) * 1.5); ev(sc, 'pointerup', mid.x + (sx - mid.x) * 1.5, mid.y + (sy - mid.y) * 1.5);
+    check('*** the size handle dragged out half as far again: its size is 150% ***', await until(() => Math.abs((savedPlace()?.scale ?? 0) - 150) <= 3, 3000), J(savedPlace()));
+    d.editPanel('pc', false);
+    check('leaving edit mode takes the handles away', await until(() => !host.querySelector('[data-room-handles]'), 2000));
+    view.destroy();
+    host.remove();
+  }
+
+  // ============================================================================================
   section('nobody answers: it leaves by itself (never a gate)');
   {
     const em3 = createEditMode({ bus, recs: () => [sign], boxOf: () => sign.cell, settings: () => ({ [EDIT_IDLE_KEY]: 60 }) });

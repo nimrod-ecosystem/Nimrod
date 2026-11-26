@@ -59,6 +59,10 @@ function ensureCss(doc) {
 .${HANDLES_CLASS} .emh-box[data-fixed]{cursor:default}
 .${HANDLES_CLASS} .emh-scale{position:absolute;right:-12px;bottom:-12px;width:24px;height:24px;border-radius:4px;background:var(--surface,#fff);border:3px solid var(--focus,var(--accent,#2b6cb0));pointer-events:auto;cursor:nwse-resize;touch-action:none}
 .${HANDLES_CLASS} .emh-rot{position:absolute;left:50%;top:-40px;width:24px;height:24px;margin-left:-12px;border-radius:50%;background:var(--surface,#fff);border:3px solid var(--focus,var(--accent,#2b6cb0));pointer-events:auto;cursor:grab;touch-action:none}
+.${HANDLES_CLASS}[data-grip] .emh-box{pointer-events:none;cursor:default}
+.${HANDLES_CLASS} .emh-grip{position:absolute;left:50%;top:-14px;min-width:88px;height:28px;margin-left:-44px;padding:0 10px;border-radius:14px;background:var(--focus,var(--accent,#2b6cb0));color:#fff;font:600 13px/28px system-ui,sans-serif;text-align:center;pointer-events:auto;cursor:move;touch-action:none;white-space:nowrap}
+.${HANDLES_CLASS}[data-grip] .emh-rot{top:-56px}
+.${HANDLES_CLASS}[data-grip] .emh-stem{top:-30px}
 .${HANDLES_CLASS} .emh-stem{position:absolute;left:50%;top:-16px;width:2px;height:16px;margin-left:-1px;background:var(--focus,var(--accent,#2b6cb0))}`;
   (doc.head || doc.documentElement).append(s);
 }
@@ -123,14 +127,19 @@ export function svgGeometry({ el }) {
  * `geometry`: htmlGeometry (the default, a room piece placed by left/top in percent) or svgGeometry (a village piece, in
  * its stage's units). `onCommit({ x?, y?, size?, rotate? })` once per gesture. Returns `{ el: the overlay, place(), destroy() }`.
  */
-export function attachHandles({ el, host, piece = {}, floor = true, movable = true, turnable = movable, geometry = htmlGeometry, onCommit = () => {} } = {}) {
+// `grip` (note GS 2, 2026-11-26: a whole PANEL's handles): the body is not the drag; a "Move" grip above it is, so a press
+// inside the panel still chooses the thing pressed (its words, its picture) instead of starting a drag.
+export const GRIP_WORDS = 'Move';
+export function attachHandles({ el, host, piece = {}, floor = true, movable = true, turnable = movable, geometry = htmlGeometry, onCommit = () => {}, grip = false } = {}) {
   if (!el || !host) return { el: null, place() {}, destroy() {} };
   const doc = host.ownerDocument || document;
   ensureCss(doc);
   const ov = doc.createElement('div');
   ov.className = HANDLES_CLASS;
   ov.dataset.roomHandles = '';
-  ov.innerHTML = `<div class="emh-box"${movable ? '' : ' data-fixed'} data-emh="move" role="presentation"></div>`
+  if (grip) ov.dataset.grip = '';
+  ov.innerHTML = `<div class="emh-box"${movable ? '' : ' data-fixed'}${grip ? '' : ' data-emh="move"'} role="presentation"></div>`
+    + (grip && movable ? `<div class="emh-grip" data-emh="move" title="Drag to move it">${GRIP_WORDS}</div>` : '')
     + `<div class="emh-scale" data-emh="scale" title="Drag to make it bigger or smaller"></div>`
     + (turnable ? '<div class="emh-stem"></div><div class="emh-rot" data-emh="rotate" title="Drag to turn it"></div>' : '');
   host.append(ov);

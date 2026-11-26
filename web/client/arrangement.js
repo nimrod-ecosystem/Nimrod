@@ -59,6 +59,8 @@ import {
 // import line.
 export { layoutChange };
 import { getManifest } from './module.js';
+import { EDIT_DEFAULTS as MODEL_EDIT_DEFAULTS } from './edit_model.js';   // a drag stops where the Transform rows stop (note GS 2)
+const MODEL_LIMITS = MODEL_EDIT_DEFAULTS.limits;
 import { writePosition } from './restart.js';
 import { createScreenLinks } from './screen_links.js';
 import { DASHBOARD_GO_TOPIC, OPENS_TYPE, OPENS_PRESS_TOPIC } from './dashboard_nest.js';
@@ -154,6 +156,8 @@ ${cornerShowCss('.k-promote')}
 @media (prefers-reduced-motion: reduce){.k-promote{transition:none}}
 [data-promoted-panel]>.k-stage>.k-cell:not([data-promoted]),
 [data-promoted-panel]>.k-placed:not(.k-placed-overlay)>.k-pcell:not([data-promoted]){visibility:hidden}
+[data-promoted-panel][data-shows-behind]>.k-stage>.k-cell:not([data-promoted]),
+[data-promoted-panel][data-shows-behind]>.k-placed:not(.k-placed-overlay)>.k-pcell:not([data-promoted]){visibility:visible;pointer-events:none}
 .kiosk[data-promoted="screen"] .k-placed-overlay>.k-pcell:not([data-promoted]){visibility:hidden}
 [data-promoted-panel]>.k-stage>.k-cell[data-promoted]{grid-area:1/1/-1/-1!important;z-index:5}
 [data-promoted-panel]>.k-placed>.k-pcell[data-promoted]{inset:0!important;left:0!important;top:0!important;
@@ -271,6 +275,7 @@ export function createArrangement({
     try { ensureCorners(); } catch (err) { console.error('arrangement: corners', err); }
     // A panel being edited that was remounted, swapped or taken off: edit mode follows it, or ends.
     try { editMode?.refresh(); } catch (err) { console.error('arrangement: edit mode', err); }
+    try { syncShowsBehind(); } catch { /* before the promote state exists (boot) */ }
     renderModsHost();
   }
 
@@ -1890,11 +1895,32 @@ export function createArrangement({
     if (m && placedRecs.some((r) => r.id === id)) return { box: m.wrap, fills: m.where === 'flat' };
     return null;
   }
+  // (2026-11-26) A SEE-THROUGH PANEL THAT ASKS FOR IT KEEPS THE OTHERS IN VIEW WHEN IT IS MADE BIGGER. Mike: "Panels
+  // behind did you know should be visible when it is set to a see through background." A module opts in with
+  // `bigShowsBehind` in its manifest (Did you know, today), and only while its background is clear or veil: its own
+  // "Panel backgrounds" row first, then the dashboard's or the screen's. Every other panel still has the others step
+  // aside. Whether EVERY see-through panel should do this is on Mike's list: a calculator over photos is the case
+  // against. Read again on each renderMods, so a background changed while it is bigger is followed.
+  function syncShowsBehind() {
+    const pb = promoted ? promoteBox(promoted) : null;
+    let on = false;
+    try {
+      const box = pb?.box;
+      const kind = box?.getAttribute?.('data-kind') || box?.querySelector?.('[data-kind]')?.getAttribute('data-kind') || '';
+      if (kind && getManifest(kind)?.bigShowsBehind) {
+        const surface = box.querySelector?.('.k-mod[data-panel-surface]')?.dataset.panelSurface
+          || box.closest?.('[data-panel-surface]')?.dataset.panelSurface || '';
+        on = surface === 'clear' || surface === 'veil';
+      }
+    } catch { on = false; }
+    if (on) kioskEl.dataset.showsBehind = '1'; else delete kioskEl.dataset.showsBehind;
+  }
   function unmarkPromoted() {
     if (!promoted) return;
     const pb = promoteBox(promoted);
     if (pb) delete pb.box.dataset.promoted;
     delete kioskEl.dataset.promotedPanel;
+    delete kioskEl.dataset.showsBehind;
     const rec = recFor(promoted);
     promoted = null;
     syncRingAlone();   // fullscreen border: the others are back, so "which panel" is a question again
@@ -1911,6 +1937,7 @@ export function createArrangement({
     promoted = id;
     pb.box.dataset.promoted = '1';
     kioskEl.dataset.promotedPanel = id;
+    syncShowsBehind();
     syncRingAlone();   // fullscreen border
     try { recFor(id)?.instance?.onResize?.(); } catch { /* not load-bearing */ }
     renderMods();
@@ -2392,9 +2419,47 @@ export function createArrangement({
     if (handlesLib) draw(handlesLib);
     else import('./room_handles.js').then((m) => { handlesLib = m; draw(m); }).catch((err) => console.error('arrangement: handles', err));
   }
+  // (note GS 2, 2026-11-26) A PLACED PANEL, chosen as a whole, gets the same handles on its own box. Mike: "edit just looks
+  // like stuff from the settings menu. It's supposed to be so you can move the objects around." Its move is a "Move" grip
+  // above it (room_handles.js `grip`), so a press inside it still chooses its words or its picture. A drag writes the
+  // same entry fields the Transform rows do (x, y the centre in percent; scale in percent; rot), through `movePlaced`: one
+  // save per gesture. Only a panel laid flat on the screen or over the dashboard (`where` 'flat', containerFor): one in a
+  // room or on a 3D face is drawn through that surface, and keeps its rows.
+  function syncPanelHandles(a) {
+    const meta = placedMeta.get(a.id);
+    if (!meta || meta.where !== 'flat' || !meta.wrap?.isConnected) return false;
+    let t = null;
+    try { t = editMode?.chosenTarget?.() || null; } catch { t = null; }
+    if (t && !t.whole) return false;
+    const host = meta.wrap.parentElement;
+    if (!host) return false;
+    const draw = (lib) => {
+      if (editMode?.active?.()?.id !== a.id || !meta.wrap.isConnected) return;
+      const g = placedGeometry(meta.entry);
+      roomHandles = lib.attachHandles({ el: meta.wrap, host, piece: { x: g.x, y: g.y, size: g.scale, rotate: g.rot },
+        floor: false, movable: true, turnable: true, grip: true,
+        onCommit: (patch) => {
+          if (!patch) return;
+          const entry = { ...meta.entry };
+          // The edit model's own limits (edit_model.js EDIT_DEFAULTS.limits), so a drag stops where a ‹ › row stops.
+          const L = MODEL_LIMITS;
+          if ('x' in patch) entry.x = clampTo(patch.x, L.x[0], L.x[1]);
+          if ('y' in patch) entry.y = clampTo(patch.y, L.y[0], L.y[1]);
+          if ('size' in patch) entry.scale = Math.round(clampTo(patch.size, L.scale[0], L.scale[1]));
+          if ('rotate' in patch) entry.rot = patch.rotate;
+          movePlaced(a.id, entry).then(() => { try { if (editMode?.active?.()?.id === a.id) syncRoomHandles(); } catch { /* gone */ } })
+            .catch((err) => console.error('arrangement: panel handles', err));
+        } });
+    };
+    if (handlesLib) draw(handlesLib);
+    else import('./room_handles.js').then((m) => { handlesLib = m; draw(m); }).catch((err) => console.error('arrangement: handles', err));
+    return true;
+  }
+  const clampTo = (v, lo, hi) => Math.max(lo, Math.min(hi, Number(v) || 0));
   function syncRoomHandles() {
     dropHandles();
     const a = editMode?.active?.();
+    if (a && a.id !== ROOM_PANEL_ID && placedMeta.has(a.id) && syncPanelHandles(a)) return;
     if (a && a.id !== ROOM_PANEL_ID && a.target) { syncTargetHandles(a); return; }
     if (!a || a.id !== ROOM_PANEL_ID || !a.target || a.target === 'room' || !roomScene || !roomEditsLib || is3dScene(layout?.scene)) return;
     const piece = roomEditsLib.pieceOf(sceneRecipe(roomBase()?.scene || null), a.target);

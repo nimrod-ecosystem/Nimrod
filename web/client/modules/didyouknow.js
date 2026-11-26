@@ -239,7 +239,11 @@ export function mountDidYouKnow(mount, { getIndex, state, say = () => {}, instan
 registerModule(
   { type: DYK_TYPE, title: 'Did you know', core: 'new', dependsOn: 'none', importance: 'optional',
     description: 'A fact, a quote or a word, one at a time, each checked against a source. Show only facts, only quotes or only words if you like.',
-    settings: DYK_SETTINGS },
+    settings: DYK_SETTINGS,
+    // (2026-11-26) Mike: "Panels behind did you know should be visible when it is set to a see through background."
+    // Made bigger on a clear or veil background, the other panels stay where they are behind it (arrangement.js
+    // `syncShowsBehind`); on a solid one they step aside as for any panel.
+    bigShowsBehind: true },
   (ctx) => {
     const { mount, bus, state } = ctx;
     let panel = null;
