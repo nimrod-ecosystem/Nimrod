@@ -558,8 +558,14 @@ ${cornerShowCss('.k-barc')}
 // is drawn in (its cell), `settings()` the dashboard's settings doc as it stands. One panel at a time.
 // =====================================================================================================
 export function createEditMode({ bus = null, recs = () => [], boxOf = () => null, doc = (typeof document !== 'undefined' ? document : null),
-  settings = () => ({}), setTimer = (fn, ms) => setTimeout(fn, ms), clearTimer = (t) => clearTimeout(t), onChange = () => {} } = {}) {
-  let active = null;      // { id, rec, box, targets, chosen, sel, bar, card, view, timer, offs }
+  settings = () => ({}), setTimer = (fn, ms) => setTimeout(fn, ms), clearTimer = (t) => clearTimeout(t), onChange = () => {},
+  // (note GS 2 step 2, 2026-11-26) OPTIONS SECOND. Mike: "edit just looks like stuff from the settings menu. It's supposed to
+  // be so you can move the objects around." `handlesFor(panelId, target)` (the dashboard's answer: it draws the handles)
+  // says whether the chosen thing has handles; when it does, its options card waits behind an "Options" button beside
+  // Done, so what Edit shows first is "move this". A thing with no handles shows its card at once, as before. Edit mode
+  // takes only pointer presses (above), so a switch's way through options (the menu) is unchanged.
+  handlesFor = null } = {}) {
+  let active = null;      // { id, rec, box, targets, chosen, sel, bar, card, view, timer, offs, optionsOpen }
   const recOf = (id) => { try { return (recs() || []).find((r) => r && r.id === id) || null; } catch { return null; } };
   const tell = () => { try { onChange(active ? { id: active.id, target: active.chosen } : null); } catch (err) { console.error('edit mode: onChange', err); } };
 
@@ -630,6 +636,7 @@ export function createEditMode({ bus = null, recs = () => [], boxOf = () => null
       ? siteWordsTarget(active, pressed) : null;
     if (site) active.targets.push(site);
     const t = (site || (targetId ? active.targets.find((x) => x.id === targetId) : active.targets.find((x) => x.whole))) || null;
+    if ((t ? t.id : null) !== active.chosen) active.optionsOpen = false;   // a new choice starts with its handles
     active.chosen = t ? t.id : null;
     const sel = selectionFor(active.rec, t, { pressed });
     active.sel = sel;
@@ -672,10 +679,26 @@ export function createEditMode({ bus = null, recs = () => [], boxOf = () => null
     if (active.card) {
       active.card.hidden = claimed;
       if (!claimed) active.view = renderOptions(active.card, sel, { onDone: () => leave('done') });
+      let handled = false;
+      if (!claimed && typeof handlesFor === 'function') { try { handled = !!handlesFor(active.id, t); } catch { handled = false; } }
+      active.handled = handled;
+      syncOptions();
     }
     armIdle();
     tell();
     return sel;
+  }
+  /** (step 2) The card behind "Options" for a thing with handles; open for everything else. */
+  function syncOptions() {
+    if (!active?.card || !active.bar) return;
+    const btn = active.bar.querySelector('[data-em="options"]');
+    const waits = !!active.handled && !active.optionsOpen && !!active.view;
+    if (active.handled && active.view) active.card.hidden = waits;
+    if (btn) {
+      btn.hidden = !(active.handled && active.view);
+      btn.textContent = active.optionsOpen ? 'Hide options' : 'Options';
+      btn.setAttribute('aria-expanded', active.optionsOpen ? 'true' : 'false');
+    }
   }
 
   function onPress(e) {
@@ -720,7 +743,8 @@ export function createEditMode({ bus = null, recs = () => [], boxOf = () => null
     box.dataset.editing = '1';
     const bar = doc.createElement('div');
     bar.className = 'em-bar';
-    bar.innerHTML = `<button type="button" class="em-btn em-done" data-em="leave">Done</button>`;
+    bar.innerHTML = `<button type="button" class="em-btn em-done" data-em="leave">Done</button>`
+      + '<button type="button" class="em-btn em-opts-btn" data-em="options" hidden>Options</button>';
     bar.querySelector('button').setAttribute('aria-label', `Done editing ${rec.title || rec.type}`);
     // LIVE AND BETA (2026-10-14): a beta module says so while it is being edited, beside Done, and only then.
     try {
@@ -733,7 +757,15 @@ export function createEditMode({ bus = null, recs = () => [], boxOf = () => null
         bar.append(tag);
       }
     } catch { /* the bar without it */ }
-    bar.addEventListener('click', (e) => { e.stopPropagation(); leave('done'); });
+    bar.addEventListener('click', (e) => {
+      e.stopPropagation();
+      // (step 2) "Options" opens or closes the chosen thing's card; every other press on the bar is Done, as before.
+      if (e.target instanceof Element && e.target.closest('[data-em="options"]')) {
+        if (active) { active.optionsOpen = !active.optionsOpen; syncOptions(); armIdle(); }
+        return;
+      }
+      leave('done');
+    });
     const card = doc.createElement('div');
     card.className = 'em-card';
     card.hidden = true;

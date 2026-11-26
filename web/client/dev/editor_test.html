@@ -368,7 +368,10 @@ try {
   bar(ed2, 'done').click();
   check('*** Done: the box is gone, edit mode left, the host told ***', !ed2.isOpen() && !ed2.el.isConnected && !t.arr.editing() && t.closed.at(-1) === 'done');
   t.arr.editPanel('b1', true);
-  check('*** ...and the next choice is nobody\'s: the in-panel card shows again ***', t.card() && t.card().hidden === false);
+  // (note GS 2 step 2, 2026-11-26) A panel with handles shows them first; its card is behind "Options" beside Done.
+  const optsBtn = () => t.card()?.parentElement?.querySelector(':scope > .em-bar [data-em="options"]') || null;
+  check('*** ...and the next choice is nobody\'s: the in-panel card is there again (behind "Options" when the panel has handles) ***',
+    t.card() && (t.card().hidden === false || (!!optsBtn() && !optsBtn().hidden && (optsBtn().click(), t.card().hidden === false))));
   t.arr.editPanel('b1', false);
 
   // ============================================================================================
@@ -528,6 +531,10 @@ try {
     t.arr.editPanel(ROOM_PANEL_ID, true);
     const anyPiece = targetsOf(t.roomRec()).find((x) => (x.transformKeys || []).length);
     t.arr.editSelect(anyPiece.id);
+    // (note GS 2 step 2) a room piece has handles: its card opens from "Options".
+    const ob = t.card()?.parentElement?.querySelector(':scope > .em-bar [data-em="options"]');
+    check('*** a room piece shows its handles first: its card waits behind "Options" ***', !!t.card()?.hidden && !!ob && !ob.hidden);
+    ob?.click();
     check('*** the in-panel card has no typed boxes (only the editor asks for them), its ‹ › as before ***',
       !!t.card() && !t.card().hidden && !t.card().querySelector('[data-em-num]') && !!t.card().querySelector('[data-em-step]'));
     t.arr.editPanel(ROOM_PANEL_ID, false);

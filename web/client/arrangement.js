@@ -2567,6 +2567,19 @@ export function createArrangement({
     }
     return true;
   }
+  /** (note GS 2 step 2) Whether `syncRoomHandles` draws handles for panel `id` with `t` chosen: the same conditions. */
+  function handlesApplyTo(id, t) {
+    if (t?.handles) return true;
+    const whole = !t || !!t.whole;
+    if (id === ROOM_PANEL_ID) {
+      if (!t || t.id === 'room' || !roomScene || !roomEditsLib || is3dScene(layout?.scene)) return false;
+      try { return !!roomEditsLib.isEditablePiece(roomEditsLib.pieceOf(sceneRecipe(roomBase()?.scene || null), t.id)); } catch { return false; }
+    }
+    const meta = placedMeta.get(id);
+    if (meta) return whole && meta.where === 'flat';
+    if (slotRecs.some((r) => r.id === id)) return whole && !!layout && !isPagePreset(layout.preset) && (layout.slots || []).length >= 2;
+    return false;
+  }
   function syncRoomHandles() {
     dropHandles();
     const a = editMode?.active?.();
@@ -2622,6 +2635,8 @@ export function createArrangement({
       try { ensureCorners(); } catch { /* not load-bearing */ }
       try { syncRoomHandles(); } catch (err) { console.error('arrangement: handles', err); }
     },
+    // (note GS 2 step 2) Which chosen things get handles here, so their options card waits behind "Options".
+    handlesFor: (id, t) => handlesApplyTo(id, t),
   }) : null;
   // `shell/edit-panel { id?, on? }`: a panel of THIS dashboard (another dashboard's id is not ours), or,
   // with no id, the focused one. `on` absent toggles.

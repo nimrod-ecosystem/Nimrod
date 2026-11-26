@@ -1076,7 +1076,11 @@ try {
     await ensureMenu('editpanel');
     check('"Edit the chosen panel" is a ⚙ menu row that can act here', !!hrow('editpanel') && !hrow('editpanel').disabled);
     hrow('editpanel').click();
-    check('*** pressing it edits the chosen panel IN PLACE: marked, Done first, its options in a card in it (nobody else claims them) ***',
+    // (note GS 2 step 2, 2026-11-26) A grid panel shows its handles first; its card opens from "Options" beside Done.
+    await until(() => !!$('#stage [data-editing] .em-bar .em-done'), 6000);
+    const homeOpts = $('#stage [data-editing] .em-bar [data-em="options"]:not([hidden])');
+    if (homeOpts) homeOpts.click();
+    check('*** pressing it edits the chosen panel IN PLACE: marked, Done first, its options in a card in it (behind "Options" when it has handles) ***',
       await until(() => !!$('#stage [data-editing] .em-bar .em-done') && !!$('#stage [data-editing] .em-card:not([hidden]) [data-em-opts]'), 6000));
     doc.dispatchEvent(new win.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     check('Escape leaves it', await until(() => !$('#stage [data-editing]'), 3000));

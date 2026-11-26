@@ -808,6 +808,16 @@ try {
       hd()?.outerHTML?.slice(0, 200));
     check('...its body is not the drag: a press inside still chooses what is pressed', !hd().querySelector('.emh-box[data-emh]')
       && getComputedStyle(hd().querySelector('.emh-box')).pointerEvents === 'none');
+    // (note GS 2 step 2) Options second: the handles first, the card behind "Options" beside Done.
+    const pbox = wrap();
+    const card = () => pbox.querySelector(':scope > .em-card');
+    const optBtn = () => pbox.querySelector(':scope > .em-bar [data-em="options"]');
+    check('*** options second: the card waits, "Options" is beside Done ***', !!card() && card().hidden && !!optBtn() && !optBtn().hidden && optBtn().textContent === 'Options',
+      `${card()?.hidden} ${optBtn()?.outerHTML}`);
+    optBtn().click();
+    check('...pressed: the card opens, and the press does not leave edit mode', !card().hidden && optBtn().textContent === 'Hide options' && d.arrangement().editing()?.id === 'pc');
+    optBtn().click();
+    check('...pressed again: it closes', card().hidden);
     const grip = hd().querySelector('.emh-grip');
     const r = grip.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
     const ev = (el, type, x, y) => el.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, pointerId: 9, button: 0 }));
