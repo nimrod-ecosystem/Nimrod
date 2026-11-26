@@ -650,6 +650,44 @@ const FAVS = normalizeFavourites([
       for (let i = 0; i < 300; i++) dc2[dv2.next(full.filter((t) => t.id !== 'a'))]++;
       check('...and still when the song playing is left out of the next pool', dc2.b < dc2.c / 3, J(dc2));
       dv2.destroy();
+      // (2026-11-26) Every song once before any comes back: Mike, "a lot of the same songs on shuffle".
+      {
+        const deckPlays = createPlays({ store: memoryPlayStore(), now: () => 1 });
+        const deckLog = panelPlays({ plays: deckPlays, instanceId: 'music-deck' }, 'spotify');
+        const list = Array.from({ length: 10 }, (_, i) => ({ id: `s${i}` }));
+        const runOf = (picker, n) => { const out = []; for (let i = 0; i < n; i++) { const id = picker.next(list); picker.played(id); out.push(id); } return out; };
+        let deck = createMusicPicker({ log: deckLog, rand: mulberry32(21), everyFirst: () => true });
+        const firstFour = runOf(deck, 4);
+        deck.destroy();
+        await Promise.resolve();
+        deck = createMusicPicker({ log: deckLog, rand: mulberry32(22), everyFirst: () => true });   // a page reload: "just played" starts empty
+        const rest = runOf(deck, 6);
+        const pass = [...firstFour, ...rest];
+        check('*** everyFirst: a 10-song list plays all 10 before any song comes back, across a reload ***',
+          new Set(pass).size === 10, J(pass));
+        const next = runOf(deck, 10);
+        check('...and the second pass is again all 10', new Set(next).size === 10, J(next));
+        deck.destroy();
+        // A song played a month ago (out of the "just played" list and the recency dip): off, it can come up again
+        // before the songs never played; on, it cannot.
+        let clock = 1;
+        const aged = (on) => {
+          const p = createMusicPicker({ rand: mulberry32(23), now: () => clock, everyFirst: () => on });
+          clock = 1;
+          for (const id of ['s0', 's1', 's2', 's3']) p.played(id);   // three after s0, so the hard "just played" rule passes it
+          clock = 1 + 3600e3 * 24 * 30;
+          return p;
+        };
+        const loose = aged(false);
+        let s0 = 0;
+        for (let i = 0; i < 200; i++) if (loose.next(list) === 's0') s0++;
+        check('...off: a song already played can come up again before every other has played (weights only)', s0 > 0, String(s0));
+        const strict = aged(true);
+        let s0b = 0;
+        for (let i = 0; i < 200; i++) if (strict.next(list) === 's0') s0b++;
+        check('...on: a song already played this pass is never picked while others are left', s0b === 0, String(s0b));
+        loose.destroy(); strict.destroy();
+      }
       heavy.destroy(); dv.destroy();
       const before = p.state().stats.c.n;
       p.destroy();

@@ -114,7 +114,8 @@ const DEFAULTS = {
   spotifyClientIdFor: 'account',
   spotifyDevice: '',
   spotifyShuffle: true,
-  songInfo: true,          // Mike, 2026-10-08: "Song info by default"
+  spotifyEveryFirst: true, // 2026-11-26: every song once before any comes back (music_pick.js `everyFirst`)
+  songInfo: true,         // Mike, 2026-10-08: "Song info by default"
   playOn: '',              // play on: '' follows the screen's Devices -> Speakers row
   whenElsewhere: 'ask',    // play on (note BK item 4)
   backupSource: '',        // backup source: '' follows the screen's "Backup folder for this screen"
@@ -188,6 +189,11 @@ export const SETTINGS = [
     onLabel: 'Shuffled like the YouTube panel (fewer repeats)', offLabel: 'In Spotify’s own order',
     note: 'Shuffling needs Spotify to list the songs. Spotify does that only for playlists you made or share. '
       + 'Others play in Spotify’s own order.' },
+  // (2026-11-26) Mike: "Spotify was playing a lot of the same songs on shuffle." Every song once before any comes back,
+  // on by default: music_pick.js `everyFirst` argues it, with the measurement.
+  { key: 'spotifyEveryFirst', label: 'A shuffled playlist', kind: 'toggle', default: true, level: 'standard',
+    appliesWhen: (c) => spotifyIsOn(c) && c.spotifyShuffle !== false,
+    onLabel: 'Plays every song once before any comes back', offLabel: 'Can bring a song back sooner (weights only)' },
   { key: 'songInfo', label: 'While Spotify plays, show', kind: 'toggle', default: true, level: 'standard',
     appliesWhen: spotifyIsOn,
     onLabel: 'The song’s name, artist and picture', offLabel: 'The favorite’s name only' },
@@ -368,7 +374,7 @@ registerModule(
     // The site's own weighted picker for Spotify (row 2.55): one per panel. Its play history is this panel's plays
     // ON THIS DEVICE (plays.js, row 2.58), as the YouTube panel keeps its own; the old server rows come down once.
     const playLog = panelPlays(ctx, 'spotify');
-    const picker = createMusicPicker({ log: playLog });
+    const picker = createMusicPicker({ log: playLog, everyFirst: () => cfg.spotifyEveryFirst !== false });
     const favPicker = createMusicPicker({ log: null });   // note FT 3: which favourite a shuffle of all of them plays next
     const setT = ctx.setTimer || ((fn, ms) => setTimeout(fn, ms));
     const clearT = ctx.clearTimer || ((id) => clearTimeout(id));

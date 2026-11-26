@@ -29,7 +29,17 @@ export const RECENT_CAP = 12;
  * `log` is the panel's plays (plays.js `panelPlays`: `subscribe(fn(stats))`, `played(id)`), or null to keep the
  * history in memory only.
  */
-export function createMusicPicker({ log = null, now = () => Date.now(), rand = Math.random } = {}) {
+//
+// (2026-11-26) EVERY SONG ONCE BEFORE ANY COMES BACK, `everyFirst`. Mike: "I felt like Spotify was playing a lot of the
+// same songs on shuffle." Measured in the browser pane the same day (this picker, 50 runs each): one sitting of a 30-song
+// list repeated about one song per 30 plays, and after a page reload (the in-memory "just played" list starts empty) a
+// song came back after only 3 others. A weighted draw is not a deck. With `everyFirst` on, `next` draws only among the
+// pool's songs with the FEWEST plays in the history, so every song in the list plays once before any plays twice, and
+// the weights still choose the order inside that. It is read from the play history, so it survives a reload.
+//   FOR it on by default: what people mean by "shuffle" (and what Spotify's own does); the complaint was repeats.
+//   AGAINST: a favourite song waits a whole pass to come back, and a song added to a long list plays early (it has
+//   no plays yet, which is the freshness weight's own lean, made strict). Off is a setting (music.js).
+export function createMusicPicker({ log = null, now = () => Date.now(), rand = Math.random, everyFirst = () => false } = {}) {
   let stats = {};
   let recent = [];
   let off = null;
@@ -43,8 +53,15 @@ export function createMusicPicker({ log = null, now = () => Date.now(), rand = M
 
   return {
     next(pool) {
-      const list = (Array.isArray(pool) ? pool : []).filter((t) => t && t.id);
+      let list = (Array.isArray(pool) ? pool : []).filter((t) => t && t.id);
       if (!list.length) return null;
+      let firstPass = false;
+      try { firstPass = !!(typeof everyFirst === 'function' ? everyFirst() : everyFirst); } catch { firstPass = false; }
+      if (firstPass) {
+        const count = (t) => Number(stats[t.id]?.n) || 0;
+        const fewest = Math.min(...list.map(count));
+        list = list.filter((t) => count(t) === fewest);
+      }
       const ids = list.map((t) => t.id);
       const durations = {};
       for (const t of list) {
