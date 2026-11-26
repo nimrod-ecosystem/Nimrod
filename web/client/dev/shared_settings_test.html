@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>shared_settings — a module's settings are the module's, not one dashboard's — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px}
+  .pass{color:green}.fail{color:firebrick;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>shared_settings (row 2.189)</h1>
+<p>Mike, 2026-11-26: "When editing something, it shouldn't be dashboard specific. That could be an option. You should be editing
+the module." A module's settings are kept once per person and read by every panel of it; "Just this panel" is the option. No
+server needed: the rows are fakes.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<script type="module">
+import { shareableKeys, withSharedLayer, OWN_FLAG, sharedRowKey, DEVICE_KEY_RE } from '../shared_settings.js';
+import { getManifest } from '../module.js';
+import '../modules/board.js';
+import '../modules/clock.js';
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div'); d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`; out.append(d);
+}
+const J = (v) => JSON.stringify(v);
+// A state handle like state.js's: get / set (merged, null kept) / subscribe (called at once) / load / flush / destroy.
+function fakeRow(initial = {}) {
+  let v = { ...initial };
+  const subs = new Set();
+  return {
+    get: () => v,
+    set(p) { v = { ...v, ...p }; for (const f of [...subs]) f(v); return Promise.resolve(); },
+    subscribe(f) { subs.add(f); f(v); return () => subs.delete(f); },
+    load: () => Promise.resolve(), flush: () => Promise.resolve(), destroyed: 0, destroy() { this.destroyed++; },
+  };
+}
+(async () => {
+  try {
+    const manifest = { type: 't', settings: [
+      { key: 'level', kind: 'choice' }, { key: 'categories', kind: 'choice' },
+      { key: 'cameraId', kind: 'choice' }, { key: 'localFolder', kind: 'text' }, { key: 'speakerVolume', kind: 'number', shared: true },
+      { key: 'apiKey', kind: 'text', secret: true }, { key: 'where', kind: 'choice', keepWithPanel: true }, { key: 'mine', kind: 'choice' } ],
+      keepWithPanel: ['mine'] };
+    const keys = shareableKeys(manifest);
+    check('*** shared: the plain settings (level, categories) ***', keys.has('level') && keys.has('categories'), J([...keys]));
+    check('...kept with the panel: a camera, a folder on one device, a secret, a key marked keepWithPanel', !keys.has('cameraId') && !keys.has('localFolder')
+      && !keys.has('apiKey') && !keys.has('where') && !keys.has('mine'), J([...keys]));
+    check('...and a device-looking key the module says IS shared (speakerVolume: shared: true)', keys.has('speakerVolume'));
+    check('*** the AAC board shares nothing (its access settings describe the switch at THAT screen) ***',
+      getManifest('board')?.shareSettings === false && shareableKeys(getManifest('board')).size === 0);
+    check('the clock shares its settings', shareableKeys(getManifest('clock')).size > 0, J([...shareableKeys(getManifest('clock'))]));
+    check('one row per module type', sharedRowKey('trivia') === 'module-trivia' && DEVICE_KEY_RE.test('playOn') && !DEVICE_KEY_RE.test('level'));
+
+    // Two panels of one module on two dashboards, and the person's shared row.
+    const shared = fakeRow();
+    const ownA = fakeRow({ pos: 3 }), ownB = fakeRow({ level: 1 });
+    const A = withSharedLayer(ownA, shared, { keys }), B = withSharedLayer(ownB, shared, { keys });
+    let bSaw = null;
+    B.subscribe((row) => { bSaw = row; });
+    A.set({ level: 4, categories: 'art', pos: 5 });
+    check('*** a change on one panel goes to the shared row ***', shared.get().level === 4 && shared.get().categories === 'art', J(shared.get()));
+    check('...what it is showing now stays its own (pos)', ownA.get().pos === 5 && !('pos' in shared.get()));
+    check('*** the other panel reads it (categories), and was told ***', B.get().categories === 'art' && bSaw?.categories === 'art', J(B.get()));
+    check('*** no silent migration: a value the other panel set itself still wins (its level 1) ***', B.get().level === 1, J(B.get()));
+    check('where a write lands is said: level on the shared row, pos on the panel', A.landsOn('level') === 'shared' && A.landsOn('pos') === 'panel');
+    B.set({ level: 2 });
+    check('*** changing it on that panel: the shared row takes it, and the panel follows it from now on ***',
+      shared.get().level === 2 && ownB.get().level === null && B.get().level === 2 && A.get().level === 2, J({ s: shared.get(), b: ownB.get() }));
+
+    // Just this panel.
+    A.set({ [OWN_FLAG]: true });
+    check('*** "Just this panel": it keeps what it showed (the shared values become its own) ***',
+      ownA.get()[OWN_FLAG] === true && ownA.get().level === 2 && ownA.get().categories === 'art' && A.get().level === 2, J(ownA.get()));
+    A.set({ level: 9 });
+    check('...and a change now is this panel\'s alone', ownA.get().level === 9 && shared.get().level === 2 && B.get().level === 2 && A.landsOn('level') === 'panel');
+    A.set({ [OWN_FLAG]: false, level: null });
+    check('turned back off: it follows the shared set again', A.get().level === 2 && A.landsOn('level') === 'shared', J(A.get()));
+
+    // Nobody's screen: no shared row.
+    const ownC = fakeRow();
+    const C = withSharedLayer(ownC, null, { keys });
+    C.set({ level: 7 });
+    check('*** a screen with nobody\'s name: no shared row, the panel keeps its own, as before ***', ownC.get().level === 7 && C.hasShared() === false && C.landsOn('level') === 'panel');
+    const D = withSharedLayer(fakeRow(), shared, { keys: shareableKeys(getManifest('board')) });
+    D.set({ level: 3 });
+    check('a module that shares nothing writes its own row', shared.get().level === 2 && D.get().level === 3);
+    // A key the DASHBOARD sets for every panel of the kind sits above the shared row: a write of it stays with the panel.
+    const ownE = fakeRow();
+    const E = withSharedLayer(ownE, shared, { keys, dashboard: () => ({ categories: 'sport' }) });
+    E.set({ categories: 'music', level: 6 });
+    check('*** a key the dashboard sets for every panel of its kind: written to the panel, not hidden under the dashboard\'s value ***',
+      ownE.get().categories === 'music' && shared.get().categories === 'art' && shared.get().level === 6 && E.landsOn('categories') === 'panel', J({ e: ownE.get(), s: shared.get() }));
+    A.destroy();
+    check('destroying a panel\'s layer closes the shared handle it was given (the host counts them)', shared.destroyed === 1);
+  } catch (err) {
+    check('the suite ran to the end', false, String(err && err.stack || err));
+  }
+  document.getElementById('summary').textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+})();
+</script>
+</body>
+</html>

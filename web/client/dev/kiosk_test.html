@@ -556,8 +556,12 @@ const toTab = (m, id) => {
       // (Mike, 2026-11-08, DELIBERATELY: "Big cursor" on Devices (its four rows: show, size, shape, colour; it had no rows
       // on a screen's menu at all) and "Size of the bar" under The bar. 69.)
       // (Mike, 2026-11-23, DELIBERATELY: "Words the games may use" on This screen, beside Lesson topics. 71.)
-      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 15 stops (was every row: 71) ***',
-        lapStops.length === 15 && oldStops.length === 71 && oldStops.some((i) => i.id === 'set:barPerson') /* the person button */
+      // (row 2.189, Mike 2026-11-26, DELIBERATELY: "<Module> settings: Shared with every <Module> panel / Just this panel" FIRST
+      // on the panel's tab, at "The usual" - this screen has a person, so its panels have a shared set. One more stop on
+      // the panel's lap (16) and one more of the old rows (72). Not at "Just the essentials". shared_settings_test checks it.)
+      check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 16 stops (was every row: 72) ***',
+        lapStops.length === 16 && oldStops.length === 72 && lapStops.includes('set:__ownSettings')
+        && oldStops.some((i) => i.id === 'set:barPerson') /* the person button */
         && oldStops.some((i) => i.id === 'set:wordLevel') /* words the games may use */
         && oldStops.some((i) => i.id === 'set:quietHours') /* quiet hours */
         && oldStops.some((i) => i.id === 'set:cursor_show') && oldStops.some((i) => i.id === 'set:barSize') /* 2026-11-08 */
@@ -598,7 +602,8 @@ const toTab = (m, id) => {
         kiosk.menu.items().filter((i) => /^uf:/.test(i.id) || i.id === 'scan-lap').map((i) => i.id).join());
       kiosk.menu.close(); await press('Escape');
       const homeAt = (() => { for (let i = 0; i < 40; i += 1) { if (kiosk.menu.focusId() === 'home') return i; kiosk.menu.next(); } return -1; })();
-      check('...and Home is 13 presses from where the menu opens (was 25; the search row is one of them)', homeAt === 13, String(homeAt));
+      // (row 2.189, 2026-11-26, DELIBERATELY: the panel's "settings: Shared / Just this panel" row is one more before it. 14.)
+      check('...and Home is 14 presses from where the menu opens (was 25; the search row and the shared-settings row are two of them)', homeAt === 14, String(homeAt));
       {
         // backup source (2026-10-08): the screen's one row for every panel's backup, beside "Your own folders".
         const all = kiosk.menu.items();

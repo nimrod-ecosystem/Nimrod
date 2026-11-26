@@ -24,6 +24,7 @@
 
 import { createBus } from './bus.js';
 import { createState } from './state.js';
+import { shareableKeys, withSharedLayer, sharedRowKey, OWN_FLAG } from './shared_settings.js';   // row 2.189: settings are the module's
 import { createPresetLibrary } from './presets.js';   // row 2.90: a voice-opened module's time, from its default preset
 import { mergeSettingsDoc, mergeLayoutSave, mergeKioskSave, lostEditWords } from './doc_merge.js';
 import { createEvents } from './events.js';
@@ -2284,13 +2285,53 @@ export async function mountKiosk(root, {
     });
   }
 
+  // (row 2.189) The person's shared row for a module type: ONE handle per type on this screen, shared by its panels, so a
+  // change on one panel is on the others at once (their own handles would each wait for the next poll). Counted, so the
+  // last panel of a type to go closes it. Null when the screen has nobody's name, or the site keeps no person rows.
+  // (On the function, not a `const` beside it: a hoisted mountInstance called before this line would meet a const in its
+  // temporal dead zone, the trap `personId` above describes.)
+  function sharedModuleRow(type) {
+    const sharedRows = (sharedModuleRow.rows ||= new Map());   // type -> { h, n, pid }
+    const pid = screenPersonNow();
+    // `makeState` given: this browser's own store (signed out) or a suite's, which has no person rows (as childCtx's own
+    // makePersonState above it says): its panels keep their own settings, as before.
+    if (!pid || !profiles?.personStateURL || !type || makeState) return null;
+    let e = sharedRows.get(type);
+    if (!e || e.pid !== pid) {
+      let h = null;
+      try {
+        const key = sharedRowKey(type);
+        h = createState({ url: profiles.personStateURL(pid, key), user, cacheKey: `person:${user}:${pid}:${key}`, push });
+      } catch (err) { console.error('kiosk: a shared settings row', err); h = null; }
+      if (!h) return null;
+      e = { h, n: 0, pid };
+      sharedRows.set(type, e);
+    }
+    e.n += 1;
+    const entry = e;
+    return Object.assign({}, entry.h, {
+      destroy() {
+        entry.n -= 1;
+        if (entry.n <= 0) { try { entry.h.destroy?.(); } catch { /* gone */ } if (sharedRows.get(type) === entry) sharedRows.delete(type); }
+      },
+    });
+  }
+
   async function mountInstance(mod, host) {
     // `stateKey` (2026-10-02, "Switch module"): a panel switched to another type keeps the SAME instance
     // id (its place, its chip, its focus) but reads and writes ITS OWN row for that type, so the new
     // type starts fresh and the old one's settings are still there when it is switched back
     // (arrangement.js `switchPanel`).
     const rowKey = mod.stateKey || mod.id;
-    const state = automation.wrapState(mod.id, withTypeLayer(stateFor(rowKey), mod.type), { manifest: getManifest(mod.type) });
+    // (row 2.189; Mike, 2026-11-26: "When editing something, it shouldn't be dashboard specific. That could be an option.")
+    // Under the panel's own row and the dashboard's "every <module> panel", the PERSON'S settings for this module, one row
+    // per type, shared by every panel of it on their screens (shared_settings.js argues what is never shared). A screen with
+    // nobody's name on it has none, and is as before.
+    const sharedKeys = shareableKeys(getManifest(mod.type));
+    const sharedRow = sharedKeys.size ? sharedModuleRow(mod.type) : null;
+    const state = automation.wrapState(mod.id, withSharedLayer(withTypeLayer(stateFor(rowKey), mod.type), sharedRow,
+      { keys: sharedKeys, dashboard: () => typeDefaults(mod.type) }),
+      { manifest: getManifest(mod.type) });
     // The talk board's words go through the history host too (history_place.js `route`, kind `select` only): the
     // site's log as always unless the person chose another place for them.
     const events = mod.type === 'board'
@@ -7452,7 +7493,22 @@ export async function mountKiosk(root, {
           if (!taken) rec.state.set({ [key]: value });
         },
       };
+      // (row 2.189, 2026-11-26) Where this panel's settings are kept, said FIRST: shared with every panel of this module
+      // on the person's screens (the default, Mike: "it shouldn't be dashboard specific. That could be an option"), or
+      // this panel's own. Only where there is a shared set (a person's screen, a module that shares).
+      const sharedField = (() => {
+        try {
+          if (!rec.state?.hasShared?.()) return [];
+          const title = rec.instance?.manifest?.title || rec.type;
+          // "The usual" (standard), not "Just the essentials": it is chosen once, by whoever sets the screen up, and every
+          // row at the essentials level is a stop on a switch user's walk through the panel's tab.
+          return [normalizeField({ key: OWN_FLAG, label: `${title} settings`, kind: 'toggle', default: false, level: 'standard',
+            onLabel: 'Just this panel', offLabel: `Shared with every ${title} panel`,
+            note: 'Shared: a change here changes every one of them, on every screen of this person’s. Just this panel: only this one.' })];
+        } catch { return []; }
+      })();
       const items = fieldItems([
+        ...sharedField.filter(Boolean),
         ...PANEL_INSTANCE_FIELDS().map(normalizeField).filter(Boolean),
         ...fieldsFor(rec.instance.manifest, rec.instance),
       ], fieldsOpts).map((it) => ({ ...it, ...MENU_TAB.module(0) }));

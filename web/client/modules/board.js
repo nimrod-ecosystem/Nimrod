@@ -688,7 +688,11 @@ registerModule(
     // a lot", it means "swap to this when something breaks". A board is a tool somebody uses on
     // purpose, not something to look at, which is the same reason it is in the catalog's
     // 'practice' group rather than 'comfort'.
-    dependsOn: 'none', importance: 'normal', settings: SETTINGS },
+    dependsOn: 'none', importance: 'normal', settings: SETTINGS,
+    // (row 2.189, 2026-11-26) NOT SHARED across a person's screens (shared_settings.js): its access settings (scanning,
+    // the step time, tap selects) describe the body and the switch at THIS screen; a tablet with no switch inheriting
+    // scanning would leave the person with no voice there. Each of its keys is argued before any is shared.
+    shareSettings: false },
   (ctx) => {
     const { mount, bus, state, events } = ctx;
     const speak = ctx.speak || ((text) => speakDefault(text));
