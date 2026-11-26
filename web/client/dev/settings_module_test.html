@@ -183,8 +183,14 @@ try {
     pv.focusRow('set:intervalMs'); pv.select();
     await sleep(800);
     const row = createState({ url: profiles.stateURL(p.id, photos.id), user: USER }); await row.load();
-    check('*** a Photos setting stepped in the panel lands on THAT panel’s own saved row ***',
-      typeof row.get()?.intervalMs === 'number' && hintIn(pv, 'set:intervalMs') !== fitWas, `${fitWas} -> ${hintIn(pv, 'set:intervalMs')} / ${J(row.get())}`);
+    // (row 2.189, Mike 2026-11-26, DELIBERATELY: "it shouldn't be dashboard specific") on a person's screen a module's
+    // setting lands on the PERSON'S shared row for that module (shared_settings.js); with nobody's name, on the panel's own.
+    const pid = (await profiles.get(p.id))?.person_id || null;
+    let sharedRow = null;
+    if (pid && profiles.personStateURL) { sharedRow = createState({ url: profiles.personStateURL(pid, 'module-photos'), user: USER }); await sharedRow.load(); }
+    const landed = pid ? sharedRow?.get()?.intervalMs : row.get()?.intervalMs;
+    check('*** a Photos setting stepped in the panel lands where its settings are kept (the person’s shared Photos row, else the panel’s own) ***',
+      typeof landed === 'number' && hintIn(pv, 'set:intervalMs') !== fitWas, `${fitWas} -> ${hintIn(pv, 'set:intervalMs')} / own ${J(row.get())} shared ${J(sharedRow?.get())}`);
     kiosk.menu.close();
   }
 
