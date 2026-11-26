@@ -1338,13 +1338,15 @@ export function createArrangement({
     if (fid) paintFocus(fid);
     renderMods();
   }
-  function floatFromSlot(id, q, scan) {
+  // `place` (note GS 2, 2026-11-26): 'overlay' for a panel asking to float; 'screen' when the whole dashboard turns into
+  // free placement (`freePlacement`, which saves once for all of them: `save: false` here).
+  function floatFromSlot(id, q, scan, { place = 'overlay', save = true } = {}) {
     const at = slotRecs.findIndex((r) => r.id === id);
     const rec = slotRecs[at];
     const cell = rec?.el?.closest?.('.k-cell');
     const def = profile?.modules?.find((m) => m.id === id);
     if (!rec || !cell || !def) return { ok: false, reason: 'not in a slot here' };
-    const entry = normalizePlacedEntry({ id, place: 'overlay', x: q.x, y: q.y, w: q.w, h: q.h,
+    const entry = normalizePlacedEntry({ id, place, x: q.x, y: q.y, w: q.w, h: q.h,
       ...(typeof scan === 'boolean' ? { scan } : {}) });
     if (promoted === id) unmarkPromoted();
     // Out of the slot: the cell is left empty, with nothing of this panel on it.
@@ -1359,13 +1361,13 @@ export function createArrangement({
     moveKeeping(wrap, rec.el);              // the wrap is already in the page, so a video in it carries on
     placedRecs.push(rec);
     syncDoor(id);
-    const base = savedBase();
+    const base = save ? savedBase() : null;
     if (base) {
       saveLayout({ ...base, slots: (Array.isArray(base.slots) ? base.slots : []).map((s) => (s === id ? null : s)),
         placed: [...(Array.isArray(base.placed) ? base.placed : []).filter((e) => e && e.id !== id), entry] });
     }
     afterMove(id);
-    return { ok: true, place: 'overlay' };
+    return { ok: true, place };
   }
   async function movePlaced(id, entry) {
     const base = savedBase();
@@ -2456,10 +2458,120 @@ export function createArrangement({
     return true;
   }
   const clampTo = (v, lo, hi) => Math.max(lo, Math.min(hi, Number(v) || 0));
+
+  // (note GS 2 step 3, 2026-11-26) A GRID PANEL, chosen as a whole, gets a Move grip and a size handle. Mike: "yes to the
+  // edit order, free placement for grids". Dropped on another cell, the two swap places (in place: the same elements,
+  // so a video carries on). A cell cannot be made bigger in a grid, so the size handle turns the dashboard into FREE
+  // PLACEMENT: every panel becomes a placed panel exactly where its cell is, and then this one takes the new size. One
+  // press, nothing else moves, and from then on every panel has the placed panel's handles. Not on a page that
+  // scrolls (its parts stack by order and height: their own rows).
+  function syncSlotHandles(a) {
+    const rec = slotRecs.find((r) => r.id === a.id);
+    const cell = rec?.el?.closest?.('.k-cell');
+    // Not on a page that scrolls, and not when the grid has ONE cell: nothing to swap with, and a stray drag of the size
+    // handle would turn a one-panel dashboard into free placement (it is in the corner of the whole screen). AGAINST:
+    // somebody may want the one panel smaller; on Mike's list.
+    if (!rec || !cell || !layout || isPagePreset(layout.preset) || (layout.slots || []).length < 2) return false;
+    let t = null;
+    try { t = editMode?.chosenTarget?.() || null; } catch { t = null; }
+    if (t && !t.whole) return false;
+    const draw = (lib) => {
+      if (editMode?.active?.()?.id !== a.id || !cell.isConnected) return;
+      const before = { transform: cell.style.transform, z: cell.style.zIndex };
+      const putBack = () => { cell.style.transform = before.transform; cell.style.zIndex = before.z; };
+      roomHandles = lib.attachHandles({ el: cell, host: cell.parentElement || stageEl, piece: { x: 0, y: 0, size: 1 },
+        floor: false, movable: true, turnable: false, grip: true, geometry: lib.transformGeometry,
+        onCommit: (patch) => {
+          putBack();
+          if (!patch) return;
+          if ('size' in patch) {
+            const k = Number(patch.size) || 1;
+            freePlacement().then((ok) => {
+              if (!ok) return;
+              const meta = placedMeta.get(a.id);
+              if (!meta) return;
+              const g = placedGeometry(meta.entry);
+              const L = MODEL_LIMITS;
+              return movePlaced(a.id, { ...meta.entry, w: clampTo(g.w * k, 2, L.x[1]), h: clampTo(g.h * k, 2, L.y[1]) });
+            }).then((r) => { if (r && r.ok === false) console.error('arrangement: sizing after free placement', r.reason); }).then(() => { try { if (editMode?.active?.()?.id === a.id) syncRoomHandles(); } catch { /* gone */ } })
+              .catch((err) => console.error('arrangement: free placement', err));
+            return;
+          }
+          // Where the grip was let go: the middle of the cell, moved by the drag, is over which cell?
+          const r = cell.getBoundingClientRect();
+          const px = r.left + r.width / 2 + (Number(patch.x) || 0), py = r.top + r.height / 2 + (Number(patch.y) || 0);
+          const over = [...stageEl.querySelectorAll(':scope > .k-cell[data-slot]')].find((c) => {
+            const b = c.getBoundingClientRect();
+            return px >= b.left && px <= b.right && py >= b.top && py <= b.bottom;
+          });
+          if (over && over !== cell) swapSlot(a.id, Number(over.dataset.slot));
+          try { if (editMode?.active?.()?.id === a.id) syncRoomHandles(); } catch { /* gone */ }
+        } });
+    };
+    if (handlesLib) draw(handlesLib);
+    else import('./room_handles.js').then((m) => { handlesLib = m; draw(m); }).catch((err) => console.error('arrangement: handles', err));
+    return true;
+  }
+  /** Move grid panel `id` to slot `to`; what was there takes its slot. In place, saved once. True if it moved. */
+  function swapSlot(id, to) {
+    if (!layout || !Array.isArray(layout.slots)) return false;
+    const from = layout.slots.indexOf(id);
+    if (from < 0 || !(to >= 0) || to >= layout.slots.length || to === from) return false;
+    const cellA = stageEl.querySelector(`:scope > .k-cell[data-slot="${from}"]`);
+    const cellB = stageEl.querySelector(`:scope > .k-cell[data-slot="${to}"]`);
+    const recA = slotRecs.find((r) => r.id === id);
+    if (!cellA || !cellB || !recA) return false;
+    const otherId = layout.slots[to] || null;
+    const recB = otherId ? slotRecs.find((r) => r.id === otherId) : null;
+    if (promoted === id || (otherId && promoted === otherId)) unmarkPromoted();
+    for (const c of [cellA, cellB]) c.querySelectorAll(':scope > .k-promote, :scope > .k-editc, :scope > .k-barc').forEach((b) => b.remove());
+    moveKeeping(cellB, recA.el);
+    if (recB) moveKeeping(cellA, recB.el);
+    cellB.setAttribute('data-kind', recA.type);
+    if (recB) cellA.setAttribute('data-kind', recB.type); else cellA.removeAttribute('data-kind');
+    const swapped = (slots) => slots.map((s, n) => (n === from ? (otherId || null) : n === to ? id : s));
+    layout = { ...layout, slots: swapped(layout.slots) };
+    const slotOf = (r) => Number(r.el?.closest?.('.k-cell')?.dataset.slot);
+    slotRecs.sort((x, y) => slotOf(x) - slotOf(y));
+    const base = savedBase();
+    if (base && Array.isArray(base.slots)) {
+      const bf = base.slots.indexOf(id);
+      if (bf >= 0) saveLayout({ ...base, slots: base.slots.map((s, n) => (n === bf ? (otherId || null) : n === to ? id : s)) }, base);
+    }
+    afterMove(id);
+    if (otherId) afterMove(otherId);
+    return true;
+  }
+  /** Every grid panel becomes a placed panel where its cell is (place 'screen'), in place, saved once. */
+  async function freePlacement() {
+    if (!layout || !slotRecs.length) return !!layout;
+    const layer = layerFor('screen');
+    const lr = layer.getBoundingClientRect();
+    if (!(lr.width > 0 && lr.height > 0)) return false;
+    const pct = (v, total) => Math.round((v / total) * 1000) / 10;
+    const entries = [];
+    for (const rec of [...slotRecs]) {
+      const cell = rec.el?.closest?.('.k-cell');
+      if (!cell) continue;
+      const b = cell.getBoundingClientRect();
+      const q = { x: pct(b.left + b.width / 2 - lr.left, lr.width), y: pct(b.top + b.height / 2 - lr.top, lr.height),
+        w: pct(b.width, lr.width), h: pct(b.height, lr.height) };
+      const r = floatFromSlot(rec.id, q, undefined, { place: 'screen', save: false });
+      if (r?.ok) entries.push(placedMeta.get(rec.id)?.entry);
+    }
+    const base = savedBase();
+    if (base) {
+      const moved = new Set(entries.filter(Boolean).map((e) => e.id));
+      saveLayout({ ...base, slots: (Array.isArray(base.slots) ? base.slots : []).map((s) => (moved.has(s) ? null : s)),
+        placed: [...(Array.isArray(base.placed) ? base.placed : []).filter((e) => e && !moved.has(e.id)), ...entries.filter(Boolean)] }, base);
+    }
+    return true;
+  }
   function syncRoomHandles() {
     dropHandles();
     const a = editMode?.active?.();
     if (a && a.id !== ROOM_PANEL_ID && placedMeta.has(a.id) && syncPanelHandles(a)) return;
+    if (a && a.id !== ROOM_PANEL_ID && slotRecs.some((r) => r.id === a.id) && syncSlotHandles(a)) return;
     if (a && a.id !== ROOM_PANEL_ID && a.target) { syncTargetHandles(a); return; }
     if (!a || a.id !== ROOM_PANEL_ID || !a.target || a.target === 'room' || !roomScene || !roomEditsLib || is3dScene(layout?.scene)) return;
     const piece = roomEditsLib.pieceOf(sceneRecipe(roomBase()?.scene || null), a.target);

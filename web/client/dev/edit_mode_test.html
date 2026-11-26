@@ -829,6 +829,73 @@ try {
   }
 
   // ============================================================================================
+  // (note GS 2 step 3, 2026-11-26) Mike: "yes to the edit order, free placement for grids".
+  section('*** a GRID panel: drag its grip onto another cell to swap; its size handle turns the dashboard into free placement ***');
+  {
+    const store = new Map([['settings', { kiosk: { layout: { preset: 'side', slots: ['g1', 'g2'] } } }]]);
+    const subs = new Map();
+    const makeState = (key) => {
+      if (!subs.has(key)) subs.set(key, new Set());
+      return { load: () => Promise.resolve(), get: () => store.get(key) || {},
+        set: (p) => { store.set(key, { ...(store.get(key) || {}), ...p }); for (const f of subs.get(key)) f(store.get(key)); return Promise.resolve(); },
+        subscribe: (f) => { subs.get(key).add(f); return () => subs.get(key).delete(f); }, startPolling() {}, flush: () => Promise.resolve(), destroy() {} };
+    };
+    const gbus = createBus();
+    const host = document.createElement('div');
+    host.style.cssText = 'position:relative;width:880px;height:500px';
+    document.getElementById('host').append(host);
+    const view = mountModule('dashboard', { mount: host, bus: gbus, rootBus: gbus, viewId: 'GD', user: 'u', personId: null,
+      arrangement: { id: 'GD', name: 'Grid', modules: [{ id: 'g1', type: 'clock', state: {} }, { id: 'g2', type: 'clock', state: {} }] },
+      profiles: { list: async () => [{ id: 'GD', name: 'Grid' }] },
+      makeState, makeEvents: noEvents, storage: { getItem: () => null, setItem() {}, removeItem() {} }, state: memState(), instanceId: 'dash-grid' });
+    await view.init();
+    const d = view.impl;
+    const savedLayout = () => store.get('settings')?.kiosk?.layout || {};
+    const cellOf = (n) => host.querySelector(`.k-stage > .k-cell[data-slot="${n}"]`);
+    check('(setup) two clocks side by side', await until(() => !!cellOf(0)?.querySelector('.k-mod') && !!cellOf(1)?.querySelector('.k-mod'), 6000));
+    const g1Host = cellOf(0).querySelector('.k-mod');
+    d.editPanel('g1', true);
+    const hd = () => host.querySelector('[data-room-handles]');
+    check('*** chosen as a whole: a Move grip and a size handle (no turn: a grid cell does not turn) ***',
+      await until(() => !!hd()?.querySelector('.emh-grip') && !!hd().querySelector('[data-emh="scale"]'), 3000) && !hd().querySelector('[data-emh="rotate"]'),
+      hd()?.outerHTML?.slice(0, 160));
+    const ev = (el, type, x, y) => el.dispatchEvent(new PointerEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, pointerId: 11, button: 0 }));
+    const grip = hd().querySelector('.emh-grip');
+    const gr = grip.getBoundingClientRect(), gx = gr.left + gr.width / 2, gy = gr.top + gr.height / 2;
+    const c0 = cellOf(0).getBoundingClientRect(), c1 = cellOf(1).getBoundingClientRect();
+    const dx = (c1.left + c1.width / 2) - (c0.left + c0.width / 2);
+    ev(grip, 'pointerdown', gx, gy); ev(grip, 'pointermove', gx + dx, gy); ev(grip, 'pointerup', gx + dx, gy);
+    check('*** dropped on the other cell: the two swap, saved ***', await until(() => JSON.stringify(savedLayout().slots) === JSON.stringify(['g2', 'g1']), 3000),
+      JSON.stringify(savedLayout()));
+    check('...in place: the same clock element is now in the other cell (nothing remounted), and the cell is not left shifted',
+      cellOf(1).querySelector('.k-mod') === g1Host && !cellOf(0).style.transform);
+    check('...and its handles are back, on its new cell', await until(() => !!hd()?.querySelector('.emh-grip'), 3000));
+    const before = cellOf(1).getBoundingClientRect();
+    const sc = hd().querySelector('[data-emh="scale"]');
+    const sr = sc.getBoundingClientRect(), sx = sr.left + sr.width / 2, sy = sr.top + sr.height / 2;
+    const mid = { x: before.left + before.width / 2, y: before.top + before.height / 2 };
+    ev(sc, 'pointerdown', sx, sy); ev(sc, 'pointermove', mid.x + (sx - mid.x) * 0.8, mid.y + (sy - mid.y) * 0.8); ev(sc, 'pointerup', mid.x + (sx - mid.x) * 0.8, mid.y + (sy - mid.y) * 0.8);
+    const placedNow = () => savedLayout().placed || [];
+    check('*** the size handle: the dashboard is now free placement - both panels placed on the screen, no slot holds either ***',
+      await until(() => placedNow().length === 2 && placedNow().every((e) => e.place === 'screen') && (savedLayout().slots || []).every((s) => !s), 3000),
+      JSON.stringify(savedLayout()));
+    const e2 = placedNow().find((e) => e.id === 'g2');
+    // Where its cell was: the placed box drawn now is the cell's box (percent of the placed layer, which can be taller
+    // than the grid's stage, so compared as drawn).
+    const box2 = host.querySelector('.k-pcell[data-placed="g2"]')?.getBoundingClientRect();
+    check('...each where its cell was (the other clock: the left cell\'s box, to a pixel or two)', e2 && Math.abs(e2.x - 25) < 2 && Math.abs(e2.w - 50) < 2
+      && box2 && Math.abs(box2.left - c0.left) < 3 && Math.abs(box2.width - c0.width) < 3 && Math.abs(box2.height - c0.height) < 3,
+      `${JSON.stringify(e2)} ${JSON.stringify(box2)} cell ${JSON.stringify(c0)}`);
+    const g1Now = () => (savedLayout().placed || []).find((x) => x.id === 'g1');
+    check('...and the one sized is 80% of its cell, both ways', await until(() => { const e = g1Now(); return e && e2 && Math.abs(e.w - 40) < 2.5 && Math.abs(e.h - e2.h * 0.8) < 2.5; }, 3000),
+      JSON.stringify(g1Now()));
+    check('...the same clock element, now in its placed box', !!host.querySelector('.k-pcell[data-placed="g1"]')?.contains(g1Host));
+    d.editPanel('g1', false);
+    view.destroy();
+    host.remove();
+  }
+
+  // ============================================================================================
   section('nobody answers: it leaves by itself (never a gate)');
   {
     const em3 = createEditMode({ bus, recs: () => [sign], boxOf: () => sign.cell, settings: () => ({ [EDIT_IDLE_KEY]: 60 }) });

@@ -121,6 +121,26 @@ export function svgGeometry({ el }) {
 }
 
 /**
+ * (note GS 2, 2026-11-26) A GRID PANEL: a cell in a CSS grid, which left/top cannot move. Previewed with its own transform
+ * (it follows the finger, and grows about its middle); the move is reported in PIXELS, for the caller to find which cell it
+ * was dropped on. Use with `piece: { x: 0, y: 0, size: 1 }`, so a commit's x/y are the pixels moved and its size the factor.
+ */
+export function transformGeometry({ el }) {
+  const base = el.style.transform || '';
+  const baseZ = el.style.zIndex;
+  return {
+    start: () => ({}),
+    delta: (dx, dy) => ({ dx: Math.round(dx), dy: Math.round(dy) }),
+    preview(d) {
+      el.style.zIndex = '30';
+      if (d.kind === 'move') el.style.transform = `${base} translate(${d.dx}px, ${d.dy}px)`.trim();
+      else if (d.kind === 'scale') el.style.transform = `${base} scale(${d.k})`.trim();
+    },
+    reset() { el.style.transform = base; el.style.zIndex = baseZ; },
+  };
+}
+
+/**
  * Handles over `el`, drawn in `host`. `piece`: its recipe values now, `{ x, y, size, rotate, flip }`; `floor`: anchored
  * at its foot (else its middle); `movable`: may be dragged; `turnable`: has the turn knob (as `movable` unless said: a
  * thing on a side wall moves along the walls but is not turned, room_edits.js isTurnable).
