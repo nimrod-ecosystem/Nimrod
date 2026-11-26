@@ -571,8 +571,13 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
       cells[0].querySelector('.k-promote').click();
       await sleep(30);
       const vis = (el) => getComputedStyle(el).visibility;
-      check('*** the corner: Photos fills its dashboard, the other panel steps aside (still mounted) ***',
-        kiosk.promoted().dashboard === ids[0] && cells[0].dataset.promoted === '1' && vis(cells[1]) === 'hidden' && kiosk.slotCount() === 2, J(kiosk.promoted()));
+      // (2026-11-26, Mike: every see-through panel keeps what is behind it) on a see-through background the other panel
+      // stays visible behind it and takes no press; on a solid one it steps aside.
+      const behind = root.querySelector('.kiosk').dataset.showsBehind === '1';
+      check('*** the corner: Photos fills its dashboard, the other panel steps aside or stays behind it (still mounted) ***',
+        kiosk.promoted().dashboard === ids[0] && cells[0].dataset.promoted === '1'
+        && (behind ? vis(cells[1]) === 'visible' && getComputedStyle(cells[1]).pointerEvents === 'none' : vis(cells[1]) === 'hidden')
+        && kiosk.slotCount() === 2, J(kiosk.promoted()));
       // *** 2026-10-03, Mike: "Promote works now but there's no way to demote it." *** The corner of a panel
       // filling its dashboard said ⤢ "fill the screen", and so did both bars: every visible press went UP. The
       // screen level looks the same as the dashboard level on a kiosk that is already full screen, and its ⤡
@@ -637,7 +642,7 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
     }
 
     // (2026-11-26) Mike: "Panels behind did you know should be visible when it is set to a see through background."
-    section('*** bigger, a see-through Did you know keeps the panels behind it in view ***');
+    section('*** bigger, a see-through panel keeps the panels behind it in view ***');
     {
       const p = await profiles.create('SC-dyk');
       await profiles.addModule(p.id, 'didyouknow');
@@ -675,8 +680,9 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
       k.dataset.panelSurface = 'clear';
       kiosk.promote(ids[1]);
       await sleep(30);
-      check('*** a panel that does not ask for it (Photos) still has the others step aside on a clear background ***',
-        !k.dataset.showsBehind && vis(cells[0]) === 'hidden', J(k.dataset));
+      // Mike, asked whether every see-through panel should: "Yes."
+      check('*** every see-through panel does it: Photos made bigger on a clear background keeps Did you know behind it ***',
+        k.dataset.showsBehind === '1' && vis(cells[0]) === 'visible', J(k.dataset));
       kiosk.demote();
       kiosk.destroy(); root.innerHTML = '';
     }
@@ -731,7 +737,12 @@ const USER = 'screenctl-' + Math.floor(Math.random() * 1e6);
       const t = await pressAt(corner(0), 'touch');
       check('*** a TOUCH on the corner reaches the corner (not the panel under it) ***', t.down === corner(0) && t.click === corner(0),
         `${t.down?.className} / ${t.click?.className}`);
-      check('*** ...and the panel fills its dashboard ***', kiosk.promoted().dashboard === ids[0] && getComputedStyle(cells[1]).visibility === 'hidden', J(kiosk.promoted()));
+      // (2026-11-26, Mike: every see-through panel keeps what is behind it) the others step aside, or, on a see-through
+      // background, stay visible behind it - and then take no press.
+      const asideOrBehind = (el) => (root.querySelector('.kiosk').dataset.showsBehind === '1'
+        ? getComputedStyle(el).visibility === 'visible' && getComputedStyle(el).pointerEvents === 'none'
+        : getComputedStyle(el).visibility === 'hidden');
+      check('*** ...and the panel fills its dashboard ***', kiosk.promoted().dashboard === ids[0] && asideOrBehind(cells[1]), J(kiosk.promoted()));
       // THE WAY BACK (2026-10-03, Mike: "no way to demote it"): the promoted panel's corner reads ⤡, stays shown
       // after the bar and the other corners have gone, sits clear of the bar, and a real press on it goes back down.
       // corner on hover (2026-10-09, DELIBERATELY changed from "STILL SHOWN once the bar has gone"): a ⤡ left up on a

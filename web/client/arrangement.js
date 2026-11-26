@@ -1895,19 +1895,19 @@ export function createArrangement({
     if (m && placedRecs.some((r) => r.id === id)) return { box: m.wrap, fills: m.where === 'flat' };
     return null;
   }
-  // (2026-11-26) A SEE-THROUGH PANEL THAT ASKS FOR IT KEEPS THE OTHERS IN VIEW WHEN IT IS MADE BIGGER. Mike: "Panels
-  // behind did you know should be visible when it is set to a see through background." A module opts in with
-  // `bigShowsBehind` in its manifest (Did you know, today), and only while its background is clear or veil: its own
-  // "Panel backgrounds" row first, then the dashboard's or the screen's. Every other panel still has the others step
-  // aside. Whether EVERY see-through panel should do this is on Mike's list: a calculator over photos is the case
-  // against. Read again on each renderMods, so a background changed while it is bigger is followed.
+  // (2026-11-26) A SEE-THROUGH PANEL KEEPS THE OTHERS IN VIEW WHEN IT IS MADE BIGGER. Mike: "Panels behind did you know
+  // should be visible when it is set to a see through background", then, asked whether every see-through panel should:
+  // "Yes." So while the panel's background is clear or veil (its own "Panel backgrounds" row first, then the
+  // dashboard's or the screen's), the others stay where they are behind it; on a solid one they step aside. A module
+  // can still say `bigHidesBehind` in its manifest to have them step aside (none does today). Read again on each
+  // renderMods, so a background changed while it is bigger is followed.
   function syncShowsBehind() {
     const pb = promoted ? promoteBox(promoted) : null;
     let on = false;
     try {
       const box = pb?.box;
       const kind = box?.getAttribute?.('data-kind') || box?.querySelector?.('[data-kind]')?.getAttribute('data-kind') || '';
-      if (kind && getManifest(kind)?.bigShowsBehind) {
+      if (box && !(kind && getManifest(kind)?.bigHidesBehind)) {
         const surface = box.querySelector?.('.k-mod[data-panel-surface]')?.dataset.panelSurface
           || box.closest?.('[data-panel-surface]')?.dataset.panelSurface || '';
         on = surface === 'clear' || surface === 'veil';
