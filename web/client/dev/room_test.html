@@ -84,7 +84,8 @@ try {
   check('registered as `room`, on the new core', m && m.core === 'new' && m.title === 'Room');
   check('it needs nothing: no server, no files, no network', m.dependsOn === 'none');
   check('its settings are declared as data', Array.isArray(m.settings) && m.settings === SETTINGS && SETTINGS.length >= 6);
-  check('which room offers every preset', SETTINGS.find((s) => s.key === 'preset').options.length === listPresets().length);
+  check('which room offers every preset, and the made bedroom (note GO)', SETTINGS.find((s) => s.key === 'preset').options.length === listPresets().length + 1
+    && SETTINGS.find((s) => s.key === 'preset').options.at(-1).value === 'made:bedroom');
   const lr = SETTINGS.find((s) => s.key === 'liftReturnMs');
   check('the lifted-panel timeout is a duration in ms with a "never" choice', lr && lr.options.some((o) => o.value === 0) && lr.default === 60000);
   check('the essentials: which room, the light, the labels', SETTINGS.filter((s) => s.level === 'essential').map((s) => s.key).join() === 'preset,light,labels');
@@ -125,6 +126,28 @@ try {
   check('the study’s module slot is offered to the host', photos && photos.kind === 'module' && photos.units.join() === '6,3');
   state.set({ signWords: 'Our den' });
   check('Words on the signs: every sign says them', host.querySelector('.rs-sign-text')?.textContent === 'Our den');
+  // (note GO, 2026-11-26) A made bedroom, and "Make another".
+  {
+    const rows = () => inst.impl.menuItems();
+    check('the menu offers "Make a bedroom" on a preset room', rows().some((r) => r.id === 'room-make'), JSON.stringify(rows().map((r) => r.id)));
+    rows().find((r) => r.id === 'room-make').run();
+    await sleep(30);
+    const madeIds = () => [...host.querySelectorAll('.rs-obj[data-id], .rs-item[data-id]')].map((e) => e.dataset.id).sort().join();
+    const first = madeIds();
+    check('*** pressed: "Which room" is the made bedroom, and a bed is drawn ***', state.get().preset === 'made:bedroom' && /(^|,)bed\d+(,|$)/.test(first), first);
+    check('...and the menu now says "Make another bedroom"', rows().some((r) => r.id === 'room-make-another'));
+    const seed1 = state.get().madeSeed;
+    const firstItems = JSON.stringify(inst.impl.__scene().recipe().items);
+    rows().find((r) => r.id === 'room-make-another').run();
+    await sleep(30);
+    check('*** "Make another bedroom": a new seed and a room drawn again ***', state.get().madeSeed !== seed1 && !!host.querySelector('.rs-obj[data-id^="bed"]') && JSON.stringify(inst.impl.__scene().recipe().items) !== firstItems, String(state.get().madeSeed));
+    const again = mountModule('room', { mount: stage(), bus: createBus(), state: fakeState({ preset: 'made:bedroom', madeSeed: state.get().madeSeed }), personId: null, instanceId: 'room-same' });
+    again.init();
+    await sleep(60);
+    const sameItems = (s) => JSON.stringify(s.__scene().recipe?.()?.items ?? null);
+    check('...and another screen with the same seed shows the same room', sameItems(again.impl) === sameItems(inst.impl) && sameItems(inst.impl) !== 'null');
+    again.destroy();
+  }
   state.set({ preset: 'theRoom', labels: 'always', motion: 'gentle', light: 'auto', signWords: '' });
   const sysReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (!sysReduced) {

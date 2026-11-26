@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>room_generate — a bedroom made from the pieces' facts — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px}
+  .pass{color:green}.fail{color:firebrick;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #rooms{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:12px}
+  #rooms>div{position:relative;aspect-ratio:16/9;overflow:hidden;background:#222}
+</style>
+</head>
+<body>
+<h1>room_generate — a bedroom made from the pieces' facts (note GO, row 2.285)</h1>
+<p>Mike, 2026-11-26: "yes to both room questions" — a bedroom first, from the room's own drawn pieces, the facts kept with the
+pieces. Over many seeds: nothing overlaps, every clearance and the door's swing are kept, the same seed makes the same room, and
+each piece is drawn at its real size. Four rooms are drawn below to look at.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<div id="rooms"></div>
+<script type="module">
+import { generateRoom, ROOM_FACTS, ROOM_TYPES, ROOM_CM, roomSizeFor, planToStage, wallToStage, nextSeed } from '../room_generate.js';
+import { FURNITURE, ROOM_SHELLS } from '../room_parts.js';
+import { normalizeRecipe, mountRoomScene } from '../room_scene.js';
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div'); d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`; out.append(d);
+}
+const J = (v) => JSON.stringify(v);
+const overlaps = (a, b) => a.x0 < b.x1 && b.x0 < a.x1 && a.z0 < b.z1 && b.z0 < a.z1;
+(async () => {
+  try {
+    // THE FACTS
+    const drawn = Object.keys(FURNITURE).filter((id) => !FURNITURE[id].svg);
+    const missing = drawn.filter((id) => !ROOM_FACTS[id]);
+    check('*** every drawn room piece has its facts ***', missing.length === 0, J(missing));
+    const COLS = ['real_size', 'sits_on', 'against', 'rooms', 'goes_with', 'clearance', 'count', 'faces'];
+    const bad = [];
+    for (const [id, f] of Object.entries(ROOM_FACTS)) {
+      for (const c of COLS) if (!(c in f)) bad.push(`${id}: no ${c}`);
+      if (!FURNITURE[id]) bad.push(`${id}: not a room piece`);
+      if (!(Array.isArray(f.real_size) && f.real_size.length === 3 && f.real_size.every((n) => n > 0))) bad.push(`${id}: real_size`);
+      if (!['floor', 'wall', 'surface'].includes(f.sits_on)) bad.push(`${id}: sits_on`);
+      if (!['wall', 'none'].includes(f.against)) bad.push(`${id}: against`);
+      if (!(Array.isArray(f.count) && f.count[0] <= f.count[1])) bad.push(`${id}: count`);
+      if (f.goes_with.some((g) => !ROOM_FACTS[g])) bad.push(`${id}: goes_with names an unknown piece`);
+      if ((f.sits_on === 'wall') !== (FURNITURE[id].on === 'wall')) bad.push(`${id}: sits_on disagrees with the drawing's own on`);
+      if (f.sits_on === 'wall' && !(f.at > 0)) bad.push(`${id}: a wall piece needs at`);
+    }
+    check('...each with every column, in range, agreeing with the drawing (a wall piece is drawn on the wall)', bad.length === 0, J(bad));
+
+    // THE SAME SEED, THE SAME ROOM
+    check('*** the same seed makes the same room ***', J(generateRoom({ seed: 42 })) === J(generateRoom({ seed: 42 })));
+    const many = new Set(Array.from({ length: 20 }, (_, i) => J(generateRoom({ seed: i + 1 }).recipe.items)));
+    check('...and twenty seeds make (nearly) twenty different rooms', many.size >= 18, String(many.size));
+    check('"Make another": the next seed is new, and the same each time', nextSeed(42) !== 42 && nextSeed(42) === nextSeed(42) && nextSeed(0) > 0);
+
+    // OVER MANY SEEDS: THE REAL-WORLD RULES
+    const problems = [];
+    const shellsSeen = new Set();
+    let lamps = 0, rugs = 0, fills = 0;
+    const allowed = new Set(Object.keys(ROOM_FACTS).filter((k) => ROOM_FACTS[k].rooms.includes('bedroom')).concat(['door', 'window', 'tableLamp', 'rug', 'sideTable']));
+    for (let seed = 1; seed <= 300; seed++) {
+      const { recipe, plan, left_out } = generateRoom({ seed });
+      const say = (m) => problems.push(`seed ${seed}: ${m}`);
+      shellsSeen.add(recipe.shell);
+      const shell = ROOM_SHELLS[recipe.shell];
+      const { pieces, keepClear, roomCm } = plan;
+      const beds = pieces.filter((p) => p.part === 'bed');
+      if (beds.length !== 1) say(`${beds.length} beds`);
+      if (left_out.includes('bed')) say('no room for the bed');
+      for (let i = 0; i < pieces.length; i++) {
+        const p = pieces[i];
+        if (p.x0 < 0 || p.x1 > roomCm.w || p.z0 < 0 || p.z1 > roomCm.d) say(`${p.part} outside the room ${J(p)}`);
+        for (let j = i + 1; j < pieces.length; j++) if (overlaps(p, pieces[j])) say(`${p.part} overlaps ${pieces[j].part}`);
+        for (const k of keepClear) if (k.piece !== i && overlaps(p, k)) say(`${p.part} stands in ${k.of}'s clearance`);
+        if (ROOM_FACTS[p.part].against === 'wall' && !(p.z0 === 0 || p.x0 === 0 || p.x1 === roomCm.w)) say(`${p.part} is not against a wall`);
+      }
+      const bed = beds[0];
+      if (bed && bed.z0 !== 0) say('the bed is not against the back wall');
+      const tables = pieces.filter((p) => p.part === 'sideTable');
+      if (bed && !tables.some((t) => Math.abs(t.x1 - bed.x0) <= 6 || Math.abs(t.x0 - bed.x1) <= 6)) say('no nightstand beside the bed');
+      const items = recipe.items;
+      const ids = new Set(items.map((i) => i.id));
+      if (ids.size !== items.length) say('ids repeat');
+      const norm = normalizeRecipe(recipe);
+      if (norm.shell !== recipe.shell || norm.items.length !== items.length) say('normalizeRecipe changes it');
+      for (const it of items) {
+        if (it.kind === 'furniture') {
+          if (!FURNITURE[it.part]) say(`unknown piece ${it.part}`);
+          if (!allowed.has(it.part)) say(`${it.part} does not belong in a bedroom`);
+          if (it.scale != null && !(it.scale > 0.4 && it.scale < 2.5)) say(`${it.part} scale ${it.scale}`);
+          if (FURNITURE[it.part]?.on === 'floor' && it.part !== 'tableLamp' && (it.y < shell.back.b - 0.01 || it.y > 100.01)) say(`${it.part} foot off the floor (${it.y})`);
+        }
+        if (it.part === 'tableLamp') {
+          lamps++;
+          const on = items.find((o) => o.id === it.standsOn);
+          if (!on || !ROOM_FACTS[on.part]?.surface) say('a table lamp not standing on a table');
+          else if (!(it.y < on.y && it.ground === on.y && it.x === on.x)) say('a table lamp not on top of its table');
+        }
+        if (it.part === 'rug') rugs++;
+      }
+      if (!items.some((i) => i.part === 'window')) say('no window');
+      if (items.filter((i) => i.part === 'door').length !== 1) say('not one door');
+      fills += items.filter((i) => ['bookshelf', 'desk', 'armchair', 'floorLamp', 'plant', 'cabinet'].includes(i.part)).length;
+    }
+    check('*** 300 rooms: one bed against the back wall, a nightstand at its side, nothing overlapping, nothing outside, every clearance and the door\'s swing kept ***',
+      problems.length === 0, J(problems.slice(0, 8)) + (problems.length > 8 ? ` …and ${problems.length - 8} more` : ''));
+    check('...every shell a bedroom can have is used', shellsSeen.size === ROOM_TYPES.bedroom.shells.length, J([...shellsSeen]));
+    check('...lamps, rugs and the fill all turn up', lamps > 300 && rugs > 150 && fills > 300, J({ lamps, rugs, fills }));
+
+    // REAL SIZE: drawn width follows real width
+    {
+      const shell = ROOM_SHELLS.room;
+      const rc = roomSizeFor(shell);
+      check('the room is as wide as its back wall is in proportion (a centimetre is square on the wall)',
+        Math.abs((rc.w / rc.wall) - (((shell.back.r - shell.back.l) * 960) / ((shell.back.b - shell.back.t) * 540))) < 0.02, J(rc));
+      const back = planToStage(shell, 0, 0, rc), front = planToStage(shell, 0, rc.d, rc);
+      check('the plan\'s back wall is the floor line, its front the stage\'s bottom', Math.abs(back.y - shell.back.b) < 1e-9 && Math.abs(front.y - 100) < 1e-9 && Math.abs(back.x - shell.back.l) < 1e-9);
+      const w = wallToStage(shell, rc.w / 2, rc.wall, rc);
+      check('a wall point at the top of the wall is at the stage\'s top', Math.abs(w.y - shell.back.t) < 1e-9 && Math.abs(w.x - 50) < 1e-9);
+      const r = generateRoom({ seed: 7 });
+      const bed = r.recipe.items.find((i) => i.part === 'bed'), lamp = r.recipe.items.find((i) => i.part === 'tableLamp');
+      if (bed && lamp) {
+        const bedPx = FURNITURE.bed.box[0] * bed.scale, lampPx = FURNITURE.tableLamp.box[0] * lamp.scale;
+        check('*** a lamp is drawn much smaller than the bed (real sizes 25 and 200 cm) ***', lampPx < bedPx / 4, J({ bedPx, lampPx }));
+      }
+    }
+    check('only the bedroom is built yet; another type says so', (() => { try { generateRoom({ type: 'kitchen' }); return false; } catch { return true; } })());
+    check('the plan is centimetres, a bedroom of an ordinary size', ROOM_CM.d === 320 && ROOM_CM.wall === 250);
+
+    // FOUR TO LOOK AT
+    for (const seed of [1, 2, 3, 4]) {
+      const host = document.createElement('div');
+      document.getElementById('rooms').append(host);
+      try { mountRoomScene(host, generateRoom({ seed }).recipe, { labels: 'never', motion: 'off' }); }
+      catch (e) { check(`room ${seed} draws`, false, String(e)); }
+    }
+    check('four made rooms draw on the page', document.querySelectorAll('#rooms > div').length === 4);
+  } catch (err) {
+    check('the suite ran to the end', false, String(err && err.stack || err));
+  }
+  document.getElementById('summary').textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+})();
+</script>
+</body>
+</html>

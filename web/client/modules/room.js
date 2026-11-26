@@ -55,6 +55,21 @@ import { registerModule, listManifests } from '../module.js';
 import { normalizeField, fieldValue } from '../settings_fields.js';
 import { mountRoomScene, RENDER_DEFAULTS, OBJECT_DEFAULTS, DEFAULT_BOOKS, MAX_BOOKS, moduleLabel, CLOSEUP_PARTS } from '../room_scene.js';
 import { listPresets, presetRecipe, DEFAULT_PRESET } from '../room_presets.js';
+import { generateRoom, nextSeed } from '../room_generate.js';   // (note GO, 2026-11-26) a bedroom made from the pieces' facts
+
+// (note GO, 2026-11-26) "Which room" can be a MADE room: `made:<type>`, drawn by room_generate.js from the row's
+// `madeSeed`. "Make another bedroom" (this panel's menu row) moves the seed on, so the same screen keeps its room until
+// somebody asks for another, and every screen with the same seed shows the same room.
+export const MADE_BEDROOM = 'made:bedroom';
+const MADE_ROOMS = [{ value: MADE_BEDROOM, label: 'A bedroom made for you (the menu has “Make another bedroom”)' }];
+const madeType = (preset) => (typeof preset === 'string' && preset.startsWith('made:') ? preset.slice(5) : null);
+const seedOf = (row) => ((Number(row?.madeSeed) >>> 0) || 1);
+/** The recipe "Which room" stands for: a preset's, or a made room's from the row's seed. */
+export function recipeFor(cfg, row = {}) {
+  const type = madeType(cfg.preset);
+  if (type) { try { return generateRoom({ type, seed: seedOf(row) }).recipe; } catch { /* an unknown type: the default */ } }
+  return presetRecipe(type ? DEFAULT_PRESET : cfg.preset);
+}
 import { LISTENING_TOPIC } from '../input_speech.js';
 import { mountCatHelp } from '../cat_help.js';
 import { readRules, objectsIn, cueFor, playSound } from '../room_notify.js';
@@ -110,7 +125,7 @@ export const DEFAULTS = Object.freeze({
 
 export const SETTINGS = [
   { key: 'preset', label: 'Which room', kind: 'choice', default: DEFAULTS.preset, level: 'essential',
-    options: listPresets() },
+    options: [...listPresets(), ...MADE_ROOMS] },
   { key: 'light', label: 'Light', kind: 'choice', default: DEFAULTS.light, level: 'essential',
     options: [
       { value: 'auto', label: 'Follows the clock' },
@@ -317,6 +332,7 @@ registerModule(
     const { mount, state } = ctx;
     let cfg = configFrom({});
     let scene = null;
+    let madeSeedShown = 1;     // the seed of the made room on show (note GO)
     let help = null;
     let host = null;
     let torn = false;
@@ -398,10 +414,11 @@ registerModule(
 
     function apply(row) {
       const next = configFrom(row || {});
-      const presetChanged = next.preset !== cfg.preset;
+      const seed = seedOf(row);
+      const presetChanged = next.preset !== cfg.preset || (madeType(next.preset) && seed !== madeSeedShown);
       cfg = next;
       if (!scene) return;
-      if (presetChanged) scene.setRecipe(presetRecipe(cfg.preset));
+      if (presetChanged) { scene.setRecipe(recipeFor(cfg, row || {})); madeSeedShown = seed; }
       scene.setOptions(renderOpts(cfg));
       // The rules ride on the room as placed here, not on the preset: a new room keeps them.
       scene.setNotify(rulesFrom(row));
@@ -413,6 +430,16 @@ registerModule(
       __editor: () => editor,
       // The reactions editor, for a host that offers it (a settings row, an edit window).
       openReactions: () => openEditor(),
+      // (note GO, 2026-11-26) This panel's own menu rows: a made bedroom, and another one.
+      menuItems: () => {
+        const row = state?.get?.() || {};
+        const made = madeType(cfg.preset) === 'bedroom';
+        return [made
+          ? { kind: 'item', id: 'room-make-another', label: 'Make another bedroom', hint: 'the same pieces, placed again',
+            run: () => state?.set?.({ madeSeed: nextSeed(seedOf(row)) }) }
+          : { kind: 'item', id: 'room-make', label: 'Make a bedroom', hint: 'a bedroom made from the room’s pieces, the way a real one is',
+            run: () => state?.set?.({ preset: MADE_BEDROOM, madeSeed: nextSeed(Date.now() >>> 0) }) }];
+      },
       // EDIT MODE (edit_mode.js): each object, chosen by a press on it, with the rows about it (`objectKeys`).
       // No `whole` target: a press on the walls or the floor chooses the panel, i.e. every row of the room's.
       editTargets: () => {
@@ -445,7 +472,8 @@ registerModule(
         });
         // The screen's flash limit (flash_limit.js): a getter, so a changed setting reaches the pressed-object
         // flash, the reactions and the window's scene without a remount.
-        scene = mountRoomScene(host, presetRecipe(cfg.preset), { ...renderOpts(cfg), bus: ctx.bus, onUnclaimed, onCatPress, onSound,
+        madeSeedShown = seedOf(state?.get?.() || {});
+        scene = mountRoomScene(host, recipeFor(cfg, state?.get?.() || {}), { ...renderOpts(cfg), bus: ctx.bus, onUnclaimed, onCatPress, onSound,
           flashLimit: () => flashLimit(ctx) });
         scene.setNotify(rulesFrom(state?.get?.() || {}));
         const sub = state?.subscribe?.((row) => apply(row));
