@@ -635,6 +635,17 @@ try {
       `${e.selected()} ${J(tw.arr.editing())}`);
     check('...its circle is marked chosen; the others choosable', circle?.hasAttribute('data-edit-selected')
       && tRec().el.querySelectorAll('.tw-pic [data-tw-i][data-edit-target]').length === n0);
+    // (Edit step 4, 2026-11-26) Town's things get the room's handles, as the village's do, and with them the arrow keys.
+    const thd = () => document.querySelector('[data-room-handles]');
+    check('*** a Town thing chosen: drag and size handles over it (no turn knob: it faces one way or the other) ***',
+      await until(() => !!thd()?.querySelector('[data-emh="move"]') && !!thd().querySelector('[data-emh="scale"]'), 3000) && !thd().querySelector('[data-emh="rotate"]'),
+      thd()?.outerHTML?.slice(0, 160));
+    const x2 = (kept()?.items?.[2] || recipeFor('kingHall', probe().deck, {}).items[2]).x;
+    const dir2 = x2 < 50 ? 'ArrowRight' : 'ArrowLeft';
+    document.body.dispatchEvent(new KeyboardEvent('keydown', { key: dir2, bubbles: true, cancelable: true }));
+    check('*** ...an arrow key moves it about 1% that way, kept in Town\'s own store ***',
+      await until(() => { const nx = kept()?.items?.[2]?.x; return Number.isFinite(nx) && Math.abs(Math.abs(nx - x2) - 1) <= 0.6 && (dir2 === 'ArrowRight' ? nx > x2 : nx < x2); }, 3000),
+      J({ x2, now: kept()?.items?.[2] }));
     // The return timer: two minutes with no press in the town goes back to the map -- not while it is being edited.
     const pending = () => tw.timers.filter((h) => h.ms === 120000 && !h.cleared);
     const fire = () => { const h = pending().at(-1); if (h) { h.cleared = true; h.fn(); } return !!h; };

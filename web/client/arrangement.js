@@ -2868,8 +2868,11 @@ export function createArrangement({
     const grow = e.key === '+' || e.key === '=' ? NUDGE_GROW : e.key === '-' || e.key === '_' ? 1 / NUDGE_GROW : null;
     if (!dir && !grow) return;
     let done = false;
-    const inGrid = slotRecs.some((r) => r.id === a.id) && !placedMeta.has(a.id);
-    const hud = hudOf(a.id);
+    // The whole panel chosen (not a thing in it, which moves itself): only then is a grid panel's arrow a swap.
+    const chosen = (() => { try { return editMode.chosenTarget?.() || null; } catch { return null; } })();
+    const whole = !a.target || !chosen || !!chosen.whole;
+    const inGrid = whole && slotRecs.some((r) => r.id === a.id) && !placedMeta.has(a.id);
+    const hud = whole ? hudOf(a.id) : null;
     if (hud) {
       // (Edit step 4) A corner thing: an arrow sends it to the corner that way; + and - step the mirror's size.
       if (dir) done = setHudCorner(hud.kind, cornerToward(hudCorner(hud.kind), dir));

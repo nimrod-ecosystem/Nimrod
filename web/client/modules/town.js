@@ -579,6 +579,23 @@ registerModule(
             transformKeys: ['x', 'y', 'size', 'facing'],
             values: () => itemValues(recipeNow()?.items?.[i] || it),
             set: (patch) => { editThing(i, patch); },
+            // (Edit step 4, 2026-11-26; Mike: "It's supposed to be so you can move the objects around") The room's handles,
+            // as the village's pieces have them (room_handles.js svgGeometry, on the hit circle over the 960x540 stage), and
+            // with them the arrow keys. The stage's units are the town's percents times 9.6 across and 5.4 down (spotOf
+            // below); the handles work in the stage's units and the change is turned back into percents here. A thing faces
+            // one way or the other (Facing, in the card), so there is no turn knob.
+            handles: (() => {
+              const v = itemValues(it);
+              return { el, piece: { x: v.x * 9.6, y: v.y * 5.4, size: v.size }, floor: true, movable: true, turnable: false, geometry: 'svg',
+                onCommit: (p) => {
+                  if (!p) return;
+                  const out = {};
+                  if ('x' in p) out.x = round1(p.x / 9.6);
+                  if ('y' in p) out.y = round1(p.y / 5.4);
+                  if ('size' in p) out.size = p.size;
+                  editThing(i, out);
+                } };
+            })(),
             actions: [
               { id: 'copy', label: 'Copy it', run: () => { copyThing(i); } },
               { id: 'remove', label: 'Take it out', note: 'Undo puts it back', run: () => { removeThing(i); } },
