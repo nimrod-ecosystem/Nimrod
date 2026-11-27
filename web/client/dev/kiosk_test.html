@@ -4894,6 +4894,26 @@ const toTab = (m, id) => {
           JSON.stringify(still().map((e) => e.className)));
         sk.destroy();
         sroot.remove();
+        // (Mike, 2026-11-26: "Wouldn't that be taken care of by setting it to do whatever your computer can handle?") The
+        // scene's own settings are the person's, as the theme is: chosen on the person's row, every screen of theirs follows.
+        const P = await profiles.create('TEST-scene-person');
+        await profiles.addModule(P.id, 'clock');
+        await remote(P.id, () => ({ theme: 'fall' }));
+        const pFull = await profiles.get(P.id);
+        const pRow = createState({ url: profiles.personStateURL(pFull.person_id, INPUTS_KEY), user: USER });
+        await pRow.load().catch(() => {});
+        // (The suite's profiles share one default person, whose row other checks write: its theme, as it was, put back below.)
+        const pWas = { theme: pRow.get()?.theme ?? null, sceneMotion: pRow.get()?.sceneMotion ?? null };
+        await pRow.set({ theme: 'fall', sceneMotion: 'still' });
+        await pRow.flush?.();
+        const proot = box();
+        const pk = await mountKiosk(proot, { user: USER, profileId: P.id, profiles, bus: createBus() });
+        check('*** "Moving theme scene: Still" on the PERSON\'s row, nothing on the screen\'s: the scene stands still ***',
+          await settled(() => still().length > 0 && still().every((e) => e.classList.contains('ls-still')), 6000),
+          JSON.stringify(still().map((e) => e.className)));
+        pk.destroy();
+        proot.remove();
+        await pRow.set(pWas); await pRow.flush?.(); pRow.destroy?.();
         // (2026-11-02, later) Nothing chosen ('auto'): still on a screen that measures slow, moving on one that does not.
         // The device's measurement is the one kept in localStorage (theme_default.js CACHE_KEY), set here and put back.
         const KEEP = localStorage.getItem('nimrod:theme-device');

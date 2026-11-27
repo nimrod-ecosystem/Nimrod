@@ -815,6 +815,7 @@ export async function mountKiosk(root, {
   let themeGate = null;          // { waits: Set, free, timer } while the deciding rows are still arriving
   let paintedThemeId;            // the choice painted last (undefined: only theme_boot.js's saved look, or nothing)
   let paintedThemeAt = 0;
+  let paintedSceneSig = null;     // (2026-11-26) the scene's own settings as last painted (syncShownTheme compares)
   let spacedThemeT = null;       // a change waiting out the flash limit's gap
   function openThemeGate() {
     if (!themeGate) return;
@@ -831,9 +832,21 @@ export async function mountKiosk(root, {
    *  those rows exist, 'gentle': the device's own reduce-motion still applies inside the scene. */
   // (2026-11-02) ...and the screen's own "Moving theme scene" (SCENE_MOTION_KEY below), which can only make it move LESS
   // than the rules above allow, never more. Read in a try: early in boot `settings` does not exist yet.
+  // *** THE SCENE'S OWN SETTINGS ARE THE PERSON'S (Mike, 2026-11-26). *** Asked whether a Pi 400 needs them per screen:
+  // "Wouldn't that be taken care of by setting it to do whatever your computer can handle?" Yes: "auto" (the default) is
+  // measured on each screen wherever the choice is kept. So they follow the theme's levels (LOOK_ORDER: the person first,
+  // then the dashboard, the screen, the device) and are written where they came from (`lookWrite`): a screen that
+  // already chose keeps its choice there, nothing anybody sees changes, and a new choice is the person's. The person's or
+  // the device's "less movement" still wins over any of them. Read in a try: early in boot the levels do not exist yet.
+  function sceneSetting(key) {
+    try { return resolveLevel(key, levelLayers(), { from: 'person', order: LOOK_ORDER }).value; }
+    catch { try { return settings.get()?.[key]; } catch { return undefined; } }
+  }
+  const sceneRow = () => ({ [VILLAGE_LOOK_KEY]: sceneSetting(VILLAGE_LOOK_KEY), [VILLAGE_PEOPLE_KEY]: sceneSetting(VILLAGE_PEOPLE_KEY) });
+  const SCENE_KEYS = [SCENE_MOTION_KEY, VILLAGE_LOOK_KEY, VILLAGE_PEOPLE_KEY];
   function sceneMotion() {
     let chosen = 'auto';
-    try { const v = settings.get()?.[SCENE_MOTION_KEY]; if (SCENE_MOTIONS.includes(v)) chosen = v; } catch { chosen = 'auto'; }
+    try { const v = sceneSetting(SCENE_MOTION_KEY); if (SCENE_MOTIONS.includes(v)) chosen = v; } catch { chosen = 'auto'; }
     try { const a = avatarContextNow(); if (a && (a.reduceMotion || a.deviceReduced)) return 'still'; } catch { /* not resolved yet */ }
     if (chosen !== 'auto') return chosen;
     let slow = false;
@@ -866,7 +879,8 @@ export async function mountKiosk(root, {
     // (2026-11-03) The scenes' own choices (the village's look and people). Read in a try: early in boot `settings` does
     // not exist yet, and the defaults are Design's.
     let sceneSettings;
-    try { sceneSettings = sceneSettingsFrom(settings.get() || {}); } catch { sceneSettings = sceneSettingsFrom({}); }
+    try { sceneSettings = sceneSettingsFrom(sceneRow()); } catch { sceneSettings = sceneSettingsFrom({}); }
+    try { paintedSceneSig = JSON.stringify([motion, sceneSettings]); } catch { /* before the levels exist */ }
     const resolved = applyTheme(document.documentElement, id, { flashLimit: flashLimitNow, motion, sceneSettings });
     // Subtitles follow the theme's subtitle style (theme.js `--subtitles-style`). In a try: `subtitles`
     // is a later `let`, and the first theme is applied before it exists.
@@ -2593,12 +2607,13 @@ export async function mountKiosk(root, {
     return {
       title: 'Background',
       help: room ? 'This dashboard’s room is behind every panel.'
-        : scene ? `The ${name || 'theme'} theme’s moving scene, behind every panel on this dashboard. How it moves and looks is this screen’s.`
+        : scene ? `The ${name || 'theme'} theme’s moving scene, behind every panel on this dashboard. How it moves and looks follows the person, as the theme does; “unless this screen is slow” is measured on each screen.`
         : `The ${name || 'theme'} theme’s colours, behind every panel on this dashboard: it has no moving scene.`,
       fields,
       values: () => {
         let v = {};
         try { v = { ...(settings.get() || {}) }; } catch { v = {}; }
+        for (const k of SCENE_KEYS) v[k] = sceneSetting(k);   // the person's, as the theme is (2026-11-26)
         try { if (homeSceneLib) v[BACKGROUND_KEY] = homeSceneLib.currentScene(arr.layout?.() || null, shownTheme()); } catch { /* not said */ }
         return v;
       },
@@ -2609,7 +2624,9 @@ export async function mountKiosk(root, {
           delete p[BACKGROUND_KEY];
           chooseBackground(id).catch((err) => console.error('kiosk: the background', err));
         }
+        for (const k of SCENE_KEYS) if (k in p) { try { lookWrite(k, p[k]); } catch (err) { console.error('kiosk: a scene setting', err); } delete p[k]; }
         if (Object.keys(p).length) { try { settings.set(p); } catch (err) { console.error('kiosk: a background setting', err); } }
+        try { syncShownTheme(); } catch { /* painted on the next change */ }
       },
     };
   }
@@ -2881,7 +2898,10 @@ export async function mountKiosk(root, {
     // to the showing dashboard's own settings.
     applyPanelSurface(settings.get());
     const id = shownTheme();
-    if (id === lastShownTheme) return;
+    // (2026-11-26) ...or the same theme with the scene's own settings changed at another level (the person's row).
+    let sig = null;
+    try { sig = JSON.stringify([sceneMotion(), sceneSettingsFrom(sceneRow())]); } catch { sig = null; }
+    if (id === lastShownTheme && (sig === null || sig === paintedSceneSig)) return;
     lastShownTheme = id;
     applyKioskTheme(id);
   }
@@ -7393,7 +7413,8 @@ export async function mountKiosk(root, {
         // Everywhere but a real screen's dashboard path that is this screen's own row, as it always was.)
         // (Row 2.34: "Panel backgrounds" likewise -- the showing dashboard's, `shownPanelSurface`.)
         values: () => ({ ...(settings.get() || {}), theme: shownTheme(), panelSurface: shownPanelSurface(settings.get()),
-          panelGap: shownPanelGap(settings.get()), [SMALL_CLOCK_KEY]: smallClockNow(), menuSearch: menuQuery }),
+          panelGap: shownPanelGap(settings.get()), [SMALL_CLOCK_KEY]: smallClockNow(), menuSearch: menuQuery,
+          ...Object.fromEntries(SCENE_KEYS.map((k) => [k, sceneSetting(k)])) }),
         // NOT filtered by `complexity()`. Both rows are declared `essential`, so passing the
         // active level would change nothing today — but passing `advanced` here would be the
         // quiet way the escape hatch stops being one the first time somebody adds a row.
@@ -7402,6 +7423,8 @@ export async function mountKiosk(root, {
           // (row 2.94) the search is this menu's, this visit: never written to the screen's row.
           if (key === 'menuSearch') { menuQuery = String(value == null ? '' : value).trim(); return; }
           if (key === 'theme' || key === 'panelSurface' || key === 'panelGap') lookWrite(key, value);
+          // (2026-11-26) the scene's own settings: the person's, as the theme is (`sceneSetting`).
+          else if (SCENE_KEYS.includes(key)) { lookWrite(key, value); try { syncShownTheme(); } catch { /* painted on the next change */ } }
           // (2026-10-03: not a key of its own -- the corner clock's corner, or a clock added; `smallClockHere`.)
           else if (key === SMALL_CLOCK_KEY) smallClockHere(value).catch((err) => console.error('kiosk: small clock', err));
           else settings.set({ [key]: value });
