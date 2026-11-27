@@ -65,6 +65,17 @@ const J = (v) => JSON.stringify(v);
     await p;
     check('...and gone from the bus when it ends', activeIds().length === 0);
     check('with no WebAudio, nothing plays and nothing breaks', (await playMotif(short, { bus, context: null, level: 1 }).catch(() => 'threw')) !== 'threw');
+    // (step 2) "Their theme" as a room rule's sound: offered, and the event's `who` reaches the host's sound.
+    const { SOUNDS } = await import('../room_notify.js');
+    check('*** "Their theme" is one of a rule\'s sounds ***', SOUNDS.some((s) => s.value === 'theme'));
+    const { mountRoomScene } = await import('../room_scene.js');
+    const { presetRecipe, DEFAULT_PRESET } = await import('../room_presets.js');
+    const div = document.createElement('div'); div.style.cssText = 'position:relative;width:480px;height:270px'; document.body.append(div);
+    const sounds = [];
+    const sc = mountRoomScene(div, presetRecipe(DEFAULT_PRESET), { labels: 'never', motion: 'off', onSound: (n, info) => sounds.push([n, info]) });
+    sc.notify('visitor', { rules: [{ on: 'visitor', object: null, does: 'sound', sound: 'theme' }], only: true, who: 'Mike' });
+    check('*** a visitor rule with "Their theme": the room is told whose (Mike) ***', J(sounds[0]) === J(['theme', { event: 'visitor', who: 'Mike' }]), J(sounds));
+    sc.destroy?.(); div.remove();
   } catch (err) {
     check('the suite ran to the end', false, String(err && err.stack || err));
   }

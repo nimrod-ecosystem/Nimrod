@@ -75,6 +75,7 @@ export function recipeFor(cfg, row = {}) {
 }
 import { LISTENING_TOPIC } from '../input_speech.js';
 import { WANTS_TO_SAY_TOPIC } from '../wants_to_say.js';   // (row 2.290) the "I have something to say" signal
+import { playMotif, themeOf } from '../motif.js';               // (row 2.309) "Their theme" as a rule's sound
 import { mountCatHelp } from '../cat_help.js';
 import { readRules, objectsIn, cueFor, playSound } from '../room_notify.js';
 import { mountNotifyEditor } from '../room_notify_editor.js';
@@ -382,8 +383,16 @@ registerModule(
       armEditor();
       return editor;
     }
-    function onSound(name) {
+    function onSound(name, info = {}) {
       const level = Number(ctx.audio?.master?.());
+      // (row 2.309) "Their theme": the theme of whoever the event is about (motif.js), through the audio bus as a sound
+      // effect; with nobody named, the event's own made theme.
+      if (name === 'theme') {
+        const who = typeof info?.who === 'string' && info.who.trim() ? info.who.trim() : String(info?.event || 'room');
+        playMotif(themeOf({ name: who }), { bus: ctx.audio || null, owner: ctx.instanceId || null })
+          .catch?.((err) => console.error('room: a theme', err));
+        return;
+      }
       playSound(name, { level: Number.isFinite(level) ? level : 1 });
     }
 
@@ -519,7 +528,7 @@ registerModule(
         ctx.bus?.subscribe?.('room/notify', (p) => {
           const event = typeof p === 'string' ? p : p?.event;
           if (!scene || !event) return;
-          scene.notify(event, Number(p?.ms) > 0 ? { ms: Number(p.ms) } : {});
+          scene.notify(event, { ...(Number(p?.ms) > 0 ? { ms: Number(p.ms) } : {}), ...(typeof p?.who === 'string' && p.who ? { who: p.who } : {}) });
           // The cue ALWAYS comes too — even when no object in this room reacts to it.
           if (!p?.cueShown) {
             const known = ['wake', 'message', 'call', 'visitor', 'timer', 'wants-to-say'].includes(event);

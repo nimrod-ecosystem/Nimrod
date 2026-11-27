@@ -63,6 +63,9 @@ export const SOUNDS = Object.freeze([
   { value: 'chime-soft', label: 'Soft chime' },
   { value: 'chime-bright', label: 'Bright chime' },
   { value: 'knock', label: 'Knock' },
+  // (row 2.309, 2026-11-27) The theme of whoever the event is about (motif.js: theirs, or the one made from their name);
+  // with nobody named, the event's own. Played by the room module through the audio bus. Never a default (no sound is).
+  { value: 'theme', label: 'Their theme' },
 ]);
 // The words of the on-screen cue for each event (the room shows them unless the publisher drew its own).
 export const CUES = Object.freeze({

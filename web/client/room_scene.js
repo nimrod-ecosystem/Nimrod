@@ -2084,7 +2084,9 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
     for (const undo of reactions) { try { undo(); } catch { /* gone */ } }
     reactions = [];
   }
-  function notify(event, { ms = o.notifyMs, rules = null, only = false } = {}) {
+  // `who` (2026-11-27, row 2.309): the name of whoever the event is about ("Mike is here"), handed on to the host's sound,
+  // so a rule's Sound can be that person's theme (motif.js).
+  function notify(event, { ms = o.notifyMs, rules = null, only = false, who = null } = {}) {
     if (destroyed) return [];
     // Inside one flash period of the last reaction: the sound still plays, the light is not re-lit
     // (what is lit stays lit until its own timer), so a burst of events cannot strobe the room.
@@ -2095,7 +2097,7 @@ export function mountRoomScene(host, recipeIn = {}, opts = {}) {
     for (const { index, does, sound } of list) {
       if (does === 'sound') {
         // Sound is the host's (the room module scales it by the screen's master volume).
-        try { o.onSound?.(sound, { event }); } catch (err) { console.error('room: onSound', err); }
+        try { o.onSound?.(sound, { event, ...(who ? { who: String(who) } : {}) }); } catch (err) { console.error('room: onSound', err); }
         continue;
       }
       if (!visualOk) continue;
