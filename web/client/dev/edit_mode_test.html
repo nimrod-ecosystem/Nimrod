@@ -847,6 +847,17 @@ try {
     await until(() => !!hd()?.querySelector('.emh-grip'), 3000);
     key('+');
     check('*** + makes it 10% bigger ***', await until(() => Math.abs(savedPlace().scale - Math.round(s0 * 1.1)) <= 1, 3000), J(savedPlace()));
+    // (Mike, 2026-11-26: "Please make them a setting.") The screen's own step, read at each press.
+    await until(() => !!hd()?.querySelector('.emh-grip'), 3000);
+    store.set('settings', { ...(store.get('settings') || {}), editStep: 5 });
+    const x5 = savedPlace().x;
+    key('ArrowRight');
+    check('*** with the screen\'s step set to 5%, one arrow moves it 5% ***', await until(() => Math.abs(savedPlace().x - (x5 + 5)) <= 0.15, 3000), J(savedPlace()));
+    store.set('settings', { ...(store.get('settings') || {}), editStep: 'lava' });
+    await until(() => !!hd()?.querySelector('.emh-grip'), 3000);
+    const x6 = savedPlace().x;
+    key('ArrowLeft');
+    check('...and a value it does not offer reads as the default 1%', await until(() => Math.abs(savedPlace().x - (x6 - 1)) <= 0.15, 3000), J(savedPlace()));
     const inBox = document.createElement('input');
     pbox.querySelector(':scope > .em-card')?.append(inBox);
     const xBefore = savedPlace().x;

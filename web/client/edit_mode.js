@@ -93,10 +93,33 @@ export const EDIT_CORNER_KEY = 'editCorner';   // false: no ✎ corner on this d
 //   level          the options card shows the 'standard' rows, as the ⚙ menu does; the builder's options
 //                  panel has its own Show row (essential / standard / advanced).
 // =====================================================================================================
-export const EDIT_DEFAULTS = Object.freeze({ idleMs: 5 * 60 * 1000, corner: true, level: 'standard' });
+export const EDIT_DEFAULTS = Object.freeze({ idleMs: 5 * 60 * 1000, corner: true, level: 'standard',
+  // (2026-11-26) How far Edit's keys move and size the chosen thing (arrangement.js "KEYS MOVE THE CHOSEN THING"), in
+  // percent of what it sits in: an arrow, Shift and an arrow, and + or -. Mike, 2026-11-26: "Please make them a setting."
+  // The defaults are the numbers argued there (1%: two things lined up by eye on a TV; 5%: across a screen in twenty
+  // presses; 10%: seven presses to double).
+  step: 1, bigStep: 5, grow: 10 });
 export const EDIT_IDLE_CHOICES = Object.freeze([0, 60 * 1000, 5 * 60 * 1000, 15 * 60 * 1000]);
+export const EDIT_STEP_KEY = 'editStep';
+export const EDIT_BIG_STEP_KEY = 'editBigStep';
+export const EDIT_GROW_KEY = 'editGrow';
+// The screen's, beside "Put the edit windows away" (whoever edits here is at this screen). `advanced`: nobody needs them
+// until the default is wrong for them, and every row at the usual level is a stop on a switch walk. Edit's keys are not a
+// switch's way in (edit mode takes pointer presses and keys), so a switch user loses nothing by their being here.
+export const EDIT_STEP_FIELDS = Object.freeze([
+  Object.freeze({ key: EDIT_STEP_KEY, label: 'In Edit, an arrow key moves the chosen thing by', kind: 'choice', level: 'advanced',
+    default: EDIT_DEFAULTS.step, options: Object.freeze([0.5, 1, 2, 5].map((v) => ({ value: v, label: `${v}% of the screen` }))) }),
+  Object.freeze({ key: EDIT_BIG_STEP_KEY, label: 'In Edit, Shift and an arrow key move it by', kind: 'choice', level: 'advanced',
+    default: EDIT_DEFAULTS.bigStep, options: Object.freeze([2, 5, 10, 20].map((v) => ({ value: v, label: `${v}% of the screen` }))) }),
+  Object.freeze({ key: EDIT_GROW_KEY, label: 'In Edit, + and − change its size by', kind: 'choice', level: 'advanced',
+    default: EDIT_DEFAULTS.grow, options: Object.freeze([5, 10, 25].map((v) => ({ value: v, label: `${v}%` }))) }),
+]);
+const pctFrom = (v, field, dflt) => {
+  const n = typeof v === 'string' && v.trim() !== '' ? Number(v) : v;
+  return field.options.some((o) => o.value === n) ? n : dflt;
+};
 
-/** The dashboard settings that bear on edit mode, read safely. */
+/** The dashboard settings that bear on edit mode, read safely. (`step`, `bigStep`, `grow`: fractions, 0.01 = 1%.) */
 export function editSettingsFrom(s = {}) {
   const r = s && typeof s === 'object' ? s : {};
   const idle = Number(r[EDIT_IDLE_KEY]);
@@ -104,6 +127,9 @@ export function editSettingsFrom(s = {}) {
     idleMs: Number.isFinite(idle) && idle >= 0 ? idle : EDIT_DEFAULTS.idleMs,
     corner: r[EDIT_CORNER_KEY] !== false,
     panel: typeof r[EDIT_PANEL_KEY] === 'string' && r[EDIT_PANEL_KEY] ? r[EDIT_PANEL_KEY] : null,
+    step: pctFrom(r[EDIT_STEP_KEY], EDIT_STEP_FIELDS[0], EDIT_DEFAULTS.step) / 100,
+    bigStep: pctFrom(r[EDIT_BIG_STEP_KEY], EDIT_STEP_FIELDS[1], EDIT_DEFAULTS.bigStep) / 100,
+    grow: 1 + pctFrom(r[EDIT_GROW_KEY], EDIT_STEP_FIELDS[2], EDIT_DEFAULTS.grow) / 100,
   };
 }
 

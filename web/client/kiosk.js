@@ -24,6 +24,7 @@
 
 import { createBus } from './bus.js';
 import { createState } from './state.js';
+import { EDIT_STEP_FIELDS } from './edit_mode.js';   // (2026-11-26) Edit's key steps, the screen's settings
 import { shareableKeys, withSharedLayer, sharedRowKey, setupRowKey, setupFields, SETUP_FROM_KEY, SETUP_NAME_KEY, SAVE_AS_KEY, FORGET_SETUP_KEY } from './shared_settings.js';   // row 2.189: settings are the module's
 import { createPresetLibrary } from './presets.js';   // row 2.90: a voice-opened module's time, from its default preset
 import { mergeSettingsDoc, mergeLayoutSave, mergeKioskSave, lostEditWords } from './doc_merge.js';
@@ -5078,6 +5079,8 @@ export async function mountKiosk(root, {
     ...(!embedded ? [{ ...TRAY_OPEN_FIELD }, { ...NEST_LIVE_DEPTH_FIELD }] : []),
     // ROW 2.38, the map editor: how long the edit windows wait with nobody pressing (dashboard_nest.js).
     { ...EDIT_IDLE_FIELD },
+    // (2026-11-26, Mike: "Please make them a setting.") How far Edit's keys move and size the chosen thing.
+    ...EDIT_STEP_FIELDS.map((f) => ({ ...f, options: f.options.map((o) => ({ ...o })) })),
     // 2026-10-02 (call_notice.js): a call to this screen when it has no Call panel - a notice to answer or
     // decline (the default), or no ring here at all. The SCREEN's: it is about this room (a bedroom screen
     // that should not ring at night, a hallway one that should), not the person, who rings on every screen.

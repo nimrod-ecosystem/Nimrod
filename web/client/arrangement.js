@@ -183,10 +183,9 @@ export const BACKGROUND_KEY = 'background';
 // *** KEYS MOVE THE CHOSEN THING (proposal_edit_moves_things step 1, 2026-11-26: "Dragging is not the only way, or Edit
 // moves nothing for somebody who cannot drag"). *** In Edit, with handles on the chosen thing: an arrow moves it, Shift
 // and an arrow moves it further, + and - make it bigger and smaller; a grid panel's arrow swaps it with the panel that
-// way. THE NUMBERS (Rule 1, on Mike's list): a step is 1% of what it sits in (fine enough to line two things up by
-// eye on a TV), Shift 5% (across a screen in twenty presses, not a hundred); a size step is 10% (seven presses to
-// double). FOR constants over a setting: the two step sizes ARE the choice, one key apart, and the typed numbers in the
-// card are the exact way. AGAINST: somebody with a tremor may want a bigger small step; a setting is cheap if asked.
+// way. THE NUMBERS are the screen's settings (Mike, 2026-11-26: "Please make them a setting."; edit_mode.js
+// EDIT_STEP_FIELDS, read by editSettingsFrom): 1% of what it sits in, Shift 5%, a size step 10%, unless chosen otherwise.
+// These three are only what is used where no settings doc is handed in.
 export const NUDGE_STEP = 0.01;
 export const NUDGE_BIG_STEP = 0.05;
 export const NUDGE_GROW = 1.1;
@@ -2865,7 +2864,11 @@ export function createArrangement({
     // (`.se`: the one editor's own box, whose keys walk its rows.)
     if (tgt && tgt.closest('input, select, textarea, [contenteditable=""], [contenteditable="true"], .em-card, .se')) return;
     const dir = NUDGE_DIRS[e.key] || null;
-    const grow = e.key === '+' || e.key === '=' ? NUDGE_GROW : e.key === '-' || e.key === '_' ? 1 / NUDGE_GROW : null;
+    // The screen's own steps (edit_mode.js EDIT_STEP_FIELDS).
+    let es = null;
+    try { es = editSettingsFrom(settings?.get?.() || {}); } catch { es = null; }
+    const by = { step: es?.step || NUDGE_STEP, big: es?.bigStep || NUDGE_BIG_STEP, grow: es?.grow || NUDGE_GROW };
+    const grow = e.key === '+' || e.key === '=' ? by.grow : e.key === '-' || e.key === '_' ? 1 / by.grow : null;
     if (!dir && !grow) return;
     if (!roomHandles || typeof roomHandles.nudge !== 'function') {
       // (Edit step 4, 2026-11-26) A thing with no handles whose module moves it with its own buttons -- an AAC board's
@@ -2902,7 +2905,7 @@ export function createArrangement({
         try { if (done && editMode?.active?.()?.id === a.id) syncRoomHandles(); } catch { /* gone */ }
       }
     } else if (dir) {
-      const step = e.shiftKey ? NUDGE_BIG_STEP : NUDGE_STEP;
+      const step = e.shiftKey ? by.big : by.step;
       done = roomHandles.nudge({ x: dir[0] * step, y: dir[1] * step });
     } else {
       done = roomHandles.nudge({ k: grow });
