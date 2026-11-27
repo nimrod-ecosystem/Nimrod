@@ -70,7 +70,9 @@ try {
 // =====================================================================================
 section('The rules, and Design’s defaults');
 {
-  check('the events are Design’s six', NOTIFY_EVENTS_LIST.map((e) => e.value).join() === 'wake,message,call,visitor,timer,custom');
+  // (2026-11-27, deliberately: row 2.290) Design's six, and "Wants to say something" before "Something else", so a person can
+  // give the signal (wants_to_say.js) rules of its own. With none, the room reacts to it as to the wake phrase.
+  check('the events are Design’s six, and the signal', NOTIFY_EVENTS_LIST.map((e) => e.value).join() === 'wake,message,call,visitor,timer,wants-to-say,custom');
   check('the reactions are Design’s six', REACTIONS.map((e) => e.value).join() === 'light,fire,pulse,perk,open,sound');
   check('the defaults are room_scene’s (one list, not two)', DEFAULT_RULES === DEFAULT_NOTIFY_RULES);
   check('...and they are Design’s: wake → lamp + cat, message → speaker, call → fireplace, visitor → door',

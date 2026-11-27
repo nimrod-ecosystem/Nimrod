@@ -46,6 +46,8 @@ export const NOTIFY_EVENTS_LIST = Object.freeze([
   { value: 'call', label: 'A call comes in' },
   { value: 'visitor', label: 'A visitor arrives' },
   { value: 'timer', label: 'A timer ends' },
+  // (row 2.290, 2026-11-27) "I have something to say" (wants_to_say.js): the room is asked to wait.
+  { value: 'wants-to-say', label: 'Wants to say something' },
   { value: 'custom', label: 'Something else' },
 ]);
 export const REACTIONS = Object.freeze([
@@ -69,6 +71,7 @@ export const CUES = Object.freeze({
   call: 'A call is coming in.',
   visitor: 'Someone is at the door.',
   timer: 'Time is up.',
+  'wants-to-say': 'Wants to say something.',
 });
 export const DEFAULT_RULES = DEFAULT_NOTIFY_RULES;
 export const NAME_MAX = 40;

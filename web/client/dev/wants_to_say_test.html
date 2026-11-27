@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>wants_to_say — "I have something to say" — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px}
+  .pass{color:green}.fail{color:firebrick;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+  #host{position:relative;width:800px;height:300px}
+</style>
+</head>
+<body>
+<h1>wants_to_say (row 2.290, note GT, step 2)</h1>
+<p>One press tells the room to wait: a pill, the room's objects, and it ends on its own (composing, a second press, a time-out).</p>
+<div id="host"></div>
+<div id="results"></div>
+<div id="summary">running…</div>
+<script type="module">
+import { mountWantsToSay, WANTS_TO_SAY_TOPIC, WANTS_DEFAULTS, WANTS_FIELDS, wantsSettingsFrom } from '../wants_to_say.js';
+import { createBus } from '../bus.js';
+import { mountModule } from '../module.js';
+import { BUILTIN_BOARDS, normalizeBoard } from '../aac_vocab.js';
+import { DEFAULT_NOTIFY_RULES } from '../room_scene.js';
+import { NOTIFY_EVENTS_LIST } from '../room_notify.js';
+import '../modules/board.js';
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div'); d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`; out.append(d);
+}
+const J = (v) => JSON.stringify(v);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+(async () => {
+  try {
+    check('the defaults: the pill on, no chime, two minutes', WANTS_DEFAULTS.visual && !WANTS_DEFAULTS.chime && WANTS_DEFAULTS.timeoutMs === 120000);
+    check('its settings: three rows at Everything (none is a stop on a switch walk)', WANTS_FIELDS.length === 3 && WANTS_FIELDS.every((f) => f.level === 'advanced'));
+    check('a time-out it does not offer reads as two minutes', wantsSettingsFrom({ wantsTimeoutMs: 7 }).timeoutMs === 120000 && wantsSettingsFrom({ wantsTimeoutMs: 30000 }).timeoutMs === 30000);
+    // The pill, with a timer this suite runs by hand.
+    const bus = createBus();
+    const timers = [];
+    let chimes = 0;
+    let row = {};
+    const said = [];
+    bus.subscribe(WANTS_TO_SAY_TOPIC, (p) => said.push(p));
+    const host = document.getElementById('host');
+    const w = mountWantsToSay(host, { bus, settings: () => row, play: () => { chimes++; },
+      setTimer: (fn, ms) => { const t = { fn, ms, done: false }; timers.push(t); return t; }, clearTimer: (t) => { if (t) t.done = true; } });
+    const pill = () => host.querySelector('[data-wants-to-say]');
+    check('nothing shows until the signal goes up', !!pill() && pill().hidden && !w.on());
+    bus.publish(WANTS_TO_SAY_TOPIC, { on: true });
+    check('*** up: "Wants to say something", a status that takes no press, and no chime by default ***', !pill().hidden && /Wants to say something/.test(pill().textContent)
+      && pill().getAttribute('role') === 'status' && chimes === 0);
+    check('...with its time-out armed at two minutes', timers.at(-1)?.ms === 120000);
+    timers.at(-1).fn();
+    check('*** the time-out takes it down by itself, and says so on the bus (so every board knows) ***', pill().hidden && !w.on() && said.at(-1)?.on === false && said.at(-1)?.reason === 'timeout', J(said.at(-1)));
+    row = { wantsChime: true, wantsTimeoutMs: 30000 };
+    bus.publish(WANTS_TO_SAY_TOPIC, { on: true });
+    check('the chime and the time-out are the person\'s settings, read at the press', chimes === 1 && timers.at(-1)?.ms === 30000);
+    bus.publish(WANTS_TO_SAY_TOPIC, { on: false });
+    check('down: the pill goes and its time-out with it', pill().hidden && timers.at(-1).done);
+    row = { wantsVisual: false };
+    bus.publish(WANTS_TO_SAY_TOPIC, { on: true });
+    check('"Show" off: no pill (the room\'s objects still react)', pill().hidden && w.on());
+    bus.publish(WANTS_TO_SAY_TOPIC, { on: false });
+    w.destroy();
+    check('destroyed: the pill is gone', !host.querySelector('[data-wants-to-say]'));
+    // The room's objects: with no rule of its own, the wake phrase's (Design's defaults: lamp and cat, silent); a person
+    // may add a "Wants to say something" rule of its own (modules/room.js).
+    check('*** the room reacts as to the wake phrase by default (a lamp lights, the cat\'s ears perk, no sound), and the event can have rules of its own ***',
+      DEFAULT_NOTIFY_RULES.some((r) => r.on === 'wake' && r.object === 'lamp' && r.does === 'light' && !r.sound)
+      && DEFAULT_NOTIFY_RULES.some((r) => r.on === 'wake' && r.object === 'cat' && r.does === 'perk')
+      && !DEFAULT_NOTIFY_RULES.some((r) => r.on === 'wants-to-say')
+      && NOTIFY_EVENTS_LIST.some((e) => e.value === 'wants-to-say'));
+    // The card: the strip's last is the signal, and a card keeps its job through the board's own reading.
+    const strip = normalizeBoard(BUILTIN_BOARDS.reactions);
+    check('the Quick reactions strip\'s last card is the signal (act: signal), the others plain', strip.cells.at(-1).act === 'signal' && strip.cells.slice(0, -1).every((c) => !c.act));
+    // A board panel on the strip: the signal card raises and lowers it; any other card ends it (she is composing).
+    const bbus = createBus();
+    const heard = [];
+    bbus.subscribe(WANTS_TO_SAY_TOPIC, (p) => heard.push(p));
+    let st = { boardId: 'reactions' };
+    const subs = new Set();
+    const state = { get: () => st, set: (p) => { st = { ...st, ...p }; for (const f of subs) f(st); return Promise.resolve(); },
+      subscribe: (f) => { subs.add(f); return () => subs.delete(f); }, load: () => Promise.resolve(), flush: () => Promise.resolve(), destroy() {} };
+    const events = { append: () => Promise.resolve(), list: () => Promise.resolve([]), load: () => Promise.resolve(), destroy() {} };
+    const spoken = [];
+    const bhost = document.createElement('div'); bhost.style.cssText = 'position:relative;width:800px;height:200px';
+    document.body.append(bhost);
+    const inst = mountModule('board', { mount: bhost, bus: bbus, state, events, instanceId: 'strip-1', output: { say: (t) => spoken.push(t) } });
+    inst.init?.();
+    await sleep(60);
+    // A card is chosen as the board's own suite chooses one: `board/pick` by its place (the strip: 0 Mm-hmm ... 5 the signal).
+    const at = { 'Mm-hmm': 0, 'I have something to say': 5 };
+    const press = (re) => { const word = Object.keys(at).find((k) => re.test(k)); if (word == null) return false; bbus.publish('board/pick', { index: at[word] }); return true; };
+    const found = press(/I have something to say/);
+    await sleep(20);
+    check('*** the signal card: pressed, the signal goes up, and nothing is spoken ***', found && heard.at(-1)?.on === true && !spoken.length, J({ found, heard, spoken }));
+    press(/Mm-hmm/);
+    await sleep(20);
+    check('*** another card pressed (she is composing): the signal comes down, and that card speaks ***', heard.at(-1)?.on === false && heard.at(-1)?.reason === 'composing' && spoken.includes('Mm-hmm'), J({ heard, spoken }));
+    press(/I have something to say/); await sleep(20);
+    press(/I have something to say/); await sleep(20);
+    check('pressed twice: up, then down again', heard.at(-2)?.on === true && heard.at(-1)?.on === false && heard.at(-1)?.reason === 'pressed again', J(heard.slice(-2)));
+    inst.destroy?.();
+    bhost.remove();
+  } catch (err) {
+    check('the suite ran to the end', false, String(err && err.stack || err));
+  }
+  document.getElementById('summary').textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+})();
+</script>
+</body>
+</html>

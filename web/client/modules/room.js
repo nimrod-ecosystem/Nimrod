@@ -74,6 +74,7 @@ export function recipeFor(cfg, row = {}) {
   return presetRecipe(type ? DEFAULT_PRESET : cfg.preset);
 }
 import { LISTENING_TOPIC } from '../input_speech.js';
+import { WANTS_TO_SAY_TOPIC } from '../wants_to_say.js';   // (row 2.290) the "I have something to say" signal
 import { mountCatHelp } from '../cat_help.js';
 import { readRules, objectsIn, cueFor, playSound } from '../room_notify.js';
 import { mountNotifyEditor } from '../room_notify_editor.js';
@@ -504,13 +505,24 @@ registerModule(
           if (p && p.on) scene.notify('wake', { ms: Number(p.ms) > 0 ? Math.min(30000, Number(p.ms) + 2000) : undefined });
           else scene.clearReactions();
         });
+        // (row 2.290) "I have something to say" (wants_to_say.js): the room's objects react while it is up, beside the
+        // pill (the cue is shown there, so no toast here); it ends when the signal does. With no rule of its own in this
+        // room, it is the WAKE PHRASE'S reactions (Design's defaults: the lamp lights, the cat's ears perk), so Design's
+        // five defaults stay Design's; a person who adds a "Wants to say something" rule gets that one instead.
+        ctx.bus?.subscribe?.(WANTS_TO_SAY_TOPIC, (p) => {
+          if (!scene) return;
+          if (!(p && p.on)) { scene.clearReactions(); return; }
+          let own = false;
+          try { own = readRules(state?.get?.() || {}).rules.some((r) => r && r.on === 'wants-to-say'); } catch { own = false; }
+          scene.notify(own ? 'wants-to-say' : 'wake', {});
+        });
         ctx.bus?.subscribe?.('room/notify', (p) => {
           const event = typeof p === 'string' ? p : p?.event;
           if (!scene || !event) return;
           scene.notify(event, Number(p?.ms) > 0 ? { ms: Number(p.ms) } : {});
           // The cue ALWAYS comes too — even when no object in this room reacts to it.
           if (!p?.cueShown) {
-            const known = ['wake', 'message', 'call', 'visitor', 'timer'].includes(event);
+            const known = ['wake', 'message', 'call', 'visitor', 'timer', 'wants-to-say'].includes(event);
             const text = typeof p?.text === 'string' && p.text.trim() ? p.text.trim()
               : cueFor(known ? event : { on: 'custom', name: event });
             scene.toast(text, Number(p?.ms) > 0 ? Math.min(30000, Number(p.ms)) : undefined);

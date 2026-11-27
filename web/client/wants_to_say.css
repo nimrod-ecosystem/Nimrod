@@ -1,0 +1,21 @@
+/* wants_to_say.css — the look of `wants_to_say.js`'s pill: "Wants to say something". Loaded by the component itself.
+
+   The listening cue's look (listening_cue.css), with one change: THE DOT DOES NOT PULSE. The listening cue is up for a few
+   seconds; this one can stay up for minutes while she composes, and a pulse that long is motion nobody asked for.
+   Non-modal (`pointer-events:none`, never takes focus), solid, the screen's own theme, no literal colours. Top middle, as
+   the listening cue; the two never show together for long (the wake phrase is a few seconds). */
+.wants-cue{
+  position:fixed;top:16px;left:50%;transform:translateX(-50%);
+  z-index:calc(var(--z-menus) + 50);
+  pointer-events:none;user-select:none;
+  display:flex;align-items:center;gap:12px;box-sizing:border-box;
+  max-width:calc(100vw - 32px);
+  padding:10px 20px 10px 16px;
+  background:var(--surface);
+  color:var(--text);
+  border:3px solid var(--accent);
+  border-radius:999px;
+  font:600 22px/1.2 var(--font, system-ui, sans-serif);
+}
+.wants-cue[hidden]{display:none}
+.wants-cue .wc-dot{flex:0 0 auto;width:16px;height:16px;border-radius:50%;background:var(--accent)}

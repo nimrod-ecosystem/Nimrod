@@ -75,6 +75,7 @@ const DEFAULT_CLIP_BASE = new URL('../aac/audio', import.meta.url).href;
 // the person's Nimrod folder - and the one lookup order, own -> shipped -> the browser's voice (board_sounds.js).
 import { createBoardSounds, createWordRecorder, clipChoices, soundFilesOf } from '../board_sounds.js';
 import { normalizeBoard, tierOf, gridOf, BUILTIN_BOARDS, YESNO } from '../aac_vocab.js';
+import { WANTS_TO_SAY_TOPIC } from '../wants_to_say.js';   // (row 2.290) the "I have something to say" signal
 import { createMediaSourcesClient } from '../media_sources.js';
 import { personSources } from '../person_known.js';
 import { cardFaceHTML, createCardImages } from '../card_face.js';
@@ -757,6 +758,10 @@ registerModule(
     // from, so a touch-driven choice gets no latencyMs at all rather than a fabricated one.
     let litAt = null;
     let destroyed = false;
+    // (row 2.290) Whether "I have something to say" is up on this screen, as the bus says (any board may have raised it).
+    let wantsOn = false;
+    const offWants = bus && typeof bus.subscribe === 'function'
+      ? bus.subscribe(WANTS_TO_SAY_TOPIC, (p) => { wantsOn = !!(p && p.on); }) : () => {};
     // *** EVERY LISTENER ON `mount` IS TIED TO ONE SIGNAL, AND `destroy` ABORTS IT. ***
     //
     // These used to be bare `mount.addEventListener` calls with nothing removing them, and
@@ -1240,6 +1245,21 @@ registerModule(
       litMsg = null;
       paint();
       flash(i);
+
+      // *** "I HAVE SOMETHING TO SAY" (row 2.290; wants_to_say.js). *** A card with `act: 'signal'` tells the room to
+      // wait instead of speaking: pressed, the signal goes up; pressed again, it comes down. Any OTHER card, on any board on
+      // this screen, is her starting to compose, and that takes it down too.
+      if (cell.act === 'signal') {
+        wantsOn = !wantsOn;
+        try { bus?.publish?.(WANTS_TO_SAY_TOPIC, { on: wantsOn, from: ctx.instanceId || null, ...(wantsOn ? {} : { reason: 'pressed again' }) }); }
+        catch (err) { console.error('board: the signal', err); }
+        if (scan) scan.select();
+        return;
+      }
+      if (wantsOn) {
+        wantsOn = false;
+        try { bus?.publish?.(WANTS_TO_SAY_TOPIC, { on: false, reason: 'composing' }); } catch (err) { console.error('board: the signal', err); }
+      }
 
       // *** `say`, NEVER `notify`. *** See the header: the verb is the boundary between a
       // talking aid and a nurse call. `say` routes to speech and stays in this room.
@@ -2423,6 +2443,7 @@ registerModule(
 
       destroy() {
         destroyed = true;
+        try { offWants(); } catch { /* gone */ }
         scoped?.dispose();
         stopScan();
         try { ro?.disconnect(); } catch { /* already gone */ } ro = null;

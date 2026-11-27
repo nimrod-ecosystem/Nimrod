@@ -143,6 +143,7 @@ import { attachMixer, MIXER_FIELDS } from './mixer.js';
 // somebody watches along (call_sound.js argues the default).
 import { attachCallSound, CALL_SOUND_FIELDS } from './call_sound.js';
 import { attachListening, LISTENING_FIELDS } from './listening_cue.js';
+import { mountWantsToSay, WANTS_FIELDS } from './wants_to_say.js';   // (row 2.290) "I have something to say"
 import {
   attachSpeech, speechOptionsFrom, speechSwitchFrom, browserRecognizer, meansSomething, SPEECH_FIELDS, SPEECH_ON_FIELDS,
   SPEECH_ACTIONS, NEAR_MISS_ACTIONS, SPEECH_BINDINGS, SPEECH_DEVICE, PHRASES, ROUTES, spokenTable,
@@ -1103,6 +1104,11 @@ export async function mountKiosk(root, {
       listening = attachListening({ bus, audio, host: kioskEl, settings: r, reducedMotion: reducedMotion() });
     } catch (err) { console.error('kiosk: listening cue', err); }
   }
+  // (row 2.290, 2026-11-27) "I HAVE SOMETHING TO SAY" (wants_to_say.js): the pill the room sees while the signal is up, read
+  // from the person's row at each press (how this person is waited for follows them, as the listening cue does). Once.
+  let wantsToSay = null;
+  try { wantsToSay = mountWantsToSay(kioskEl, { bus, settings: () => (personRow || {}) }); }
+  catch (err) { console.error('kiosk: the signal', err); }
 
   // ---- THE VOICE: spoken commands, subtitles, amplify, a phone as a microphone (2026-09-30) ---------
   //
@@ -5472,6 +5478,8 @@ export async function mountKiosk(root, {
       // row 2.144 (2026-10-31): subtitles on this person's calls, outgoing and incoming - theirs, on every screen and the
       // call page (call_loadouts.js). Always shown: they are not part of the room's subtitles mode above.
       ...callSubsPersonFields(),
+      // (row 2.290) "I have something to say": how the room is told to wait, and when it stops (the person's, at Everything).
+      ...WANTS_FIELDS,
       ...AMPLIFY_FIELDS.filter((f) => f.key === 'amplifyOn' || ampOn),
       // VOICE RECORDING (row 2.44): the switch always (so anybody can SEE it is off, and a guardian
       // can find it); its retention rows only while it is on - the same rule as every mode above.
@@ -10786,6 +10794,7 @@ export async function mountKiosk(root, {
       // effects chain (which closes the audio context it made). Before the audio bus they register on.
       try { offListenPerson?.(); } catch { /* already gone */ } offListenPerson = null;
       try { listening?.destroy(); } catch { /* already gone */ } listening = null;
+      try { wantsToSay?.destroy(); } catch { /* already gone */ } wantsToSay = null;
       try { master?.destroy(); } catch { /* already gone */ } master = null;
       try { mixer?.destroy(); } catch { /* already gone */ } mixer = null;
       try { callSound?.destroy(); } catch { /* already gone */ } callSound = null;

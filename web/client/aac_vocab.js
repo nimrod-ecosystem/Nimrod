@@ -188,6 +188,9 @@ export function normalizeBoard(raw) {
       // device and in the person's Nimrod folder, never here). Only on a card that has one, so every board without
       // sounds - the built-ins, every board made before today - comes out of this function exactly as before.
       ...(cleanSoundRef(c.sound) ? { sound: cleanSoundRef(c.sound) } : {}),
+      // (row 2.290, 2026-11-27) A CARD WITH A JOB: `act: 'signal'` tells the room "I have something to say" instead of
+      // speaking (wants_to_say.js). Only on a card that has one, so every other board comes out of here as before.
+      ...(c.act === 'signal' ? { act: 'signal' } : {}),
     };
   });
   while (cells.length && cells[cells.length - 1] == null) cells.pop();
@@ -646,7 +649,7 @@ export const MEALS = {
 // One row of six short reactions for a conversation already going: chat's starting set, not reviewed by a speech-language
 // person, and like every board here each card is an ordinary card (renamed, reordered, given a picture in the board
 // editor). One row, so it can sit along the edge of a screen or over the dashboard as an overlay. "I have something to say"
-// is a plain card until its signal is built (step 2: it will tell the room to wait instead of speaking).
+// is the SIGNAL (step 2, `act: 'signal'`): it tells the room to wait instead of speaking (wants_to_say.js).
 export const REACTIONS = {
   version: VOCAB_VERSION,
   id: 'reactions',
@@ -660,7 +663,7 @@ export const REACTIONS = {
     { id: 'really',  word: 'Really?',                 symbol: null,   kind: 'social' },
     { id: 'goon',    word: 'Go on',                   symbol: null,   kind: 'social' },
     { id: 'wait',    word: 'Wait',                    symbol: 'wait', kind: 'social' },
-    { id: 'tosay',   word: 'I have something to say', symbol: null,   kind: 'need' },
+    { id: 'tosay',   word: 'I have something to say', symbol: null,   kind: 'need', act: 'signal' },
   ],
 };
 
