@@ -180,6 +180,34 @@ export const ROOM_PIECE_PREFIX = `${ROOM_PANEL_ID}/`;
 // by a press on nothing else while editing, or the menu's "Edit the background". A fixed name, like the room's.
 export const BACKGROUND_PANEL_ID = 'scene:background';
 export const BACKGROUND_KEY = 'background';
+// *** KEYS MOVE THE CHOSEN THING (proposal_edit_moves_things step 1, 2026-11-26: "Dragging is not the only way, or Edit
+// moves nothing for somebody who cannot drag"). *** In Edit, with handles on the chosen thing: an arrow moves it, Shift
+// and an arrow moves it further, + and - make it bigger and smaller; a grid panel's arrow swaps it with the panel that
+// way. THE NUMBERS (Rule 1, on Mike's list): a step is 1% of what it sits in (fine enough to line two things up by
+// eye on a TV), Shift 5% (across a screen in twenty presses, not a hundred); a size step is 10% (seven presses to
+// double). FOR constants over a setting: the two step sizes ARE the choice, one key apart, and the typed numbers in the
+// card are the exact way. AGAINST: somebody with a tremor may want a bigger small step; a setting is cheap if asked.
+export const NUDGE_STEP = 0.01;
+export const NUDGE_BIG_STEP = 0.05;
+export const NUDGE_GROW = 1.1;
+const NUDGE_DIRS = Object.freeze({ ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] });
+/** The cell a grid panel's arrow goes to: the nearest whose middle is that way from `from`'s middle, else null. PURE. */
+export function neighbourCell(from, cells, [dx, dy]) {
+  if (!from || !Array.isArray(cells)) return null;
+  const mid = (r) => ({ x: r.left + r.width / 2, y: r.top + r.height / 2 });
+  const a = mid(from);
+  let best = null, bestScore = Infinity;
+  for (const c of cells) {
+    if (!c || !c.rect || c.rect === from) continue;
+    const b = mid(c.rect);
+    const along = (b.x - a.x) * dx + (b.y - a.y) * dy;      // how far that way
+    if (along <= 1) continue;
+    const across = Math.abs((b.x - a.x) * dy) + Math.abs((b.y - a.y) * dx);   // how far off the line
+    const score = along + across * 2;
+    if (score < bestScore) { bestScore = score; best = c; }
+  }
+  return best;
+}
 // A PANEL THAT FLOATS ON REQUEST (Mike's list 09-30, Scoreboard item 5; "A PANEL ASKS TO FLOAT" below).
 // `shell/place { id, place?: 'overlay' | 'slot', x?, y?, w?, h?, scan?, claim?, reply? }`: a panel asks this
 // dashboard to float it over the others, put it back, or put it in / take it out of the switch lap.
@@ -1378,7 +1406,15 @@ export function createArrangement({
     afterMove(id);
     return { ok: true, place };
   }
-  async function movePlaced(id, entry) {
+  // ONE AT A TIME, in the order asked (2026-11-26): two moves in flight (two key presses faster than a save) each read the
+  // saved layout and applied it when done, so the older could finish last and put the panel back. Each waits its turn now.
+  let placeTurn = Promise.resolve();
+  function movePlaced(id, entry) {
+    const run = placeTurn.then(() => movePlacedNow(id, entry));
+    placeTurn = run.catch(() => {});
+    return run;
+  }
+  async function movePlacedNow(id, entry) {
     const base = savedBase();
     if (!base) return { ok: false, reason: 'no layout' };
     const list = Array.isArray(base.placed) ? base.placed : [];
@@ -2504,20 +2540,25 @@ export function createArrangement({
     if (!host) return false;
     const draw = (lib) => {
       if (editMode?.active?.()?.id !== a.id || !meta.wrap.isConnected) return;
-      const g = placedGeometry(meta.entry);
+      // `meta.asked`: the newest place asked for and not yet saved (keys pressed faster than a save: each builds on the
+      // last, never on the place before it).
+      const g = placedGeometry(meta.asked || meta.entry);
       roomHandles = lib.attachHandles({ el: meta.wrap, host, piece: { x: g.x, y: g.y, size: g.scale, rotate: g.rot },
         floor: false, movable: true, turnable: true, grip: true,
         onCommit: (patch) => {
           if (!patch) return;
-          const entry = { ...meta.entry };
+          const entry = { ...(meta.asked || meta.entry) };
+          meta.asked = entry;
           // The edit model's own limits (edit_model.js EDIT_DEFAULTS.limits), so a drag stops where a ‹ › row stops.
           const L = MODEL_LIMITS;
           if ('x' in patch) entry.x = clampTo(patch.x, L.x[0], L.x[1]);
           if ('y' in patch) entry.y = clampTo(patch.y, L.y[0], L.y[1]);
           if ('size' in patch) entry.scale = Math.round(clampTo(patch.size, L.scale[0], L.scale[1]));
           if ('rotate' in patch) entry.rot = patch.rotate;
-          movePlaced(a.id, entry).then(() => { try { if (editMode?.active?.()?.id === a.id) syncRoomHandles(); } catch { /* gone */ } })
-            .catch((err) => console.error('arrangement: panel handles', err));
+          movePlaced(a.id, entry).then(() => {
+            if (meta.asked === entry) meta.asked = null;
+            try { if (editMode?.active?.()?.id === a.id) syncRoomHandles(); } catch { /* gone */ }
+          }).catch((err) => { if (meta.asked === entry) meta.asked = null; console.error('arrangement: panel handles', err); });
         } });
     };
     if (handlesLib) draw(handlesLib);
@@ -2752,6 +2793,42 @@ export function createArrangement({
   // stage is inside `.kiosk` (and a press stopped there never reaches the stage), but a host may draw them side by side.
   const bgPressEls = [kioskEl, stageEl].filter((e) => e && typeof e.addEventListener === 'function');
   if (editMode) for (const el of bgPressEls) for (const ev of BG_PRESS_EVENTS) el.addEventListener(ev, onBackgroundPress, true);
+  // KEYS MOVE THE CHOSEN THING (NUDGE_STEP above). On the window, capturing, so it is heard before the kiosk's own arrow
+  // keys (which move the panel ring): while a thing with handles is chosen, an arrow is about it. Not while somebody is
+  // in a box, a list or the options card (the keys are theirs there), nor with Ctrl, Alt or the Command key.
+  function onEditKey(e) {
+    const a = editMode?.active?.();
+    if (!a || !roomHandles || typeof roomHandles.nudge !== 'function' || e.ctrlKey || e.metaKey || e.altKey) return;
+    const tgt = e.target instanceof Element ? e.target : null;
+    // (`.se`: the one editor's own box, whose keys walk its rows.)
+    if (tgt && tgt.closest('input, select, textarea, [contenteditable=""], [contenteditable="true"], .em-card, .se')) return;
+    const dir = NUDGE_DIRS[e.key] || null;
+    const grow = e.key === '+' || e.key === '=' ? NUDGE_GROW : e.key === '-' || e.key === '_' ? 1 / NUDGE_GROW : null;
+    if (!dir && !grow) return;
+    let done = false;
+    const inGrid = slotRecs.some((r) => r.id === a.id) && !placedMeta.has(a.id);
+    if (dir && inGrid) {
+      const cell = recFor(a.id)?.el?.closest?.('.k-cell');
+      const cells = [...stageEl.querySelectorAll(':scope > .k-cell[data-slot]')].map((c) => ({ el: c, rect: c.getBoundingClientRect() }));
+      const from = cells.find((c) => c.el === cell)?.rect || null;
+      const to = neighbourCell(from, cells, dir);
+      if (to) {
+        done = swapSlot(a.id, Number(to.el.dataset.slot));
+        try { if (done && editMode?.active?.()?.id === a.id) syncRoomHandles(); } catch { /* gone */ }
+      }
+    } else if (dir) {
+      const step = e.shiftKey ? NUDGE_BIG_STEP : NUDGE_STEP;
+      done = roomHandles.nudge({ x: dir[0] * step, y: dir[1] * step });
+    } else {
+      done = roomHandles.nudge({ k: grow });
+    }
+    // Taken even when nothing could move (the edge of the grid): an arrow here never also walks the panel ring.
+    e.preventDefault(); e.stopPropagation();
+    try { editMode?.touch?.(); } catch { /* the idle clock as it is */ }
+    return done;
+  }
+  const keyWin = editMode && kioskEl?.ownerDocument?.defaultView;
+  if (keyWin) keyWin.addEventListener('keydown', onEditKey, true);
   /** Edit panel `id` (on true), stop (false), or toggle (undefined). True if `id` is a panel here. */
   function editPanel(id, on) {
     if (!editMode || !id || !editPanels().some((r) => r.id === id)) return false;
@@ -2764,6 +2841,7 @@ export function createArrangement({
     dropHandles();
     try { offEditVerb?.(); editMode?.destroy(); } catch { /* already gone */ }
     try { for (const el of bgPressEls) for (const ev of BG_PRESS_EVENTS) el.removeEventListener(ev, onBackgroundPress, true); } catch { /* already gone */ }
+    try { keyWin?.removeEventListener('keydown', onEditKey, true); } catch { /* already gone */ }
     try { offPlaceVerb?.(); } catch { /* already gone */ }
     screenLinks?.destroy();
     destroyRec(stageRec); destroyRec(cameraRec); destroyRec(clockRec); destroyRec(ambientRec);

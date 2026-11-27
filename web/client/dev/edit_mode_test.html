@@ -832,6 +832,28 @@ try {
     const sx = sr.left + sr.width / 2, sy = sr.top + sr.height / 2;
     ev(sc, 'pointerdown', sx, sy); ev(sc, 'pointermove', mid.x + (sx - mid.x) * 1.5, mid.y + (sy - mid.y) * 1.5); ev(sc, 'pointerup', mid.x + (sx - mid.x) * 1.5, mid.y + (sy - mid.y) * 1.5);
     check('*** the size handle dragged out half as far again: its size is 150% ***', await until(() => Math.abs((savedPlace()?.scale ?? 0) - 150) <= 3, 3000), J(savedPlace()));
+    // (proposal step 1's other half, 2026-11-26) "Dragging is not the only way, or Edit moves nothing for somebody who cannot drag."
+    await until(() => !!hd()?.querySelector('.emh-grip'), 3000);
+    const key = (k, o = {}) => document.body.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true, ...o }));
+    const x0 = savedPlace().x, s0 = savedPlace().scale;
+    key('ArrowLeft');
+    check('*** an arrow key moves it 1% that way, saved as its place ***', await until(() => Math.abs(savedPlace().x - (x0 - 1)) <= 0.15, 3000), J(savedPlace()));
+    await until(() => !!hd()?.querySelector('.emh-grip'), 3000);
+    key('ArrowDown', { shiftKey: true });
+    check('...Shift and an arrow, 5%', await until(() => Math.abs(savedPlace().y - 55) <= 0.15, 3000), J(savedPlace()));
+    await until(() => !!hd()?.querySelector('.emh-grip'), 3000);
+    key('ArrowRight'); key('ArrowRight');
+    check('...two presses before it is drawn again are two steps, not one', await until(() => Math.abs(savedPlace().x - (x0 + 1)) <= 0.15, 3000), J(savedPlace()));
+    await until(() => !!hd()?.querySelector('.emh-grip'), 3000);
+    key('+');
+    check('*** + makes it 10% bigger ***', await until(() => Math.abs(savedPlace().scale - Math.round(s0 * 1.1)) <= 1, 3000), J(savedPlace()));
+    const inBox = document.createElement('input');
+    pbox.querySelector(':scope > .em-card')?.append(inBox);
+    const xBefore = savedPlace().x;
+    inBox.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true, cancelable: true }));
+    await sleep(150);
+    check('...but an arrow in a box (the card\'s) is the box\'s own: nothing moves', savedPlace().x === xBefore);
+    inBox.remove();
     d.editPanel('pc', false);
     check('leaving edit mode takes the handles away', await until(() => !host.querySelector('[data-room-handles]'), 2000));
     view.destroy();
@@ -880,6 +902,19 @@ try {
     check('...in place: the same clock element is now in the other cell (nothing remounted), and the cell is not left shifted',
       cellOf(1).querySelector('.k-mod') === g1Host && !cellOf(0).style.transform);
     check('...and its handles are back, on its new cell', await until(() => !!hd()?.querySelector('.emh-grip'), 3000));
+    // (step 1's keys) An arrow on a grid panel swaps it with the panel that way; at the edge, nothing moves.
+    const gkey = (k) => document.body.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }));
+    gkey('ArrowLeft');
+    check('*** an arrow key on a grid panel: it swaps with the panel that way, saved ***',
+      await until(() => JSON.stringify(savedLayout().slots) === JSON.stringify(['g1', 'g2']), 3000) && cellOf(0).querySelector('.k-mod') === g1Host,
+      JSON.stringify(savedLayout()));
+    await until(() => !!hd()?.querySelector('.emh-grip'), 3000);
+    gkey('ArrowLeft');
+    await sleep(150);
+    check('...and at the edge, nothing moves', JSON.stringify(savedLayout().slots) === JSON.stringify(['g1', 'g2']));
+    gkey('ArrowRight');
+    check('(setup) back where the drag put it', await until(() => JSON.stringify(savedLayout().slots) === JSON.stringify(['g2', 'g1']), 3000));
+    await until(() => !!hd()?.querySelector('.emh-grip'), 3000);
     const before = cellOf(1).getBoundingClientRect();
     const sc = hd().querySelector('[data-emh="scale"]');
     const sr = sc.getBoundingClientRect(), sx = sr.left + sr.width / 2, sy = sr.top + sr.height / 2;

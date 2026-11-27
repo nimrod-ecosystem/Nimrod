@@ -825,6 +825,8 @@ export function createEditMode({ bus = null, recs = () => [], boxOf = () => null
     /** The chosen target itself, as its module listed it (a village piece's `handles`, below arrangement.js), or null. */
     chosenTarget: () => (active && active.chosen ? active.targets.find((t) => t.id === active.chosen) || null : null),
     selection: () => active?.sel || null,
+    /** Somebody did something here that edit mode did not see (a key that moved the chosen thing): the idle wait starts again. */
+    touch: () => { armIdle(); },
     /** The panel being edited was remounted, swapped or removed: follow it, or leave. */
     refresh() {
       if (!active) return;

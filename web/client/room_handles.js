@@ -151,7 +151,8 @@ export function transformGeometry({ el }) {
 // inside the panel still chooses the thing pressed (its words, its picture) instead of starting a drag.
 export const GRIP_WORDS = 'Move';
 export function attachHandles({ el, host, piece = {}, floor = true, movable = true, turnable = movable, geometry = htmlGeometry, onCommit = () => {}, grip = false } = {}) {
-  if (!el || !host) return { el: null, place() {}, destroy() {} };
+  if (!el || !host) return { el: null, place() {}, nudge: () => false, destroy() {} };
+  piece = { ...(piece || {}) };   // its own copy: a key's step moves it on (nudge), never the caller's object
   const doc = host.ownerDocument || document;
   ensureCss(doc);
   const ov = doc.createElement('div');
@@ -215,6 +216,28 @@ export function attachHandles({ el, host, piece = {}, floor = true, movable = tr
     if (d.kind === 'rotate') patch = { rotate: normDeg((Number(piece.rotate) || 0) + d.deg) };
     try { onCommit(patch); } catch (err) { console.error('room handles: commit', err); }
   }
+  // *** MOVED BY KEYS (proposal_edit_moves_things step 1, 2026-11-26): "Dragging is not the only way, or Edit moves nothing
+  // for somebody who cannot drag." *** `nudge({ x, y, k })`: x and y are fractions of the host's width and height to move
+  // by (0.01 = 1% of the screen), `k` a factor to grow by. One press is one change, through the same `onCommit` as a drag
+  // (one save, one Undo step), in the piece's own units (the geometry's `delta`, as a drag's pixels are). What it cannot
+  // do (a fixed thing moved), it does not. True when something was committed.
+  function nudge({ x = 0, y = 0, k = 1 } = {}) {
+    if (torn) return false;
+    let patch = null;
+    if ((x || y) && movable) {
+      const h = host.getBoundingClientRect();
+      const d = geo.delta(x * (h.width || 0), y * (h.height || 0), geo.start());
+      patch = { x: round1((Number(piece.x) || 0) + d.dx), y: round1((Number(piece.y) || 0) + d.dy) };
+    } else if (k && k !== 1) {
+      patch = { size: round1((Number(piece.size) || 1) * k) };
+    }
+    if (!patch) return false;
+    try { onCommit(patch); } catch (err) { console.error('room handles: commit', err); return false; }
+    // A second press before the thing is drawn again steps on from this one, not from where it started. (Not a grid
+    // cell's: its x/y/size are this gesture's own pixels and factor, never a place.)
+    if (geometry !== transformGeometry) Object.assign(piece, patch);
+    return true;
+  }
   const stopClick = (e) => { e.stopPropagation(); };
   ov.addEventListener('pointerdown', onDown);
   ov.addEventListener('pointermove', onMove);
@@ -225,6 +248,7 @@ export function attachHandles({ el, host, piece = {}, floor = true, movable = tr
   return {
     el: ov,
     place,
+    nudge,
     destroy() { torn = true; try { ov.remove(); } catch { /* gone */ } },
   };
 }
