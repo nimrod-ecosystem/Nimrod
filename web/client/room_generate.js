@@ -60,7 +60,7 @@ export function roomSizeFor(shell, roomCm = ROOM_CM) {
 //   at        cm: a wall piece's centre above the floor
 export const ROOM_FACTS = Object.freeze({
   sofa:      { real_size: [200, 90, 85],  sits_on: 'floor', against: 'wall', rooms: ['living'], goes_with: ['rug', 'sideTable', 'tableLamp', 'floorLamp'], clearance: 60, count: [0, 1], faces: 'room' },
-  armchair:  { real_size: [85, 85, 95],   sits_on: 'floor', against: 'none', rooms: ['living', 'bedroom'], goes_with: ['sideTable', 'floorLamp'], clearance: 40, count: [0, 1], faces: 'room' },
+  armchair:  { real_size: [85, 85, 95],   sits_on: 'floor', against: 'none', rooms: ['living', 'bedroom', 'study'], goes_with: ['sideTable', 'floorLamp'], clearance: 40, count: [0, 1], faces: 'room' },
   bed:       { real_size: [200, 140, 55], sits_on: 'floor', against: 'wall', rooms: ['bedroom'], goes_with: ['sideTable', 'tableLamp', 'rug'], clearance: 50, count: [1, 1], faces: 'room' },
   bookshelf: { real_size: [80, 30, 180],  sits_on: 'floor', against: 'wall', rooms: ['living', 'bedroom', 'study'], goes_with: [], clearance: 60, count: [0, 1], faces: 'room' },
   desk:      { real_size: [120, 60, 75],  sits_on: 'floor', against: 'wall', rooms: ['study', 'bedroom'], goes_with: ['tableLamp'], clearance: 70, count: [0, 1], faces: 'room', surface: 75 },
@@ -79,7 +79,10 @@ export const ROOM_FACTS = Object.freeze({
   speaker:   { real_size: [20, 20, 35],   sits_on: 'surface', against: 'none', rooms: ['living', 'study'], goes_with: [], clearance: 0, count: [0, 2], faces: 'room' },
 });
 
-// The room types this file can make. Only the bedroom is built (Mike's yes, 2026-11-26); the others are the next steps.
+// The room types this file can make. The bedroom first (Mike's yes, 2026-11-26); the living room and the study from the
+// same pieces, since their facts were already here (2026-11-26, later). A kitchen waits for kitchen pieces to be drawn.
+// Each is: its ANCHOR (the big piece against the back wall), and what goes with it comes from the anchor's own
+// `goes_with` (a bed's nightstands, a sofa's side table and rug, a desk's lamp ON it), then the fill.
 export const ROOM_TYPES = Object.freeze({
   bedroom: {
     label: 'Bedroom',
@@ -90,6 +93,26 @@ export const ROOM_TYPES = Object.freeze({
     walls: [['stripes', '#c9d6d3'], ['paint', '#d9d2b6'], ['sprig', '#e6dcc4'], ['limewash', '#cfd8cf'], ['paint', '#b8c4d8'], ['boards', '#a8794e']],
     floors: [['carpet', '#9c8a74'], ['boards', '#9a6a42'], ['carpet', '#7d8a9c'], ['boards', '#6e4a2e']],
     sign: 'Sweet dreams',
+  },
+  living: {
+    label: 'Living room',
+    anchor: 'sofa',
+    fill: ['fireplace', 'armchair', 'bookshelf', 'cabinet', 'floorLamp', 'plant'],
+    shells: ['room', 'corner', 'flat'],
+    walls: [['paint', '#e2d6bf'], ['limewash', '#d6cdb8'], ['stripes', '#d8c9b0'], ['paint', '#c7d3c4'], ['boards', '#9a6e48']],
+    floors: [['boards', '#8a5a36'], ['boards', '#a57a52'], ['carpet', '#8c7f6c'], ['carpet', '#6f7d6a']],
+    sign: 'Welcome home',
+  },
+  study: {
+    label: 'Study',
+    anchor: 'desk',
+    fill: ['bookshelf', 'armchair', 'cabinet', 'floorLamp', 'plant'],
+    // what this kind of room is not itself without (a study with no books is an office): at least one, room allowing
+    need: ['bookshelf'],
+    shells: ['room', 'corner', 'flat'],
+    walls: [['paint', '#cfd6d8'], ['boards', '#8f6844'], ['limewash', '#d3d0c4'], ['paint', '#d8ccb4']],
+    floors: [['boards', '#7a5134'], ['carpet', '#6c7584'], ['boards', '#9a6a42']],
+    sign: 'Quiet, please',
   },
 });
 
@@ -235,14 +258,16 @@ export function generateRoom({ type = 'bedroom', seed = 1, roomCm: roomAsked = R
   const af = ROOM_FACTS[anchor];
   const [aw, ad] = af.real_size;
   const nightW = ROOM_FACTS.sideTable.real_size[0];
+  const goes = new Set(af.goes_with || []);
   const spots = [];
   for (let x0 = 0; x0 + aw <= roomCm.w; x0 += 10) spots.push(x0);
   shuffle(spots);
   let anchorAt = null;
   for (const x0 of spots) {
     const r = { x0, x1: x0 + aw, z0: 0, z1: ad };
-    // a bed wants room for at least one nightstand at one end
-    const roomForTable = plan.fits({ x0: x0 - GAP - nightW, x1: x0 - GAP, z0: 0, z1: ROOM_FACTS.sideTable.real_size[1] })
+    // an anchor that goes with a side table (a bed, a sofa) wants room for one at one end
+    const roomForTable = !goes.has('sideTable')
+      || plan.fits({ x0: x0 - GAP - nightW, x1: x0 - GAP, z0: 0, z1: ROOM_FACTS.sideTable.real_size[1] })
       || plan.fits({ x0: x0 + aw + GAP, x1: x0 + aw + GAP + nightW, z0: 0, z1: ROOM_FACTS.sideTable.real_size[1] });
     if (plan.fits(r, af.clearance) && roomForTable) { anchorAt = r; break; }
   }
@@ -259,11 +284,14 @@ export function generateRoom({ type = 'bedroom', seed = 1, roomCm: roomAsked = R
     placed.push(entry);
     return entry;
   };
-  if (anchorAt) placeFloor(anchor, anchorAt); else leftOut.push(anchor);
+  const anchorEntry = anchorAt ? placeFloor(anchor, anchorAt) : null;
+  if (!anchorAt) leftOut.push(anchor);
 
-  // 4. what goes with the anchor
+  // 4. what goes with the anchor, from its own `goes_with`: side tables at its ends (a lamp on the first), a lamp ON it
+  // when it has a top and no side tables (a desk), and a rug in front of it.
   const tables = [];
-  if (anchorAt) {
+  if (anchorAt && !goes.has('sideTable') && goes.has('tableLamp') && af.surface) lampOn(anchorEntry);
+  if (anchorAt && goes.has('sideTable')) {
     const st = ROOM_FACTS.sideTable;
     const [tw, td] = st.real_size;
     const ends = [
@@ -279,7 +307,10 @@ export function generateRoom({ type = 'bedroom', seed = 1, roomCm: roomAsked = R
     if (!tables.length) leftOut.push('sideTable');
     // a lamp on the first nightstand (a reading lamp), and sometimes on the second
     tables.forEach((t, i) => { if (i === 0 || coin(0.4)) lampOn(t); });
-    // the rug in front of the bed, centred on it, over the floor it can see
+  }
+  // the rug in front of the anchor, centred on it, over the floor it can see. (The draws above come in the same order
+  // as before for a bedroom, so a bedroom already made from a seed is the same room after this.)
+  if (anchorAt && goes.has('rug')) {
     const rf = ROOM_FACTS.rug;
     const rz0 = anchorAt.z1 - 40, rz1 = Math.min(roomCm.d, rz0 + rf.real_size[1]);
     const rx = (anchorAt.x0 + anchorAt.x1) / 2;
@@ -295,7 +326,8 @@ export function generateRoom({ type = 'bedroom', seed = 1, roomCm: roomAsked = R
       scale: floorScale(shell, 'tableLamp', lf.real_size[0], foot, roomCm), standsOn: t.item.id });
   }
 
-  // 2b + 5. the wall: the window, a picture over the bed, a clock. Each checked against what is on the wall already.
+  // 2b + 5. the wall: the window, a picture over the anchor (the bed, the sofa, the desk), a clock. Each checked against
+  // what is on the wall already.
   const win = ROOM_FACTS.window;
   const [ww, , wh] = win.real_size;
   const winSpots = [];
@@ -336,7 +368,8 @@ export function generateRoom({ type = 'bedroom', seed = 1, roomCm: roomAsked = R
   for (const part of spec.fill) {
     const f = ROOM_FACTS[part];
     if (!f || !f.rooms.includes(type)) continue;
-    const want = f.count[0] + Math.floor(rand() * (f.count[1] - f.count[0] + 1));
+    const lo = (spec.need || []).includes(part) ? Math.max(1, f.count[0]) : f.count[0];
+    const want = lo + Math.floor(rand() * (Math.max(lo, f.count[1]) - lo + 1));
     const [pw, pd] = f.real_size;
     for (let k = 0; k < want; k++) {
       const tries = [];

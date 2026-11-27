@@ -55,13 +55,16 @@ import { registerModule, listManifests } from '../module.js';
 import { normalizeField, fieldValue } from '../settings_fields.js';
 import { mountRoomScene, RENDER_DEFAULTS, OBJECT_DEFAULTS, DEFAULT_BOOKS, MAX_BOOKS, moduleLabel, CLOSEUP_PARTS } from '../room_scene.js';
 import { listPresets, presetRecipe, DEFAULT_PRESET } from '../room_presets.js';
-import { generateRoom, nextSeed } from '../room_generate.js';   // (note GO, 2026-11-26) a bedroom made from the pieces' facts
+import { generateRoom, nextSeed, ROOM_TYPES } from '../room_generate.js';   // (note GO, 2026-11-26) a room made from the pieces' facts
 
 // (note GO, 2026-11-26) "Which room" can be a MADE room: `made:<type>`, drawn by room_generate.js from the row's
 // `madeSeed`. "Make another bedroom" (this panel's menu row) moves the seed on, so the same screen keeps its room until
 // somebody asks for another, and every screen with the same seed shows the same room.
 export const MADE_BEDROOM = 'made:bedroom';
-const MADE_ROOMS = [{ value: MADE_BEDROOM, label: 'A bedroom made for you (the menu has “Make another bedroom”)' }];
+// (2026-11-26, later) Every kind room_generate.js can make: a bedroom, a living room, a study.
+const madeName = (type) => String(ROOM_TYPES[type]?.label || type).toLowerCase();
+const MADE_ROOMS = Object.keys(ROOM_TYPES).map((type) => ({ value: `made:${type}`,
+  label: `A ${madeName(type)} made for you (the menu has “Make another ${madeName(type)}”)` }));
 const madeType = (preset) => (typeof preset === 'string' && preset.startsWith('made:') ? preset.slice(5) : null);
 const seedOf = (row) => ((Number(row?.madeSeed) >>> 0) || 1);
 /** The recipe "Which room" stands for: a preset's, or a made room's from the row's seed. */
@@ -430,12 +433,14 @@ registerModule(
       __editor: () => editor,
       // The reactions editor, for a host that offers it (a settings row, an edit window).
       openReactions: () => openEditor(),
-      // (note GO, 2026-11-26) This panel's own menu rows: a made bedroom, and another one.
+      // (note GO, 2026-11-26) This panel's own menu rows: a made bedroom, and another one of whatever kind is made (the
+      // other kinds are in "Which room": one row here, so the switch walk is as long as it was).
       menuItems: () => {
         const row = state?.get?.() || {};
-        const made = madeType(cfg.preset) === 'bedroom';
+        const type = madeType(cfg.preset);
+        const made = !!type && !!ROOM_TYPES[type];
         return [made
-          ? { kind: 'item', id: 'room-make-another', label: 'Make another bedroom', hint: 'the same pieces, placed again',
+          ? { kind: 'item', id: 'room-make-another', label: `Make another ${madeName(type)}`, hint: 'the same pieces, placed again',
             run: () => state?.set?.({ madeSeed: nextSeed(seedOf(row)) }) }
           : { kind: 'item', id: 'room-make', label: 'Make a bedroom', hint: 'a bedroom made from the room’s pieces, the way a real one is',
             run: () => state?.set?.({ preset: MADE_BEDROOM, madeSeed: nextSeed(Date.now() >>> 0) }) }];

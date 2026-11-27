@@ -131,7 +131,31 @@ const overlaps = (a, b) => a.x0 < b.x1 && b.x0 < a.x1 && a.z0 < b.z1 && b.z0 < a
         check('*** a lamp is drawn much smaller than the bed (real sizes 25 and 200 cm) ***', lampPx < bedPx / 4, J({ bedPx, lampPx }));
       }
     }
-    check('only the bedroom is built yet; another type says so', (() => { try { generateRoom({ type: 'kitchen' }); return false; } catch { return true; } })());
+    check('a kind with no pieces drawn for it yet (a kitchen) says so', (() => { try { generateRoom({ type: 'kitchen' }); return false; } catch { return true; } })());
+    // (2026-11-26, later) THE LIVING ROOM AND THE STUDY, from the same pieces and the anchor's own `goes_with`.
+    const kindsOk = (type, anchor, also) => {
+      let bad = null;
+      for (let seed = 1; seed <= 60 && !bad; seed++) {
+        const { recipe, plan } = generateRoom({ type, seed });
+        const parts = recipe.items.map((i) => i.part || i.kind);
+        if (parts.filter((p) => p === anchor).length !== 1) bad = `seed ${seed}: ${anchor} x${parts.filter((p) => p === anchor).length}`;
+        else if (parts.includes('bed') && type !== 'bedroom') bad = `seed ${seed}: a bed in a ${type}`;
+        else if (!also(parts, recipe)) bad = `seed ${seed}: ${parts.join(',')}`;
+        else {
+          const solid = plan.pieces;
+          for (let i = 0; i < solid.length && !bad; i++) for (let j = i + 1; j < solid.length; j++) {
+            const a = solid[i], b = solid[j];
+            if (a.x0 < b.x1 && b.x0 < a.x1 && a.z0 < b.z1 && b.z0 < a.z1) { bad = `seed ${seed}: ${a.part} overlaps ${b.part}`; break; }
+          }
+        }
+      }
+      return bad;
+    };
+    let why = kindsOk('living', 'sofa', (p) => p.includes('sideTable') && p.includes('tableLamp'));
+    check('*** a living room: one sofa against the wall, a side table and a lamp with it, no bed, nothing overlapping (60 seeds) ***', !why, why);
+    why = kindsOk('study', 'desk', (p, r) => p.includes('bookshelf') && r.items.some((i) => i.part === 'tableLamp' && i.standsOn === r.items.find((x) => x.part === 'desk')?.id));
+    check('*** a study: one desk with its lamp ON it, and always a bookshelf (a study is not itself without one) ***', !why, why);
+    check('every kind the Room panel offers can be made', Object.keys(ROOM_TYPES).every((t) => { try { return !!generateRoom({ type: t, seed: 3 }).recipe; } catch { return false; } }));
     check('the plan is centimetres, a bedroom of an ordinary size', ROOM_CM.d === 320 && ROOM_CM.wall === 250);
 
     // FOUR TO LOOK AT

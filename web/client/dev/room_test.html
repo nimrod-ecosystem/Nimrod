@@ -84,8 +84,9 @@ try {
   check('registered as `room`, on the new core', m && m.core === 'new' && m.title === 'Room');
   check('it needs nothing: no server, no files, no network', m.dependsOn === 'none');
   check('its settings are declared as data', Array.isArray(m.settings) && m.settings === SETTINGS && SETTINGS.length >= 6);
-  check('which room offers every preset, and the made bedroom (note GO)', SETTINGS.find((s) => s.key === 'preset').options.length === listPresets().length + 1
-    && SETTINGS.find((s) => s.key === 'preset').options.at(-1).value === 'made:bedroom');
+  check('which room offers every preset, and the made rooms: a bedroom, a living room, a study (note GO)',
+    SETTINGS.find((s) => s.key === 'preset').options.length === listPresets().length + 3
+    && JSON.stringify(SETTINGS.find((s) => s.key === 'preset').options.slice(-3).map((o) => o.value)) === JSON.stringify(['made:bedroom', 'made:living', 'made:study']));
   const lr = SETTINGS.find((s) => s.key === 'liftReturnMs');
   check('the lifted-panel timeout is a duration in ms with a "never" choice', lr && lr.options.some((o) => o.value === 0) && lr.default === 60000);
   check('the essentials: which room, the light, the labels', SETTINGS.filter((s) => s.level === 'essential').map((s) => s.key).join() === 'preset,light,labels');
