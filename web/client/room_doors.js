@@ -213,10 +213,8 @@ export function classifyLayoutChange(before, after) {
   if (c !== 'grid') return c;
   const a = before || null, b = after || null;
   if (isArranged(a) !== isArranged(b)) return 'grid';
-  const { placed: _pa, scene: sa, background: _ba, ...ra } = a || {};       // eslint-disable-line no-unused-vars
-  const { placed: _pb, scene: sb, background: _bb, ...rb } = b || {};       // eslint-disable-line no-unused-vars
+  const { placed: _pa, scene: sa, ...ra } = a || {};       // eslint-disable-line no-unused-vars
+  const { placed: _pb, scene: sb, ...rb } = b || {};       // eslint-disable-line no-unused-vars
   if (J(ra) !== J(rb)) return 'grid';
-  // (B1) Only the background slot differs: in place, as layout.js layoutChange says.
-  if (J(sa || null) === J(sb || null)) return 'placement';
   return sceneDoorChanges(sa || null, sb || null) ? 'placement' : 'grid';
 }

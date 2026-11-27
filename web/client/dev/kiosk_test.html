@@ -4732,6 +4732,40 @@ const toTab = (m, id) => {
       root.remove();
     }
 
+    // ---- B1/B3 (2026-11-26; Mike: "The backgrounds should really be just another type of module"): THE BACKGROUND, EDITED ----
+    {
+      const S = await profiles.create('TEST-background');
+      const a = await profiles.addModule(S.id, 'clock');
+      await remote(S.id, () => ({ kiosk: { layout: { preset: 'full', slots: [a.id] } } }));
+      const root = box();
+      const kbus = createBus();
+      const k = await mountKiosk(root, { user: USER, profileId: S.id, profiles, bus: kbus });
+      const A = () => k.arrangement?.();
+      check('(setup, background) the clock is in its slot', await settled(() => k.slotLayout()?.slots?.[0] === a.id, 8000), JSON.stringify(k.slotLayout()));
+      kbus.publish('shell/edit-panel', { id: 'scene:background', on: true, from: 'menu' });
+      const bgRow = () => A()?.editSelection?.()?.fields?.find((f) => f.key === 'background') || null;
+      check('*** the background is edited like a module: its card starts with Home’s list of backdrops ***',
+        await settled(() => A()?.editing?.()?.id === 'scene:background' && !!bgRow(), 6000)
+          && bgRow().options.some((o) => /^Still: /.test(o.label)) && bgRow().options.some((o) => /^Rooms: /.test(o.label)),
+        JSON.stringify({ e: A()?.editing?.(), f: A()?.editSelection?.()?.fields?.map((f) => f.key) }));
+      const roomId = bgRow()?.options?.find((o) => /^room:/.test(o.value))?.value;
+      A().editSelection().set('background', roomId);
+      check(`*** a room chosen there (${roomId}) is this dashboard’s background: saved, the clock onto its wall ***`,
+        await pollAsync(async () => { const L = (await readOf(S.id)).kiosk?.layout; return L?.scene?.kind === 'room' && (L.placed || []).some((e) => e.id === a.id); }, 8000),
+        JSON.stringify((await readOf(S.id)).kiosk?.layout));
+      check('*** ...and what is edited now is the room, whose card starts with the same Background row ***',
+        await settled(() => A()?.editing?.()?.id === 'scene:room' && !!bgRow() && bgRow() && A().editSelection().values().background === roomId, 8000),
+        JSON.stringify({ e: A()?.editing?.(), f: A()?.editSelection?.()?.fields?.map((f) => f.key), v: A()?.editSelection?.()?.values?.()?.background }));
+      const stillId = bgRow()?.options?.find((o) => /^theme:/.test(o.value) && /^Still: /.test(o.label))?.value;
+      A().editSelection().set('background', stillId);
+      check(`*** a still theme chosen from the room's card (${stillId}): the room goes, the clock stays on the screen ***`,
+        await pollAsync(async () => { const L = (await readOf(S.id)).kiosk?.layout; return !!L && !L.scene && ((L.placed || []).some((e) => e.id === a.id) || (L.slots || []).includes(a.id)); }, 8000),
+        JSON.stringify((await readOf(S.id)).kiosk?.layout));
+      try { k.closeEditView(); } catch { /* not open */ }
+      k.destroy();
+      root.remove();
+    }
+
     // ---- 1c. ROW 2.145 STEP 1 (2026-10-31): THE ONE EDITOR in the edit view's slot -- held, saved, put away ----
     {
       const S = await profiles.create('TEST-scene-editor');

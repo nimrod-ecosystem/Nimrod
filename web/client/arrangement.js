@@ -52,7 +52,7 @@
 
 import {
   normalizeLayout, isArranged, resolveLayout, gridStyle, slotStyle, placedGeometry, layoutChange, normalizePlacedEntry,
-  isPagePreset, pageCellStyle, backgroundOf, BACKGROUND_DEFAULT,
+  isPagePreset, pageCellStyle,
 } from './layout.js';
 
 // Re-exported so the shell (kiosk.js already imports this file) can classify a change without a new
@@ -268,9 +268,9 @@ export function createArrangement({
   // ROW 2.110: `notify(text)`, a short spoken and shown notice (the shell's output.notify): "This room is full",
   // "Nothing to undo". Absent: nothing is said, and the press simply does nothing.
   notify = null,
-  // B1 (2026-11-26): `background()` -> { title, label, help?, fields, values(), set(patch) } | null, the host's words for what
-  // the background slot shows and the settings of the thing in it (the theme's scene: how it moves, the village's look).
-  // The slot's own choice (BACKGROUND_KEY: the theme's scene or plain) is the dashboard's, saved here with its layout.
+  // B1 (2026-11-26): `background()` -> { title, help?, fields, values(), set(patch) } | null, the host's rows for the
+  // dashboard's background: first what is in the slot (BACKGROUND_KEY, the layout's `scene` or the theme's own backdrop),
+  // then the settings of what is in it (the theme's scene: how it moves, the village's look). The host writes them all.
   // Absent: the background is not offered in edit mode (a preview, a nested dashboard).
   background = null,
 } = {}) {
@@ -297,30 +297,6 @@ export function createArrangement({
     kioskEl.dataset.mirrorCorner = CORNERS.includes(m.corner) ? m.corner : KDEF.mirror.corner;
     // ('off' too, 2026-10-03: "Show a small clock: Off" -- kiosk.css hides the corner clock; SMALL_CLOCK_FIELD.)
     kioskEl.dataset.clockCorner = CLOCK_CORNERS.includes(c.corner) ? c.corner : KDEF.clock.corner;
-  }
-
-  // (B1) The background slot, said on the kiosk for kiosk.css: 'plain' hides the theme's scene (display:none, so nothing
-  // in it is drawn or moves). A dashboard with a room keeps its room there, whatever the slot says (B3 is the room's turn).
-  function syncBackground() {
-    if (!kioskEl) return;
-    const plain = !!layout && !isRoomScene(layout.scene) && backgroundOf(layout) === 'plain';
-    if (plain) kioskEl.dataset.background = 'plain'; else delete kioskEl.dataset.background;
-  }
-  /** (B1) Put `kind` in the background slot: shown at once and saved with the layout. False when there is no layout. */
-  function setBackground(kind) {
-    if (!layout) return false;
-    const next = backgroundOf({ background: kind });
-    if (next === backgroundOf(layout)) return true;
-    layout = { ...layout };
-    if (next === BACKGROUND_DEFAULT) delete layout.background; else layout.background = next;
-    syncBackground();
-    const base = savedBase();
-    if (base) {
-      const saved = { ...base };
-      if (next === BACKGROUND_DEFAULT) delete saved.background; else saved.background = next;
-      saveLayout(saved, base);
-    }
-    return true;
   }
 
   // persist a mirror change into the profile settings (merges with theme/voice/clock)
@@ -459,7 +435,6 @@ export function createArrangement({
     // Each mount reports on its OWN panels. This list was filled here and never emptied, so after a
     // screen swap the empty-screen sentence below named the previous screen's failures as well.
     failedSlots.length = 0;
-    syncBackground();   // (B1) the background slot, before anything in front of it is drawn
     stageEl.classList.add('k-grid');
     stageEl.setAttribute('style', gridStyle(layout.preset));
     // A PAGE THAT SCROLLS (row 2.127): parts stacked, each as tall as its own "Height on the page" (kiosk.js applies it
@@ -1281,18 +1256,14 @@ export function createArrangement({
     delete l.placed;
     if (nextPlaced.length) l.placed = nextPlaced;
     if (doors.length) l.scene = r.scene;      // row 2.38: the scene as saved, its doors moved
-    // (B1) The background slot as saved, applied in place (layout.js layoutChange: a change of it reloads nothing).
-    delete l.background;
-    if (r.background) l.background = r.background;
     if (!isArranged(l)) return { ...none, reason: 'grid' };
-    if (!placedMounted) { layout = l; syncBackground(); return { ...none, applied: true, deferred: true }; }
+    if (!placedMounted) { layout = l; return { ...none, applied: true, deferred: true }; }
     const before = new Map(placedOf().map((e) => [e.id, e]));
     const after = l.placed || [];
     const keep = new Set(after.map((e) => e.id));
     const out = { applied: true, moved: [], added: [], removed: [], doors: doors.map((d) => d.id), hud: { dropped: [], raised: [] } };
     for (const id of before.keys()) if (!keep.has(id)) { removePlaced(id); out.removed.push(id); }
     layout = l;
-    syncBackground();
     // The HUD pair, by the same rule as a rebuild (see `dropHud`): what is placed now leaves its corner first.
     partition();
     out.hud.dropped = dropHud();
@@ -1541,7 +1512,6 @@ export function createArrangement({
     while (slotRecs.length) destroyRec(slotRecs.pop());
     teardownPlaced();                       // Stage R: placed modules, the room, and their layers
     stageEl.innerHTML = ''; stageEl.className = 'k-stage'; stageEl.removeAttribute('style');
-    syncBackground();                       // (B1) the incoming screen's background slot (none: the theme's scene)
     mirrorEl.innerHTML = ''; mirrorEl.hidden = true;
     clockEl.innerHTML = ''; clockEl.hidden = true;
     ambientEl.innerHTML = ''; ambientEl.hidden = true;
@@ -2120,31 +2090,30 @@ export function createArrangement({
       id: BACKGROUND_PANEL_ID, type: 'background', title, el: stageEl, desc: d,
       // A panel in front of it is not it: a press there goes on to the panel's own edit (BACKGROUND PRESSES below).
       passThrough: '.k-cell, .k-pcell',
-      instance: { editTargets: () => [backgroundTarget(rec)] },
+      // The host's rows read afresh on each choice: they depend on what is in the slot now.
+      instance: { editTargets: () => { try { const now = background(); if (now) rec.desc = now; } catch { /* the last rows */ } return [backgroundTarget(rec)]; } },
       // No state row of its own: the slot is the layout's, the rest the host's.
       state: { get: () => ({}), set: () => {} },
     };
     bgRec = rec;
     return rec;
   }
+  // Its rows are the host's (kiosk.js backgroundInfo): first what is in the slot (BACKGROUND_KEY: Home's one list of
+  // backdrops -- a still theme, a moving one, a room, a 3D room; home_profile.js sceneChoices), then what is in it has to
+  // tune. The slot IS the layout's `scene` (none: the theme's own backdrop), so nothing new is stored.
   function backgroundTarget(rec) {
     const d = rec.desc || {};
-    const plain = backgroundOf(layout) === 'plain';
-    const slotField = { key: BACKGROUND_KEY, label: 'Background', kind: 'choice', level: 'essential', default: BACKGROUND_DEFAULT,
-      options: [{ value: 'theme', label: d.label ? `The theme’s scene: ${d.label}` : 'The theme’s scene' },
-        { value: 'plain', label: 'Plain: the theme’s colours, nothing moving' }] };
-    const own = (() => { try { return Array.isArray(d.fields) ? d.fields : []; } catch { return []; } })();
+    const fields = (() => { try { return Array.isArray(d.fields) ? d.fields : []; } catch { return []; } })();
     return {
       id: 'background', whole: true, label: bgTitle(rec), el: stageEl,
-      help: [plain ? 'This dashboard’s background is plain.' : (d.help || 'What is behind every panel on this dashboard.'),
-        'The choice of background is this dashboard’s; how the scene moves and looks is this screen’s, as before.'].join(' '),
-      // The scene's own rows only while the scene is what is there: a plain background has nothing to tune.
-      fields: [slotField, ...(plain ? [] : own)],
-      values: () => { let v = {}; try { v = d.values?.() || {}; } catch { v = {}; } return { ...v, [BACKGROUND_KEY]: backgroundOf(layout) }; },
+      help: d.help || 'What is behind every panel on this dashboard.',
+      fields,
+      values: () => { try { return d.values?.() || {}; } catch { return {}; } },
       set: (patch = {}) => {
         const p = { ...(patch || {}) };
-        if (BACKGROUND_KEY in p) { setBackground(p[BACKGROUND_KEY]); delete p[BACKGROUND_KEY]; reselectBackground(); }
-        if (Object.keys(p).length) { try { d.set?.(p); } catch (err) { console.error('arrangement: a background setting', err); } }
+        try { d.set?.(p); } catch (err) { console.error('arrangement: a background setting', err); }
+        // What is in the slot decides the rows: drawn again once the host has done it.
+        if (BACKGROUND_KEY in p) reselectBackground();
       },
     };
   }
@@ -2388,16 +2357,23 @@ export function createArrangement({
     const root = roomScene.root || roomHost;
     const rows = () => { try { return roomRowsLib ? roomRowsLib.roomRows(roomBase()) : []; } catch { return []; } };
     const fieldRows = lib ? (three ? lib.ROOM3D_ROWS : lib.ROOM_ROWS) : [];
+    // (B3, 2026-11-26) THE ROOM IS WHAT IS IN THE BACKGROUND SLOT: its card starts with the slot's own row (the host's,
+    // as the background's card does), so a room can be swapped for a theme's scene, or another room, from here.
+    const slot = (() => {
+      if (typeof background !== 'function') return null;
+      try { const d = background(); const f = (d?.fields || []).find((x) => x && x.key === BACKGROUND_KEY); return f ? { d, f } : null; } catch { return null; }
+    })();
     out.push({
       id: 'room', label: 'The room', el: root, whole: true,
       help: three ? 'The room itself: whether the camera drifts, and how deep the room is.'
         : `The room itself: its shape, its walls and floor, its light, and what is out of the window${ed ? '; and a piece of furniture to add' : ''}.`,
-      fields: [...fieldRows.map((row) => ({ key: row.key, label: row.label, kind: 'choice', level: 'essential',
+      fields: [...(slot ? [slot.f] : []), ...fieldRows.map((row) => ({ key: row.key, label: row.label, kind: 'choice', level: 'essential',
         default: row.options()[0]?.[0], options: row.options().map(([value, label]) => ({ value, label })) })),
       // "Add a piece" (row 2.110): choosing one puts it in the middle of its wall or floor, and chooses it.
       ...(ed ? [{ key: 'addPiece', label: 'Add a piece', kind: 'choice', level: 'essential', default: '', options: ed.addOptions(),
         note: 'it goes in the middle of the wall or the floor, chosen, to move from there' }] : [])],
-      values: () => ({ ...Object.fromEntries(rows().map((x) => [x.key, x.value])), ...(ed ? { addPiece: '' } : {}) }),
+      values: () => ({ ...Object.fromEntries(rows().map((x) => [x.key, x.value])), ...(ed ? { addPiece: '' } : {}),
+        ...(slot ? { [BACKGROUND_KEY]: (() => { try { return slot.d.values?.()?.[BACKGROUND_KEY]; } catch { return undefined; } })() } : {}) }),
       ...(ed ? { actions: [{ id: 'undo', label: 'Undo', run: () => { undoRoom(); } },
         // Step 2 (room_edits.js presetText): the room as a starting room, copied, to go into the site's own rooms.
         { id: 'default', label: 'Copy as the default', note: 'this room, ready to become a starting room', run: () => { copyRoomDefault(); } }],
@@ -2405,6 +2381,7 @@ export function createArrangement({
         siteDefault: () => { const scene = roomBase()?.scene || null; return scene && roomEditsLib ? roomEditsLib.presetEntry(sceneRecipe(scene), { preset: scene.preset || '' }) : null; } } : {}),
       set: (patch) => {
         if (!patch) return;
+        if (slot && BACKGROUND_KEY in patch) { try { slot.d.set?.({ [BACKGROUND_KEY]: patch[BACKGROUND_KEY] }); } catch (err) { console.error('arrangement: the background', err); } return; }
         if (ed && patch.addPiece) { addRoomPiece(patch.addPiece); return; }
         if (!lib) return;
         let L = roomBase();
@@ -2787,7 +2764,6 @@ export function createArrangement({
     dropHandles();
     try { offEditVerb?.(); editMode?.destroy(); } catch { /* already gone */ }
     try { for (const el of bgPressEls) for (const ev of BG_PRESS_EVENTS) el.removeEventListener(ev, onBackgroundPress, true); } catch { /* already gone */ }
-    try { delete kioskEl.dataset.background; } catch { /* already gone */ }
     try { offPlaceVerb?.(); } catch { /* already gone */ }
     screenLinks?.destroy();
     destroyRec(stageRec); destroyRec(cameraRec); destroyRec(clockRec); destroyRec(ambientRec);
@@ -2799,9 +2775,7 @@ export function createArrangement({
     // ---- the state, read through functions: a swap replaces what they return ----
     profile: () => profile,
     layout: () => layout,
-    // (B1) The background slot: what it holds, put something in it, and whether it can be edited here now.
-    background: () => backgroundOf(layout),
-    setBackground,
+    // (B1) Whether edit mode can edit the dashboard's background here now (the ⚙ menu's "Edit the background…" asks).
     canEditBackground: () => !!backgroundEditRec(),
     stageDefs: () => stageDefs,
     primary: () => primary,

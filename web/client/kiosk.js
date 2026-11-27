@@ -43,7 +43,7 @@ import { switchURL, switchesByReload, writeTrail, takeTrail } from './screen_swi
 import { REMOTE_STREAM } from './output_remote.js';
 // (Row 2.38: `classifyLayoutChange` is layout.js's `layoutChange` plus doors -- a change that only moves a
 // room object's door is applied in place, like a move, never a reload. room_doors.js argues it.)
-import { createArrangement, classifyLayoutChange as layoutChange, ROOM_PANEL_ID, ROOM_PIECE_PREFIX, BACKGROUND_PANEL_ID,
+import { createArrangement, classifyLayoutChange as layoutChange, ROOM_PANEL_ID, ROOM_PIECE_PREFIX, BACKGROUND_PANEL_ID, BACKGROUND_KEY,
   PLACE_REQUEST_TOPIC, SMALL_CLOCK_FIELD, SMALL_CLOCK_KEY, CLOCK_CORNERS, clockCornerOf } from './arrangement.js';
 import {
   paintWho, whoWords, BAR_PERSON_FIELD, BAR_PERSON_KEY, WHO_ACT,
@@ -2543,31 +2543,108 @@ export async function mountKiosk(root, {
     driveRoom: (id, handle, fields) => automation.wrapState(id, handle, { fields }),
     // Row 2.110: the room editor's short notices ("This room is full", "Nothing to undo").
     notify: (text) => { try { output?.notify?.(text, { source: 'room' }); } catch { /* said nothing */ } },
-    // (B1, 2026-11-26; Mike: "The backgrounds should really be just another type of module") What the background slot shows
-    // and its settings, for edit mode's card: the theme's scene and the screen's own rows for it (the ones the ⚙ menu's
-    // Theme tab shows, written the same way, to the screen's row). Not on an embed: its page owns the background.
-    background: () => (embedded ? null : backgroundInfo()),
+    // (B1/B3, 2026-11-26; Mike: "The backgrounds should really be just another type of module") The rows of the
+    // dashboard's background for edit mode's card: WHAT IS IN IT, from Home's one list of backdrops (home_profile.js
+    // sceneChoices: a still theme, a moving one, a room, a 3D room), chosen the way Home chooses (applyScene); then the
+    // screen's own rows for the theme's moving scene (the ones the ⚙ menu's Theme tab shows, written the same way).
+    // Not on an embed (its page owns the background), nor where this screen's layout cannot be changed here.
+    background: () => (embedded || !canChangeLayout() ? null : backgroundInfo()),
   });
+  // Home's backdrop list (home_profile.js), loaded the first time the background is edited; until then the card has the
+  // scene's own rows only, and is drawn again with the list once it is here.
+  let homeSceneLib = null;
+  let homeSceneLoading = null;
+  function loadHomeScenes() {
+    if (homeSceneLib || homeSceneLoading) return;
+    homeSceneLoading = import('./home_profile.js').then((m) => {
+      homeSceneLib = m;
+      try {
+        const a = arr.editing?.();
+        if (a && (a.id === BACKGROUND_PANEL_ID || (a.id === ROOM_PANEL_ID && (!a.target || a.target === 'room')))) arr.editSelect(a.target || null);
+      } catch { /* not being edited */ }
+    }).catch((err) => console.error('kiosk: the backdrop list', err)).finally(() => { homeSceneLoading = null; });
+  }
   function backgroundInfo() {
+    loadHomeScenes();
     let t = null;
     try { t = paintedTheme(shownTheme()); } catch { t = null; }
-    const scene = t?.scene || null;
+    const L = (() => { try { return arr.layout?.() || null; } catch { return null; } })();
+    const room = !!L?.scene && (L.scene.kind === 'room' || L.scene.kind === 'room3d');
+    const scene = room ? null : (t?.scene || null);
     const name = String(t?.label || t?.id || '').split(' — ')[0];
     const copy = (f) => ({ ...f, ...(f.options ? { options: f.options.map((o) => ({ ...o })) } : {}) });
+    let slotField = null;
+    if (homeSceneLib) {
+      try {
+        const kinds = homeSceneLib.SCENE_KINDS || {};
+        slotField = { key: BACKGROUND_KEY, label: 'Background', kind: 'choice', level: 'essential', picker: true,
+          default: homeSceneLib.currentScene(L, shownTheme()),
+          options: homeSceneLib.sceneChoices().map((c) => ({ value: c.id, label: `${kinds[c.kind] || c.kind}: ${String(c.label).split(' — ')[0]}` })),
+          note: 'a theme brings its colours with it; a room takes the panels onto its walls' };
+      } catch (err) { console.error('kiosk: the backdrop list', err); slotField = null; }
+    }
     const fields = [
+      ...(slotField ? [slotField] : []),
       ...(scene && sceneTakesSky(scene) ? [SKY_FIELD] : []),
       ...(scene ? [SCENE_MOTION_FIELD] : []),
       ...(scene === 'medieval' ? [VILLAGE_LOOK_FIELD, VILLAGE_PEOPLE_FIELD] : []),
     ].map(copy);
     return {
       title: 'Background',
-      label: scene ? (name || scene) : (name ? `${name} has no moving scene, only its colours` : null),
-      help: scene ? `The ${name || 'theme'} theme’s moving scene, behind every panel on this dashboard.`
-        : `The ${name || 'theme'} theme has no moving scene: its colours are behind the panels.`,
+      help: room ? 'This dashboard’s room is behind every panel.'
+        : scene ? `The ${name || 'theme'} theme’s moving scene, behind every panel on this dashboard. How it moves and looks is this screen’s.`
+        : `The ${name || 'theme'} theme’s colours, behind every panel on this dashboard: it has no moving scene.`,
       fields,
-      values: () => { try { return settings.get() || {}; } catch { return {}; } },
-      set: (patch) => { try { settings.set({ ...(patch || {}) }); } catch (err) { console.error('kiosk: a background setting', err); } },
+      values: () => {
+        let v = {};
+        try { v = { ...(settings.get() || {}) }; } catch { v = {}; }
+        try { if (homeSceneLib) v[BACKGROUND_KEY] = homeSceneLib.currentScene(arr.layout?.() || null, shownTheme()); } catch { /* not said */ }
+        return v;
+      },
+      set: (patch) => {
+        const p = { ...(patch || {}) };
+        if (BACKGROUND_KEY in p) {
+          const id = p[BACKGROUND_KEY];
+          delete p[BACKGROUND_KEY];
+          chooseBackground(id).catch((err) => console.error('kiosk: the background', err));
+        }
+        if (Object.keys(p).length) { try { settings.set(p); } catch (err) { console.error('kiosk: a background setting', err); } }
+      },
     };
+  }
+  /** (B1/B3) Put Home's backdrop `id` behind this dashboard's panels: what Home's scene tray does (applyScene), here. A
+   *  theme is written as the menu's Colours row writes it (lookWrite); a room changes the layout, which is rebuilt as
+   *  the menu's Layout list rebuilds it (`applyLayoutPreset`). */
+  async function chooseBackground(id) {
+    if (!homeSceneLib || !canChangeLayout() || typeof id !== 'string') return false;
+    const doc = layoutDoc();
+    const cur = (doc.get?.() || {}).kiosk || {};
+    const mods = arr.profile()?.modules || [];
+    const r = homeSceneLib.applyScene(cur.layout ?? null, id, { theme: shownTheme(), ids: mods.map((m) => m.id) });
+    if (!r) return false;
+    if (r.theme !== undefined && r.theme !== shownTheme()) lookWrite('theme', r.theme);
+    if (JSON.stringify(r.layout ?? null) === JSON.stringify(cur.layout ?? null)) return true;
+    // Told FIRST, as applyLayoutPreset says: the 09-12 watch hears this write synchronously.
+    expectLayoutSig = JSON.stringify(r.layout);
+    doc.set({ kiosk: { ...cur, layout: r.layout } });
+    const was = arr.editing?.()?.id || null;
+    if (useDashboard && dash) {
+      await doc.flush?.().catch?.(() => {});
+      await swapDashboard(profileId, { remember: false });
+    } else {
+      arr.resolve(r.layout);
+      await applyModules();
+    }
+    // Still editing what is behind the panels: the room, if that is what is there now, else the background.
+    try {
+      if (was === BACKGROUND_PANEL_ID || was === ROOM_PANEL_ID) {
+        const next = (arr.editRecs?.() || []).some((x) => x.id === ROOM_PANEL_ID) ? ROOM_PANEL_ID : BACKGROUND_PANEL_ID;
+        arr.editPanel?.(next, true);
+      }
+    } catch { /* the dashboard as it is */ }
+    refreshViews();
+    renderMods();
+    return true;
   }
   // *** WHICH ARRANGEMENT THE SHELL IS READING (step 6 Stage 3). *** Normally this file's own. With
   // `dashboardModule` on (embedded only), the panels are mounted by a dashboard MODULE, and the bar,
@@ -10338,6 +10415,9 @@ export async function mountKiosk(root, {
     // `layout:` key in this same object literal is silently shadowed by it — which is
     // exactly what happened first time. This one is the composed SLOT layout.
     slotLayout: () => (arr.layout() ? { ...arr.layout() } : null),
+    // (B1, 2026-11-26) The arrangement the shell reads, for the suites: what edit mode is editing and its card. (The one
+    // editor's ✎ check reached for it before it existed, and fell back.)
+    arrangement: () => arr,
     // The switch lap as the arrangement has it now (`focusRing`: a panel left out of it is not here) -- for
     // the suites (2026-10-02, "In the switch scan").
     focusRing: () => { try { return focusRing().map((s) => ({ ...s })); } catch { return []; } },

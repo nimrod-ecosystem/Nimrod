@@ -98,25 +98,7 @@ export function normalizeLayout(layout, validIds = []) {
   if (placed.length) out.placed = placed;
   const scene = normalizeScene(layout && layout.scene);
   if (scene) out.scene = scene;
-  // (B1, 2026-11-26) What the dashboard's background slot holds, kept ONLY when it is not the default (the theme's moving
-  // scene), the same byte-for-byte rule as `placed` and `scene` above.
-  const bg = backgroundOf(layout);
-  if (bg !== BACKGROUND_DEFAULT) out.background = bg;
   return out;
-}
-
-// *** A DASHBOARD'S BACKGROUND IS A SLOT THAT HOLDS ONE THING (plan_edit_the_module_20261126.md B1; Mike, 2026-11-26: "The
-// backgrounds should really be just another type of module"). *** Behind every panel: 'theme', the theme's own moving
-// scene (every screen until now, so the default and never stored), or 'plain', the theme's colours and nothing moving.
-// A room is the third (B3): today a dashboard with a room `scene` shows the room there, as it always did. The scene's own
-// settings (how it moves, the village's look) are the background's settings, edited from it in Edit; they stay on the
-// screen's row, where they have always been, so nothing anybody chose moves.
-export const BACKGROUND_DEFAULT = 'theme';
-export const BACKGROUNDS = Object.freeze(['theme', 'plain']);
-/** What a (raw or normalised) layout's background slot holds. PURE. */
-export function backgroundOf(layout) {
-  const v = layout && layout.background;
-  return BACKGROUNDS.includes(v) ? v : BACKGROUND_DEFAULT;
 }
 
 // Has anyone actually arranged anything? An all-empty layout is treated as "no layout",
@@ -361,9 +343,8 @@ export function layoutChange(before, after) {
   const a = before || null, b = after || null;
   if (JSON.stringify(a) === JSON.stringify(b)) return 'none';
   if (isArranged(a) !== isArranged(b)) return 'grid';
-  // (B1) The background slot is applied in place too (arrangement.js applyPlaced): a change of it reloads nothing.
-  const { placed: pa, background: ba, ...ra } = a || {};
-  const { placed: pb, background: bb, ...rb } = b || {};
+  const { placed: pa, ...ra } = a || {};
+  const { placed: pb, ...rb } = b || {};
   if (JSON.stringify(ra) !== JSON.stringify(rb)) return 'grid';
   return 'placement';
 }
