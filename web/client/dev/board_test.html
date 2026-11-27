@@ -1069,8 +1069,9 @@ try {
     // *** SWITCHING STILL WORKS, FROM THE ONE MENU. *** Moving a control is only safe if the control still
     // exists; this is the check that says the hazard fix (and row 2.95) did not remove the feature it was protecting.
     const offered = () => (inst.impl.settingsChoices?.().boardId || []);
+    // (2026-11-27, deliberately: row 2.290, note GT) the Quick reactions strip is a built-in board too.
     check('the menu offers every built-in board',
-      JSON.stringify(offered().map((o) => o.value)) === '["yesno","core","care","library","meals"]',
+      JSON.stringify(offered().map((o) => o.value)) === '["yesno","core","care","library","meals","reactions"]',
       JSON.stringify(offered().map((o) => o.value)));
     st.set({ ...st.get(), boardId: 'care' });
     await sleep(40);
@@ -1079,6 +1080,15 @@ try {
     // The example board is LABELLED as one where somebody choosing actually reads it.
     check('...and the example board says so where it is chosen',
       /example/i.test(offered().find((o) => o.value === 'care')?.label || ''));
+    // (row 2.290, note GT) The Quick reactions strip: one row of six, the signal card last.
+    st.set({ ...st.get(), boardId: 'reactions' });
+    await sleep(40);
+    const strip = (await import('../aac_vocab.js')).BUILTIN_BOARDS.reactions;
+    check('*** the Quick reactions strip: one row of six, mm-hmm to "I have something to say" ***',
+      inst.impl.__probe().boardId === 'reactions' && strip.cols === 6 && strip.rows === 1 && strip.cells.length === 6
+      && strip.cells.at(-1).word === 'I have something to say', JSON.stringify(strip));
+    st.set({ ...st.get(), boardId: 'care' });
+    await sleep(40);
     const edRows = () => inst.impl.menuItems();
     check('*** the menu has the editor\u2019s two rows, which put the menu away when pressed ***',
       edRows().some((r) => r.id === 'board-edit' && r.closesMenu === true && !r.disabled)
@@ -1092,7 +1102,7 @@ try {
     check('somebody who wants the row can still have it',
       inst.impl.__probe().boardsShown === true);
     check('...and it offers the same boards the panel does',
-      JSON.stringify(inst.impl.__probe().boards) === '["yesno","core","care","library","meals"]',
+      JSON.stringify(inst.impl.__probe().boards) === '["yesno","core","care","library","meals","reactions"]',
       JSON.stringify(inst.impl.__probe().boards));
     host.querySelector('[data-board="yesno"]')?.click();
     await sleep(40);

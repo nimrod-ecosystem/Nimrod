@@ -641,4 +641,27 @@ export const MEALS = {
   ],
 };
 
-export const BUILTIN_BOARDS = { yesno: YESNO, core: UNIVERSAL, care: CARE, library: LIBRARY, meals: MEALS };
+// *** QUICK REACTIONS, A STRIP (row 2.290, chat's note GT, 2026-11-27; proposal_reaction_strip_20261127.md step 1). ***
+//
+// One row of six short reactions for a conversation already going: chat's starting set, not reviewed by a speech-language
+// person, and like every board here each card is an ordinary card (renamed, reordered, given a picture in the board
+// editor). One row, so it can sit along the edge of a screen or over the dashboard as an overlay. "I have something to say"
+// is a plain card until its signal is built (step 2: it will tell the room to wait instead of speaking).
+export const REACTIONS = {
+  version: VOCAB_VERSION,
+  id: 'reactions',
+  name: 'Quick reactions (a strip; chat\'s starting set)',
+  tier: 6,
+  cols: 6,
+  rows: 1,
+  cells: [
+    { id: 'mmhmm',   word: 'Mm-hmm',                  symbol: null,   kind: 'social' },
+    { id: 'ha',      word: 'Ha!',                     symbol: null,   kind: 'love' },
+    { id: 'really',  word: 'Really?',                 symbol: null,   kind: 'social' },
+    { id: 'goon',    word: 'Go on',                   symbol: null,   kind: 'social' },
+    { id: 'wait',    word: 'Wait',                    symbol: 'wait', kind: 'social' },
+    { id: 'tosay',   word: 'I have something to say', symbol: null,   kind: 'need' },
+  ],
+};
+
+export const BUILTIN_BOARDS = { yesno: YESNO, core: UNIVERSAL, care: CARE, library: LIBRARY, meals: MEALS, reactions: REACTIONS };

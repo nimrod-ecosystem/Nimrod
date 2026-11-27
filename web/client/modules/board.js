@@ -196,7 +196,7 @@ const CUSTOM_ID = 'custom';
 // a board actually reads, and a word that only appears in the settings menu is a word most
 // people will never see. Kept short — this sits over a communication surface, not a settings page.
 const BOARD_LABELS = { yesno: 'Yes / No / Other', core: 'Core words (36)',
-                       care: 'Care board (example)' };
+                       care: 'Care board (example)', reactions: 'Quick reactions' };
 export const SELECT_KIND = 'select';           // the durable record's event kind
 // How long a pressed card's ring stays on. Shorter than the shortest flash period (339 ms at 3 a
 // second), so the ring is always dark again before the flash limit lets it light once more.
@@ -434,6 +434,8 @@ export const SETTINGS = [
       { value: 'care',  label: 'Care board — an example (16 words)' },
       // (2026-11-02, Mike via chat's note EB) chat's draft, labelled as not reviewed: aac_vocab.js MEALS.
       { value: 'meals', label: 'Meals — an example, not reviewed by a speech-language person (12 words)' },
+      // (row 2.290, note GT, 2026-11-27) one row of six, to sit along an edge or over the dashboard: aac_vocab.js REACTIONS.
+      { value: 'reactions', label: 'Quick reactions — a strip of six (mm-hmm, ha!, really?…)' },
     ] },
   // *** SWITCHING BOARDS IS ON THE BOARD, NOT ONLY IN THE MENU. ***
   //
