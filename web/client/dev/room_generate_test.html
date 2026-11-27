@@ -155,6 +155,39 @@ const overlaps = (a, b) => a.x0 < b.x1 && b.x0 < a.x1 && a.z0 < b.z1 && b.z0 < a
     check('*** a living room: one sofa against the wall, a side table and a lamp with it, no bed, nothing overlapping (60 seeds) ***', !why, why);
     why = kindsOk('study', 'desk', (p, r) => p.includes('bookshelf') && r.items.some((i) => i.part === 'tableLamp' && i.standsOn === r.items.find((x) => x.part === 'desk')?.id));
     check('*** a study: one desk with its lamp ON it, and always a bookshelf (a study is not itself without one) ***', !why, why);
+    // (Mike, 2026-11-26: "the doors didn't go down to the floor and objects on the wall overlapped") Measured on what the
+    // room DRAWS (room_scene.js itemBox, the window with its curtains and rod), for every kind, 60 seeds each.
+    {
+      const { itemBox, isFloor } = await import('../room_scene.js');
+      const { ROOM_SHELLS } = await import('../room_parts.js');
+      const OH = { window: { side: 0.18, top: 0.1, bottom: 0.1 } };
+      const drawn = (it, shell) => { const v = itemBox(it, shell).visible; const o = it.kind === 'furniture' && OH[it.part];
+        return o ? { l: v.left - v.w * o.side, r: v.left + v.w * (1 + o.side), t: v.top - v.h * o.top, b: v.top + v.h * (1 + o.bottom) }
+          : { l: v.left, r: v.left + v.w, t: v.top, b: v.top + v.h }; };
+      const meet = (a, c) => a.l < c.r && c.l < a.r && a.t < c.b && c.t < a.b;
+      let overlap = null, doorGap = 0, doorAt = '', shelfOnSide = null;
+      for (const type of Object.keys(ROOM_TYPES)) for (let seed = 1; seed <= 60; seed++) {
+        const { recipe, plan } = generateRoom({ type, seed });
+        const shell = ROOM_SHELLS[recipe.shell];
+        const onWall = recipe.items.filter((it) => !isFloor(it) && (!it.wall || it.wall === 'back'));
+        for (let i = 0; i < onWall.length && !overlap; i++) for (let j = i + 1; j < onWall.length; j++) {
+          if (meet(drawn(onWall[i], shell), drawn(onWall[j], shell))) { overlap = `${type} ${seed}: ${onWall[i].part || onWall[i].kind} and ${onWall[j].part || onWall[j].kind}`; break; }
+        }
+        for (const d of recipe.items.filter((it) => it.part === 'door')) {
+          const v = itemBox(d, shell).visible;
+          const side = d.wall === 'left' || d.wall === 'right';
+          const u = !side ? 1 : d.wall === 'left' ? Math.min(0.98, Math.max(0.02, d.x / shell.back.l)) : Math.min(0.98, Math.max(0.02, (100 - d.x) / (100 - shell.back.r)));
+          const floorPx = ((side ? 100 + u * (shell.back.b - 100) : shell.back.b) / 100) * 540;
+          const gap = Math.abs(v.top + v.h - floorPx);
+          if (gap > doorGap) { doorGap = gap; doorAt = `${type} ${seed} ${d.wall || 'back'}`; }
+        }
+        const fp = plan.pieces.find((p) => p.part === 'fireplace');
+        if (fp && fp.z0 > 0 && !shelfOnSide) shelfOnSide = `${type} ${seed}`;
+      }
+      check('*** no two things on the back wall overlap, as they are drawn (the window with its curtains) ***', !overlap, overlap);
+      check('*** every door stands on the floor: its foot on the floor line, on the back wall or a side wall ***', doorGap < 1, `${doorGap.toFixed(1)} px off, ${doorAt}`);
+      check('a fireplace is only ever on the back wall (it is built into a wall)', !shelfOnSide, shelfOnSide);
+    }
     check('every kind the Room panel offers can be made', Object.keys(ROOM_TYPES).every((t) => { try { return !!generateRoom({ type: t, seed: 3 }).recipe; } catch { return false; } }));
     check('the plan is centimetres, a bedroom of an ordinary size', ROOM_CM.d === 320 && ROOM_CM.wall === 250);
 

@@ -32,7 +32,7 @@
 
 import { mulberry32 } from './rng.js';
 import { ROOM_SHELLS, FURNITURE, WALL_FINISHES, FLOOR_FINISHES, STAGE } from './room_parts.js';
-import { depthScale } from './room_scene.js';
+import { depthScale, itemBox, sideWallTransform } from './room_scene.js';
 
 // `w: null`: the room's width follows the shell, so a centimetre is as wide as it is tall on the back wall (a "flat"
 // shell's back wall is wider on the stage than a "room" shell's, so its room is wider, not its pieces stretched).
@@ -72,7 +72,9 @@ export const ROOM_FACTS = Object.freeze({
   floorLamp: { real_size: [35, 35, 160],  sits_on: 'floor', against: 'wall', rooms: ['living', 'bedroom', 'study'], goes_with: [], clearance: 0, count: [0, 1], faces: 'room' },
   plant:     { real_size: [40, 40, 90],   sits_on: 'floor', against: 'wall', rooms: ['living', 'bedroom', 'study', 'kitchen'], goes_with: [], clearance: 0, count: [0, 2], faces: 'room' },
   rug:       { real_size: [200, 140, 1],  sits_on: 'floor', against: 'none', rooms: ['living', 'bedroom'], goes_with: [], clearance: 0, count: [0, 1], faces: 'room', flat: true },
-  fireplace: { real_size: [140, 40, 110], sits_on: 'floor', against: 'wall', rooms: ['living'], goes_with: ['rug', 'armchair'], clearance: 90, count: [0, 1], faces: 'room' },
+  // `back_only` (2026-11-26, seen in the browser pane): a fireplace is built into a wall, and the room draws every floor
+  // piece facing the viewer, so one "against" a side wall stood out on the floor in front of the sofa. The back wall only.
+  fireplace: { real_size: [140, 40, 110], sits_on: 'floor', against: 'wall', back_only: true, rooms: ['living'], goes_with: ['rug', 'armchair'], clearance: 90, count: [0, 1], faces: 'room' },
   window:    { real_size: [120, 10, 120], sits_on: 'wall', against: 'wall', rooms: ['living', 'bedroom', 'study', 'kitchen'], goes_with: [], clearance: 0, count: [1, 1], faces: 'room', at: 140 },
   wallShelf: { real_size: [90, 20, 25],   sits_on: 'wall', against: 'wall', rooms: ['living', 'bedroom', 'study', 'kitchen'], goes_with: [], clearance: 0, count: [0, 1], faces: 'room', at: 165 },
   door:      { real_size: [90, 5, 210],   sits_on: 'wall', against: 'wall', rooms: ['living', 'bedroom', 'study', 'kitchen'], goes_with: [], clearance: 90, count: [0, 1], faces: 'room', at: 105 },
@@ -117,6 +119,12 @@ export const ROOM_TYPES = Object.freeze({
 });
 
 const GAP = 5;   // cm between pieces set side by side (a nightstand beside the bed)
+// How far a drawing reaches past its own box (room_parts.js: the window's curtains run 14% past each side and its rod 18%,
+// the rod 10% above, the curtains 10% below), as fractions of the box. Read off the drawings, so a change there is a
+// change here.
+const DRAWN_OVERHANG = Object.freeze({ window: { side: 0.18, top: 0.10, bottom: 0.10 } });
+// Stage px kept clear between two things on the back wall (a hair at 960 px: enough that two frames never read as one).
+const WALL_GAP_PX = 6;
 
 // ---------------------------------------------------------------------------------------------
 // PLAN (cm) -> STAGE (percent)
@@ -231,26 +239,53 @@ export function generateRoom({ type = 'bedroom', seed = 1, roomCm: roomAsked = R
   let n = 0;
   const id = (base) => `${base}${++n}`;
 
-  // 2a. the door. On a side wall where the shell has one (its swing is the floor beside that wall), else at one end
-  // of the back wall (its swing is the floor in front of it).
+  // *** WHAT IS SEEN ON THE BACK WALL, AS DRAWN (Mike, 2026-11-26: "objects on the wall overlapped"). *** The cm spans
+  // above use each piece's REAL size, but a drawing is not its real size: a window's curtains and rod reach 18% past its
+  // box, a door's drawing is squatter than a door. So every wall thing, and every floor thing standing against the back
+  // wall, is also kept as the box the room will draw (room_scene.js itemBox, in stage px, with the overhang), and a new
+  // wall thing must not touch any of them, nor a floor thing pushed back against the wall touch a wall thing.
+  const ppc = (((shell.back.r - shell.back.l) / 100) * STAGE.w) / roomCm.w;     // stage px per cm on the back wall
+  const wallShown = [], backShown = [];
+  const shownBox = (item) => {
+    const v = itemBox(item, shell).visible;
+    const o = item.kind === 'furniture' ? DRAWN_OVERHANG[item.part] : null;
+    if (!o) return { l: v.left, t: v.top, r: v.left + v.w, b: v.top + v.h };
+    return { l: v.left - v.w * o.side, t: v.top - v.h * o.top, r: v.left + v.w * (1 + o.side), b: v.top + v.h * (1 + o.bottom) };
+  };
+  const touches = (a, list) => list.some((s) => a.l < s.r + WALL_GAP_PX && s.l < a.r + WALL_GAP_PX && a.t < s.b + WALL_GAP_PX && s.t < a.b + WALL_GAP_PX);
+
+  // 2a. the door, AS TALL AS A REAL DOOR (Mike, 2026-11-26: "the doors didn't go down to the floor"). Its drawing is
+  // squatter than a door, so scaled by its width it was about 180 cm tall, centred at 105 cm: 15 cm off the floor. Scaled
+  // by its HEIGHT, it is a 210 cm door standing on the floor, a little wider than 90 cm. On a side wall where the shell
+  // has one (its swing is the floor beside that wall), else at one end of the back wall (its swing in front of it).
   const door = ROOM_FACTS.door;
+  const doorK = round((door.real_size[2] * ppc) / FURNITURE.door.box[1], 3);
+  const doorW = (FURNITURE.door.box[0] * doorK) / ppc;                          // its drawn width, cm
   const side = shell.left && shell.right ? pick(['left', 'right']) : shell.left ? 'left' : null;
   if (side) {
     const along = between(0.35, 0.6);                               // how far toward the front, along the side wall
     const edge = side === 'left' ? shell.back.l : 100 - shell.back.r;
     const x = side === 'left' ? edge * (1 - along) : 100 - edge * (1 - along);
-    recipe.items.push({ id: id('door'), kind: 'furniture', part: 'door', x: round(x), y: 55, wall: side });
+    // Its foot on the side wall's floor line at that x (the line runs from the stage's bottom at the front to the back
+    // wall's foot), its middle half its drawn height above (room_scene.js sideWallTransform draws it that big there).
+    const probe = { kind: 'furniture', part: 'door', x, y: 50, wall: side, scale: doorK };
+    const tf = sideWallTransform(shell, probe);
+    const u = side === 'left' ? Math.min(0.98, Math.max(0.02, x / shell.back.l)) : Math.min(0.98, Math.max(0.02, (100 - x) / (100 - shell.back.r)));
+    const floorY = 100 + u * (shell.back.b - 100);
+    const halfH = ((FURNITURE.door.box[1] * doorK * tf.sy) / 2 / STAGE.h) * 100;
+    recipe.items.push({ id: id('door'), kind: 'furniture', part: 'door', x: round(x), y: round(floorY - halfH), wall: side, scale: doorK });
     const zMid = along * roomCm.d;
     const xs = side === 'left' ? [0, door.clearance] : [roomCm.w - door.clearance, roomCm.w];
-    plan.reserve({ x0: xs[0], x1: xs[1], z0: zMid - door.real_size[0] / 2, z1: zMid + door.real_size[0] / 2 }, 'door');
+    plan.reserve({ x0: xs[0], x1: xs[1], z0: zMid - doorW / 2, z1: zMid + doorW / 2 }, 'door');
   } else {
     const atLeft = coin();
-    const x0 = atLeft ? 10 : roomCm.w - 10 - door.real_size[0];
-    const at = wallToStage(shell, x0 + door.real_size[0] / 2, door.at, roomCm);
-    recipe.items.push({ id: id('door'), kind: 'furniture', part: 'door', x: round(at.x), y: round(at.y),
-      scale: wallScale(shell, 'door', door.real_size[0], roomCm) });
-    wallUsed.push({ x0, x1: x0 + door.real_size[0], h0: 0, h1: door.real_size[2] });
-    plan.reserve({ x0, x1: x0 + door.real_size[0], z0: 0, z1: door.clearance }, 'door');
+    const x0 = atLeft ? 10 : roomCm.w - 10 - doorW;
+    const at = wallToStage(shell, x0 + doorW / 2, door.real_size[2] / 2, roomCm);
+    const item = { id: id('door'), kind: 'furniture', part: 'door', x: round(at.x), y: round(at.y), scale: doorK };
+    recipe.items.push(item);
+    wallShown.push(shownBox(item));
+    wallUsed.push({ x0, x1: x0 + doorW, h0: 0, h1: door.real_size[2] });
+    plan.reserve({ x0, x1: x0 + doorW, z0: 0, z1: door.clearance }, 'door');
   }
 
   // 3. the anchor, against the back wall, out of the door's way. Tried at random spots along the wall, then the rest.
@@ -273,13 +308,20 @@ export function generateRoom({ type = 'bedroom', seed = 1, roomCm: roomAsked = R
   }
   if (!anchorAt) for (const x0 of spots) { const r = { x0, x1: x0 + aw, z0: 0, z1: ad }; if (plan.fits(r, af.clearance)) { anchorAt = r; break; } }
   const placed = [];   // { part, r, item }
-  const placeFloor = (part, r, extra = {}) => {
+  // A floor piece as it would be drawn at `r`, not yet placed (`placeFloor` places it).
+  const floorItem = (part, r, extra = {}) => {
     const f = ROOM_FACTS[part];
     const foot = planToStage(shell, (r.x0 + r.x1) / 2, r.z1, roomCm);
-    const item = { id: id(part), kind: 'furniture', part, x: round(foot.x), y: round(foot.y),
+    return { id: `${part}?`, kind: 'furniture', part, x: round(foot.x), y: round(foot.y),
       scale: floorScale(shell, part, f.real_size[0], foot.y, roomCm), ...extra };
+  };
+  const againstBack = (r) => r.z0 <= 0;
+  const placeFloor = (part, r, extra = {}) => {
+    const f = ROOM_FACTS[part];
+    const item = { ...floorItem(part, r, extra), id: id(part) };
     recipe.items.push(item);
     if (!f.flat) plan.add(part, r, f.clearance);
+    if (!f.flat && againstBack(r)) backShown.push(shownBox(item));
     const entry = { part, r, item };
     placed.push(entry);
     return entry;
@@ -322,9 +364,24 @@ export function generateRoom({ type = 'bedroom', seed = 1, roomCm: roomAsked = R
     // the table's top, on the stage: its foot, raised by its drawn height at its depth and scale
     const tablePx = FURNITURE[t.part].box[1] * depthScale(foot) * t.item.scale;
     const topY = foot - (tablePx / STAGE.h) * 100 * 0.9;
-    recipe.items.push({ id: id('tableLamp'), kind: 'furniture', part: 'tableLamp', x: t.item.x, y: round(topY), ground: foot,
-      scale: floorScale(shell, 'tableLamp', lf.real_size[0], foot, roomCm), standsOn: t.item.id });
+    const lamp = { id: 'tableLamp?', kind: 'furniture', part: 'tableLamp', x: t.item.x, y: round(topY), ground: foot,
+      scale: floorScale(shell, 'tableLamp', lf.real_size[0], foot, roomCm), standsOn: t.item.id };
+    // A lamp on a table against the back wall stands in front of what hangs there: not under a window or a picture.
+    const back = againstBack(t.r);
+    const box = back ? shownBox(lamp) : null;
+    if (back && touches(box, wallShown)) return;
+    lamp.id = id('tableLamp');
+    recipe.items.push(lamp);
+    if (back) backShown.push(box);
   }
+  /** Hang a wall thing if what it would look like touches nothing on the back wall (nor a piece standing against it). */
+  const hang = (item) => {
+    const box = shownBox(item);
+    if (touches(box, wallShown) || touches(box, backShown)) return false;
+    recipe.items.push(item);
+    wallShown.push(box);
+    return true;
+  };
 
   // 2b + 5. the wall: the window, a picture over the anchor (the bed, the sofa, the desk), a clock. Each checked against
   // what is on the wall already.
@@ -337,29 +394,37 @@ export function generateRoom({ type = 'bedroom', seed = 1, roomCm: roomAsked = R
   // a window over the bed is ordinary; it then takes the picture's place
   let windowAt = null;
   for (const x0 of winSpots) {
-    if (wallFree(x0, x0 + ww, win.at - wh / 2, win.at + wh / 2)) { windowAt = x0; break; }
+    if (!wallFree(x0, x0 + ww, win.at - wh / 2, win.at + wh / 2)) continue;
+    const at = wallToStage(shell, x0 + ww / 2, win.at, roomCm);
+    if (hang({ id: `window${n + 1}`, kind: 'furniture', part: 'window', x: round(at.x), y: round(at.y), scale: wallScale(shell, 'window', ww, roomCm) })) {
+      n += 1;
+      windowAt = x0;
+      wallUsed.push({ x0, x1: x0 + ww, h0: win.at - wh / 2, h1: win.at + wh / 2 });
+      break;
+    }
   }
-  if (windowAt != null) {
-    wallUsed.push({ x0: windowAt, x1: windowAt + ww, h0: win.at - wh / 2, h1: win.at + wh / 2 });
-    const at = wallToStage(shell, windowAt + ww / 2, win.at, roomCm);
-    recipe.items.push({ id: id('window'), kind: 'furniture', part: 'window', x: round(at.x), y: round(at.y), scale: wallScale(shell, 'window', ww, roomCm) });
-  } else leftOut.push('window');
+  if (windowAt == null) leftOut.push('window');
   if (overBed) {
     const fw = 60, fh = 60, fat = 150;
     const cx = (overBed.x0 + overBed.x1) / 2;
     if (wallFree(cx - fw / 2, cx + fw / 2, fat - fh / 2, fat + fh / 2)) {
-      wallUsed.push({ x0: cx - fw / 2, x1: cx + fw / 2, h0: fat - fh / 2, h1: fat + fh / 2 });
       const at = wallToStage(shell, cx, fat, roomCm);
-      recipe.items.push({ id: id('frame'), kind: 'frame', x: round(at.x), y: round(at.y), frame: pick(['classic', 'ornate', 'instant']),
-        width: Math.round((fw / roomCm.w) * ((shell.back.r - shell.back.l) / 100) * STAGE.w) });
+      const frame = pick(['classic', 'ornate', 'instant']);
+      if (hang({ id: `frame${n + 1}`, kind: 'frame', x: round(at.x), y: round(at.y), frame, width: Math.round(fw * ppc) })) {
+        n += 1;
+        wallUsed.push({ x0: cx - fw / 2, x1: cx + fw / 2, h0: fat - fh / 2, h1: fat + fh / 2 });
+      }
     }
   }
+  // The clock: 30 cm across, drawn that size (it was a fixed 60 px, which on a wide wall is far bigger than the 30 cm
+  // kept for it, and so it reached over the window).
+  const cw = 30, cat = 195;
   for (const cx of [...winSpots].map((x) => x + 15)) {
-    const cw = 30, cat = 195;
-    if (wallFree(cx - cw / 2, cx + cw / 2, cat - cw / 2, cat + cw / 2)) {
+    if (!wallFree(cx - cw / 2, cx + cw / 2, cat - cw / 2, cat + cw / 2)) continue;
+    const at = wallToStage(shell, cx, cat, roomCm);
+    if (hang({ id: `clock${n + 1}`, kind: 'clock', x: round(at.x), y: round(at.y), size: Math.round(cw * ppc) })) {
+      n += 1;
       wallUsed.push({ x0: cx - cw / 2, x1: cx + cw / 2, h0: cat - cw / 2, h1: cat + cw / 2 });
-      const at = wallToStage(shell, cx, cat, roomCm);
-      recipe.items.push({ id: id('clock'), kind: 'clock', x: round(at.x), y: round(at.y), size: 60 });
       break;
     }
   }
@@ -375,14 +440,16 @@ export function generateRoom({ type = 'bedroom', seed = 1, roomCm: roomAsked = R
       const tries = [];
       if (f.against === 'wall') {
         for (let x0 = 0; x0 + pw <= roomCm.w; x0 += 10) tries.push({ x0, x1: x0 + pw, z0: 0, z1: pd });   // the back wall
-        for (let z0 = 0; z0 + pd <= roomCm.d; z0 += 20) {                                                 // the side walls
+        for (let z0 = 0; z0 + pd <= roomCm.d && !f.back_only; z0 += 20) {                                 // the side walls
           tries.push({ x0: 0, x1: pw, z0, z1: z0 + pd });
           tries.push({ x0: roomCm.w - pw, x1: roomCm.w, z0, z1: z0 + pd });
         }
       }
       else for (let x0 = 0; x0 + pw <= roomCm.w; x0 += 20) for (let z0 = 0; z0 + pd <= roomCm.d; z0 += 20) tries.push({ x0, x1: x0 + pw, z0, z1: z0 + pd });
       shuffle(tries);
-      const r = tries.find((t) => plan.fits(t, f.clearance));
+      // A piece pushed back against the wall must not stand in front of the window, the picture or the clock (a flat
+      // rug is never against a wall).
+      const r = tries.find((t) => plan.fits(t, f.clearance) && (f.flat || !againstBack(t) || !touches(shownBox(floorItem(part, t)), wallShown)));
       if (!r) { leftOut.push(part); break; }
       const p = placeFloor(part, r);
       if (f.surface && coin(0.5)) lampOn(p);
