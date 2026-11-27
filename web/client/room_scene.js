@@ -137,6 +137,53 @@ export function sideWallTransform(shell, it) {
   return { sx: 0.56 * s, sy: s, shear };
 }
 
+/* *** SIDE WALLS IN TRUE PERSPECTIVE (Mike, 2026-11-27: "The doors on the side wall don't match the angle of the
+   wall."). *** The matrix above is one shear: it tilts a thing's top and bottom edges by the SAME amount, the slope of
+   the wall at the thing's middle. On a real side wall the floor line and a line higher up slope differently (both run
+   to one vanishing point), so a tall thing -- a door -- had a bottom that did not follow the floor and a top that did
+   not follow the wall. Now a side-wall thing is drawn onto FOUR CORNERS (room_backdrop.js quadMatrix, the projective map
+   a module on a 3D wall already uses): at each of its two upright edges, its bottom and top sit at the same fractions
+   of the wall's height as at its middle, so its bottom edge runs parallel to the floor line, its top to the wall's top,
+   and its near edge is taller than its far one.
+   THE WALL'S LINES: the floor line exactly as ROOM_SHELLS draws it (the back wall's foot, at the corner, to the stage's
+   bottom edge), so a thing's foot follows the floor that is on screen; and the wall's top line from the back wall's top
+   corner to Design's vanishing point (the middle of the back wall, at eye height: 0.45 of its foot, as the shear above
+   has it). A line partway up the wall is the same fraction of the way between the two. (Seen 2026-11-27 at full size:
+   with the top line run to the floor line's own vanishing point, which sits above the stage, a door's top sloped DOWN
+   toward the viewer, as if seen from above the ceiling. From eye height it rises toward the viewer, as a real door's does.)
+   Its width across is Design's 0.56 foreshortening, and its size at its middle Design's (no bigger than 1.45 times the
+   back wall's), so a thing hangs where and as big as it did. */
+export function sideWallGeometry(shell, side) {
+  const b = shell.back;
+  const L = side === 'left' ? b.l : b.r;                 // the back corner's x, %
+  const front = side === 'left' ? 0 : 100;               // the stage's edge, where the floor line meets the bottom
+  const vpX = (b.l + b.r) / 2;
+  const floorAt = (x) => b.b + ((100 - b.b) * (x - L)) / (front - L);
+  const vpY = b.b * 0.45;                                // Design's eye height (sideWallTransform)
+  const topAt = (x) => b.t + ((vpY - b.t) * (x - L)) / (vpX - L);
+  const backTall = b.b - b.t;
+  const tall = (x) => floorAt(x) - topAt(x);
+  /** How much nearer than the back wall the wall is at x, capped as Design's matrix caps it. */
+  const near = (x) => Math.min(1.45, tall(x) / backTall);
+  return { floorAt, topAt, tall, near, backTall };
+}
+/** The four corners (stage px: TL, TR, BR, BL) of a thing `w` x `h` (its drawn box, at its scale) hung at it.x / it.y. */
+export function sideWallQuad(shell, it, w, h) {
+  const g = sideWallGeometry(shell, it.wall);
+  const cx = Number(it.x) || 0, cy = Number(it.y) || 0;
+  const s = g.near(cx);
+  const hw = ((w * 0.56 * s) / 2 / W) * 100;                         // half its width, %
+  const f = (g.floorAt(cx) - cy) / g.tall(cx);                        // its middle, as a fraction of the wall up from the floor
+  const half = ((h * s) / 2 / H) * 100 / g.tall(cx);                  // half its height, the same way
+  const at = (x) => { const t = g.tall(x); return { top: g.floorAt(x) - (f + half) * t, bot: g.floorAt(x) - (f - half) * t }; };
+  const x0 = cx - hw, x1 = cx + hw;
+  const a = at(x0), c = at(x1);
+  const P = (x, y) => [(x / 100) * W, (y / 100) * H];
+  return it.flip
+    ? [P(x1, c.top), P(x0, a.top), P(x0, a.bot), P(x1, c.bot)]
+    : [P(x0, a.top), P(x1, c.top), P(x1, c.bot), P(x0, a.bot)];
+}
+
 /** Which wall a stage x falls on for a shell. Dragging past a corner reassigns the wall. */
 export function wallAt(shell, x) {
   const b = shell.back;
@@ -227,6 +274,18 @@ export function itemBox(it, shell = ROOM_SHELLS.room) {
   else if (it.kind === 'build') { const [bw, bh] = roomBoxFor({ parts: Array.isArray(it.parts) ? it.parts : [] }); w = bw * k; h = bh * k; mk = 1; }   // brick builder
   else { const c = contentSize(it); w = c.w; h = c.h; mk = sc; }
   const side = !floor && (it.wall === 'left' || it.wall === 'right') && shell[it.wall] ? sideWallTransform(shell, it) : null;
+  // (2026-11-27) A side-wall thing on its four corners in true perspective (sideWallQuad, above). Its own element keeps its
+  // size (w x h); the corners carry its scale. Falls back to the shear for a corner set the map cannot take.
+  if (side) {
+    const sq = sideWallQuad(shell, it, w * mk, h * mk);
+    const t = quadMatrix(w, h, sq);
+    if (t) {
+      const xs = sq.map((p) => p[0]), ys = sq.map((p) => p[1]);
+      const left = Math.min(...xs), top = Math.min(...ys), vw = Math.max(...xs) - left, vh = Math.max(...ys) - top;
+      return { left: 0, top: 0, w, h, k, transform: t, origin: '0 0', floor: false, side, sideQuad: sq,
+        cx: (it.x / 100) * W, anchorY: (it.y / 100) * H, visible: { w: vw, h: vh, left, top } };
+    }
+  }
   const f = it.flip ? -1 : 1;
   const transform = side
     ? `translate(-50%, -50%) matrix(${side.sx * mk * f}, ${side.shear * side.sx * mk * f}, 0, ${side.sy * mk}, 0, 0)`
@@ -258,10 +317,15 @@ export function drivenBox(base, row) {
   const dx = (d.across / 100) * base.visible.w, dy = (d.down / 100) * base.visible.h;
   const cx = base.cx + dx, anchorY = base.anchorY + dy;
   const vw = base.visible.w * d.scale, vh = base.visible.h * d.scale;
+  // A side-wall thing on its four corners (sideWallQuad) is placed from the stage's corner: its turn and growth go about
+  // its own middle, put in FRONT of the corner map, or it would swing about the top-left of the room.
+  const about = base.sideQuad && (d.turn || d.scale !== 1)
+    ? `translate(${base.cx}px, ${base.anchorY}px)${d.turn ? ` rotate(${d.turn}deg)` : ''}${d.scale !== 1 ? ` scale(${d.scale})` : ''} translate(${-base.cx}px, ${-base.anchorY}px) ` : '';
   return {
     ...base,
     left: base.left + (dx / W) * 100, top: base.top + (dy / H) * 100,
-    transform: `${base.transform}${d.turn ? ` rotate(${d.turn}deg)` : ''}${d.scale !== 1 ? ` scale(${d.scale})` : ''}`,
+    transform: base.sideQuad ? `${about}${base.transform}`
+      : `${base.transform}${d.turn ? ` rotate(${d.turn}deg)` : ''}${d.scale !== 1 ? ` scale(${d.scale})` : ''}`,
     k: base.k * d.scale, cx, anchorY, hue: d.hue,
     visible: { w: vw, h: vh, left: cx - vw / 2, top: base.floor ? anchorY - vh : anchorY - vh / 2 },
   };

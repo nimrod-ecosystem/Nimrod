@@ -165,7 +165,8 @@ const overlaps = (a, b) => a.x0 < b.x1 && b.x0 < a.x1 && a.z0 < b.z1 && b.z0 < a
         return o ? { l: v.left - v.w * o.side, r: v.left + v.w * (1 + o.side), t: v.top - v.h * o.top, b: v.top + v.h * (1 + o.bottom) }
           : { l: v.left, r: v.left + v.w, t: v.top, b: v.top + v.h }; };
       const meet = (a, c) => a.l < c.r && c.l < a.r && a.t < c.b && c.t < a.b;
-      let overlap = null, doorGap = 0, doorAt = '', shelfOnSide = null;
+      let overlap = null, doorGap = 0, doorAt = '', shelfOnSide = null, topSlopeBad = null, sameSlope = null, doorHidden = null;
+      const { sideWallGeometry } = await import('../room_scene.js');
       for (const type of Object.keys(ROOM_TYPES)) for (let seed = 1; seed <= 60; seed++) {
         const { recipe, plan } = generateRoom({ type, seed });
         const shell = ROOM_SHELLS[recipe.shell];
@@ -174,12 +175,30 @@ const overlaps = (a, b) => a.x0 < b.x1 && b.x0 < a.x1 && a.z0 < b.z1 && b.z0 < a
           if (meet(drawn(onWall[i], shell), drawn(onWall[j], shell))) { overlap = `${type} ${seed}: ${onWall[i].part || onWall[i].kind} and ${onWall[j].part || onWall[j].kind}`; break; }
         }
         for (const d of recipe.items.filter((it) => it.part === 'door')) {
-          const v = itemBox(d, shell).visible;
+          const box = itemBox(d, shell);
           const side = d.wall === 'left' || d.wall === 'right';
-          const u = !side ? 1 : d.wall === 'left' ? Math.min(0.98, Math.max(0.02, d.x / shell.back.l)) : Math.min(0.98, Math.max(0.02, (100 - d.x) / (100 - shell.back.r)));
-          const floorPx = ((side ? 100 + u * (shell.back.b - 100) : shell.back.b) / 100) * 540;
-          const gap = Math.abs(v.top + v.h - floorPx);
+          let gap;
+          if (side) {
+            // (2026-11-27, "The doors on the side wall don't match the angle of the wall") Drawn on four corners: BOTH
+            // bottom corners on the floor line, and its top edge as steep as the wall's lines there (not the floor's).
+            const g = sideWallGeometry(shell, d.wall);
+            const q = box.sideQuad;
+            const floorPx = (xPx) => (g.floorAt((xPx / 960) * 100) / 100) * 540;
+            gap = q ? Math.max(Math.abs(q[2][1] - floorPx(q[2][0])), Math.abs(q[3][1] - floorPx(q[3][0]))) : 999;
+            if (q) {
+              const slope = (p, r) => (r[1] - p[1]) / (r[0] - p[0]);
+              const fTop = (q[0][1] - (g.floorAt((q[0][0] / 960) * 100) / 100) * 540) / ((g.tall((q[0][0] / 960) * 100) / 100) * 540);
+              const fTop2 = (q[1][1] - (g.floorAt((q[1][0] / 960) * 100) / 100) * 540) / ((g.tall((q[1][0] / 960) * 100) / 100) * 540);
+              if (Math.abs(fTop - fTop2) > 0.002 && !topSlopeBad) topSlopeBad = `${type} ${seed}: top at ${fTop.toFixed(3)} and ${fTop2.toFixed(3)} of the wall`;
+              if (Math.abs(slope(q[3], q[2]) - slope(q[0], q[1])) < 1e-3 && !sameSlope) sameSlope = `${type} ${seed}`;
+            }
+          } else gap = Math.abs(box.visible.top + box.visible.h - (shell.back.b / 100) * 540);
           if (gap > doorGap) { doorGap = gap; doorAt = `${type} ${seed} ${d.wall || 'back'}`; }
+        }
+        for (const d of recipe.items.filter((it) => it.part === 'door' && (it.wall === 'left' || it.wall === 'right'))) {
+          const db = drawn(d, shell);
+          const hid = recipe.items.find((it) => isFloor(it) && !(it.part === 'rug') && meet(drawn(it, shell), db));
+          if (hid && !doorHidden) doorHidden = `${type} ${seed}: ${hid.part} in front of the ${d.wall} door`;
         }
         const fp = plan.pieces.find((p) => p.part === 'fireplace');
         if (fp && fp.z0 > 0 && !shelfOnSide) shelfOnSide = `${type} ${seed}`;
@@ -187,6 +206,9 @@ const overlaps = (a, b) => a.x0 < b.x1 && b.x0 < a.x1 && a.z0 < b.z1 && b.z0 < a
       check('*** no two things on the back wall overlap, as they are drawn (the window with its curtains) ***', !overlap, overlap);
       check('*** every door stands on the floor: its foot on the floor line, on the back wall or a side wall ***', doorGap < 1, `${doorGap.toFixed(1)} px off, ${doorAt}`);
       check('a fireplace is only ever on the back wall (it is built into a wall)', !shelfOnSide, shelfOnSide);
+      check('*** a side-wall door\'s top edge follows the wall (the same height up the wall at both its edges) ***', !topSlopeBad, topSlopeBad);
+      check('...and its top and bottom edges slope differently, as two lines running to one vanishing point do', !sameSlope, sameSlope);
+      check('*** nothing standing on the floor covers a side-wall door (a rug lies under it) ***', !doorHidden, doorHidden);
     }
     check('every kind the Room panel offers can be made', Object.keys(ROOM_TYPES).every((t) => { try { return !!generateRoom({ type: t, seed: 3 }).recipe; } catch { return false; } }));
     check('the plan is centimetres, a bedroom of an ordinary size', ROOM_CM.d === 320 && ROOM_CM.wall === 250);

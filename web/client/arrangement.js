@@ -1053,7 +1053,11 @@ export function createArrangement({
         wall, scale: g.scale / 100 }, shell);
       s.left = `${box.left}%`; s.top = `${box.top}%`;
       s.width = `${box.w}px`; s.height = `${box.h}px`;
-      s.transform = `${box.transform}${turn}`;
+      // (2026-11-27) On a side wall the box is a four-corner map from the room's corner (room_scene.js sideWallQuad): a
+      // turn goes about the module's own middle, in front of it, or it would swing about the corner of the room.
+      s.transform = box.sideQuad && turn
+        ? `translate(${box.cx}px, ${box.anchorY}px)${turn} translate(${-box.cx}px, ${-box.anchorY}px) ${box.transform}`
+        : `${box.transform}${turn}`;
       s.transformOrigin = box.origin;
       return;
     }

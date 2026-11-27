@@ -32,7 +32,7 @@
 
 import { mulberry32 } from './rng.js';
 import { ROOM_SHELLS, FURNITURE, WALL_FINISHES, FLOOR_FINISHES, STAGE } from './room_parts.js';
-import { depthScale, itemBox, sideWallTransform } from './room_scene.js';
+import { depthScale, itemBox, sideWallGeometry } from './room_scene.js';
 
 // `w: null`: the room's width follows the shell, so a centimetre is as wide as it is tall on the back wall (a "flat"
 // shell's back wall is wider on the stage than a "room" shell's, so its room is wider, not its pieces stretched).
@@ -245,7 +245,7 @@ export function generateRoom({ type = 'bedroom', seed = 1, roomCm: roomAsked = R
   // wall, is also kept as the box the room will draw (room_scene.js itemBox, in stage px, with the overhang), and a new
   // wall thing must not touch any of them, nor a floor thing pushed back against the wall touch a wall thing.
   const ppc = (((shell.back.r - shell.back.l) / 100) * STAGE.w) / roomCm.w;     // stage px per cm on the back wall
-  const wallShown = [], backShown = [];
+  const wallShown = [], backShown = [], doorShown = [];
   const shownBox = (item) => {
     const v = itemBox(item, shell).visible;
     const o = item.kind === 'furniture' ? DRAWN_OVERHANG[item.part] : null;
@@ -266,14 +266,16 @@ export function generateRoom({ type = 'bedroom', seed = 1, roomCm: roomAsked = R
     const along = between(0.35, 0.6);                               // how far toward the front, along the side wall
     const edge = side === 'left' ? shell.back.l : 100 - shell.back.r;
     const x = side === 'left' ? edge * (1 - along) : 100 - edge * (1 - along);
-    // Its foot on the side wall's floor line at that x (the line runs from the stage's bottom at the front to the back
-    // wall's foot), its middle half its drawn height above (room_scene.js sideWallTransform draws it that big there).
-    const probe = { kind: 'furniture', part: 'door', x, y: 50, wall: side, scale: doorK };
-    const tf = sideWallTransform(shell, probe);
-    const u = side === 'left' ? Math.min(0.98, Math.max(0.02, x / shell.back.l)) : Math.min(0.98, Math.max(0.02, (100 - x) / (100 - shell.back.r)));
-    const floorY = 100 + u * (shell.back.b - 100);
-    const halfH = ((FURNITURE.door.box[1] * doorK * tf.sy) / 2 / STAGE.h) * 100;
-    recipe.items.push({ id: id('door'), kind: 'furniture', part: 'door', x: round(x), y: round(floorY - halfH), wall: side, scale: doorK });
+    // Its foot on the side wall's floor line at that x, its middle half its drawn height above it there (room_scene.js
+    // sideWallGeometry: the size it is drawn at that far along the wall). Drawn in perspective (sideWallQuad), a foot on
+    // the floor line at its middle is on it along its whole bottom edge.
+    const gw = sideWallGeometry(shell, side);
+    const halfH = ((FURNITURE.door.box[1] * doorK * gw.near(x)) / 2 / STAGE.h) * 100;
+    const sideDoor = { id: id('door'), kind: 'furniture', part: 'door', x: round(x, 3), y: round(gw.floorAt(x) - halfH, 3), wall: side, scale: doorK };
+    recipe.items.push(sideDoor);
+    // (2026-11-27, seen at full size: a bookshelf along that wall stood in front of the door, since the room draws a floor
+    // piece facing the viewer) Nothing on the floor may cover the door as it is drawn.
+    doorShown.push(shownBox(sideDoor));
     const zMid = along * roomCm.d;
     const xs = side === 'left' ? [0, door.clearance] : [roomCm.w - door.clearance, roomCm.w];
     plan.reserve({ x0: xs[0], x1: xs[1], z0: zMid - doorW / 2, z1: zMid + doorW / 2 }, 'door');
@@ -449,7 +451,12 @@ export function generateRoom({ type = 'bedroom', seed = 1, roomCm: roomAsked = R
       shuffle(tries);
       // A piece pushed back against the wall must not stand in front of the window, the picture or the clock (a flat
       // rug is never against a wall).
-      const r = tries.find((t) => plan.fits(t, f.clearance) && (f.flat || !againstBack(t) || !touches(shownBox(floorItem(part, t)), wallShown)));
+      const r = tries.find((t) => {
+        if (!plan.fits(t, f.clearance)) return false;
+        if (f.flat) return true;
+        const box = shownBox(floorItem(part, t));
+        return (!againstBack(t) || !touches(box, wallShown)) && !touches(box, doorShown);
+      });
       if (!r) { leftOut.push(part); break; }
       const p = placeFloor(part, r);
       if (f.surface && coin(0.5)) lampOn(p);

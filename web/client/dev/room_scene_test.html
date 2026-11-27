@@ -151,7 +151,11 @@ try {
     const b = itemBox({ kind: 'furniture', part: 'sofa', x: 50, y: 100 }, room);
     check('itemBox: a floor thing is its box × depth, anchored at its foot', near(b.w, 270 * 1.22) && near(b.visible.top + b.visible.h, 540) && b.floor);
     const s = itemBox({ kind: 'clock', x: 92, y: 30, wall: 'right', size: 64 }, room);
-    check('itemBox: a side-wall thing carries the matrix', !!s.side && /matrix\(/.test(s.transform));
+    // (2026-11-27, deliberately: "The doors on the side wall don't match the angle of the wall") on four corners in true
+    // perspective, not one shear: its near edge (toward the front, right on a right wall) taller than its far one.
+    const nearTall = s.sideQuad && (s.sideQuad[2][1] - s.sideQuad[1][1]) > (s.sideQuad[3][1] - s.sideQuad[0][1]);
+    check('itemBox: a side-wall thing is drawn onto four corners in perspective, its near edge taller', !!s.side && /matrix3d\(/.test(s.transform) && nearTall,
+      JSON.stringify(s.sideQuad));
     const m = itemBox({ kind: 'module', x: 44, y: 34, w: 240, h: 140 }, room);
     check('itemBox: a module mount is its own w×h, centred', m.w === 240 && m.h === 140 && !m.side && near(m.visible.left, 0.44 * 960 - 120));
   }

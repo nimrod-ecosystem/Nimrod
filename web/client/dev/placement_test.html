@@ -345,7 +345,8 @@ try {
     const free = wrapOf(t, 'w1');
     check('a module placed freely in the room sits on the room\'s own stage (it scales with the room)',
       free && room.stage.contains(free));
-    check('*** on a side wall it gets the wall\'s perspective matrix ***', /matrix\(/.test(free?.style.transform || ''),
+    // (2026-11-27, deliberately) the wall's perspective is now four corners (room_scene.js sideWallQuad), not one shear.
+    check('*** on a side wall it gets the wall\'s perspective (its four-corner map) ***', /matrix3d\(/.test(free?.style.transform || '') && free?.style.transformOrigin === '0px 0px',
       free?.style.transform);
     check('flat-on-screen still sits above the room', t.kioskEl.querySelector('.k-placed[data-place="screen"]')?.contains(wrapOf(t, 'p1')));
     const layout2 = { preset: 'full', slots: [null], scene: { kind: 'room', preset: 'theRoom' }, placed: [
