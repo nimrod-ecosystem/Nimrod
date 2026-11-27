@@ -18,7 +18,8 @@ server needed: the rows are fakes.</p>
 <div id="results"></div>
 <div id="summary">running…</div>
 <script type="module">
-import { shareableKeys, withSharedLayer, OWN_FLAG, sharedRowKey, DEVICE_KEY_RE } from '../shared_settings.js';
+import { shareableKeys, withSharedLayer, OWN_FLAG, sharedRowKey, DEVICE_KEY_RE, setupFields,
+  SETUP_KEY, SETUP_FROM_KEY, SETUP_NAME_KEY, SAVE_AS_KEY, FORGET_SETUP_KEY } from '../shared_settings.js';
 import { getManifest } from '../module.js';
 import { selectionFor } from '../edit_mode.js';
 import '../modules/board.js';
@@ -112,6 +113,63 @@ function fakeRow(initial = {}) {
     check('nobody\'s screen: nothing said, no button', selectionFor({ id: 'c2', type: 'clock', state: withSharedLayer(fakeRow(), null, { keys }), instance: null }).kept === null);
     A.destroy();
     check('destroying a panel\'s layer closes the shared handle it was given (the host counts them)', shared.destroyed === 1);
+
+    // *** SAVE AS: named setups (Mike, 2026-11-26: "there should be a save as option, so people can have different setups"). ***
+    const main = fakeRow({ level: 3, categories: 'art' });
+    const setupRows = new Map();   // id -> { row, opens }   (the host's counted rows, like kiosk.js sharedModuleRow)
+    const openSetup = (id) => {
+      let e = setupRows.get(id);
+      if (!e) { e = { row: fakeRow(), opens: 0, closes: 0 }; setupRows.set(id, e); }
+      e.opens++;
+      return Object.assign({}, e.row, { destroy() { e.closes++; } });
+    };
+    const ownP = fakeRow(), ownQ = fakeRow({ level: 8 });
+    const P = withSharedLayer(ownP, main, { keys, openSetup }), Q = withSharedLayer(ownQ, main, { keys, openSetup });
+    let pSaw = 0; P.subscribe(() => { pSaw++; });
+    check('a panel says where it is kept: the main setup', P.get()[SETUP_FROM_KEY] === 'main' && P.currentSetup() === null && P.setups().length === 0);
+    const f0 = setupFields(P, 'Trivia');
+    check('the choice offers the main setup and just this panel', f0.length === 1 && f0[0].key === SETUP_FROM_KEY
+      && J(f0[0].options.map((o) => o.value)) === J(['main', 'panel']), J(f0));
+    P.set({ [SAVE_AS_KEY]: '' });
+    const s1 = P.setups()[0];
+    check('*** Save as: a new setup on the list, named "Setup 2" when no name was given ***', P.setups().length === 1 && s1.name === 'Setup 2', J(P.setups()));
+    check('...holding what the panel showed (level 3, art), and the panel uses it from now on',
+      J(setupRows.get(s1.id).row.get()) === J({ level: 3, categories: 'art' }) && P.get()[SETUP_FROM_KEY] === s1.id && ownP.get()[SETUP_KEY] === s1.id
+      && P.get().level === 3, J({ s: setupRows.get(s1.id).row.get(), p: P.get() }));
+    P.set({ level: 6 });
+    check('*** a change now goes to the setup, not the main set ***', setupRows.get(s1.id).row.get().level === 6 && main.get().level === 3 && P.get().level === 6);
+    check('...the other panel, on the main setup, is unchanged', Q.get().level === 8 && Q.get().categories === 'art', J(Q.get()));
+    Q.set({ [SETUP_FROM_KEY]: s1.id });
+    check('*** another panel chooses that setup: it shows it (its own old level 8 goes; choosing is choosing to follow) ***',
+      Q.get().level === 6 && ownQ.get().level === null && Q.currentSetup()?.id === s1.id, J({ q: Q.get(), own: ownQ.get() }));
+    P.set({ categories: 'music' });
+    check('...and follows a change made on the first one', Q.get().categories === 'music');
+    P.set({ [SETUP_NAME_KEY]: '  Bedtime   clock ' });
+    check('*** the setup is named from its row (trimmed), and both panels say it ***', P.currentSetup()?.name === 'Bedtime clock'
+      && Q.get()[SETUP_NAME_KEY] === 'Bedtime clock' && setupFields(P, 'Trivia').some((f) => f.key === SETUP_NAME_KEY), J(P.setups()));
+    const f1 = setupFields(Q, 'Trivia')[0];
+    check('the choice lists it by name', f1.options.some((o) => o.value === s1.id && /Bedtime clock/.test(o.label)), J(f1.options));
+    const em = selectionFor({ id: 'p1', type: 'clock', state: P, instance: null });
+    check('*** edit mode says the setup by name, and offers Save as ***', /Setup “Bedtime clock”/.test(em.help) && em.actions.some((a) => a.id === 'save-as')
+      && em.fields[0]?.key === SETUP_FROM_KEY, em.help);
+    P.set({ [SETUP_FROM_KEY]: 'main' });
+    check('back to the main setup: it shows the main set again', P.get().level === 3 && P.get().categories === 'art' && P.currentSetup() === null);
+    P.set({ [SETUP_FROM_KEY]: 'panel' });
+    check('"Just this panel" from the choice keeps what it shows', P.justThisPanel() && ownP.get().level === 3 && P.get()[SETUP_FROM_KEY] === 'panel');
+    P.set({ [SETUP_FROM_KEY]: 'main' });
+    check('*** leaving "Just this panel" really follows again (its copied values go; the old toggle left them winning) ***',
+      !P.justThisPanel() && ownP.get().level === null && P.get().level === 3, J(ownP.get()));
+    P.set({ [SETUP_FROM_KEY]: 'nope' });
+    check('a setup not on the list is refused', P.get()[SETUP_FROM_KEY] === 'main');
+    Q.set({ [FORGET_SETUP_KEY]: s1.id });
+    check('*** taken off the list: the panel that used it uses the main setup; the setup\'s row is not deleted ***',
+      Q.setups().length === 0 && Q.get()[SETUP_FROM_KEY] === 'main' && Q.get().level === 3 && setupRows.get(s1.id).row.get().level === 6, J(Q.get()));
+    const e1 = setupRows.get(s1.id);
+    check('the hosts\' setup handles are all given back once nothing uses the setup', e1.opens === e1.closes, J({ o: e1.opens, c: e1.closes }));
+    check('the panel was told of the changes', pSaw > 4, String(pSaw));
+    const N = withSharedLayer(fakeRow(), null, { keys, openSetup });
+    N.set({ [SAVE_AS_KEY]: 'x' });
+    check('nobody\'s screen: no setups, nothing offered', setupFields(N, 'Trivia').length === 0 && N.setups().length === 0);
   } catch (err) {
     check('the suite ran to the end', false, String(err && err.stack || err));
   }

@@ -559,8 +559,10 @@ const toTab = (m, id) => {
       // (row 2.189, Mike 2026-11-26, DELIBERATELY: "<Module> settings: Shared with every <Module> panel / Just this panel" FIRST
       // on the panel's tab, at "The usual" - this screen has a person, so its panels have a shared set. One more stop on
       // the panel's lap (16) and one more of the old rows (72). Not at "Just the essentials". shared_settings_test checks it.)
+      // (Save as, Mike 2026-11-26: the row is now a choice, "Main setup / each named setup / Just this panel", the same one
+      // stop; "Save these settings as a new setup" is at Everything, so the lap stays 16. Edit mode carries Save as.)
       check('*** the one-switch walk, DELIBERATELY changed: one lap of the panel’s tab is 16 stops (was every row: 72) ***',
-        lapStops.length === 16 && oldStops.length === 72 && lapStops.includes('set:__ownSettings')
+        lapStops.length === 16 && oldStops.length === 72 && lapStops.includes('set:__settingsFrom') && !lapStops.includes('setup-save-as')
         && oldStops.some((i) => i.id === 'set:barPerson') /* the person button */
         && oldStops.some((i) => i.id === 'set:wordLevel') /* words the games may use */
         && oldStops.some((i) => i.id === 'set:quietHours') /* quiet hours */

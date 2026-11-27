@@ -66,7 +66,7 @@ import { explainModule, selectionAt, explain } from './cat_help.js';
 import { cornerShowCss } from './panel_corners.js';   // corner on hover (2026-10-09): when the ✎ corner shows
 import { stageOf } from './modules_catalog.js';      // live and beta (2026-10-14): the Beta tag beside Done
 import { BETA_WORDS } from './beta.js';
-import { OWN_FLAG } from './shared_settings.js';   // row 2.189: where a panel's settings are kept, said and changed here
+import { OWN_FLAG, SAVE_AS_KEY, setupFields } from './shared_settings.js';  // row 2.189: where a panel's settings are kept, said and changed here
 import { wordsElementAt, recordChange, showWordsInPlace, norm, LINE_MAX } from './wording_edit.js';   // the site's words (note FC 2)
 
 export const EDIT_PANEL_TOPIC = 'shell/edit-panel';   // { id?, on?: true|false } -- absent `on` toggles
@@ -192,11 +192,22 @@ export function selectionFor(rec, target = null, { pressed = null } = {}) {
   const sharedHere = typeof target?.values !== 'function' && (() => { try { return !!st?.hasShared?.(); } catch { return false; } })();
   const justThis = sharedHere && (() => { try { return !!st.justThisPanel?.(); } catch { return false; } })();
   const kept = sharedHere ? (justThis ? 'panel' : 'shared') : null;
-  const keptWords = kept === 'shared' ? `Shared: a change here changes every ${title} panel on this person’s screens.`
+  // (Save as, 2026-11-26; Mike: "there should be a save as option, so people can have different setups if they want")
+  // A panel may follow a NAMED setup of its module instead of the main one (shared_settings.js SETUPS): said by name.
+  const setup = sharedHere && !justThis ? (() => { try { return st.currentSetup?.() || null; } catch { return null; } })() : null;
+  const keptWords = kept === 'shared' && setup ? `Setup “${setup.name}”: a change here changes every ${title} panel that uses it.`
+    : kept === 'shared' ? `Shared: a change here changes every ${title} panel on this person’s screens.`
     : kept === 'panel' ? 'Just this panel: a change here changes this one only.' : '';
   const keptAction = sharedHere ? [{ id: 'kept', label: justThis ? `Share with every ${title} panel` : 'Just this panel',
-    note: justThis ? 'its settings become the shared ones again' : 'this panel keeps what it shows, and changes alone from now on',
-    run: () => { try { st.set({ [OWN_FLAG]: !justThis }); } catch (err) { console.error('edit mode: kept', err); } } }] : [];
+    note: justThis ? 'it uses the main setup again' : 'this panel keeps what it shows, and changes alone from now on',
+    run: () => { try { st.set({ [OWN_FLAG]: !justThis }); } catch (err) { console.error('edit mode: kept', err); } } },
+    ...(typeof st.saveAs === 'function' ? [{ id: 'save-as', label: 'Save as a new setup',
+      note: 'what this panel shows now, as a setup of its own that this panel uses from now on; name it under Settings',
+      run: () => { try { st.set({ [SAVE_AS_KEY]: '' }); } catch (err) { console.error('edit mode: save as', err); } } }] : [])] : [];
+  // The whole panel's options start with the choice of setup (and its name), the rows that say where the rest is kept.
+  if (sharedHere && !target) {
+    try { fields = [...setupFields(st, title).map((f) => normalizeField(f)).filter(Boolean), ...fields]; } catch { /* the rows without it */ }
+  }
   return {
     panelId: rec?.id || null, type, title,
     target: target ? { id: target.id, label: target.label } : null,

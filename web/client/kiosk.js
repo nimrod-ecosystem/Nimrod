@@ -24,7 +24,7 @@
 
 import { createBus } from './bus.js';
 import { createState } from './state.js';
-import { shareableKeys, withSharedLayer, sharedRowKey, OWN_FLAG } from './shared_settings.js';   // row 2.189: settings are the module's
+import { shareableKeys, withSharedLayer, sharedRowKey, setupRowKey, setupFields, SETUP_FROM_KEY, SETUP_NAME_KEY, SAVE_AS_KEY, FORGET_SETUP_KEY } from './shared_settings.js';   // row 2.189: settings are the module's
 import { createPresetLibrary } from './presets.js';   // row 2.90: a voice-opened module's time, from its default preset
 import { mergeSettingsDoc, mergeLayoutSave, mergeKioskSave, lostEditWords } from './doc_merge.js';
 import { createEvents } from './events.js';
@@ -2290,29 +2290,31 @@ export async function mountKiosk(root, {
   // last panel of a type to go closes it. Null when the screen has nobody's name, or the site keeps no person rows.
   // (On the function, not a `const` beside it: a hoisted mountInstance called before this line would meet a const in its
   // temporal dead zone, the trap `personId` above describes.)
-  function sharedModuleRow(type) {
-    const sharedRows = (sharedModuleRow.rows ||= new Map());   // type -> { h, n, pid }
+  // (Save as, 2026-11-26) `setup`: a NAMED setup's row of that type (shared_settings.js setupRowKey), counted the same way.
+  function sharedModuleRow(type, setup = null) {
+    const sharedRows = (sharedModuleRow.rows ||= new Map());   // type (or type~setup) -> { h, n, pid }
     const pid = screenPersonNow();
     // `makeState` given: this browser's own store (signed out) or a suite's, which has no person rows (as childCtx's own
     // makePersonState above it says): its panels keep their own settings, as before.
     if (!pid || !profiles?.personStateURL || !type || makeState) return null;
-    let e = sharedRows.get(type);
+    const at = setup ? `${type}~${setup}` : type;
+    let e = sharedRows.get(at);
     if (!e || e.pid !== pid) {
       let h = null;
       try {
-        const key = sharedRowKey(type);
+        const key = setup ? setupRowKey(type, setup) : sharedRowKey(type);
         h = createState({ url: profiles.personStateURL(pid, key), user, cacheKey: `person:${user}:${pid}:${key}`, push });
       } catch (err) { console.error('kiosk: a shared settings row', err); h = null; }
       if (!h) return null;
       e = { h, n: 0, pid };
-      sharedRows.set(type, e);
+      sharedRows.set(at, e);
     }
     e.n += 1;
     const entry = e;
     return Object.assign({}, entry.h, {
       destroy() {
         entry.n -= 1;
-        if (entry.n <= 0) { try { entry.h.destroy?.(); } catch { /* gone */ } if (sharedRows.get(type) === entry) sharedRows.delete(type); }
+        if (entry.n <= 0) { try { entry.h.destroy?.(); } catch { /* gone */ } if (sharedRows.get(at) === entry) sharedRows.delete(at); }
       },
     });
   }
@@ -2330,7 +2332,7 @@ export async function mountKiosk(root, {
     const sharedKeys = shareableKeys(getManifest(mod.type));
     const sharedRow = sharedKeys.size ? sharedModuleRow(mod.type) : null;
     const state = automation.wrapState(mod.id, withSharedLayer(withTypeLayer(stateFor(rowKey), mod.type), sharedRow,
-      { keys: sharedKeys, dashboard: () => typeDefaults(mod.type) }),
+      { keys: sharedKeys, dashboard: () => typeDefaults(mod.type), openSetup: (id) => sharedModuleRow(mod.type, id) }),
       { manifest: getManifest(mod.type) });
     // The talk board's words go through the history host too (history_place.js `route`, kind `select` only): the
     // site's log as always unless the person chose another place for them.
@@ -7502,9 +7504,27 @@ export async function mountKiosk(root, {
           const title = rec.instance?.manifest?.title || rec.type;
           // "The usual" (standard), not "Just the essentials": it is chosen once, by whoever sets the screen up, and every
           // row at the essentials level is a stop on a switch user's walk through the panel's tab.
-          return [normalizeField({ key: OWN_FLAG, label: `${title} settings`, kind: 'toggle', default: false, level: 'standard',
-            onLabel: 'Just this panel', offLabel: `Shared with every ${title} panel`,
-            note: 'Shared: a change here changes every one of them, on every screen of this person’s. Just this panel: only this one.' })];
+          // (Save as, 2026-11-26) The choice is the main setup, each named setup, or just this panel (setupFields).
+          return setupFields(rec.state, title).map(normalizeField);
+        } catch { return []; }
+      })();
+      // (Save as, 2026-11-26; Mike: "there should be a save as option, so people can have different setups") Under the
+      // panel's rows: save what it shows now as a new setup it follows from then on, and, on a named setup, take it off
+      // the list (its row stays on the server; panels that used it use the main setup again).
+      const setupRows = (() => {
+        try {
+          if (!rec.state?.hasShared?.() || typeof rec.state.saveAs !== 'function') return [];
+          const cur = rec.state.currentSetup?.() || null;
+          // "Everything" (advanced) here, not "the usual": every row at the usual level is one more stop on a switch user's
+          // walk through the panel's tab (kiosk_test counts it), and Save as is an editing act -- Mike: "When editing
+          // modules" -- so edit mode's card carries it at every level and this row is the second way in.
+          const rows = [{ kind: 'item', id: 'setup-save-as', level: 'advanced', label: 'Save these settings as a new setup',
+            hint: 'a new setup with what this panel shows now; this panel uses it from now on, and you can name it',
+            run: () => { rec.state.set({ [SAVE_AS_KEY]: '' }); } }];
+          if (cur) rows.push({ kind: 'item', id: 'setup-forget', level: 'standard', label: `Take “${cur.name}” off the list`,
+            hint: 'panels that use it use the main setup again; nothing is deleted',
+            run: () => { rec.state.set({ [FORGET_SETUP_KEY]: cur.id }); } });
+          return rows.filter((it) => showsAtLevel(it, complexity())).map((it) => ({ ...it, ...MENU_TAB.module(0) }));
         } catch { return []; }
       })();
       const items = fieldItems([
@@ -7512,6 +7532,8 @@ export async function mountKiosk(root, {
         ...PANEL_INSTANCE_FIELDS().map(normalizeField).filter(Boolean),
         ...fieldsFor(rec.instance.manifest, rec.instance),
       ], fieldsOpts).map((it) => ({ ...it, ...MENU_TAB.module(0) }));
+      // The setup rows right after the choice they belong to (the choice and its name are the first rows when present).
+      if (setupRows.length) items.splice(items.filter((it) => it.key === SETUP_FROM_KEY || it.key === SETUP_NAME_KEY).length, 0, ...setupRows);
       // LIVE AND BETA (2026-10-14): a beta panel says so HERE, in its own settings (and in edit mode), never on the
       // panel while it is used. A row that says, not a control: it costs a switch nothing to pass.
       try {
