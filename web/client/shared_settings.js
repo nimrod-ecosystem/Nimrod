@@ -275,6 +275,22 @@ export function withSharedLayer(base, shared, { keys = new Set(), dashboard = ()
       return cur.id ? list().find((s) => s.id === cur.id) || null : null;
     },
     saveAs,
+    // (plan A5, 2026-11-26) NO SILENT MIGRATION, SAID: the shared keys this panel still has values of its own for, while it
+    // follows a shared set (a value set before settings were shared, or by a host that wrote its row). Those win over the
+    // shared set, so a change made elsewhere does not show here; the editor says so, with one press to follow instead.
+    ownDiffers: () => {
+      if (!active()) return [];
+      const mine = ownRow();
+      return [...keys].filter((k) => goesShared(k) && isSet(mine[k]));
+    },
+    /** Follow the shared set for every key this panel kept its own value of (ownDiffers). True when something changed. */
+    followShared: () => {
+      if (!active()) return false;
+      const p = followPatch();
+      if (!Object.keys(p).length) return false;
+      base.set?.(p);
+      return true;
+    },
     set(patch = {}) {
       if (!patch || typeof patch !== 'object') return base.set?.(patch);
       patch = { ...patch };

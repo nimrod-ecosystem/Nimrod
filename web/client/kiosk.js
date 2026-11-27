@@ -7632,6 +7632,16 @@ export async function mountKiosk(root, {
           const rows = [{ kind: 'item', id: 'setup-save-as', level: 'advanced', label: 'Save these settings as a new setup',
             hint: 'a new setup with what this panel shows now; this panel uses it from now on, and you can name it',
             run: () => { rec.state.set({ [SAVE_AS_KEY]: '' }); } }];
+          // (plan A5) This panel still has its own values for some shared settings: said, with one press to follow them.
+          const differs = (() => { try { return rec.state.ownDiffers?.() || []; } catch { return []; } })();
+          if (differs.length) {
+            const decl = (() => { try { return fieldsFor(rec.instance.manifest, rec.instance); } catch { return []; } })();
+            const names = differs.map((k) => decl.find((f) => f.key === k)?.label || k);
+            const title = rec.instance?.manifest?.title || rec.type;
+            rows.unshift({ kind: 'item', id: 'setup-follow', level: 'standard', label: cur ? `Use “${cur.name}” for all of them` : `Use the shared ${title} settings`,
+              hint: `this panel has its own ${names.join(', ')}; pressed, they follow the shared ones`,
+              run: () => { rec.state.followShared?.(); } });
+          }
           if (cur) rows.push({ kind: 'item', id: 'setup-forget', level: 'standard', label: `Take “${cur.name}” off the list`,
             hint: 'panels that use it use the main setup again; nothing is deleted',
             run: () => { rec.state.set({ [FORGET_SETUP_KEY]: cur.id }); } });

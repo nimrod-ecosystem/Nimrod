@@ -72,6 +72,16 @@ function fakeRow(initial = {}) {
     check('*** the other panel reads it (categories), and was told ***', B.get().categories === 'art' && bSaw?.categories === 'art', J(B.get()));
     check('*** no silent migration: a value the other panel set itself still wins (its level 1) ***', B.get().level === 1, J(B.get()));
     check('where a write lands is said: level on the shared row, pos on the panel', A.landsOn('level') === 'shared' && A.landsOn('pos') === 'panel');
+    // (plan A5) ...and the value that panel kept of its own is SAID, with one press to follow the shared one instead.
+    check('*** the panel with a value of its own says which (level), and nothing changed by itself ***', J(B.ownDiffers()) === J(['level']) && ownB.get().level === 1);
+    const selB = selectionFor({ id: 'b1', type: 'clock', state: B, instance: null });
+    const useBtn = selB.actions.find((x) => x.id === 'use-shared');
+    check('...the options say so, with "Use the shared … settings"', /has its own value for level/.test(selB.help) && /^Use the shared /.test(useBtn?.label || ''), selB.help);
+    useBtn.run();
+    check('*** pressed: it follows the shared set (its level is the shared 4 now), and says nothing more ***',
+      ownB.get().level === null && B.get().level === 4 && B.ownDiffers().length === 0
+      && !selectionFor({ id: 'b1', type: 'clock', state: B, instance: null }).actions.some((x) => x.id === 'use-shared'), J({ own: ownB.get(), b: B.get() }));
+    ownB.set({ level: 1 });   // put back as it was, for the checks below
     B.set({ level: 2 });
     check('*** changing it on that panel: the shared row takes it, and the panel follows it from now on ***',
       shared.get().level === 2 && ownB.get().level === null && B.get().level === 2 && A.get().level === 2, J({ s: shared.get(), b: ownB.get() }));

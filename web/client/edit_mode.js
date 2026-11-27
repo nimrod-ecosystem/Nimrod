@@ -195,12 +195,21 @@ export function selectionFor(rec, target = null, { pressed = null } = {}) {
   // (Save as, 2026-11-26; Mike: "there should be a save as option, so people can have different setups if they want")
   // A panel may follow a NAMED setup of its module instead of the main one (shared_settings.js SETUPS): said by name.
   const setup = sharedHere && !justThis ? (() => { try { return st.currentSetup?.() || null; } catch { return null; } })() : null;
-  const keptWords = kept === 'shared' && setup ? `Setup “${setup.name}”: a change here changes every ${title} panel that uses it.`
+  // (plan A5) ...and where this panel still has values of its own for some of those (set before they were shared): they win
+  // here, so they are named, with one press to follow the shared ones instead. Nothing is changed until it is pressed.
+  const differs = kept === 'shared' ? (() => { try { return st.ownDiffers?.() || []; } catch { return []; } })() : [];
+  const differLabels = differs.map((k) => fields.find((f) => f.key === k)?.label || k);
+  const keptWords = [kept === 'shared' && setup ? `Setup “${setup.name}”: a change here changes every ${title} panel that uses it.`
     : kept === 'shared' ? `Shared: a change here changes every ${title} panel on this person’s screens.`
-    : kept === 'panel' ? 'Just this panel: a change here changes this one only.' : '';
+    : kept === 'panel' ? 'Just this panel: a change here changes this one only.' : '',
+  differs.length ? `This panel has its own ${differLabels.length === 1 ? 'value' : 'values'} for ${differLabels.join(', ')}, which the shared ones do not change.` : '']
+    .filter(Boolean).join(' ');
   const keptAction = sharedHere ? [{ id: 'kept', label: justThis ? `Share with every ${title} panel` : 'Just this panel',
     note: justThis ? 'it uses the main setup again' : 'this panel keeps what it shows, and changes alone from now on',
     run: () => { try { st.set({ [OWN_FLAG]: !justThis }); } catch (err) { console.error('edit mode: kept', err); } } },
+    ...(differs.length ? [{ id: 'use-shared', label: setup ? `Use “${setup.name}” for all of them` : `Use the shared ${title} settings`,
+      note: `${differLabels.join(', ')} follow${differLabels.length === 1 ? 's' : ''} the shared ${differLabels.length === 1 ? 'one' : 'ones'} from now on`,
+      run: () => { try { st.followShared?.(); } catch (err) { console.error('edit mode: use shared', err); } } }] : []),
     ...(typeof st.saveAs === 'function' ? [{ id: 'save-as', label: 'Save as a new setup',
       note: 'what this panel shows now, as a setup of its own that this panel uses from now on; name it under Settings',
       run: () => { try { st.set({ [SAVE_AS_KEY]: '' }); } catch (err) { console.error('edit mode: save as', err); } } }] : [])] : [];
