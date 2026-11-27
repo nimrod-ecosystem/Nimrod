@@ -107,6 +107,25 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     check('pressed twice: up, then down again', heard.at(-2)?.on === true && heard.at(-1)?.on === false && heard.at(-1)?.reason === 'pressed again', J(heard.slice(-2)));
     inst.destroy?.();
     bhost.remove();
+    // (step 3) "How it comes out": a card set to "Shown on the screen only" is written (the output bus's status) and never spoken.
+    let st2 = { boardId: 'custom', board: { id: 'own', name: 'Mine', cols: 2, rows: 1, cells: [{ id: 'a', word: 'Mm-hmm', out: 'shown' }, { id: 'b', word: 'Yes' }] } };
+    const state2 = { get: () => st2, set: (p) => { st2 = { ...st2, ...p }; return Promise.resolve(); }, subscribe: () => () => {},
+      load: () => Promise.resolve(), flush: () => Promise.resolve(), destroy() {} };
+    const sayd = [], shown = [];
+    const b2bus = createBus();
+    const h2 = document.createElement('div'); h2.style.cssText = 'position:relative;width:600px;height:200px';
+    document.body.append(h2);
+    const inst2 = mountModule('board', { mount: h2, bus: b2bus, state: state2, events, instanceId: 'own-1',
+      output: { say: (t) => sayd.push(t), status: (t) => shown.push(t) } });
+    inst2.init?.();
+    await sleep(60);
+    b2bus.publish('board/pick', { index: 0 });
+    b2bus.publish('board/pick', { index: 1 });
+    await sleep(20);
+    check('*** "Shown on the screen only": written, not spoken; a plain card still speaks ***', J(shown) === J(['Mm-hmm']) && J(sayd) === J(['Yes']), J({ shown, sayd }));
+    check('...and a card keeps it through the board\'s own reading', normalizeBoard(st2.board).cells[0].out === 'shown' && !normalizeBoard(st2.board).cells[1].out);
+    inst2.destroy?.();
+    h2.remove();
   } catch (err) {
     check('the suite ran to the end', false, String(err && err.stack || err));
   }

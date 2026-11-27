@@ -1270,7 +1270,10 @@ registerModule(
       const own = ownUrlOf(cell);
       const clips = clipChoices({ text, own, base: cfg.callClipBase ?? DEFAULT_CLIP_BASE, shipped: cfg.shippedClips !== false });
       try {
-        if (ctx.output?.say) {
+        // (row 2.290 step 3) A card set to "Shown on the screen only": the output bus's `status`, which writes it on the
+        // screen and is never spoken (output.js DEFAULT_ROUTING). With no output layer, nothing is spoken either.
+        if (cell.out === 'shown') ctx.output?.status?.(text, { source: 'board' });
+        else if (ctx.output?.say) {
           ctx.output.say(text, { source: 'board',
             ...(clips.length ? { data: { clips: clips.map((c) => c.url), ...(own ? { ownClip: own } : {}) } } : {}) });
         } else speak(text);
@@ -1980,17 +1983,21 @@ registerModule(
               note: 'A symbol follows the theme and the themed pictures.' },
             { key: 'picture', label: 'Picture', kind: 'picture', default: null,
               note: 'A picture you choose stays as it is, whatever the theme.' },
+            // (row 2.290 step 3) Spoken, or written on the screen only. Its own sound is "Record this word" below.
+            { key: 'out', label: 'How it comes out', kind: 'choice', default: 'spoken',
+              options: [{ value: 'spoken', label: 'Spoken' }, { value: 'shown', label: 'Shown on the screen only' }] },
           ],
           values: () => {
             const k = at(drafting?.draft);
             const now = (k >= 0 && drafting.draft.cells[k]) || c;
-            return { word: now.word || '', say: now.say || '', symbol: now.symbol || '', picture: now.image || null };
+            return { word: now.word || '', say: now.say || '', symbol: now.symbol || '', picture: now.image || null, out: now.out || 'spoken' };
           },
           set: (patch) => {
             const p = {};
             if ('word' in patch) p.word = patch.word;
             if ('say' in patch) p.say = patch.say ? String(patch.say) : null;
             if ('symbol' in patch) p.symbol = patch.symbol || null;
+            if ('out' in patch) p.out = patch.out === 'shown' ? 'shown' : undefined;
             if ('picture' in patch) {
               const ref = patch.picture;
               p.image = ref && ref.path ? { sourceId: String(ref.sourceId || ''), path: String(ref.path) } : null;

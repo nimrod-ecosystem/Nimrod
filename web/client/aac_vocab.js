@@ -191,6 +191,9 @@ export function normalizeBoard(raw) {
       // (row 2.290, 2026-11-27) A CARD WITH A JOB: `act: 'signal'` tells the room "I have something to say" instead of
       // speaking (wants_to_say.js). Only on a card that has one, so every other board comes out of here as before.
       ...(c.act === 'signal' ? { act: 'signal' } : {}),
+      // (row 2.290 step 3) HOW IT COMES OUT: spoken (absent, as every card until now) or `out: 'shown'`, written on the
+      // screen and not spoken (a quiet "mm-hmm" while somebody else talks).
+      ...(c.out === 'shown' ? { out: 'shown' } : {}),
     };
   });
   while (cells.length && cells[cells.length - 1] == null) cells.pop();
