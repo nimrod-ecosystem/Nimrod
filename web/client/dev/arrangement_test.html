@@ -57,7 +57,8 @@ const M = {
 // Everything the shell would hand over, faked and recorded.
 // `content(def, host)`: what a fake module draws in its host, after its id (the move tests put a playing iframe there).
 // `layoutStore` (row 2.145 step 4): where a change the arrangement saves itself goes (the kiosk's ownLayoutStore).
-function make({ modules = [], failTypes = [], embedded = false, throwingGetters = false, content = null, layoutStore = null, background = null } = {}) {
+// `instance(def, host)`: more on a fake module's instance (the key test gives one `editTargets`).
+function make({ modules = [], failTypes = [], embedded = false, throwingGetters = false, content = null, layoutStore = null, background = null, instance = null } = {}) {
   const host = document.getElementById('host');
   host.innerHTML = '';
   const el = (cls) => { const e = document.createElement('div'); e.className = cls; host.append(e); return e; };
@@ -88,7 +89,7 @@ function make({ modules = [], failTypes = [], embedded = false, throwingGetters 
       h.textContent = def.id;
       if (content) content(def, h);
       return { id: def.id, type: def.type, title: def.type.toUpperCase(), el: h,
-               instance: { manifest: { title: def.type }, destroy: () => log.destroyed.push(def.id), onResize() {} },
+               instance: { manifest: { title: def.type }, destroy: () => log.destroyed.push(def.id), onResize() {}, ...(instance ? instance(def, h) : {}) },
                state: { get: () => ({}), set() {}, destroy() {} }, events: { destroy() {} } };
     },
     destroyRec: (rec) => { if (!rec) return; rec.instance.destroy(); },
@@ -747,6 +748,32 @@ try {
     t.arr.editPanel('k1', false);
     t.arr.applyLayout({ kiosk: { clock: { corner: 'off' } } });
     check('a clock that is off is not offered', !t.arr.editRecs().some((r) => r.id === 'k1'));
+    t.arr.destroy();
+  }
+
+  section('a thing moved by its own buttons (an AAC board card\'s ◂ Move left): an arrow presses the one that way');
+  {
+    const pressed = [];
+    const t = make({ modules: [M.t1], instance: (def, h) => ({ editTargets: () => {
+      const card = h.querySelector('.fake-card') || Object.assign(document.createElement('div'), { className: 'fake-card', textContent: 'Yes' });
+      if (!card.isConnected) h.append(card);
+      return [{ id: 'card-a', label: 'Yes', el: card, redraws: true,
+        actions: ['left', 'right', 'up', 'down'].map((w) => ({ id: `move-${w}`, label: `Move ${w}`, run: () => pressed.push(w) })) },
+        { id: 'board', label: 'The board', el: h, whole: true }];
+    } }) });
+    t.arr.resolve({ preset: 'full', slots: ['t1'] }); t.arr.partition();
+    await t.arr.mountLayout();
+    t.arr.editPanel('t1', true);
+    t.arr.editSelect('card-a');
+    const key = (k) => document.body.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }));
+    key('ArrowLeft'); key('ArrowDown');
+    check('*** the card chosen: ← presses its "Move left", ↓ its "Move down" ***', J(pressed) === J(['left', 'down']), J(pressed));
+    key('+');
+    check('...and + does nothing to a thing that has no size handle', J(pressed) === J(['left', 'down']));
+    t.arr.editSelect(null);
+    key('ArrowRight');
+    check('the board itself chosen (no move buttons): an arrow presses nothing', J(pressed) === J(['left', 'down']), J(pressed));
+    t.arr.editPanel('t1', false);
     t.arr.destroy();
   }
 

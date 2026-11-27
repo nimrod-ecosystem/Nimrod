@@ -2860,13 +2860,27 @@ export function createArrangement({
   // in a box, a list or the options card (the keys are theirs there), nor with Ctrl, Alt or the Command key.
   function onEditKey(e) {
     const a = editMode?.active?.();
-    if (!a || !roomHandles || typeof roomHandles.nudge !== 'function' || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (!a || e.ctrlKey || e.metaKey || e.altKey) return;
     const tgt = e.target instanceof Element ? e.target : null;
     // (`.se`: the one editor's own box, whose keys walk its rows.)
     if (tgt && tgt.closest('input, select, textarea, [contenteditable=""], [contenteditable="true"], .em-card, .se')) return;
     const dir = NUDGE_DIRS[e.key] || null;
     const grow = e.key === '+' || e.key === '=' ? NUDGE_GROW : e.key === '-' || e.key === '_' ? 1 / NUDGE_GROW : null;
     if (!dir && !grow) return;
+    if (!roomHandles || typeof roomHandles.nudge !== 'function') {
+      // (Edit step 4, 2026-11-26) A thing with no handles whose module moves it with its own buttons -- an AAC board's
+      // card ("◂ Move left", into the board editor's draft, which reaches the board only on "Use this board", Undo and
+      // all): an arrow presses the button that way, through the selection (which finds the card again once redrawn).
+      if (!dir) return;
+      const way = { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down' }[e.key];
+      let act = null;
+      try { act = (editMode.selection?.()?.actions || []).find((x) => x && x.id === `move-${way}` && typeof x.run === 'function') || null; } catch { act = null; }
+      if (!act) return;
+      e.preventDefault(); e.stopPropagation();
+      try { act.run(); } catch (err) { console.error('arrangement: a move button', err); }
+      try { editMode?.touch?.(); } catch { /* the idle clock as it is */ }
+      return true;
+    }
     let done = false;
     // The whole panel chosen (not a thing in it, which moves itself): only then is a grid panel's arrow a swap.
     const chosen = (() => { try { return editMode.chosenTarget?.() || null; } catch { return null; } })();
