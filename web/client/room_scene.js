@@ -317,14 +317,15 @@ export function drivenBox(base, row) {
   const dx = (d.across / 100) * base.visible.w, dy = (d.down / 100) * base.visible.h;
   const cx = base.cx + dx, anchorY = base.anchorY + dy;
   const vw = base.visible.w * d.scale, vh = base.visible.h * d.scale;
-  // A side-wall thing on its four corners (sideWallQuad) is placed from the stage's corner: its turn and growth go about
-  // its own middle, put in FRONT of the corner map, or it would swing about the top-left of the room.
-  const about = base.sideQuad && (d.turn || d.scale !== 1)
-    ? `translate(${base.cx}px, ${base.anchorY}px)${d.turn ? ` rotate(${d.turn}deg)` : ''}${d.scale !== 1 ? ` scale(${d.scale})` : ''} translate(${-base.cx}px, ${-base.anchorY}px) ` : '';
+  // A side-wall thing on its four corners (sideWallQuad) has its transform origin at its own top-left: its turn and growth
+  // go AFTER the corner map (so it turns inside the wall's perspective, on the wall) and about its own middle (half its
+  // element's size), or it would swing about its corner.
+  const inPlane = base.sideQuad && (d.turn || d.scale !== 1)
+    ? ` translate(${base.w / 2}px, ${base.h / 2}px)${d.turn ? ` rotate(${d.turn}deg)` : ''}${d.scale !== 1 ? ` scale(${d.scale})` : ''} translate(${-base.w / 2}px, ${-base.h / 2}px)` : '';
   return {
     ...base,
     left: base.left + (dx / W) * 100, top: base.top + (dy / H) * 100,
-    transform: base.sideQuad ? `${about}${base.transform}`
+    transform: base.sideQuad ? `${base.transform}${inPlane}`
       : `${base.transform}${d.turn ? ` rotate(${d.turn}deg)` : ''}${d.scale !== 1 ? ` scale(${d.scale})` : ''}`,
     k: base.k * d.scale, cx, anchorY, hue: d.hue,
     visible: { w: vw, h: vh, left: cx - vw / 2, top: base.floor ? anchorY - vh : anchorY - vh / 2 },

@@ -321,7 +321,9 @@ function mountObj(extra = {}) {
       const db = drivenBox(b0, { driveScale: 200 });
       check('a floor object keeps its depth size when moved: only driveScale grows it', db.k === b0.k * 2 && drivenBox(b0, { driveDown: 50 }).k === b0.k);
       sc.driveItem('clock', { driveTurn: -20 });
-      check('a thing on a side wall turns inside its own perspective', /matrix\(.*\) rotate\(-20deg\)/.test(el('clock').style.transform), el('clock').style.transform);
+      // (2026-11-27, deliberately) side-wall things are drawn on four corners (room_scene.js sideWallQuad): the turn still
+      // comes after the wall's map, so it turns on the wall, now about its own middle.
+      check('a thing on a side wall turns inside its own perspective', /matrix3d\(.*\) translate\([^)]*\) rotate\(-20deg\)/.test(el('clock').style.transform), el('clock').style.transform);
       sc.setOptions({ showSlots: true });
       check('*** a rebuild of the room keeps what drives it ***', /scale\(2\)/.test(el('lamp').style.transform) && sc.driven('lamp').driveScale === 200);
       sc.setOptions({ showSlots: false });
