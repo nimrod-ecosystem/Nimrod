@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>room_generate3d — a made room in the 3D room — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px}
+  .pass{color:green}.fail{color:firebrick;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>room_generate3d (proposal_made_rooms_3d step 1)</h1>
+<p>Mike, 2026-11-27: "C would be good eventually. We definitely want 3d at some point." The same plan as the 2D made rooms, in
+the 3D room: real sizes, side-wall pieces turned along their wall, nothing tall in front of a wall where a module hangs.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<script type="module">
+import { generateRoom3d, slotZonesFor, room3dCm, PX_PER_CM } from '../room_generate3d.js';
+import { ROOM_FACTS, ROOM_TYPES } from '../room_generate.js';
+import { ROOM3D_PRESETS, viewOf, normalizeRoom3d } from '../room3d.js';
+import { sceneChoices, applyScene, currentScene } from '../home_profile.js';
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div'); d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`; out.append(d);
+}
+const J = (v) => JSON.stringify(v);
+try {
+  const base = ROOM3D_PRESETS.box.recipe;
+  const view = viewOf(base);
+  const cm = room3dCm(view);
+  check('the 3D room is 4.8 m across and 2.7 m high, at 2 px a centimetre (room3d.js: 0.2 px per mm)', cm.w === 480 && cm.wall === 270 && PX_PER_CM === 2, J(cm));
+  const zones = slotZonesFor(base.slots, view);
+  check('a zone for each slot: the back wall, and each side wall', zones.length === 3 && zones.some((z) => z.wall === 'back') && zones.some((z) => z.wall === 'left') && zones.some((z) => z.wall === 'right'), J(zones));
+  check('...the back slot\'s lowest edge a metre up (its y 40%, h 46% of a 2.7 m wall)', zones.find((z) => z.wall === 'back').below === 100, J(zones));
+  let bad = null, sides = 0, turnedOk = true, sameSeed = true;
+  for (const type of Object.keys(ROOM_TYPES)) for (let seed = 1; seed <= 50 && !bad; seed++) {
+    const { recipe, plan } = generateRoom3d({ type, seed });
+    if (J(recipe) !== J(generateRoom3d({ type, seed }).recipe)) sameSeed = false;
+    const norm = normalizeRoom3d({ recipe });
+    if (norm.furniture.length !== recipe.furniture.length) bad = `${type} ${seed}: the 3D room dropped a piece`;
+    for (const p of plan.pieces) {
+      const h = ROOM_FACTS[p.part].real_size[2];
+      for (const z of zones) {
+        const against = z.wall === 'back' ? p.z0 <= 0 && p.x0 < z.to && z.from < p.x1
+          : z.wall === 'left' ? p.x0 <= 0 && p.z0 < z.to && z.from < p.z1 : p.x1 >= cm.w && p.z0 < z.to && z.from < p.z1;
+        if (against && h > z.below && !bad) bad = `${type} ${seed}: a ${p.part} ${h} cm tall in front of the ${z.wall} slot`;
+      }
+      if (p.turned) { sides++; const [w, d] = ROOM_FACTS[p.part].real_size; if (Math.abs((p.x1 - p.x0) - d) > 0.01 || Math.abs((p.z1 - p.z0) - w) > 0.01) turnedOk = false; }
+    }
+    for (const f of recipe.furniture) {
+      const real = ROOM_FACTS[f.id.replace(/\d+$/, '')]?.real_size;
+      if (real && f.h !== real[2] * PX_PER_CM && !bad) bad = `${type} ${seed}: ${f.id} drawn ${f.h} px tall for ${real[2]} cm`;
+    }
+    if (recipe.furniture.some((f) => f.id.startsWith('door') || f.id.startsWith('window'))) bad = `${type} ${seed}: a door or a window in the 3D room`;
+  }
+  check('*** nothing taller than a slot\'s lowest edge stands against the wall under it (a module is somebody\'s photos), 150 rooms ***', !bad, bad);
+  check('*** a piece against a side wall is turned to run along it (its width along the wall) ***', sides > 0 && turnedOk, `${sides} ${turnedOk}`);
+  check('every piece drawn its real height, and the same seed makes the same room', sameSeed);
+  // Home's backdrop list (and with it the background card in Edit): made rooms, in 2D and 3D.
+  const ch = sceneChoices();
+  check('*** Home\'s list offers made rooms in 2D and in 3D, one of each kind ***', ['room', 'room3d'].every((k) => Object.keys(ROOM_TYPES).every((t) => ch.some((c) => c.id === `${k}:made-${t}`))),
+    J(ch.filter((c) => c.made).map((c) => c.id)));
+  const r3 = applyScene({ preset: 'full', slots: ['a'] }, 'room3d:made-bedroom', { theme: 'default', ids: ['a'] });
+  check('*** picked: the dashboard\'s scene is a 3D room with its own made recipe (a bed in it), the panel hung in a slot ***',
+    r3.layout.scene.kind === 'room3d' && r3.layout.scene.preset === 'made-bedroom' && r3.layout.scene.recipe?.furniture?.some((f) => /^bed/.test(f.id))
+    && (r3.layout.placed || []).some((p) => p.id === 'a' && p.place === 'scene'), J(r3.layout));
+  check('...and it is the one marked as showing', currentScene(r3.layout, 'default') === 'room3d:made-bedroom');
+  const again = applyScene(r3.layout, 'room3d:made-bedroom', { theme: 'default' });
+  check('picked again while it shows: the same room, kept', J(again.layout.scene.recipe) === J(r3.layout.scene.recipe));
+  const r2 = applyScene(null, 'room:made-living', { theme: 'default', ids: ['a'] });
+  check('a made living room in 2D: a 2D recipe with a sofa', r2.layout.scene.kind === 'room' && r2.layout.scene.recipe?.items?.some((i) => i.part === 'sofa'), J(r2.layout.scene));
+} catch (err) {
+  check('the suite ran to the end', false, String(err && err.stack || err));
+}
+document.getElementById('summary').textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+</script>
+</body>
+</html>

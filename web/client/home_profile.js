@@ -39,6 +39,16 @@ import { THEMES, DEFAULT_THEME, paintedTheme } from './theme.js';
 import { profileSetup } from './game/game.js';
 import { ROOM3D_PRESETS, ROOM3D_DEFAULT_PRESET, ROOM3D_DEFAULTS, normalizeRoom3d, viewOf, slotSpot } from './room3d.js';
 import { tidyScene } from './room_doors.js';
+import { generateRoom, ROOM_TYPES, nextSeed } from './room_generate.js';       // (2026-11-27) made rooms, in 2D
+import { generateRoom3d } from './room_generate3d.js';                          // ...and in 3D
+
+// *** MADE ROOMS AS A DASHBOARD'S BACKDROP (2026-11-27). *** A room room_generate.js makes (a bedroom, a living room, a study),
+// in the 2D room or the 3D one, is a choice in this list like a starting room: `room:made-<type>` / `room3d:made-<type>`.
+// Picked, it is made from a new seed and kept as the scene's own recipe, so the dashboard shows that room from then on (and
+// can edit it like any room); picked again while it is showing, it is kept, as any room is.
+export const MADE_PREFIX = 'made-';
+const madeTypeOf = (key) => (typeof key === 'string' && key.startsWith(MADE_PREFIX) && ROOM_TYPES[key.slice(MADE_PREFIX.length)] ? key.slice(MADE_PREFIX.length) : null);
+const madeLabel = (type) => `A ${String(ROOM_TYPES[type].label).toLowerCase()} made for you`;
 
 const clone = (v) => (v == null ? v : JSON.parse(JSON.stringify(v)));
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
@@ -321,8 +331,9 @@ export const SCENE_KINDS = Object.freeze({ static: 'Still', live: 'Moving scenes
 const ROOM_KINDS = new Set(['room', 'room3d']);
 
 export function sceneChoices() {
-  const rooms = Object.entries(ROOM_PRESETS).map(([k, p]) => ({ id: `room:${k}`, kind: 'room', key: k, label: p.label }));
-  const rooms3d = Object.entries(ROOM3D_PRESETS).map(([k, p]) => ({ id: `room3d:${k}`, kind: 'room3d', key: k, label: p.label }));
+  const made = (kind) => Object.keys(ROOM_TYPES).map((t) => ({ id: `${kind}:${MADE_PREFIX}${t}`, kind, key: `${MADE_PREFIX}${t}`, label: madeLabel(t), made: t }));
+  const rooms = [...Object.entries(ROOM_PRESETS).map(([k, p]) => ({ id: `room:${k}`, kind: 'room', key: k, label: p.label })), ...made('room')];
+  const rooms3d = [...Object.entries(ROOM3D_PRESETS).map(([k, p]) => ({ id: `room3d:${k}`, kind: 'room3d', key: k, label: p.label })), ...made('room3d')];
   const themes = Object.entries(THEMES).map(([k, t]) => ({ id: `theme:${k}`, kind: t.scene ? 'live' : 'static', key: k, label: t.label || k }));
   const still = themes.filter((t) => t.kind === 'static').sort((a, b) => (b.key === DEFAULT_THEME) - (a.key === DEFAULT_THEME));
   return [...still, ...themes.filter((t) => t.kind === 'live'), ...rooms, ...rooms3d];
@@ -369,6 +380,13 @@ export function applyScene(layout, choiceId, { theme = null, ids = [] } = {}) {
     // The room already showing, pressed again, is kept AS IT IS -- its own recipe (walls, doors, depth) and a
     // 3D room's drift are choices made for this dashboard, and the pressed button is the one marked current.
     L.scene = same ? clone(was) : { kind: c.kind, preset: c.key };
+    // A made room: made now, from a new seed, and kept as the scene's own recipe (MADE ROOMS above).
+    const madeType = !same ? madeTypeOf(c.key) : null;
+    if (madeType) {
+      const seed = nextSeed((Date.now() >>> 0) ^ Math.floor(Math.random() * 0xffffffff));
+      try { L.scene.recipe = (c.kind === 'room3d' ? generateRoom3d : generateRoom)({ type: madeType, seed }).recipe; }
+      catch { L.scene = { kind: c.kind, preset: c.kind === 'room3d' ? ROOM3D_DEFAULT_PRESET : Object.keys(ROOM_PRESETS)[0] }; }
+    }
     for (const id of moved) {
       if (placed.some((p) => p && p.id === id)) continue;
       if (c.kind === 'room3d') {

@@ -177,24 +177,34 @@ const round = (v, n = 2) => { const f = 10 ** n; return Math.round(v * f) / f; }
 
 const overlaps = (a, b) => a.x0 < b.x1 && b.x0 < a.x1 && a.z0 < b.z1 && b.z0 < a.z1;
 
-function createPlan(roomCm) {
+function createPlan(roomCm, slotZones = []) {
   const pieces = [];      // { part, x0, x1, z0, z1, clear }   (z0 the back edge, z1 the front edge)
   const keepClear = [];   // rectangles nothing may stand in (a door's swing, a piece's clearance)
   const inside = (r) => r.x0 >= 0 && r.x1 <= roomCm.w && r.z0 >= 0 && r.z1 <= roomCm.d;
+  // The floor kept free in front of a piece: toward the viewer, or, for one turned against a side wall (3D), out from it.
+  const frontOf = (r, c) => (r.turned && r.side === 'left' ? { x0: r.x1, x1: r.x1 + c, z0: r.z0, z1: r.z1 }
+    : r.turned && r.side === 'right' ? { x0: r.x0 - c, x1: r.x0, z0: r.z0, z1: r.z1 }
+      : { x0: r.x0, x1: r.x1, z0: r.z1, z1: r.z1 + c });
+  // (3D, step 1) A piece `h` cm tall against a wall where a module hangs must stand below it (a module is somebody's photos).
+  const coversSlot = (r, h) => slotZones.some((z) => h > z.below && (
+    z.wall === 'back' ? r.z0 <= 0 && r.x0 < z.to && z.from < r.x1
+      : z.wall === 'left' ? r.x0 <= 0 && r.z0 < z.to && z.from < r.z1
+        : z.wall === 'right' ? r.x1 >= roomCm.w && r.z0 < z.to && z.from < r.z1 : false));
   return {
     pieces, keepClear,
-    /** Can a footprint `r` with clearance `c` cm in front of it go here? */
-    fits(r, c = 0) {
+    /** Can a footprint `r` with clearance `c` cm in front of it, `h` cm tall, go here? */
+    fits(r, c = 0, h = 0) {
       if (!inside(r)) return false;
-      const front = { x0: r.x0, x1: r.x1, z0: r.z1, z1: r.z1 + c };
-      if (c > 0 && front.z1 > roomCm.d) return false;
+      if (h > 0 && coversSlot(r, h)) return false;
+      const front = frontOf(r, c);
+      if (c > 0 && !inside(front)) return false;
       for (const p of pieces) if (overlaps(r, p) || (c > 0 && overlaps(front, p))) return false;
       for (const k of keepClear) if (overlaps(r, k)) return false;
       return true;
     },
     add(part, r, c = 0) {
       pieces.push({ part, ...r });
-      if (c > 0) keepClear.push({ x0: r.x0, x1: r.x1, z0: r.z1, z1: r.z1 + c, of: part, piece: pieces.length - 1 });
+      if (c > 0) keepClear.push({ ...frontOf(r, c), of: part, piece: pieces.length - 1 });
     },
     reserve(r, of) { keepClear.push({ ...r, of, piece: -1 }); },
   };
@@ -210,9 +220,15 @@ function createPlan(roomCm) {
  *   plan      the footprints in cm and the kept-clear areas (for the suite and a future editor overlay)
  *   left_out  the pieces that were tried and had no room
  */
-export function generateRoom({ type = 'bedroom', seed = 1, roomCm: roomAsked = ROOM_CM } = {}) {
+// `mode: '3d'` (2026-11-27, proposal_made_rooms_3d step 1): the PLAN only, for the 3D room (room_generate3d.js draws it):
+// no door and no window, picture or clock (the 3D room has none yet), no lamps on tables (its boxes stand on the floor), a
+// piece against a side wall turned to run along it (the 3D room's side walls are real walls), and `slotZones`: where a
+// module hangs, nothing taller than the zone's `below` (cm) stands against that wall. [{ wall: 'back'|'left'|'right',
+// from, to (cm along it: across for the back, from the back wall for a side), below }].
+export function generateRoom({ type = 'bedroom', seed = 1, roomCm: roomAsked = ROOM_CM, mode = '2d', slotZones = [] } = {}) {
   const spec = ROOM_TYPES[type];
   if (!spec) throw new Error(`room_generate: no room type "${type}"`);
+  const is3d = mode === '3d';
   const s = (Number(seed) >>> 0) || 1;
   const rand = mulberry32(s);
   const pick = (list) => list[Math.floor(rand() * list.length)];
@@ -234,7 +250,7 @@ export function generateRoom({ type = 'bedroom', seed = 1, roomCm: roomAsked = R
     made: { type, seed: s },
     items: [],
   };
-  const plan = createPlan(roomCm);
+  const plan = createPlan(roomCm, is3d && Array.isArray(slotZones) ? slotZones : []);
   const leftOut = [];
   const wallUsed = [];   // back-wall spans in cm: { x0, x1, h0, h1 }
   const wallFree = (x0, x1, h0, h1) => x0 >= 0 && x1 <= roomCm.w && !wallUsed.some((u) => x0 < u.x1 && u.x0 < x1 && h0 < u.h1 && u.h0 < h1);
@@ -264,7 +280,9 @@ export function generateRoom({ type = 'bedroom', seed = 1, roomCm: roomAsked = R
   const doorK = round((door.real_size[2] * ppc) / FURNITURE.door.box[1], 3);
   const doorW = (FURNITURE.door.box[0] * doorK) / ppc;                          // its drawn width, cm
   const side = shell.left && shell.right ? pick(['left', 'right']) : shell.left ? 'left' : null;
-  if (side) {
+  if (is3d) {
+    // the 3D room has no door yet (room3d.js "what it does not do")
+  } else if (side) {
     const along = between(0.35, 0.6);                               // how far toward the front, along the side wall
     const edge = side === 'left' ? shell.back.l : 100 - shell.back.r;
     const x = side === 'left' ? edge * (1 - along) : 100 - edge * (1 - along);
@@ -308,9 +326,9 @@ export function generateRoom({ type = 'bedroom', seed = 1, roomCm: roomAsked = R
     const roomForTable = !goes.has('sideTable')
       || plan.fits({ x0: x0 - GAP - nightW, x1: x0 - GAP, z0: 0, z1: ROOM_FACTS.sideTable.real_size[1] })
       || plan.fits({ x0: x0 + aw + GAP, x1: x0 + aw + GAP + nightW, z0: 0, z1: ROOM_FACTS.sideTable.real_size[1] });
-    if (plan.fits(r, af.clearance) && roomForTable) { anchorAt = r; break; }
+    if (plan.fits(r, af.clearance, af.real_size[2]) && roomForTable) { anchorAt = r; break; }
   }
-  if (!anchorAt) for (const x0 of spots) { const r = { x0, x1: x0 + aw, z0: 0, z1: ad }; if (plan.fits(r, af.clearance)) { anchorAt = r; break; } }
+  if (!anchorAt) for (const x0 of spots) { const r = { x0, x1: x0 + aw, z0: 0, z1: ad }; if (plan.fits(r, af.clearance, af.real_size[2])) { anchorAt = r; break; } }
   const placed = [];   // { part, r, item }
   // A floor piece as it would be drawn at `r`, not yet placed (`placeFloor` places it).
   const floorItem = (part, r, extra = {}) => {
@@ -348,7 +366,7 @@ export function generateRoom({ type = 'bedroom', seed = 1, roomCm: roomAsked = R
     const want = coin(0.6) ? 2 : 1;
     for (const r of ends) {
       if (tables.length >= want) break;
-      if (plan.fits(r, st.clearance)) tables.push(placeFloor('sideTable', r));
+      if (plan.fits(r, st.clearance, st.real_size[2])) tables.push(placeFloor('sideTable', r));
     }
     if (!tables.length) leftOut.push('sideTable');
     // a lamp on the first nightstand (a reading lamp), and sometimes on the second
@@ -363,6 +381,7 @@ export function generateRoom({ type = 'bedroom', seed = 1, roomCm: roomAsked = R
     if (coin(0.8)) placeFloor('rug', { x0: rx - rf.real_size[0] / 2, x1: rx + rf.real_size[0] / 2, z0: rz0, z1: rz1 });
   }
   function lampOn(t) {
+    if (is3d) return;            // the 3D room's boxes stand on the floor; a lamp on a table waits for that
     const lf = ROOM_FACTS.tableLamp;
     const foot = t.item.y;
     // the table's top, on the stage: its foot, raised by its drawn height at its depth and scale
@@ -394,7 +413,9 @@ export function generateRoom({ type = 'bedroom', seed = 1, roomCm: roomAsked = R
   }
 
   // 2b + 5. the wall: the window, a picture over the anchor (the bed, the sofa, the desk), a clock. Each checked against
-  // what is on the wall already.
+  // what is on the wall already. (Not in the 3D room: it has none of the three yet; its walls hold modules.)
+  if (!is3d) hangWallThings();
+  function hangWallThings() {
   const win = ROOM_FACTS.window;
   const [ww, , wh] = win.real_size;
   const winSpots = [];
@@ -438,6 +459,7 @@ export function generateRoom({ type = 'bedroom', seed = 1, roomCm: roomAsked = R
       break;
     }
   }
+  }
 
   // 6. fill, each to a count drawn from its range, at random spots; against-the-wall pieces at the back wall. What the
   // room NEEDS was placed before the wall things (above), and counts toward its number here.
@@ -457,17 +479,20 @@ export function generateRoom({ type = 'bedroom', seed = 1, roomCm: roomAsked = R
     const tries = [];
     if (f.against === 'wall') {
       for (let x0 = 0; x0 + pw <= roomCm.w; x0 += 10) tries.push({ x0, x1: x0 + pw, z0: 0, z1: pd });   // the back wall
-      for (let z0 = 0; z0 + pd <= roomCm.d && !f.back_only; z0 += 20) {                                 // the side walls
-        tries.push({ x0: 0, x1: pw, z0, z1: z0 + pd });
-        tries.push({ x0: roomCm.w - pw, x1: roomCm.w, z0, z1: z0 + pd });
+      // the side walls. In 3D a piece there is TURNED to run along the wall (its width along it, its depth out from it),
+      // and may stand there whatever `back_only` says: the 3D room's side walls are real walls.
+      const [sw, sd] = is3d ? [pd, pw] : [pw, pd];
+      for (let z0 = 0; z0 + sd <= roomCm.d && (is3d || !f.back_only); z0 += 20) {
+        tries.push({ x0: 0, x1: sw, z0, z1: z0 + sd, ...(is3d ? { side: 'left', turned: true } : {}) });
+        tries.push({ x0: roomCm.w - sw, x1: roomCm.w, z0, z1: z0 + sd, ...(is3d ? { side: 'right', turned: true } : {}) });
       }
     }
     else for (let x0 = 0; x0 + pw <= roomCm.w; x0 += 20) for (let z0 = 0; z0 + pd <= roomCm.d; z0 += 20) tries.push({ x0, x1: x0 + pw, z0, z1: z0 + pd });
     shuffle(tries);
     // A piece pushed back against the wall must not stand in front of the window, the picture or the clock, nor anything
-    // cover a side-wall door (a flat rug is never against a wall).
+    // cover a side-wall door (a flat rug is never against a wall); in 3D, nothing tall in front of a module's slot.
     const r = tries.find((t) => {
-      if (!plan.fits(t, f.clearance)) return false;
+      if (!plan.fits(t, f.clearance, f.real_size[2])) return false;
       if (f.flat) return true;
       const box = shownBox(floorItem(part, t));
       return (!againstBack(t) || !touches(box, wallShown)) && !touches(box, doorShown);
