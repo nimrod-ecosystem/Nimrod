@@ -150,7 +150,8 @@ export function transformGeometry({ el }) {
 // `grip` (note GS 2, 2026-11-26: a whole PANEL's handles): the body is not the drag; a "Move" grip above it is, so a press
 // inside the panel still chooses the thing pressed (its words, its picture) instead of starting a drag.
 export const GRIP_WORDS = 'Move';
-export function attachHandles({ el, host, piece = {}, floor = true, movable = true, turnable = movable, geometry = htmlGeometry, onCommit = () => {}, grip = false } = {}) {
+// `scalable` (2026-11-26, the corner clock: it has no size to change): false draws no size handle, and `nudge` grows nothing.
+export function attachHandles({ el, host, piece = {}, floor = true, movable = true, turnable = movable, geometry = htmlGeometry, onCommit = () => {}, grip = false, scalable = true } = {}) {
   if (!el || !host) return { el: null, place() {}, nudge: () => false, destroy() {} };
   piece = { ...(piece || {}) };   // its own copy: a key's step moves it on (nudge), never the caller's object
   const doc = host.ownerDocument || document;
@@ -161,7 +162,7 @@ export function attachHandles({ el, host, piece = {}, floor = true, movable = tr
   if (grip) ov.dataset.grip = '';
   ov.innerHTML = `<div class="emh-box"${movable ? '' : ' data-fixed'}${grip ? '' : ' data-emh="move"'} role="presentation"></div>`
     + (grip && movable ? `<div class="emh-grip" data-emh="move" title="Drag to move it">${GRIP_WORDS}</div>` : '')
-    + `<div class="emh-scale" data-emh="scale" title="Drag to make it bigger or smaller"></div>`
+    + (scalable ? `<div class="emh-scale" data-emh="scale" title="Drag to make it bigger or smaller"></div>` : '')
     + (turnable ? '<div class="emh-stem"></div><div class="emh-rot" data-emh="rotate" title="Drag to turn it"></div>' : '');
   host.append(ov);
   const geo = geometry({ el, host, floor });
@@ -188,7 +189,7 @@ export function attachHandles({ el, host, piece = {}, floor = true, movable = tr
   }
   function onDown(e) {
     const kind = e.target instanceof Element ? e.target.closest('[data-emh]')?.dataset.emh : null;
-    if (!kind || (kind === 'move' && !movable) || (kind === 'rotate' && !turnable)) return;
+    if (!kind || (kind === 'move' && !movable) || (kind === 'rotate' && !turnable) || (kind === 'scale' && !scalable)) return;
     e.preventDefault(); e.stopPropagation();
     try { e.target.setPointerCapture?.(e.pointerId); } catch { /* not capturable */ }
     drag = { kind, start: { x: e.clientX, y: e.clientY }, anchor: anchor(kind), geo: geo.start(), moved: false, d: { kind } };
@@ -228,7 +229,7 @@ export function attachHandles({ el, host, piece = {}, floor = true, movable = tr
       const h = host.getBoundingClientRect();
       const d = geo.delta(x * (h.width || 0), y * (h.height || 0), geo.start());
       patch = { x: round1((Number(piece.x) || 0) + d.dx), y: round1((Number(piece.y) || 0) + d.dy) };
-    } else if (k && k !== 1) {
+    } else if (k && k !== 1 && scalable) {
       patch = { size: round1((Number(piece.size) || 1) * k) };
     }
     if (!patch) return false;

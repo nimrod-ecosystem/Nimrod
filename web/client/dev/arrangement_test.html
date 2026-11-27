@@ -720,6 +720,36 @@ try {
     n.arr.destroy();
   }
 
+  section('the mirror and the corner clock, moved in Edit (Edit step 4, 2026-11-26)');
+  {
+    const t = make({ modules: [M.p1, M.c1, M.k1] });
+    t.arr.resolve({ preset: 'full', slots: ['p1'] }); t.arr.partition(); await t.arr.mountOverlays();
+    await t.arr.mountLayout();
+    t.mirrorEl.hidden = false; t.clockEl.hidden = false;
+    t.arr.applyLayout({ kiosk: { mirror: { corner: 'br', size: 'md' }, clock: { corner: 'tl' } } });
+    check('*** the mirror and the corner clock are things edit mode edits ***', ['c1', 'k1'].every((id) => t.arr.editRecs().some((r) => r.id === id)),
+      J(t.arr.editRecs().map((r) => r.id)));
+    t.arr.editPanel('c1', true);
+    const hd = () => t.kioskEl.querySelector('[data-room-handles]') || document.querySelector('[data-room-handles]');
+    check('chosen: a Move grip and a size handle (no turn)', await until(() => !!hd()?.querySelector('.emh-grip') && !!hd().querySelector('[data-emh="scale"]'), 3000)
+      && !hd().querySelector('[data-emh="rotate"]'), hd()?.outerHTML?.slice(0, 160));
+    const key = (k) => document.body.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }));
+    key('ArrowUp');
+    check('*** an arrow sends it to the corner that way (bottom right, up: top right), written where the corner keys write it ***',
+      t.getData().kiosk?.mirror?.corner === 'tr', J(t.getData().kiosk));
+    key('+');
+    check('...and + makes the mirror the next size up', t.getData().kiosk?.mirror?.size === 'lg', J(t.getData().kiosk));
+    t.arr.editPanel('k1', true);
+    check('the corner clock: a Move grip and no size handle (it has no size to change)',
+      await until(() => !!hd()?.querySelector('.emh-grip') && !hd().querySelector('[data-emh="scale"]'), 3000), hd()?.outerHTML?.slice(0, 160));
+    key('ArrowRight');
+    check('*** ...an arrow sends it along too (top left, right: top right) ***', t.getData().kiosk?.clock?.corner === 'tr', J(t.getData().kiosk));
+    t.arr.editPanel('k1', false);
+    t.arr.applyLayout({ kiosk: { clock: { corner: 'off' } } });
+    check('a clock that is off is not offered', !t.arr.editRecs().some((r) => r.id === 'k1'));
+    t.arr.destroy();
+  }
+
   section("the screen's links, and destroy");
   {
     const e = make({ modules: [M.p1], embedded: true });

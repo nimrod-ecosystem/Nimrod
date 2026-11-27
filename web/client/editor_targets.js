@@ -471,6 +471,10 @@ export function buildTree(arr, { placedModel = null, words = null, startOf = nul
     const stage = safe(() => arr.stageRec(), null);
     if (stage && recById.has(stage.id)) addPanel(recById.get(stage.id), ROOT_ID, 1);
   }
+  // (Edit step 4, 2026-11-26) Anything else edit mode edits that no slot or placement holds: the mirror and the corner clock.
+  for (const r of recs) {
+    if (r && r.id && r.id !== ROOM_PANEL_ID && r.id !== BACKGROUND_PANEL_ID && !nodes.has(nodeIdFor(r.id))) addPanel(r, ROOT_ID, 1);
+  }
   const roomRec = recById.get(ROOM_PANEL_ID);
   if (roomRec) addPanel(roomRec, ROOT_ID, 1);
   // (B1, 2026-11-26) The dashboard's background, a row like a panel's: what is behind every panel, and its settings.

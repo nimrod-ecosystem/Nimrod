@@ -2107,7 +2107,26 @@ export function createArrangement({
   // dashboard that draws corners (a NESTED one is pressed as one thing: going in is how its panels are
   // edited, as it is how they are reached).
   const editCornerOn = () => { try { return editSettingsFrom(settings?.get?.() || {}).corner; } catch { return true; } };
-  const editPanels = () => [...(layout ? [...slotRecs, ...placedRecs] : [stageRec]), roomEditRec(), backgroundEditRec()].filter(Boolean);
+  const editPanels = () => [...(layout ? [...slotRecs, ...placedRecs] : [stageRec]), ...hudRecs(), roomEditRec(), backgroundEditRec()].filter(Boolean);
+  // *** THE MIRROR AND THE CORNER CLOCK, EDITED IN PLACE (Edit step 4, 2026-11-26; Mike: "It's supposed to be so you can
+  // move the objects around"). *** The camera and the clock that no slot holds sit in a corner of the screen (`partition`).
+  // In Edit they are two more things to choose (while the background is being edited, a press on one; the one editor's
+  // list): a Move grip drags either to the corner nearest where it is let go, the mirror's size handle steps through its
+  // sizes, and the keys do both (an arrow: the corner that way; + and -: the mirror's size). Written where the bar's
+  // corner keys write them (`patchMirror`, `patchClock`). Not while the mirror is hidden or the clock is off.
+  function hudOf(id) {
+    if (!id || !kioskEl) return null;
+    if (cameraRec && cameraRec.id === id && mirrorEl && !mirrorEl.hidden) return { rec: cameraRec, el: mirrorEl, kind: 'mirror' };
+    if (clockRec && clockRec.id === id && clockEl && !clockEl.hidden && kioskEl.dataset.clockCorner !== 'off') return { rec: clockRec, el: clockEl, kind: 'clock' };
+    return null;
+  }
+  function hudRecs() { return [cameraRec, clockRec].filter((r) => r && hudOf(r.id)); }
+  const hudCorner = (kind) => (kind === 'mirror' ? kioskEl.dataset.mirrorCorner : kioskEl.dataset.clockCorner) || '';
+  function setHudCorner(kind, corner) {
+    if (!/^[tb][lr]$/.test(corner || '') || corner === hudCorner(kind)) return false;
+    if (kind === 'mirror') patchMirror({ corner }); else patchClock({ corner });
+    return true;
+  }
   // *** THE BACKGROUND, EDITED LIKE A MODULE (B1, 2026-11-26; Mike: "The backgrounds should really be just another type of
   // module"). *** One more thing edit mode edits, beside the panels and the room: its box is the stage (behind and around
   // every panel), its one target the whole of it, its card the slot's choice (the theme's scene, or plain) and then the
@@ -2620,6 +2639,47 @@ export function createArrangement({
     else import('./room_handles.js').then((m) => { handlesLib = m; draw(m); }).catch((err) => console.error('arrangement: handles', err));
     return true;
   }
+  // (Edit step 4) THE MIRROR AND THE CORNER CLOCK's handles (hudOf, above): a Move grip, and the mirror's size handle.
+  // Let go anywhere: it goes to the corner nearest where it was let go. Its size: dragged out by more than an eighth,
+  // the next size up; in by as much, the next one down (MIRROR_SIZES has three, so a drag is a step, not a free size).
+  const HUD_SIZE_STEP = 0.12;
+  function syncHudHandles(a) {
+    const h = hudOf(a.id);
+    if (!h) return false;
+    let t = null;
+    try { t = editMode?.chosenTarget?.() || null; } catch { t = null; }
+    if (t && !t.whole) return false;
+    const host = h.el.parentElement || kioskEl;
+    const redraw = () => setTimeout(() => { try { if (editMode?.active?.()?.id === a.id) syncRoomHandles(); } catch { /* gone */ } }, 0);
+    const draw = (lib) => {
+      if (editMode?.active?.()?.id !== a.id || !h.el.isConnected) return;
+      const before = { transform: h.el.style.transform, z: h.el.style.zIndex };
+      const putBack = () => { h.el.style.transform = before.transform; h.el.style.zIndex = before.z; };
+      roomHandles = lib.attachHandles({ el: h.el, host, piece: { x: 0, y: 0, size: 1 }, floor: false, movable: true, turnable: false,
+        grip: true, scalable: h.kind === 'mirror', geometry: lib.transformGeometry,
+        onCommit: (patch) => {
+          putBack();
+          if (!patch) return;
+          if ('size' in patch) {
+            const k = Number(patch.size) || 1;
+            if (k > 1 + HUD_SIZE_STEP) cycleMirrorSize(1); else if (k < 1 - HUD_SIZE_STEP) cycleMirrorSize(-1);
+          } else {
+            const r = h.el.getBoundingClientRect(), kr = kioskEl.getBoundingClientRect();
+            const px = r.left + r.width / 2 + (Number(patch.x) || 0), py = r.top + r.height / 2 + (Number(patch.y) || 0);
+            setHudCorner(h.kind, `${py < kr.top + kr.height / 2 ? 't' : 'b'}${px < kr.left + kr.width / 2 ? 'l' : 'r'}`);
+          }
+          redraw();
+        } });
+    };
+    if (handlesLib) draw(handlesLib);
+    else import('./room_handles.js').then((m) => { handlesLib = m; draw(m); }).catch((err) => console.error('arrangement: handles', err));
+    return true;
+  }
+  /** The corner an arrow key sends a corner thing to: the same row or column, toward the arrow. PURE. */
+  const cornerToward = (corner, [dx, dy]) => {
+    const c = /^[tb][lr]$/.test(corner || '') ? corner : 'br';
+    return `${dy < 0 ? 't' : dy > 0 ? 'b' : c[0]}${dx < 0 ? 'l' : dx > 0 ? 'r' : c[1]}`;
+  };
   /** Move grid panel `id` to slot `to`; what was there takes its slot. In place, saved once. True if it moved. */
   function swapSlot(id, to) {
     if (!layout || !Array.isArray(layout.slots)) return false;
@@ -2683,6 +2743,7 @@ export function createArrangement({
       if (!t || t.id === 'room' || !roomScene || !roomEditsLib || is3dScene(layout?.scene)) return false;
       try { return !!roomEditsLib.isEditablePiece(roomEditsLib.pieceOf(sceneRecipe(roomBase()?.scene || null), t.id)); } catch { return false; }
     }
+    if (hudOf(id)) return whole;
     const meta = placedMeta.get(id);
     if (meta) return whole && meta.where === 'flat';
     if (slotRecs.some((r) => r.id === id)) return whole && !!layout && !isPagePreset(layout.preset) && (layout.slots || []).length >= 2;
@@ -2691,6 +2752,7 @@ export function createArrangement({
   function syncRoomHandles() {
     dropHandles();
     const a = editMode?.active?.();
+    if (a && hudOf(a.id) && syncHudHandles(a)) return;
     if (a && a.id !== ROOM_PANEL_ID && placedMeta.has(a.id) && syncPanelHandles(a)) return;
     if (a && a.id !== ROOM_PANEL_ID && slotRecs.some((r) => r.id === a.id) && syncSlotHandles(a)) return;
     if (a && a.id !== ROOM_PANEL_ID && a.target) { syncTargetHandles(a); return; }
@@ -2720,7 +2782,7 @@ export function createArrangement({
   }
 
   const editBoxOf = (id) => (id === ROOM_PANEL_ID ? roomHost : null) || (id === BACKGROUND_PANEL_ID ? stageEl : null)
-    || promoteBox(id)?.box || recFor(id)?.el || null;
+    || hudOf(id)?.el || promoteBox(id)?.box || recFor(id)?.el || null;
   /** (row 2.145, 2026-11-02) The panel a pressed element is in: the SMALLEST panel box holding it (a module in a room's
    *  slot is inside the room's box too), or null. For the one editor's "press a panel to choose it". */
   function panelAt(node) {
@@ -2807,7 +2869,13 @@ export function createArrangement({
     if (!dir && !grow) return;
     let done = false;
     const inGrid = slotRecs.some((r) => r.id === a.id) && !placedMeta.has(a.id);
-    if (dir && inGrid) {
+    const hud = hudOf(a.id);
+    if (hud) {
+      // (Edit step 4) A corner thing: an arrow sends it to the corner that way; + and - step the mirror's size.
+      if (dir) done = setHudCorner(hud.kind, cornerToward(hudCorner(hud.kind), dir));
+      else if (hud.kind === 'mirror') { cycleMirrorSize(grow > 1 ? 1 : -1); done = true; }
+      if (done) setTimeout(() => { try { if (editMode?.active?.()?.id === a.id) syncRoomHandles(); } catch { /* gone */ } }, 0);
+    } else if (dir && inGrid) {
       const cell = recFor(a.id)?.el?.closest?.('.k-cell');
       const cells = [...stageEl.querySelectorAll(':scope > .k-cell[data-slot]')].map((c) => ({ el: c, rect: c.getBoundingClientRect() }));
       const from = cells.find((c) => c.el === cell)?.rect || null;
