@@ -62,7 +62,9 @@ export const ROOM_FACTS = Object.freeze({
   sofa:      { real_size: [200, 90, 85],  sits_on: 'floor', against: 'wall', rooms: ['living'], goes_with: ['rug', 'sideTable', 'tableLamp', 'floorLamp'], clearance: 60, count: [0, 1], faces: 'room' },
   armchair:  { real_size: [85, 85, 95],   sits_on: 'floor', against: 'none', rooms: ['living', 'bedroom', 'study'], goes_with: ['sideTable', 'floorLamp'], clearance: 40, count: [0, 1], faces: 'room' },
   bed:       { real_size: [200, 140, 55], sits_on: 'floor', against: 'wall', rooms: ['bedroom'], goes_with: ['sideTable', 'tableLamp', 'rug'], clearance: 50, count: [1, 1], faces: 'room' },
-  bookshelf: { real_size: [80, 30, 180],  sits_on: 'floor', against: 'wall', rooms: ['living', 'bedroom', 'study'], goes_with: [], clearance: 60, count: [0, 1], faces: 'room' },
+  // `back_only` for now (Mike, 2026-11-27: "b with a until then"): the room draws every floor piece facing the viewer, so a
+  // bookshelf along a side wall hid what stood behind it there. Back wall only until Design draws its side view (b).
+  bookshelf: { real_size: [80, 30, 180],  sits_on: 'floor', against: 'wall', back_only: true, rooms: ['living', 'bedroom', 'study'], goes_with: [], clearance: 60, count: [0, 1], faces: 'room' },
   desk:      { real_size: [120, 60, 75],  sits_on: 'floor', against: 'wall', rooms: ['study', 'bedroom'], goes_with: ['tableLamp'], clearance: 70, count: [0, 1], faces: 'room', surface: 75 },
   sideTable: { real_size: [45, 40, 55],   sits_on: 'floor', against: 'wall', rooms: ['living', 'bedroom'], goes_with: ['tableLamp'], clearance: 0, count: [0, 2], faces: 'room', surface: 55 },
   cabinet:   { real_size: [120, 45, 60],  sits_on: 'floor', against: 'wall', rooms: ['living', 'bedroom', 'study'], goes_with: ['tableLamp', 'speaker'], clearance: 50, count: [0, 1], faces: 'room', surface: 60 },
@@ -385,6 +387,12 @@ export function generateRoom({ type = 'bedroom', seed = 1, roomCm: roomAsked = R
     return true;
   };
 
+  // 4b. what this kind of room is not itself without (a study's bookshelf), BEFORE the wall things: a tall piece that may
+  // stand only against the back wall (`back_only`) finds no room once the window, the picture and the clock are up.
+  for (const part of spec.need || []) {
+    if (ROOM_FACTS[part]?.rooms.includes(type) && !placed.some((p) => p.part === part) && !placeOne(part)) leftOut.push(part);
+  }
+
   // 2b + 5. the wall: the window, a picture over the anchor (the bed, the sofa, the desk), a clock. Each checked against
   // what is on the wall already.
   const win = ROOM_FACTS.window;
@@ -431,36 +439,43 @@ export function generateRoom({ type = 'bedroom', seed = 1, roomCm: roomAsked = R
     }
   }
 
-  // 6. fill, each to a count drawn from its range, at random spots; against-the-wall pieces at the back wall
+  // 6. fill, each to a count drawn from its range, at random spots; against-the-wall pieces at the back wall. What the
+  // room NEEDS was placed before the wall things (above), and counts toward its number here.
   for (const part of spec.fill) {
     const f = ROOM_FACTS[part];
     if (!f || !f.rooms.includes(type)) continue;
     const lo = (spec.need || []).includes(part) ? Math.max(1, f.count[0]) : f.count[0];
     const want = lo + Math.floor(rand() * (Math.max(lo, f.count[1]) - lo + 1));
+    const have = placed.filter((p) => p.part === part).length;
+    for (let k = have; k < want; k++) if (!placeOne(part)) { leftOut.push(part); break; }
+  }
+
+  /** One `part` where it fits, as the fill places it (a lamp on it sometimes, if it has a top). The entry, or null. */
+  function placeOne(part) {
+    const f = ROOM_FACTS[part];
     const [pw, pd] = f.real_size;
-    for (let k = 0; k < want; k++) {
-      const tries = [];
-      if (f.against === 'wall') {
-        for (let x0 = 0; x0 + pw <= roomCm.w; x0 += 10) tries.push({ x0, x1: x0 + pw, z0: 0, z1: pd });   // the back wall
-        for (let z0 = 0; z0 + pd <= roomCm.d && !f.back_only; z0 += 20) {                                 // the side walls
-          tries.push({ x0: 0, x1: pw, z0, z1: z0 + pd });
-          tries.push({ x0: roomCm.w - pw, x1: roomCm.w, z0, z1: z0 + pd });
-        }
+    const tries = [];
+    if (f.against === 'wall') {
+      for (let x0 = 0; x0 + pw <= roomCm.w; x0 += 10) tries.push({ x0, x1: x0 + pw, z0: 0, z1: pd });   // the back wall
+      for (let z0 = 0; z0 + pd <= roomCm.d && !f.back_only; z0 += 20) {                                 // the side walls
+        tries.push({ x0: 0, x1: pw, z0, z1: z0 + pd });
+        tries.push({ x0: roomCm.w - pw, x1: roomCm.w, z0, z1: z0 + pd });
       }
-      else for (let x0 = 0; x0 + pw <= roomCm.w; x0 += 20) for (let z0 = 0; z0 + pd <= roomCm.d; z0 += 20) tries.push({ x0, x1: x0 + pw, z0, z1: z0 + pd });
-      shuffle(tries);
-      // A piece pushed back against the wall must not stand in front of the window, the picture or the clock (a flat
-      // rug is never against a wall).
-      const r = tries.find((t) => {
-        if (!plan.fits(t, f.clearance)) return false;
-        if (f.flat) return true;
-        const box = shownBox(floorItem(part, t));
-        return (!againstBack(t) || !touches(box, wallShown)) && !touches(box, doorShown);
-      });
-      if (!r) { leftOut.push(part); break; }
-      const p = placeFloor(part, r);
-      if (f.surface && coin(0.5)) lampOn(p);
     }
+    else for (let x0 = 0; x0 + pw <= roomCm.w; x0 += 20) for (let z0 = 0; z0 + pd <= roomCm.d; z0 += 20) tries.push({ x0, x1: x0 + pw, z0, z1: z0 + pd });
+    shuffle(tries);
+    // A piece pushed back against the wall must not stand in front of the window, the picture or the clock, nor anything
+    // cover a side-wall door (a flat rug is never against a wall).
+    const r = tries.find((t) => {
+      if (!plan.fits(t, f.clearance)) return false;
+      if (f.flat) return true;
+      const box = shownBox(floorItem(part, t));
+      return (!againstBack(t) || !touches(box, wallShown)) && !touches(box, doorShown);
+    });
+    if (!r) return null;
+    const p = placeFloor(part, r);
+    if (f.surface && coin(0.5)) lampOn(p);
+    return p;
   }
 
   return { recipe, plan: { pieces: plan.pieces, keepClear: plan.keepClear, roomCm }, left_out: leftOut };

@@ -200,12 +200,13 @@ const overlaps = (a, b) => a.x0 < b.x1 && b.x0 < a.x1 && a.z0 < b.z1 && b.z0 < a
           const hid = recipe.items.find((it) => isFloor(it) && !(it.part === 'rug') && meet(drawn(it, shell), db));
           if (hid && !doorHidden) doorHidden = `${type} ${seed}: ${hid.part} in front of the ${d.wall} door`;
         }
-        const fp = plan.pieces.find((p) => p.part === 'fireplace');
-        if (fp && fp.z0 > 0 && !shelfOnSide) shelfOnSide = `${type} ${seed}`;
+        // (Mike, 2026-11-27: "b with a until then") a fireplace, and a bookshelf until Design's side view, on the back wall only.
+        const fp = plan.pieces.find((p) => (p.part === 'fireplace' || p.part === 'bookshelf') && p.z0 > 0);
+        if (fp && !shelfOnSide) shelfOnSide = `${type} ${seed}: a ${fp.part} on a side wall`;
       }
       check('*** no two things on the back wall overlap, as they are drawn (the window with its curtains) ***', !overlap, overlap);
       check('*** every door stands on the floor: its foot on the floor line, on the back wall or a side wall ***', doorGap < 1, `${doorGap.toFixed(1)} px off, ${doorAt}`);
-      check('a fireplace is only ever on the back wall (it is built into a wall)', !shelfOnSide, shelfOnSide);
+      check('a fireplace, and (until its side view) a bookshelf, only ever on the back wall', !shelfOnSide, shelfOnSide);
       check('*** a side-wall door\'s top edge follows the wall (the same height up the wall at both its edges) ***', !topSlopeBad, topSlopeBad);
       check('...and its top and bottom edges slope differently, as two lines running to one vanishing point do', !sameSlope, sameSlope);
       check('*** nothing standing on the floor covers a side-wall door (a rug lies under it) ***', !doorHidden, doorHidden);
