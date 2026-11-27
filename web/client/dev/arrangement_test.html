@@ -32,7 +32,7 @@
 <div id="summary">running…</div>
 
 <script type="module">
-import { createArrangement, moveKeeping, ROOM_PANEL_ID, PLACE_REQUEST_TOPIC } from '../arrangement.js';
+import { createArrangement, moveKeeping, ROOM_PANEL_ID, PLACE_REQUEST_TOPIC, BACKGROUND_PANEL_ID } from '../arrangement.js';
 import { createBus } from '../bus.js';
 import { readConfig } from '../restart.js';
 import '../modules/ambient_drift.js';     // a real `mount: 'ambient'` manifest for partition()
@@ -57,7 +57,7 @@ const M = {
 // Everything the shell would hand over, faked and recorded.
 // `content(def, host)`: what a fake module draws in its host, after its id (the move tests put a playing iframe there).
 // `layoutStore` (row 2.145 step 4): where a change the arrangement saves itself goes (the kiosk's ownLayoutStore).
-function make({ modules = [], failTypes = [], embedded = false, throwingGetters = false, content = null, layoutStore = null } = {}) {
+function make({ modules = [], failTypes = [], embedded = false, throwingGetters = false, content = null, layoutStore = null, background = null } = {}) {
   const host = document.getElementById('host');
   host.innerHTML = '';
   const el = (cls) => { const e = document.createElement('div'); e.className = cls; host.append(e); return e; };
@@ -98,6 +98,7 @@ function make({ modules = [], failTypes = [], embedded = false, throwingGetters 
     health: throwingGetters ? thrower('health') : () => ({ forget: (id) => log.forgot.push(id) }),
     profileId: throwingGetters ? thrower('profileId') : () => ids.profileId,
     ...(layoutStore ? { layoutStore } : {}),
+    ...(background ? { background } : {}),
   });
   arr.setProfile({ id: 'scr-A', name: 'A', modules });
   return { arr, log, bus, kioskEl, stageEl, mirrorEl, clockEl, ambientEl, settings, storage, ids,
@@ -231,7 +232,10 @@ try {
       'movePagePart',
       // 2026-11-02 (row 2.145, deliberately): the panel a pressed element is in, for the one editor's "press a panel to
       // choose it" (editor_test and kiosk_test drive it). Missing here from 90259c59 until the full sweep caught it.
-      'panelAt'];
+      'panelAt',
+      // 2026-11-26 (B1, deliberately): the dashboard's background slot, and whether edit mode can edit it here (the ⚙ menu's
+      // "Edit the background…" asks). Driven in the background section below.
+      'background', 'setBackground', 'canEditBackground'];
     const got = arr ? Object.keys(arr) : [];
     check('the surface is exactly the one kiosk.js calls (Stage 2 builds on it)',
       want.length === got.length && want.every((k) => got.includes(k)),
@@ -663,6 +667,65 @@ try {
     check('*** ...and put back into the grid: still the same page ***',
       replies[1]?.ok && !!snap.t1.f.closest('.k-cell') && !bad.length, `${J(replies)} ${bad.join('; ')}`);
     t.arr.destroy();
+  }
+
+  section('the background, edited like a module (B1; Mike 2026-11-26: "The backgrounds should really be just another type of module")');
+  {
+    let saved = { preset: 'two', slots: ['p1', 't1'] };
+    const saves = [];
+    let screenRow = { sceneMotion: 'auto' };
+    const bgDesc = () => ({ title: 'Background', label: 'Fall', help: 'The Fall theme’s moving scene.',
+      fields: [{ key: 'sceneMotion', label: 'Moving theme scene', kind: 'choice', level: 'standard', default: 'auto',
+        options: [{ value: 'auto', label: 'Auto' }, { value: 'still', label: 'Still' }] }],
+      values: () => screenRow, set: (p) => { screenRow = { ...screenRow, ...p }; } });
+    const t = make({ modules: [M.p1, M.t1], background: bgDesc,
+      layoutStore: { get: () => saved, save: (next, base) => { saves.push({ next, base }); saved = next; } } });
+    t.arr.resolve(saved); t.arr.partition();
+    await t.arr.mountLayout();
+    check('*** the background is one more thing edit mode edits, beside the panels ***',
+      t.arr.canEditBackground() && t.arr.editRecs().some((r) => r.id === BACKGROUND_PANEL_ID) && t.arr.background() === 'theme');
+    t.arr.editPanel('p1', true);
+    t.kioskEl.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    check('*** while editing a panel, a press on nothing chooses the background ***', t.arr.editing()?.id === BACKGROUND_PANEL_ID, J(t.arr.editing()));
+    let sel = t.arr.editSelection();
+    check('its card: the slot first (the theme’s scene, named, or plain), then the scene’s own settings',
+      sel?.fields?.[0]?.key === 'background' && /Fall/.test(sel.fields[0].options[0].label) && sel.fields.some((f) => f.key === 'sceneMotion')
+      && sel.values().background === 'theme', J(sel?.fields?.map((f) => f.key)));
+    check('...and its words say whose each is (the slot this dashboard’s, the scene’s settings this screen’s)',
+      /this dashboard’s/.test(sel.help) && /screen’s/.test(sel.help), sel.help);
+    sel.set('sceneMotion', 'still');
+    check('a scene setting is written where the host keeps it (the screen’s row)', screenRow.sceneMotion === 'still' && !saves.length);
+    sel.set('background', 'plain');
+    check('*** plain: shown at once (the kiosk says so for kiosk.css) and saved with the layout, nothing remounted ***',
+      t.kioskEl.dataset.background === 'plain' && saves.at(-1)?.next?.background === 'plain' && saved.slots.join() === 'p1,t1'
+      && t.log.mounts.filter((id) => id === 'p1').length === 1, J({ ds: t.kioskEl.dataset.background, saves }));
+    await until(() => t.arr.editSelection()?.fields?.length === 1);
+    check('...and the card has nothing to tune while it is plain', t.arr.editSelection()?.fields?.length === 1, J(t.arr.editSelection()?.fields?.map((f) => f.key)));
+    const r = await t.arr.applySaved(saved, JSON.parse(J({ ...saved, background: undefined })));   // (prev, next)
+    check('*** a background changed elsewhere is applied in place, not a rebuild ***', r?.applied === true && !t.kioskEl.dataset.background
+      && t.log.mounts.filter((id) => id === 'p1').length === 1, J(r));
+    const cellP = t.arr.recFor('p1')?.el;
+    cellP?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    check('*** while editing the background, a press on a panel edits that panel ***', t.arr.editing()?.id === 'p1', J(t.arr.editing()));
+    t.arr.editPanel('p1', false);
+    t.kioskEl.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    check('not editing: a press on nothing does nothing', !t.arr.editing());
+    t.arr.destroy();
+    check('destroy: the kiosk says no background of its own', !t.kioskEl.dataset.background);
+    const n = make({ modules: [M.p1] });
+    n.arr.resolve({ preset: 'full', slots: ['p1'] }); n.arr.partition(); await n.arr.mountLayout();
+    check('no host words for it (a preview): the background is not offered', !n.arr.canEditBackground()
+      && !n.arr.editRecs().some((r) => r.id === BACKGROUND_PANEL_ID));
+    n.arr.destroy();
+  }
+  {
+    const L = await import('../layout.js');
+    check('layout: the default background is never stored; plain is kept; anything else is the default',
+      !('background' in L.normalizeLayout({ preset: 'full', slots: ['a'], background: 'theme' }, ['a']))
+      && L.normalizeLayout({ preset: 'full', slots: ['a'], background: 'plain' }, ['a']).background === 'plain'
+      && !('background' in L.normalizeLayout({ preset: 'full', slots: ['a'], background: 'lava' }, ['a'])));
+    check('...and a change of only the background is a placement change (in place), never a grid one',
+      L.layoutChange({ preset: 'full', slots: ['a'] }, { preset: 'full', slots: ['a'], background: 'plain' }) === 'placement');
   }
 
   section("the screen's links, and destroy");

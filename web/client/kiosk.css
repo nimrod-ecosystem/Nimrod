@@ -194,6 +194,12 @@
      root; the panels shrink up by that much, so the lines never cover an answer. 0 (unset) is today's
      layout exactly. The dashboard host (.k-dash, below) takes the stage's place and gets the same. */
   .kiosk > .k-stage{bottom:var(--subtitles-reserve,0px)}
+  /* A PLAIN BACKGROUND (B1, 2026-11-26; layout.js BACKGROUNDS): the dashboard's background slot holds nothing but the
+     theme's colours, so the theme's scene is not drawn -- the kiosk's own and the page's copy on <body> (kiosk.js mounts
+     both, "MUST LIVE INSIDE THE FULLSCREEN TARGET"). display:none, so nothing in it is painted or moves. Only the
+     screen's own scene, a direct child: a room panel's window view is a scene too, and it stays. */
+  .kiosk[data-background="plain"] > .ls,
+  body:has(.kiosk[data-background="plain"]) > .ls{display:none}
   /* THE AMBIENT LAYER (band 100) -- see kiosk.js's own header comment on `data-ambient` for
      what mounts here. `pointer-events:auto`, DELIBERATELY differing from the board's own
      `.ab-surface` (which is `none`, because it sits UNDER cards that are somebody's voice):

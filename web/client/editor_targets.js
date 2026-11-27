@@ -64,7 +64,7 @@ import { normalizeField } from './settings_fields.js';
 import { preset, isPagePreset, PAGE_HEIGHT_FIELD, PAGE_HEIGHT_KEY, PAGE_HEIGHTS, pageHeightOf, placedGeometry } from './layout.js';
 import { PLACES, SURFACES, PLACE_LABELS, SURFACE_LABELS, EDIT_DEFAULTS as MODEL_DEFAULTS, normalizeItem } from './edit_model.js';
 import { getManifest } from './module.js';
-import { ROOM_PANEL_ID } from './arrangement.js';
+import { ROOM_PANEL_ID, BACKGROUND_PANEL_ID } from './arrangement.js';
 import { WORDS_GROUP_ID } from './editor_words.js';
 
 export const ROOT_ID = 'dash';
@@ -473,6 +473,9 @@ export function buildTree(arr, { placedModel = null, words = null, startOf = nul
   }
   const roomRec = recById.get(ROOM_PANEL_ID);
   if (roomRec) addPanel(roomRec, ROOT_ID, 1);
+  // (B1, 2026-11-26) The dashboard's background, a row like a panel's: what is behind every panel, and its settings.
+  const bgRec = recById.get(BACKGROUND_PANEL_ID);
+  if (bgRec) addPanel(bgRec, ROOT_ID, 1);
   // (step 3) "Words on this screen", last, only when it has something in it.
   if (words) {
     const here = safe(() => words.screen(), []) || [];

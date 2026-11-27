@@ -52,7 +52,7 @@
 
 import {
   normalizeLayout, isArranged, resolveLayout, gridStyle, slotStyle, placedGeometry, layoutChange, normalizePlacedEntry,
-  isPagePreset, pageCellStyle,
+  isPagePreset, pageCellStyle, backgroundOf, BACKGROUND_DEFAULT,
 } from './layout.js';
 
 // Re-exported so the shell (kiosk.js already imports this file) can classify a change without a new
@@ -176,6 +176,10 @@ export const ROOM_PANEL_ID = 'scene:room';
 export const ROOM_PIECE_TYPE = 'room-piece';
 export const ROOM_PIECE_PRESS_TOPIC = 'room-piece/press';
 export const ROOM_PIECE_PREFIX = `${ROOM_PANEL_ID}/`;
+// THE DASHBOARD'S BACKGROUND (B1, 2026-11-26; layout.js BACKGROUNDS argues it), as one more thing edit mode can edit: chosen
+// by a press on nothing else while editing, or the menu's "Edit the background". A fixed name, like the room's.
+export const BACKGROUND_PANEL_ID = 'scene:background';
+export const BACKGROUND_KEY = 'background';
 // A PANEL THAT FLOATS ON REQUEST (Mike's list 09-30, Scoreboard item 5; "A PANEL ASKS TO FLOAT" below).
 // `shell/place { id, place?: 'overlay' | 'slot', x?, y?, w?, h?, scan?, claim?, reply? }`: a panel asks this
 // dashboard to float it over the others, put it back, or put it in / take it out of the switch lap.
@@ -264,6 +268,11 @@ export function createArrangement({
   // ROW 2.110: `notify(text)`, a short spoken and shown notice (the shell's output.notify): "This room is full",
   // "Nothing to undo". Absent: nothing is said, and the press simply does nothing.
   notify = null,
+  // B1 (2026-11-26): `background()` -> { title, label, help?, fields, values(), set(patch) } | null, the host's words for what
+  // the background slot shows and the settings of the thing in it (the theme's scene: how it moves, the village's look).
+  // The slot's own choice (BACKGROUND_KEY: the theme's scene or plain) is the dashboard's, saved here with its layout.
+  // Absent: the background is not offered in edit mode (a preview, a nested dashboard).
+  background = null,
 } = {}) {
   // THE ARRANGEMENT'S OWN STATE (see the header). Set by `setProfile` and `resolve`, read by every
   // caller through `arr.profile()` / `arr.layout()`.
@@ -288,6 +297,30 @@ export function createArrangement({
     kioskEl.dataset.mirrorCorner = CORNERS.includes(m.corner) ? m.corner : KDEF.mirror.corner;
     // ('off' too, 2026-10-03: "Show a small clock: Off" -- kiosk.css hides the corner clock; SMALL_CLOCK_FIELD.)
     kioskEl.dataset.clockCorner = CLOCK_CORNERS.includes(c.corner) ? c.corner : KDEF.clock.corner;
+  }
+
+  // (B1) The background slot, said on the kiosk for kiosk.css: 'plain' hides the theme's scene (display:none, so nothing
+  // in it is drawn or moves). A dashboard with a room keeps its room there, whatever the slot says (B3 is the room's turn).
+  function syncBackground() {
+    if (!kioskEl) return;
+    const plain = !!layout && !isRoomScene(layout.scene) && backgroundOf(layout) === 'plain';
+    if (plain) kioskEl.dataset.background = 'plain'; else delete kioskEl.dataset.background;
+  }
+  /** (B1) Put `kind` in the background slot: shown at once and saved with the layout. False when there is no layout. */
+  function setBackground(kind) {
+    if (!layout) return false;
+    const next = backgroundOf({ background: kind });
+    if (next === backgroundOf(layout)) return true;
+    layout = { ...layout };
+    if (next === BACKGROUND_DEFAULT) delete layout.background; else layout.background = next;
+    syncBackground();
+    const base = savedBase();
+    if (base) {
+      const saved = { ...base };
+      if (next === BACKGROUND_DEFAULT) delete saved.background; else saved.background = next;
+      saveLayout(saved, base);
+    }
+    return true;
   }
 
   // persist a mirror change into the profile settings (merges with theme/voice/clock)
@@ -426,6 +459,7 @@ export function createArrangement({
     // Each mount reports on its OWN panels. This list was filled here and never emptied, so after a
     // screen swap the empty-screen sentence below named the previous screen's failures as well.
     failedSlots.length = 0;
+    syncBackground();   // (B1) the background slot, before anything in front of it is drawn
     stageEl.classList.add('k-grid');
     stageEl.setAttribute('style', gridStyle(layout.preset));
     // A PAGE THAT SCROLLS (row 2.127): parts stacked, each as tall as its own "Height on the page" (kiosk.js applies it
@@ -1247,14 +1281,18 @@ export function createArrangement({
     delete l.placed;
     if (nextPlaced.length) l.placed = nextPlaced;
     if (doors.length) l.scene = r.scene;      // row 2.38: the scene as saved, its doors moved
+    // (B1) The background slot as saved, applied in place (layout.js layoutChange: a change of it reloads nothing).
+    delete l.background;
+    if (r.background) l.background = r.background;
     if (!isArranged(l)) return { ...none, reason: 'grid' };
-    if (!placedMounted) { layout = l; return { ...none, applied: true, deferred: true }; }
+    if (!placedMounted) { layout = l; syncBackground(); return { ...none, applied: true, deferred: true }; }
     const before = new Map(placedOf().map((e) => [e.id, e]));
     const after = l.placed || [];
     const keep = new Set(after.map((e) => e.id));
     const out = { applied: true, moved: [], added: [], removed: [], doors: doors.map((d) => d.id), hud: { dropped: [], raised: [] } };
     for (const id of before.keys()) if (!keep.has(id)) { removePlaced(id); out.removed.push(id); }
     layout = l;
+    syncBackground();
     // The HUD pair, by the same rule as a rebuild (see `dropHud`): what is placed now leaves its corner first.
     partition();
     out.hud.dropped = dropHud();
@@ -1503,6 +1541,7 @@ export function createArrangement({
     while (slotRecs.length) destroyRec(slotRecs.pop());
     teardownPlaced();                       // Stage R: placed modules, the room, and their layers
     stageEl.innerHTML = ''; stageEl.className = 'k-stage'; stageEl.removeAttribute('style');
+    syncBackground();                       // (B1) the incoming screen's background slot (none: the theme's scene)
     mirrorEl.innerHTML = ''; mirrorEl.hidden = true;
     clockEl.innerHTML = ''; clockEl.hidden = true;
     ambientEl.innerHTML = ''; ambientEl.hidden = true;
@@ -2062,7 +2101,58 @@ export function createArrangement({
   // dashboard that draws corners (a NESTED one is pressed as one thing: going in is how its panels are
   // edited, as it is how they are reached).
   const editCornerOn = () => { try { return editSettingsFrom(settings?.get?.() || {}).corner; } catch { return true; } };
-  const editPanels = () => [...(layout ? [...slotRecs, ...placedRecs] : [stageRec]), roomEditRec()].filter(Boolean);
+  const editPanels = () => [...(layout ? [...slotRecs, ...placedRecs] : [stageRec]), roomEditRec(), backgroundEditRec()].filter(Boolean);
+  // *** THE BACKGROUND, EDITED LIKE A MODULE (B1, 2026-11-26; Mike: "The backgrounds should really be just another type of
+  // module"). *** One more thing edit mode edits, beside the panels and the room: its box is the stage (behind and around
+  // every panel), its one target the whole of it, its card the slot's choice (the theme's scene, or plain) and then the
+  // settings of what is in it, as the host words them (kiosk.js: how the scene moves, the village's look and people).
+  // Only on an arranged dashboard (the slot is saved with the layout) whose scene is not a room (the room is edited as
+  // itself, ROOM_PANEL_ID; B3 puts it in this slot).
+  let bgRec = null;
+  function backgroundEditRec() {
+    if (typeof background !== 'function' || !layout || !stageEl || isRoomScene(layout.scene)) { bgRec = null; return null; }
+    let d = null;
+    try { d = background(); } catch (err) { console.error('arrangement: the background', err); d = null; }
+    if (!d) { bgRec = null; return null; }
+    const title = String(d.title || 'Background');
+    if (bgRec && bgRec.title === title) { bgRec.desc = d; return bgRec; }
+    const rec = {
+      id: BACKGROUND_PANEL_ID, type: 'background', title, el: stageEl, desc: d,
+      // A panel in front of it is not it: a press there goes on to the panel's own edit (BACKGROUND PRESSES below).
+      passThrough: '.k-cell, .k-pcell',
+      instance: { editTargets: () => [backgroundTarget(rec)] },
+      // No state row of its own: the slot is the layout's, the rest the host's.
+      state: { get: () => ({}), set: () => {} },
+    };
+    bgRec = rec;
+    return rec;
+  }
+  function backgroundTarget(rec) {
+    const d = rec.desc || {};
+    const plain = backgroundOf(layout) === 'plain';
+    const slotField = { key: BACKGROUND_KEY, label: 'Background', kind: 'choice', level: 'essential', default: BACKGROUND_DEFAULT,
+      options: [{ value: 'theme', label: d.label ? `The theme’s scene: ${d.label}` : 'The theme’s scene' },
+        { value: 'plain', label: 'Plain: the theme’s colours, nothing moving' }] };
+    const own = (() => { try { return Array.isArray(d.fields) ? d.fields : []; } catch { return []; } })();
+    return {
+      id: 'background', whole: true, label: bgTitle(rec), el: stageEl,
+      help: [plain ? 'This dashboard’s background is plain.' : (d.help || 'What is behind every panel on this dashboard.'),
+        'The choice of background is this dashboard’s; how the scene moves and looks is this screen’s, as before.'].join(' '),
+      // The scene's own rows only while the scene is what is there: a plain background has nothing to tune.
+      fields: [slotField, ...(plain ? [] : own)],
+      values: () => { let v = {}; try { v = d.values?.() || {}; } catch { v = {}; } return { ...v, [BACKGROUND_KEY]: backgroundOf(layout) }; },
+      set: (patch = {}) => {
+        const p = { ...(patch || {}) };
+        if (BACKGROUND_KEY in p) { setBackground(p[BACKGROUND_KEY]); delete p[BACKGROUND_KEY]; reselectBackground(); }
+        if (Object.keys(p).length) { try { d.set?.(p); } catch (err) { console.error('arrangement: a background setting', err); } }
+      },
+    };
+  }
+  const bgTitle = (rec) => rec?.title || 'Background';
+  // The card is drawn again when the slot changes (its rows depend on what is in it).
+  const reselectBackground = () => setTimeout(() => {
+    try { if (editMode?.active?.()?.id === BACKGROUND_PANEL_ID) editMode.select(null); } catch { /* gone */ }
+  }, 0);
 
   // ---- THE DASHBOARD'S ROOM, EDITED IN PLACE (2026-10-02) ---------------------------------------------
   // Mike: "click on a button or piece of furniture or whatever else and have access to any options for it."
@@ -2611,7 +2701,8 @@ export function createArrangement({
     return true;
   }
 
-  const editBoxOf = (id) => (id === ROOM_PANEL_ID ? roomHost : null) || promoteBox(id)?.box || recFor(id)?.el || null;
+  const editBoxOf = (id) => (id === ROOM_PANEL_ID ? roomHost : null) || (id === BACKGROUND_PANEL_ID ? stageEl : null)
+    || promoteBox(id)?.box || recFor(id)?.el || null;
   /** (row 2.145, 2026-11-02) The panel a pressed element is in: the SMALLEST panel box holding it (a module in a room's
    *  slot is inside the room's box too), or null. For the one editor's "press a panel to choose it". */
   function panelAt(node) {
@@ -2658,6 +2749,32 @@ export function createArrangement({
     if (q.on === true) editMode.enter(id); else editMode.toggle(id);
     if (pick && editMode.active()?.id === id) { try { editMode.select(pick); } catch { /* not one of its things */ } }
   }) : null;
+  // *** BACKGROUND PRESSES (B1, 2026-11-26). *** While something is being edited, a press on NOTHING (the bare stage, the
+  // theme's scene behind the panels) chooses the background: the plan's "a press on nothing else chooses it". While the
+  // background is being edited, a press on a panel in front of it edits that panel (the panels are inside the background's
+  // box, so they would otherwise be dead to a press). Capture on the kiosk, so this runs before edit mode's own listener
+  // on the box. Edit mode's own controls, the corners and the handles are never "nothing".
+  const onBackgroundPress = (e) => {
+    const a = editMode?.active?.();
+    if (!a) return;
+    const node = e.target instanceof Element ? e.target : null;
+    if (!node || node.closest('.em-card, .em-bar, .em-handles, .k-editc, .k-promote, .k-barc')) return;
+    if (a.id === BACKGROUND_PANEL_ID) {
+      const id = panelAt(node);
+      if (!id || id === BACKGROUND_PANEL_ID) return;
+      e.preventDefault(); e.stopPropagation();
+      if (e.type === 'click') { try { editMode.enter(id); } catch (err) { console.error('arrangement: edit that panel', err); } }
+      return;
+    }
+    const nothing = node === kioskEl || node === stageEl || !!node.closest('.ls');
+    if (!nothing || !backgroundEditRec()) return;
+    if (e.type === 'click') { try { editMode.enter(BACKGROUND_PANEL_ID); } catch (err) { console.error('arrangement: edit the background', err); } }
+  };
+  const BG_PRESS_EVENTS = ['click', 'pointerdown', 'mousedown', 'touchstart'];
+  // On the stage too, registered before edit mode ever puts its own listener there, so this one runs first: on a kiosk the
+  // stage is inside `.kiosk` (and a press stopped there never reaches the stage), but a host may draw them side by side.
+  const bgPressEls = [kioskEl, stageEl].filter((e) => e && typeof e.addEventListener === 'function');
+  if (editMode) for (const el of bgPressEls) for (const ev of BG_PRESS_EVENTS) el.addEventListener(ev, onBackgroundPress, true);
   /** Edit panel `id` (on true), stop (false), or toggle (undefined). True if `id` is a panel here. */
   function editPanel(id, on) {
     if (!editMode || !id || !editPanels().some((r) => r.id === id)) return false;
@@ -2669,6 +2786,8 @@ export function createArrangement({
   function destroy() {
     dropHandles();
     try { offEditVerb?.(); editMode?.destroy(); } catch { /* already gone */ }
+    try { for (const el of bgPressEls) for (const ev of BG_PRESS_EVENTS) el.removeEventListener(ev, onBackgroundPress, true); } catch { /* already gone */ }
+    try { delete kioskEl.dataset.background; } catch { /* already gone */ }
     try { offPlaceVerb?.(); } catch { /* already gone */ }
     screenLinks?.destroy();
     destroyRec(stageRec); destroyRec(cameraRec); destroyRec(clockRec); destroyRec(ambientRec);
@@ -2680,6 +2799,10 @@ export function createArrangement({
     // ---- the state, read through functions: a swap replaces what they return ----
     profile: () => profile,
     layout: () => layout,
+    // (B1) The background slot: what it holds, put something in it, and whether it can be edited here now.
+    background: () => backgroundOf(layout),
+    setBackground,
+    canEditBackground: () => !!backgroundEditRec(),
     stageDefs: () => stageDefs,
     primary: () => primary,
     stageRec: () => stageRec,

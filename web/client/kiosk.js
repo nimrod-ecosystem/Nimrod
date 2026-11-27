@@ -43,7 +43,7 @@ import { switchURL, switchesByReload, writeTrail, takeTrail } from './screen_swi
 import { REMOTE_STREAM } from './output_remote.js';
 // (Row 2.38: `classifyLayoutChange` is layout.js's `layoutChange` plus doors -- a change that only moves a
 // room object's door is applied in place, like a move, never a reload. room_doors.js argues it.)
-import { createArrangement, classifyLayoutChange as layoutChange, ROOM_PANEL_ID, ROOM_PIECE_PREFIX,
+import { createArrangement, classifyLayoutChange as layoutChange, ROOM_PANEL_ID, ROOM_PIECE_PREFIX, BACKGROUND_PANEL_ID,
   PLACE_REQUEST_TOPIC, SMALL_CLOCK_FIELD, SMALL_CLOCK_KEY, CLOCK_CORNERS, clockCornerOf } from './arrangement.js';
 import {
   paintWho, whoWords, BAR_PERSON_FIELD, BAR_PERSON_KEY, WHO_ACT,
@@ -2543,7 +2543,32 @@ export async function mountKiosk(root, {
     driveRoom: (id, handle, fields) => automation.wrapState(id, handle, { fields }),
     // Row 2.110: the room editor's short notices ("This room is full", "Nothing to undo").
     notify: (text) => { try { output?.notify?.(text, { source: 'room' }); } catch { /* said nothing */ } },
+    // (B1, 2026-11-26; Mike: "The backgrounds should really be just another type of module") What the background slot shows
+    // and its settings, for edit mode's card: the theme's scene and the screen's own rows for it (the ones the ⚙ menu's
+    // Theme tab shows, written the same way, to the screen's row). Not on an embed: its page owns the background.
+    background: () => (embedded ? null : backgroundInfo()),
   });
+  function backgroundInfo() {
+    let t = null;
+    try { t = paintedTheme(shownTheme()); } catch { t = null; }
+    const scene = t?.scene || null;
+    const name = String(t?.label || t?.id || '').split(' — ')[0];
+    const copy = (f) => ({ ...f, ...(f.options ? { options: f.options.map((o) => ({ ...o })) } : {}) });
+    const fields = [
+      ...(scene && sceneTakesSky(scene) ? [SKY_FIELD] : []),
+      ...(scene ? [SCENE_MOTION_FIELD] : []),
+      ...(scene === 'medieval' ? [VILLAGE_LOOK_FIELD, VILLAGE_PEOPLE_FIELD] : []),
+    ].map(copy);
+    return {
+      title: 'Background',
+      label: scene ? (name || scene) : (name ? `${name} has no moving scene, only its colours` : null),
+      help: scene ? `The ${name || 'theme'} theme’s moving scene, behind every panel on this dashboard.`
+        : `The ${name || 'theme'} theme has no moving scene: its colours are behind the panels.`,
+      fields,
+      values: () => { try { return settings.get() || {}; } catch { return {}; } },
+      set: (patch) => { try { settings.set({ ...(patch || {}) }); } catch (err) { console.error('kiosk: a background setting', err); } },
+    };
+  }
   // *** WHICH ARRANGEMENT THE SHELL IS READING (step 6 Stage 3). *** Normally this file's own. With
   // `dashboardModule` on (embedded only), the panels are mounted by a dashboard MODULE, and the bar,
   // the menu, focus and recovery's hands must all be about ITS panels -- so every read below goes
@@ -7254,6 +7279,15 @@ export async function mountKiosk(root, {
         run: () => {
           try { menu.close(); } catch { /* already closed */ }
           bus.publish('shell/edit-panel', { id: ROOM_PANEL_ID, on: true, from: 'menu' });
+        } }] : []),
+      // (B1, 2026-11-26) THE BACKGROUND, EDITED LIKE A MODULE: the way in that is not "press on nothing while editing".
+      // At Everything only: edit mode takes pointer presses, so on a switch walk this row would be a stop that opens
+      // something the switch cannot use (kiosk_test counts the walk).
+      ...(arr.canEditBackground?.() && complexity() === 'advanced' ? [{ kind: 'item', id: 'edit-background', label: 'Edit the background…',
+        hint: 'the theme’s scene or plain, and how the scene moves and looks', ...MENU_TAB.theme(0),
+        run: () => {
+          try { menu.close(); } catch { /* already closed */ }
+          bus.publish('shell/edit-panel', { id: BACKGROUND_PANEL_ID, on: true, from: 'menu' });
         } }] : []),
       // MIRROR, IN THE MENU (row 2.191, 2026-11-02): the bar's Mirror, here too, so the bar can lose it without the screen
       // losing it (the transport bar proposal's step 5.2). Only while this dashboard has a camera: with none it can do
