@@ -185,7 +185,7 @@ export const SUITES = [
   // 2026-10-02: "person known" -- panels that read the person once at mount end up with the person on a slow boot.
   'person_known',
   // The room, the cat, ambient motion and sound.
-  'room', 'room_scene', 'room_generate', 'room_generate3d', 'wants_to_say', 'shared_settings', 'scene_motion', 'room_notify', 'cat_guide', 'cat_help', 'comet_ambient', 'ambient_drift', 'mixer',
+  'room', 'room_scene', 'room_generate', 'room_generate3d', 'wants_to_say', 'motif', 'shared_settings', 'scene_motion', 'room_notify', 'cat_guide', 'cat_help', 'comet_ambient', 'ambient_drift', 'mixer',
   // Row 2.37, second pass: the window's weather, the library, petting, close-ups, zoom on focus.
   'room_objects',
   // 2026-10-02: the 3D room (CSS 3D transforms): its walls, modules on them, the drift and its guards.

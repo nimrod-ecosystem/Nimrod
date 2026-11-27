@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>motif — a short theme for a person or a character — test</title>
+<style>
+  body{font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;margin:24px}
+  .pass{color:green}.fail{color:firebrick;font-weight:700}
+  #results{white-space:pre-wrap;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  #summary{margin-top:14px;font-weight:700;font-size:1.05rem}
+</style>
+</head>
+<body>
+<h1>motif (row 2.309, note GV, part 1 step 1)</h1>
+<p>A few bars as data, made from a name when nobody wrote one, played through the audio bus. No sound is made here: the audio is a fake.</p>
+<div id="results"></div>
+<div id="summary">running…</div>
+<script type="module">
+import { motifFor, normalizeMotif, motifSeconds, themeOf, playMotif, MOTIF_SCALE, MOTIF_DEFAULTS } from '../motif.js';
+import { createAudioBus } from '../audio_bus.js';
+const out = document.getElementById('results');
+let passed = 0, failed = 0;
+function check(name, cond, detail = '') {
+  const ok = !!cond; ok ? passed++ : failed++;
+  const d = document.createElement('div'); d.className = ok ? 'pass' : 'fail';
+  d.textContent = `${ok ? 'PASS' : 'FAIL'}  ${name}${!ok && detail ? '   ' + detail : ''}`; out.append(d);
+}
+const J = (v) => JSON.stringify(v);
+(async () => {
+  try {
+    const mike = motifFor('Mike');
+    check('*** a name makes a theme, and the same name always the same one ***', !!mike && J(mike) === J(motifFor('Mike')) && J(motifFor('mike ')) === J(mike));
+    const names = ['Mike', 'Nimrod', 'Ann', 'Grandma', 'The baker', 'Sam', 'Jo', 'Pat'];
+    const all = names.map((n) => J(motifFor(n)));
+    check('...different names, different themes', new Set(all).size === all.length, all.join('\n'));
+    let bad = null;
+    for (const n of [...names, ...Array.from({ length: 200 }, (_, i) => `person${i}`)]) {
+      const m = motifFor(n);
+      if (!m || m.notes.length < 5 || m.notes.length > 8) bad = `${n}: ${m?.notes?.length} notes`;
+      else if (m.notes.some(([p]) => !MOTIF_SCALE.includes(p))) bad = `${n}: a note off the scale`;
+      else if (![60, 67].includes(m.notes.at(-1)[0])) bad = `${n}: does not end at home or the fifth`;
+      else if (motifSeconds(m) > MOTIF_DEFAULTS.maxSeconds) bad = `${n}: ${motifSeconds(m)} s`;
+      if (bad) break;
+    }
+    check('*** every made theme: 5 to 8 notes of the pentatonic scale, ending at home or the fifth, at most 6 seconds (208 names) ***', !bad, bad);
+    check('a written theme wins over the made one', J(themeOf({ name: 'Mike', motif: { notes: [[64, 1], [67, 2]] } }).notes) === J([[64, 1], [67, 2]])
+      && J(themeOf({ name: 'Mike' })) === J(mike));
+    const long = normalizeMotif({ notes: Array.from({ length: 40 }, () => [72, 2]), tempo: 60 });
+    check('a written theme is held to 16 notes and 6 seconds (the tail cut, never sped up)', long.notes.length === 3 && long.tempo === 60, J(long));
+    check('nonsense is no theme', normalizeMotif({ notes: 'la la' }) === null && normalizeMotif(null) === null);
+    // Played: through the audio bus as a sound effect, active only while it plays.
+    const bus = createAudioBus();
+    const made = { osc: 0, started: 0 };
+    const param = () => ({ value: 0, setValueAtTime() {}, exponentialRampToValueAtTime() {} });
+    const ac = {
+      currentTime: 0, destination: {},
+      createGain: () => ({ gain: param(), connect() {}, disconnect() {} }),
+      createOscillator: () => { made.osc++; return { type: 'sine', frequency: param(), connect() {}, start() { made.started++; }, stop() {} }; },
+    };
+    const short = { notes: [[60, 0.5], [67, 0.5]], tempo: 180 };
+    const p = playMotif(short, { bus, context: ac });
+    const during = bus.state();
+    const activeIds = () => Object.entries(bus.state() || {}).filter(([id, s]) => id.startsWith('motif:') && s.active).map(([, s]) => s.tier);
+    check('*** played: one note each, registered on the audio bus as a sound effect while it plays ***', made.osc === 2 && made.started === 2 && J(activeIds()) === J(['sfx']), J({ made, during }));
+    await p;
+    check('...and gone from the bus when it ends', activeIds().length === 0);
+    check('with no WebAudio, nothing plays and nothing breaks', (await playMotif(short, { bus, context: null, level: 1 }).catch(() => 'threw')) !== 'threw');
+  } catch (err) {
+    check('the suite ran to the end', false, String(err && err.stack || err));
+  }
+  document.getElementById('summary').textContent = failed === 0 ? `ALL PASS — ${passed} checks` : `${failed} FAILED / ${passed} passed`;
+})();
+</script>
+</body>
+</html>
